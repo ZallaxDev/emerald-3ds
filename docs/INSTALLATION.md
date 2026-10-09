@@ -106,6 +106,15 @@ using the `payload/` folder from the matching release ZIP:
 python -m emerald3ds_builder --payload /path/to/payload install --rom /path/to/rom.gba --sd /path/to/card
 ```
 
+### macOS (if you build the standalone package yourself)
+
+Official releases are built on Windows. If you build the macOS standalone package yourself (`tools/build_release.py --platform macOS`):
+
+1. Open the resulting `Emerald3DS-vX.Y.Z-macOS` folder.
+2. Double-click `Emerald3DS-Builder`. If Gatekeeper blocks it because of an unidentified developer, right-click the file and select **Open**.
+   *(Note: if transferred or downloaded, macOS App Translocation may isolate the executable from the `payload/` folder. Removing the quarantine attribute with `xattr -d com.apple.quarantine <path-to-folder>` resolves this).*
+3. Follow the same steps as Windows to select your ROM and SD card.
+
 See the [builder documentation](../builder/README.md) for other source-builder commands.
 
 Pokémon Emerald 3Ds Dual Screen is an unofficial fan project, not affiliated
