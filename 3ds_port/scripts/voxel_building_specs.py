@@ -4090,3 +4090,16 @@ SPECS = [
                      "pieces": own_shell(petalburg_gym())},
     },
 ]
+
+# Landmarks and props described in files of their own (voxel_specs_*.py):
+# the Oceanic Museum's and Mt. Pyre's small props, the Space Center's and
+# New Mauville's furniture, the Frontier's service halls, the Safari Zone's
+# gates, the Weather Institute, Sootopolis's houses and Fortree's treehouse.
+from voxel_specs_small_landmarks import SPECS as SMALL_LANDMARK_SPECS
+from voxel_specs_industrial_props import SPECS as INDUSTRIAL_PROP_SPECS
+from voxel_specs_frontier_aux import SPECS as FRONTIER_AUX_SPECS
+from voxel_specs_route_landmarks import SPECS as ROUTE_LANDMARK_SPECS
+from voxel_specs_city_landmarks import SPECS as CITY_LANDMARK_SPECS
+from voxel_specs_elevated_landmarks import SPECS as ELEVATED_LANDMARK_SPECS
+SPECS += (SMALL_LANDMARK_SPECS + INDUSTRIAL_PROP_SPECS + FRONTIER_AUX_SPECS
+          + ROUTE_LANDMARK_SPECS + CITY_LANDMARK_SPECS + ELEVATED_LANDMARK_SPECS)

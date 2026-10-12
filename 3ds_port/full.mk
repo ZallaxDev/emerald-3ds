@@ -421,7 +421,8 @@ romfs/voxel/trees.rgba5551: scripts/gen_voxel_trees.py \
 # file). verify-voxel-buildings runs the proofs alone, even when the file is
 # up to date: the release build asks for it.
 romfs/voxel/buildings.bin: scripts/gen_voxel_buildings.py scripts/voxel_building.py \
-		scripts/voxel_building_specs.py scripts/dump_region_art.py scripts/voxel_props.py \
+		scripts/voxel_building_specs.py $(wildcard scripts/voxel_specs_*.py) \
+		scripts/dump_region_art.py scripts/voxel_props.py \
 		scripts/voxel_relief_fixes.py assets/voxel/relief_fixes.json \
 		$(ROOT)/data/layouts/layouts.json
 	@mkdir -p $(@D)
