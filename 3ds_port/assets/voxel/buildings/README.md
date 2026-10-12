@@ -165,6 +165,45 @@ room next to Rustboro (512 KiB) must stay at 256 KiB or less, or crossing
 the door leaves one of them waiting. So a long, thin piece (a side wall the
 room's full length) is split.
 
+## Landmarks in files of their own
+
+`scripts/voxel_specs_*.py` hold the landmarks whose art needs more than a
+spec entry (a cleaned drawing, a texture of several bands, parts read off the
+drawing); `voxel_building_specs.py` imports their `SPECS` at its end.
+
+- `voxel_specs_small_landmarks.py`: Mt. Pyre's gravestones (one model, every
+  grave on the first floor) and the Oceanic Museum's columns, display cases
+  and the four exhibits upstairs, all as relief props.
+- `voxel_specs_industrial_props.py`: the Space Center's computer
+  desks (the laptop lifted off the desk), schematic table, empty desk and
+  wall console; New Mauville's generator (plinth, body and round exhaust cap
+  as three solids), equipment rack, green machine and power cabinet. Each
+  piece is matched by its drawing, so a desk modelled once stands on both
+  floors.
+- `voxel_specs_frontier_aux.py`: the Battle Frontier's Ranking Hall and
+  Exchange Service Corner (the raised service emblem on the roof, a canopy
+  over the hall's entrance) and the Reception Gate's two wings.
+- `voxel_specs_route_landmarks.py`: the Safari Zone's gate on Route 121 and
+  its south entrance, and the Weather Institute with its two round roof
+  housings (`WeatherRoofInstallations`; the drawing's own cream material
+  covers their reverse flank).
+- `voxel_specs_city_landmarks.py`: Lavaridge's gym and Sootopolis's seven
+  houses, the peaked ones as an octagonal body under an octagonal cone.
+- `voxel_specs_elevated_landmarks.py`: Fortree's treehouse, its leafy roof
+  front a slope with the drawing projected at its natural density.
+
+Three spec keys serve these models:
+
+- `preserve_ground` with `own` (a set of the drawing's pixels, or a function
+  of the art returning one): only those pixels are the model's; the map's own
+  ground is patched under every cell it stands on (`placement_ground_policy`),
+  so the cliff behind a Sootopolis house, the deck round the treehouse or the
+  garden behind a Frontier hall stays terrain.
+- `patch_omit_tiles`: metatiles whose colours a ground patch must not carry
+  (water stays the animated ground's).
+- `owned`: the cells of the rectangle the model reserves, when a corner of
+  the rectangle holds only the surrounding terrain.
+
 ## Memory
 
 The shared texture lives in VRAM (uploaded through the atlas staging buffer,

@@ -989,6 +989,10 @@ def build_models(only=None):
             parts = spec["parts"]()
         model = vb.Model(spec["name"], art, parts, (w, h), spec["ground"][0])
         model.owned = owned if owned is not None else {(i, j) for i in range(w) for j in range(h)}
+        if spec.get("preserve_ground") and "own" in spec:
+            # the drawing's structural pixels only: the ground pixels
+            # between them (a deck, a cliff) stay the map's (ground_patch)
+            model.own = set(spec["own"](art) if callable(spec["own"]) else spec["own"])
         model.spec = spec
         model.layout = layout
         models.append(model)
@@ -1154,6 +1158,18 @@ def _area_xz(poly):
 _EXISTS = {}    # blockdata path -> on disk: asked for every model
 
 
+def placement_ground_policy(model, found):
+    """A `preserve_ground` model keeps the map's own ground under every
+    cell it stands on: each placement patches all of its cells (ground_patch
+    clears only the model's own pixels), so mixed scenery - a deck, a cliff,
+    a garden - survives around it."""
+    if model.spec.get("preserve_ground"):
+        model.spec.setdefault("patch_all", set()).update(p[4] for p in found)
+        found = [(lid, x, y, ground, name, sorted(model.owned))
+                 for lid, x, y, ground, name, odd in found]
+    return found
+
+
 def find_placements(model, layouts_json):
     """Every place in Hoenn the building stands, with the ground around it.
 
@@ -1190,8 +1206,9 @@ def find_placements(model, layouts_json):
         # found by its tiles (prop_specs): it stands where it was found, on
         # each cell's own ground
         index_of = {e.get("id"): k for k, e in enumerate(layouts_json)}
-        return [(index_of[lid] + 1, px, py, OWN_GROUND, lid, [])
-                for (lid, px, py) in model.spec["at"]]
+        return placement_ground_policy(model,
+            [(index_of[lid] + 1, px, py, OWN_GROUND, lid, [])
+             for (lid, px, py) in model.spec["at"]])
     for index, entry in enumerate(layouts_json):
         if model.spec.get("bare"):
             break       # it stands only where reuse_pieces found it
@@ -1300,7 +1317,7 @@ def find_placements(model, layouts_json):
         else:
             odd = []
         found.append((ids.index(lid) + 1, px, py, ground, lid, odd))
-    return found
+    return placement_ground_policy(model, found)
 
 
 def _canonical_at(model):
@@ -1395,10 +1412,15 @@ def ground_patch(model, layout, px, py, i, j):
     img = layout.cell_image(layout.metatile(px + i, py + j)).convert("RGBA")
     ipx, apx = img.load(), model.art.load()
     own = getattr(model, "own", None)   # a bare piece: its own pixels only
+    # the colours of metatiles the patch must not carry (water under a hut:
+    # it stays the animated ground's)
+    omit = {pixel[:3] for mt in model.spec.get("patch_omit_tiles", ())
+            for pixel in layout.cell_image(mt).getdata()}
     for y in range(16):
         for x in range(16):
-            if (apx[i * 16 + x, j * 16 + y][3] >= 128 if own is None
-                    else (i * 16 + x, j * 16 + y) in own):
+            if (ipx[x, y][:3] in omit or
+                    (apx[i * 16 + x, j * 16 + y][3] >= 128 if own is None
+                     else (i * 16 + x, j * 16 + y) in own)):
                 ipx[x, y] = (0, 0, 0, 0)
     return img
 
