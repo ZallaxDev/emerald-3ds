@@ -71,7 +71,7 @@ BACKEND_SRCS += src/3ds_bottom_ui.c
 build/bridge/3ds_bottom_ui.o: FULLCFLAGS += -DCTR_APP_VERSION='"$(APP_VERSION)"'
 # The ENHANCEMENTS and CHEATS pages of OPTIONS (include/3ds_extras.h).
 BACKEND_SRCS += src/3ds_extras.c
-BACKEND_SRCS += src/3ds_field_icon.c src/3ds_follower.c src/3ds_follower_trail.c
+BACKEND_SRCS += src/3ds_field_icon.c src/3ds_field_icon_palette.c src/3ds_follower.c src/3ds_follower_trail.c
 # The frame profiler times the engine's own routines through linker wrappers.
 BACKEND_SRCS += src/3ds_prof_wrap.c
 PROF_WRAPPED := RunTasks AnimateSprites BuildOamBuffer ProcessDma3Requests \
@@ -585,12 +585,12 @@ build/follower_trail_test.exe: tests/follower_trail_test.c src/3ds_follower_trai
 	@mkdir -p build
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/follower_trail_test.c src/3ds_follower_trail.c -o $@
 
-build/follower_runtime_test.exe: tests/follower_runtime_test.c src/3ds_follower.c src/3ds_field_icon.c src/3ds_follower_trail.c include/3ds_follower_trail.h include/3ds_field_icon.h include/3ds_follower.h $(ROOT)/src/sprite.c build/follower_movement_test.hostobj build/follower_metatile_test.hostobj
+build/follower_runtime_test.exe: tests/follower_runtime_test.c src/3ds_follower.c src/3ds_field_icon.c src/3ds_field_icon_palette.c src/3ds_follower_trail.c include/3ds_follower_trail.h include/3ds_field_icon.h include/3ds_field_icon_palette.h include/3ds_follower.h $(ROOT)/src/sprite.c build/follower_movement_test.hostobj build/follower_metatile_test.hostobj
 	@mkdir -p build
 	$(HOSTCC) -std=gnu99 -O2 -Wall -Wextra -Werror -Wno-ignored-qualifiers -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast \
 		-D_FORTIFY_SOURCE=0 -DPORTABLE -DMODERN=1 -DUBFIX -D__INTELLISENSE__ -DPLATFORM_3DS -DPORT_BRIDGE \
 		-iquote compat -iquote $(ROOT)/include -iquote $(ROOT) -Iinclude -ffunction-sections -fdata-sections $(FOLLOWER_HOST_GC) \
-		tests/follower_runtime_test.c src/3ds_follower.c src/3ds_field_icon.c src/3ds_follower_trail.c build/follower_movement_test.hostobj build/follower_metatile_test.hostobj -o $@
+		tests/follower_runtime_test.c src/3ds_follower.c src/3ds_field_icon.c src/3ds_field_icon_palette.c src/3ds_follower_trail.c build/follower_movement_test.hostobj build/follower_metatile_test.hostobj -o $@
 
 # Link the real game collision/elevation code, keeping unrelated game functions out.
 build/follower_movement_test.hostobj: $(ROOT)/src/event_object_movement.c include/3ds_follower.h

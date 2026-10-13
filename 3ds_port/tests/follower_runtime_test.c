@@ -32,6 +32,9 @@ struct Pokemon gPlayerParty[PARTY_SIZE];
 u8 gPlayerPartyCount;
 static struct SaveBlock1 sSave;
 struct SaveBlock1 *gSaveBlock1Ptr = &sSave;
+const struct SpritePalette gMonIconPaletteTable[3] = {{0}};
+const struct CompressedSpritePalette gMonPaletteTable[NUM_SPECIES] = {{0}};
+const struct CompressedSpritePalette gMonShinyPaletteTable[NUM_SPECIES] = {{0}};
 const u8 gMonIconPaletteIndices[NUM_SPECIES] = {[1] = 0, [2] = 0, [3] = 1};
 
 static u8 sPalette[3];
@@ -42,6 +45,12 @@ static s16 sCamera;
 static u8 sBlocked, sElevation;
 static u8 sIconTiles[1024];
 static struct { u16 species, hp; bool8 egg; u32 personality; } sParty[PARTY_SIZE];
+
+/* This existing regression harness exercises normal followers only. */
+bool8 IsMonShiny(struct Pokemon *mon) { (void)mon; return FALSE; }
+void LoadPalette(const void *src, u16 offset, u16 size) { (void)src; (void)offset; (void)size; }
+void LZ77UnCompWram(const u32 *src, void *dst) { (void)src; (void)dst; assert(!"unexpected shiny asset in normal follower test"); }
+const void *Port_ResolveAssetPointerSized(const void *p, u32 size) { (void)size; return p; }
 
 void CB2_Overworld(void) {}
 static void Menu(void) {}
@@ -301,8 +310,8 @@ int main(void)
     sEnabled = FALSE; CtrFollower_Update();
     memset(gSprites, 0, sizeof(gSprites)); memset(sPalette, 0xFF, sizeof(sPalette));
     /* Wild/follower icons sharing a palette can be removed in either order. */
-    u8 wild = CtrFieldIcon_Create(1, 0, 0x5657);
-    u8 follower = CtrFieldIcon_Create(2, 0, 0x464C);
+    u8 wild = CtrFieldIcon_Create(1, 0, 0x5657, false);
+    u8 follower = CtrFieldIcon_Create(2, 0, 0x464C, false);
     /* Facing lives in OAM too, so the voxel decoder and 2D renderer agree. */
     gSprites[follower].oam.matrixNum = 0x10;
     CtrFieldIcon_SetMotion(follower, 1, 0);
@@ -333,16 +342,16 @@ int main(void)
     unsigned freed = sFreed;
     CtrFieldIcon_Destroy(wild, 1); assert(sFreed == freed && sPalette[0] == 12);
     CtrFieldIcon_Destroy(follower, 2); assert(sFreed == freed + 1 && sPalette[0] == 0xFF);
-    wild = CtrFieldIcon_Create(1, 0, 0x5657);
-    follower = CtrFieldIcon_Create(2, 0, 0x464C);
+    wild = CtrFieldIcon_Create(1, 0, 0x5657, false);
+    follower = CtrFieldIcon_Create(2, 0, 0x464C, false);
     freed = sFreed;
     CtrFieldIcon_Destroy(follower, 2); assert(sFreed == freed);
     CtrFieldIcon_Destroy(wild, 1); assert(sFreed == freed + 1);
-    sPaletteFull = TRUE; assert(CtrFieldIcon_Create(1, 0, 0x464C) == MAX_SPRITES);
+    sPaletteFull = TRUE; assert(CtrFieldIcon_Create(1, 0, 0x464C, false) == MAX_SPRITES);
     sPaletteFull = FALSE;
     for (unsigned i = 0; i < MAX_SPRITES; ++i) gSprites[i].inUse = TRUE;
     created = sCreated;
-    assert(CtrFieldIcon_Create(1, 0, 0x464C) == MAX_SPRITES && sCreated == created);
+    assert(CtrFieldIcon_Create(1, 0, 0x464C, false) == MAX_SPRITES && sCreated == created);
     puts("PASS follower runtime: real OAM depth/collision hooks, persistent dialogues, lifecycle, palettes, animation and facing");
     return 0;
 }

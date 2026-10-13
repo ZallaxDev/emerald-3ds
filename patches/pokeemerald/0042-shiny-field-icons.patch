@@ -1,0 +1,15 @@
+Pokémon Emerald 3Ds Dual Screen: runtime shiny field icon palettes.
+Applies after 0041-pokemon-follower.patch. No new graphics or palette assets.
+
+diff --git a/src/wild_encounter.c b/src/wild_encounter.c
+--- a/src/wild_encounter.c
++++ b/src/wild_encounter.c
+@@ -746,7 +746,7 @@
+         v->species = wild->species;
+         v->personality = VisibleRollPersonality();
+         v->shiny = GET_SHINY_VALUE(VisibleOtId(), v->personality) < SHINY_ODDS;
+-        v->spriteId = CtrFieldIcon_Create(v->species, v->personality, VW_MAGIC);
++        v->spriteId = CtrFieldIcon_Create(v->species, v->personality, VW_MAGIC, v->shiny);
+         if (v->spriteId >= MAX_SPRITES)
+             return;
+         gSprites[v->spriteId].coordOffsetEnabled = TRUE;

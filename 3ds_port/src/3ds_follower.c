@@ -21,6 +21,7 @@ static struct
     bool8 active;
     u8 spriteId, mapGroup, mapNum;
     u8 elevation;
+    bool8 shiny;
     u16 species;
     u32 personality;
     CtrFollowerPoint position;
@@ -179,17 +180,20 @@ void CtrFollower_Update(void)
     }
     u16 species = GetMonData(mon, MON_DATA_SPECIES);
     u32 personality = GetMonData(mon, MON_DATA_PERSONALITY);
+    bool8 shiny = IsMonShiny(mon);
     if (!SpriteValid() || sFollower.species != species || sFollower.personality != personality
+     || sFollower.shiny != shiny
      || sFollower.mapGroup != gSaveBlock1Ptr->location.mapGroup
      || sFollower.mapNum != gSaveBlock1Ptr->location.mapNum)
     {
         RemoveFollower();
-        u8 spriteId = CtrFieldIcon_Create(species, personality, FOLLOWER_MARKER);
+        u8 spriteId = CtrFieldIcon_Create(species, personality, FOLLOWER_MARKER, shiny);
         if (spriteId == MAX_SPRITES)
             return;
         sFollower.spriteId = spriteId;
         sFollower.species = species;
         sFollower.personality = personality;
+        sFollower.shiny = shiny;
         sFollower.mapGroup = gSaveBlock1Ptr->location.mapGroup;
         sFollower.mapNum = gSaveBlock1Ptr->location.mapNum;
         sFollower.active = TRUE;
