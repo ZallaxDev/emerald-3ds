@@ -7,13 +7,23 @@
 #include "pokemon.h"
 #include "pokemon_icon.h"
 #include "sprite.h"
+#include "event_object_movement.h"
 #include "3ds_field_icon.h"
 #include "3ds_follower.h"
 #include "constants/pokemon_icon.h"
 
 void CtrFollower_Update(void);
 
-struct Sprite gSprites[MAX_SPRITES + 1];
+/* Use the real OAM sorter, not a second model of draw order. */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#pragma GCC diagnostic ignored "-Wmissing-braces"
+#define IndexOfSpritePaletteTag CtrTest_UnusedIndexOfSpritePaletteTag
+u8 CtrTest_UnusedIndexOfSpritePaletteTag(u16 tag);
+#include "src/sprite.c"
+#undef IndexOfSpritePaletteTag
+#pragma GCC diagnostic pop
 u8 VRAM_[0x18000];
 struct ObjectEvent gObjectEvents[OBJECT_EVENTS_COUNT];
 struct PlayerAvatar gPlayerAvatar;
@@ -24,7 +34,7 @@ static struct SaveBlock1 sSave;
 struct SaveBlock1 *gSaveBlock1Ptr = &sSave;
 const u8 gMonIconPaletteIndices[NUM_SPECIES] = {[1] = 0, [2] = 0, [3] = 1};
 
-static u8 sPalette[3], sOccupant = OBJECT_EVENTS_COUNT;
+static u8 sPalette[3];
 static u8 sFlags = PLAYER_AVATAR_FLAG_ON_FOOT;
 static bool8 sEnabled = TRUE, sLocked, sScript, sPaletteFull;
 static unsigned sCreated, sDestroyed, sFreed;
@@ -39,7 +49,8 @@ int CtrExtras_Get(const char *key) { assert(strcmp(key, "follower") == 0); retur
 u8 GetPlayerAvatarFlags(void) { return sFlags; }
 bool8 ArePlayerFieldControlsLocked(void) { return sLocked; }
 bool8 ScriptContext_IsEnabled(void) { return sScript; }
-u8 GetObjectEventIdByXY(s16 x, s16 y) { (void)x; (void)y; return sOccupant; }
+int GetMapBorderIdAt(int x, int y) { (void)x; (void)y; return 0; }
+bool32 CanCameraMoveInDirection(int direction) { (void)direction; return TRUE; }
 u8 MapGridGetCollisionAt(int x, int y)
 {
     int dx = x - gObjectEvents[0].currentCoords.x, dy = y - gObjectEvents[0].currentCoords.y;
@@ -48,7 +59,6 @@ u8 MapGridGetCollisionAt(int x, int y)
 }
 u8 MapGridGetElevationAt(int x, int y) { (void)x; (void)y; return sElevation; }
 u32 MapGridGetMetatileBehaviorAt(int x, int y) { (void)x; (void)y; return 0; }
-bool8 MetatileBehavior_IsSurfableWaterOrUnderwater(u8 behavior) { return behavior == 1; }
 void SetSpritePosToMapCoords(s16 x, s16 y, s16 *sx, s16 *sy)
 {
     *sx = x * 16 - sCamera;
@@ -96,6 +106,8 @@ u8 CreateMonIcon(u16 species, void (*callback)(struct Sprite *), s16 x, s16 y,
             gSprites[i].x = x;
             gSprites[i].y = y;
             gSprites[i].subpriority = subpriority;
+            gSprites[i].centerToCornerVecX = -16;
+            gSprites[i].centerToCornerVecY = -16;
             gSprites[i].oam.paletteNum = sPalette[gMonIconPaletteIndices[species]];
             ++sCreated;
             return i;
@@ -111,8 +123,10 @@ static void PlacePlayer(s16 x, s16 y)
 {
     gObjectEvents[0].currentCoords.x = x / 16;
     gObjectEvents[0].currentCoords.y = y / 16;
+    gObjectEvents[0].previousCoords = gObjectEvents[0].currentCoords;
     gSprites[0].x = x + 8 - sCamera;
     gSprites[0].y = y;
+    SetObjectSubpriorityByElevation(gObjectEvents[0].previousElevation, &gSprites[0], 1);
 }
 static struct Sprite *Follower(void)
 {
@@ -123,13 +137,40 @@ static struct Sprite *Follower(void)
 }
 static void Step(s16 x, s16 y) { PlacePlayer(x, y); CtrFollower_Update(); }
 
+static unsigned DrawOrder(const struct Sprite *sprite)
+{
+    UpdateOamCoords();
+    BuildSpritePriorities();
+    for (unsigned i = 0; i < MAX_SPRITES; ++i) sSpriteOrder[i] = i;
+    SortSprites();
+    for (unsigned i = 0; i < MAX_SPRITES; ++i)
+        if (&gSprites[sSpriteOrder[i]] == sprite) return i;
+    assert(0); return MAX_SPRITES;
+}
+
+static void CheckNpcReservation(s16 x, s16 y)
+{
+    struct ObjectEvent *npc = &gObjectEvents[1];
+    npc->active = TRUE;
+    npc->currentCoords = (struct Coords16){x + 1, y};
+    npc->previousCoords = npc->currentCoords;
+    assert(CtrFollower_BlocksObjectAt(npc, x, y));
+    assert(GetCollisionAtCoords(npc, x, y, DIR_WEST) == COLLISION_OBJECT_EVENT);
+    assert(GetCollisionFlagsAtCoords(npc, x, y, DIR_WEST)
+            & (1 << (COLLISION_OBJECT_EVENT - 1)));
+    assert(!CtrFollower_BlocksObjectAt(&gObjectEvents[0], x, y));
+    npc->active = FALSE;
+}
+
 int main(void)
 {
     memset(sPalette, 0xFF, sizeof(sPalette));
     gMain.callback2 = CB2_Overworld;
     gObjectEvents[0].active = TRUE;
+    gObjectEvents[0].isPlayer = TRUE;
     gSprites[0].inUse = TRUE;
     gSprites[0].centerToCornerVecY = -16;
+    gSprites[0].oam.priority = 2;
     gPlayerPartyCount = 2;
     sParty[0].species = 1; sParty[0].hp = 10;
     sParty[1].species = 2; sParty[1].hp = 10;
@@ -142,6 +183,7 @@ int main(void)
     assert(CtrFollower_GetPosition(Follower(), &fx, &fy, &pad));
     assert(fx == 0 && fy == -16 && pad == 8);
     assert(CtrFollower_IsSprite(Follower()) && !CtrFollower_IsSprite(&gSprites[0]));
+    CheckNpcReservation(0, -1);
     Step(16, 0);
     assert(!Follower()->invisible && Follower()->x == 8 && Follower()->y == 0);
     /* Camera scrolling cannot manufacture a step in world coordinates. */
@@ -150,8 +192,7 @@ int main(void)
     sCamera = 0; Step(16, 16);
     assert(Follower()->x == 24 && Follower()->y == 0);
     assert(Follower()->hFlip && (Follower()->oam.matrixNum & 0x08));
-    sOccupant = 3; Step(16, 16); assert(Follower()->invisible);
-    sOccupant = OBJECT_EVENTS_COUNT; Step(16, 16); assert(!Follower()->invisible);
+    CheckNpcReservation(1, 0);
     sFlags = PLAYER_AVATAR_FLAG_SURFING; CtrFollower_Update(); assert(!Follower());
     sFlags = PLAYER_AVATAR_FLAG_MACH_BIKE; CtrFollower_Update(); assert(!Follower());
     sFlags = PLAYER_AVATAR_FLAG_ON_FOOT; Step(16, 16); assert(!Follower()->invisible);
@@ -162,9 +203,20 @@ int main(void)
     sParty[0].hp = 0; CtrFollower_Update(); assert(sCreated == created + 1 && !Follower()->invisible);
     sParty[1].egg = TRUE; CtrFollower_Update(); assert(!Follower());
     sParty[1].egg = FALSE; Step(48, 16);
-    sScript = TRUE; CtrFollower_Update(); assert(!Follower());
+    struct Sprite *dialogueFollower = Follower();
+    unsigned dialogueCreated = sCreated;
+    int32_t dialogueX, dialogueY; int dialoguePad;
+    assert(CtrFollower_GetPosition(dialogueFollower, &dialogueX, &dialogueY, &dialoguePad));
+    sScript = TRUE; CtrFollower_Update(); assert(Follower() == dialogueFollower && !Follower()->invisible);
+    assert(sCreated == dialogueCreated);
+    assert(CtrFollower_GetPosition(Follower(), &fx, &fy, &pad) && fx == dialogueX && fy == dialogueY);
+    gObjectEvents[1].active = TRUE;
+    assert(!CtrFollower_BlocksObjectAt(&gObjectEvents[1], fx / 16, fy / 16));
+    assert(GetCollisionAtCoords(&gObjectEvents[1], fx / 16, fy / 16, DIR_NORTH) == COLLISION_NONE);
+    gObjectEvents[1].active = FALSE;
     sScript = FALSE; Step(48, 16);
-    sLocked = TRUE; CtrFollower_Update(); assert(!Follower());
+    sLocked = TRUE; CtrFollower_Update(); assert(Follower() == dialogueFollower && !Follower()->invisible);
+    assert(sCreated == dialogueCreated);
     sLocked = FALSE; Step(48, 16);
     gSprites[0].y2 = -8; CtrFollower_Update(); assert(!Follower());
     gSprites[0].y2 = 0; Step(48, 16);
@@ -175,6 +227,65 @@ int main(void)
     unsigned destroyed = sDestroyed;
     CtrFollower_Update(); assert(sDestroyed == destroyed && Follower());
     sEnabled = FALSE; CtrFollower_Update(); assert(!Follower());
+    /* North places the follower lower on screen, in front of the player's feet.
+     * Cover fractional running steps, camera offsets and OAM's wrapped Y range. */
+    sEnabled = TRUE; gObjectEvents[0].facingDirection = DIR_NORTH;
+    Step(64, 96);
+    for (unsigned i = 0; i < 40; ++i)
+    {
+        Step(64, 96 - 2 * i);
+        assert(!Follower()->invisible);
+        for (int camera = -256; camera <= 256; camera += 8)
+        {
+            gSpriteCoordOffsetY = camera;
+            SetObjectSubpriorityByElevation(0, &gSprites[0], 1);
+            CtrFollower_Update();
+            /* The original game's 256-pixel depth wrap needs a local tie fix. */
+            assert(DrawOrder(Follower()) < DrawOrder(&gSprites[0]));
+        }
+    }
+    gSpriteCoordOffsetY = 0;
+    CheckNpcReservation(4, 2);
+    /* Between tiles, keep both occupied ends reserved until the follower leaves. */
+    assert(CtrFollower_GetPosition(Follower(), &fx, &fy, &pad));
+    assert(fy % 16 != 0);
+    CheckNpcReservation(4, fy / 16 + 1);
+    gObjectEvents[1].active = TRUE;
+    gObjectEvents[1].currentCoords = (struct Coords16){5, 2};
+    gObjectEvents[1].previousCoords = gObjectEvents[1].currentCoords;
+    Step(64, 0);
+    assert(!CtrFollower_BlocksObjectAt(&gObjectEvents[1], 4, 2));
+    assert(GetCollisionAtCoords(&gObjectEvents[1], 4, 2, DIR_WEST) == COLLISION_NONE);
+    /* A same-row turn and a southward walk must reverse the layering correctly. */
+    Step(66, 0); Step(80, 0);
+    assert(!Follower()->invisible);
+    Step(80, 2); Step(80, 16); Step(80, 32);
+    assert(DrawOrder(Follower()) > DrawOrder(&gSprites[0]));
+    assert(CtrFollower_GetPosition(Follower(), &fx, &fy, &pad));
+    gObjectEvents[1].active = FALSE;
+    struct ObjectEvent *npc = &gObjectEvents[1];
+    sElevation = 3; CtrFollower_Update();
+    npc->active = TRUE; npc->currentElevation = 4;
+    assert(!CtrFollower_BlocksObjectAt(npc, fx / 16, fy / 16));
+    npc->currentElevation = 0;
+    assert(CtrFollower_BlocksObjectAt(npc, fx / 16, fy / 16));
+    ++sSave.location.mapNum;
+    assert(!CtrFollower_BlocksObjectAt(npc, fx / 16, fy / 16));
+    --sSave.location.mapNum;
+    sFlags = PLAYER_AVATAR_FLAG_MACH_BIKE;
+    assert(!CtrFollower_BlocksObjectAt(npc, fx / 16, fy / 16));
+    sFlags = PLAYER_AVATAR_FLAG_ON_FOOT;
+    sElevation = 0;
+    sEnabled = FALSE;
+    assert(!CtrFollower_BlocksObjectAt(npc, fx / 16, fy / 16));
+    CtrFollower_Update(); npc->active = FALSE;
+    /* Spawning must avoid both the departure and arrival tiles of a moving NPC. */
+    npc->active = TRUE;
+    npc->previousCoords = (struct Coords16){3, 0};
+    npc->currentCoords = (struct Coords16){4, 0};
+    sEnabled = TRUE; gObjectEvents[0].facingDirection = DIR_SOUTH; Step(48, 16);
+    assert(!Follower()->invisible && Follower()->y == 16);
+    sEnabled = FALSE; CtrFollower_Update(); npc->active = FALSE;
     /* Immediate placement follows facing; a blocked rear tile falls back safely. */
     sEnabled = TRUE; gObjectEvents[0].facingDirection = DIR_EAST; Step(48, 16);
     assert(Follower()->x == 40 && Follower()->y == 16 && Follower()->hFlip);
@@ -232,6 +343,6 @@ int main(void)
     for (unsigned i = 0; i < MAX_SPRITES; ++i) gSprites[i].inUse = TRUE;
     created = sCreated;
     assert(CtrFieldIcon_Create(1, 0, 0x464C) == MAX_SPRITES && sCreated == created);
-    puts("PASS follower runtime: lifecycle, shared palettes, motion-paced animation, facing in 2D/voxel OAM");
+    puts("PASS follower runtime: real OAM depth/collision hooks, persistent dialogues, lifecycle, palettes, animation and facing");
     return 0;
 }

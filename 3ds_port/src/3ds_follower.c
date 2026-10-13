@@ -20,6 +20,7 @@ static struct
 {
     bool8 active;
     u8 spriteId, mapGroup, mapNum;
+    u8 elevation;
     u16 species;
     u32 personality;
     CtrFollowerPoint position;
@@ -72,6 +73,53 @@ static s16 TileCoordinate(s32 pixel)
     return pixel >= 0 ? pixel / 16 : -((-pixel + 15) / 16);
 }
 
+static bool OnFoot(void)
+{
+    u8 flags = GetPlayerAvatarFlags();
+    return (flags & PLAYER_AVATAR_FLAG_ON_FOOT)
+        && !(flags & (PLAYER_AVATAR_FLAG_MACH_BIKE | PLAYER_AVATAR_FLAG_ACRO_BIKE
+                    | PLAYER_AVATAR_FLAG_SURFING | PLAYER_AVATAR_FLAG_UNDERWATER
+                    | PLAYER_AVATAR_FLAG_FORCED_MOVE));
+}
+
+bool CtrFollower_BlocksObjectAt(const struct ObjectEvent *object, int16_t x, int16_t y)
+{
+    if (!object || !object->active || object->isPlayer
+     || !SpriteValid() || gSprites[sFollower.spriteId].invisible
+     || !CtrExtras_Get("follower") || gMain.callback2 != CB2_Overworld
+     || gPlayerAvatar.objectEventId >= OBJECT_EVENTS_COUNT || !OnFoot()
+     || object == &gObjectEvents[gPlayerAvatar.objectEventId]
+     || sFollower.mapGroup != gSaveBlock1Ptr->location.mapGroup
+     || sFollower.mapNum != gSaveBlock1Ptr->location.mapNum
+     || ScriptContext_IsEnabled() || ArePlayerFieldControlsLocked())
+        return false;
+    const struct ObjectEvent *player = &gObjectEvents[gPlayerAvatar.objectEventId];
+    if (!player->active || player->spriteId >= MAX_SPRITES
+     || gSprites[player->spriteId].invisible || gSprites[player->spriteId].y2 != 0)
+        return false;
+    if (object->currentElevation && sFollower.elevation
+     && object->currentElevation != sFollower.elevation)
+        return false;
+    /* While between tiles, reserve both ends, just like a moving object event. */
+    return x >= TileCoordinate(sFollower.position.x)
+        && x <= TileCoordinate(sFollower.position.x + 15)
+        && y >= TileCoordinate(sFollower.position.y)
+        && y <= TileCoordinate(sFollower.position.y + 15);
+}
+
+static bool TileOccupied(s16 x, s16 y)
+{
+    for (unsigned i = 0; i < OBJECT_EVENTS_COUNT; ++i)
+    {
+        const struct ObjectEvent *object = &gObjectEvents[i];
+        if (i != gPlayerAvatar.objectEventId && object->active
+         && ((object->currentCoords.x == x && object->currentCoords.y == y)
+          || (object->previousCoords.x == x && object->previousCoords.y == y)))
+            return true;
+    }
+    return false;
+}
+
 static bool SeedBehindPlayer(const struct ObjectEvent *player, CtrFollowerPoint position)
 {
     int facingX = 0, facingY = 1;
@@ -91,7 +139,7 @@ static bool SeedBehindPlayer(const struct ObjectEvent *player, CtrFollowerPoint 
         s16 y = TileCoordinate(position.y) + offsets[i][1];
         u8 elevation = MapGridGetElevationAt(x, y);
         if (MapGridGetCollisionAt(x, y)
-         || GetObjectEventIdByXY(x, y) != OBJECT_EVENTS_COUNT
+         || TileOccupied(x, y)
          || MetatileBehavior_IsSurfableWaterOrUnderwater(MapGridGetMetatileBehaviorAt(x, y))
          || (elevation && player->currentElevation && elevation != player->currentElevation))
             continue;
@@ -118,14 +166,7 @@ void CtrFollower_Update(void)
         return;
     }
     const struct Sprite *playerSprite = &gSprites[player->spriteId];
-    u8 flags = GetPlayerAvatarFlags();
-    /* Cosmetic only: never participates in object collisions or scripted movement. */
-    if (!(flags & PLAYER_AVATAR_FLAG_ON_FOOT)
-     || (flags & (PLAYER_AVATAR_FLAG_MACH_BIKE | PLAYER_AVATAR_FLAG_ACRO_BIKE
-                | PLAYER_AVATAR_FLAG_SURFING | PLAYER_AVATAR_FLAG_UNDERWATER
-                | PLAYER_AVATAR_FLAG_FORCED_MOVE))
-     || playerSprite->invisible || playerSprite->y2 != 0
-     || ArePlayerFieldControlsLocked() || ScriptContext_IsEnabled())
+    if (!OnFoot() || playerSprite->invisible || playerSprite->y2 != 0)
     {
         RemoveFollower();
         return;
@@ -154,6 +195,8 @@ void CtrFollower_Update(void)
         sFollower.active = TRUE;
         sFollower.footPad = CtrFieldIcon_FootPad(spriteId);
         gSprites[spriteId].invisible = TRUE;
+        /* Update runs after AnimateSprites; upload the initial frame before this OAM. */
+        gSprites[spriteId].callback(&gSprites[spriteId]);
     }
     s16 tileX, tileY;
     SetSpritePosToMapCoords(player->currentCoords.x, player->currentCoords.y, &tileX, &tileY);
@@ -188,14 +231,26 @@ void CtrFollower_Update(void)
     CtrFieldIcon_SetMotion(sFollower.spriteId, stepX, stepY);
     sFollower.position = follower;
     s16 x = TileCoordinate(follower.x), y = TileCoordinate(follower.y);
-    u8 occupant = GetObjectEventIdByXY(x, y);
     s32 dx = follower.x - position.x, dy = follower.y - position.y;
-    /* Turning back or an NPC entering the trail must not put two sprites on top of each other. */
-    sprite->invisible = (dx > -8 && dx < 8 && dy > -8 && dy < 8)
-        || (occupant != OBJECT_EVENTS_COUNT && occupant != gPlayerAvatar.objectEventId);
+    /* Let the player turn back freely; NPCs use the collision hook instead. */
+    sprite->invisible = (dx > -8 && dx < 8 && dy > -8 && dy < 8);
     SetSpritePosToMapCoords(x, y, &tileX, &tileY);
     sprite->x = tileX + follower.x - x * 16 + 8;
     sprite->y = tileY + follower.y - y * 16;
-    sprite->oam.priority = playerSprite->oam.priority;
-    sprite->subpriority = 200 - ((sprite->y + 64) >> 1 & 0x7F);
+    u8 elevation = MapGridGetElevationAt(x, y);
+    if (!elevation || elevation == 15)
+        elevation = player->previousElevation;
+    sFollower.elevation = elevation;
+    sprite->oam.priority = ElevationToPriority(elevation);
+    /* The same feet/elevation/camera calculation as NPCs; lower on screen draws in front. */
+    SetObjectSubpriorityByElevation(elevation, sprite, 1);
+    /* Tile quantisation and the 256-pixel camera wrap must not invert two close feet. */
+    if (sprite->oam.priority == playerSprite->oam.priority
+     && dx > -32 && dx < 32 && dy > -32 && dy < 32)
+    {
+        if (dy > 0 && sprite->subpriority >= playerSprite->subpriority)
+            sprite->subpriority = playerSprite->subpriority ? playerSprite->subpriority - 1 : 0;
+        else if (dy < 0 && sprite->subpriority <= playerSprite->subpriority)
+            sprite->subpriority = playerSprite->subpriority < 255 ? playerSprite->subpriority + 1 : 255;
+    }
 }

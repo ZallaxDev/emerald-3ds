@@ -585,10 +585,28 @@ build/follower_trail_test.exe: tests/follower_trail_test.c src/3ds_follower_trai
 	@mkdir -p build
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/follower_trail_test.c src/3ds_follower_trail.c -o $@
 
-build/follower_runtime_test.exe: tests/follower_runtime_test.c src/3ds_follower.c src/3ds_field_icon.c src/3ds_follower_trail.c include/3ds_follower_trail.h include/3ds_field_icon.h include/3ds_follower.h
+build/follower_runtime_test.exe: tests/follower_runtime_test.c src/3ds_follower.c src/3ds_field_icon.c src/3ds_follower_trail.c include/3ds_follower_trail.h include/3ds_field_icon.h include/3ds_follower.h $(ROOT)/src/sprite.c build/follower_movement_test.hostobj build/follower_metatile_test.hostobj
 	@mkdir -p build
-	$(HOSTCC) -std=gnu99 -O2 -Wall -Wextra -Werror -Wno-ignored-qualifiers -DPORTABLE -DMODERN=1 -D__INTELLISENSE__ -DPLATFORM_3DS -DPORT_BRIDGE \
-		-iquote compat -iquote $(ROOT)/include -Iinclude tests/follower_runtime_test.c src/3ds_follower.c src/3ds_field_icon.c src/3ds_follower_trail.c -o $@
+	$(HOSTCC) -std=gnu99 -O2 -Wall -Wextra -Werror -Wno-ignored-qualifiers -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast \
+		-D_FORTIFY_SOURCE=0 -DPORTABLE -DMODERN=1 -DUBFIX -D__INTELLISENSE__ -DPLATFORM_3DS -DPORT_BRIDGE \
+		-iquote compat -iquote $(ROOT)/include -iquote $(ROOT) -Iinclude -ffunction-sections -fdata-sections $(FOLLOWER_HOST_GC) \
+		tests/follower_runtime_test.c src/3ds_follower.c src/3ds_field_icon.c src/3ds_follower_trail.c build/follower_movement_test.hostobj build/follower_metatile_test.hostobj -o $@
+
+# Link the real game collision/elevation code, keeping unrelated game functions out.
+build/follower_movement_test.hostobj: $(ROOT)/src/event_object_movement.c include/3ds_follower.h
+	@mkdir -p build
+	$(HOSTCC) -std=gnu99 -O2 -Wall -Wextra -Werror -Wno-ignored-qualifiers -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast \
+		-Wno-pointer-sign -Wno-missing-field-initializers -Wno-missing-braces -Wno-unused-parameter -Wno-unused-const-variable \
+		-Wno-type-limits -Wno-implicit-fallthrough \
+		-D_FORTIFY_SOURCE=0 -DPORTABLE -DMODERN=1 -DUBFIX -D__INTELLISENSE__ -DPLATFORM_3DS -DPORT_BRIDGE \
+		-DSetSpritePosToMapCoords=CtrTest_UnusedSetSpritePosToMapCoords \
+		-iquote compat -iquote $(ROOT)/include -iquote $(ROOT) -Iinclude -ffunction-sections -fdata-sections -c $< -o $@
+
+build/follower_metatile_test.hostobj: $(ROOT)/src/metatile_behavior.c
+	@mkdir -p build
+	$(HOSTCC) -std=gnu99 -O2 -Wall -Wextra -Werror -Wno-ignored-qualifiers -Wno-unused-parameter \
+		-D_FORTIFY_SOURCE=0 -DPORTABLE -DMODERN=1 -D__INTELLISENSE__ \
+		-iquote compat -iquote $(ROOT)/include -ffunction-sections -fdata-sections -c $< -o $@
 
 FOLLOWER_HOST_GC := -Wl,--gc-sections
 ifeq ($(shell uname -s),Darwin)

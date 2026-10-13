@@ -9,14 +9,40 @@ diff --git a/src/overworld.c b/src/overworld.c
  #endif
  
  void CB1_Overworld(void)
-@@ -1595,6 +1596,7 @@
-     if (gMain.callback2 == CB2_Overworld)
-         DoCB1_Overworld(gMain.newKeys, gMain.heldKeys);
- #ifdef PLATFORM_3DS
+@@ -1606,6 +1607,9 @@
+     AnimateSprites();
+     CameraUpdate();
+     UpdateCameraPanning();
++#ifdef PLATFORM_3DS
 +    CtrFollower_Update();
-     VisibleWild_Update();
++#endif
+     BuildOamBuffer();
+     UpdatePaletteFade();
+     UpdateTilesetAnimations();
+diff --git a/src/event_object_movement.c b/src/event_object_movement.c
+--- a/src/event_object_movement.c
++++ b/src/event_object_movement.c
+@@ -22,6 +22,9 @@
+ #include "trainer_see.h"
+ #include "trainer_hill.h"
+ #include "util.h"
++#ifdef PLATFORM_3DS
++#include "3ds_follower.h"
++#endif
+ #ifdef PORT_BRIDGE
+ #include "port_platform.h"
  #endif
- }
+@@ -4731,6 +4734,10 @@
+     u8 i;
+     struct ObjectEvent *curObject;
+ 
++#ifdef PLATFORM_3DS
++    if (CtrFollower_BlocksObjectAt(objectEvent, x, y))
++        return TRUE;
++#endif
+     for (i = 0; i < OBJECT_EVENTS_COUNT; i++)
+     {
+         curObject = &gObjectEvents[i];
 diff --git a/src/wild_encounter.c b/src/wild_encounter.c
 --- a/src/wild_encounter.c
 +++ b/src/wild_encounter.c

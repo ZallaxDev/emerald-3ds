@@ -4,7 +4,7 @@
 
 - Optional PKMN FOLLOWER in ENHANCEMENTS: the first
   non-egg party Pokémon with HP follows the walked path in 2D and voxel,
-  using the existing icons. It retracts for scripts, jumps, bikes and water.
+  using the existing icons. It retracts for jumps, bikes and water.
   Map and party changes rebuild its trail; visible wild Pokémon share icon
   palettes safely. Off by default; the save format is unchanged.
   The icon animation speeds up when running and mirrors horizontally to
@@ -12,6 +12,10 @@
   Appears immediately behind the player when enabled (uses a free adjacent
   tile if blocked). Voxel feet align to the ground and cast the same outdoor
   sun shadow as characters.
+  Stays visible during dialogue and interactions. Wandering NPCs respect its
+  occupied tile without blocking the player or scripted movement. In 2D,
+  depth follows the characters' feet so a follower below the player draws
+  in front, including when walking or running north.
 
 ## 0.3.1 — 2026-10-10
 
