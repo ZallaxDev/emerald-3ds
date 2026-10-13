@@ -18,6 +18,7 @@
 #include "port_platform.h"
 
 #include "3ds_video.h"
+#include "3ds_follower.h"
 #include "voxel_building.h"
 #include "voxel_entities.h"
 #include "voxel_grade.h"
@@ -1201,7 +1202,8 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
         effect->surf = sprite->template == gFieldEffectObjectTemplatePointers[FLDEFFOBJ_SURF_BLOB];
         effect->decal = IsDecal(sprite->template);
         effect->tile = IsTileEffect(sprite->template);
-        effect->owner = effect->decal || effect->tile ? -1 : EffectOwner(sprite, objects);
+        effect->owner = effect->decal || effect->tile || CtrFollower_IsSprite(sprite)
+                      ? -1 : EffectOwner(sprite, objects);
         effect->front = effect->owner < 0 || DrawnOver(sprite, objects[effect->owner].sprite);
         /* Behind its object and below its feet: what the object rides. Only
          * the surf mon is ridden; grass behind a walker's feet, as it steps

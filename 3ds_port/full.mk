@@ -71,6 +71,7 @@ BACKEND_SRCS += src/3ds_bottom_ui.c
 build/bridge/3ds_bottom_ui.o: FULLCFLAGS += -DCTR_APP_VERSION='"$(APP_VERSION)"'
 # The ENHANCEMENTS and CHEATS pages of OPTIONS (include/3ds_extras.h).
 BACKEND_SRCS += src/3ds_extras.c
+BACKEND_SRCS += src/3ds_field_icon.c src/3ds_follower.c src/3ds_follower_trail.c
 # The frame profiler times the engine's own routines through linker wrappers.
 BACKEND_SRCS += src/3ds_prof_wrap.c
 PROF_WRAPPED := RunTasks AnimateSprites BuildOamBuffer ProcessDma3Requests \
@@ -571,3 +572,18 @@ verify-bottom-map:
 verify: verify-voxel-regions
 verify-voxel-regions: romfs/voxel/regions.bin
 	"$(PYTHON)" -B tests/voxel_regions_test.py --cc "$(HOSTCC)"
+
+# The follower's path has no game/SDK dependency and is checked on the host.
+verify: verify-follower
+.PHONY: verify-follower
+verify-follower: build/follower_trail_test.exe build/follower_runtime_test.exe
+	./build/follower_trail_test.exe
+	./build/follower_runtime_test.exe
+build/follower_trail_test.exe: tests/follower_trail_test.c src/3ds_follower_trail.c include/3ds_follower_trail.h
+	@mkdir -p build
+	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/follower_trail_test.c src/3ds_follower_trail.c -o $@
+
+build/follower_runtime_test.exe: tests/follower_runtime_test.c src/3ds_follower.c src/3ds_field_icon.c src/3ds_follower_trail.c include/3ds_follower_trail.h include/3ds_field_icon.h include/3ds_follower.h
+	@mkdir -p build
+	$(HOSTCC) -std=gnu99 -O2 -Wall -Wextra -Werror -Wno-ignored-qualifiers -DPORTABLE -DMODERN=1 -D__INTELLISENSE__ -DPLATFORM_3DS -DPORT_BRIDGE \
+		-iquote compat -iquote $(ROOT)/include -Iinclude tests/follower_runtime_test.c src/3ds_follower.c src/3ds_field_icon.c src/3ds_follower_trail.c -o $@

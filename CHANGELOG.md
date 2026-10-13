@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Optional FOLLOWER in ENHANCEMENTS (ACOMPANANTE in Spanish): the first
+  non-egg party Pokémon with HP follows the walked path in 2D and voxel,
+  using the existing icons. It retracts for scripts, jumps, bikes and water.
+  Map and party changes rebuild its trail; visible wild Pokémon share icon
+  palettes safely. Off by default; the save format is unchanged.
+
 ## 0.3.1 — 2026-10-10
 
 New and improved:

@@ -1,0 +1,119 @@
+diff --git a/src/overworld.c b/src/overworld.c
+--- a/src/overworld.c
++++ b/src/overworld.c
+@@ -1588,6 +1588,7 @@
+ 
+ #ifdef PLATFORM_3DS
+ void VisibleWild_Update(void); // wild_encounter.c
++void CtrFollower_Update(void); // 3ds_port/src/3ds_follower.c
+ #endif
+ 
+ void CB1_Overworld(void)
+@@ -1595,6 +1596,7 @@
+     if (gMain.callback2 == CB2_Overworld)
+         DoCB1_Overworld(gMain.newKeys, gMain.heldKeys);
+ #ifdef PLATFORM_3DS
++    CtrFollower_Update();
+     VisibleWild_Update();
+ #endif
+ }
+diff --git a/src/wild_encounter.c b/src/wild_encounter.c
+--- a/src/wild_encounter.c
++++ b/src/wild_encounter.c
+@@ -593,6 +593,7 @@
+ #include "sound.h"
+ #include "constants/field_effects.h"
+ #include "constants/pokemon_icon.h"
++#include "3ds_field_icon.h"
+ #include "constants/songs.h"
+ 
+ /* The setting: off, or how many may be about at once. */
+@@ -637,40 +638,10 @@
+         && gSprites[v->spriteId].data[7] == VW_MAGIC;
+ }
+ 
+-/*
+- * Icon palettes. On the field OBJ palette slots 0-11 belong to the objects
+- * (written directly, gReservedSpritePaletteCount), so tags get only 12-15,
+- * shared with the field effects. A palette is loaded only when a slot is free
+- * (else that one does not appear: an icon without its slot showed another
+- * palette's colours), and freed when the last icon using it goes.
+- */
+-static u16 VisiblePaletteTag(u16 species)
+-{
+-    return POKE_ICON_BASE_PAL_TAG + gMonIconPaletteIndices[species];
+-}
+-
+-static bool8 VisibleLoadPalette(u16 species)
+-{
+-    if (IndexOfSpritePaletteTag(VisiblePaletteTag(species)) == 0xFF)
+-        LoadMonIconPalette(species);
+-    return IndexOfSpritePaletteTag(VisiblePaletteTag(species)) != 0xFF;
+-}
+-
+ static void VisibleRemove(struct VisibleWild *v)
+ {
+     if (v->active && VisibleSpriteValid(v))
+-    {
+-        u32 i;
+-        bool8 shared = FALSE;
+-
+-        FreeAndDestroyMonIconSprite(&gSprites[v->spriteId]);
+-        for (i = 0; i < VW_MAX; i++)
+-            if (&sVisible[i] != v && sVisible[i].active
+-             && gMonIconPaletteIndices[sVisible[i].species] == gMonIconPaletteIndices[v->species])
+-                shared = TRUE;
+-        if (!shared)
+-            FreeMonIconPalette(v->species);
+-    }
++        CtrFieldIcon_Destroy(v->spriteId, v->species);
+     v->active = FALSE;
+ }
+ 
+@@ -717,35 +688,6 @@
+ static u32 VisibleRollPersonality(void)
+ {
+     return ShinyOdds_WildPersonality();
+-}
+-
+-/*
+- * Their icons' two frames, copied straight into OBJ VRAM. The game's own
+- * callback queues the copy for VBlank with a pointer into the asset cache,
+- * and on the field, where many assets stream through it, that slot can be
+- * reused before the copy runs: the frame came out as garbage.
+- */
+-#define VW_ICON_BYTES 0x200      /* 32x32, 4bpp */
+-#define VW_ICON_FRAME 14         /* frames per icon frame: a slow bob */
+-
+-static void SpriteCB_VisibleIcon(struct Sprite *sprite)
+-{
+-    if (sprite->data[6] > 0)
+-    {
+-        sprite->data[6]--;
+-        return;
+-    }
+-    {
+-        /* The icon is one asset holding both frames: resolve the asset, then
+-         * step into it. The placeholder plus 0x200 is another symbol. */
+-        const u8 *icon = Port_ResolveAssetPointer(sprite->images);
+-
+-        if (icon != NULL)
+-            CpuCopy16(icon + VW_ICON_BYTES * sprite->data[5],
+-                      (void *)(OBJ_VRAM0 + sprite->oam.tileNum * TILE_SIZE_4BPP), VW_ICON_BYTES);
+-    }
+-    sprite->data[5] ^= 1;
+-    sprite->data[6] = VW_ICON_FRAME;
+ }
+ 
+ static void VisibleSparkle(const struct VisibleWild *v)
+@@ -804,9 +746,7 @@
+         v->species = wild->species;
+         v->personality = VisibleRollPersonality();
+         v->shiny = GET_SHINY_VALUE(VisibleOtId(), v->personality) < SHINY_ODDS;
+-        if (!VisibleLoadPalette(v->species))
+-            return;
+-        v->spriteId = CreateMonIcon(v->species, SpriteCB_VisibleIcon, 0, 0, 1, v->personality, TRUE);
++        v->spriteId = CtrFieldIcon_Create(v->species, v->personality, VW_MAGIC);
+         if (v->spriteId >= MAX_SPRITES)
+             return;
+         gSprites[v->spriteId].coordOffsetEnabled = TRUE;
