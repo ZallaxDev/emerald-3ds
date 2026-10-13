@@ -178,12 +178,15 @@ static bool ReadRows(FILE *file, unsigned count, unsigned size, uint8_t *row,
 static unsigned sHeightBytes;
 
 /*
- * A page is a power of two wide but holds only the rows it uses, in whole
- * tiles of 8. The GPU samples it as a texture the next power of two tall:
- * the rows past the page are never stored, never given VRAM, and never
- * read - no face's uv reaches them. Padded to a power of two, the Battle
- * Frontier's two halves took 512 KiB each, and the page arena could not
- * hold both maps in view together.
+ * A page is a power of two wide and stores the rows it uses, in whole tiles
+ * of 8, while the texture the console reads is those rows rounded up to a
+ * power of two. The piece it lives in is sized for THAT height: the console
+ * fetches the texture it is told about, so a piece cut to the stored rows
+ * makes it sample whatever lies past them. The rows past the stored ones
+ * hold nothing, and no face's uv may reach them. Padded, the Battle
+ * Frontier's two halves take 512 KiB each, over what the page arena holds
+ * with both maps in view - answering that is a packing job, not a reason to
+ * under-size the piece.
  */
 static bool TakePage(unsigned i, const uint8_t *r)
 {

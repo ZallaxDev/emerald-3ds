@@ -1686,13 +1686,15 @@ def pack_atlas(images):
     shelf packer left the space beside a tall, narrow drawing - a room's
     side wall - empty, and a small room took a page of half a megabyte.
 
-    A page is a power of two wide but only as tall as the rows it uses, in
-    whole tiles of 8: the console's texture is those rows rounded up to a
-    power of two (texture_rows), and the rows past them are neither stored
-    nor given VRAM - no face reads them. Rounded up, the Battle Frontier's
-    two halves took 512 KiB each, and the page arena cannot hold both maps
-    in view together. Every width is tried, tallest first and largest first,
-    and the fewest texels win. Returns ((width, rows), {key: (ox, oy)})."""
+    A page is a power of two wide and stores only the rows it uses, in whole
+    tiles of 8. The console's texture is those rows rounded up to a power of
+    two (texture_rows) and is backed for that height: the rows past the
+    stored ones are never written, and the console sizes the piece for the
+    texture it reads. Rounded up, the Battle Frontier's two halves take
+    512 KiB each, over what the page arena holds with both maps in view -
+    that has to be answered by the packing. Every width is tried, tallest
+    first and largest first, and the fewest texels win.
+    Returns ((width, rows), {key: (ox, oy)})."""
     orders = [sorted(images, key=lambda kv: (-kv[1].size[1], -kv[1].size[0])),
               sorted(images, key=lambda kv: (-kv[1].size[0] * kv[1].size[1], -kv[1].size[1]))]
     best = None

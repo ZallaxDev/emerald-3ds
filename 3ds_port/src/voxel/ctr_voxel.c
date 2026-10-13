@@ -1030,14 +1030,16 @@ static bool sPageNoRoomLogged[VOXEL_MAX_PAGES];
 
 /* A page texture over a piece of the arena. Never C3D_TexDelete'd: that
  * would hand the piece to the console's allocator, which never gave it.
- * The piece holds the page's `h` rows; the texture is `th` tall, a power of
- * two, and its rows past `h` are never sampled (VoxelBuildings_PageSize). */
-static void PageTexInit(C3D_Tex *tex, void *data, unsigned w, unsigned h, unsigned th)
+ * The file holds the page's `h` rows, but the texture comes to `th`, the
+ * power of two above them, so the piece is that texture's size: the console
+ * fetches the texture it is told about, and a piece cut to `h` makes it read
+ * whatever lies past the piece (VoxelBuildings_PageSize). */
+static void PageTexInit(C3D_Tex *tex, void *data, unsigned w, unsigned th)
 {
     memset(tex, 0, sizeof(*tex));
     tex->data = data;
     tex->fmt = GPU_RGBA5551;
-    tex->size = w * h * sizeof(uint16_t);
+    tex->size = w * th * sizeof(uint16_t);
     tex->width = (u16)w;
     tex->height = (u16)th;
     tex->param = GPU_TEXTURE_MODE(GPU_TEX_2D);
@@ -1300,13 +1302,13 @@ static void WantPage(int page, uint32_t keep, bool quiet)
      */
     while (victim->tex.data == NULL)
     {
-        unsigned bytes = w * h * sizeof(uint16_t);
+        unsigned bytes = w * th * sizeof(uint16_t);
         void *block = VoxelArena_Alloc(&sPageArena, bytes, bytes < 256u * 1024u);
         BuildingPageSlot *drop = NULL;
 
         if (block != NULL)
         {
-            PageTexInit(&victim->tex, block, w, h, th);
+            PageTexInit(&victim->tex, block, w, th);
             victim->w = w;
             victim->h = h;
             break;

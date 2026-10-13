@@ -574,6 +574,18 @@ def layout_pages(bld):
     return out
 
 
+def page_bytes(size):
+    """The memory a page's texture takes: its width by the height it is
+    declared at, the power of two above the rows it stores. That is what the
+    port allocates (ctr_voxel.c WantPage), so it is what this check has to
+    measure."""
+    w, h = size
+    th = 8
+    while th < h:
+        th *= 2
+    return w * th * 2
+
+
 def page_pairs(bld):
     """Maps joined by a connection stand in view together, and with them
     their pages in the console's page arena (ctr_voxel.c
@@ -593,9 +605,9 @@ def page_pairs(bld):
         for c in m.get("connections") or []:
             other = maps.get(c.get("map"))
             b = sizes.get(lid_of.get(other.get("layout"))) if other else None
-            if a and b and a[0] * a[1] * 2 + b[0] * b[1] * 2 > PAGE_ARENA:
+            if a and b and page_bytes(a) + page_bytes(b) > PAGE_ARENA:
                 pair = tuple(sorted((m["id"], other["id"])))
-                bad.add(pair + ((a[0] * a[1] + b[0] * b[1]) * 2 >> 10,))
+                bad.add(pair + ((page_bytes(a) + page_bytes(b)) >> 10,))
     return sorted(bad)
 
 
