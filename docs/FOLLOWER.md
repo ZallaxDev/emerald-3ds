@@ -14,6 +14,9 @@ by the existing 2D renderer or as a card by the voxel field-effects renderer.
 
 - Follows the walked path at a distance of 16 pixels, including corners,
   walking, running and fast-forward. Stopping keeps that distance.
+- Bobs faster when moving faster. Faces right with a horizontal flip when
+  moving right, left when moving left, and retains facing when moving
+  vertically or standing still. Both renderers read the same OAM flip bit.
 - Does not occupy an object-event slot, block the player, or trigger battles.
 - Hides when reversing into the follower or an NPC occupies its tile.
 - Retracts during scripts, locked field controls, jumping, bike riding, Surf

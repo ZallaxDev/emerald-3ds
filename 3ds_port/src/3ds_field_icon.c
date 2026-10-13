@@ -21,7 +21,7 @@ static void AnimateFieldIcon(struct Sprite *sprite)
         CpuCopy16(icon + ICON_BYTES * sprite->data[5],
                   VRAM_ + 0x10000 + sprite->oam.tileNum * TILE_SIZE_4BPP, ICON_BYTES);
     sprite->data[5] ^= 1;
-    sprite->data[6] = ICON_FRAME;
+    sprite->data[6] = sprite->data[4];
 }
 
 static void ReleaseUnusedPalette(u16 species)
@@ -57,9 +57,32 @@ u8 CtrFieldIcon_Create(u16 species, u32 personality, s16 marker)
     }
     gSprites[id].coordOffsetEnabled = TRUE;
     gSprites[id].data[7] = marker;
+    gSprites[id].data[4] = ICON_FRAME;
     gSprites[id].data[5] = 0;
     gSprites[id].data[6] = 0;
     return id;
+}
+
+void CtrFieldIcon_SetMotion(u8 spriteId, s16 dx, s16 dy)
+{
+    if (spriteId >= MAX_SPRITES || !gSprites[spriteId].inUse
+     || gSprites[spriteId].callback != AnimateFieldIcon)
+        return;
+    struct Sprite *sprite = &gSprites[spriteId];
+    unsigned speed = (dx < 0 ? -dx : dx) + (dy < 0 ? -dy : dy);
+    if (speed < 1) speed = 1;
+    if (speed > 4) speed = 4;
+    /* The countdown includes its zero frame: 15 walking frames, 8 running frames. */
+    s16 delay = (ICON_FRAME + speed) / speed - 1;
+    sprite->data[4] = delay;
+    if (sprite->data[6] > delay)
+        sprite->data[6] = delay;
+    if (dx != 0)
+    {
+        sprite->hFlip = dx > 0;
+        /* Both the 2D OAM and voxel atlas read this bit; preserve vertical flip. */
+        sprite->oam.matrixNum = (sprite->oam.matrixNum & ~0x08) | (sprite->hFlip ? 0x08 : 0);
+    }
 }
 
 void CtrFieldIcon_Destroy(u8 spriteId, u16 species)

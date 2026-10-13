@@ -119,11 +119,22 @@ void CtrFollower_Update(void)
             - (tileY + 16 + playerSprite->centerToCornerVecY)
     }, follower;
     struct Sprite *sprite = &gSprites[sFollower.spriteId];
+    /* World coordinates exclude camera scrolling and track walking/running speed. */
+    s16 stepX = sTrail.count ? position.x - sTrail.last.x : 0;
+    s16 stepY = sTrail.count ? position.y - sTrail.last.y : 0;
+    bool hadFollowerPosition = sTrail.count == CTR_FOLLOWER_POINTS;
+    CtrFollowerPoint previousFollower = sTrail.points[sTrail.next];
     if (!CtrFollowerTrail_Update(&sTrail, position, &follower))
     {
         sprite->invisible = TRUE;
         return;
     }
+    if (hadFollowerPosition)
+    {
+        stepX = follower.x - previousFollower.x;
+        stepY = follower.y - previousFollower.y;
+    }
+    CtrFieldIcon_SetMotion(sFollower.spriteId, stepX, stepY);
     s16 x = TileCoordinate(follower.x), y = TileCoordinate(follower.y);
     u8 occupant = GetObjectEventIdByXY(x, y);
     s32 dx = follower.x - position.x, dy = follower.y - position.y;

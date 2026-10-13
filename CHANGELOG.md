@@ -7,6 +7,8 @@
   using the existing icons. It retracts for scripts, jumps, bikes and water.
   Map and party changes rebuild its trail; visible wild Pokémon share icon
   palettes safely. Off by default; the save format is unchanged.
+  The icon animation speeds up when running and mirrors horizontally to
+  follow its movement direction in both rendering modes.
 
 ## 0.3.1 — 2026-10-10
 

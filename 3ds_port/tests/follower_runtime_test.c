@@ -126,6 +126,7 @@ int main(void)
     assert(CtrFollower_IsSprite(Follower()) && !CtrFollower_IsSprite(&gSprites[0]));
     Step(16, 0);
     assert(!Follower()->invisible && Follower()->x == 8 && Follower()->y == 0);
+    assert(Follower()->hFlip && (Follower()->oam.matrixNum & 0x08));
     /* Camera scrolling cannot manufacture a step in world coordinates. */
     sCamera = 40; Step(16, 0);
     assert(Follower()->x == -32 && !Follower()->invisible);
@@ -160,6 +161,30 @@ int main(void)
     /* Wild/follower icons sharing a palette can be removed in either order. */
     u8 wild = CtrFieldIcon_Create(1, 0, 0x5657);
     u8 follower = CtrFieldIcon_Create(2, 0, 0x464C);
+    /* Facing lives in OAM too, so the voxel decoder and 2D renderer agree. */
+    gSprites[follower].oam.matrixNum = 0x10;
+    CtrFieldIcon_SetMotion(follower, 1, 0);
+    assert(gSprites[follower].hFlip && gSprites[follower].oam.matrixNum == 0x18);
+    assert(gSprites[follower].data[4] == 14 && gSprites[wild].data[4] == 14);
+    gSprites[follower].callback(&gSprites[follower]);
+    s16 frame = gSprites[follower].data[5];
+    for (unsigned i = 0; i < 14; ++i) gSprites[follower].callback(&gSprites[follower]);
+    assert(gSprites[follower].data[5] == frame);
+    gSprites[follower].callback(&gSprites[follower]);
+    assert(gSprites[follower].data[5] != frame);
+    CtrFieldIcon_SetMotion(follower, -2, 0);
+    assert(!gSprites[follower].hFlip && gSprites[follower].oam.matrixNum == 0x10);
+    assert(gSprites[follower].data[4] == 7 && gSprites[follower].data[6] == 7);
+    frame = gSprites[follower].data[5];
+    for (unsigned i = 0; i < 7; ++i) gSprites[follower].callback(&gSprites[follower]);
+    assert(gSprites[follower].data[5] == frame);
+    gSprites[follower].callback(&gSprites[follower]);
+    assert(gSprites[follower].data[5] != frame);
+    CtrFieldIcon_SetMotion(follower, 0, 2);
+    assert(!gSprites[follower].hFlip && gSprites[follower].data[4] == 7);
+    CtrFieldIcon_SetMotion(follower, 0, 0);
+    assert(!gSprites[follower].hFlip && gSprites[follower].data[4] == 14);
+    assert(gSprites[wild].data[4] == 14);
     unsigned freed = sFreed;
     CtrFieldIcon_Destroy(wild, 1); assert(sFreed == freed && sPalette[0] == 12);
     CtrFieldIcon_Destroy(follower, 2); assert(sFreed == freed + 1 && sPalette[0] == 0xFF);
@@ -173,6 +198,6 @@ int main(void)
     for (unsigned i = 0; i < MAX_SPRITES; ++i) gSprites[i].inUse = TRUE;
     created = sCreated;
     assert(CtrFieldIcon_Create(1, 0, 0x464C) == MAX_SPRITES && sCreated == created);
-    puts("PASS follower runtime: camera, lead, map, menus, scripts, bike/surf/jump, palette sharing/exhaustion");
+    puts("PASS follower runtime: lifecycle, shared palettes, motion-paced animation, facing in 2D/voxel OAM");
     return 0;
 }
