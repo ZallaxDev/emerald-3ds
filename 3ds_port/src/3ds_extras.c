@@ -6,7 +6,6 @@
 #include <string.h>
 #include "global.h"
 #include "3ds_extras.h"
-#include "3ds_locale.h"
 #include "3ds_platform.h"
 #include "event_data.h"
 #include "pokedex.h"
@@ -185,7 +184,7 @@ const CtrExtra gCtrExtras[] =
     {CTR_EXTRAS_ENHANCEMENTS, "TRADE EVO LV. 40", "trade_evo", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
     {CTR_EXTRAS_ENHANCEMENTS, "HMS WITHOUT MOVE", "field_hms", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
     {CTR_EXTRAS_ENHANCEMENTS, "VISIBLE WILD", "visible_wild", 4, 0, sVisibleWild, NULL, NULL, NULL},
-    {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("FOLLOWER", "ACOMPANANTE"), "follower", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
+    {CTR_EXTRAS_ENHANCEMENTS, "PKMN FOLLOWER", "follower", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
     {CTR_EXTRAS_CHEATS, "WILD ENCOUNTERS", "encounter_rate", 5, 0, sEncounterRate, NULL, NULL, NULL},
     {CTR_EXTRAS_CHEATS, "SHINY ODDS", "shiny_odds", 6, 0, sShinyOdds, NULL, NULL, NULL},
     {CTR_EXTRAS_CHEATS, "ALWAYS CATCH", "always_catch", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},

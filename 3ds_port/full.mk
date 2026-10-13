@@ -576,9 +576,11 @@ verify-voxel-regions: romfs/voxel/regions.bin
 # The follower's path has no game/SDK dependency and is checked on the host.
 verify: verify-follower
 .PHONY: verify-follower
-verify-follower: build/follower_trail_test.exe build/follower_runtime_test.exe
+verify-follower: build/follower_trail_test.exe build/follower_runtime_test.exe build/follower_voxel_1_test.exe build/follower_voxel_0_test.exe
 	./build/follower_trail_test.exe
 	./build/follower_runtime_test.exe
+	./build/follower_voxel_1_test.exe
+	./build/follower_voxel_0_test.exe
 build/follower_trail_test.exe: tests/follower_trail_test.c src/3ds_follower_trail.c include/3ds_follower_trail.h
 	@mkdir -p build
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/follower_trail_test.c src/3ds_follower_trail.c -o $@
@@ -587,3 +589,14 @@ build/follower_runtime_test.exe: tests/follower_runtime_test.c src/3ds_follower.
 	@mkdir -p build
 	$(HOSTCC) -std=gnu99 -O2 -Wall -Wextra -Werror -Wno-ignored-qualifiers -DPORTABLE -DMODERN=1 -D__INTELLISENSE__ -DPLATFORM_3DS -DPORT_BRIDGE \
 		-iquote compat -iquote $(ROOT)/include -Iinclude tests/follower_runtime_test.c src/3ds_follower.c src/3ds_field_icon.c src/3ds_follower_trail.c -o $@
+
+FOLLOWER_HOST_GC := -Wl,--gc-sections
+ifeq ($(shell uname -s),Darwin)
+FOLLOWER_HOST_GC := -Wl,-dead_strip
+endif
+build/follower_voxel_%_test.exe: tests/follower_voxel_test.c src/voxel/voxel_entities.c include/3ds_follower.h
+	@mkdir -p build
+	$(HOSTCC) -std=gnu99 -O2 -Wall -Wextra -Werror -Wno-ignored-qualifiers -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast \
+		-D_FORTIFY_SOURCE=0 -DPORTABLE -DMODERN=1 -D__INTELLISENSE__ -DPLATFORM_3DS -DPORT_BRIDGE -DCTR_VOXEL_LIGHTING=$* \
+		-iquote compat -iquote $(ROOT)/include -Iinclude -Isrc/voxel -ffunction-sections -fdata-sections \
+		$(FOLLOWER_HOST_GC) tests/follower_voxel_test.c -lm -o $@

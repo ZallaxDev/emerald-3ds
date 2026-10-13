@@ -17,6 +17,9 @@ typedef struct
 } CtrFollowerTrail;
 
 void CtrFollowerTrail_Reset(CtrFollowerTrail *trail, CtrFollowerPoint player);
+/* Seed a straight one-tile trail from a validated adjacent tile to the player. */
+void CtrFollowerTrail_Seed(CtrFollowerTrail *trail, CtrFollowerPoint player,
+                           int tailX, int tailY);
 /* Discontinuities reset the trail; a fresh trail waits for one walked tile. */
 bool CtrFollowerTrail_Update(CtrFollowerTrail *trail, CtrFollowerPoint player,
                              CtrFollowerPoint *follower);

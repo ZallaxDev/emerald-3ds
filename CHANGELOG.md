@@ -2,13 +2,16 @@
 
 ## Unreleased
 
-- Optional FOLLOWER in ENHANCEMENTS (ACOMPANANTE in Spanish): the first
+- Optional PKMN FOLLOWER in ENHANCEMENTS: the first
   non-egg party Pokémon with HP follows the walked path in 2D and voxel,
   using the existing icons. It retracts for scripts, jumps, bikes and water.
   Map and party changes rebuild its trail; visible wild Pokémon share icon
   palettes safely. Off by default; the save format is unchanged.
   The icon animation speeds up when running and mirrors horizontally to
   follow its movement direction in both rendering modes.
+  Appears immediately behind the player when enabled (uses a free adjacent
+  tile if blocked). Voxel feet align to the ground and cast the same outdoor
+  sun shadow as characters.
 
 ## 0.3.1 — 2026-10-10
 

@@ -7,6 +7,26 @@ void CtrFollowerTrail_Reset(CtrFollowerTrail *trail, CtrFollowerPoint player)
     trail->count = 1;
 }
 
+void CtrFollowerTrail_Seed(CtrFollowerTrail *trail, CtrFollowerPoint player,
+                           int tailX, int tailY)
+{
+    if (!((tailX == 0 && (tailY == -1 || tailY == 1))
+       || (tailY == 0 && (tailX == -1 || tailX == 1))))
+    {
+        CtrFollowerTrail_Reset(trail, player);
+        return;
+    }
+    for (unsigned i = 0; i < CTR_FOLLOWER_POINTS; ++i)
+    {
+        int distance = CTR_FOLLOWER_DISTANCE - (int)i;
+        trail->points[i] = (CtrFollowerPoint){player.x + tailX * distance,
+                                             player.y + tailY * distance};
+    }
+    trail->last = player;
+    trail->next = 0;
+    trail->count = CTR_FOLLOWER_POINTS;
+}
+
 bool CtrFollowerTrail_Update(CtrFollowerTrail *trail, CtrFollowerPoint player,
                              CtrFollowerPoint *follower)
 {

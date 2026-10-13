@@ -93,3 +93,22 @@ void CtrFieldIcon_Destroy(u8 spriteId, u16 species)
     FreeAndDestroyMonIconSprite(&gSprites[spriteId]);
     ReleaseUnusedPalette(species);
 }
+
+int CtrFieldIcon_FootPad(u8 spriteId)
+{
+    if (spriteId >= MAX_SPRITES || !gSprites[spriteId].inUse
+     || gSprites[spriteId].callback != AnimateFieldIcon)
+        return 0;
+    const u8 *tiles = Port_ResolveAssetPointer(gSprites[spriteId].images);
+    if (tiles == NULL)
+        return 0;
+    /* Frame zero is the standing pose; measuring every bob would cancel the animation. */
+    for (int y = 31; y >= 0; --y)
+        for (int tx = 0; tx < 4; ++tx)
+        {
+            const u8 *row = tiles + ((y / 8) * 4 + tx) * TILE_SIZE_4BPP + (y % 8) * 4;
+            if (row[0] | row[1] | row[2] | row[3])
+                return 31 - y;
+        }
+    return 0;
+}

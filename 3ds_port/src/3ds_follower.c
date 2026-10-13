@@ -3,6 +3,7 @@
 #include "field_player_avatar.h"
 #include "fieldmap.h"
 #include "main.h"
+#include "metatile_behavior.h"
 #include "overworld.h"
 #include "pokemon.h"
 #include "script.h"
@@ -21,6 +22,8 @@ static struct
     u8 spriteId, mapGroup, mapNum;
     u16 species;
     u32 personality;
+    CtrFollowerPoint position;
+    int footPad;
 } sFollower;
 
 static bool8 SpriteValid(void)
@@ -33,6 +36,16 @@ static bool8 SpriteValid(void)
 bool CtrFollower_IsSprite(const struct Sprite *sprite)
 {
     return SpriteValid() && sprite == &gSprites[sFollower.spriteId];
+}
+
+bool CtrFollower_GetPosition(const struct Sprite *sprite, int32_t *x, int32_t *y, int *footPad)
+{
+    if (!CtrFollower_IsSprite(sprite) || sprite->invisible)
+        return false;
+    *x = sFollower.position.x;
+    *y = sFollower.position.y;
+    *footPad = sFollower.footPad;
+    return true;
 }
 
 static void RemoveFollower(void)
@@ -57,6 +70,37 @@ static struct Pokemon *LeadPokemon(void)
 static s16 TileCoordinate(s32 pixel)
 {
     return pixel >= 0 ? pixel / 16 : -((-pixel + 15) / 16);
+}
+
+static bool SeedBehindPlayer(const struct ObjectEvent *player, CtrFollowerPoint position)
+{
+    int facingX = 0, facingY = 1;
+    switch (player->facingDirection)
+    {
+    case DIR_NORTH: facingY = -1; break;
+    case DIR_WEST: facingX = -1; facingY = 0; break;
+    case DIR_EAST: facingX = 1; facingY = 0; break;
+    }
+    const int offsets[4][2] = {
+        {-facingX, -facingY}, {-facingY, facingX},
+        {facingY, -facingX}, {facingX, facingY}
+    };
+    for (unsigned i = 0; i < ARRAY_COUNT(offsets); ++i)
+    {
+        s16 x = TileCoordinate(position.x) + offsets[i][0];
+        s16 y = TileCoordinate(position.y) + offsets[i][1];
+        u8 elevation = MapGridGetElevationAt(x, y);
+        if (MapGridGetCollisionAt(x, y)
+         || GetObjectEventIdByXY(x, y) != OBJECT_EVENTS_COUNT
+         || MetatileBehavior_IsSurfableWaterOrUnderwater(MapGridGetMetatileBehaviorAt(x, y))
+         || (elevation && player->currentElevation && elevation != player->currentElevation))
+            continue;
+        CtrFollowerTrail_Seed(&sTrail, position, offsets[i][0], offsets[i][1]);
+        /* Face the same way as the player before the first actual movement. */
+        CtrFieldIcon_SetMotion(sFollower.spriteId, facingX, 0);
+        return true;
+    }
+    return false;
 }
 
 void CtrFollower_Update(void)
@@ -108,6 +152,7 @@ void CtrFollower_Update(void)
         sFollower.mapGroup = gSaveBlock1Ptr->location.mapGroup;
         sFollower.mapNum = gSaveBlock1Ptr->location.mapNum;
         sFollower.active = TRUE;
+        sFollower.footPad = CtrFieldIcon_FootPad(spriteId);
         gSprites[spriteId].invisible = TRUE;
     }
     s16 tileX, tileY;
@@ -126,8 +171,14 @@ void CtrFollower_Update(void)
     CtrFollowerPoint previousFollower = sTrail.points[sTrail.next];
     if (!CtrFollowerTrail_Update(&sTrail, position, &follower))
     {
-        sprite->invisible = TRUE;
-        return;
+        if (!SeedBehindPlayer(player, position)
+         || !CtrFollowerTrail_Update(&sTrail, position, &follower))
+        {
+            sprite->invisible = TRUE;
+            return;
+        }
+        hadFollowerPosition = false;
+        stepX = stepY = 0;
     }
     if (hadFollowerPosition)
     {
@@ -135,6 +186,7 @@ void CtrFollower_Update(void)
         stepY = follower.y - previousFollower.y;
     }
     CtrFieldIcon_SetMotion(sFollower.spriteId, stepX, stepY);
+    sFollower.position = follower;
     s16 x = TileCoordinate(follower.x), y = TileCoordinate(follower.y);
     u8 occupant = GetObjectEventIdByXY(x, y);
     s32 dx = follower.x - position.x, dy = follower.y - position.y;

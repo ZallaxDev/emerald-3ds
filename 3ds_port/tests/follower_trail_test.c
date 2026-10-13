@@ -37,6 +37,17 @@ int main(void)
     assert(follower.x == 0 && follower.y == 0);
     assert(CtrFollowerTrail_Update(&trail, (CtrFollowerPoint){-32, 0}, &follower));
     assert(follower.x == -16 && follower.y == 0);
+    for (int direction = -1; direction <= 1; direction += 2)
+    {
+        CtrFollowerTrail_Seed(&trail, (CtrFollowerPoint){32, 48}, direction, 0);
+        assert(CtrFollowerTrail_Update(&trail, (CtrFollowerPoint){32, 48}, &follower));
+        assert(follower.x == 32 + direction * 16 && follower.y == 48);
+        CtrFollowerTrail_Seed(&trail, (CtrFollowerPoint){32, 48}, 0, direction);
+        assert(CtrFollowerTrail_Update(&trail, (CtrFollowerPoint){32, 48}, &follower));
+        assert(follower.x == 32 && follower.y == 48 + direction * 16);
+    }
+    CtrFollowerTrail_Seed(&trail, (CtrFollowerPoint){32, 48}, 1, 1);
+    assert(!CtrFollowerTrail_Update(&trail, (CtrFollowerPoint){32, 48}, &follower));
     puts("PASS follower trail: distance, corners, stop, run, reversal, warp, negative coordinates");
     return 0;
 }

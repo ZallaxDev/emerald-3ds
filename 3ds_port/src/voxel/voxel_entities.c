@@ -826,6 +826,49 @@ static void EmitDecalShadow(VoxelBuilder *shadows, const VoxelSpriteSlot *slot, 
 }
 #endif
 
+/* The follower has map coordinates of its own; transparent icon margins are
+ * neither its feet nor an offset from the player's picture. */
+static bool EmitFollower(VoxelBuilder *builder, VoxelBuilder *shadows,
+                         VoxelSpriteSlot *slot, unsigned index, const struct Sprite *sprite,
+                         const VoxelCamera *camera, const VoxelDoor *door,
+                         float rightX, float rightZ, float stretch)
+{
+    int32_t mapX, mapY;
+    int pad;
+    if (!CtrFollower_GetPosition(sprite, &mapX, &mapY, &pad))
+        return false;
+    float worldX = mapX / VOXEL_PIXELS_PER_TILE - MAP_OFFSET;
+    float worldZ = mapY / VOXEL_PIXELS_PER_TILE - MAP_OFFSET;
+    if (VoxelWorld_InstanceCount() > 0)
+    {
+        worldX += VoxelWorld_Instance(0)->originX;
+        worldZ += VoxelWorld_Instance(0)->originY;
+    }
+    float cx = worldX + 0.5f, cz = worldZ + 0.5f;
+    if (fabsf(cx - camera->targetX) > 24.0f || fabsf(cz - camera->targetZ) > 24.0f)
+        return true;
+    slot->footPad = pad;
+    float dusk = DoorLight(door, cx, cz);
+    if (dusk <= 0.0f)
+        return true;
+    float shade = 1.0f;
+#if CTR_VOXEL_LIGHTING
+    const VoxelMapInstance *inst = VoxelWorld_GetInstanceAt((int)floorf(cx), (int)floorf(cz));
+    if (inst != NULL && !inst->indoor)
+    {
+        shade = VoxelLighting_Sample(cx, 0.75f, cz);
+        if (shadows != NULL)
+            EmitCastShadow(shadows, slot, index, worldX, worldZ,
+                           rightX, rightZ, stretch, shade, 0.0f);
+    }
+#else
+    (void)shadows;
+#endif
+    EmitBillboard(builder, slot, index, cx, cz, 0.0f, 0.0f, 0.0f,
+                  rightX, rightZ, stretch, shade * dusk);
+    return true;
+}
+
 /* Require every map cell under the actual, relief-shifted quad to be
  * reflective. Checking only the first south cell let a long reflection spill
  * across shorelines into grass. The small AABB is conservative when yawed. */
@@ -1277,6 +1320,10 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
             ++updates;
         if (!sSlots[effect->slot].valid)
             continue;
+        if (EmitFollower(builder, shadows, &sSlots[effect->slot], effect->slot, sprite,
+                         camera, &door, rightX, rightZ, stretch))
+            continue;
+        sSlots[effect->slot].footPad = 0;
         h = sSlots[effect->slot].height;
         x = sprite->x + sprite->x2;
         base = sprite->y + sprite->centerToCornerVecY + h;
