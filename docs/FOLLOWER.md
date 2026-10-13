@@ -70,7 +70,11 @@ Hardware acceptance must cover both 2D and voxel: enter and exit a building,
 cross connected maps, walk/run at 1× and 4×, jump a ledge, ride a bike, Surf,
 open menus, change the lead, fight a battle, toggle the option, and play with
 VISIBLE WILD off and on. Check sprite colours and depth ordering alongside
-NPCs and multiple wild Pokémon. Hardware acceptance is pending.
-For this revision, stand with the follower below the player in 2D, turn and
-run north, let a wandering NPC approach it and leave its tile, and speak to
-NPCs/read signs. Check the same interactions in voxel.
+NPCs and multiple wild Pokémon.
+
+Hardware feedback on a New Nintendo 3DS XL with the Spanish build confirms
+the follower works in 2D and voxel. The final revision was tested and confirmed
+for northward 2D depth ordering, wandering NPC tile exclusion, and visibility
+during dialogue and interactions. Voxel placement was also reported correct.
+The broader acceptance matrix above remains a checklist, not a claim that
+every combination has been tested on hardware.
