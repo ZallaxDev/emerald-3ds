@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-The bottom screen's own pixel art: the RUN button's shoe (off and on) and the
-Y badge of the registered-item button, and the title screen's "Developed by"
-logo (assets/artwork/logo.png). Everything else the bottom screen draws comes
-from the game.
+The bottom screen's own pixel art: the RUN button's shoe (off and on), the
+Y badge of the registered-item button, the column's Pokédex icon (Emerald has
+no Pokédex item graphic), and the title screen's "Developed by" logo
+(assets/artwork/logo.png). Everything else the bottom screen draws comes from
+the game.
 
 The indexed PNGs in assets/artwork/bottom/ are the source; this script turns
 them into src/3ds_bottom_art.h (4bpp tiles in the GBA's one-dimensional
@@ -44,6 +45,8 @@ PALETTE = [
     ("S", (255, 255, 255)),   # speed lines' tips
     ("K", (0, 0, 0)),         # badge outline and letter
     ("R", (255, 0, 0)),       # badge red
+    ("e", (48, 216, 72)),     # Pokédex LED
+    ("E", (24, 140, 48)),     # Pokédex LED shade
 ]
 
 SHOE = [
@@ -99,6 +102,8 @@ SPRITES = [
     ("shoe_off.png", "sArtShoeOff", 3, 3),
     ("shoe_on.png", "sArtShoeOn", 3, 3),
     ("badge_y.png", "sArtBadgeY", 2, 2),
+    # Mastered from Pokémon Platinum's menu Pokédex icon (TSR sheet 25668).
+    ("pokedex.png", "sArtPokedex", 3, 3),
 ]
 
 

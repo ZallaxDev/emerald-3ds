@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+New and improved:
+
+- Touch menu: the Pokédex column uses a red Pokédex icon (port art; Emerald
+  has no Pokédex item graphic). Source: Pokémon Platinum menu icons.
+
 ## 0.3.1 — 2026-10-10
 
 New and improved:
