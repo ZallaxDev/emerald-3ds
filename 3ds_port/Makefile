@@ -52,6 +52,8 @@ SOURCES += src/3ds_local.c
 SOURCES += src/3ds_daynight.c
 SOURCES += src/3ds_clock_store.c
 SOURCES += src/3ds_encounters.c
+# The stereoscopic Pokémon planes (include/3ds_stereo_mon.h).
+SOURCES += src/3ds_stereo_mon.c src/3ds_stereo_mon_decode.c src/3ds_stereo_battle.c
 LIBS := -lcitro2d -lcitro3d $(LIBS)
 OBJECTS := $(patsubst src/%.c,build/%.o,$(SOURCES))
 GAMEFLAGS := -DPORTABLE -DPLATFORM_3DS -D__3DS__ -DMODERN=1 -DUBFIX -D__INTELLISENSE__
@@ -316,6 +318,18 @@ verify-pak: build/pak_test.exe tests/make_test_pak.py
 build/pak_test.exe: tests/pak_test.c src/3ds_pak.c include/3ds_pak.h
 	@mkdir -p build
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/pak_test.c src/3ds_pak.c -o $@
+
+# The stereoscopic planes file and composition; the built file, when there is one.
+verify: verify-stereo
+.PHONY: verify-stereo
+verify-stereo: build/stereo_mon_test.exe
+	./build/stereo_mon_test.exe $(wildcard romfs/stereo/mons.bin)
+	"$(PYTHON)" tests/stereo_collapse_test.py
+	"$(PYTHON)" tests/stereo_depth_groups_test.py
+
+build/stereo_mon_test.exe: tests/stereo_mon_test.c src/3ds_stereo_mon_decode.c src/3ds_video_decode.c include/3ds_stereo_mon.h
+	@mkdir -p build
+	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/stereo_mon_test.c src/3ds_stereo_mon_decode.c src/3ds_video_decode.c -o $@
 
 clean:
 	rm -rf build dist $(TARGET).elf $(TARGET).3dsx $(TARGET).smdh
