@@ -53,6 +53,9 @@ static bool C3D_TexInitVRAM(C3D_Tex *tex, unsigned w, unsigned h, int fmt) {
     ++allocated; tex->data = &allocated; return true;
 }
 static void C3D_TexDelete(C3D_Tex *tex) { assert(tex->data && allocated); --allocated; tex->data = NULL; }
+/* The pages' arena is not part of this test: nothing is borrowed from it. */
+static void AtlasPageRelease(C3D_Tex *tex) { if (tex->data) C3D_TexDelete(tex); memset(tex, 0, sizeof(*tex)); }
+static bool AtlasPageBorrow(C3D_Tex *tex) { (void)tex; return false; }
 static void C3D_TexSetFilter(C3D_Tex *t, int a, int b) { (void)t; (void)a; (void)b; }
 static void C3D_TexSetWrap(C3D_Tex *t, int a, int b) { (void)t; (void)a; (void)b; }
 typedef struct { bool draft; } VoxelChunk;

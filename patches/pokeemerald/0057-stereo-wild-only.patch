@@ -1,0 +1,26 @@
+Pokémon Emerald 3Ds Dual Screen changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: CHEATS' 3D WILD ONLY makes every wild Pokémon one with depth planes for the stereoscopic battle (3ds_port/src/3ds_stereo_mon_game.c).
+Applies after 0056-follower-pokemon.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/wild_encounter.c b/src/wild_encounter.c
+--- a/src/wild_encounter.c
++++ b/src/wild_encounter.c
+@@ -379,10 +379,19 @@
+     return Random() % NUM_NATURES;
+ }
+ 
++#ifdef PLATFORM_3DS
++// 3ds_port/src/3ds_stereo_mon_game.c: the species to meet instead, when
++// CHEATS' 3D WILD ONLY is on.
++u16 CtrStereoMonGame_WildSpecies(u16 species);
++#endif
++
+ static void CreateWildMon(u16 species, u8 level)
+ {
+     bool32 checkCuteCharm;
+ 
++#ifdef PLATFORM_3DS
++    species = CtrStereoMonGame_WildSpecies(species);
++#endif
+     ZeroEnemyPartyMons();
+     checkCuteCharm = TRUE;
+ 

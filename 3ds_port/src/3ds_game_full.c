@@ -72,6 +72,7 @@
 #include "3ds_assets.h"
 #include "3ds_audio.h"
 #include "3ds_bottom.h"
+#include "3ds_stereo_mon.h"
 #include "3ds_sprite_ids.h"
 
 #include <stdio.h>
@@ -1188,6 +1189,7 @@ void CtrGame_WaitFrame(void)
         uint64_t start = CtrPlatform_Ticks();
 
         CtrBottom_Frame();
+        CtrStereoMonGame_Frame();
         CtrPlatform_NoteBottom(CtrPlatform_TickMs(CtrPlatform_Ticks() - start));
     }
 

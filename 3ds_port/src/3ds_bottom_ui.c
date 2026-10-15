@@ -2533,7 +2533,8 @@ static unsigned PageSubs(unsigned page)
     unsigned screens = 1;
 
     for (unsigned i = 0; i < gCtrExtraCount; ++i)
-        if (CTR_EXTRAS_TAB(gCtrExtras[i].page) == page && (gCtrExtras[i].page >> 4) + 1u > screens)
+        if (CTR_EXTRAS_TAB(gCtrExtras[i].page) == page && (gCtrExtras[i].page >> 4) + 1u > screens
+            && (!gCtrExtras[i].shown || gCtrExtras[i].shown()))
             screens = (gCtrExtras[i].page >> 4) + 1;
     return screens;
 }
@@ -2545,7 +2546,7 @@ static const CtrExtra *PageExtra(unsigned page, unsigned row)
     if (row >= CELLS_PER_PAGE)
         return NULL;
     for (unsigned i = 0, n = 0; i < gCtrExtraCount; ++i)
-        if (gCtrExtras[i].page == screen && n++ == row)
+        if (gCtrExtras[i].page == screen && (!gCtrExtras[i].shown || gCtrExtras[i].shown()) && n++ == row)
             return &gCtrExtras[i];
     return NULL;
 }

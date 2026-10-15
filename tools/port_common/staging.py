@@ -57,6 +57,7 @@ ENGINE_PATTERNS = [
     "voxel/trees.rgba5551",
     "bottom/battle.bin",
     "battle/hud.bin",
+    "stereo/*",
 ]
 OPTIONAL_PATTERNS = [
     "followers/*",

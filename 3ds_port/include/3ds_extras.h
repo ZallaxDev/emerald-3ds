@@ -42,6 +42,9 @@ typedef struct
      * characters (the cell arrows show when step is set). */
     void (*step)(int direction);
     const uint8_t *(*text)(void);
+    /* Optional: whether the line is shown at all (a feature whose data the
+     * build has none of hides its settings). NULL: always. */
+    bool (*shown)(void);
 } CtrExtra;
 
 extern const CtrExtra gCtrExtras[];

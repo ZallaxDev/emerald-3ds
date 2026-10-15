@@ -234,6 +234,36 @@ Fixed:
   frame, the Pokénav condition cancel icon, the Battle Factory screens, the
   Trainer Hill records, the Battle Pyramid floor colours and the slots' Reel
   Time window are drawn as on the GBA.
+- Stereoscopic Pokémon in battle: an opponent whose species has depth planes
+  is drawn as its stack of planes where its sprite stands, with the sprite's
+  own palette (so its fades and tints are kept), each plane at its depth with
+  the slider, never turned or swayed, so its pixels stay crisp. Move effects pass in front
+  of it, the intro's curtain over it; each plane carries a skirt of the
+  planes behind it so no gap opens between them; the
+  moment the sprite is not the plain
+  picture (a Substitute, Transform, the slide of a faint) the sprite itself
+  is drawn as before. OPTIONS' SETTINGS 2/2 has 3D BATTLE MONS (ON/OFF);
+  3D DEPTH scales the stack's depth as it does the world's.
+  CHEATS has 3D WILD ONLY: every wild Pokémon met is one with planes, to try
+  it anywhere.
+- The player's side of the battle in 3D too: the Pokémon's back sprites,
+  the trainers' front sprites in the intro and the player's own back with
+  its throw are drawn as their planes, from a second collection
+  (`stereo/backs.bin`, `scripts/gen_stereo_backs.py` from the authored
+  back-and-trainer work; `STEREO_BACKS` in `local.mk`). Up to four
+  pictures share the planes texture: eight planes each for two, four each
+  in a double battle.
+- The battle's message box in 3D: a panel a little in front of the screen,
+  slightly narrower than it and centred over dark gutters, so the Pokémon
+  in front of the scene are not walled in by it.
+- The planes collection now covers all 385 Hoenn-dex species (two poses
+  each; Castform's forms, Unown's other letters and Spinda's spots keep the
+  plain sprite). A finished pack is built in with `STEREO_PACK` in
+  `local.mk`.
+- 3D battle on a New 3DS: a move that blends with the scene (a stat change's
+  glow, a screen flash) no longer flattens the Pokémon onto the scenery for
+  as long as it lasts; the frame is composed per eye instead, as the voxel
+  battle's is.
 - Voxel overworld in stereoscopic 3D on a New 3DS: with the 3D slider up the
   world is drawn once per eye from its own camera, so buildings, trees,
   terrain relief, shadows, reflections and the fog stand at their own depth;

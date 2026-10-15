@@ -42,3 +42,7 @@ __pycache__/
 session-*.md
 .public-denylist
 .DS_Store
+
+# Generated sprite depth packs and reports (ChatGPT/Codex handoffs); local.mk points the build at them.
+output/
+*_READY_FOR_CLAUDE.json

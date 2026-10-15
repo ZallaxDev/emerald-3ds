@@ -77,6 +77,8 @@ BACKEND_SRCS += src/3ds_extras.c
 # talks to (its radio is src/3ds_local.c).
 BACKEND_SRCS += src/3ds_rfu_adapter.c
 BACKEND_SRCS += src/3ds_encounter_tables.c
+# The stereoscopic Pokémon planes' game side (include/3ds_stereo_mon.h).
+BACKEND_SRCS += src/3ds_stereo_mon_game.c
 # The frame profiler times the engine's own routines through linker wrappers.
 BACKEND_SRCS += src/3ds_prof_wrap.c
 PROF_WRAPPED := RunTasks AnimateSprites BuildOamBuffer ProcessDma3Requests \
@@ -134,6 +136,26 @@ ROMFS_SHADER_OUTS += romfs/stage/leaves.bin
 ROMFS_SHADER_OUTS += romfs/bottom/battle.bin
 # The battle's info boxes and text box: the port's own art (scripts/gen_battle_hud.py).
 ROMFS_SHADER_OUTS += romfs/battle/hud.bin
+# The stereoscopic Pokémon planes (scripts/gen_stereo_mons.py), from the
+# Sprite Stereo Lab's work directory named in STEREO_WORK (local.mk); without
+# one the file is a header alone and the battle draws its sprites as before. STEREO_PACK names a finished
+# planes file instead (the full collection), collapsed into four depth groups;
+# STEREO_MONS_PACK a four-plane file ready to go (a release asset), copied as
+# it is but for the same fill. STEREO_ANNOTATIONS maps sprite IDs to anatomical masks for semantic
+# grouping.
+STEREO_WORK ?=
+STEREO_ANNOTATIONS ?=
+STEREO_PACK ?=
+STEREO_MONS_PACK ?=
+ROMFS_SHADER_OUTS += romfs/stereo/mons.bin
+# The battle's other pictures (scripts/gen_stereo_backs.py): Pokémon backs,
+# trainers' fronts and the players' backs, from the authored collection in
+# STEREO_BACKS (its extraction/manifest.json and work/ folders; local.mk).
+# STEREO_BACKS_PACK names a finished backs file instead, its transparent
+# pixels filled (no outline) on the way in.
+STEREO_BACKS ?=
+STEREO_BACKS_PACK ?=
+ROMFS_SHADER_OUTS += romfs/stereo/backs.bin
 
 FULL_OBJECTS := $(FULL_C_OBJS) $(FULL_DATA_OBJS) $(BACKEND_OBJS)
 # The keep table is only referenced from the payload, which is not linked,
@@ -478,6 +500,31 @@ romfs/bottom/battle.bin: scripts/gen_battle_art.py
 romfs/battle/hud.bin: scripts/gen_battle_hud.py
 	@mkdir -p $(@D)
 	"$(PYTHON)" scripts/gen_battle_hud.py --output $@
+.PHONY: FORCE_STEREO
+ifneq ($(STEREO_BACKS_PACK),)
+romfs/stereo/backs.bin: $(STEREO_BACKS_PACK) scripts/collapse_stereo_planes.py
+	@mkdir -p $(@D)
+	"$(PYTHON)" scripts/collapse_stereo_planes.py --fill-only --input "$(STEREO_BACKS_PACK)" --output $@
+else
+romfs/stereo/backs.bin: scripts/gen_stereo_backs.py scripts/collapse_stereo_planes.py scripts/stereo_depth_groups.py $(if $(STEREO_BACKS),FORCE_STEREO,) $(if $(STEREO_BACKS),$(wildcard $(STEREO_BACKS)/work/*/depth-frames.bin) $(STEREO_BACKS)/extraction/manifest.json,)
+	@mkdir -p $(@D)
+	"$(PYTHON)" scripts/gen_stereo_backs.py --smart --cleanup $(if $(STEREO_BACKS),--work "$(STEREO_BACKS)",) --root $(ROOT) --output $@
+endif
+
+ifneq ($(STEREO_MONS_PACK),)
+romfs/stereo/mons.bin: $(STEREO_MONS_PACK) scripts/collapse_stereo_planes.py
+	@mkdir -p $(@D)
+	"$(PYTHON)" scripts/collapse_stereo_planes.py --fill-only --input "$(STEREO_MONS_PACK)" --output $@
+else ifneq ($(STEREO_PACK),)
+romfs/stereo/mons.bin: $(STEREO_PACK) scripts/collapse_stereo_planes.py scripts/stereo_depth_groups.py $(if $(STEREO_ANNOTATIONS),$(STEREO_ANNOTATIONS) FORCE_STEREO,)
+	@mkdir -p $(@D)
+	"$(PYTHON)" scripts/collapse_stereo_planes.py --input "$(STEREO_PACK)" --output $@ --planes 4 --smart --cleanup $(if $(STEREO_ANNOTATIONS),--annotations "$(STEREO_ANNOTATIONS)",)
+else
+romfs/stereo/mons.bin: scripts/gen_stereo_mons.py scripts/stereo_depth_groups.py $(if $(STEREO_WORK),$(wildcard $(STEREO_WORK)/*/depth_hint_s.png $(STEREO_WORK)/*/anatomy.json),)
+	@mkdir -p $(@D)
+	"$(PYTHON)" scripts/gen_stereo_mons.py --smart --cleanup $(if $(STEREO_WORK),--work "$(STEREO_WORK)",) --root $(ROOT) --output $@
+endif
+
 romfs/stage/leaves.bin: scripts/gen_intro_margins.py $(ROOT)/graphics/intro/scene_1/bg.4bpp \
 		$(wildcard $(ROOT)/graphics/intro/scene_1/bg?_map.bin)
 	@mkdir -p $(@D)
