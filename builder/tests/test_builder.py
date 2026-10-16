@@ -150,6 +150,20 @@ class RomTests(unittest.TestCase):
                     loaded = romlib.load_rom(path)
                     self.assertEqual((loaded.code, loaded.sha1, loaded.data), (code, sha, data))
 
+    def test_other_regional_gen3_games_are_named(self):
+        # A Spanish FireRed or a German Ruby is named, not reported as an unknown file.
+        cases = {b"POKEMON FIREBPRS": "Pokemon FireRed (Spain)",
+                 b"POKEMON RUBYAXVD": "Pokemon Ruby (Germany)",
+                 b"POKEMON LEAFBPGJ": "Pokemon LeafGreen (Japan)"}
+        for head, name in cases.items():
+            data = bytearray(b"\xff" * romlib.ROM_SIZE)
+            data[0xA0:0xB0] = head
+            with tempfile.TemporaryDirectory() as tmp:
+                with self.assertRaises(BuilderError) as ctx:
+                    romlib.load_rom(self._write(tmp, bytes(data)))
+                self.assertEqual(ctx.exception.code, "rom_wrong_game")
+                self.assertIn(name, ctx.exception.message)
+
     def test_zip_must_hold_one_rom(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "r.zip"
