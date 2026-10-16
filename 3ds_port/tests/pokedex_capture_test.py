@@ -366,6 +366,9 @@ static void Task_ExitCaughtMonPage(u8);
 IntrCallback CtrPokedex_VBlankCallback(void);
 bool8 CtrPokedex_IsCaughtMonPage(void);
 '''
+        # UpdateStage, taken from the bridge below, warms the battle HUD before
+        # the battle's first frame; the harness defines that one for it.
+        source += "static void CtrBattleHud_Warm(void) {}\n"
         source += bridge[bridge.index("#define CTR_STAGE_CALLBACKS"):bridge.index("static void RememberCallback(")]
         for signature in (
             "static void RememberCallback(", "static void SetCentredCallback(",
