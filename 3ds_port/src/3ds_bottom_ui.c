@@ -85,6 +85,7 @@
 #include "pokemon.h"
 #include "pokemon_icon.h"
 #include "pokeball.h"
+#include "pokemon_storage_system.h"
 #include "pokemon_summary_screen.h"
 #include "pokenav.h"
 #include "region_map.h"
@@ -519,6 +520,20 @@ static struct
     u32 condCount;
     u16 *condMap;
     Pal condPal[6], condTextPal, condCancelPal[2], condSparklePal;
+    /* RIBBONS: the list's art (slot 1) and its window's palette (slot 2);
+     * the summary's art (slot 1), the icons (slots 2-6), the name window's
+     * palette (slot 10); the big icons; the RIBBONS header. */
+    u8 *ribListTiles, *ribSumTiles, *ribIcons, *ribBigIcons, *navLeftRibbons;
+    u32 ribListCount, ribSumCount;
+    u16 *ribListMap, *ribSumMap;
+    Pal ribListPal[3], ribSumPal[2], ribIconPal[5], ribInfoPal;
+    /* SEARCH: the results' frame (slot 1) and list window (slot 2), the
+     * option patch on the condition screen (options.bin, BG3), the SEARCH
+     * header and the categories' headers. */
+    u8 *searchTiles, *navLeftSearch, *navLeftCategory[CONTEST_CATEGORIES_COUNT];
+    u32 searchCount;
+    u16 *searchMap, *searchPatch;
+    Pal searchPal[3];
     /* Icons. */
     Icon column[SCR_COUNT];
     u8 *typeTiles;
@@ -718,6 +733,47 @@ static void LoadResources(void)
     PalFile("pokenav/condition/sparkle.gbapal", &sRes.condSparklePal, 1, FALSE);
     sRes.navLeftCondition = UnlzFile("pokenav/left_headers/condition.4bpp.lz", NULL);
     sRes.navLeftParty = UnlzFile("pokenav/left_headers/party.4bpp.lz", NULL);
+    sRes.ribListTiles = UnlzFile("pokenav/ribbons/list_bg.4bpp.lz", &size);
+    sRes.ribListCount = size / 32;
+    sRes.ribListMap = UnlzFile("pokenav/ribbons/list_bg.bin.lz", NULL);
+    sRes.ribListPal[0] = sRes.navPal[0];
+    PalFile("pokenav/ribbons/list_bg.gbapal", &sRes.ribListPal[1], 1, FALSE);
+    PalFile("pokenav/ribbons/list_ui.gbapal", &sRes.ribListPal[2], 1, FALSE);
+    sRes.ribSumTiles = Unlz(gPokenavRibbonsSummaryBg_Gfx, &size);
+    sRes.ribSumCount = size / 32;
+    sRes.ribSumMap = Unlz(gPokenavRibbonsSummaryBg_Tilemap, NULL);
+    sRes.ribSumPal[0] = sRes.navPal[0];
+    PalSymbol(gPokenavRibbonsSummaryBg_Pal, &sRes.ribSumPal[1], 1);
+    sRes.ribIcons = UnlzFile("pokenav/ribbons/icons.4bpp.lz", NULL);
+    sRes.ribBigIcons = UnlzFile("pokenav/ribbons/icons_big.4bpp.lz", NULL);
+    for (int i = 0; i < 5; ++i)
+    {
+        char name[40];
+
+        snprintf(name, sizeof(name), "pokenav/ribbons/icons%d.gbapal", i + 1);
+        PalFile(name, &sRes.ribIconPal[i], 1, FALSE);
+    }
+    PalFile("pokenav/ribbons/mon_info.gbapal", &sRes.ribInfoPal, 1, FALSE);
+    sRes.navLeftRibbons = UnlzFile("pokenav/left_headers/ribbons.4bpp.lz", NULL);
+    sRes.searchTiles = UnlzFile("pokenav/condition/search_results.4bpp.lz", &size);
+    sRes.searchCount = size / 32;
+    sRes.searchMap = UnlzFile("pokenav/condition/search_results.bin.lz", NULL);
+    sRes.searchPal[0] = sRes.navPal[0];
+    PalFile("pokenav/condition/search_results.gbapal", &sRes.searchPal[1], 1, FALSE);
+    PalFile("pokenav/condition/search_results_list.gbapal", &sRes.searchPal[2], 1, FALSE);
+    sRes.searchPatch = ReadRomfs("pokenav/options/options.bin", NULL);
+    sRes.navLeftSearch = UnlzFile("pokenav/left_headers/search.4bpp.lz", NULL);
+    {
+        static const char *const names[CONTEST_CATEGORIES_COUNT] = {"cool", "beauty", "cute", "smart", "tough"};
+
+        for (int i = 0; i < CONTEST_CATEGORIES_COUNT; ++i)
+        {
+            char name[48];
+
+            snprintf(name, sizeof(name), "pokenav/left_headers/%s.4bpp.lz", names[i]);
+            sRes.navLeftCategory[i] = UnlzFile(name, NULL);
+        }
+    }
     PalFile("pokenav/match_call/options_cursor.gbapal", &sRes.mcCursorPal, 1, FALSE);
     {
         u16 *raw = Unlz(gSummaryMoveSelect_Pal, NULL);
@@ -2530,6 +2586,19 @@ typedef struct
      * picked (condCount is CANCEL), its five conditions (CONDITION_* order)
      * and sheen. */
     u8 condCount, condSel, condSlots[PARTY_SIZE], conditions[CONDITION_COUNT], sheen;
+    /* RIBBONS: the list's first row on show, its length, the Pokémon picked;
+     * the rows on show (box << 8 | place, and their counts); the summary's
+     * ribbons (normal, then gift ones), the one shown big (RIB_NONE), and
+     * the Pokémon's name, gender, level. */
+    u16 ribTop, ribCount, ribSel, ribRow[8];
+    u8 ribRowCount[8], ribIds[25], ribIdCount, ribGift[7], ribGiftCount, ribBig, ribGender, ribLevel;
+    u8 ribNick[POKEMON_NAME_LENGTH + 2];
+    /* SEARCH: the category, the results' first row on show, their count,
+     * the one picked; the rows on show (box << 8 | place) and their ranks;
+     * on the condition screen, where the Pokémon is (a box, or RIB_PARTY_BOX)
+     * and its rank. */
+    u8 searchCat, searchBox;
+    u16 searchTop, searchCount, searchSel, searchRow[8], searchRank[8], searchMonRank;
     /* Region map. */
     u8 mapsec, cursorX, cursorY, pickMapsec, pickX, pickY;
     u8 clockShown, clockValid, clockRate, clockPhase;
@@ -3428,16 +3497,14 @@ static struct
     Pal pal;
 } sSumPic;
 
-static void SummaryPic(struct Pokemon *mon)
+static void SummaryPicOf(u16 species, u32 otId, u32 personality)
 {
-    u16 species = GetMonData(mon, MON_DATA_SPECIES_OR_EGG);
-    u32 personality = GetMonData(mon, MON_DATA_PERSONALITY);
     u16 *raw;
 
     if (sSumPic.valid && sSumPic.species == species && sSumPic.personality == personality)
         return;
     LoadSpecialPokePic(&gMonFrontPicTable[species], sSumPic.tiles, species, personality, TRUE);
-    raw = Unlz(GetMonFrontSpritePal(mon), NULL);
+    raw = Unlz(GetMonSpritePalFromSpeciesAndPersonality(species, otId, personality), NULL);
     if (raw)
     {
         ToPals(&sSumPic.pal, raw, 1);
@@ -3446,6 +3513,12 @@ static void SummaryPic(struct Pokemon *mon)
     sSumPic.species = species;
     sSumPic.personality = personality;
     sSumPic.valid = TRUE;
+}
+
+static void SummaryPic(struct Pokemon *mon)
+{
+    SummaryPicOf(GetMonData(mon, MON_DATA_SPECIES_OR_EGG), GetMonData(mon, MON_DATA_OT_ID),
+                 GetMonData(mon, MON_DATA_PERSONALITY));
 }
 
 /* The caught ball's picture (its first frame), each loaded once. */
@@ -3655,13 +3728,16 @@ static void SnapshotBag(ViewState *s)
 /* ------------------------------------------------------------------------ */
 
 /*
- * The PokéNav's main menu and Match Call are drawn by the bottom screen
- * itself from the save, as the party and the bag are. MAP is the bottom
- * screen's own map; CONDITION and RIBBONS still open the game's PokéNav.
+ * The PokéNav's main menu, Match Call, CONDITION's party and RIBBONS are
+ * drawn by the bottom screen itself from the save, as the party and the bag
+ * are, CONDITION's SEARCH too. MAP is the bottom screen's own map.
  * A call is made only with no script running: its message is written with
  * the string buffers a field message may be printing from (put back after).
  */
-enum { PNAV_MENU, PNAV_MATCH_CALL, PNAV_CONDITION_MENU, PNAV_CONDITION };
+enum { PNAV_MENU, PNAV_MATCH_CALL, PNAV_CONDITION_MENU, PNAV_CONDITION, PNAV_RIBBONS, PNAV_RIBBON_SUMMARY,
+       PNAV_SEARCH_MENU, PNAV_SEARCH_RESULTS, PNAV_SEARCH_CONDITION };
+/* SEARCH's menu: the five categories, then CANCEL. */
+#define SEARCH_OPT_CANCEL CONTEST_CATEGORIES_COUNT
 /* The CONDITION submenu's options. */
 enum { COND_OPT_PARTY, COND_OPT_SEARCH, COND_OPT_CANCEL, COND_OPT_COUNT };
 enum { NAV_OPT_MAP, NAV_OPT_CONDITION, NAV_OPT_MATCH_CALL, NAV_OPT_RIBBONS, NAV_OPT_SWITCH_OFF };
@@ -3729,6 +3805,221 @@ static void ResetNavScreen(void)
     sMcSel = MC_NO_ENTRY;
 }
 
+/*
+ * RIBBONS (pokenav_ribbons_list.c, pokenav_ribbons_summary.c): the party's
+ * and the boxes' Pokémon with ribbons, most ribbons first (the game's
+ * stable insertion), built once when the list opens; a Pokémon's ribbons
+ * from MON_DATA_RIBBONS as GetMonRibbons reads them.
+ */
+#define RIB_PARTY_BOX TOTAL_BOXES_COUNT
+#define RIB_NONE 0xFF
+/* pokenav_ribbons_summary.c's grid: nine to a row, the gift ribbons on the
+ * row after the normal ones' three. */
+#define RIBBONS_PER_ROW 9
+#define GIFT_RIBBON_ROW (1 + (FIRST_GIFT_RIBBON / RIBBONS_PER_ROW))
+#define GIFT_RIBBON_START_POS (RIBBONS_PER_ROW * GIFT_RIBBON_ROW)
+static struct { u8 box, place, count; } sRibList[TOTAL_BOXES_COUNT * IN_BOX_COUNT + PARTY_SIZE];
+static u16 sRibListCount, sRibTop, sRibSel;
+static u8 sRibBig = RIB_NONE;
+
+static struct BoxPokemon *RibbonMon(u16 index)
+{
+    return sRibList[index].box == RIB_PARTY_BOX ? &gPlayerParty[sRibList[index].place].box
+                                                : GetBoxedMonPtr(sRibList[index].box, sRibList[index].place);
+}
+
+static void RibbonListAdd(u8 box, u8 place, u8 count)
+{
+    u16 i = sRibListCount;
+
+    /* After every entry with as many or more: ties keep their order. */
+    while (i > 0 && sRibList[i - 1].count < count)
+    {
+        sRibList[i] = sRibList[i - 1];
+        --i;
+    }
+    sRibList[i].box = box;
+    sRibList[i].place = place;
+    sRibList[i].count = count;
+    ++sRibListCount;
+}
+
+static void BuildRibbonList(void)
+{
+    sRibListCount = 0;
+    for (int i = 0; i < PARTY_SIZE; ++i)
+    {
+        struct Pokemon *mon = &gPlayerParty[i];
+        u8 count;
+
+        if (!GetMonData(mon, MON_DATA_SANITY_HAS_SPECIES))
+            break;
+        if (GetMonData(mon, MON_DATA_SANITY_IS_EGG) || GetMonData(mon, MON_DATA_SANITY_IS_BAD_EGG))
+            continue;
+        if ((count = GetMonData(mon, MON_DATA_RIBBON_COUNT)) != 0)
+            RibbonListAdd(RIB_PARTY_BOX, i, count);
+    }
+    for (int box = 0; box < TOTAL_BOXES_COUNT; ++box)
+        for (int place = 0; place < IN_BOX_COUNT; ++place)
+        {
+            u8 count;
+
+            if (CheckBoxMonSanityAt(box, place)
+             && (count = GetBoxMonData(GetBoxedMonPtr(box, place), MON_DATA_RIBBON_COUNT)) != 0)
+                RibbonListAdd(box, place, count);
+        }
+}
+
+static void SnapshotRibbons(ViewState *s)
+{
+    if (sRibTop + 8 > sRibListCount)
+        sRibTop = sRibListCount > 8 ? sRibListCount - 8 : 0;
+    if (sRibSel >= sRibListCount)
+        sRibSel = 0;
+    s->ribTop = sRibTop;
+    s->ribCount = sRibListCount;
+    s->ribSel = sRibSel;
+    for (int i = 0; i < 8 && sRibTop + i < sRibListCount; ++i)
+    {
+        s->ribRow[i] = sRibList[sRibTop + i].box << 8 | sRibList[sRibTop + i].place;
+        s->ribRowCount[i] = sRibList[sRibTop + i].count;
+    }
+    if (sNavView != PNAV_RIBBON_SUMMARY || sRibListCount == 0)
+        return;
+    {
+        struct BoxPokemon *mon = RibbonMon(sRibSel);
+        u32 ribbons = GetBoxMonData(mon, MON_DATA_RIBBONS);
+        u16 species = GetBoxMonData(mon, MON_DATA_SPECIES);
+        /* sRibbonData: each contest's rank count adds its ranks' ribbons. */
+        static const u8 contestBase[] = {COOL_RIBBON_NORMAL, BEAUTY_RIBBON_NORMAL, CUTE_RIBBON_NORMAL,
+                                         SMART_RIBBON_NORMAL, TOUGH_RIBBON_NORMAL};
+
+        if (ribbons & 1)
+            s->ribIds[s->ribIdCount++] = CHAMPION_RIBBON;
+        for (int c = 0; c < 5; ++c)
+            for (int n = 0; n < (int)((ribbons >> (1 + 3 * c)) & 7) && n < 4; ++n)
+                s->ribIds[s->ribIdCount++] = contestBase[c] + n;
+        for (int b = 0; b < 4; ++b)
+            if (ribbons & (1 << (16 + b)))
+                s->ribIds[s->ribIdCount++] = WINNING_RIBBON + b;
+        for (int b = 0; b < 7; ++b)
+            if (ribbons & (1 << (20 + b)))
+                s->ribGift[s->ribGiftCount++] = FIRST_GIFT_RIBBON + b;
+        s->ribBig = sRibBig;
+        GetBoxMonData(mon, MON_DATA_NICKNAME, s->ribNick);
+        StringGet_Nickname(s->ribNick);
+        s->ribGender = GetBoxMonGender(mon);
+        s->ribLevel = GetLevelFromBoxMonExp(mon);
+        s->personality = GetBoxMonData(mon, MON_DATA_PERSONALITY);
+        SummaryPicOf(species, GetBoxMonData(mon, MON_DATA_OT_ID), s->personality);
+    }
+}
+
+/*
+ * SEARCH (pokenav_conditions_search_results.c): every Pokémon of the party
+ * (no eggs) and the boxes, most of the category's condition first (ties
+ * after, as the game inserts them); a rank shared by equal values.
+ */
+static struct { u8 box, place, value; u16 rank; } sSearchList[TOTAL_BOXES_COUNT * IN_BOX_COUNT + PARTY_SIZE];
+static u16 sSearchCount, sSearchTop, sSearchSel;
+static u8 sSearchCat, sSearchMenuCursor;
+
+static u8 ConditionOf(struct BoxPokemon *mon, u8 category)
+{
+    static const u8 data[CONTEST_CATEGORIES_COUNT] = {MON_DATA_COOL, MON_DATA_BEAUTY, MON_DATA_CUTE, MON_DATA_SMART,
+                                                      MON_DATA_TOUGH};
+
+    return GetBoxMonData(mon, data[category]);
+}
+
+static void SearchAdd(u8 box, u8 place, u8 value)
+{
+    u16 i = sSearchCount;
+
+    while (i > 0 && sSearchList[i - 1].value < value)
+    {
+        sSearchList[i] = sSearchList[i - 1];
+        --i;
+    }
+    sSearchList[i].box = box;
+    sSearchList[i].place = place;
+    sSearchList[i].value = value;
+    ++sSearchCount;
+}
+
+static void BuildSearch(u8 category)
+{
+    sSearchCount = 0;
+    for (int i = 0; i < PARTY_SIZE; ++i)
+    {
+        struct Pokemon *mon = &gPlayerParty[i];
+
+        if (!GetMonData(mon, MON_DATA_SANITY_HAS_SPECIES))
+            break;
+        if (!GetMonData(mon, MON_DATA_SANITY_IS_EGG) && !GetMonData(mon, MON_DATA_SANITY_IS_BAD_EGG))
+            SearchAdd(RIB_PARTY_BOX, i, ConditionOf(&mon->box, category));
+    }
+    for (int box = 0; box < TOTAL_BOXES_COUNT; ++box)
+        for (int place = 0; place < IN_BOX_COUNT; ++place)
+            if (CheckBoxMonSanityAt(box, place))
+                SearchAdd(box, place, ConditionOf(GetBoxedMonPtr(box, place), category));
+    for (u16 i = 0; i < sSearchCount; ++i)
+        sSearchList[i].rank = i > 0 && sSearchList[i].value == sSearchList[i - 1].value ? sSearchList[i - 1].rank : i + 1;
+}
+
+static struct BoxPokemon *SearchMon(u16 index)
+{
+    return sSearchList[index].box == RIB_PARTY_BOX ? &gPlayerParty[sSearchList[index].place].box
+                                                   : GetBoxedMonPtr(sSearchList[index].box, sSearchList[index].place);
+}
+
+static void SnapshotSearch(ViewState *s)
+{
+    if (sSearchTop + 8 > sSearchCount)
+        sSearchTop = sSearchCount > 8 ? sSearchCount - 8 : 0;
+    if (sSearchSel >= sSearchCount)
+        sSearchSel = 0;
+    s->searchCat = sSearchCat;
+    s->searchTop = sSearchTop;
+    s->searchCount = sSearchCount;
+    s->searchSel = sSearchSel;
+    for (int i = 0; i < 8 && sSearchTop + i < sSearchCount; ++i)
+    {
+        s->searchRow[i] = sSearchList[sSearchTop + i].box << 8 | sSearchList[sSearchTop + i].place;
+        s->searchRank[i] = sSearchList[sSearchTop + i].rank;
+    }
+    if (sNavView != PNAV_SEARCH_CONDITION || sSearchCount == 0)
+        return;
+    {
+        /* The condition screen of the one picked, as the party's is. */
+        struct BoxPokemon *mon = SearchMon(sSearchSel);
+        u16 species = GetBoxMonData(mon, MON_DATA_SPECIES);
+
+        s->searchBox = sSearchList[sSearchSel].box;
+        s->searchMonRank = sSearchList[sSearchSel].rank;
+        s->conditions[CONDITION_COOL] = GetBoxMonData(mon, MON_DATA_COOL);
+        s->conditions[CONDITION_TOUGH] = GetBoxMonData(mon, MON_DATA_TOUGH);
+        s->conditions[CONDITION_SMART] = GetBoxMonData(mon, MON_DATA_SMART);
+        s->conditions[CONDITION_CUTE] = GetBoxMonData(mon, MON_DATA_CUTE);
+        s->conditions[CONDITION_BEAUTY] = GetBoxMonData(mon, MON_DATA_BEAUTY);
+        s->sheen = GetBoxMonData(mon, MON_DATA_SHEEN);
+        GetBoxMonData(mon, MON_DATA_NICKNAME, s->ribNick);
+        StringGet_Nickname(s->ribNick);
+        s->ribGender = GetBoxMonGender(mon);
+        if (species == SPECIES_NIDORAN_M || species == SPECIES_NIDORAN_F)
+        {
+            u8 name[POKEMON_NAME_LENGTH + 2];
+
+            StringCopy(name, s->ribNick);
+            if (StringCompare(name, gSpeciesNames[species]) == 0)
+                s->ribGender = MON_GENDERLESS;
+        }
+        s->ribLevel = GetLevelFromBoxMonExp(mon);
+        s->personality = GetBoxMonData(mon, MON_DATA_PERSONALITY);
+        SummaryPicOf(species, GetBoxMonData(mon, MON_DATA_OT_ID), s->personality);
+    }
+}
+
 /* The condition screen: the party without its eggs (as
  * pokenav_conditions.c lists it), then CANCEL. */
 static void SnapshotCondition(ViewState *s)
@@ -3771,6 +4062,24 @@ static void SnapshotNav(ViewState *s)
     if (sNavView == PNAV_CONDITION)
     {
         SnapshotCondition(s);
+        return;
+    }
+    if (sNavView == PNAV_RIBBONS || sNavView == PNAV_RIBBON_SUMMARY)
+    {
+        SnapshotRibbons(s);
+        return;
+    }
+    if (sNavView == PNAV_SEARCH_MENU)
+    {
+        s->navOptionCount = SEARCH_OPT_CANCEL + 1;
+        for (int i = 0; i <= SEARCH_OPT_CANCEL; ++i)
+            s->navOptions[i] = i;
+        s->navCursor = sSearchMenuCursor;
+        return;
+    }
+    if (sNavView == PNAV_SEARCH_RESULTS || sNavView == PNAV_SEARCH_CONDITION)
+    {
+        SnapshotSearch(s);
         return;
     }
     s->navOptionCount = NavOptions(s->navOptions);
@@ -5789,6 +6098,16 @@ static const NavOption sNavMainOptions[] = {
     [NAV_OPT_RIBBONS]    = {0x060, 2, gText_CheckObtainedRibbons},
     [NAV_OPT_SWITCH_OFF] = {0x080, 3, gText_PutAwayPokenav},
 };
+static const NavOption sNavSearchOptions[] = {
+    [CONTEST_CATEGORY_COOL]   = {0x0E0, 4, gText_FindCoolPokemon},
+    [CONTEST_CATEGORY_BEAUTY] = {0x100, 1, gText_FindBeautifulPokemon},
+    [CONTEST_CATEGORY_CUTE]   = {0x120, 2, gText_FindCutePokemon},
+    [CONTEST_CATEGORY_SMART]  = {0x140, 0, gText_FindSmartPokemon},
+    [CONTEST_CATEGORY_TOUGH]  = {0x160, 0, gText_FindToughPokemon},
+    [SEARCH_OPT_CANCEL]       = {0x180, 3, gText_ReturnToConditionMenu},
+};
+/* The categories' headers' palette rows (left_headers/palette.gbapal). */
+static const u8 sCategoryHeaderPal[CONTEST_CATEGORIES_COUNT] = {4, 1, 2, 0, 0};
 static const NavOption sNavConditionOptions[] = {
     [COND_OPT_PARTY]  = {0x0A0, 1, gText_CheckPartyPokemonInDetail},
     [COND_OPT_SEARCH] = {0x0C0, 1, gText_CheckAllPokemonInDetail},
@@ -5848,6 +6167,12 @@ static void DrawNavOptions(const ViewState *s, const NavOption *table, int yStar
     width = StrWidth(&sNormal, description);
     DrawStr(&sNormal, description, 24 + (192 - width) / 2, 137 + NAV_MESSAGE_DY, box->c[8], box->c[7]);
     DrawNavLeftHeader(leftHeader, leftPal, 32);
+    /* SEARCH's own header under CONDITION's (centre y 66). */
+    if (table == sNavSearchOptions && sRes.navLeftSearch)
+    {
+        DrawSprite(sRes.navLeftSearch, 4, 2, 0, 58, sRes.navLeftPal[1].c);
+        DrawSprite(sRes.navLeftSearch + 8 * 32, 4, 2, 32, 58, sRes.navLeftPal[1].c);
+    }
     DrawNavLayer(sRes.navHeaderTiles, sRes.navHeaderCount, sRes.navHeaderMap, 32, 0, 20, sRes.navPal, 0);
     if (sRes.column[SCR_POKENAV].tiles)
         DrawSprite(sRes.column[SCR_POKENAV].tiles, 4, 4, 204, -4, sRes.column[SCR_POKENAV].pal.c);
@@ -5923,13 +6248,17 @@ static void DrawConditionGraph(const u8 *conditions)
  * sheen's sparkles, the party's balls and CANCEL on the right, the headers.
  * Under it, the dots and the taps that take the keys' place.
  */
+static int DrawRibbonGender(u8 gender, u8 level, int x, int y, const Pal *pal);
+static void DrawNavSubHeader(const u8 *tiles, const Pal *pal, int y);
+
 static void DrawConditionScreen(const ViewState *s)
 {
     static const u8 up[] = {CHAR_UP_ARROW, EOS}, down[] = {CHAR_DOWN_ARROW, EOS};
     static const s8 sparkles[10][2] = {
         {0, -35}, {20, -28}, {33, -10}, {33, 10}, {20, 28}, {0, 35}, {-20, 28}, {-33, 10}, {-33, -10}, {-20, -28},
     };
-    bool8 cancel = s->condSel >= s->condCount;
+    bool8 search = s->navView == PNAV_SEARCH_CONDITION;
+    bool8 cancel = search ? s->searchCount == 0 : s->condSel >= s->condCount;
     const Pal *text = &sRes.condTextPal;
     Pal dots[6];
 
@@ -5946,23 +6275,57 @@ static void DrawConditionScreen(const ViewState *s)
         }
     /* BG3, the graph's art; BG2's green inside the polygon. */
     DrawNavLayer(sRes.condTiles, sRes.condCount, sRes.condMap, 32, 0, 20, sRes.condPal, 0);
+    /* Search mode: the options patch (options.bin, 9x4) at BG3 tile (0, 5). */
+    if (search && sRes.searchPatch)
+        for (int ty = 0; ty < 4; ++ty)
+            for (int tx = 0; tx < 9; ++tx)
+            {
+                u16 e = sRes.searchPatch[ty * 9 + tx];
+
+                if ((e & 0x3FF) < sRes.condCount && (e >> 12) < 6)
+                    DrawTile(sRes.condTiles + (e & 0x3FF) * 32, tx * 8, 40 + ty * 8, sRes.condPal[e >> 12].c, (e >> 10) & 1,
+                             (e >> 11) & 1);
+            }
     if (!cancel)
         DrawConditionGraph(s->conditions);
     /* OBJ priority 2: the party's balls (the picked one's top half), the
      * empty places, CANCEL (lit when picked). */
-    for (int i = 0; i < s->condCount && sRes.condBall; ++i)
+    for (int i = 0; !search && i < s->condCount && sRes.condBall; ++i)
     {
         DrawSprite(sRes.condBall + (i == s->condSel ? 0 : 4) * 32, 2, 2, 218, 20 * i, sRes.condCancelPal[0].c);
         AddHit(212, 20 * i - 2, 28, 20, HIT_ROW + i);
     }
-    for (int i = s->condCount; i < PARTY_SIZE && sRes.condPlace; ++i)
+    for (int i = s->condCount; !search && i < PARTY_SIZE && sRes.condPlace; ++i)
         DrawTile(sRes.condPlace, 222, 20 * i, sRes.condCancelPal[0].c, FALSE, FALSE);
-    if (sRes.condCancel)
+    if (!search && sRes.condCancel)
     {
         DrawSprite(sRes.condCancel, 4, 2, 214, 120, sRes.condCancelPal[cancel ? 0 : 1].c);
         AddHit(212, 118, 28, 20, HIT_ROW + s->condCount);
     }
-    if (!cancel)
+    if (!cancel && search)
+    {
+        int n = s->sheen == 255 ? 9 : s->sheen / 29;
+        u8 line[16];
+
+        if (sSumPic.valid)
+            DrawSprite(sSumPic.tiles, 8, 8, 6, 72, sSumPic.pal.c);
+        DrawStr(&sNormal, s->ribNick, 104, 9, text->c[8], text->c[9]);
+        if (s->ribGender == MON_MALE)
+            DrawStr(&sNormal, gText_MaleSymbol, 104 + 60, 9, text->c[4], text->c[5]);
+        else if (s->ribGender == MON_FEMALE)
+            DrawStr(&sNormal, gText_FemaleSymbol, 104 + 60, 9, text->c[6], text->c[7]);
+        line[0] = CHAR_SLASH;
+        StringCopy(StringCopy(line + 1, gText_LevelSymbol), Number(s->ribLevel, 3, STR_CONV_MODE_LEFT_ALIGN));
+        DrawStr(&sNormal, line, 104 + 68, 9, text->c[8], text->c[9]);
+        /* Where it is (IN PARTY or the box), and its rank at (8, 48). */
+        DrawStr(&sNormal, s->searchBox == RIB_PARTY_BOX ? gText_InParty : GetBoxNamePtr(s->searchBox), 104, 25, text->c[8],
+                text->c[9]);
+        DrawStr(&sNormal, gText_Number2, 8 + 4, 49, text->c[8], text->c[9]);
+        DrawStrRight(&sNormal, Number(s->searchMonRank, 4, STR_CONV_MODE_RIGHT_ALIGN), 8 + 56, 49, text->c[8], text->c[9]);
+        for (int k = 0; k <= n && sRes.condSparkle; ++k)
+            DrawSprite(sRes.condSparkle + 8 * 32, 2, 2, 38 + sparkles[k][0] - 8, 104 + sparkles[k][1] - 8, sRes.condSparklePal.c);
+    }
+    if (!cancel && !search)
     {
         const MonView *m = &s->party[s->condSlots[s->condSel]];
         u8 line[16];
@@ -5986,11 +6349,10 @@ static void DrawConditionScreen(const ViewState *s)
     }
     /* The headers: CONDITION (main) and PARTY under it, then BG0 from row 4. */
     DrawNavLeftHeader(sRes.navLeftCondition, &sRes.navLeftPal[1], 0);
-    if (sRes.navLeftParty)
-    {
-        DrawSprite(sRes.navLeftParty, 4, 2, 0, 26, sRes.navLeftPal[1].c);
-        DrawSprite(sRes.navLeftParty + 8 * 32, 4, 2, 32, 26, sRes.navLeftPal[1].c);
-    }
+    if (search)
+        DrawNavSubHeader(sRes.navLeftCategory[s->searchCat], &sRes.navLeftPal[sCategoryHeaderPal[s->searchCat]], 26);
+    else
+        DrawNavSubHeader(sRes.navLeftParty, &sRes.navLeftPal[1], 26);
     DrawNavLayer(sRes.navHeaderTiles, sRes.navHeaderCount, sRes.navHeaderMap, 32, 4, 20, sRes.condPal, 0);
     FillRect(8, 144, 128, 16, sRes.navPal[0].c[4]);
     FillRect(8, 144, 128, 1, sRes.navPal[0].c[5]);
@@ -6162,6 +6524,259 @@ static void DrawMatchCall(const ViewState *s)
     DrawTallButton(122, 172, 14, 64, gText_Cancel, s->pressed == HIT_NAV_BACK, !s->mcCall, HIT_NAV_BACK);
 }
 
+/* A sub-header (two 32x16 sprites) under the main one, at y. */
+static void DrawNavSubHeader(const u8 *tiles, const Pal *pal, int y)
+{
+    if (!tiles)
+        return;
+    DrawSprite(tiles, 4, 2, 0, y, pal->c);
+    DrawSprite(tiles + 8 * 32, 4, 2, 32, y, pal->c);
+}
+
+/* The search's results (pokenav_conditions_search_results.c): the frame
+ * (BG1) over the list's window (BG2), the rows, the rank of the one picked,
+ * the cursor and the arrows, the CONDITION and category headers. */
+static void DrawSearchResults(const ViewState *s)
+{
+    static const u8 up[] = {CHAR_UP_ARROW, EOS}, down[] = {CHAR_DOWN_ARROW, EOS};
+    const Pal *list = &sRes.searchPal[2];
+
+    FillRect(0, 0, CW, H, sRes.navPal[0].c[0]);
+    DrawNavDots();
+    FillRect(104, 0, 136, 160, list->c[1]);
+    for (int i = 0; i < 8 && s->searchTop + i < s->searchCount; ++i)
+    {
+        u8 box = s->searchRow[i] >> 8, place = s->searchRow[i] & 0xFF;
+        struct BoxPokemon *mon = box == RIB_PARTY_BOX ? &gPlayerParty[place].box : GetBoxedMonPtr(box, place);
+        u8 nick[POKEMON_NAME_LENGTH + 2];
+        int y = 9 + 16 * i;
+
+        GetBoxMonData(mon, MON_DATA_NICKNAME, nick);
+        StringGet_Nickname(nick);
+        DrawStr(&sNormal, nick, 112, y, list->c[TEXT_COLOR_DARK_GRAY], list->c[TEXT_COLOR_LIGHT_GRAY]);
+        DrawRibbonGender(GetBoxMonGender(mon), GetLevelFromBoxMonExp(mon), 112 + 60, y, list);
+        AddHit(104, y - 1, 136, 16, HIT_ROW + i);
+    }
+    DrawNavLayer(sRes.searchTiles, sRes.searchCount, sRes.searchMap, 32, 0, 20, sRes.searchPal, 0);
+    if (s->searchCount)
+    {
+        u16 rank = 1;
+
+        for (int i = 0; i < 8; ++i)
+            if (s->searchTop + i == s->searchSel)
+                rank = s->searchRank[i];
+        DrawStr(&sNormal, gText_NumberIndex, 12, 49, sRes.searchPal[1].c[TEXT_COLOR_DARK_GRAY], sRes.searchPal[1].c[TEXT_COLOR_LIGHT_GRAY]);
+        DrawStr(&sNormal, Number(rank, 3, STR_CONV_MODE_RIGHT_ALIGN), 42, 49, sRes.searchPal[1].c[TEXT_COLOR_DARK_GRAY],
+                sRes.searchPal[1].c[TEXT_COLOR_LIGHT_GRAY]);
+    }
+    if (sRes.mcArrows)
+    {
+        if (s->searchSel >= s->searchTop && s->searchSel < s->searchTop + 8)
+            DrawSprite(sRes.mcArrows, 1, 2, 103, 8 + 16 * (s->searchSel - s->searchTop), sRes.mcArrowPal.c);
+        if (s->searchTop + 8 < s->searchCount)
+            DrawSprite(sRes.mcArrows + 2 * 32, 2, 1, 160, 132, sRes.mcArrowPal.c);
+        if (s->searchTop > 0)
+            DrawSprite(sRes.mcArrows + 4 * 32, 2, 1, 160, 4, sRes.mcArrowPal.c);
+    }
+    DrawNavLeftHeader(sRes.navLeftCondition, &sRes.navLeftPal[1], 0);
+    DrawNavSubHeader(sRes.navLeftCategory[s->searchCat], &sRes.navLeftPal[sCategoryHeaderPal[s->searchCat]], 26);
+    DrawNavLayer(sRes.navHeaderTiles, sRes.navHeaderCount, sRes.navHeaderMap, 32, 4, 20, sRes.searchPal, 0);
+    FillRect(8, 144, 128, 16, sRes.navPal[0].c[4]);
+    FillRect(8, 144, 128, 1, sRes.navPal[0].c[5]);
+
+    DrawTallButton(2, 172, 7, 64, up, s->pressed == HIT_NAV_UP, s->searchTop > 0, HIT_NAV_UP);
+    DrawTallButton(62, 172, 7, 64, down, s->pressed == HIT_NAV_DOWN, s->searchTop + 8 < s->searchCount, HIT_NAV_DOWN);
+    DrawTallButton(122, 172, 14, 64, gText_Cancel, s->pressed == HIT_NAV_BACK, TRUE, HIT_NAV_BACK);
+}
+
+/* The ribbons' descriptions (src/data/text/ribbon_descriptions.h). */
+extern const u8 *const gRibbonDescriptionPointers[][2];
+extern const u8 *const gGiftRibbonDescriptionPointers[MAX_GIFT_RIBBON][2];
+
+/* sRibbonGfxData: each ribbon's icon and its palette (slots 2-6). */
+static const u8 sRibbonGfx[FIRST_GIFT_RIBBON + 7][2] = {
+    [CHAMPION_RIBBON] = {0, 2},
+    [COOL_RIBBON_NORMAL] = {1, 2}, {2, 2}, {3, 2}, {4, 2},
+    [BEAUTY_RIBBON_NORMAL] = {1, 3}, {2, 3}, {3, 3}, {4, 3},
+    [CUTE_RIBBON_NORMAL] = {1, 4}, {2, 4}, {3, 4}, {4, 4},
+    [SMART_RIBBON_NORMAL] = {1, 5}, {2, 5}, {3, 5}, {4, 5},
+    [TOUGH_RIBBON_NORMAL] = {1, 6}, {2, 6}, {3, 6}, {4, 6},
+    [WINNING_RIBBON] = {5, 2}, {6, 2}, {7, 3}, {8, 4},
+    [FIRST_GIFT_RIBBON] = {9, 3}, {9, 5}, {9, 6}, {10, 5}, {10, 6}, {11, 2}, {11, 3},
+};
+
+/* The gender and level of a ribbons row or name line: ♂ and ♀ in their
+ * colours, then "/Lv" and the level; returns the x it ends at. */
+static int DrawRibbonGender(u8 gender, u8 level, int x, int y, const Pal *pal)
+{
+    u8 line[12];
+
+    if (gender == MON_MALE)
+        x = DrawStr(&sNormal, gText_MaleSymbol, x, y, pal->c[TEXT_COLOR_LIGHT_RED], pal->c[TEXT_COLOR_GREEN]);
+    else if (gender == MON_FEMALE)
+        x = DrawStr(&sNormal, gText_FemaleSymbol, x, y, pal->c[TEXT_COLOR_LIGHT_GREEN], pal->c[TEXT_COLOR_BLUE]);
+    line[0] = CHAR_SLASH;
+    StringCopy(StringCopy(line + 1, gText_LevelSymbol), Number(level, 3, STR_CONV_MODE_LEFT_ALIGN));
+    return DrawStr(&sNormal, line, x, y, pal->c[TEXT_COLOR_DARK_GRAY], pal->c[TEXT_COLOR_LIGHT_GRAY]);
+}
+
+/* "%3d/%3d", centred in the 56 px of its window at (x, y). */
+static void DrawRibbonIndex(int x, int y, u16 index, u16 count, const Pal *pal)
+{
+    u8 text[12];
+
+    StringCopy(StringCopy(StringCopy(text, Number(index, 3, STR_CONV_MODE_RIGHT_ALIGN)), gText_Slash),
+               Number(count, 3, STR_CONV_MODE_RIGHT_ALIGN));
+    DrawStr(&sNormal, text, x + (56 - StrWidth(&sNormal, text)) / 2, y, pal->c[TEXT_COLOR_DARK_GRAY], pal->c[TEXT_COLOR_LIGHT_GRAY]);
+}
+
+static void DrawRibbonList(const ViewState *s)
+{
+    static const u8 up[] = {CHAR_UP_ARROW, EOS}, down[] = {CHAR_DOWN_ARROW, EOS};
+    const Pal *ui = &sRes.ribListPal[2];
+
+    DrawNavDots();
+    /* BG2, the list's window colour; its rows. */
+    FillRect(104, 0, 136, 160, ui->c[1]);
+    for (int i = 0; i < 8 && s->ribTop + i < s->ribCount; ++i)
+    {
+        u8 box = s->ribRow[i] >> 8, place = s->ribRow[i] & 0xFF;
+        struct BoxPokemon *mon = box == RIB_PARTY_BOX ? &gPlayerParty[place].box : GetBoxedMonPtr(box, place);
+        u8 nick[POKEMON_NAME_LENGTH + 2];
+        int y = 9 + 16 * i;
+
+        GetBoxMonData(mon, MON_DATA_NICKNAME, nick);
+        StringGet_Nickname(nick);
+        DrawStr(&sNormal, nick, 112, y, ui->c[TEXT_COLOR_DARK_GRAY], ui->c[TEXT_COLOR_LIGHT_GRAY]);
+        DrawRibbonGender(GetBoxMonGender(mon), GetLevelFromBoxMonExp(mon), 172, y, ui);
+        DrawStr(&sNormal, Number(s->ribRowCount[i], 2, STR_CONV_MODE_RIGHT_ALIGN), 226, y, ui->c[TEXT_COLOR_DARK_GRAY],
+                ui->c[TEXT_COLOR_LIGHT_GRAY]);
+        AddHit(104, y - 1, 136, 16, HIT_ROW + i);
+    }
+    /* BG1, the list's art over it; its index window (never filled). */
+    DrawNavLayer(sRes.ribListTiles, sRes.ribListCount, sRes.ribListMap, 32, 0, 20, sRes.ribListPal, 0);
+    if (s->ribCount)
+        DrawRibbonIndex(8, 49, s->ribSel + 1, s->ribCount, &sRes.ribListPal[1]);
+    /* The cursor and the arrows. */
+    if (sRes.mcArrows)
+    {
+        if (s->ribSel >= s->ribTop && s->ribSel < s->ribTop + 8)
+            DrawSprite(sRes.mcArrows, 1, 2, 103, 8 + 16 * (s->ribSel - s->ribTop), sRes.mcArrowPal.c);
+        if (s->ribTop + 8 < s->ribCount)
+            DrawSprite(sRes.mcArrows + 2 * 32, 2, 1, 160, 132, sRes.mcArrowPal.c);
+        if (s->ribTop > 0)
+            DrawSprite(sRes.mcArrows + 4 * 32, 2, 1, 160, 4, sRes.mcArrowPal.c);
+    }
+    DrawNavLeftHeader(sRes.navLeftRibbons, &sRes.navLeftPal[2], 0);
+    DrawNavLayer(sRes.navHeaderTiles, sRes.navHeaderCount, sRes.navHeaderMap, 32, 4, 20, sRes.ribListPal, 0);
+    FillRect(8, 144, 128, 16, sRes.navPal[0].c[4]);
+    FillRect(8, 144, 128, 1, sRes.navPal[0].c[5]);
+
+    DrawTallButton(2, 172, 7, 64, up, s->pressed == HIT_NAV_UP, s->ribTop > 0, HIT_NAV_UP);
+    DrawTallButton(62, 172, 7, 64, down, s->pressed == HIT_NAV_DOWN, s->ribTop + 8 < s->ribCount, HIT_NAV_DOWN);
+    DrawTallButton(122, 172, 14, 64, gText_Cancel, s->pressed == HIT_NAV_BACK, TRUE, HIT_NAV_BACK);
+}
+
+/* A small ribbon (BG1): its icon's 8x16 strip and the strip mirrored. */
+static void DrawRibbonIcon(u8 ribbon, int x, int y)
+{
+    const u8 *strip = sRes.ribIcons + 2 * sRibbonGfx[ribbon][0] * 32;
+    const u16 *pal = sRes.ribIconPal[sRibbonGfx[ribbon][1] - 2].c;
+
+    DrawTile(strip, x, y, pal, FALSE, FALSE);
+    DrawTile(strip, x + 8, y, pal, TRUE, FALSE);
+    DrawTile(strip + 32, x, y + 8, pal, FALSE, FALSE);
+    DrawTile(strip + 32, x + 8, y + 8, pal, TRUE, FALSE);
+}
+
+static void DrawRibbonSummary(const ViewState *s)
+{
+    static const u8 left[] = {CHAR_LEFT_ARROW, EOS}, right[] = {CHAR_RIGHT_ARROW, EOS};
+    const Pal *box = &sRes.ribSumPal[1], *info = &sRes.ribInfoPal;
+    u8 text[24];
+
+    DrawNavDots();
+    /* BG2, the summary's art, and its windows. */
+    DrawNavLayer(sRes.ribSumTiles, sRes.ribSumCount, sRes.ribSumMap, 32, 0, 20, sRes.ribSumPal, 0);
+    FillRect(112, 8, 104, 16, info->c[1]);
+    DrawStr(&sNormal, s->ribNick, 112, 9, info->c[TEXT_COLOR_DARK_GRAY], info->c[TEXT_COLOR_LIGHT_GRAY]);
+    DrawRibbonGender(s->ribGender, s->ribLevel, 112 + 60, 9, info);
+    FillRect(8, 40, 56, 16, box->c[1]);
+    DrawRibbonIndex(8, 41, s->ribSel + 1, s->ribCount, box);
+    FillRect(96, 104, 128, 32, box->c[4]);
+    if (s->ribBig == RIB_NONE)
+    {
+        /* gText_RibbonsF700: its {DYNAMIC 0} the count. */
+        const u8 *src = gText_RibbonsF700;
+        u8 *dst = text;
+
+        for (; *src != EOS && dst < text + sizeof(text) - 4; ++src)
+        {
+            if (src[0] == CHAR_DYNAMIC)
+            {
+                dst = StringCopy(dst, Number(s->ribIdCount + s->ribGiftCount, 2, STR_CONV_MODE_LEFT_ALIGN));
+                ++src;
+                continue;
+            }
+            *dst++ = *src;
+        }
+        *dst = EOS;
+        DrawStr(&sNormal, text, 96, 105, box->c[TEXT_COLOR_DARK_GRAY], box->c[TEXT_COLOR_LIGHT_GRAY]);
+    }
+    else
+    {
+        u8 ribbon = s->ribBig < GIFT_RIBBON_START_POS ? s->ribIds[s->ribBig] : s->ribGift[s->ribBig - GIFT_RIBBON_START_POS];
+        const u8 *const *lines = NULL;
+
+        if (ribbon < FIRST_GIFT_RIBBON)
+            lines = gRibbonDescriptionPointers[ribbon];
+        else
+        {
+            u8 v = gSaveBlock1Ptr->giftRibbons[ribbon - FIRST_GIFT_RIBBON];
+
+            if (v != 0 && v <= MAX_GIFT_RIBBON)
+                lines = gGiftRibbonDescriptionPointers[v - 1];
+        }
+        for (int i = 0; lines && i < 2; ++i)
+            DrawStr(&sNormal, lines[i], 96, 105 + 16 * i, box->c[TEXT_COLOR_DARK_GRAY], box->c[TEXT_COLOR_LIGHT_GRAY]);
+    }
+    /* BG1, the small ribbons: nine to a row, the gift ones on row 3. */
+    for (int i = 0; i < s->ribIdCount && sRes.ribIcons; ++i)
+    {
+        int x = 88 + 16 * (i % RIBBONS_PER_ROW), y = 32 + 16 * (i / RIBBONS_PER_ROW);
+
+        DrawRibbonIcon(s->ribIds[i], x, y);
+        AddHit(x, y, 16, 16, HIT_ROW + i);
+    }
+    for (int j = 0; j < s->ribGiftCount && sRes.ribIcons; ++j)
+    {
+        DrawRibbonIcon(s->ribGift[j], 88 + 16 * j, 80);
+        AddHit(88 + 16 * j, 80, 16, 16, HIT_ROW + GIFT_RIBBON_START_POS + j);
+    }
+    /* OBJ priority 1: the ribbon shown big, 8 px past its small icon. */
+    if (s->ribBig != RIB_NONE && sRes.ribBigIcons)
+    {
+        bool8 gift = s->ribBig >= GIFT_RIBBON_START_POS;
+        u8 ribbon = gift ? s->ribGift[s->ribBig - GIFT_RIBBON_START_POS] : s->ribIds[s->ribBig];
+        int pos = gift ? s->ribBig - GIFT_RIBBON_START_POS : s->ribBig % RIBBONS_PER_ROW;
+        int row = gift ? GIFT_RIBBON_ROW : s->ribBig / RIBBONS_PER_ROW;
+
+        DrawSprite(sRes.ribBigIcons + 16 * sRibbonGfx[ribbon][0] * 32, 4, 4, 80 + 16 * pos, 24 + 16 * row,
+                   sRes.ribIconPal[sRibbonGfx[ribbon][1] - 2].c);
+    }
+    /* OBJ priority 0: the Pokémon's picture. */
+    if (sSumPic.valid)
+        DrawSprite(sSumPic.tiles, 8, 8, 8, 72, sSumPic.pal.c);
+    DrawNavLeftHeader(sRes.navLeftRibbons, &sRes.navLeftPal[2], 0);
+    DrawNavLayer(sRes.navHeaderTiles, sRes.navHeaderCount, sRes.navHeaderMap, 32, 4, 20, sRes.ribSumPal, 0);
+    FillRect(8, 144, 128, 16, sRes.navPal[0].c[4]);
+    FillRect(8, 144, 128, 1, sRes.navPal[0].c[5]);
+
+    DrawTallButton(2, 172, 7, 64, left, s->pressed == HIT_NAV_UP, s->ribCount > 1, HIT_NAV_UP);
+    DrawTallButton(62, 172, 7, 64, right, s->pressed == HIT_NAV_DOWN, s->ribCount > 1, HIT_NAV_DOWN);
+    DrawTallButton(122, 172, 14, 64, gText_Cancel, s->pressed == HIT_NAV_BACK, TRUE, HIT_NAV_BACK);
+}
+
 static void DrawNav(const ViewState *s)
 {
     int clipX1 = sClipX1;
@@ -6175,8 +6790,16 @@ static void DrawNav(const ViewState *s)
         DrawMatchCall(s);
     else if (s->navView == PNAV_CONDITION_MENU)
         DrawNavOptions(s, sNavConditionOptions, 56, 20, sRes.navLeftCondition, &sRes.navLeftPal[1], TRUE);
-    else if (s->navView == PNAV_CONDITION)
+    else if (s->navView == PNAV_CONDITION || s->navView == PNAV_SEARCH_CONDITION)
         DrawConditionScreen(s);
+    else if (s->navView == PNAV_SEARCH_MENU)
+        DrawNavOptions(s, sNavSearchOptions, 40, 16, sRes.navLeftCondition, &sRes.navLeftPal[1], TRUE);
+    else if (s->navView == PNAV_SEARCH_RESULTS)
+        DrawSearchResults(s);
+    else if (s->navView == PNAV_RIBBONS)
+        DrawRibbonList(s);
+    else if (s->navView == PNAV_RIBBON_SUMMARY)
+        DrawRibbonSummary(s);
     else
         DrawNavMenu(s);
     sClipX1 = clipX1;
@@ -9267,6 +9890,109 @@ static void McCall(u8 index)
 
 static void PokenavTap(u8 id)
 {
+    if (sNavView == PNAV_SEARCH_MENU)
+    {
+        if (id < HIT_NAV_OPTION || id > HIT_NAV_OPTION + SEARCH_OPT_CANCEL)
+            return;
+        PlaySE(SE_SELECT);
+        if (id - HIT_NAV_OPTION != sSearchMenuCursor)
+        {
+            sSearchMenuCursor = id - HIT_NAV_OPTION;
+            return;
+        }
+        if (sSearchMenuCursor == SEARCH_OPT_CANCEL)
+            sNavView = PNAV_CONDITION_MENU;
+        else
+        {
+            sSearchCat = sSearchMenuCursor;
+            BuildSearch(sSearchCat);
+            sSearchTop = sSearchSel = 0;
+            sNavView = PNAV_SEARCH_RESULTS;
+        }
+        return;
+    }
+    if (sNavView == PNAV_SEARCH_RESULTS)
+    {
+        if (id == HIT_NAV_BACK)
+            sNavView = PNAV_SEARCH_MENU;
+        else if (id == HIT_NAV_UP || id == HIT_NAV_DOWN)
+        {
+            int top = sSearchTop + (id == HIT_NAV_UP ? -7 : 7);
+
+            sSearchTop = top < 0 ? 0 : top;
+        }
+        else if (id >= HIT_ROW && id < HIT_ROW + 8 && sSearchTop + (id - HIT_ROW) < sSearchCount)
+        {
+            sSearchSel = sSearchTop + (id - HIT_ROW);
+            sNavView = PNAV_SEARCH_CONDITION;
+        }
+        else
+            return;
+        PlaySE(SE_SELECT);
+        return;
+    }
+    if (sNavView == PNAV_SEARCH_CONDITION)
+    {
+        if (id == HIT_NAV_BACK)
+        {
+            sNavView = PNAV_SEARCH_RESULTS;
+            if (sSearchSel < sSearchTop)
+                sSearchTop = sSearchSel;
+            else if (sSearchSel >= sSearchTop + 8)
+                sSearchTop = sSearchSel - 7;
+        }
+        else if ((id == HIT_NAV_UP || id == HIT_NAV_DOWN) && sSearchCount > 1)
+            sSearchSel = (sSearchSel + (id == HIT_NAV_UP ? sSearchCount - 1 : 1)) % sSearchCount;
+        else
+            return;
+        PlaySE(SE_SELECT);
+        return;
+    }
+    if (sNavView == PNAV_RIBBONS)
+    {
+        if (id == HIT_NAV_BACK)
+            sNavView = PNAV_MENU;
+        else if (id == HIT_NAV_UP || id == HIT_NAV_DOWN)
+        {
+            int top = sRibTop + (id == HIT_NAV_UP ? -7 : 7);
+
+            sRibTop = top < 0 ? 0 : top;
+        }
+        else if (id >= HIT_ROW && id < HIT_ROW + 8 && sRibTop + (id - HIT_ROW) < sRibListCount)
+        {
+            /* A Pokémon: its ribbons (the game's A). */
+            sRibSel = sRibTop + (id - HIT_ROW);
+            sRibBig = RIB_NONE;
+            sNavView = PNAV_RIBBON_SUMMARY;
+        }
+        else
+            return;
+        PlaySE(SE_SELECT);
+        return;
+    }
+    if (sNavView == PNAV_RIBBON_SUMMARY)
+    {
+        if (id == HIT_NAV_BACK)
+        {
+            sNavView = PNAV_RIBBONS;
+            if (sRibSel < sRibTop)
+                sRibTop = sRibSel;
+            else if (sRibSel >= sRibTop + 8)
+                sRibTop = sRibSel - 7;
+        }
+        else if ((id == HIT_NAV_UP || id == HIT_NAV_DOWN) && sRibListCount > 1)
+        {
+            sRibSel = (sRibSel + (id == HIT_NAV_UP ? sRibListCount - 1 : 1)) % sRibListCount;
+            sRibBig = RIB_NONE;
+        }
+        else if (id >= HIT_ROW && id < HIT_ROW + GIFT_RIBBON_START_POS + 7)
+            /* A ribbon: shown big with its description; again, the count. */
+            sRibBig = sRibBig == id - HIT_ROW ? RIB_NONE : id - HIT_ROW;
+        else
+            return;
+        PlaySE(SE_SELECT);
+        return;
+    }
     if (sNavView == PNAV_CONDITION_MENU)
     {
         if (id < HIT_NAV_OPTION || id >= HIT_NAV_OPTION + COND_OPT_COUNT)
@@ -9283,7 +10009,10 @@ static void PokenavTap(u8 id)
             sCondSel = 0;
         }
         else if (sCondMenuCursor == COND_OPT_SEARCH)
-            OpenGamePokenav();
+        {
+            sNavView = PNAV_SEARCH_MENU;
+            sSearchMenuCursor = CONTEST_CATEGORY_COOL;
+        }
         else
             sNavView = PNAV_MENU;
         return;
@@ -9334,6 +10063,12 @@ static void PokenavTap(u8 id)
         case NAV_OPT_CONDITION:
             sNavView = PNAV_CONDITION_MENU;
             sCondMenuCursor = COND_OPT_PARTY;
+            break;
+        case NAV_OPT_RIBBONS:
+            BuildRibbonList();
+            sRibTop = sRibSel = 0;
+            sRibBig = RIB_NONE;
+            sNavView = PNAV_RIBBONS;
             break;
         case NAV_OPT_SWITCH_OFF:
             sScreen = SCR_MAP;

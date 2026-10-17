@@ -20,8 +20,12 @@
   column's MAP stands for HOENN MAP), Match Call (the trainer list with
   rematches, where each trainer is, and calls with the game's messages) and
   the CONDITION menu with the party's condition graphs, sheen and pictures
-  are drawn there in the game's look. SEARCH and RIBBONS still open the
-  game's PokéNav.
+  are drawn there in the game's look.
+
+- The PokéNav's RIBBONS (the party's and the boxes' Pokémon with ribbons,
+  each one's ribbons with their descriptions) and CONDITION's SEARCH (every
+  Pokémon ranked by a condition, and its condition screen) are drawn on the
+  bottom screen too, in the game's look.
 
 ## 0.4.0 — 2026-10-16
 
