@@ -35,8 +35,10 @@
 
 - ITEM in the bottom screen's party: GIVE picks the item in the bottom
   screen's bag (and offers to switch it with the one held), TAKE puts the
-  held item back in the bag, with the game's messages. MAIL is still given
-  from the START menu's POKéMON.
+  held item back in the bag, with the game's messages. A Pokémon holding
+  MAIL has MAIL instead: READ shows it on the bottom screen in its own
+  stationery, TAKE sends it to the PC or keeps the blank MAIL, and a MAIL
+  given is written on the game's mail screen, back to the field after.
 
 ## 0.4.0 — 2026-10-16
 

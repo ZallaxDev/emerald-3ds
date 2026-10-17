@@ -2562,6 +2562,8 @@ typedef struct
      * actions (PACTION_*), the message. */
     u8 partyAct, partyActCount, partyActions[MAX_MON_MOVES + 4], partyMore;
     u8 partyMsg[160];
+    /* The MAIL read (PARTY_MAIL). */
+    struct CtrMailView mail;
     u8 types[2], nature, ability;
     u16 stats[NUM_STATS];
     u16 moves[MAX_MON_MOVES];
@@ -3453,17 +3455,19 @@ static void ReadOptionValues(u8 options[OPTION_ROWS])
  * move, waits for the field to be free of events; a field move then runs on
  * the field as the game runs it from its menu (party_menu.c's CtrParty_*).
  */
-enum { PARTY_LIST, PARTY_SUMMARY };
+enum { PARTY_LIST, PARTY_SUMMARY, PARTY_MAIL };
 #define PARTY_NO_SWAP 0xFF
 static u8 sPartyView, sPartySel, sPartySwap = PARTY_NO_SWAP;
 /* Over the list: nothing, the actions, a message (a tap closes it, for
  * sPartyActBack), a YES/NO question (sPartyAsk: a field move's, on
- * sPartyActMove, or switching the held item for sPartyGiveItem), the
- * Pokémon Soft-Boiled (or Milk Drink) is used on, or GIVE / TAKE. A message
- * goes page by page (sPartyMsgPage), as the game's {PAUSE} prompts. */
-enum { PACT_NONE, PACT_MENU, PACT_MESSAGE, PACT_ASK, PACT_TARGET, PACT_ITEM };
-enum { PACTION_SUMMARY, PACTION_SWITCH, PACTION_ITEM, PACTION_CANCEL, PACTION_FIELD_MOVE };
-enum { PASK_FIELD_MOVE, PASK_SWITCH_ITEMS };
+ * sPartyActMove, switching the held item for sPartyGiveItem, or taking a
+ * MAIL), the Pokémon Soft-Boiled (or Milk Drink) is used on, GIVE / TAKE,
+ * READ / TAKE, or the game's mail writing under way. A message goes page by
+ * page (sPartyMsgPage), as the game's {PAUSE} prompts. */
+enum { PACT_NONE, PACT_MENU, PACT_MESSAGE, PACT_ASK, PACT_TARGET, PACT_ITEM, PACT_MAIL, PACT_WRITING };
+/* ITEM's place is MAIL's for a Pokémon holding one. */
+enum { PACTION_SUMMARY, PACTION_SWITCH, PACTION_ITEM, PACTION_CANCEL, PACTION_MAIL, PACTION_FIELD_MOVE };
+enum { PASK_FIELD_MOVE, PASK_SWITCH_ITEMS, PASK_MAIL_TO_PC, PASK_LOSE_MAIL };
 static u8 sPartyAct, sPartyActBack, sPartyActMove, sPartyAsk, sPartyMsgPage;
 static u16 sPartyGiveItem;
 static u8 sPartyMsg[160];
@@ -3594,8 +3598,8 @@ static u8 PartyActions(u8 slot, u8 *actions)
     }
     if (gPlayerPartyCount > 1)
         actions[count++] = PACTION_SWITCH;
-    if (!GetMonData(&gPlayerParty[slot], MON_DATA_IS_EGG) && !ItemIsMail(GetMonData(&gPlayerParty[slot], MON_DATA_HELD_ITEM)))
-        actions[count++] = PACTION_ITEM;
+    if (!GetMonData(&gPlayerParty[slot], MON_DATA_IS_EGG))
+        actions[count++] = ItemIsMail(GetMonData(&gPlayerParty[slot], MON_DATA_HELD_ITEM)) ? PACTION_MAIL : PACTION_ITEM;
     actions[count++] = PACTION_CANCEL;
     return count;
 }
@@ -3732,6 +3736,8 @@ static void SnapshotPartySummary(ViewState *s)
     }
 }
 
+static void PartyMailWritten(void);
+
 static void SnapshotParty(ViewState *s)
 {
     SnapshotPartyMons(s);
@@ -3742,8 +3748,12 @@ static void SnapshotParty(ViewState *s)
     }
     if (sPartySwap != PARTY_NO_SWAP && sPartySwap >= gPlayerPartyCount)
         sPartySwap = PARTY_NO_SWAP;
+    if (sPartyView == PARTY_MAIL && GetMonData(&gPlayerParty[sPartySel], MON_DATA_MAIL) >= PARTY_SIZE)
+        sPartyView = PARTY_LIST;
     if (sPartyView != PARTY_LIST)
         sPartyAct = PACT_NONE;
+    if (sPartyAct == PACT_WRITING)
+        PartyMailWritten();
     s->partyView = sPartyView;
     s->partySel = sPartySel;
     s->partySwap = sPartySwap;
@@ -3756,6 +3766,8 @@ static void SnapshotParty(ViewState *s)
     s->frame = gSaveBlock2Ptr->optionsWindowFrameType;
     if (sPartyView == PARTY_SUMMARY)
         SnapshotPartySummary(s);
+    else if (sPartyView == PARTY_MAIL)
+        CtrMail_View(&gSaveBlock1Ptr->mail[GetMonData(&gPlayerParty[sPartySel], MON_DATA_MAIL)], &s->mail);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -4385,6 +4397,9 @@ static bool8 Prefetch(const ViewState *s)
         ItemIcon(s->party[s->partySel].item);
     if (sIconBudget && s->mode == MODE_FIELD && s->screen == SCR_BAG && s->bagSelItem != ITEM_NONE)
         ItemIcon(s->bagSelItem);
+    if (sIconBudget && s->mode == MODE_FIELD && s->screen == SCR_POKEMON && s->partyView == PARTY_MAIL
+        && s->mail.iconSpecies != SPECIES_NONE)
+        MonIcon(s->mail.iconSpecies, FALSE);
     if (sIconBudget && s->mode == MODE_BATTLE_ACTION && s->quickBall != ITEM_NONE)
         ItemIcon(s->quickBall);
     if (sIconBudget && s->mode == MODE_BATTLE_ACTION && s->safari)
@@ -5417,8 +5432,14 @@ static void DrawPartyActions(const ViewState *s)
 
         while (i < s->partyActCount && s->partyActions[i] != row2[k])
             ++i;
+        if (k == 2 && i == s->partyActCount)
+            for (i = 0; i < s->partyActCount && s->partyActions[i] != PACTION_MAIL; ++i)
+                ;
         DrawTrayButton(TRAY_X(k), TRAY_ROW2_Y,
-                       k == 0 ? gText_Summary5 : k == 1 ? gText_Switch2 : k == 2 ? gText_Item : gText_Cancel2,
+                       k == 0   ? gText_Summary5
+                       : k == 1 ? gText_Switch2
+                       : k == 2 ? (i < s->partyActCount ? gText_Mail : gText_Item)
+                                : gText_Cancel2,
                        s->pressed == HIT_PARTY_ACTION + i, i < s->partyActCount, FALSE, HIT_PARTY_ACTION + i);
     }
 }
@@ -5442,9 +5463,12 @@ static void DrawPartyList(const ViewState *s)
                        HIT_PARTY_MESSAGE);
         return;
     case PACT_ITEM:
-        DrawTopMessage(s, gText_DoWhatWithItem);
-        DrawTrayButton(TRAY_X(1), TRAY_ROW1_Y, gMenuText_Give, s->pressed == HIT_PARTY_YES, TRUE, FALSE, HIT_PARTY_YES);
-        DrawTrayButton(TRAY_X(2), TRAY_ROW1_Y, gText_Take, s->pressed == HIT_PARTY_NO, TRUE, FALSE, HIT_PARTY_NO);
+    case PACT_MAIL:
+        DrawTopMessage(s, s->partyAct == PACT_MAIL ? gText_DoWhatWithMail : gText_DoWhatWithItem);
+        DrawTrayButton(TRAY_X(1), TRAY_ROW1_Y, s->partyAct == PACT_MAIL ? gText_Read2 : gMenuText_Give,
+                       s->pressed == HIT_PARTY_YES, TRUE, FALSE, HIT_PARTY_YES);
+        DrawTrayButton(TRAY_X(2), TRAY_ROW1_Y, s->partyAct == PACT_MAIL ? gText_Take2 : gText_Take,
+                       s->pressed == HIT_PARTY_NO, TRUE, FALSE, HIT_PARTY_NO);
         DrawTrayButton(TRAY_X(3), TRAY_ROW2_Y, gText_Cancel2, s->pressed == HIT_PARTY_BACK, TRUE, FALSE,
                        HIT_PARTY_BACK);
         return;
@@ -5458,6 +5482,8 @@ static void DrawPartyList(const ViewState *s)
         }
         DrawTrayButton(TRAY_X(1), TRAY_ROW1_Y, gText_Yes, s->pressed == HIT_PARTY_YES, TRUE, FALSE, HIT_PARTY_YES);
         DrawTrayButton(TRAY_X(2), TRAY_ROW1_Y, gText_No, s->pressed == HIT_PARTY_NO, TRUE, FALSE, HIT_PARTY_NO);
+        return;
+    case PACT_WRITING:
         return;
     case PACT_TARGET:
         DrawTopMessage(s, s->partyMsg);
@@ -7025,10 +7051,74 @@ static void DrawNav(const ViewState *s)
     sClipX1 = clipX1;
 }
 
+/*
+ * A held MAIL as mail.c's ReadMail shows it, on the GBA's 240x160 at the
+ * party's height: its stationery (BG1) over the bars in the player's colours
+ * (BG2, its tile 1 all over - here the whole bottom screen), the words and
+ * the signature in the mail's colours, the Bead and Dream mail's icon. A tap
+ * goes back, as A or B does.
+ */
+static struct
+{
+    const u32 *tiles;
+    u8 *tileData, *map;
+    u32 tileCount;
+} sMailGfx;
+
+static void DrawPartyMail(const ViewState *s)
+{
+    const struct CtrMailView *m = &s->mail;
+    Pal pals[16];
+    u32 size;
+
+    if (sMailGfx.tiles != m->tiles)
+    {
+        free(sMailGfx.tileData);
+        free(sMailGfx.map);
+        sMailGfx.tileData = Unlz(m->tiles, &size);
+        sMailGfx.tileCount = sMailGfx.tileData ? size / 32 : 0;
+        sMailGfx.map = Unlz(m->tileMap, NULL);
+        sMailGfx.tiles = m->tiles;
+    }
+    AddHit(0, 0, CW, H, HIT_PARTY_MESSAGE);
+    if (!sMailGfx.tileData || !sMailGfx.map)
+        return;
+    PalSymbol(m->palette, &pals[0], 1);
+    pals[0].c[10] = Rgb565(m->barColors[0]);
+    pals[0].c[11] = Rgb565(m->barColors[1]);
+    for (int i = 1; i < 16; ++i)
+        pals[i] = pals[0];
+    for (int ty = 0; ty < H / 8; ++ty)
+        for (int tx = 0; tx < CW / 8; ++tx)
+            DrawMapEntry(sMailGfx.tileData, sMailGfx.tileCount, 1, tx * 8, ty * 8, pals);
+    for (int ty = 0; ty < 20; ++ty)
+        for (int tx = 0; tx < 30; ++tx)
+        {
+            const u8 *e = sMailGfx.map + (ty * 32 + tx) * 2;
+
+            DrawMapEntry(sMailGfx.tileData, sMailGfx.tileCount, e[0] | (e[1] << 8), tx * 8, PARTY_Y0 + ty * 8, pals);
+        }
+    for (int i = 0; i < m->numLines; ++i)
+        DrawStr(&sNormal, m->lines[i], m->lineX[i], PARTY_Y0 + m->lineY[i], Rgb565(m->textColor), Rgb565(m->textShadow));
+    if (m->numLines)
+        DrawStr(&sNormal, m->signature, m->signatureX, PARTY_Y0 + m->signatureY, Rgb565(m->textColor),
+                Rgb565(m->textShadow));
+    if (m->iconSpecies != SPECIES_NONE)
+    {
+        const u8 *tiles = MonIcon(m->iconSpecies, FALSE);
+        u8 iconPal = gMonIconPaletteIndices[m->iconSpecies];
+
+        if (tiles && iconPal < 3)
+            DrawSprite(tiles, 4, 4, m->iconX - 16, PARTY_Y0 + m->iconY - 16, sRes.monIconPal[iconPal].c);
+    }
+}
+
 static void DrawParty(const ViewState *s)
 {
     if (s->partyView == PARTY_SUMMARY)
         DrawPartySummary(s);
+    else if (s->partyView == PARTY_MAIL)
+        DrawPartyMail(s);
     else
         DrawPartyList(s);
 }
@@ -9916,6 +10006,53 @@ static void PartyItemText(u8 *dest, const u8 *template, const u8 *var1, u16 item
     ExpandVars(dest, template, var1, name);
 }
 
+/* A MAIL given (party_menu.c's CtrParty_GiveMail): written on the game's
+ * screen, the field faded out for it; PartyMailWritten has the outcome. */
+static void PartyGiveMail(u8 slot, u16 mail)
+{
+    switch (CtrParty_GiveMail(slot, mail))
+    {
+    case CTR_MAIL_BAG_FULL:
+        PartyMessage(gText_BagFullCouldNotRemoveItem, PACT_NONE);
+        break;
+    case CTR_MAIL_WRITING:
+        sPartyAct = PACT_WRITING;
+        CtrLog_Write(CTR_LOG_INPUT, "bottom screen: writing mail %u for %u", mail, slot);
+        break;
+    default:
+        sPartyAct = PACT_NONE;
+        break;
+    }
+}
+
+/* Back from writing: Task_DisplayGaveMailFromPartyMessage's message, or
+ * nothing if it was cancelled (all as it was). */
+static void PartyMailWritten(void)
+{
+    u16 mail, old;
+    u8 nick[POKEMON_NAME_LENGTH + 2], name[ITEM_NAME_LENGTH + 4], text[sizeof(sPartyMsg)];
+
+    switch (CtrParty_MailResult(&mail, &old))
+    {
+    case CTR_MAIL_WRITTEN:
+        if (old == ITEM_NONE)
+        {
+            GetMonNickname(&gPlayerParty[sPartySel], nick);
+            PartyItemText(text, gText_PkmnWasGivenItem, nick, mail);
+        }
+        else
+        {
+            CopyItemName(mail, name);
+            PartyItemText(text, gText_SwitchedPkmnItem, name, old);
+        }
+        PartyMessage(text, PACT_NONE);
+        break;
+    case CTR_MAIL_CANCELLED:
+        sPartyAct = PACT_NONE;
+        break;
+    }
+}
+
 /* CB2_GiveHoldItem without the menu: given, or asked to switch with the
  * one held (Task_SwitchHoldItemsPrompt). */
 static void PartyGiveItem(u8 slot, u16 item)
@@ -9934,6 +10071,11 @@ static void PartyGiveItem(u8 slot, u16 item)
     {
         PartyItemText(text, gText_PkmnAlreadyHoldingItemSwitch, nick, held);
         PartyAsk(text, PASK_SWITCH_ITEMS);
+        return;
+    }
+    if (ItemIsMail(item))
+    {
+        PartyGiveMail(slot, item);
         return;
     }
     SetMonData(mon, MON_DATA_HELD_ITEM, &item);
@@ -9956,6 +10098,11 @@ static void PartySwitchItems(void)
         sPartyAct = PACT_NONE;
         return;
     }
+    if (ItemIsMail(item))
+    {
+        PartyGiveMail(sPartySel, item);
+        return;
+    }
     RemoveBagItem(item, 1);
     if (AddBagItem(held, 1) == FALSE)
     {
@@ -9968,6 +10115,24 @@ static void PartySwitchItems(void)
     PartyItemText(text, gText_SwitchedPkmnItem, name, held);
     PartyMessage(text, PACT_NONE);
     CtrLog_Write(CTR_LOG_INPUT, "bottom screen: switched item %u for %u on %u", held, item, sPartySel);
+}
+
+/* Task_HandleSendMailToPCYesNoInput and ...LoseMailMessageYesNoInput's YES. */
+static void PartyTakeMail(bool8 toPc)
+{
+    struct Pokemon *mon = &gPlayerParty[sPartySel];
+    u16 item = GetMonData(mon, MON_DATA_HELD_ITEM);
+
+    if (toPc)
+        PartyMessage(TakeMailFromMonAndSave(mon) != MAIL_NONE ? gText_MailSentToPC : gText_PCMailboxFull, PACT_NONE);
+    else if (AddBagItem(item, 1) == TRUE)
+    {
+        TakeMailFromMon(mon);
+        PartyMessage(gText_MailTakenFromPkmn, PACT_NONE);
+    }
+    else
+        PartyMessage(gText_BagFullCouldNotRemoveItem, PACT_NONE);
+    CtrLog_Write(CTR_LOG_INPUT, "bottom screen: mail taken from %u (to PC: %u)", sPartySel, toPc);
 }
 
 /* CursorCb_TakeItem. */
@@ -10079,7 +10244,7 @@ static bool8 PartyActTap(u8 id)
             }
             if (action == PACTION_SWITCH && !PartyEditable())
                 return TRUE;
-            sPartyAct = action == PACTION_ITEM ? PACT_ITEM : PACT_NONE;
+            sPartyAct = action == PACTION_ITEM ? PACT_ITEM : action == PACTION_MAIL ? PACT_MAIL : PACT_NONE;
             if (action == PACTION_SUMMARY)
             {
                 sPartyView = PARTY_SUMMARY;
@@ -10123,6 +10288,21 @@ static bool8 PartyActTap(u8 id)
         else
             return TRUE;
         break;
+    case PACT_MAIL:
+        if (id == HIT_PARTY_YES)
+        {
+            sPartyAct = PACT_NONE;
+            sPartyView = PARTY_MAIL;
+        }
+        else if (id == HIT_PARTY_NO && PartyEditable())
+            PartyAsk(gText_SendMailToPC, PASK_MAIL_TO_PC);
+        else if (id == HIT_PARTY_BACK)
+            sPartyAct = PACT_NONE;
+        else
+            return TRUE;
+        break;
+    case PACT_WRITING:
+        return TRUE;
     case PACT_ASK:
         if (id == HIT_PARTY_MESSAGE && PartyMessageMore())
             ++sPartyMsgPage;
@@ -10130,6 +10310,11 @@ static bool8 PartyActTap(u8 id)
             return TRUE;
         else if (id == HIT_PARTY_YES && sPartyAsk == PASK_SWITCH_ITEMS && PartyEditable())
             PartySwitchItems();
+        else if (id == HIT_PARTY_YES && (sPartyAsk == PASK_MAIL_TO_PC || sPartyAsk == PASK_LOSE_MAIL)
+                 && PartyEditable())
+            PartyTakeMail(sPartyAsk == PASK_MAIL_TO_PC);
+        else if (id == HIT_PARTY_NO && sPartyAsk == PASK_MAIL_TO_PC)
+            PartyAsk(gText_MailMessageWillBeLost, PASK_LOSE_MAIL);
         else if (id == HIT_PARTY_YES && sPartyAsk == PASK_FIELD_MOVE && FieldIdle())
             PartyFieldMove(sPartyActMove, TRUE);
         else if (id == HIT_PARTY_NO)
@@ -10160,6 +10345,17 @@ static bool8 PartyActTap(u8 id)
 
 static void PartyTap(u8 id)
 {
+    /* Read: back to the Pokémon's actions (CB2_ReturnToPartyMenuFromReadingMail). */
+    if (sPartyView == PARTY_MAIL)
+    {
+        if (id == HIT_PARTY_MESSAGE)
+        {
+            sPartyView = PARTY_LIST;
+            sPartyAct = PACT_MENU;
+            PlaySE(SE_SELECT);
+        }
+        return;
+    }
     if (sPartyView == PARTY_LIST && PartyActTap(id))
         return;
     if (sPartyView == PARTY_SUMMARY)
@@ -10265,18 +10461,11 @@ static void BagItemText(u8 *dest, const u8 *template, u16 item)
     ExpandVar1(dest, template, name);
 }
 
-/* Task_ItemContext_GiveToParty's checks, then back to the party with it;
- * MAIL (written as it is given) is the game's party menu's. */
+/* Task_ItemContext_GiveToParty's checks, then back to the party with it. */
 static void BagGive(u16 item)
 {
     if (!IsWritingMailAllowed(item))
         StringCopy(sBagMsg, gText_CantWriteMail);
-    else if (ItemIsMail(item))
-        CtrLocale_ToGame(sBagMsg, sizeof(sBagMsg),
-                         CTR_TEXT("Give MAIL from the START\nmenu's POKéMON.",
-                                  "Da CARTAS desde POKéMON\nen el menú START.",
-                                  "Donnez les LETTRES via\nPOKéMON du menu START.",
-                                  "Dai i MESSAGGI da\nPOKéMON nel menu START."));
     else if (!IsHoldingItemAllowed(item))
         BagItemText(sBagMsg, gText_Var1CantBeHeldHere, item);
     else if (sBagPocket == KEYITEMS_POCKET || GetItemImportance(item))

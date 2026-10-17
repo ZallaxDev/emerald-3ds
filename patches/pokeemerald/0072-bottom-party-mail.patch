@@ -1,0 +1,233 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: MAIL from the bottom screen's party
+Applies after 0071-bottom-party-field-moves.patch; apply with tools/bootstrap.py.
+
+diff --git a/include/mail.h b/include/mail.h
+--- a/include/mail.h
++++ b/include/mail.h
+@@ -30,4 +30,26 @@
+ u8 TakeMailFromMonAndSave(struct Pokemon *mon);
+ bool8 ItemIsMail(u16 itemId);
+ 
++#ifdef PORT_BRIDGE
++// The bottom screen's party (3ds_bottom_ui.c) shows a held MAIL without this
++// screen: what ReadMail draws, positions on its 240x160.
++#define CTR_MAIL_LINES 8
++struct CtrMailView
++{
++    const u16 *palette;     // BG palette 0, its colours 10 and 11 the bars'
++    const u32 *tiles;       // LZ77
++    const u32 *tileMap;     // LZ77, BG1; BG2 is its tile 1 all over
++    u16 barColors[2];
++    u16 textColor, textShadow;
++    u8 numLines;
++    u8 lines[CTR_MAIL_LINES][64];
++    s16 lineX[CTR_MAIL_LINES], lineY[CTR_MAIL_LINES];
++    u8 signature[32];
++    s16 signatureX, signatureY;
++    u16 iconSpecies;        // SPECIES_NONE: no icon; else its centre
++    s16 iconX, iconY;
++};
++void CtrMail_View(struct Mail *mail, struct CtrMailView *view);
++#endif
++
+ #endif // GUARD_MAIL_H
+diff --git a/include/party_menu.h b/include/party_menu.h
+--- a/include/party_menu.h
++++ b/include/party_menu.h
+@@ -103,4 +103,18 @@
+ u8 CtrParty_UseFieldMove(u8 slot, u8 fieldMove, bool8 confirmed, u8 *text, u32 textSize);
+ #endif
+ 
++#ifdef PORT_BRIDGE
++// CtrParty_GiveMail's outcomes, and CtrParty_MailResult's after writing.
++enum {
++    CTR_MAIL_NONE,
++    CTR_MAIL_FAILED,            // no MAIL slot, or not in the bag
++    CTR_MAIL_BAG_FULL,          // no room for the item held
++    CTR_MAIL_WRITING,           // the game's mail writing is on its way
++    CTR_MAIL_WRITTEN,
++    CTR_MAIL_CANCELLED,         // given back: as it was before
++};
++u8 CtrParty_GiveMail(u8 slot, u16 mail);
++u8 CtrParty_MailResult(u16 *mail, u16 *oldItem);
++#endif
++
+ #endif // GUARD_PARTY_MENU_H
+diff --git a/src/mail.c b/src/mail.c
+--- a/src/mail.c
++++ b/src/mail.c
+@@ -750,5 +750,67 @@
+         ResetBgsAndClearDma3BusyFlags(0);
+         FreeAllWindowBuffers();
+         FREE_AND_SET_NULL(sMailRead);
++    }
++}
++
++#ifdef PORT_BRIDGE
++// ReadMail, CB2_InitMailRead, BufferMailText and PrintMailText's choices for
++// `mail`, for the bottom screen to draw (3ds_bottom_ui.c).
++void CtrMail_View(struct Mail *mail, struct CtrMailView *view)
++{
++    const struct MailLayout *layout;
++    u8 type, *ptr, name[12];
++    u16 i, y = 0, numWords = 0, buffer[2], species;
++    bool8 hasText = TRUE;
++
++    memset(view, 0, sizeof(*view));
++    if (IS_ITEM_MAIL(mail->itemId))
++    {
++        type = ITEM_TO_MAIL(mail->itemId);
++    }
++    else
++    {
++        type = ITEM_TO_MAIL(FIRST_MAIL_INDEX);
++        hasText = FALSE;
++    }
++    layout = &sMailLayouts_Tall[type];
++    view->palette = sMailGraphics[type].palette;
++    view->tiles = sMailGraphics[type].tiles;
++    view->tileMap = sMailGraphics[type].tileMap;
++    view->textColor = sMailGraphics[type].textColor;
++    view->textShadow = sMailGraphics[type].textShadow;
++    view->barColors[0] = sBgColors[gSaveBlock2Ptr->playerGender][0];
++    view->barColors[1] = sBgColors[gSaveBlock2Ptr->playerGender][1];
++    species = MailSpeciesToSpecies(mail->species, buffer);
++    if (species > SPECIES_NONE && species < NUM_SPECIES
++     && (type == ITEM_TO_MAIL(ITEM_BEAD_MAIL) || type == ITEM_TO_MAIL(ITEM_DREAM_MAIL)))
++    {
++        view->iconSpecies = GetIconSpeciesNoPersonality(mail->species);
++        view->iconX = type == ITEM_TO_MAIL(ITEM_BEAD_MAIL) ? 96 : 40;
++        view->iconY = 128;
+     }
++    if (!hasText)
++        return;
++
++    // The message window is at tiles (2, 3).
++    for (i = 0; i < layout->numLines && view->numLines < CTR_MAIL_LINES; i++)
++    {
++        u8 *line = view->lines[view->numLines];
++
++        ConvertEasyChatWordsToString(line, &mail->words[numWords], layout->lines[i].numEasyChatWords, 1);
++        numWords += layout->lines[i].numEasyChatWords;
++        if (line[0] == EOS || line[0] == CHAR_SPACE)
++            continue;
++        view->lineX[view->numLines] = 16 + layout->lines[i].xOffset + layout->wordsXPos;
++        view->lineY[view->numLines] = 24 + y + layout->wordsYPos;
++        y += layout->lines[i].height;
++        view->numLines++;
++    }
++    StringCopy(name, mail->playerName);
++    ConvertInternationalPlayerName(name);
++    ptr = StringCopy(view->signature, gText_FromSpace);
++    StringCopy(ptr, name);
++    view->signatureX = 16 + GetStringCenterAlignXOffset(FONT_NORMAL, view->signature, layout->signatureWidth) + 104;
++    view->signatureY = 24 + layout->signatureYPos + 88;
+ }
++#endif
+diff --git a/src/party_menu.c b/src/party_menu.c
+--- a/src/party_menu.c
++++ b/src/party_menu.c
+@@ -6752,5 +6752,103 @@
+     LockPlayerFieldControls();
+     CreateTask(Task_FieldMoveWaitForFade, 8);
+     return CTR_FIELD_MOVE_STARTED;
++}
++#endif
++
++#ifdef PORT_BRIDGE
++/*
++ * GIVE with a MAIL from the bottom screen's party: given as CB2_GiveHoldItem
++ * and Task_HandleSwitchItemsYesNoInput give it (the item held back to the
++ * bag), then written on the game's own screen (CB2_WriteMailToGiveMon),
++ * which the field fades out for and comes back to. Cancelled, it is all put
++ * back as CB2_ReturnToPartyMenuFromWritingMail puts it.
++ */
++static u8 sCtrMailResult;
++static u16 sCtrMailItem;
++
++static void CB2_CtrReturnFromWritingMail(void)
++{
++    struct Pokemon *mon = &gPlayerParty[gPartyMenu.slotId];
++    u16 item = GetMonData(mon, MON_DATA_HELD_ITEM);
++
++    if (gSpecialVar_Result == FALSE)
++    {
++        TakeMailFromMon(mon);
++        SetMonData(mon, MON_DATA_HELD_ITEM, &sPartyMenuItemId);
++        if (sPartyMenuItemId != ITEM_NONE)
++            RemoveBagItem(sPartyMenuItemId, 1);
++        AddBagItem(item, 1);
++        sCtrMailResult = CTR_MAIL_CANCELLED;
++    }
++    else
++    {
++        sCtrMailResult = CTR_MAIL_WRITTEN;
++    }
++    SetMainCallback2(CB2_ReturnToField);
++}
++
++static void CB2_CtrWriteMail(void)
++{
++    u8 mail = GetMonData(&gPlayerParty[gPartyMenu.slotId], MON_DATA_MAIL);
++
++    DoEasyChatScreen(EASY_CHAT_TYPE_MAIL, gSaveBlock1Ptr->mail[mail].words, CB2_CtrReturnFromWritingMail,
++                     EASY_CHAT_PERSON_DISPLAY_NONE);
++}
++
++static void Task_CtrOpenMailWriting(u8 taskId)
++{
++    if (!gPaletteFade.active)
++    {
++        PlayRainStoppingSoundEffect();
++        CleanupOverworldWindowsAndTilemaps();
++        SetMainCallback2(CB2_CtrWriteMail);
++        DestroyTask(taskId);
++    }
+ }
++
++u8 CtrParty_GiveMail(u8 slot, u16 mail)
++{
++    struct Pokemon *mon = &gPlayerParty[slot];
++    u16 held = GetMonData(mon, MON_DATA_HELD_ITEM);
++
++    if (!ItemIsMail(mail) || CheckBagHasItem(mail, 1) != TRUE || ItemIsMail(held))
++        return CTR_MAIL_FAILED;
++    RemoveBagItem(mail, 1);
++    if (held != ITEM_NONE && AddBagItem(held, 1) == FALSE)
++    {
++        AddBagItem(mail, 1);
++        return CTR_MAIL_BAG_FULL;
++    }
++    GiveItemToMon(mon, mail);
++    if (GetMonData(mon, MON_DATA_HELD_ITEM) != mail)
++    {
++        if (held != ITEM_NONE)
++            RemoveBagItem(held, 1);
++        AddBagItem(mail, 1);
++        return CTR_MAIL_FAILED;
++    }
++    gPartyMenu.slotId = slot;
++    sPartyMenuItemId = held;
++    sCtrMailItem = mail;
++    sCtrMailResult = CTR_MAIL_WRITING;
++    LockPlayerFieldControls();
++    FadeScreen(FADE_TO_BLACK, 0);
++    CreateTask(Task_CtrOpenMailWriting, 8);
++    return CTR_MAIL_WRITING;
++}
++
++// Once: WRITTEN or CANCELLED, with the MAIL and the item it replaced.
++u8 CtrParty_MailResult(u16 *mail, u16 *oldItem)
++{
++    u8 result = sCtrMailResult;
++
++    if (result == CTR_MAIL_WRITTEN || result == CTR_MAIL_CANCELLED)
++    {
++        *mail = sCtrMailItem;
++        *oldItem = sPartyMenuItemId;
++        sCtrMailResult = CTR_MAIL_NONE;
++        return result;
++    }
++    return CTR_MAIL_NONE;
++}
+ #endif
