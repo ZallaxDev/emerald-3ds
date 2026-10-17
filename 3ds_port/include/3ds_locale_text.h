@@ -14,6 +14,7 @@ static inline uint8_t CtrLocale_Glyph(uint32_t c)
     switch (c)
     {
     case ' ': return 0x00;
+    case '\n': return 0xFE; /* CHAR_NEWLINE */
     case '/': return 0xBA;
     case '-': return 0xAE;
     case '.': return 0xAD;

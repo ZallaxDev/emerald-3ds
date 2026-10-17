@@ -476,13 +476,13 @@ static struct
     u16 *cancelMap;
     /* The summary screen: its tiles, its eight palettes and the PP text's as
      * the ninth, the page tilemaps (PSS_PAGE_* order, then the egg's info),
-     * the STATUS and move effect boxes, the A button, the move selector. */
+     * the STATUS and move effect boxes, the move selector. */
     u8 *sumTiles;
     u32 sumTileCount;
     Pal sumPal[9];
     u16 *sumPage[5];
     const u16 *sumStatus, *sumEffectBattle, *sumEffectContest;
-    u8 *sumAButton, *moveSelectTiles;
+    u8 *moveSelectTiles;
     Pal moveSelectPal;
     /* Icons. */
     Icon column[SCR_COUNT];
@@ -604,7 +604,6 @@ static void LoadResources(void)
     sRes.sumStatus = ReadRomfs("summary_screen/status_tilemap.bin", NULL);
     sRes.sumEffectBattle = Port_ResolveAssetPointer(gSummaryScreen_MoveEffect_Battle_Tilemap);
     sRes.sumEffectContest = Port_ResolveAssetPointer(gSummaryScreen_MoveEffect_Contest_Tilemap);
-    sRes.sumAButton = ReadRomfs("summary_screen/a_button.4bpp", NULL);
     sRes.moveSelectTiles = Unlz(gSummaryMoveSelect_Gfx, NULL);
     {
         u16 *raw = Unlz(gSummaryMoveSelect_Pal, NULL);
@@ -2389,7 +2388,7 @@ typedef struct
     u8 pp[MAX_MON_MOVES], maxPp[MAX_MON_MOVES];
     /* The summary: its page (SUM_*), the move whose details show
      * (SUM_NO_MOVE), and what the game's summary screen shows. */
-    u8 sumPage, sumMove, shiny, ball, otGender, ribbons, expTicks, sumOk;
+    u8 sumPage, sumMove, sumMoveSwap, shiny, ball, otGender, ribbons, expTicks, sumOk;
     u16 dexNum, otId;
     u32 personality, exp, expNext;
     u8 otName[PLAYER_NAME_LENGTH + 10];
@@ -2600,7 +2599,6 @@ enum
     HIT_PARTY_NEXT,
     HIT_SUM_PAGE_PREV,
     HIT_SUM_PAGE_NEXT,
-    HIT_SUM_PROMPT,
     HIT_SUM_MOVE,          /* + move slot */
     HIT_OPTION = 0xC0,     /* + option row; +HIT_OPTION_BACK for the left arrow */
     HIT_PAGE = 0xE0,       /* + OPTIONS page tab */
@@ -3228,6 +3226,9 @@ static u8 sPartyView, sPartySel, sPartySwap = PARTY_NO_SWAP;
 enum { SUM_INFO, SUM_SKILLS, SUM_BATTLE, SUM_CONTEST, SUM_PAGES };
 #define SUM_NO_MOVE 0xFF
 static u8 sSumPage, sSumMove = SUM_NO_MOVE;
+/* SWITCH on a picked move: the move waiting for the one it changes place
+ * with (SUM_NO_MOVE). */
+static u8 sSumMoveSwap = SUM_NO_MOVE;
 
 /* pokemon_summary_screen.c (0057): the trainer memo, or an egg's state and
  * memo, as the summary writes them. */
@@ -3405,6 +3406,7 @@ static void SnapshotPartySummary(ViewState *s)
     }
     if (s->sumMove != SUM_NO_MOVE && s->moves[s->sumMove] == MOVE_NONE)
         s->sumMove = SUM_NO_MOVE;
+    s->sumMoveSwap = s->sumMove != SUM_NO_MOVE ? sSumMoveSwap : SUM_NO_MOVE;
     /* DrawExperienceProgressBar and PrintExpPointsNextLevel. */
     s->exp = GetMonData(mon, MON_DATA_EXP);
     if (view->level < MAX_LEVEL)
@@ -4748,15 +4750,29 @@ static void DrawGameButton(int x, int y, const u8 *label, bool8 pressed, bool8 e
         AddHit(x - 1, y - 6, 58, 28, id);
 }
 
-/* A tall button with a label in the middle of it. */
+/* A tall button with a label in the middle of it, each of its lines
+ * centred. */
 static void DrawTallButton(int x, int y, int wt, int h, const u8 *label, bool8 pressed, bool8 enabled, u8 id)
 {
+    u8 line[24];
+    int lines = StrLines(label), top;
     u16 fg, sh;
 
     pressed = pressed && enabled;
     DrawButtonArt(x, y + pressed, wt, h);
     ButtonText(enabled, &fg, &sh);
-    DrawStrCentered(&sSmall, label, x + wt * 4, y + (h - sSmall.height) / 2 + pressed, fg, sh);
+    top = y + (h - lines * sSmall.lineHeight) / 2 + pressed;
+    for (int i = 0; i < lines; ++i)
+    {
+        int n = 0;
+
+        while (*label != EOS && *label != CHAR_NEWLINE && n < (int)sizeof(line) - 1)
+            line[n++] = *label++;
+        line[n] = EOS;
+        if (*label == CHAR_NEWLINE)
+            ++label;
+        DrawStrCentered(&sSmall, line, x + wt * 4, top + i * sSmall.lineHeight, fg, sh);
+    }
     if (enabled)
         AddHit(x, y, wt * 8, h, id);
 }
@@ -4786,7 +4802,7 @@ static void DrawMonButton(const ViewState *s, int x, int y, int wt, int h, int s
 
     DrawButtonArt(x, y + pressed, wt, h);
     ButtonText(enabled, &fg, &sh);
-    DrawStr(&sSmall, step < 0 ? left : right, step < 0 ? x + 5 : x + w - 11, y + (h - sSmall.height) / 2 + pressed, fg, sh);
+    DrawStr(&sSmall, step < 0 ? left : right, step < 0 ? x + 3 : x + w - 9, y + (h - sSmall.height) / 2 + pressed, fg, sh);
     if (!enabled)
         return;
     {
@@ -5036,18 +5052,20 @@ static void DrawPartySummary(const ViewState *s)
         DrawSumMap(sRes.sumPage[m->isEgg ? 4 : 0], 32, 0, 0, 30, 20, 0, 0, m->isEgg ? -1 : s->shiny ? 5 : 0);
         if (s->sumPage != SUM_INFO)
             DrawSumMap(sRes.sumPage[s->sumPage], 32, 0, 0, 30, 20, 0, 0, -1);
-        DrawSumText(titles[s->sumPage], 2, 1, 6, 1);
-        /* The prompt at (22, 0): CANCEL on INFO, INFO on the moves pages. */
-        if (s->sumPage == SUM_INFO || s->sumPage >= SUM_BATTLE)
+        /* The title bar: the page's title alone, across it. No page dots
+         * or prompt: the buttons under the summary do their work. Its
+         * tiles are the bar's own, those of its left part. */
         {
-            const u8 *prompt = s->sumPage == SUM_INFO ? gText_Cancel2 : gText_Info;
-            int x = 176 + 62 - StrWidth(&sNormal, prompt);
+            u16 bar[2][30];
 
-            if (sRes.sumAButton)
-                DrawSprite(sRes.sumAButton, 2, 2, x - 16 < 176 ? 176 : x - 16, 0, sRes.sumPal[7].c);
-            DrawSumText(prompt, x, 1, 7, 0);
-            AddHit(176, 0, 64, 16, HIT_SUM_PROMPT);
+            for (int tx = 0; tx < 30; ++tx)
+            {
+                bar[0][tx] = sRes.sumPage[0][0];
+                bar[1][tx] = sRes.sumPage[0][32];
+            }
+            DrawSumMap(&bar[0][0], 30, 0, 0, 30, 2, 0, 0, -1);
         }
+        DrawSumTextCentred(titles[s->sumPage], 0, 240, 1, 6, 1);
         DrawSumPortrait(s);
         if (s->sumPage == SUM_INFO)
             DrawSumInfo(s);
@@ -5061,10 +5079,23 @@ static void DrawPartySummary(const ViewState *s)
     DrawGameButton(8, 166, left, s->pressed == HIT_SUM_PAGE_PREV, !m->isEgg, HIT_SUM_PAGE_PREV);
     DrawGameButton(176, 166, right, s->pressed == HIT_SUM_PAGE_NEXT, !m->isEgg, HIT_SUM_PAGE_NEXT);
     /* The Pokémon before and after, each with its icon and name. */
-    DrawMonButton(s, 2, 186, 8, 52, -1, HIT_PARTY_PREV);
-    DrawTallButton(70, 186, 6, 52, gText_Cancel, s->pressed == HIT_PARTY_BACK, TRUE, HIT_PARTY_BACK);
-    DrawTallButton(122, 186, 6, 52, gText_Switch, s->pressed == HIT_PARTY_SWITCH, others && s->canEdit, HIT_PARTY_SWITCH);
-    DrawMonButton(s, 174, 186, 8, 52, 1, HIT_PARTY_NEXT);
+    DrawMonButton(s, 2, 186, 7, 52, -1, HIT_PARTY_PREV);
+    DrawTallButton(62, 186, 7, 52, gText_Cancel, s->pressed == HIT_PARTY_BACK, TRUE, HIT_PARTY_BACK);
+    /* SWITCH moves the move picked on a moves page (held down until the
+     * move it swaps with is tapped), the Pokémon otherwise. */
+    {
+        bool8 move = s->sumMove != SUM_NO_MOVE;
+        int moves = 0;
+
+        for (int i = 0; i < MAX_MON_MOVES; ++i)
+            moves += s->moves[i] != MOVE_NONE;
+        DrawTallButton(122, 186, 7, 52,
+                       Ascii(move ? CTR_TEXT("SWITCH\nMOVES", "CAMBIAR\nMOVIM.", "ÉCHANGER\nCAPAC.", "SCAMBIA\nMOSSE")
+                                  : CTR_TEXT("SWITCH\nPOKéMON", "CAMBIAR\nPOKéMON", "ÉCHANGER\nPOKéMON", "SCAMBIA\nPOKéMON")),
+                       s->pressed == HIT_PARTY_SWITCH || s->sumMoveSwap != SUM_NO_MOVE,
+                       (move ? moves > 1 : others) && s->canEdit, HIT_PARTY_SWITCH);
+    }
+    DrawMonButton(s, 182, 186, 7, 52, 1, HIT_PARTY_NEXT);
 }
 
 static void DrawParty(const ViewState *s)
@@ -7896,21 +7927,59 @@ static u8 NextPartySlot(u8 from, s8 step)
     return from;
 }
 
+/* pokemon_summary_screen.c's SwapMonMoves: the moves, their PP and their
+ * PP Ups change places. */
+static void SwapPartyMonMoves(struct Pokemon *mon, u8 a, u8 b)
+{
+    u16 moveA = GetMonData(mon, MON_DATA_MOVE1 + a), moveB = GetMonData(mon, MON_DATA_MOVE1 + b);
+    u8 ppA = GetMonData(mon, MON_DATA_PP1 + a), ppB = GetMonData(mon, MON_DATA_PP1 + b);
+    u8 bonuses = GetMonData(mon, MON_DATA_PP_BONUSES);
+    u8 bonusA = (bonuses >> (a * 2)) & 3, bonusB = (bonuses >> (b * 2)) & 3;
+
+    bonuses &= ~((3 << (a * 2)) | (3 << (b * 2)));
+    bonuses |= (bonusA << (b * 2)) | (bonusB << (a * 2));
+    SetMonData(mon, MON_DATA_MOVE1 + a, &moveB);
+    SetMonData(mon, MON_DATA_MOVE1 + b, &moveA);
+    SetMonData(mon, MON_DATA_PP1 + a, &ppB);
+    SetMonData(mon, MON_DATA_PP1 + b, &ppA);
+    SetMonData(mon, MON_DATA_PP_BONUSES, &bonuses);
+    CtrLog_Write(CTR_LOG_INPUT, "bottom screen: moves %u <-> %u", a, b);
+}
+
 static void PartyTap(u8 id)
 {
     if (sPartyView == PARTY_SUMMARY)
     {
         bool8 egg = GetMonData(&gPlayerParty[sPartySel], MON_DATA_IS_EGG);
 
-        if (id == HIT_PARTY_BACK || (id == HIT_SUM_PROMPT && sSumPage == SUM_INFO))
+        if (id != HIT_PARTY_SWITCH && !(id >= HIT_SUM_MOVE && id < HIT_SUM_MOVE + MAX_MON_MOVES))
+            sSumMoveSwap = SUM_NO_MOVE;
+        if (id == HIT_PARTY_BACK)
             sPartyView = PARTY_LIST;
         else if ((id == HIT_SUM_PAGE_PREV || id == HIT_SUM_PAGE_NEXT) && !egg)
         {
             sSumPage = (sSumPage + (id == HIT_SUM_PAGE_PREV ? SUM_PAGES - 1 : 1)) % SUM_PAGES;
             sSumMove = SUM_NO_MOVE;
         }
-        else if (id == HIT_SUM_PROMPT)
-            sSumMove = sSumMove == SUM_NO_MOVE ? 0 : SUM_NO_MOVE;
+        else if (id == HIT_PARTY_SWITCH && sSumPage >= SUM_BATTLE && sSumMove != SUM_NO_MOVE)
+        {
+            if (sSumMoveSwap == SUM_NO_MOVE && !PartyEditable())
+                return;
+            sSumMoveSwap = sSumMoveSwap == SUM_NO_MOVE ? sSumMove : SUM_NO_MOVE;
+        }
+        else if (id >= HIT_SUM_MOVE && id < HIT_SUM_MOVE + MAX_MON_MOVES && sSumMoveSwap != SUM_NO_MOVE)
+        {
+            /* The second move: they change places (the same one: stays). */
+            u8 other = id - HIT_SUM_MOVE;
+
+            if (other != sSumMoveSwap && PartyEditable()
+             && GetMonData(&gPlayerParty[sPartySel], MON_DATA_MOVE1 + other) != MOVE_NONE)
+            {
+                SwapPartyMonMoves(&gPlayerParty[sPartySel], sSumMoveSwap, other);
+                sSumMove = other;
+            }
+            sSumMoveSwap = SUM_NO_MOVE;
+        }
         else if (id >= HIT_SUM_MOVE && id < HIT_SUM_MOVE + MAX_MON_MOVES)
             sSumMove = sSumMove == id - HIT_SUM_MOVE ? SUM_NO_MOVE : id - HIT_SUM_MOVE;
         else if (id == HIT_PARTY_PREV || id == HIT_PARTY_NEXT)
@@ -7944,7 +8013,7 @@ static void PartyTap(u8 id)
         sPartySel = id - HIT_SLOT;
         sPartyView = PARTY_SUMMARY;
         sSumPage = SUM_INFO;
-        sSumMove = SUM_NO_MOVE;
+        sSumMove = sSumMoveSwap = SUM_NO_MOVE;
         PlaySE(SE_SELECT);
         return;
     }
