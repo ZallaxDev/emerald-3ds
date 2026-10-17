@@ -2,7 +2,11 @@
 ;
 ; position + shade packed as four shorts, texcoord as two floats (16 bytes, see
 ; VoxelGpuVertex in ctr_voxel.c). Positions are in 1/512 tile relative to the
-; draw's origin, which modelView carries; shade is 1/16384. Optional fixed-sun
+; draw's origin; shade is 1/16384. The origin is added here, in whole tiles
+; from an anchor near the camera that modelView carries: a shared edge of two
+; chunks then reaches the matrix as the same numbers, exactly. Folded into each
+; chunk's own modelView, it was rounded differently on either side and the seam
+; opened a row of background pixels as the camera moved. Optional fixed-sun
 ; lighting is baked on the CPU into shade.
 ;
 ; Per vertex, the shader turns that brightness into a colour grade and a haze
@@ -20,7 +24,7 @@
 ; pattern, which the world and sprites sample (and the rays, turned).
 ;   dapple = (dappleU . position, dappleV . position)
 
-.fvec projection[4], modelView[4]
+.fvec projection[4], modelView[4], origin
 .fvec shadeTint, tintDiff, grade, fog
 .fvec dappleU, dappleV
 
@@ -42,11 +46,14 @@
 	mul r0.xyz, ctrVoxelConst.xxxx, inpos
 	mov r0.w,   ones
 
-	; r1 = modelView * position
-	dp4 r1.x, modelView[0], r0
-	dp4 r1.y, modelView[1], r0
-	dp4 r1.z, modelView[2], r0
-	dp4 r1.w, modelView[3], r0
+	; r7 = position from the anchor (origin.w is 0)
+	add r7, origin, r0
+
+	; r1 = modelView * r7
+	dp4 r1.x, modelView[0], r7
+	dp4 r1.y, modelView[1], r7
+	dp4 r1.z, modelView[2], r7
+	dp4 r1.w, modelView[3], r7
 
 	; outpos = projection * r1
 	dp4 outpos.x, projection[0], r1

@@ -102,6 +102,9 @@ VoxelVisualShape VoxelWorld_ClassifyTile(int worldX, int worldY);
 void VoxelWorld_GetMapDimensions(int *width, int *height);
 /* Whether the map joins others at its edges, walked across with no warp. */
 bool VoxelWorld_MapIsConnected(void);
+/* The edges of the current map (instance 0) where the camera stops, chosen
+ * map by map (GetMapClosedEdges, field_camera.c; CTR_FIELD_EDGE_*). */
+unsigned VoxelWorld_ClosedEdges(void);
 void VoxelWorld_GetPlayerWorldCoords(float *worldX, float *worldZ);
 void VoxelWorld_GetLocation(int *mapGroup, int *mapNum);
 /* Small renderer-facing classification of the original field weather state. */

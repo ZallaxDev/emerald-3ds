@@ -129,6 +129,23 @@ pass; on an Old 3DS the world stays flat unless OPTIONS' 3D WORLD says ON
 (`sVoxelStereo` in `3ds_video.c`), and 3D DEPTH scales the slider. Both are
 extras on the SETTINGS tab's second screen (`3ds_extras.c`).
 
+## The camera at a map's edge
+
+The 400x240 screen shows more of a map than the GBA's, and past a map's edge
+there is only its border tiled over and over. On the edges chosen map by map
+(`sCameraEdgeMaps` in `field_camera.c`; none by default) the camera stops at
+that edge and only the player walks on. In front of a map joined to part of
+such an edge, and in dark caves, whose circle of light is the middle of the
+picture, the camera stays on the player. In 2D (`field_camera.c`) the game's
+camera still follows the player, as the scripts expect of it; the
+picture, backgrounds and sprites alike, is held back from it by a shift, and
+the tilemap's ring follows the picture rather than the camera. A map narrower
+than the screen, stopped at both ends, is centred on it. In voxel
+(`voxel_camera.c`) the point the camera looks at stops short of the player instead, never so far that the
+player walks into the diorama's blur. Both ease to a new place when the edges
+change under them, as on a crossing, and the people spawned move with the
+view (`3ds_field_view.c`).
+
 ## Saves and logs
 
 The 128 KiB flash image is mirrored in RAM and written range by range to

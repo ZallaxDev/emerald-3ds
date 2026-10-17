@@ -47,6 +47,7 @@ void CtrFieldView_Flat(CtrFieldView *view)
     view->south = FLAT_SOUTH;
     view->farHalfWidth = FLAT_HALF_WIDTH;
     view->nearHalfWidth = FLAT_HALF_WIDTH;
+    view->shiftX = view->shiftY = 0;
 }
 
 static float Clamp(float value, float lo, float hi)
@@ -81,6 +82,7 @@ void CtrFieldView_Voxel(CtrFieldView *view, float pitchDegrees, float zoomPercen
                                1.0f, VOXEL_REACH_MAX);
     view->nearHalfWidth = Clamp((nearGround * cosf(pitch) + nearHeight * sinf(pitch)) * tanX + 1.0f,
                                 1.0f, VOXEL_REACH_MAX);
+    view->shiftX = view->shiftY = 0;
 }
 
 float CtrFieldView_Outside(const CtrFieldView *view, int dx, int dy)
@@ -89,6 +91,8 @@ float CtrFieldView_Outside(const CtrFieldView *view, int dx, int dy)
     float span = view->north + view->south;
     float t, halfWidth, side;
 
+    dx -= view->shiftX;
+    dy -= view->shiftY;
     if (dy < -view->north)
         outside = -view->north - dy;
     else if (dy > view->south)
@@ -105,19 +109,48 @@ float CtrFieldView_Score(const CtrFieldView *view, int dx, int dy)
     return 2.0f * CtrFieldView_Outside(view, dx, dy) + sqrtf((float)(dx * dx + dy * dy));
 }
 
-void CtrFieldView_Window(const CtrFieldView *view, int margin, int *sideways, int *north, int *south)
+void CtrFieldView_Window(const CtrFieldView *view, int margin, int *west, int *east, int *north, int *south)
 {
     float halfWidth = view->farHalfWidth > view->nearHalfWidth ? view->farHalfWidth : view->nearHalfWidth;
+    int sideways = (int)ceilf(halfWidth) + margin;
 
-    *sideways = (int)ceilf(halfWidth) + margin;
-    *north = (int)ceilf(view->north) + margin;
-    *south = (int)ceilf(view->south) + margin;
+    *west = sideways - view->shiftX;
+    *east = sideways + view->shiftX;
+    *north = (int)ceilf(view->north) + margin - view->shiftY;
+    *south = (int)ceilf(view->south) + margin + view->shiftY;
+}
+
+float CtrFieldView_Limit(float at, float before, float after, float low, float high, unsigned closed)
+{
+    float least = low + before, most = high - after;
+
+    /* Both ends closed and the map narrower than the view: in the middle. */
+    if ((closed & CTR_FIELD_EDGE_LOW) && (closed & CTR_FIELD_EDGE_HIGH) && least > most)
+        return (low + high + before - after) * 0.5f;
+    if ((closed & CTR_FIELD_EDGE_LOW) && at < least)
+        return least;
+    if ((closed & CTR_FIELD_EDGE_HIGH) && at > most)
+        return most;
+    return at;
 }
 
 #ifndef CTR_FIELD_VIEW_HOST
 static CtrFieldView sView;
 static unsigned sGeneration;
 static int sKey = -1;
+static int sFlatShiftX, sFlatShiftY, sVoxelShiftX, sVoxelShiftY;
+
+void CtrFieldView_SetFlatShift(int x, int y)
+{
+    sFlatShiftX = x;
+    sFlatShiftY = y;
+}
+
+void CtrFieldView_SetVoxelShift(int x, int y)
+{
+    sVoxelShiftX = x;
+    sVoxelShiftY = y;
+}
 
 const CtrFieldView *CtrFieldView_Current(void)
 {
@@ -132,8 +165,9 @@ const CtrFieldView *CtrFieldView_Current(void)
     int pitch = 0, zoom = 0;
 #endif
     int key = voxel ? 1 + ((pitch & 0xFF) << 1) + ((zoom & 0x3FF) << 9) : 0;
+    int shiftX = voxel ? sVoxelShiftX : sFlatShiftX, shiftY = voxel ? sVoxelShiftY : sFlatShiftY;
 
-    if (key != sKey)
+    if (key != sKey || shiftX != sView.shiftX || shiftY != sView.shiftY)
     {
         CtrFieldView view;
 
@@ -141,6 +175,8 @@ const CtrFieldView *CtrFieldView_Current(void)
             CtrFieldView_Voxel(&view, (float)pitch, (float)zoom);
         else
             CtrFieldView_Flat(&view);
+        view.shiftX = shiftX;
+        view.shiftY = shiftY;
         if (sKey < 0 || memcmp(&view, &sView, sizeof(view)) != 0)
             ++sGeneration;
         sView = view;

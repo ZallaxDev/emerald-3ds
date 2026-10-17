@@ -17,6 +17,7 @@
 #include "metatile_behavior.h"
 #include "event_object_movement.h"
 #include "field_player_avatar.h"
+#include "field_camera.h"
 #include "constants/map_types.h"
 #include "constants/metatile_behaviors.h"
 #include "port_platform.h"
@@ -705,6 +706,11 @@ bool VoxelWorld_Underground(void)
 bool VoxelWorld_MapIsConnected(void)
 {
     return gMapHeader.connections != NULL && gMapHeader.connections->count > 0;
+}
+
+unsigned VoxelWorld_ClosedEdges(void)
+{
+    return GetMapClosedEdges();
 }
 
 /*
