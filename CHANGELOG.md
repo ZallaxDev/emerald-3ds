@@ -16,6 +16,13 @@
   REGISTER puts a key item on Y, and SWITCH ITEM moves an item in its
   pocket as SELECT does, while no event is under way.
 
+- POKéNAV on the bottom screen no longer stops the game: its main menu (the
+  column's MAP stands for HOENN MAP), Match Call (the trainer list with
+  rematches, where each trainer is, and calls with the game's messages) and
+  the CONDITION menu with the party's condition graphs, sheen and pictures
+  are drawn there in the game's look. SEARCH and RIBBONS still open the
+  game's PokéNav.
+
 ## 0.4.0 — 2026-10-16
 
 - The project is now called Emerald 3DS, by Zallax: new name on the HOME

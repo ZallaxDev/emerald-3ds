@@ -55,6 +55,8 @@
 #include "3ds_encounters.h"
 #include "3ds_locale_text.h"
 #include "main.h"
+#include "match_call.h"
+#include "menu_specialized.h"
 #include "money.h"
 #include "battle.h"
 #include "battle_anim.h"
@@ -496,6 +498,27 @@ static struct
     const u8 *hmIcon;
     u8 *selectIcon, *scrollTiles;
     Pal scrollPal;
+    /* The PokéNav (pokenav_*.c): each BG layer's tiles, tilemap and the
+     * palette in the slot its entries name (navPal: 0 header, 1 message or
+     * call window, 2 device outline or Match Call UI, 3 dots or list, 4 call
+     * frame, 5 the rematch Poké Ball); the sprites and their palettes. */
+    u8 *navHeaderTiles, *navMessageTiles, *navDeviceTiles, *navDotsTiles;
+    u32 navHeaderCount, navMessageCount, navDeviceCount, navDotsCount;
+    u16 *navHeaderMap, *navMessageMap, *navDeviceMap, *navDotsMap;
+    Pal navPal[6], navMcPal[6];
+    u8 *navOptionTiles, *navLeftMain, *navLeftMatchCall, *navBlueLight;
+    Pal navOptionPal[5], navLeftPal[5], navBlueLightPal;
+    u8 *mcUiTiles, *mcPokeball, *mcFrame, *mcArrows, *mcCursor;
+    u32 mcUiCount;
+    u16 *mcUiMap;
+    Pal mcArrowPal, mcCursorPal;
+    /* CONDITION: the graph's art and palette (slot 1), the text palette, the
+     * party's balls, the empty places, CANCEL (two palettes), the sheen's
+     * sparkles, the CONDITION and PARTY headers. */
+    u8 *condTiles, *condBall, *condPlace, *condCancel, *condSparkle, *navLeftCondition, *navLeftParty;
+    u32 condCount;
+    u16 *condMap;
+    Pal condPal[6], condTextPal, condCancelPal[2], condSparklePal;
     /* Icons. */
     Icon column[SCR_COUNT];
     u8 *typeTiles;
@@ -642,6 +665,60 @@ static void LoadResources(void)
     sRes.selectIcon = ReadRomfs("bag/select_button.4bpp", NULL);
     sRes.scrollTiles = UnlzFile("interface/scroll_indicator.4bpp.lz", NULL);
     PalFile("interface/red.gbapal", &sRes.scrollPal, 1, FALSE);
+    sRes.navHeaderTiles = Unlz(gPokenavHeader_Gfx, &size);
+    sRes.navHeaderCount = size / 32;
+    sRes.navHeaderMap = Unlz(gPokenavHeader_Tilemap, NULL);
+    sRes.navMessageTiles = Unlz(gPokenavMessageBox_Gfx, &size);
+    sRes.navMessageCount = size / 32;
+    sRes.navMessageMap = Unlz(gPokenavMessageBox_Tilemap, NULL);
+    sRes.navDeviceTiles = UnlzFile("pokenav/device_outline.4bpp.lz", &size);
+    sRes.navDeviceCount = size / 32;
+    sRes.navDeviceMap = UnlzFile("pokenav/device_outline_map.bin.lz", NULL);
+    sRes.navDotsTiles = UnlzFile("pokenav/bg_dots.4bpp.lz", &size);
+    sRes.navDotsCount = size / 32;
+    sRes.navDotsMap = UnlzFile("pokenav/bg_dots.bin.lz", NULL);
+    PalFile("pokenav/header.gbapal", &sRes.navPal[0], 1, FALSE);
+    PalFile("pokenav/message.gbapal", &sRes.navPal[1], 1, FALSE);
+    PalFile("pokenav/device_outline.gbapal", &sRes.navPal[2], 1, FALSE);
+    PalFile("pokenav/bg_dots.gbapal", &sRes.navPal[3], 1, FALSE);
+    sRes.navOptionTiles = Unlz(gPokenavOptions_Gfx, NULL);
+    PalSymbol(gPokenavOptions_Pal, sRes.navOptionPal, 5);
+    sRes.navLeftMain = UnlzFile("pokenav/left_headers/main_menu.4bpp.lz", NULL);
+    sRes.navLeftMatchCall = UnlzFile("pokenav/left_headers/match_call.4bpp.lz", NULL);
+    PalFile("pokenav/left_headers/palette.gbapal", sRes.navLeftPal, 5, FALSE);
+    sRes.navBlueLight = UnlzFile("pokenav/blue_light.4bpp.lz", NULL);
+    PalFile("pokenav/blue_light.gbapal", &sRes.navBlueLightPal, 1, FALSE);
+    /* Match Call: slot 0 the header's, 1 the call window, 2 its UI, 3 the
+     * list window, 4 the call frame, 5 the rematch ball's first palette. */
+    sRes.navMcPal[0] = sRes.navPal[0];
+    PalFile("pokenav/match_call/call_window.gbapal", &sRes.navMcPal[1], 1, FALSE);
+    PalFile("pokenav/match_call/ui.gbapal", &sRes.navMcPal[2], 1, FALSE);
+    PalFile("pokenav/match_call/list_window.gbapal", &sRes.navMcPal[3], 1, FALSE);
+    PalFile("pokenav/match_call/window.gbapal", &sRes.navMcPal[4], 1, FALSE);
+    PalFile("pokenav/match_call/pokeball.gbapal", &sRes.navMcPal[5], 1, FALSE);
+    sRes.mcUiTiles = UnlzFile("pokenav/match_call/ui.4bpp.lz", &size);
+    sRes.mcUiCount = size / 32;
+    sRes.mcUiMap = UnlzFile("pokenav/match_call/ui.bin.lz", NULL);
+    sRes.mcPokeball = UnlzFile("pokenav/match_call/pokeball.4bpp.lz", NULL);
+    sRes.mcFrame = ReadRomfs("pokenav/match_call/window.4bpp", NULL);
+    sRes.mcArrows = UnlzFile("pokenav/list_arrows.4bpp.lz", NULL);
+    PalFile("pokenav/list_arrows.gbapal", &sRes.mcArrowPal, 1, FALSE);
+    sRes.mcCursor = UnlzFile("pokenav/match_call/options_cursor.4bpp.lz", NULL);
+    sRes.condTiles = Unlz(gPokenavCondition_Gfx, &size);
+    sRes.condCount = size / 32;
+    sRes.condMap = Unlz(gPokenavCondition_Tilemap, NULL);
+    sRes.condPal[0] = sRes.navPal[0];
+    PalFile("pokenav/condition/graph.gbapal", &sRes.condPal[1], 1, FALSE);
+    PalFile("pokenav/condition/text.gbapal", &sRes.condTextPal, 1, FALSE);
+    sRes.condBall = ReadRomfs("pokenav/condition/pokeball.4bpp", NULL);
+    sRes.condPlace = ReadRomfs("pokenav/condition/pokeball_placeholder.4bpp", NULL);
+    sRes.condCancel = ReadRomfs("pokenav/condition/cancel.4bpp", NULL);
+    PalFile("pokenav/condition/cancel.gbapal", sRes.condCancelPal, 2, FALSE);
+    sRes.condSparkle = ReadRomfs("pokenav/condition/sparkle.4bpp", NULL);
+    PalFile("pokenav/condition/sparkle.gbapal", &sRes.condSparklePal, 1, FALSE);
+    sRes.navLeftCondition = UnlzFile("pokenav/left_headers/condition.4bpp.lz", NULL);
+    sRes.navLeftParty = UnlzFile("pokenav/left_headers/party.4bpp.lz", NULL);
+    PalFile("pokenav/match_call/options_cursor.gbapal", &sRes.mcCursorPal, 1, FALSE);
     {
         u16 *raw = Unlz(gSummaryMoveSelect_Pal, NULL);
 
@@ -2440,6 +2517,19 @@ typedef struct
      * rows on show. */
     u8 bagPocket, bagTop, bagCount, bagSel, bagSwap, bagOk;
     u16 bagItem[8], bagQty[8], bagSelItem;
+    /* POKéNAV: the main menu or Match Call; the options shown (NAV_OPT_*
+     * order), the one picked, the blue light's blink; Match Call's list
+     * (each row's entry and rematch ball), its count and battles, the
+     * entry picked and the place it is at, its options box, the call's page. */
+    u8 navView, navOptions[6], navOptionCount, navCursor, navLight, navOk;
+    u8 mcTop, mcSel, mcBox, mcBoxCursor, mcRematch, mcMapsec;
+    u16 mcCount, mcEntry[8];
+    u32 mcBattles;
+    u8 mcCall, mcPage;
+    /* CONDITION: the party's Pokémon shown (no eggs; their slots), the one
+     * picked (condCount is CANCEL), its five conditions (CONDITION_* order)
+     * and sheen. */
+    u8 condCount, condSel, condSlots[PARTY_SIZE], conditions[CONDITION_COUNT], sheen;
     /* Region map. */
     u8 mapsec, cursorX, cursorY, pickMapsec, pickX, pickY;
     u8 clockShown, clockValid, clockRate, clockPhase;
@@ -2656,6 +2746,13 @@ enum
     HIT_BAG_REGISTER,
     HIT_BAG_SWITCH,
     HIT_BAG_CANCEL,
+    HIT_NAV_OPTION = 0x40, /* + PokéNav main menu row */
+    HIT_NAV_UP = 0x48,
+    HIT_NAV_DOWN,
+    HIT_NAV_BACK,
+    HIT_NAV_CALL,
+    HIT_NAV_BOX_CANCEL,
+    HIT_NAV_MESSAGE,
     HIT_OPTION = 0xC0,     /* + option row; +HIT_OPTION_BACK for the left arrow */
     HIT_PAGE = 0xE0,       /* + OPTIONS page tab */
 };
@@ -3553,6 +3650,163 @@ static void SnapshotBag(ViewState *s)
                                              : BagGetItemIdByPocketPosition(sBagPocket + 1, s->bagSel);
 }
 
+/* ------------------------------------------------------------------------ */
+/* POKéNAV: its main menu and Match Call, drawn here as the world goes on   */
+/* ------------------------------------------------------------------------ */
+
+/*
+ * The PokéNav's main menu and Match Call are drawn by the bottom screen
+ * itself from the save, as the party and the bag are. MAP is the bottom
+ * screen's own map; CONDITION and RIBBONS still open the game's PokéNav.
+ * A call is made only with no script running: its message is written with
+ * the string buffers a field message may be printing from (put back after).
+ */
+enum { PNAV_MENU, PNAV_MATCH_CALL, PNAV_CONDITION_MENU, PNAV_CONDITION };
+/* The CONDITION submenu's options. */
+enum { COND_OPT_PARTY, COND_OPT_SEARCH, COND_OPT_CANCEL, COND_OPT_COUNT };
+enum { NAV_OPT_MAP, NAV_OPT_CONDITION, NAV_OPT_MATCH_CALL, NAV_OPT_RIBBONS, NAV_OPT_SWITCH_OFF };
+#define MC_ROWS 8
+#define MC_NO_ENTRY 0xFF
+static u8 sNavView, sNavCursor, sCondMenuCursor, sCondSel, sMcTop, sMcSel = MC_NO_ENTRY, sMcBoxCursor;
+static bool8 sMcBox, sMcCall;
+static u8 sMcPage, sMcPages, sMcPageStart[24];
+static u8 sMcMessage[1000];
+static struct PokenavMatchCallEntry sMcEntries[MC_HEADER_COUNT + REMATCH_TABLE_ENTRIES];
+static u16 sMcCount;
+
+/* pokenav_menu_handler.c's option lists, by the flags the game reads,
+ * without HOENN MAP: the column's MAP is the bottom screen's map. */
+static u8 NavOptions(u8 *options)
+{
+    u8 n = 0;
+
+    options[n++] = NAV_OPT_CONDITION;
+    if (FlagGet(FLAG_ADDED_MATCH_CALL_TO_POKENAV))
+    {
+        options[n++] = NAV_OPT_MATCH_CALL;
+        if (FlagGet(FLAG_SYS_RIBBON_GET))
+            options[n++] = NAV_OPT_RIBBONS;
+    }
+    options[n++] = NAV_OPT_SWITCH_OFF;
+    return n;
+}
+
+/* LoopedTask_BuildMatchCallList: the special trainers enabled, then the
+ * registered rematch trainers. */
+static void BuildMatchCall(void)
+{
+    sMcCount = 0;
+    for (int i = 0; i < MC_HEADER_COUNT; ++i)
+        if (MatchCall_GetEnabled(i))
+            sMcEntries[sMcCount++] = (struct PokenavMatchCallEntry){TRUE, MatchCall_GetMapSec(i), i};
+    for (int i = 0; i < REMATCH_TABLE_ENTRIES; ++i)
+        if (!MatchCall_HasRematchId(i) && IsRematchEntryRegistered(i))
+            sMcEntries[sMcCount++] = (struct PokenavMatchCallEntry){FALSE, GetMatchTableMapSectionId(i), i};
+}
+
+/* ShouldDrawRematchPokeballIcon. */
+static bool8 McRematch(const struct PokenavMatchCallEntry *e)
+{
+    int index = e->isSpecialTrainer ? MatchCall_GetRematchTableIdx(e->headerId) : e->headerId;
+
+    return index != REMATCH_TABLE_ENTRIES && gSaveBlock1Ptr->trainerRematches[index] != 0;
+}
+
+/* AreAnyTrainerRematchesNearby: the main menu's blue light. */
+static bool8 NavRematchNearby(void)
+{
+    for (int i = 0; i < REMATCH_TABLE_ENTRIES; ++i)
+        if (GetMatchTableMapSectionId(i) == gMapHeader.regionMapSectionId && IsRematchEntryRegistered(i)
+            && gSaveBlock1Ptr->trainerRematches[i])
+            return TRUE;
+    return FALSE;
+}
+
+static void ResetNavScreen(void)
+{
+    sNavView = PNAV_MENU;
+    sMcBox = sMcCall = FALSE;
+    sMcSel = MC_NO_ENTRY;
+}
+
+/* The condition screen: the party without its eggs (as
+ * pokenav_conditions.c lists it), then CANCEL. */
+static void SnapshotCondition(ViewState *s)
+{
+    SnapshotPartyMons(s);
+    s->condCount = 0;
+    for (int i = 0; i < PARTY_SIZE; ++i)
+        if (s->party[i].species && !s->party[i].isEgg)
+            s->condSlots[s->condCount++] = i;
+    if (sCondSel > s->condCount)
+        sCondSel = 0;
+    s->condSel = sCondSel;
+    if (s->condSel < s->condCount)
+    {
+        struct Pokemon *mon = &gPlayerParty[s->condSlots[s->condSel]];
+
+        SummaryPic(mon);
+        s->personality = GetMonData(mon, MON_DATA_PERSONALITY);
+        s->conditions[CONDITION_COOL] = GetMonData(mon, MON_DATA_COOL);
+        s->conditions[CONDITION_TOUGH] = GetMonData(mon, MON_DATA_TOUGH);
+        s->conditions[CONDITION_SMART] = GetMonData(mon, MON_DATA_SMART);
+        s->conditions[CONDITION_CUTE] = GetMonData(mon, MON_DATA_CUTE);
+        s->conditions[CONDITION_BEAUTY] = GetMonData(mon, MON_DATA_BEAUTY);
+        s->sheen = GetMonData(mon, MON_DATA_SHEEN);
+    }
+}
+
+static void SnapshotNav(ViewState *s)
+{
+    s->navOk = sRes.navHeaderTiles && sRes.navHeaderMap && sRes.navDotsMap && sRes.navDeviceMap;
+    s->navView = sNavView;
+    if (sNavView == PNAV_CONDITION_MENU)
+    {
+        s->navOptionCount = COND_OPT_COUNT;
+        for (int i = 0; i < COND_OPT_COUNT; ++i)
+            s->navOptions[i] = i;
+        s->navCursor = sCondMenuCursor;
+        return;
+    }
+    if (sNavView == PNAV_CONDITION)
+    {
+        SnapshotCondition(s);
+        return;
+    }
+    s->navOptionCount = NavOptions(s->navOptions);
+    if (sNavCursor >= s->navOptionCount)
+        sNavCursor = 0;
+    s->navCursor = sNavCursor;
+    s->navLight = FlagGet(FLAG_ADDED_MATCH_CALL_TO_POKENAV) && NavRematchNearby() ? 1 + ((sFrames / 9) & 1) : 0;
+    if (sNavView != PNAV_MATCH_CALL)
+        return;
+    BuildMatchCall();
+    if (sMcSel != MC_NO_ENTRY && sMcSel >= sMcCount)
+        sMcSel = MC_NO_ENTRY, sMcBox = FALSE;
+    if (sMcTop + MC_ROWS > sMcCount)
+        sMcTop = sMcCount > MC_ROWS ? sMcCount - MC_ROWS : 0;
+    s->mcCount = sMcCount;
+    s->mcTop = sMcTop;
+    for (int i = 0; i < MC_ROWS && sMcTop + i < sMcCount; ++i)
+    {
+        const struct PokenavMatchCallEntry *e = &sMcEntries[sMcTop + i];
+
+        s->mcEntry[i] = e->headerId | (e->isSpecialTrainer ? 0x8000 : 0);
+        if (McRematch(e))
+            s->mcRematch |= 1 << i;
+    }
+    s->mcSel = sMcSel;
+    s->mcMapsec = sMcSel != MC_NO_ENTRY ? sMcEntries[sMcSel].mapSec : MAPSEC_NONE;
+    s->mcBattles = GetGameStat(GAME_STAT_TRAINER_BATTLES);
+    if (s->mcBattles > 99999)
+        s->mcBattles = 99999;
+    s->mcBox = sMcBox;
+    s->mcBoxCursor = sMcBoxCursor;
+    s->mcCall = sMcCall;
+    s->mcPage = sMcPage;
+    s->canEdit = PartyEditable();
+}
+
 static void Snapshot(ViewState *s, u8 mode, u8 pressed)
 {
     memset(s, 0, sizeof(*s));
@@ -3646,6 +3900,10 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
             /* The game's own bag (from a shop, the PC...) is the compositor's. */
             if (s->mode == MODE_FIELD)
                 SnapshotBag(s);
+            break;
+        case SCR_POKENAV:
+            if (s->mode == MODE_FIELD)
+                SnapshotNav(s);
             break;
         case SCR_SAVE:
             SnapshotSave(s);
@@ -5442,6 +5700,486 @@ static void DrawBag(const ViewState *s)
     DrawTallButton(84, 186, 9, 52, Ascii(CTR_TEXT("SWITCH\nITEM", "CAMBIAR\nOBJETO", "ÉCHANGER\nOBJET", "SCAMBIA\nSTRUM.")),
                    s->pressed == HIT_BAG_SWITCH || s->bagSwap != BAG_NO_ROW, swappable && item && s->canEdit, HIT_BAG_SWITCH);
     DrawTallButton(166, 186, 9, 52, gText_Cancel, s->pressed == HIT_BAG_CANCEL, TRUE, HIT_BAG_CANCEL);
+}
+
+/*
+ * The PokéNav as pokenav_*.c draws it on the GBA's 240x160, at the top of
+ * the bottom screen: its BG layers back to front (BG3 the dots or the list,
+ * BG2 the device or Match Call's UI, BG1 the message box or the call, BG0 the
+ * header), each OBJ priority's sprites between them, as the GBA shows them.
+ * Under it, the dots go on, with the taps that take the keys' place.
+ */
+static void DrawNavLayerAt(const u8 *tiles, u32 count, const u16 *map, int stride, int sy, int rows, const Pal *pals,
+                           int tileBase, int dy)
+{
+    if (!tiles || !map)
+        return;
+    for (int ty = 0; ty < rows; ++ty)
+        for (int tx = 0; tx < 30; ++tx)
+        {
+            u16 e = map[(sy + ty) * stride + tx];
+            int tile = (e & 0x3FF) - tileBase;
+
+            if (tile >= 0 && (u32)tile < count && (e >> 12) < 6)
+                DrawTile(tiles + tile * 32, tx * 8, dy + ty * 8, pals[e >> 12].c, (e >> 10) & 1, (e >> 11) & 1);
+        }
+}
+
+static void DrawNavLayer(const u8 *tiles, u32 count, const u16 *map, int stride, int sy, int rows, const Pal *pals,
+                         int tileBase)
+{
+    DrawNavLayerAt(tiles, count, map, stride, sy, rows, pals, tileBase, 0);
+}
+
+/* The description box goes down into the bottom screen's extra lines. */
+#define NAV_MESSAGE_DY 64
+
+/* The dots (BG3) under the whole screen: their 20 rows again below. */
+static void DrawNavDots(void)
+{
+    for (int y0 = 0; y0 < H; y0 += 160)
+        for (int ty = 0; ty < 20 && y0 + ty * 8 < H; ++ty)
+            for (int tx = 0; tx < 30; ++tx)
+            {
+                u16 e = sRes.navDotsMap[ty * 32 + tx];
+
+                if ((e & 0x3FF) < sRes.navDotsCount)
+                    DrawTile(sRes.navDotsTiles + (e & 0x3FF) * 32, tx * 8, y0 + ty * 8, sRes.navPal[3].c, (e >> 10) & 1,
+                             (e >> 11) & 1);
+            }
+}
+
+/* A left header (two 64x32 sprites, the second from tile 32). */
+static void DrawNavLeftHeader(const u8 *tiles, const Pal *pal, int y)
+{
+    if (!tiles)
+        return;
+    DrawSprite(tiles, 8, 4, 0, y, pal->c);
+    DrawSprite(tiles + 32 * 32, 8, 4, 64, y, pal->c);
+}
+
+/* A palette made lighter by `level` sixteenths (BLDCNT lighten, BLDY). */
+static void LightenPal(Pal *dst, const Pal *src, int level)
+{
+    for (int i = 0; i < 16; ++i)
+    {
+        u16 c = src->c[i];
+        int r = c >> 11, g = (c >> 5) & 63, b = c & 31;
+
+        r += (31 - r) * level / 16;
+        g += (63 - g) * level / 16;
+        b += (31 - b) * level / 16;
+        dst->c[i] = (r << 11) | (g << 5) | b;
+    }
+}
+
+/* An option of a PokéNav menu: its label in options.4bpp, its palette row
+ * in options.gbapal, its description (pokenav_menu_handler_gfx.c). */
+typedef struct
+{
+    u16 tile;
+    u8 pal;
+    const u8 *description;
+} NavOption;
+
+static const NavOption sNavMainOptions[] = {
+    [NAV_OPT_MAP]        = {0x000, 0, gText_CheckMapOfHoenn},
+    [NAV_OPT_CONDITION]  = {0x020, 1, gText_CheckPokemonInDetail},
+    [NAV_OPT_MATCH_CALL] = {0x040, 4, gText_CallRegisteredTrainer},
+    [NAV_OPT_RIBBONS]    = {0x060, 2, gText_CheckObtainedRibbons},
+    [NAV_OPT_SWITCH_OFF] = {0x080, 3, gText_PutAwayPokenav},
+};
+static const NavOption sNavConditionOptions[] = {
+    [COND_OPT_PARTY]  = {0x0A0, 1, gText_CheckPartyPokemonInDetail},
+    [COND_OPT_SEARCH] = {0x0C0, 1, gText_CheckAllPokemonInDetail},
+    [COND_OPT_CANCEL] = {0x180, 3, gText_ReturnToPokenavMenu},
+};
+
+/*
+ * A PokéNav menu: the dots (purple in the CONDITION menus), the device,
+ * the options from yStart every deltaY (the one picked 10 px left and lit:
+ * its glow at mid strength), the blue light, the description box, the
+ * left header, the top header and the PokéNav's icon.
+ */
+static void DrawNavOptions(const ViewState *s, const NavOption *table, int yStart, int deltaY, const u8 *leftHeader,
+                           const Pal *leftPal, bool8 purple)
+{
+    const Pal *box = &sRes.navPal[1];
+    const u8 *description = table[s->navOptions[s->navCursor]].description;
+    Pal dots[6];
+    int width;
+
+    memcpy(dots, sRes.navPal, sizeof(dots));
+    if (purple)
+    {
+        /* ChangeBgDotsColorToPurple: colours 7 and 8 as 1 and 2. */
+        dots[3].c[1] = sRes.navPal[3].c[7];
+        dots[3].c[2] = sRes.navPal[3].c[8];
+    }
+    for (int y0 = 0; y0 < H; y0 += 160)
+        for (int ty = 0; ty < 20 && y0 + ty * 8 < H; ++ty)
+            for (int tx = 0; tx < 30; ++tx)
+            {
+                u16 e = sRes.navDotsMap[ty * 32 + tx];
+
+                if ((e & 0x3FF) < sRes.navDotsCount)
+                    DrawTile(sRes.navDotsTiles + (e & 0x3FF) * 32, tx * 8, y0 + ty * 8, dots[3].c, (e >> 10) & 1, (e >> 11) & 1);
+            }
+    DrawNavLayer(sRes.navDeviceTiles, sRes.navDeviceCount, sRes.navDeviceMap, 32, 0, 20, sRes.navPal, 0);
+    for (int i = 0; i < s->navOptionCount; ++i)
+    {
+        const NavOption *option = &table[s->navOptions[i]];
+        bool8 picked = i == s->navCursor;
+        int x = picked ? 114 : 124, y = yStart - 8 + deltaY * i;
+        Pal pal = sRes.navOptionPal[option->pal];
+
+        if (picked)
+            LightenPal(&pal, &sRes.navOptionPal[option->pal], 4);
+        for (int j = 0; j < 4 && sRes.navOptionTiles; ++j)
+            DrawSprite(sRes.navOptionTiles + (option->tile + 8 * j) * 32, 4, 2, x + 32 * j, y + (s->pressed == HIT_NAV_OPTION + i),
+                       pal.c);
+        AddHit(112, y - 2, 128, deltaY, HIT_NAV_OPTION + i);
+    }
+    if (s->navLight == 1 && sRes.navBlueLight)
+        DrawSprite(sRes.navBlueLight, 4, 2, 0, 88, sRes.navBlueLightPal.c);
+    DrawNavLayerAt(sRes.navMessageTiles, sRes.navMessageCount, sRes.navMessageMap, 32, 0, 20, sRes.navPal, 0, NAV_MESSAGE_DY);
+    /* The description window at (3, 17): its fill and text {6, 8, 7}. */
+    FillRect(24, 136 + NAV_MESSAGE_DY, 192, 16, box->c[6]);
+    width = StrWidth(&sNormal, description);
+    DrawStr(&sNormal, description, 24 + (192 - width) / 2, 137 + NAV_MESSAGE_DY, box->c[8], box->c[7]);
+    DrawNavLeftHeader(leftHeader, leftPal, 32);
+    DrawNavLayer(sRes.navHeaderTiles, sRes.navHeaderCount, sRes.navHeaderMap, 32, 0, 20, sRes.navPal, 0);
+    if (sRes.column[SCR_POKENAV].tiles)
+        DrawSprite(sRes.column[SCR_POKENAV].tiles, 4, 4, 204, -4, sRes.column[SCR_POKENAV].pal.c);
+}
+
+static void DrawNavMenu(const ViewState *s)
+{
+    DrawNavOptions(s, sNavMainOptions, 42, 20, sRes.navLeftMain, &sRes.navLeftPal[3], FALSE);
+}
+
+/* A pixel of BG3 under the graph's polygon: BG2's green blended over it
+ * (BLDALPHA 11/4), out = (11 * green + 4 * BG3) / 16 per channel. */
+static void BlendGraphPixel(int x, int y)
+{
+    u16 *p, c;
+    int r, g, b;
+
+    x += sOX;
+    if (x < sClipX0 || x >= sClipX1 || y < sClipY0 || y >= sClipY1)
+        return;
+    p = &sDst[x * H + (H - 1 - y)];
+    c = *p;
+    r = (4 * (c >> 11)) / 16;
+    g = (11 * 31 + 4 * ((c >> 6) & 31)) / 16;
+    b = (4 * (c & 31)) / 16;
+    if (g > 31)
+        g = 31;
+    *p = (r << 11) | (g << 6) | b;
+}
+
+/* The polygon of the five conditions (ConditionGraph_CalcPositions): its
+ * rows 56-120, each on the scanline above it as the game's windows show it. */
+static void DrawConditionGraph(const u8 *conditions)
+{
+    static const u8 order[] = {CONDITION_COOL, CONDITION_BEAUTY, CONDITION_CUTE, CONDITION_SMART, CONDITION_TOUGH};
+    struct UCoords16 v[CONDITION_COUNT];
+    u8 values[CONDITION_COUNT];
+
+    memcpy(values, conditions, sizeof(values));
+    ConditionGraph_CalcPositions(values, v);
+    for (int row = CONDITION_GRAPH_TOP_Y; row <= CONDITION_GRAPH_BOTTOM_Y; ++row)
+    {
+        int x0 = 1000, x1 = -1000;
+
+        for (int i = 0; i < CONDITION_COUNT; ++i)
+        {
+            const struct UCoords16 *a = &v[order[i]], *b = &v[order[(i + 1) % CONDITION_COUNT]];
+            int ay = a->y, by = b->y;
+
+            if ((row < ay && row < by) || (row > ay && row > by))
+                continue;
+            if (ay == by)
+            {
+                x0 = min(x0, min(a->x, b->x));
+                x1 = max(x1, max(a->x, b->x));
+                continue;
+            }
+            {
+                int x = a->x + ((row - ay) * ((int)b->x - a->x) + (by - ay) / 2) / (by - ay);
+
+                x0 = min(x0, x);
+                x1 = max(x1, x);
+            }
+        }
+        for (int x = x0; x <= x1; ++x)
+            BlendGraphPixel(x, row - 1);
+    }
+}
+
+/*
+ * The party's condition screen (pokenav_conditions_gfx.c): the graph's
+ * art (BG3) with the polygon in it, the Pokémon's picture and name, its
+ * sheen's sparkles, the party's balls and CANCEL on the right, the headers.
+ * Under it, the dots and the taps that take the keys' place.
+ */
+static void DrawConditionScreen(const ViewState *s)
+{
+    static const u8 up[] = {CHAR_UP_ARROW, EOS}, down[] = {CHAR_DOWN_ARROW, EOS};
+    static const s8 sparkles[10][2] = {
+        {0, -35}, {20, -28}, {33, -10}, {33, 10}, {20, 28}, {0, 35}, {-20, 28}, {-33, 10}, {-33, -10}, {-20, -28},
+    };
+    bool8 cancel = s->condSel >= s->condCount;
+    const Pal *text = &sRes.condTextPal;
+    Pal dots[6];
+
+    memcpy(dots, sRes.navPal, sizeof(dots));
+    dots[3].c[1] = sRes.navPal[3].c[7];
+    dots[3].c[2] = sRes.navPal[3].c[8];
+    for (int ty = 20; ty < H / 8; ++ty)
+        for (int tx = 0; tx < 30; ++tx)
+        {
+            u16 e = sRes.navDotsMap[(ty - 20) * 32 + tx];
+
+            if ((e & 0x3FF) < sRes.navDotsCount)
+                DrawTile(sRes.navDotsTiles + (e & 0x3FF) * 32, tx * 8, ty * 8, dots[3].c, (e >> 10) & 1, (e >> 11) & 1);
+        }
+    /* BG3, the graph's art; BG2's green inside the polygon. */
+    DrawNavLayer(sRes.condTiles, sRes.condCount, sRes.condMap, 32, 0, 20, sRes.condPal, 0);
+    if (!cancel)
+        DrawConditionGraph(s->conditions);
+    /* OBJ priority 2: the party's balls (the picked one's top half), the
+     * empty places, CANCEL (lit when picked). */
+    for (int i = 0; i < s->condCount && sRes.condBall; ++i)
+    {
+        DrawSprite(sRes.condBall + (i == s->condSel ? 0 : 4) * 32, 2, 2, 218, 20 * i, sRes.condCancelPal[0].c);
+        AddHit(212, 20 * i - 2, 28, 20, HIT_ROW + i);
+    }
+    for (int i = s->condCount; i < PARTY_SIZE && sRes.condPlace; ++i)
+        DrawTile(sRes.condPlace, 222, 20 * i, sRes.condCancelPal[0].c, FALSE, FALSE);
+    if (sRes.condCancel)
+    {
+        DrawSprite(sRes.condCancel, 4, 2, 214, 120, sRes.condCancelPal[cancel ? 0 : 1].c);
+        AddHit(212, 118, 28, 20, HIT_ROW + s->condCount);
+    }
+    if (!cancel)
+    {
+        const MonView *m = &s->party[s->condSlots[s->condSel]];
+        u8 line[16];
+        int n = s->sheen == 255 ? 9 : s->sheen / 29;
+
+        /* OBJ priority 1: the picture (not flipped here). */
+        if (sSumPic.valid)
+            DrawSprite(sSumPic.tiles, 8, 8, 6, 72, sSumPic.pal.c);
+        /* BG1: CopyConditionMonNameGender at (104, 9), the gender at x 60. */
+        DrawStr(&sNormal, m->nick, 104, 9, text->c[8], text->c[9]);
+        if (m->gender == MON_MALE)
+            DrawStr(&sNormal, gText_MaleSymbol, 104 + 60, 9, text->c[4], text->c[5]);
+        else if (m->gender == MON_FEMALE)
+            DrawStr(&sNormal, gText_FemaleSymbol, 104 + 60, 9, text->c[6], text->c[7]);
+        line[0] = CHAR_SLASH;
+        StringCopy(StringCopy(line + 1, gText_LevelSymbol), Number(m->level, 3, STR_CONV_MODE_LEFT_ALIGN));
+        DrawStr(&sNormal, line, 104 + 68, 9, text->c[8], text->c[9]);
+        /* OBJ priority 0: the sheen's sparkles round the picture. */
+        for (int k = 0; k <= n && sRes.condSparkle; ++k)
+            DrawSprite(sRes.condSparkle + 8 * 32, 2, 2, 38 + sparkles[k][0] - 8, 104 + sparkles[k][1] - 8, sRes.condSparklePal.c);
+    }
+    /* The headers: CONDITION (main) and PARTY under it, then BG0 from row 4. */
+    DrawNavLeftHeader(sRes.navLeftCondition, &sRes.navLeftPal[1], 0);
+    if (sRes.navLeftParty)
+    {
+        DrawSprite(sRes.navLeftParty, 4, 2, 0, 26, sRes.navLeftPal[1].c);
+        DrawSprite(sRes.navLeftParty + 8 * 32, 4, 2, 32, 26, sRes.navLeftPal[1].c);
+    }
+    DrawNavLayer(sRes.navHeaderTiles, sRes.navHeaderCount, sRes.navHeaderMap, 32, 4, 20, sRes.condPal, 0);
+    FillRect(8, 144, 128, 16, sRes.navPal[0].c[4]);
+    FillRect(8, 144, 128, 1, sRes.navPal[0].c[5]);
+
+    /* The keys' work by touch: the Pokémon before and after, back. */
+    DrawTallButton(2, 172, 7, 64, up, s->pressed == HIT_NAV_UP, TRUE, HIT_NAV_UP);
+    DrawTallButton(62, 172, 7, 64, down, s->pressed == HIT_NAV_DOWN, TRUE, HIT_NAV_DOWN);
+    DrawTallButton(122, 172, 14, 64, gText_Cancel, s->pressed == HIT_NAV_BACK, TRUE, HIT_NAV_BACK);
+}
+
+/* The call's message: its pages of two lines (a new page at \p, as the
+ * PokéNav's call window clears). */
+static void McPaginate(void)
+{
+    const u8 *p = sMcMessage;
+    int lines = 0;
+
+    sMcPages = 1;
+    sMcPageStart[0] = 0;
+    while (*p != EOS && sMcPages < ARRAY_COUNT(sMcPageStart))
+    {
+        u8 c = *p++;
+
+        if (c == EXT_CTRL_CODE_BEGIN && *p != EOS)
+        {
+            p += GetExtCtrlCodeLength(*p);
+            continue;
+        }
+        if (c == CHAR_PROMPT_CLEAR || ((c == CHAR_NEWLINE || c == CHAR_PROMPT_SCROLL) && ++lines == 2))
+        {
+            sMcPageStart[sMcPages++] = p - sMcMessage;
+            lines = 0;
+        }
+    }
+    if (sMcPageStart[sMcPages - 1] == p - sMcMessage && sMcPages > 1)
+        --sMcPages;
+}
+
+static void DrawMcPage(int page, int x, int y, u16 fg, u16 sh)
+{
+    const u8 *p = sMcMessage + sMcPageStart[page];
+    int lines = 0, left = x;
+
+    while (*p != EOS)
+    {
+        u16 g;
+
+        if (page + 1 < sMcPages && p - sMcMessage >= sMcPageStart[page + 1])
+            break;
+        if (*p == CHAR_PROMPT_CLEAR)
+            break;
+        g = NextGlyph(&p);
+        if (g == 0xFFFF)
+            break;
+        if (g == 0xFFFE)
+        {
+            if (++lines == 2)
+                break;
+            x = left;
+            y += sNormal.lineHeight;
+            continue;
+        }
+        x += DrawGlyph(&sNormal, g, x, y, fg, sh);
+    }
+}
+
+static void DrawMatchCall(const ViewState *s)
+{
+    static const u8 up[] = {CHAR_UP_ARROW, EOS}, down[] = {CHAR_DOWN_ARROW, EOS};
+    const Pal *ui = &sRes.navMcPal[2], *list = &sRes.navMcPal[3];
+    u8 text[64];
+
+    /* BG3, the list: its window colour, the rows, the rematch balls. */
+    DrawNavDots();
+    FillRect(104, 0, 136, 160, list->c[1]);
+    for (int i = 0; i < MC_ROWS && s->mcTop + i < s->mcCount; ++i)
+    {
+        struct PokenavMatchCallEntry e = {(s->mcEntry[i] & 0x8000) != 0, 0, s->mcEntry[i] & 0x7FFF};
+        int y = 8 + 16 * i;
+
+        BufferMatchCallNameAndDesc(&e, text);
+        DrawBagText(&sNarrow, text, 104 + 8, y + 1, list->c[TEXT_COLOR_DARK_GRAY], list->c[TEXT_COLOR_LIGHT_GRAY]);
+        if ((s->mcRematch & (1 << i)) && sRes.mcPokeball)
+        {
+            DrawTile(sRes.mcPokeball, 232, y, sRes.navMcPal[5].c, FALSE, FALSE);
+            DrawTile(sRes.mcPokeball + 32, 232, y + 8, sRes.navMcPal[5].c, FALSE, FALSE);
+        }
+        AddHit(104, y, 136, 16, HIT_ROW + i);
+    }
+    /* BG2, the UI, and its windows: where the trainer is, the record. */
+    DrawNavLayer(sRes.mcUiTiles, sRes.mcUiCount, sRes.mcUiMap, 32, 0, 20, sRes.navMcPal, 0x80);
+    if (s->mcSel != MC_NO_ENTRY)
+    {
+        const u8 *place = text;
+
+        if (s->mcMapsec == MAPSEC_NONE)
+            place = gText_Unknown;
+        else
+            GetMapName(text, s->mcMapsec, 0);
+        DrawStr(&sNarrow, place, (88 - StrWidth(&sNarrow, place)) / 2, 41, ui->c[TEXT_COLOR_DARK_GRAY], ui->c[TEXT_COLOR_LIGHT_GRAY]);
+    }
+    if (!s->mcBox)
+    {
+        DrawStr(&sNarrow, gText_NumberRegistered, 2, 73, ui->c[TEXT_COLOR_DARK_GRAY], ui->c[TEXT_COLOR_LIGHT_GRAY]);
+        DrawStrRight(&sNarrow, Number(s->mcCount, 3, STR_CONV_MODE_LEFT_ALIGN), 86, 89, ui->c[TEXT_COLOR_DARK_GRAY],
+                     ui->c[TEXT_COLOR_LIGHT_GRAY]);
+        DrawStr(&sNarrow, gText_NumberOfBattles, 2, 105, ui->c[TEXT_COLOR_DARK_GRAY], ui->c[TEXT_COLOR_LIGHT_GRAY]);
+        DrawStrRight(&sNarrow, Number(s->mcBattles, 5, STR_CONV_MODE_LEFT_ALIGN), 86, 121, ui->c[TEXT_COLOR_DARK_GRAY],
+                     ui->c[TEXT_COLOR_LIGHT_GRAY]);
+    }
+    else
+    {
+        /* The options box: CALL and CANCEL (CHECK to come), the cursor. */
+        DrawStr(&sNarrow, gText_Call, 16, 73, ui->c[TEXT_COLOR_DARK_GRAY], ui->c[TEXT_COLOR_LIGHT_GRAY]);
+        DrawStr(&sNarrow, gText_Cancel6, 16, 89, ui->c[TEXT_COLOR_DARK_GRAY], ui->c[TEXT_COLOR_LIGHT_GRAY]);
+        if (sRes.mcCursor)
+            DrawSprite(sRes.mcCursor, 1, 2, 0, 72 + 16 * s->mcBoxCursor, sRes.mcCursorPal.c);
+        AddHit(0, 72, 88, 16, HIT_NAV_CALL);
+        AddHit(0, 88, 88, 16, HIT_NAV_BOX_CANCEL);
+    }
+    /* OBJ priority 2: the list arrows. */
+    if (sRes.mcArrows)
+    {
+        if (s->mcSel != MC_NO_ENTRY && s->mcSel >= s->mcTop && s->mcSel < s->mcTop + MC_ROWS)
+            DrawSprite(sRes.mcArrows, 1, 2, 103, 8 + 16 * (s->mcSel - s->mcTop), sRes.mcArrowPal.c);
+        if (s->mcTop + MC_ROWS < s->mcCount)
+            DrawSprite(sRes.mcArrows + 2 * 32, 2, 1, 156, 132, sRes.mcArrowPal.c);
+        if (s->mcTop > 0)
+            DrawSprite(sRes.mcArrows + 4 * 32, 2, 1, 156, 4, sRes.mcArrowPal.c);
+    }
+    /* BG1: the call, in its frame at rows 11-16 (match_call.c), the window at
+     * (1, 12) 28x4, the PokéNav's icon at its left. */
+    if (s->mcCall && sRes.mcFrame)
+    {
+        const Pal *frame = &sRes.navMcPal[4], *window = &sRes.navMcPal[1];
+
+        for (int tx = 0; tx < 30; ++tx)
+            for (int ty = 11; ty <= 16; ++ty)
+            {
+                int tile;
+
+                if (ty == 11)
+                    tile = tx == 0 ? 1 : tx == 29 ? 3 : 2;
+                else if (ty == 16)
+                    tile = tx == 0 ? 6 : tx == 29 ? 8 : 7;
+                else if (tx == 0 || tx == 29)
+                    tile = tx == 0 ? 4 : 5;
+                else
+                    continue;
+                DrawTile(sRes.mcFrame + (tile - 1) * 32, tx * 8, ty * 8, frame->c, FALSE, FALSE);
+            }
+        FillRect(8, 96, 224, 32, window->c[1]);
+        DrawMcPage(s->mcPage, 8 + 32, 97, window->c[TEXT_COLOR_DARK_GRAY], window->c[TEXT_COLOR_LIGHT_GRAY]);
+        if (sRes.column[SCR_POKENAV].tiles)
+            DrawSprite(sRes.column[SCR_POKENAV].tiles, 4, 4, 8, 96, sRes.column[SCR_POKENAV].pal.c);
+        AddHit(0, 88, 240, 48, HIT_NAV_MESSAGE);
+    }
+    /* OBJ priority 1: the left header (match_call, y 16), then BG0 from row 4. */
+    DrawNavLeftHeader(sRes.navLeftMatchCall, &sRes.navLeftPal[4], 0);
+    DrawNavLayer(sRes.navHeaderTiles, sRes.navHeaderCount, sRes.navHeaderMap, 32, 4, 20, sRes.navMcPal, 0);
+    /* The help bar's window at (8, 144): its fill (no keys to tell of). */
+    FillRect(8, 144, 128, 16, sRes.navPal[0].c[4]);
+    FillRect(8, 144, 128, 1, sRes.navPal[0].c[5]);
+
+    /* The keys' work by touch. */
+    DrawTallButton(2, 172, 7, 64, up, s->pressed == HIT_NAV_UP, s->mcTop > 0 && !s->mcCall, HIT_NAV_UP);
+    DrawTallButton(62, 172, 7, 64, down, s->pressed == HIT_NAV_DOWN, s->mcTop + MC_ROWS < s->mcCount && !s->mcCall,
+                   HIT_NAV_DOWN);
+    DrawTallButton(122, 172, 14, 64, gText_Cancel, s->pressed == HIT_NAV_BACK, !s->mcCall, HIT_NAV_BACK);
+}
+
+static void DrawNav(const ViewState *s)
+{
+    int clipX1 = sClipX1;
+
+    if (!s->navOk)
+        return;
+    /* The GBA's screen ends at 240: the option bars run off it there. */
+    if (sClipX1 > CW)
+        sClipX1 = CW;
+    if (s->navView == PNAV_MATCH_CALL)
+        DrawMatchCall(s);
+    else if (s->navView == PNAV_CONDITION_MENU)
+        DrawNavOptions(s, sNavConditionOptions, 56, 20, sRes.navLeftCondition, &sRes.navLeftPal[1], TRUE);
+    else if (s->navView == PNAV_CONDITION)
+        DrawConditionScreen(s);
+    else
+        DrawNavMenu(s);
+    sClipX1 = clipX1;
 }
 
 static void DrawParty(const ViewState *s)
@@ -7274,6 +8012,10 @@ static void Render(const ViewState *s)
             FillRect(0, 0, CW, H, 0);
             break;
         case SCR_CARD: DrawTrainerCard(s); break;
+        case SCR_POKENAV:
+            if (s->mode == MODE_FIELD)
+                DrawNav(s);
+            break;
         case SCR_SAVE: DrawSave(s); break;
         case SCR_OPTION: DrawOptions(s); break;
         }
@@ -8477,6 +9219,192 @@ static void BagTap(u8 id)
     }
 }
 
+/* The game's PokéNav for what is not drawn here yet (CONDITION, RIBBONS). */
+static void OpenGamePokenav(void)
+{
+    if (FieldIdle() && CtrStartMenu_Available())
+    {
+        StartPlan(PLAN_START, START_POKENAV);
+        BeginSession(FALSE);
+    }
+}
+
+/* CALL: the message as GetMatchCallMessageText writes it, with the string
+ * buffers it uses put back. */
+static void McCall(u8 index)
+{
+    static u8 saved[3][sizeof(gStringVar1)], saved4[sizeof(gStringVar4)];
+    const struct PokenavMatchCallEntry *e = &sMcEntries[index];
+    const u8 *text;
+
+    if (ScriptContext_IsEnabled() || gMain.inBattle)
+        return;
+    memcpy(saved[0], gStringVar1, sizeof(gStringVar1));
+    memcpy(saved[1], gStringVar2, sizeof(gStringVar2));
+    memcpy(saved[2], gStringVar3, sizeof(gStringVar3));
+    memcpy(saved4, gStringVar4, sizeof(gStringVar4));
+    if (!Overworld_MapTypeAllowsTeleportAndFly(gMapHeader.mapType))
+        text = gText_CallCantBeMadeHere;
+    else
+    {
+        if (!e->isSpecialTrainer)
+            SelectMatchCallMessage(GetTrainerIdxByRematchIdx(e->headerId), gStringVar4);
+        else
+            MatchCall_GetMessage(e->headerId, gStringVar4);
+        text = gStringVar4;
+    }
+    StringCopy(sMcMessage, text);
+    memcpy(gStringVar1, saved[0], sizeof(gStringVar1));
+    memcpy(gStringVar2, saved[1], sizeof(gStringVar2));
+    memcpy(gStringVar3, saved[2], sizeof(gStringVar3));
+    memcpy(gStringVar4, saved4, sizeof(gStringVar4));
+    McPaginate();
+    sMcPage = 0;
+    sMcCall = TRUE;
+    PlaySE(SE_POKENAV_CALL);
+    CtrLog_Write(CTR_LOG_INPUT, "bottom screen: match call %u (%u pages)", e->headerId, sMcPages);
+}
+
+static void PokenavTap(u8 id)
+{
+    if (sNavView == PNAV_CONDITION_MENU)
+    {
+        if (id < HIT_NAV_OPTION || id >= HIT_NAV_OPTION + COND_OPT_COUNT)
+            return;
+        PlaySE(SE_SELECT);
+        if (id - HIT_NAV_OPTION != sCondMenuCursor)
+        {
+            sCondMenuCursor = id - HIT_NAV_OPTION;
+            return;
+        }
+        if (sCondMenuCursor == COND_OPT_PARTY)
+        {
+            sNavView = PNAV_CONDITION;
+            sCondSel = 0;
+        }
+        else if (sCondMenuCursor == COND_OPT_SEARCH)
+            OpenGamePokenav();
+        else
+            sNavView = PNAV_MENU;
+        return;
+    }
+    if (sNavView == PNAV_CONDITION)
+    {
+        u8 count = 0;
+
+        for (int i = 0; i < PARTY_SIZE && i < gPlayerPartyCount; ++i)
+            if (GetMonData(&gPlayerParty[i], MON_DATA_SPECIES) != SPECIES_NONE && !GetMonData(&gPlayerParty[i], MON_DATA_IS_EGG))
+                ++count;
+        if (id == HIT_NAV_BACK || (id == HIT_ROW + count && sCondSel == count))
+            sNavView = PNAV_CONDITION_MENU;
+        else if (id == HIT_NAV_UP || id == HIT_NAV_DOWN)
+            sCondSel = (sCondSel + (id == HIT_NAV_UP ? count : 1)) % (count + 1);
+        else if (id >= HIT_ROW && id <= HIT_ROW + count)
+            sCondSel = id - HIT_ROW;
+        else
+            return;
+        PlaySE(SE_SELECT);
+        return;
+    }
+    if (sNavView == PNAV_MENU)
+    {
+        u8 options[6], count = NavOptions(options);
+
+        if (id < HIT_NAV_OPTION || id >= HIT_NAV_OPTION + count)
+            return;
+        if (id - HIT_NAV_OPTION != sNavCursor)
+        {
+            /* The first tap picks it, as the cursor does; the second opens it. */
+            sNavCursor = id - HIT_NAV_OPTION;
+            PlaySE(SE_SELECT);
+            return;
+        }
+        PlaySE(SE_SELECT);
+        switch (options[sNavCursor])
+        {
+        case NAV_OPT_MAP:
+            sScreen = SCR_MAP;
+            break;
+        case NAV_OPT_MATCH_CALL:
+            sNavView = PNAV_MATCH_CALL;
+            sMcTop = 0;
+            sMcSel = MC_NO_ENTRY;
+            sMcBox = sMcCall = FALSE;
+            break;
+        case NAV_OPT_CONDITION:
+            sNavView = PNAV_CONDITION_MENU;
+            sCondMenuCursor = COND_OPT_PARTY;
+            break;
+        case NAV_OPT_SWITCH_OFF:
+            sScreen = SCR_MAP;
+            break;
+        default:
+            OpenGamePokenav();
+            break;
+        }
+        return;
+    }
+    if (sMcCall)
+    {
+        /* The call: a tap for the next page; after the last, it hangs up. */
+        if (id == HIT_NAV_MESSAGE)
+        {
+            if (++sMcPage >= sMcPages)
+            {
+                sMcCall = FALSE;
+                sMcBox = FALSE;
+                PlaySE(SE_POKENAV_HANG_UP);
+            }
+            else
+                PlaySE(SE_SELECT);
+        }
+        return;
+    }
+    switch (id)
+    {
+    case HIT_NAV_UP:
+    case HIT_NAV_DOWN:
+    {
+        int top = sMcTop + (id == HIT_NAV_UP ? -(MC_ROWS - 1) : MC_ROWS - 1);
+
+        if (top > (int)sMcCount - MC_ROWS)
+            top = sMcCount - MC_ROWS;
+        if (top < 0)
+            top = 0;
+        if (top != sMcTop)
+            PlaySE(SE_SELECT);
+        sMcTop = top;
+        return;
+    }
+    case HIT_NAV_BACK:
+        sNavView = PNAV_MENU;
+        sMcBox = FALSE;
+        PlaySE(SE_SELECT);
+        return;
+    case HIT_NAV_CALL:
+        if (sMcBox && sMcSel != MC_NO_ENTRY)
+        {
+            sMcBoxCursor = 0;
+            McCall(sMcSel);
+        }
+        return;
+    case HIT_NAV_BOX_CANCEL:
+        sMcBox = FALSE;
+        PlaySE(SE_SELECT);
+        return;
+    }
+    if (id >= HIT_ROW && id < HIT_ROW + MC_ROWS && sMcTop + (id - HIT_ROW) < sMcCount)
+    {
+        u8 entry = sMcTop + (id - HIT_ROW);
+
+        /* A trainer: picked, and its options box open (the game's A). */
+        sMcSel = entry;
+        sMcBox = TRUE;
+        sMcBoxCursor = 0;
+        PlaySE(SE_SELECT);
+    }
+}
+
 static void Activate(u8 id, u8 mode)
 {
     if (id == HIT_NONE)
@@ -8553,15 +9481,13 @@ static void Activate(u8 id, u8 mode)
         }
         if (mode != MODE_FIELD)
             return;
-        /* The PokéNav takes the area when it opens; the top keeps the world
-         * from the moment it is asked for, fade included. */
+        /* POKéNAV is the bottom screen's own: its menu and Match Call. */
         if (screen == SCR_POKENAV)
         {
-            if (FieldIdle())
-            {
-                StartPlan(PLAN_START, START_POKENAV);
-                BeginSession(FALSE);
-            }
+            if (sScreen != SCR_POKENAV)
+                ResetNavScreen();
+            sScreen = SCR_POKENAV;
+            sPickMapsec = MAPSEC_NONE;
             return;
         }
         /* POKéMON is the bottom screen's own: the world goes on above it. */
@@ -8609,6 +9535,10 @@ static void Activate(u8 id, u8 mode)
     case SCR_BAG:
         if (mode == MODE_FIELD)
             BagTap(id);
+        break;
+    case SCR_POKENAV:
+        if (mode == MODE_FIELD)
+            PokenavTap(id);
         break;
     case SCR_SAVE:
         if (id == HIT_YES && FieldIdle())
