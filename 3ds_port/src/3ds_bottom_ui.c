@@ -5640,7 +5640,7 @@ static void DrawPartyActions(const ViewState *s)
         DrawTrayButton(TRAY_X(k), TRAY_ROW2_Y,
                        k == 0   ? gText_Summary5
                        : k == 1 ? gText_Switch2
-                       : k == 2 ? (i < s->partyActCount ? gText_Mail : gText_Item)
+                       : k == 2 ? (i < s->partyActCount && s->partyActions[i] == PACTION_MAIL ? gText_Mail : gText_Item)
                                 : gText_Cancel2,
                        s->pressed == HIT_PARTY_ACTION + i, i < s->partyActCount, FALSE, HIT_PARTY_ACTION + i);
     }
