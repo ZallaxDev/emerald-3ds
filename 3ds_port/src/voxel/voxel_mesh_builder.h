@@ -181,4 +181,10 @@ void VoxelMesh_DraftCell(VoxelBuilder *b, const VoxelMapInstance *inst, int x, i
  * Instance 0 only, and nothing indoors, where the filler is the clear colour. */
 void VoxelMesh_EmitBorder(VoxelBuilder *builder, int x0, int y0, int x1, int y1);
 
+/* Height of the flat water belt at a rendered world-space point, including
+ * instance 0's base and relief displacement. False for map instances (also
+ * connected maps), stood borders, indoor void and drawn stood belts. Uses
+ * the emitter's cached perimeter plane; does not allocate. */
+bool VoxelMesh_BorderWaterAt(float worldX, float worldZ, float *height);
+
 #endif

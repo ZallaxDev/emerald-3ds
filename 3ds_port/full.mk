@@ -604,6 +604,7 @@ build/voxel_ground_mesh_test.exe: $(GROUND_TEST_SRCS) $(LIGHTING_TEST_HEADERS) s
 verify: verify-voxel-water-border
 verify-voxel-water-border: build/voxel_water_border_test.exe
 	./build/voxel_water_border_test.exe
+	HOSTCC="$(HOSTCC)" "$(PYTHON)" -B tests/voxel_battle_border_test.py
 
 build/voxel_water_border_test.exe: tests/voxel_water_border_test.c tests/voxel_tileset_fixture.h src/voxel/voxel_mesh_builder.c $(LIGHTING_TEST_HEADERS) $(filter-out tests/voxel_ground_mesh_test.c src/voxel/voxel_mesh_builder.c,$(GROUND_TEST_SRCS))
 	@mkdir -p $(@D)

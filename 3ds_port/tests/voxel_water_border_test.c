@@ -41,6 +41,10 @@ static float sLift[H][W];
 static bool sWater[H][W];
 static bool sDrawn;           /* a drawn map: every point moved south by its height */
 static bool sBorderSplitY, sWaterBefore;
+static bool sConnected;
+static float sBase;
+static unsigned sBelt;
+static VoxelMapInstance sNeighbor = {.layoutId = 2, .originX = W, .width = 2, .height = H};
 static int sStoodWestOf = -1000; /* split coordinate; default water lies east of it */
 static int16_t sGrid[H][W][VOXEL_RELIEF_SIDE * VOXEL_RELIEF_SIDE];
 static int16_t sDepth[H][W][VOXEL_RELIEF_SIDE * VOXEL_RELIEF_SIDE];
@@ -51,8 +55,8 @@ static bool Inside(int x, int y)
 }
 
 /* ── synthetic relief: every lifted cell level, at sLift ───────────────── */
-float TestRelief_Base(const VoxelMapInstance *inst) { (void)inst; return 0.0f; }
-unsigned TestRelief_Belt(const VoxelMapInstance *inst) { (void)inst; return 0u; }
+float TestRelief_Base(const VoxelMapInstance *inst) { return inst == &sMap ? sBase : 0.0f; }
+unsigned TestRelief_Belt(const VoxelMapInstance *inst) { (void)inst; return sBelt; }
 float TestRelief_CellLift(const VoxelMapInstance *inst, int x, int y)
 {
     (void)inst;
@@ -102,14 +106,19 @@ unsigned VoxelRegions_RoleAt(unsigned id, int x, int y)
 }
 bool VoxelWorld_UsesTreeSprites(const VoxelMapInstance *m) { (void)m; return false; }
 const VoxelMapInstance *VoxelWorld_Instance(unsigned i) { return i == 0 ? &sMap : NULL; }
-const VoxelMapInstance *VoxelWorld_GetInstanceAt(int x, int y) { return Inside(x, y) ? &sMap : NULL; }
+const VoxelMapInstance *VoxelWorld_GetInstanceAt(int x, int y)
+{
+    if (Inside(x, y)) return &sMap;
+    return sConnected && x >= W && x < W + 2 && y >= 0 && y < H ? &sNeighbor : NULL;
+}
 int VoxelWorld_GetMetatileId(int x, int y)
 {
     return Inside(x, y) ? (y - sMap.originY) * W + x - sMap.originX : 0;
 }
 VoxelVisualShape VoxelWorld_ClassifyTile(int x, int y)
 {
-    if (!Inside(x, y)) return VOXEL_SHAPE_VOID;
+    if (!Inside(x, y))
+        return VoxelWorld_GetInstanceAt(x, y) ? VOXEL_SHAPE_FLAT : VOXEL_SHAPE_VOID;
     return sWater[y - sMap.originY][x - sMap.originX] ? VOXEL_SHAPE_WATER : VOXEL_SHAPE_FLAT;
 }
 bool VoxelWorld_BorderIsWater(int x, int y)
@@ -141,7 +150,9 @@ static void Reset(int layout)
 {
     memset(sLift, 0, sizeof(sLift));
     memset(sWater, 0, sizeof(sWater));
-    sDrawn = false;
+    sDrawn = sConnected = false;
+    sBase = 0.0f;
+    sBelt = 0;
     sStoodWestOf = -1000;
     sBorderSplitY = sWaterBefore = false;
     sMap.indoor = false;

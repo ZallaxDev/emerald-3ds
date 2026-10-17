@@ -1694,6 +1694,27 @@ static bool BorderWaterLevel(int x, int y, float *level, float *shift)
     return true;
 }
 
+/* Sample the same rendered plane for battle-stage scoring. The belt's
+ * source cells may be displaced south by their relief, so undo that shift
+ * before deciding which border tile is beneath this world-space point. */
+bool VoxelMesh_BorderWaterAt(float worldX, float worldZ, float *height)
+{
+    const VoxelMapInstance *ring = VoxelWorld_Instance(0);
+    float level, shift;
+    int x = (int)floorf(worldX), z;
+
+    if (ring == NULL || ring->indoor || VoxelRelief_Belt(ring) != 0
+     || ring->width <= 0 || ring->height <= 0
+     || VoxelWorld_GetInstanceAt(x, (int)floorf(worldZ)) != NULL)
+        return false;
+    BeltWaterPlane(ring, &level, &shift);
+    z = (int)floorf(worldZ - shift);
+    if (VoxelWorld_GetInstanceAt(x, z) != NULL || !VoxelWorld_BorderIsWater(x, z))
+        return false;
+    *height = VoxelRelief_Base(ring) + level;
+    return true;
+}
+
 /* Join the stood top's edge to the water's displaced edge. Extending a
  * vertical face only to the water's height leaves its Z displacement open.
  * Use the same endpoint order as the ordinary cardinal faces, including the

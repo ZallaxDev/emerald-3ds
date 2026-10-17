@@ -22,6 +22,7 @@
 #include "ctr_battle_layout.h"
 #include "voxel_battle.h"
 #include "voxel_building.h"
+#include "voxel_mesh_builder.h"
 #include "voxel_relief.h"
 #include "voxel_tree.h"
 #include "voxel_world.h"
@@ -155,8 +156,16 @@ static void ReadCell(StageCell *cell, int x, int z, bool indoor)
     cell->lift = VoxelRelief_LiftAt(x + 0.5f, z + 0.5f);
     if (inst == NULL)
     {
-        /* Indoors the room ends in black; outdoors in the map's border,
-         * which is mostly trees. */
+        /* The sea belt is flat, at the same displaced plane the field
+         * draws; it must not score as a two-tile obstruction. */
+        if (!indoor && VoxelMesh_BorderWaterAt(x + 0.5f, z + 0.5f, &cell->lift))
+        {
+            cell->kind = GROUND_WATER;
+            cell->blocked = true; /* border cells remain outside the walkable map */
+            return;
+        }
+        /* Indoors the room ends in black; other outdoor borders are
+         * mostly trees. */
         cell->kind = indoor ? GROUND_VOID : GROUND_PLAIN;
         cell->top = indoor ? 0.0f : 2.0f;
         cell->blocked = true;
@@ -205,6 +214,15 @@ static void ReadCell(StageCell *cell, int x, int z, bool indoor)
         cell->top = top;
     relief = VoxelRelief_Cell(inst, x, z);
     cell->slope = relief != NULL && VoxelRelief_IsSlope(relief);
+}
+
+/* Retain continuous relief sampling inside maps. Outside them the camera
+ * target must use the rendered water plane too, rather than NULL relief. */
+static float StageGround(float x, float z)
+{
+    float height;
+
+    return VoxelMesh_BorderWaterAt(x, z, &height) ? height : VoxelRelief_LiftAt(x, z);
 }
 
 static const StageCell *CellAt(float x, float z)
@@ -471,7 +489,7 @@ bool VoxelBattle_StepStage(unsigned cells, unsigned candidates, float *targetX, 
     }
     *targetX = sStage.bestX;
     *targetZ = sStage.bestZ;
-    *ground = VoxelRelief_LiftAt(sStage.bestX, sStage.bestZ);
+    *ground = StageGround(sStage.bestX, sStage.bestZ);
     return true;
 }
 
