@@ -77,6 +77,7 @@
 #include "berry.h"
 #include "item_menu.h"
 #include "item_menu_icons.h"
+#include "landmark.h"
 #include "item_use.h"
 #include "mail.h"
 #include "menu.h"
@@ -2624,6 +2625,10 @@ typedef struct
     u16 searchTop, searchCount, searchSel, searchRow[8], searchRank[8], searchMonRank;
     /* Region map. */
     u8 mapsec, cursorX, cursorY, pickMapsec, pickX, pickY;
+    /* Zoomed in (its view's top left, map pixels), the Fly map, the picked
+     * section's kind (MAPSECTYPE_*) and the cell's place in it. */
+    u8 mapZoom, mapFly, pickType, pickPos;
+    s16 mapViewX, mapViewY;
     u8 clockShown, clockValid, clockRate, clockPhase;
     u16 clockMinute;
     /* Bag: which of the game's is on show, BAG_VIEW_*. */
@@ -2789,7 +2794,12 @@ static bool8 RectsMeet(int ax0, int ay0, int ax1, int ay1, int bx0, int by0, int
 
 /* Per screen state, kept while another screen is shown. */
 
-static u8 sPickMapsec = MAPSEC_NONE, sPickX, sPickY;
+static u8 sPickMapsec = MAPSEC_NONE, sPickX, sPickY, sPickPos;
+/* MAP zoomed in (twice the size, the view's top left in map pixels); the Fly
+ * map (who flies, and the screen it came from, back there if cancelled). */
+static bool8 sMapZoom, sMapFly;
+static u8 sFlySlot, sFlyFrom;
+static s16 sMapViewX, sMapViewY;
 static u8 sSaveStep;
 /* Room for the longest, gText_DifferentSaveFile (some 230 bytes). */
 static u8 sSaveMessage[256];
@@ -2825,6 +2835,9 @@ enum
     HIT_QUICK_BALL_PREV,
     HIT_QUICK_BALL_NEXT,
     HIT_MAP = 0x90,
+    HIT_MAP_ZOOM,
+    HIT_MAP_FLY,
+    HIT_MAP_CANCEL,
     HIT_SLOT = 0xA0,       /* + party slot */
     HIT_PARTY_BACK = 0xA8,
     HIT_PARTY_SWITCH,
@@ -2883,6 +2896,14 @@ static u8 HitTest(int x, int y)
 /* Game state                                                               */
 /* ------------------------------------------------------------------------ */
 
+
+/* The field with nothing going on, the player perhaps walking: what FLY
+ * needs (the flight holds the player where the step ends). */
+static bool8 FieldFree(void)
+{
+    return gMain.callback2 == CB2_Overworld && !ArePlayerFieldControlsLocked() && !ScriptContext_IsEnabled()
+        && !gPaletteFade.active && !CtrStartMenu_Busy();
+}
 
 /* The player stands in the field with nothing else going on. */
 static bool8 FieldIdle(void)
@@ -4438,6 +4459,15 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
             s->pickMapsec = sPickMapsec;
             s->pickX = sPickX;
             s->pickY = sPickY;
+            s->mapZoom = sMapZoom;
+            s->mapFly = sMapFly;
+            s->mapViewX = sMapViewX;
+            s->mapViewY = sMapViewY;
+            if (sPickMapsec != MAPSEC_NONE)
+            {
+                s->pickType = CtrRegionMap_MapSecType(sPickMapsec);
+                s->pickPos = sPickPos;
+            }
             /* The hour is always on the bar above the map; the part of the day
              * and the clock's speed only with the day/night clock or SHOW CLOCK
              * on. Off, the clock is not running: the hour is the game's own. */
@@ -4761,8 +4791,10 @@ static void DrawColumn(const ViewState *s)
  */
 #define CLOCK_X 5
 #define CLOCK_Y 5
-#define CLOCK_W 230
+#define CLOCK_W 180
 #define CLOCK_H 15
+#define ZOOM_X 189
+#define ZOOM_W 46
 #define MAP_ORIGIN_X 0
 #define MAP_ORIGIN_Y 36
 #define MAP_WIN_X0 8
@@ -4902,8 +4934,74 @@ static void DrawMapClock(const ViewState *s)
                    : s->clockPhase == CTR_TIME_MORNING ? 0u
                    : s->clockMinute >= 16u * 60u ? 2u : 1u;
     DrawStrIn(&sSmall, Ascii(s->clockValid ? phases[phase] : "--"),
-              CLOCK_X + 66, CLOCK_X + 168, top, bottom, TXT_DARK, TXT_LIGHT);
-    DrawStrIn(&sSmall, Ascii(speed), CLOCK_X + 169, CLOCK_X + CLOCK_W - 4, top, bottom, TXT_DARK, TXT_LIGHT);
+              CLOCK_X + 66, CLOCK_X + 134, top, bottom, TXT_DARK, TXT_LIGHT);
+    DrawStrIn(&sSmall, Ascii(speed), CLOCK_X + 135, CLOCK_X + CLOCK_W - 4, top, bottom, TXT_DARK, TXT_LIGHT);
+}
+
+/*
+ * Zoomed in, the map is twice the size in the window, as the PokéNav's A
+ * shows it: map pixels (the picture's own, from MAP_ORIGIN) from the view's
+ * top left. A tap there picks a cell and brings it to the middle.
+ */
+#define MAP_WIN_W (MAP_WIN_X1 - MAP_WIN_X0)
+#define MAP_WIN_H (MAP_WIN_Y1 - MAP_WIN_Y0)
+#define MAP_PANEL_W 100
+
+static u16 MapPixel(int mx, int my)
+{
+    int tx = mx >> 3, ty = my >> 3;
+    u8 tile = 0, v;
+
+    if (!sRes.mapTiles)
+        return sRes.mapPal[0];
+    if (sRes.mapMap && mx >= 0 && my >= 0 && tx < 64 && ty < 64)
+        tile = sRes.mapMap[ty * 64 + tx];
+    if (tile >= sRes.mapTileCount)
+        return sRes.mapPal[0];
+    v = sRes.mapTiles[tile * 64 + (my & 7) * 8 + (mx & 7)];
+    return v >= 112 && v < 144 ? sRes.mapPal[v - 112] : sRes.mapPal[0];
+}
+
+static void DrawZoomedMap(const ViewState *s)
+{
+    int saved[4];
+
+    ClipToMapWindow(saved);
+    for (int y = MAP_WIN_Y0; y < MAP_WIN_Y1; y += 2)
+        for (int x = MAP_WIN_X0; x < MAP_WIN_X1; x += 2)
+        {
+            u16 c = MapPixel(s->mapViewX + (x - MAP_WIN_X0) / 2, s->mapViewY + (y - MAP_WIN_Y0) / 2);
+
+            Put(x, y, c);
+            Put(x + 1, y, c);
+            Put(x, y + 1, c);
+            Put(x + 1, y + 1, c);
+        }
+    RestoreClip(saved);
+}
+
+/* Map pixels to the screen, as the view has them. */
+static void MapToScreen(const ViewState *s, int mx, int my, int *sx, int *sy)
+{
+    if (s->mapZoom)
+    {
+        *sx = MAP_WIN_X0 + (mx - s->mapViewX) * 2;
+        *sy = MAP_WIN_Y0 + (my - s->mapViewY) * 2;
+    }
+    else
+    {
+        *sx = MAP_ORIGIN_X + mx;
+        *sy = MAP_ORIGIN_Y + my;
+    }
+}
+
+/* A 16x16 mark centred on a cursor cell. */
+static void DrawCellMark(const ViewState *s, const u8 *tiles, const u16 *pal, int cx, int cy)
+{
+    int sx, sy;
+
+    MapToScreen(s, cx * 8 + 4, cy * 8 + 4, &sx, &sy);
+    DrawSprite(tiles, 2, 2, sx - 8, sy - 8, pal);
 }
 
 /* The player's mark and a picked cell's cursor, inside the window. */
@@ -4913,39 +5011,299 @@ static void DrawMapMarks(const ViewState *s)
 
     ClipToMapWindow(saved);
     if (s->mapsec != MAPSEC_NONE && sRes.playerIcon[s->gender])
-        DrawSprite(sRes.playerIcon[s->gender], 2, 2, MAP_ORIGIN_X + s->cursorX * 8 - 4,
-                   MAP_ORIGIN_Y + s->cursorY * 8 - 4, sRes.playerIconPal[s->gender].c);
+        DrawCellMark(s, sRes.playerIcon[s->gender], sRes.playerIconPal[s->gender].c, s->cursorX, s->cursorY);
     if (s->pickMapsec != MAPSEC_NONE && sRes.cursorTiles)
-        DrawSprite(sRes.cursorTiles, 2, 2, MAP_ORIGIN_X + s->pickX * 8 - 4, MAP_ORIGIN_Y + s->pickY * 8 - 4,
-                   sRes.cursorPal.c);
+        DrawCellMark(s, sRes.cursorTiles, sRes.cursorPal.c, s->pickX, s->pickY);
     RestoreClip(saved);
+}
+
+/*
+ * The Fly map's icons (CreateFlyDestIcons, TryCreateRedOutlineFlyDestIcons):
+ * each town and city, lit if visited; the Battle Frontier's red outline.
+ * Their sprites kept an 8x8 sprite's centre, so their top left is the
+ * section's cell's (the outline's 4 pixels up and left).
+ */
+static u8 *sFlyIcons;
+static Pal sFlyIconPal;
+
+static void DrawFlyIcon(const ViewState *s, int mx, int my, int wt, int ht, int frame)
+{
+    int sx, sy;
+
+    MapToScreen(s, mx + wt * 4, my + ht * 4, &sx, &sy);
+    DrawSprite(sFlyIcons + frame * 32, wt, ht, sx - wt * 4, sy - ht * 4, sFlyIconPal.c);
+}
+
+static void DrawFlyIcons(const ViewState *s)
+{
+    int saved[4];
+
+    if (!sFlyIcons)
+    {
+        sFlyIcons = UnlzFile("pokenav/region_map/fly_target_icons.4bpp.lz", NULL);
+        PalFile("pokenav/region_map/fly_target_icons.gbapal", &sFlyIconPal, 1, FALSE);
+    }
+    if (!sFlyIcons)
+        return;
+    ClipToMapWindow(saved);
+    for (int mapsec = MAPSEC_LITTLEROOT_TOWN; mapsec <= MAPSEC_EVER_GRANDE_CITY; ++mapsec)
+    {
+        const struct RegionMapLocation *e = &gRegionMapEntries[mapsec];
+        int wt = e->width == 2 ? 2 : 1, ht = wt == 1 && e->height == 2 ? 2 : 1;
+        int frame = wt == 2 ? 1 : ht == 2 ? 3 : 0;
+
+        if (!FlagGet(FLAG_VISITED_LITTLEROOT_TOWN + mapsec - MAPSEC_LITTLEROOT_TOWN))
+            frame += 5;
+        DrawFlyIcon(s, (e->x + 1) * 8, (e->y + 2) * 8, wt, ht, frame);
+    }
+    if (FlagGet(FLAG_LANDMARK_BATTLE_FRONTIER))
+    {
+        const struct RegionMapLocation *e = &gRegionMapEntries[MAPSEC_BATTLE_FRONTIER];
+
+        DrawFlyIcon(s, (e->x + 1) * 8 - 4, (e->y + 2) * 8 - 4, 2, 2, 10);
+    }
+    RestoreClip(saved);
+}
+
+/*
+ * The picked place's information, as the PokéNav map's window has it
+ * (UpdateMapSecInfoWindow): a town or city one can fly to, its layout
+ * (DrawCityMap); a route, its landmarks found so far (PrintLandmarkNames).
+ * On a plate inside the window, on the side away from the place.
+ */
+static u8 *sCityTiles;
+static u32 sCityTileCount;
+static const u32 *sCityMapKey;
+static u16 *sCityMap;
+static Pal sCityPal;
+
+static const u32 *MapCityPicture(u8 mapsec, u8 type, u8 pos)
+{
+    return type == MAPSECTYPE_CITY_CANFLY ? CtrPokenav_CityMap(mapsec, pos) : NULL;
+}
+
+static int MapLandmarks(u8 mapsec, u8 type, u8 pos)
+{
+    int n = 0;
+
+    if (type != MAPSECTYPE_ROUTE && type != MAPSECTYPE_BATTLE_FRONTIER)
+        return 0;
+    while (n < 5 && GetLandmarkName(mapsec, pos, n))
+        ++n;
+    return n;
+}
+
+static bool8 MapHasPanel(u8 mapsec, u8 type, u8 pos)
+{
+    return mapsec != MAPSEC_NONE && (MapCityPicture(mapsec, type, pos) || MapLandmarks(mapsec, type, pos));
+}
+
+/* The panel on the right if the place is on the map's left half. */
+static bool8 MapPanelRight(int cx)
+{
+    return cx * 8 + 4 < (MAP_WIN_X0 + MAP_WIN_X1) / 2 - MAP_ORIGIN_X;
+}
+
+static void DrawMapPanel(const ViewState *s)
+{
+    const u32 *city;
+    int n, x, y = MAP_WIN_Y0 + 3, h;
+
+    /* Zoomed in only, as the PokéNav has it. */
+    if (!s->mapZoom || s->pickMapsec == MAPSEC_NONE || !MapHasPanel(s->pickMapsec, s->pickType, s->pickPos))
+        return;
+    city = MapCityPicture(s->pickMapsec, s->pickType, s->pickPos);
+    n = city ? 0 : MapLandmarks(s->pickMapsec, s->pickType, s->pickPos);
+    h = city ? 92 : n * 16 + 10;
+    x = MapPanelRight(s->pickX) ? MAP_WIN_X1 - MAP_PANEL_W - 3 : MAP_WIN_X0 + 3;
+    DrawPlate(x, y, MAP_PANEL_W, h, &sLook.plate, 0, FALSE);
+    if (city)
+    {
+        if (!sCityTiles)
+        {
+            u32 size = 0;
+
+            sCityTiles = Unlz(CtrPokenav_CityZoomTiles(), &size);
+            sCityTileCount = size / 32;
+            PalFile("pokenav/region_map/zoom_tiles.gbapal", &sCityPal, 1, FALSE);
+        }
+        if (sCityMapKey != city)
+        {
+            free(sCityMap);
+            sCityMap = Unlz(city, NULL);
+            sCityMapKey = city;
+        }
+        if (sCityTiles && sCityMap)
+        {
+            Pal pals[16];
+
+            for (int i = 0; i < 16; ++i)
+                pals[i] = sCityPal;
+            for (int ty = 0; ty < 10; ++ty)
+                for (int tx = 0; tx < 10; ++tx)
+                    DrawMapEntry(sCityTiles, sCityTileCount, sCityMap[ty * 10 + tx], x + 10 + tx * 8, y + 6 + ty * 8, pals);
+        }
+        return;
+    }
+    for (int i = 0; i < n; ++i)
+        DrawStr(&sNarrow, GetLandmarkName(s->pickMapsec, s->pickPos, i), x + 6, y + 5 + i * 16, TXT_DARK, TXT_LIGHT);
+}
+
+/* A plate for a tap on the map's screen, its label in the middle. */
+static void DrawMapButton(int x, int y, int w, int h, const u8 *label, bool8 enabled, bool8 pressed, u8 id)
+{
+    const PlateLook *look = !enabled ? &sLook.off : &sLook.plate;
+    u16 fg = !enabled ? sLook.offText : TXT_DARK, sh = !enabled ? sLook.offShadow : TXT_LIGHT;
+
+    pressed = pressed && enabled;
+    DrawPlate(x, y, w, h, look, 0, pressed);
+    DrawStrIn(&sNormal, label, x + 1, x + w - 1, y + 1 + pressed, y + h - 2 + pressed, fg, sh);
+    if (enabled)
+        AddHit(x, y, w, h, id);
 }
 
 static void DrawRegionMap(const ViewState *s)
 {
+    static const u8 plus[] = {CHAR_PLUS, EOS}, minus[] = {CHAR_HYPHEN, EOS};
+
+    if (s->mapZoom)
+        DrawZoomedMap(s);
+    if (s->mapFly)
+        DrawFlyIcons(s);
     DrawMapMarks(s);
     AddHit(MAP_WIN_X0, MAP_WIN_Y0, MAP_WIN_X1 - MAP_WIN_X0, MAP_WIN_Y1 - MAP_WIN_Y0, HIT_MAP);
-    DrawRegionName(s);
-    DrawMapClock(s);
+    DrawMapPanel(s);
+    if (s->mapFly)
+    {
+        /* The Fly map: FLY to where?; its name, FLY and CANCEL below. */
+        bool8 canFly = s->pickMapsec != MAPSEC_NONE
+                    && (s->pickType == MAPSECTYPE_CITY_CANFLY || s->pickType == MAPSECTYPE_BATTLE_FRONTIER);
+
+        DrawPlate(CLOCK_X, CLOCK_Y, CLOCK_W, CLOCK_H, &sLook.plate, 0, FALSE);
+        DrawStrIn(&sSmall, gText_FlyToWhere, CLOCK_X + 4, CLOCK_X + CLOCK_W - 4, CLOCK_Y, CLOCK_Y + CLOCK_H, TXT_DARK,
+                  TXT_LIGHT);
+        if (s->pickMapsec != MAPSEC_NONE)
+        {
+            u8 name[32];
+
+            GetMapName(name, s->pickMapsec, 0);
+            DrawPlate(NAME_X, NAME_Y, 114, NAME_H, canFly ? &sLook.chosen : &sLook.plate, 0, FALSE);
+            DrawStrIn(&sNarrow, name, NAME_X + 1, NAME_X + 113, NAME_Y + 1, NAME_Y + NAME_H - 2,
+                      canFly ? TXT_WHITE : TXT_DARK, canFly ? sLook.chosenShadow : TXT_LIGHT);
+        }
+        DrawMapButton(122, NAME_Y, 56, NAME_H, gMoveNames[MOVE_FLY], canFly, s->pressed == HIT_MAP_FLY, HIT_MAP_FLY);
+        DrawMapButton(181, NAME_Y, 54, NAME_H, gText_Cancel, TRUE, s->pressed == HIT_MAP_CANCEL, HIT_MAP_CANCEL);
+    }
+    else
+    {
+        DrawRegionName(s);
+        DrawMapClock(s);
+    }
+    DrawMapButton(ZOOM_X, CLOCK_Y, ZOOM_W, CLOCK_H, s->mapZoom ? minus : plus, TRUE, s->pressed == HIT_MAP_ZOOM,
+                  HIT_MAP_ZOOM);
 }
 
-/* The section under a tapped map cell, as the region map's cursor finds it. */
+/* The view zoomed in round a cell: in the middle of what the panel leaves. */
+static void MapZoomTo(int cx, int cy, bool8 panel)
+{
+    int free = MAP_WIN_W - (panel ? MAP_PANEL_W + 6 : 0);
+    int left = panel && !MapPanelRight(cx) ? MAP_PANEL_W + 6 : 0;
+    int vx = cx * 8 + 4 - (left + free / 2) / 2, vy = cy * 8 + 4 - MAP_WIN_H / 4;
+    int x0 = MAP_WIN_X0 - MAP_ORIGIN_X, x1 = MAP_WIN_X1 - MAP_ORIGIN_X - MAP_WIN_W / 2;
+    int y0 = MAP_WIN_Y0 - MAP_ORIGIN_Y, y1 = MAP_WIN_Y1 - MAP_ORIGIN_Y - MAP_WIN_H / 2;
+
+    sMapViewX = vx < x0 ? x0 : vx > x1 ? x1 : vx;
+    sMapViewY = vy < y0 ? y0 : vy > y1 ? y1 : vy;
+}
+
+/* The section under a tapped cell, as the region map's cursor finds it
+ * (GetMapSecIdAt), and the cell's place in it. */
 static void PickMapCell(int x, int y)
 {
-    int cx = (x - MAP_ORIGIN_X + 64) / 8 - 8, cy = (y - MAP_ORIGIN_Y + 64) / 8 - 8;
+    int mx = sMapZoom ? sMapViewX + (x - MAP_WIN_X0) / 2 : x - MAP_ORIGIN_X;
+    int my = sMapZoom ? sMapViewY + (y - MAP_WIN_Y0) / 2 : y - MAP_ORIGIN_Y;
+    int cx = (mx + 64) / 8 - 8, cy = (my + 64) / 8 - 8;
+    u16 mapsec = cx >= 0 && cy >= 0 ? GetRegionMapSecIdAt(cx, cy) : MAPSEC_NONE;
 
     sPickMapsec = MAPSEC_NONE;
-    for (int i = 0; i < MAPSEC_NONE; ++i)
+    if (mapsec == MAPSEC_NONE)
+        return;
+    sPickMapsec = mapsec;
+    sPickX = cx;
+    sPickY = cy;
+    sPickPos = CtrRegionMap_PosWithinMapSec(cx, cy, mapsec);
+    if (sMapZoom)
+        MapZoomTo(cx, cy, MapHasPanel(mapsec, CtrRegionMap_MapSecType(mapsec), sPickPos));
+}
+
+/* CB2_OpenFlyMap on the bottom screen: the map, its cursor where the player
+ * is, while the field goes on above. */
+static void OpenFlyMap(u8 slot, u8 from)
+{
+    u8 x, y;
+
+    sMapFly = TRUE;
+    sMapZoom = FALSE;
+    sFlySlot = slot;
+    sFlyFrom = from;
+    sScreen = SCR_MAP;
+    sPickMapsec = PlayerRegionPosition(&x, &y);
+    sPickX = x;
+    sPickY = y;
+    sPickPos = CtrRegionMap_PosWithinMapSec(x, y, sPickMapsec);
+}
+
+static void MapTap(u8 id, int tapX, int tapY)
+{
+    switch (id)
     {
-        const struct RegionMapLocation *e = &gRegionMapEntries[i];
-        int ex = e->x + 1, ey = e->y + 2;
-        if (e->width && cx >= ex && cy >= ey && cx < ex + e->width && cy < ey + e->height)
+    case HIT_MAP:
+        PickMapCell(tapX, tapY);
+        break;
+    case HIT_MAP_ZOOM:
+        sMapZoom = !sMapZoom;
+        if (sMapZoom)
         {
-            sPickMapsec = i;
-            sPickX = cx;
-            sPickY = cy;
-            return;
+            u8 x, y;
+
+            if (sPickMapsec != MAPSEC_NONE)
+                MapZoomTo(sPickX, sPickY, MapHasPanel(sPickMapsec, CtrRegionMap_MapSecType(sPickMapsec), sPickPos));
+            else if (PlayerRegionPosition(&x, &y) != MAPSEC_NONE)
+                MapZoomTo(x, y, FALSE);
+            else
+                MapZoomTo(15, 10, FALSE);
         }
+        PlaySE(SE_SELECT);
+        break;
+    case HIT_MAP_FLY:
+    {
+        u8 type = sPickMapsec == MAPSEC_NONE ? MAPSECTYPE_NONE : CtrRegionMap_MapSecType(sPickMapsec);
+
+        if (!sMapFly || (type != MAPSECTYPE_CITY_CANFLY && type != MAPSECTYPE_BATTLE_FRONTIER))
+            break;
+        /* Nothing on the field may be under way, walking aside: the flight
+         * waits for none. */
+        if (!FieldFree())
+        {
+            PlaySE(SE_FAILURE);
+            break;
+        }
+        PlaySE(SE_SELECT);
+        CtrLog_Write(CTR_LOG_INPUT, "bottom screen: fly to %u (%u) by %u", sPickMapsec, sPickPos, sFlySlot);
+        CtrParty_Fly(sFlySlot, sPickMapsec, sPickPos);
+        sMapFly = FALSE;
+        sMapZoom = FALSE;
+        sPickMapsec = MAPSEC_NONE;
+        break;
+    }
+    case HIT_MAP_CANCEL:
+        if (!sMapFly)
+            break;
+        sMapFly = FALSE;
+        sPickMapsec = MAPSEC_NONE;
+        sScreen = sFlyFrom;
+        PlaySE(SE_SELECT);
+        break;
     }
 }
 
@@ -10837,6 +11195,10 @@ static void PartyFieldMove(u8 fieldMove, bool8 confirmed)
         sPartyAct = PACT_TARGET;
         sPartyMsgPage = 0;
         break;
+    case CTR_FIELD_MOVE_FLY_MAP:
+        sPartyAct = PACT_NONE;
+        OpenFlyMap(sPartySel, SCR_POKEMON);
+        break;
     default:
         CtrLog_Write(CTR_LOG_INPUT, "bottom screen: field move %u by %u", fieldMove, sPartySel);
         sPartyAct = PACT_NONE;
@@ -10894,9 +11256,14 @@ static bool8 PartyActTap(u8 id)
             action = actions[id - HIT_PARTY_ACTION];
             if (action >= PACTION_FIELD_MOVE)
             {
-                /* As SWITCH: not in the middle of an event, nor of a step. */
-                if (!FieldIdle())
+                /* As SWITCH: not in the middle of an event, nor of a step;
+                 * FLY's map while walking too (its flight waits for none). */
+                if (action - PACTION_FIELD_MOVE == CtrParty_FieldMoveOf(MOVE_FLY) ? !FieldFree() : !FieldIdle())
+                {
+                    if (action - PACTION_FIELD_MOVE == CtrParty_FieldMoveOf(MOVE_FLY))
+                        PlaySE(SE_FAILURE);
                     return TRUE;
+                }
                 PlaySE(SE_SELECT);
                 PartyFieldMove(action - PACTION_FIELD_MOVE, FALSE);
                 return TRUE;
@@ -11269,8 +11636,9 @@ static void BagAction(u8 action, u16 item)
     {
     case BAG_ACT_USE:
     case BAG_ACT_CHECK:
-        /* Standing still, nothing under way: as SELECT. */
-        if (!FieldIdle())
+        /* Standing still, nothing under way: as SELECT. A TM or HM only
+         * asks first (FLY's map may open while walking). */
+        if (CtrItem_FieldFunc(item) == ItemUseOutOfBattle_TMHM ? !FieldFree() : !FieldIdle())
             return;
         PlaySE(SE_SELECT);
         BagUse(item);
@@ -11427,17 +11795,29 @@ static void BagActTap(u8 id)
         }
         else
         {
-            /* UseFieldHmFromBag: as the Pokémon's own move. */
-            if (!FieldIdle())
-                return;
-            if (CtrParty_UseFieldMove(sBagHmUser, CtrParty_FieldMoveOf(ItemIdToBattleMoveId(sBagItem)), FALSE, text,
-                                      sizeof(text)) == CTR_FIELD_MOVE_STARTED)
+            /* UseFieldHmFromBag: as the Pokémon's own move (FLY's map while
+             * walking too). */
+            if (sBagItem == ITEM_HM02 ? !FieldFree() : !FieldIdle())
             {
+                if (sBagItem == ITEM_HM02)
+                    PlaySE(SE_FAILURE);
+                return;
+            }
+            switch (CtrParty_UseFieldMove(sBagHmUser, CtrParty_FieldMoveOf(ItemIdToBattleMoveId(sBagItem)), FALSE,
+                                          text, sizeof(text)))
+            {
+            case CTR_FIELD_MOVE_STARTED:
                 ResetBagScreen();
                 sScreen = SCR_MAP;
-            }
-            else
+                break;
+            case CTR_FIELD_MOVE_FLY_MAP:
+                ResetBagScreen();
+                OpenFlyMap(sBagHmUser, SCR_BAG);
+                break;
+            default:
                 BagBox(text, BACT_MESSAGE, FALSE);
+                break;
+            }
         }
         break;
     default:
@@ -11921,6 +12301,9 @@ static void Activate(u8 id, u8 mode)
     {
         u8 screen = id - HIT_COLUMN;
 
+        /* Another screen, or MAP again: the Fly map is left. */
+        sMapFly = FALSE;
+
         if (mode == MODE_POKENAV)
         {
             /* Its own button is its B; any other leaves it for that screen. */
@@ -12008,8 +12391,7 @@ static void Activate(u8 id, u8 mode)
     switch (sShown.screen)
     {
     case SCR_MAP:
-        if (id == HIT_MAP)
-            PickMapCell(sTouch.lastX, sTouch.lastY);
+        MapTap(id, sTouch.lastX, sTouch.lastY);
         break;
     case SCR_POKEMON:
         if (mode == MODE_FIELD)
@@ -12520,6 +12902,7 @@ static bool8 MapCursorOnlyMoved(const ViewState *now, const ViewState *shown)
     if (now->screen != SCR_MAP || now->mode == MODE_OFF || now->mode >= MODE_BATTLE_INFO
      || now->inBattle || now->bagView == BAG_VIEW_WHOLE
      || now->mapsec == MAPSEC_NONE || shown->mapsec == MAPSEC_NONE
+     || now->mapZoom || now->mapFly || now->pickMapsec != MAPSEC_NONE
      || (now->cursorX == shown->cursorX && now->cursorY == shown->cursorY
          && now->mapsec == shown->mapsec))
         return FALSE;

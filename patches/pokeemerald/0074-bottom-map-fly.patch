@@ -1,0 +1,275 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: The bottom screen's map: town layouts, landmarks and Fly
+Applies after 0073-bottom-bag-items.patch; apply with tools/bootstrap.py.
+
+diff --git a/include/field_effect.h b/include/field_effect.h
+--- a/include/field_effect.h
++++ b/include/field_effect.h
+@@ -47,4 +47,8 @@
+ u8 CreateMonSprite_PicBox(u16 species, s16 x, s16 y, u8 subpriority);
+ void StartEscapeRopeFieldEffect(void);
+ 
++#ifdef PORT_BRIDGE
++void CtrFly_Start(void);
++#endif
++
+ #endif // GUARD_FIELD_EFFECTS_H
+diff --git a/include/party_menu.h b/include/party_menu.h
+--- a/include/party_menu.h
++++ b/include/party_menu.h
+@@ -97,6 +97,7 @@
+     CTR_FIELD_MOVE_ASK,         // `text` asks; again with `confirmed` on YES
+     CTR_FIELD_MOVE_CHOOSE_MON,  // Soft-Boiled / Milk Drink: on whom
+     CTR_FIELD_MOVE_STARTED,
++    CTR_FIELD_MOVE_FLY_MAP,     // FLY: its map on the bottom screen, then CtrParty_Fly
+ };
+ u8 CtrParty_FieldMoves(u8 slot, u8 *fieldMoves);
+ u16 CtrParty_FieldMoveId(u8 fieldMove);
+@@ -139,4 +140,8 @@
+ u8 CtrParty_FieldMoveOf(u16 move);
+ #endif
+ 
++#ifdef PORT_BRIDGE
++void CtrParty_Fly(u8 slot, u16 mapSecId, u8 posWithinMapSec);
++#endif
++
+ #endif // GUARD_PARTY_MENU_H
+diff --git a/include/pokenav.h b/include/pokenav.h
+--- a/include/pokenav.h
++++ b/include/pokenav.h
+@@ -496,4 +496,11 @@
+ u32 IsRibbonsSummaryLoopedTaskActive(void);
+ void FreeRibbonsSummaryScreen2(void);
+ 
++#ifdef PORT_BRIDGE
++// The bottom screen's map (3ds_bottom_ui.c): a town's layout picture (LZ77,
++// 10x10 tiles of CtrPokenav_CityZoomTiles), NULL if it has none.
++const u32 *CtrPokenav_CityMap(u16 mapSecId, u8 posWithinMapSec);
++const u32 *CtrPokenav_CityZoomTiles(void);
++#endif
++
+ #endif // GUARD_POKENAV_H
+diff --git a/include/region_map.h b/include/region_map.h
+--- a/include/region_map.h
++++ b/include/region_map.h
+@@ -121,4 +121,11 @@
+ 
+ extern const struct RegionMapLocation gRegionMapEntries[];
+ 
++#ifdef PORT_BRIDGE
++// The bottom screen's map and Fly (3ds_bottom_ui.c), from a cursor cell.
++u8 CtrRegionMap_MapSecType(u16 mapSecId);
++u8 CtrRegionMap_PosWithinMapSec(u16 x, u16 y, u16 mapSecId);
++void CtrRegionMap_SetFlyDestination(u16 mapSecId, u8 posWithinMapSec);
++#endif
++
+ #endif //GUARD_REGION_MAP_H
+diff --git a/src/field_effect.c b/src/field_effect.c
+--- a/src/field_effect.c
++++ b/src/field_effect.c
+@@ -4018,3 +4018,17 @@
+ #undef tVelocityY
+ #undef tMoveSteps
+ #undef tObjEventId
++
++#ifdef PORT_BRIDGE
++// FieldCallback_UseFly from the field as it is (the bottom screen's Fly map,
++// party_menu.c's CtrParty_Fly): no fade to come in from, the player perhaps
++// walking.
++void CtrFly_Start(void)
++{
++    CreateTask(Task_UseFly, 0);
++    LockPlayerFieldControls();
++    // The player may be mid-step: it ends it (FlyOutFieldEffect_FieldMovePose
++    // waits for that), held from taking another.
++    FreezeObjectEventsExceptOne(gPlayerAvatar.objectEventId);
++}
++#endif
+diff --git a/src/party_menu.c b/src/party_menu.c
+--- a/src/party_menu.c
++++ b/src/party_menu.c
+@@ -4051,21 +4051,8 @@
+         return FALSE;
+ }
+ 
+-#ifdef PORT_BRIDGE
+-static bool8 sCtrFlyMapFromBottom;
+-#endif
+-
+ void CB2_ReturnToPartyMenuFromFlyMap(void)
+ {
+-#ifdef PORT_BRIDGE
+-    // Opened from the bottom screen's party: cancelled, back to the field.
+-    if (sCtrFlyMapFromBottom)
+-    {
+-        sCtrFlyMapFromBottom = FALSE;
+-        SetMainCallback2(CB2_ReturnToField);
+-        return;
+-    }
+-#endif
+     InitPartyMenu(PARTY_MENU_TYPE_FIELD, PARTY_LAYOUT_SINGLE, PARTY_ACTION_CHOOSE_MON, TRUE, PARTY_MSG_CHOOSE_MON, Task_HandleChooseMonInput, CB2_ReturnToFieldWithOpenMenu);
+ }
+ 
+@@ -6660,18 +6647,6 @@
+ u16 CtrParty_FieldMoveId(u8 fieldMove)
+ {
+     return sFieldMoves[fieldMove];
+-}
+-
+-static void Task_CtrOpenFlyMap(u8 taskId)
+-{
+-    if (!gPaletteFade.active)
+-    {
+-        PlayRainStoppingSoundEffect();
+-        CleanupOverworldWindowsAndTilemaps();
+-        sCtrFlyMapFromBottom = TRUE;
+-        SetMainCallback2(CB2_OpenFlyMap);
+-        DestroyTask(taskId);
+-    }
+ }
+ 
+ static void CtrExitAreaText(const struct WarpData *warp, const u8 *question, u8 *text, u32 textSize)
+@@ -6744,10 +6719,8 @@
+         }
+         break;
+     case FIELD_MOVE_FLY:
+-        LockPlayerFieldControls();
+-        FadeScreen(FADE_TO_BLACK, 0);
+-        CreateTask(Task_CtrOpenFlyMap, 8);
+-        return CTR_FIELD_MOVE_STARTED;
++        // The Fly map is the bottom screen's: CtrParty_Fly from it.
++        return CTR_FIELD_MOVE_FLY_MAP;
+     }
+     LockPlayerFieldControls();
+     CreateTask(Task_FieldMoveWaitForFade, 8);
+@@ -7206,5 +7179,20 @@
+         return FALSE;
+     CtrStartEvolution(slot, species, TRUE);
+     return TRUE;
++}
++#endif
++
++#ifdef PORT_BRIDGE
++/*
++ * FLY picked on the bottom screen's map (3ds_bottom_ui.c), with nothing under
++ * way on the field: the destination CB_ExitFlyMap sets, then the flight as
++ * FieldCallback_UseFly starts it - from the field as it is, nothing to fade
++ * back in from. The player is held from here on.
++ */
++void CtrParty_Fly(u8 slot, u16 mapSecId, u8 posWithinMapSec)
++{
++    gPartyMenu.slotId = slot;
++    CtrRegionMap_SetFlyDestination(mapSecId, posWithinMapSec);
++    CtrFly_Start();
+ }
+ #endif
+diff --git a/src/pokenav_region_map.c b/src/pokenav_region_map.c
+--- a/src/pokenav_region_map.c
++++ b/src/pokenav_region_map.c
+@@ -752,5 +752,25 @@
+     if (!CtrPokenav_IsOpen() || GetSubstructPtr(POKENAV_SUBSTRUCT_REGION_MAP_ZOOM) == NULL)
+         return -1;
+     return sMapSecInfoWindowTemplate.bg;
++}
++#endif
++
++#ifdef PORT_BRIDGE
++// DrawCityMap's picture, for the bottom screen's map.
++const u32 *CtrPokenav_CityMap(u16 mapSecId, u8 posWithinMapSec)
++{
++    int i;
++
++    for (i = 0; i < NUM_CITY_MAPS; i++)
++    {
++        if (sPokenavCityMaps[i].mapSecId == mapSecId && sPokenavCityMaps[i].index == posWithinMapSec)
++            return sPokenavCityMaps[i].tilemap;
++    }
++    return NULL;
+ }
++
++const u32 *CtrPokenav_CityZoomTiles(void)
++{
++    return sRegionMapCityZoomTiles_Gfx;
++}
+ #endif
+diff --git a/src/region_map.c b/src/region_map.c
+--- a/src/region_map.c
++++ b/src/region_map.c
+@@ -2063,3 +2063,78 @@
+     return TRUE;
+ }
+ #endif
++
++#ifdef PORT_BRIDGE
++// GetMapsecType: a city or town (one to fly to, visited), a route, ...
++u8 CtrRegionMap_MapSecType(u16 mapSecId)
++{
++    return GetMapsecType(mapSecId);
++}
++
++static bool8 CtrMapSecInRow(u16 y, u16 mapSecId)
++{
++    u16 x;
++
++    if (y-- == 0)
++        return FALSE;
++    for (x = MAPCURSOR_X_MIN; x <= MAPCURSOR_X_MAX; x++)
++    {
++        if (GetMapSecIdAt(x, y) == mapSecId)
++            return TRUE;
++    }
++    return FALSE;
++}
++
++// GetPositionOfCursorWithinMapSec, for a cell: how many of the section's
++// cells come before it, row by row.
++u8 CtrRegionMap_PosWithinMapSec(u16 x, u16 y, u16 mapSecId)
++{
++    u8 pos = 0;
++
++    if (mapSecId == MAPSEC_NONE)
++        return 0;
++    while (1)
++    {
++        if (x <= MAPCURSOR_X_MIN)
++        {
++            if (!CtrMapSecInRow(y, mapSecId))
++                break;
++            y--;
++            x = MAPCURSOR_X_MAX + 1;
++        }
++        else
++        {
++            x--;
++            if (GetMapSecIdAt(x, y) == mapSecId)
++                pos++;
++        }
++    }
++    return pos;
++}
++
++// CB_ExitFlyMap's, for a destination chosen.
++void CtrRegionMap_SetFlyDestination(u16 mapSecId, u8 posWithinMapSec)
++{
++    switch (mapSecId)
++    {
++    case MAPSEC_SOUTHERN_ISLAND:
++        SetWarpDestinationToHealLocation(HEAL_LOCATION_SOUTHERN_ISLAND_EXTERIOR);
++        break;
++    case MAPSEC_BATTLE_FRONTIER:
++        SetWarpDestinationToHealLocation(HEAL_LOCATION_BATTLE_FRONTIER_OUTSIDE_EAST);
++        break;
++    case MAPSEC_LITTLEROOT_TOWN:
++        SetWarpDestinationToHealLocation(gSaveBlock2Ptr->playerGender == MALE ? HEAL_LOCATION_LITTLEROOT_TOWN_BRENDANS_HOUSE : HEAL_LOCATION_LITTLEROOT_TOWN_MAYS_HOUSE);
++        break;
++    case MAPSEC_EVER_GRANDE_CITY:
++        SetWarpDestinationToHealLocation(FlagGet(FLAG_LANDMARK_POKEMON_LEAGUE) && posWithinMapSec == 0 ? HEAL_LOCATION_EVER_GRANDE_CITY_POKEMON_LEAGUE : HEAL_LOCATION_EVER_GRANDE_CITY);
++        break;
++    default:
++        if (sMapHealLocations[mapSecId][2] != HEAL_LOCATION_NONE)
++            SetWarpDestinationToHealLocation(sMapHealLocations[mapSecId][2]);
++        else
++            SetWarpDestinationToMapWarp(sMapHealLocations[mapSecId][0], sMapHealLocations[mapSecId][1], WARP_ID_NONE);
++        break;
++    }
++}
++#endif

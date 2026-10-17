@@ -48,6 +48,14 @@
   forget, the level-up stats, and the evolution scene when it comes. TOSS
   asks how many; CHECK TAG shows the berry's tag.
 
+- MAP on the bottom screen zooms in (the PokéNav's A, on the button by the
+  clock); zoomed in, a town or city shows the game's layout of it and a
+  route its landmarks. FLY opens its map on the bottom screen while the
+  game goes on above, walking and running too: the visited towns lit, FLY
+  and CANCEL under it. Confirmed with nothing under way, the player stops
+  where the step ends and flies; with a dialogue or another event under
+  way, the error sound plays instead.
+
 ## 0.4.0 — 2026-10-16
 
 - The project is now called Emerald 3DS, by Zallax: new name on the HOME
