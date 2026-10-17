@@ -74,7 +74,10 @@
 #include "graphics.h"
 #include "item.h"
 #include "item_icon.h"
+#include "berry.h"
 #include "item_menu.h"
+#include "item_menu_icons.h"
+#include "item_use.h"
 #include "mail.h"
 #include "menu.h"
 #include "menu_helpers.h"
@@ -2562,7 +2565,12 @@ typedef struct
      * actions (PACTION_*), the message. */
     u8 partyAct, partyActCount, partyActions[MAX_MON_MOVES + 4], partyMore;
     u8 partyMsg[160];
-    /* The MAIL read (PARTY_MAIL). */
+    /* Using an item from the bag: each slot's text in place of its HP (a TM's
+     * ABLE...), the move picker's (PICK_*), the level-up stats and page. */
+    const u8 *partyDesc[PARTY_SIZE];
+    s16 partyStats[NUM_STATS * 2];
+    u8 partyPick, partyStatsPage;
+    /* The MAIL read (PARTY_MAIL), or the bag's blank one. */
     struct CtrMailView mail;
     u8 types[2], nature, ability;
     u16 stats[NUM_STATS];
@@ -2580,6 +2588,13 @@ typedef struct
      * rows on show. */
     u8 bagPocket, bagTop, bagCount, bagSel, bagSwap, bagOk, bagGive;
     u8 bagMsg[96];
+    /* The tray's work on the item picked (BACT_*, BASK_*): its actions
+     * (BAG_ACT_*), how many to toss, the message (in the description's
+     * place, or a box) and its page. */
+    u8 bagAct, bagAsk, bagBoxDesc, bagMore, bagActions[5], bagActionCount, bagRiding;
+    u16 bagTossQty;
+    u8 bagBox[160];
+    u8 bagTagBerry;                   /* CHECK TAG's berry (ITEM_TO_BERRY) */
     u16 bagItem[8], bagQty[8], bagSelItem;
     /* POKéNAV: the main menu or Match Call; the options shown (NAV_OPT_*
      * order), the one picked, the blue light's blink; Match Call's list
@@ -2836,6 +2851,12 @@ enum
     HIT_NAV_MESSAGE,
     HIT_OPTION = 0xC0,     /* + option row; +HIT_OPTION_BACK for the left arrow */
     HIT_PAGE = 0xE0,       /* + OPTIONS page tab */
+    HIT_BAG_ACT = 0xF0,    /* + bag tray action */
+    HIT_BAG_YES = 0xF5,
+    HIT_BAG_NO,
+    HIT_BAG_QTY,           /* + -10, -1, +1, +10 */
+    HIT_BAG_OK = 0xFB,
+    HIT_PARTY_MOVE = 0x20, /* + move slot */
 };
 /* More than there are option rows, so a row and a left arrow never share an id. */
 #define HIT_OPTION_BACK 16
@@ -3464,13 +3485,28 @@ static u8 sPartyView, sPartySel, sPartySwap = PARTY_NO_SWAP;
  * MAIL), the Pokémon Soft-Boiled (or Milk Drink) is used on, GIVE / TAKE,
  * READ / TAKE, or the game's mail writing under way. A message goes page by
  * page (sPartyMsgPage), as the game's {PAUSE} prompts. */
-enum { PACT_NONE, PACT_MENU, PACT_MESSAGE, PACT_ASK, PACT_TARGET, PACT_ITEM, PACT_MAIL, PACT_WRITING };
+enum { PACT_NONE, PACT_MENU, PACT_MESSAGE, PACT_ASK, PACT_TARGET, PACT_ITEM, PACT_MAIL, PACT_WRITING,
+       /* From the bag (sPartyFromBag, back there when done): the Pokémon an
+        * item is used on or given to, a move for it or to forget, the
+        * level-up stats. */
+       PACT_USE, PACT_GIVE, PACT_PICK_MOVE, PACT_STATS };
+enum { PICK_PP, PICK_FORGET };
 /* ITEM's place is MAIL's for a Pokémon holding one. */
 enum { PACTION_SUMMARY, PACTION_SWITCH, PACTION_ITEM, PACTION_CANCEL, PACTION_MAIL, PACTION_FIELD_MOVE };
-enum { PASK_FIELD_MOVE, PASK_SWITCH_ITEMS, PASK_MAIL_TO_PC, PASK_LOSE_MAIL };
+enum { PASK_FIELD_MOVE, PASK_SWITCH_ITEMS, PASK_MAIL_TO_PC, PASK_LOSE_MAIL, PASK_REPLACE_MOVE, PASK_STOP_LEARNING };
 static u8 sPartyAct, sPartyActBack, sPartyActMove, sPartyAsk, sPartyMsgPage;
 static u16 sPartyGiveItem;
-static u8 sPartyMsg[160];
+static u8 sPartyMsg[256];
+/* After a message, instead of sPartyActBack: the next step of a flow. */
+static void (*sPartyThen)(void);
+/* An item from the bag: the item, the move picker's work, the stats of a
+ * level-up, the move being learned (from a TM, or the level's). */
+static bool8 sPartyFromBag;
+static u16 sPartyUseItem;
+static u8 sPartyPick, sPartyStatsPage;
+static s16 sPartyStats[NUM_STATS * 2];
+static u16 sLearnMove, sLearnTm;
+static bool8 sLearnLevelUp;
 /* The summary's pages, PSS_PAGE_* order. */
 enum { SUM_INFO, SUM_SKILLS, SUM_BATTLE, SUM_CONTEST, SUM_PAGES };
 #define SUM_NO_MOVE 0xFF
@@ -3580,6 +3616,8 @@ static void ResetPartyScreen(void)
     sPartyView = PARTY_LIST;
     sPartySwap = PARTY_NO_SWAP;
     sPartyAct = PACT_NONE;
+    sPartyThen = NULL;
+    sPartyFromBag = FALSE;
 }
 
 /* SetPartyMonFieldSelectionActions without ITEM: an egg's has no field
@@ -3760,8 +3798,35 @@ static void SnapshotParty(ViewState *s)
     s->partyAct = sPartyAct;
     if (sPartyAct == PACT_MENU)
         s->partyActCount = PartyActions(sPartySel, s->partyActions);
-    if (sPartyAct == PACT_MESSAGE || sPartyAct == PACT_ASK || sPartyAct == PACT_TARGET)
+    /* Done with the bag's item: back to the bag, as the game's menu closes. */
+    if (sPartyFromBag && sPartyAct == PACT_NONE && sPartyView == PARTY_LIST)
+    {
+        sPartyFromBag = FALSE;
+        sScreen = SCR_BAG;
+    }
+    if (sPartyAct == PACT_MESSAGE || sPartyAct == PACT_ASK || sPartyAct == PACT_TARGET || sPartyAct == PACT_USE
+     || sPartyAct == PACT_GIVE || sPartyAct == PACT_PICK_MOVE || sPartyAct == PACT_STATS)
         s->partyMore = MessagePage(sPartyMsg, sPartyMsgPage, s->partyMsg, sizeof(s->partyMsg));
+    if (sPartyAct == PACT_USE)
+        for (int i = 0; i < gPlayerPartyCount && i < PARTY_SIZE; ++i)
+            s->partyDesc[i] = CtrParty_ItemDescText(i, sPartyUseItem);
+    if (sPartyAct == PACT_PICK_MOVE)
+    {
+        struct Pokemon *mon = &gPlayerParty[sPartySel];
+
+        s->partyPick = sPartyPick;
+        for (int i = 0; i < MAX_MON_MOVES; ++i)
+        {
+            s->moves[i] = GetMonData(mon, MON_DATA_MOVE1 + i);
+            s->pp[i] = GetMonData(mon, MON_DATA_PP1 + i);
+            s->maxPp[i] = s->moves[i] ? CalculatePPWithBonus(s->moves[i], GetMonData(mon, MON_DATA_PP_BONUSES), i) : 0;
+        }
+    }
+    if (sPartyAct == PACT_STATS)
+    {
+        memcpy(s->partyStats, sPartyStats, sizeof(sPartyStats));
+        s->partyStatsPage = sPartyStatsPage;
+    }
     s->canEdit = PartyEditable();
     s->frame = gSaveBlock2Ptr->optionsWindowFrameType;
     if (sPartyView == PARTY_SUMMARY)
@@ -3800,12 +3865,73 @@ static u8 BagStacks(u8 pocket)
  * (PARTY_NO_SWAP: none), and a message where the description goes. */
 static u8 sBagGiveTo = PARTY_NO_SWAP;
 static u8 sBagMsg[96];
+/* The tray's work on the item picked: nothing (its actions), how many to
+ * toss, a question (sBagAsk), a message, a blank MAIL. The message is the
+ * game's: in the description's place (TOSS's) or a box under the bag
+ * (DisplayItemMessage's), page by page. */
+enum { BACT_NONE, BACT_QTY, BACT_ASK, BACT_MESSAGE, BACT_MAIL, BACT_TAG };
+enum { BASK_TOSS, BASK_TEACH, BASK_FIELD_HM };
+/* sContextMenuItems_*'s, in their order. */
+enum { BAG_ACT_USE, BAG_ACT_GIVE, BAG_ACT_TOSS, BAG_ACT_REGISTER, BAG_ACT_CHECK_TAG, BAG_ACT_CHECK };
+static u8 sBagAct, sBagAsk, sBagBoxDesc, sBagMsgPage, sBagHmUser;
+static u16 sBagItem, sBagTossQty;
+static u8 sBagBox[256];
+static struct Mail sBagMail;
+
+static void BagBox(const u8 *text, u8 act, bool8 desc)
+{
+    StringCopy(sBagBox, text);
+    sBagAct = act;
+    sBagBoxDesc = desc;
+    sBagMsgPage = 0;
+}
+
+/* OpenContextMenu's for the field (ITEMMENULOCATION_FIELD), or GIVE alone
+ * for a Pokémon's. */
+static u8 BagActions(u8 pocket, u16 item, u8 *actions)
+{
+    u8 n = 0;
+
+    if (sBagGiveTo != PARTY_NO_SWAP)
+    {
+        actions[n++] = BAG_ACT_GIVE;
+        return n;
+    }
+    switch (pocket)
+    {
+    case ITEMS_POCKET:
+        actions[n++] = ItemIsMail(item) ? BAG_ACT_CHECK : BAG_ACT_USE;
+        actions[n++] = BAG_ACT_GIVE;
+        actions[n++] = BAG_ACT_TOSS;
+        break;
+    case KEYITEMS_POCKET:
+        actions[n++] = BAG_ACT_USE;
+        actions[n++] = BAG_ACT_REGISTER;
+        break;
+    case BALLS_POCKET:
+        actions[n++] = BAG_ACT_GIVE;
+        actions[n++] = BAG_ACT_TOSS;
+        break;
+    case TMHM_POCKET:
+        actions[n++] = BAG_ACT_USE;
+        actions[n++] = BAG_ACT_GIVE;
+        break;
+    case BERRIES_POCKET:
+        actions[n++] = BAG_ACT_CHECK_TAG;
+        actions[n++] = BAG_ACT_USE;
+        actions[n++] = BAG_ACT_GIVE;
+        actions[n++] = BAG_ACT_TOSS;
+        break;
+    }
+    return n;
+}
 
 static void ResetBagScreen(void)
 {
     sBagSwap = BAG_NO_ROW;
     sBagGiveTo = PARTY_NO_SWAP;
     sBagMsg[0] = EOS;
+    sBagAct = BACT_NONE;
 }
 
 static void SnapshotBag(ViewState *s)
@@ -3827,6 +3953,21 @@ static void SnapshotBag(ViewState *s)
         sBagGiveTo = PARTY_NO_SWAP;
     s->bagGive = sBagGiveTo;
     StringCopy(s->bagMsg, sBagMsg);
+    s->frame = gSaveBlock2Ptr->optionsWindowFrameType;
+    s->bagAct = sBagAct;
+    if (sBagAct == BACT_TAG && sBagSel[sBagPocket] >= count)
+        sBagAct = BACT_NONE;
+    if (sBagAct == BACT_TAG)
+        s->bagTagBerry = ITEM_TO_BERRY(BagGetItemIdByPocketPosition(sBagPocket + 1, sBagSel[sBagPocket]));
+    else if (sBagAct == BACT_MAIL)
+        CtrMail_View(&sBagMail, &s->mail);
+    else if (sBagAct != BACT_NONE)
+    {
+        s->bagAsk = sBagAsk;
+        s->bagBoxDesc = sBagBoxDesc;
+        s->bagTossQty = sBagTossQty;
+        s->bagMore = MessagePage(sBagBox, sBagMsgPage, s->bagBox, sizeof(s->bagBox));
+    }
     s->canEdit = PartyEditable();
     s->bagOk = sRes.bagTiles && sRes.bagMap;
     for (int i = 0; i < BAG_ROWS && s->bagTop + i < count; ++i)
@@ -3837,6 +3978,9 @@ static void SnapshotBag(ViewState *s)
     s->bagSelItem = s->bagSel == BAG_NO_ROW ? ITEM_NONE
                   : s->bagSel == count       ? ITEM_LIST_END
                                              : BagGetItemIdByPocketPosition(sBagPocket + 1, s->bagSel);
+    if (s->bagSel < count)
+        s->bagActionCount = BagActions(sBagPocket, s->bagSelItem, s->bagActions);
+    s->bagRiding = TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_MACH_BIKE | PLAYER_AVATAR_FLAG_ACRO_BIKE) != 0;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -5310,15 +5454,18 @@ static void DrawPartySlot(const ViewState *s, int i)
     Pal pal = sRes.partyPal[main ? 3 : 4];
     u16 fg, sh;
 
+    const u8 *desc = m->species ? s->partyDesc[i] : NULL;
+
     if (main)
-        map = m->isEgg && sRes.slotMainNoHp ? sRes.slotMainNoHp : sRes.slotMain;
+        map = (m->isEgg || desc) && sRes.slotMainNoHp ? sRes.slotMainNoHp : sRes.slotMain;
     else if (!m->species)
         map = sRes.slotWideEmpty;
     else
-        map = m->isEgg && sRes.slotWideNoHp ? sRes.slotWideNoHp : sRes.slotWide;
+        map = (m->isEgg || desc) && sRes.slotWideNoHp ? sRes.slotWideNoHp : sRes.slotWide;
     if (!map)
         return;
-    PartyBoxPalette(&pal, m, s->pressed == HIT_SLOT + i || (s->partyAct != PACT_NONE && s->partySel == i),
+    PartyBoxPalette(&pal, m, s->pressed == HIT_SLOT + i || (s->partyAct != PACT_NONE && s->partyAct != PACT_USE
+                                                            && s->partyAct != PACT_GIVE && s->partySel == i),
                     s->partySwap == i);
     for (int ty = 0; ty < h; ++ty)
         for (int tx = 0; tx < w; ++tx)
@@ -5342,6 +5489,12 @@ static void DrawPartySlot(const ViewState *s, int i)
             DrawStr(&sSmall, m->gender == MON_MALE ? gText_MaleSymbol : gText_FemaleSymbol, x + l->genderX,
                     y + l->genderY, Rgb565(sRes.partyRaw[color]), Rgb565(sRes.partyRaw[color + 1]));
         }
+        /* DisplayPartyPokemonDescriptionText, at sPartyBoxInfoRects' place. */
+        if (desc)
+        {
+            DrawStr(&sNormal, desc, x + (main ? 12 : 77), y + (main ? 34 : 4), fg, sh);
+            goto icon;
+        }
         /* DisplayPartyPokemonHP and ...MaxHP both print the slash. */
         StringCopy(text, Number(m->hp, 3, STR_CONV_MODE_RIGHT_ALIGN));
         end = text + StringLength(text);
@@ -5351,6 +5504,7 @@ static void DrawPartySlot(const ViewState *s, int i)
         StringCopy(StringCopy(text, gText_Slash), Number(m->maxHp, 3, STR_CONV_MODE_RIGHT_ALIGN));
         DrawStr(&sSmall, text, x + l->maxHpX, y + l->maxHpY, fg, sh);
         DrawPartyHpBar(x + l->barX, y + l->barY, m->hp, m->maxHp, &pal);
+icon:
         DrawAilment(m->ailment, sprites[4] - 16, PARTY_Y0 + sprites[5] - 4);
     }
     /* The icon, then its held item mark, as the game's sprites. */
@@ -5384,19 +5538,67 @@ static void DrawGameButton(int x, int y, const u8 *label, bool8 pressed, bool8 e
 static void DrawButtonArt(int x, int y, int wt, int h);
 static void ButtonText(bool8 enabled, u16 *fg, u16 *sh);
 
-static void DrawTrayButton(int x, int y, const u8 *label, bool8 pressed, bool8 enabled, bool8 move, u8 id)
+static void DrawTrayButtonW(int x, int y, int wt, const u8 *label, bool8 pressed, bool8 enabled, bool8 move, u8 id)
 {
-    const Font *font = StrWidth(&sSmall, label) <= 52 ? &sSmall : &sNarrow;
+    const Font *font = StrWidth(&sSmall, label) <= wt * 8 - 4 ? &sSmall : &sNarrow;
     u16 fg, sh;
 
     pressed = pressed && enabled;
-    DrawButtonArt(x, y + pressed, 7, 16);
+    DrawButtonArt(x, y + pressed, wt, 16);
     ButtonText(enabled, &fg, &sh);
     if (move && enabled)
         fg = TXT_LBLUE, sh = TXT_BLUE;
-    DrawStrCentered(font, label, x + 28, y + (font == &sSmall) + pressed, fg, sh);
+    DrawStrCentered(font, label, x + wt * 4, y + (font == &sSmall) + pressed, fg, sh);
     if (enabled)
-        AddHit(x - 1, y - 6, 58, 28, id);
+        AddHit(x - 1, y - 6, wt * 8 + 2, 28, id);
+}
+
+static void DrawTrayButton(int x, int y, const u8 *label, bool8 pressed, bool8 enabled, bool8 move, u8 id)
+{
+    DrawTrayButtonW(x, y, 7, label, pressed, enabled, move, id);
+}
+
+/* A move as a wide button: its name, and its PP at the right. */
+static void DrawMoveButton(int x, int y, const ViewState *s, int i, u8 id)
+{
+    bool8 enabled = s->moves[i] != MOVE_NONE, pressed = enabled && s->pressed == id;
+    u8 pp[12], *end;
+    u16 fg, sh;
+
+    DrawButtonArt(x, y + pressed, 14, 16);
+    ButtonText(enabled, &fg, &sh);
+    if (!enabled)
+        return;
+    DrawStr(&sSmall, gMoveNames[s->moves[i]], x + 6, y + 1 + pressed, fg, sh);
+    end = StringCopy(pp, Number(s->pp[i], 2, STR_CONV_MODE_RIGHT_ALIGN));
+    *end++ = CHAR_SLASH;
+    StringCopy(end, Number(s->maxPp[i], 2, STR_CONV_MODE_RIGHT_ALIGN));
+    DrawStrRight(&sSmall, pp, x + 106, y + 1 + pressed, fg, sh);
+    AddHit(x, y - 3, 112, 22, id);
+}
+
+/* The level-up stats (DrawLevelUpWindowPg1, then ...Pg2) in a box under the
+ * party: what each rose by, then what it is. */
+static void DrawLevelUpStats(const ViewState *s)
+{
+    static const u8 order[NUM_STATS] = {STAT_HP, STAT_ATK, STAT_DEF, STAT_SPATK, STAT_SPDEF, STAT_SPEED};
+    const u8 *const names[NUM_STATS] = {gText_MaxHP, gText_Attack, gText_Defense, gText_SpAtk, gText_SpDef, gText_Speed};
+
+    DrawWindowFrame(s->frame, 8, 176, 28, 6, TXT_WHITE);
+    for (int i = 0; i < NUM_STATS; ++i)
+    {
+        int x = i < 3 ? 10 : 124, y = 177 + (i % 3) * 16;
+        s16 before = s->partyStats[order[i]], after = s->partyStats[NUM_STATS + order[i]];
+        u8 value[12];
+
+        DrawStr(&sNormal, names[i], x, y, TXT_DARK, TXT_LIGHT);
+        if (s->partyStatsPage == 0)
+            StringCopy(StringCopy(value, after >= before ? gText_Plus : gText_Dash),
+                       Number(after >= before ? after - before : before - after, 2, STR_CONV_MODE_LEFT_ALIGN));
+        else
+            StringCopy(value, Number(after, 3, STR_CONV_MODE_RIGHT_ALIGN));
+        DrawStrRight(&sNormal, value, x + 100, y, TXT_DARK, TXT_LIGHT);
+    }
 }
 
 static void DrawTopMessage(const ViewState *s, const u8 *text)
@@ -5485,6 +5687,19 @@ static void DrawPartyList(const ViewState *s)
         return;
     case PACT_WRITING:
         return;
+    case PACT_PICK_MOVE:
+        DrawTopMessage(s, s->partyMsg);
+        for (int i = 0; i < MAX_MON_MOVES; ++i)
+            DrawMoveButton(i & 1 ? 124 : 4, 176 + (i / 2) * 22, s, i, HIT_PARTY_MOVE + i);
+        DrawTrayButton(TRAY_X(3), 220, gText_Cancel2, s->pressed == HIT_PARTY_BACK, TRUE, FALSE, HIT_PARTY_BACK);
+        return;
+    case PACT_STATS:
+        DrawTopMessage(s, s->partyMsg);
+        DrawLevelUpStats(s);
+        AddHit(0, 0, CW, H, HIT_PARTY_MESSAGE);
+        return;
+    case PACT_USE:
+    case PACT_GIVE:
     case PACT_TARGET:
         DrawTopMessage(s, s->partyMsg);
         DrawTrayButton(TRAY_X(3), TRAY_ROW2_Y, gText_Cancel2, s->pressed == HIT_PARTY_BACK, TRUE, FALSE,
@@ -6139,6 +6354,144 @@ static void BagItemName(u8 *dest, u8 pocket, u16 item)
         CopyItemName(item, dest);
 }
 
+static void DrawPartyMail(const ViewState *s);
+
+/*
+ * CHECK TAG: berry_tag_screen.c's screen, at the party's height: BG3's tile
+ * in the player's colour all over, the tag (BG2), the texts (BG1's windows,
+ * in the screen's font palette), the flavour circles and the berry's
+ * picture (OBJ, under BG0), the title (BG0) with BERRY TAG. The arrows
+ * go to the berry before or after in the pocket, as UP and DOWN do.
+ */
+static struct
+{
+    bool8 tried;
+    u8 *tiles, *circle, *pic;
+    u16 *tag, *title;
+    u32 tileCount;
+    Pal pals[16], picPal;
+    u8 picBerry;
+} sTagGfx;
+
+static void LoadBerryTag(u8 berry)
+{
+    u32 size = 0;
+
+    if (!sTagGfx.tried)
+    {
+        u16 *raw;
+
+        sTagGfx.tried = TRUE;
+        sTagGfx.tiles = Unlz(gBerryCheck_Gfx, &size);
+        sTagGfx.tileCount = sTagGfx.tiles ? size / 32 : 0;
+        sTagGfx.tag = Unlz(gBerryTag_Gfx, NULL);
+        sTagGfx.title = Unlz(gBerryTag_Tilemap, NULL);
+        sTagGfx.circle = Unlz(gBerryCheckCircle_Gfx, NULL);
+        raw = Unlz(gBerryCheck_Pal, &size);
+        if (raw)
+            ToPals(sTagGfx.pals, raw, size / 32 < 6 ? size / 32 : 6);
+        free(raw);
+        PalFile("bag/berry_tag_screen.gbapal", &sTagGfx.pals[15], 1, FALSE);
+    }
+    if (sTagGfx.picBerry != berry)
+    {
+        const u32 *tiles, *pal;
+        u16 *raw;
+
+        free(sTagGfx.pic);
+        CtrBerry_Pic(berry - 1, &tiles, &pal);
+        sTagGfx.pic = Unlz(tiles, NULL);
+        raw = Unlz(pal, NULL);
+        if (raw)
+            ToPals(&sTagGfx.picPal, raw, 1);
+        free(raw);
+        sTagGfx.picBerry = berry;
+    }
+}
+
+static void DrawBerryTag(const ViewState *s)
+{
+    static const u8 circleX[FLAVOR_COUNT] = {64, 104, 144, 184, 224};
+    static const u8 up[] = {CHAR_UP_ARROW, EOS}, down[] = {CHAR_DOWN_ARROW, EOS};
+    static const u8 *const firmness[] = {gBerryFirmnessString_VerySoft, gBerryFirmnessString_Soft,
+                                         gBerryFirmnessString_Hard, gBerryFirmnessString_VeryHard,
+                                         gBerryFirmnessString_SuperHard};
+    const struct Berry *berry = GetBerryInfo(s->bagTagBerry);
+    const u16 *font = sTagGfx.pals[15].c;
+    u16 bg = ((s->gender == MALE ? 4 : 5) << 12) | 0x42;
+    bool8 flavors[FLAVOR_COUNT];
+    u8 text[64];
+#if GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH
+    const int descX = 24;
+#else
+    const int descX = 32;
+#endif
+
+    LoadBerryTag(s->bagTagBerry);
+    if (!sTagGfx.tiles || !sTagGfx.tag || !sTagGfx.title)
+        return;
+    for (int ty = 0; ty < H / 8; ++ty)
+        for (int tx = 0; tx < CW / 8; ++tx)
+            DrawMapEntry(sTagGfx.tiles, sTagGfx.tileCount, bg, tx * 8, ty * 8, sTagGfx.pals);
+    for (int ty = 0; ty < 20; ++ty)
+        for (int tx = 0; tx < 30; ++tx)
+            DrawMapEntry(sTagGfx.tiles, sTagGfx.tileCount, sTagGfx.tag[ty * 32 + tx], tx * 8, PARTY_Y0 + ty * 8,
+                         sTagGfx.pals);
+
+    /* PrintBerryNumberAndName, ...Size, ...Firmness, ...Description1 and 2. */
+    ExpandVars(text, gText_NumberVar1Var2, Number(s->bagTagBerry, 2, STR_CONV_MODE_LEADING_ZEROS), berry->name);
+    DrawStr(&sNormal, text, 88, PARTY_Y0 + 33, font[2], font[3]);
+    DrawStr(&sNormal, gText_SizeSlash, 88, PARTY_Y0 + 57, font[2], font[3]);
+    if (berry->size != 0)
+    {
+        u32 inches = 1000 * berry->size / 254, fraction;
+        u8 whole[4];
+
+        if (inches % 10 > 4)
+            inches += 10;
+        fraction = (inches % 100) / 10;
+        inches /= 100;
+        StringCopy(whole, Number(inches, 2, STR_CONV_MODE_LEFT_ALIGN));
+        ExpandVars(text, gText_Var1DotVar2, whole, Number(fraction, 2, STR_CONV_MODE_LEFT_ALIGN));
+        DrawStr(&sNormal, text, 128, PARTY_Y0 + 57, font[2], font[3]);
+    }
+    else
+        DrawStr(&sNormal, gText_ThreeMarks, 128, PARTY_Y0 + 57, font[2], font[3]);
+    DrawStr(&sNormal, gText_FirmSlash, 88, PARTY_Y0 + 73, font[2], font[3]);
+    DrawStr(&sNormal, berry->firmness != 0 && berry->firmness <= ARRAY_COUNT(firmness) ? firmness[berry->firmness - 1]
+                                                                                      : gText_ThreeMarks,
+            128, PARTY_Y0 + 73, font[2], font[3]);
+    DrawStr(&sNormal, berry->description1, descX, PARTY_Y0 + 113, font[2], font[3]);
+    DrawStr(&sNormal, berry->description2, descX, PARTY_Y0 + 129, font[2], font[3]);
+
+    /* The sprites, priority 1: the flavours it has, and the berry (48x48,
+     * ArrangeBerryGfx's margin in its 64x64 sprite at (56, 64)). */
+    flavors[FLAVOR_SPICY] = berry->spicy;
+    flavors[FLAVOR_DRY] = berry->dry;
+    flavors[FLAVOR_SWEET] = berry->sweet;
+    flavors[FLAVOR_BITTER] = berry->bitter;
+    flavors[FLAVOR_SOUR] = berry->sour;
+    for (int i = 0; i < FLAVOR_COUNT; ++i)
+        if (flavors[i] && sTagGfx.circle)
+            DrawSprite(sTagGfx.circle, 8, 8, circleX[i] - 32, PARTY_Y0 + 116 - 32, sTagGfx.pals[0].c);
+    if (sTagGfx.pic)
+        DrawSprite(sTagGfx.pic, 6, 6, 56 - 24, PARTY_Y0 + 64 - 24, sTagGfx.picPal.c);
+
+    /* BG0: the title, and BERRY TAG in its window (2, 0). */
+    for (int ty = 0; ty < 20; ++ty)
+        for (int tx = 0; tx < 30; ++tx)
+            if (sTagGfx.title[ty * 32 + tx] & 0x3FF)
+                DrawMapEntry(sTagGfx.tiles, sTagGfx.tileCount, sTagGfx.title[ty * 32 + tx], tx * 8, PARTY_Y0 + ty * 8,
+                             sTagGfx.pals);
+    FillRect(16, PARTY_Y0, 64, 16, font[15]);
+    DrawStrCentered(&sNormal, gText_BerryTag, 48, PARTY_Y0 + 1, font[14], font[13]);
+
+    DrawTrayButton(TRAY_X(0), 212, up, s->pressed == HIT_BAG_QTY, s->bagSel > 0, FALSE, HIT_BAG_QTY);
+    DrawTrayButton(TRAY_X(1), 212, down, s->pressed == HIT_BAG_QTY + 1, s->bagSel + 1 < s->bagCount, FALSE,
+                   HIT_BAG_QTY + 1);
+    DrawTrayButton(TRAY_X(3), 212, gText_Cancel2, s->pressed == HIT_BAG_NO, TRUE, FALSE, HIT_BAG_NO);
+}
+
 static void DrawBag(const ViewState *s)
 {
     static const u8 left[] = {CHAR_LEFT_ARROW, EOS}, right[] = {CHAR_RIGHT_ARROW, EOS};
@@ -6152,6 +6505,17 @@ static void DrawBag(const ViewState *s)
 
     if (!s->bagOk)
         return;
+    /* CHECK on a MAIL: the stationery, blank (CB2_CheckMail). */
+    if (s->bagAct == BACT_MAIL)
+    {
+        DrawPartyMail(s);
+        return;
+    }
+    if (s->bagAct == BACT_TAG)
+    {
+        DrawBerryTag(s);
+        return;
+    }
     /* The bag's backdrop, and its stripes under it for the taps. */
     DrawBagMap(sRes.bagMap, 32, 0, 0, 30, 20, 0, 0, pals);
     for (int ty = 20; ty < H / 8; ++ty)
@@ -6227,7 +6591,9 @@ static void DrawBag(const ViewState *s)
     if (s->bagSelItem != ITEM_NONE)
     {
         DrawItemIcon(s->bagSelItem, 8, 72);
-        if (s->bagMsg[0] != EOS)
+        if (s->bagAct != BACT_NONE && s->bagBoxDesc)
+            DrawBagText(&sNormal, s->bagBox, 3, 104 + 1, fg, sh);
+        else if (s->bagMsg[0] != EOS)
             DrawBagText(&sNormal, s->bagMsg, 3, 104 + 1, fg, sh);
         else if (s->bagSelItem == ITEM_LIST_END)
         {
@@ -6240,21 +6606,79 @@ static void DrawBag(const ViewState *s)
             DrawBagText(&sNormal, GetItemDescription(s->bagSelItem), 3, 104 + 1, fg, sh);
     }
 
-    /* The keys' work by touch: pocket, scroll, then the item's actions. */
+    /* A message or a question, in the description's place or a box under
+     * the bag (DisplayItemMessage's), with its buttons in the tray; TOSS's
+     * how many, with the quantity box (ITEMWIN_QUANTITY) by the icon. */
+    if (s->bagAct != BACT_NONE)
+    {
+        if (!s->bagBoxDesc)
+        {
+            DrawWindowFrame(s->frame, 16, 168, 26, 4, TXT_WHITE);
+            DrawStr(&sNormal, s->bagBox, 16, 169, TXT_DARK, TXT_LIGHT);
+        }
+        if (s->bagAct == BACT_QTY)
+        {
+            static const u8 labels[][4] = {{CHAR_HYPHEN, CHAR_1, CHAR_0, EOS}, {CHAR_HYPHEN, CHAR_1, EOS},
+                                           {CHAR_PLUS, CHAR_1, EOS}, {CHAR_PLUS, CHAR_1, CHAR_0, EOS}};
+
+            ExpandVar1(text, gText_xVar1, Number(s->bagTossQty, BAG_ITEM_CAPACITY_DIGITS, STR_CONV_MODE_LEADING_ZEROS));
+            DrawWindowFrame(s->frame, 64, 84, 5, 2, TXT_WHITE);
+            DrawStrCentered(&sNormal, text, 84, 85, TXT_DARK, TXT_LIGHT);
+            for (int i = 0; i < 4; ++i)
+                DrawTrayButton(TRAY_X(i), 186, labels[i], s->pressed == HIT_BAG_QTY + i, TRUE, FALSE, HIT_BAG_QTY + i);
+            DrawTrayButton(TRAY_X(2), 214, gText_Ok2, s->pressed == HIT_BAG_OK, TRUE, FALSE, HIT_BAG_OK);
+            DrawTrayButton(TRAY_X(3), 214, gText_Cancel2, s->pressed == HIT_BAG_NO, TRUE, FALSE, HIT_BAG_NO);
+        }
+        else if (s->bagAct == BACT_ASK && !s->bagMore)
+        {
+            DrawTrayButton(TRAY_X(1), 214, gText_Yes, s->pressed == HIT_BAG_YES, TRUE, FALSE, HIT_BAG_YES);
+            DrawTrayButton(TRAY_X(2), 214, gText_No, s->pressed == HIT_BAG_NO, TRUE, FALSE, HIT_BAG_NO);
+        }
+        else
+        {
+            /* A tap anywhere goes on, as A does. */
+            AddHit(0, 0, CW, H, HIT_BAG_OK);
+            DrawTrayButton(TRAY_X(1) + 30, 214, gText_Ok2, s->pressed == HIT_BAG_OK, TRUE, FALSE, HIT_BAG_OK);
+        }
+        return;
+    }
+
+    /* The keys' work by touch: pocket and scroll; then the item's actions
+     * (the game's context menu), SWITCH ITEM and CANCEL. */
     DrawGameButton(2, 166, left, s->pressed == HIT_BAG_POCKET_PREV, s->bagPocket > 0, HIT_BAG_POCKET_PREV);
     DrawGameButton(62, 166, up, s->pressed == HIT_BAG_PAGE_UP, s->bagTop > 0, HIT_BAG_PAGE_UP);
     DrawGameButton(122, 166, down, s->pressed == HIT_BAG_PAGE_DOWN, s->bagTop + BAG_ROWS < s->bagCount + 1, HIT_BAG_PAGE_DOWN);
     DrawGameButton(182, 166, right, s->pressed == HIT_BAG_POCKET_NEXT, s->bagPocket < POCKETS_COUNT - 1, HIT_BAG_POCKET_NEXT);
-    /* Picking an item for a Pokémon: GIVE in REGISTER's place. */
-    if (s->bagGive != PARTY_NO_SWAP)
-        DrawTallButton(2, 186, 9, 52, gMenuText_Give, s->pressed == HIT_BAG_REGISTER, item && s->canEdit,
-                       HIT_BAG_REGISTER);
-    else
-        DrawTallButton(2, 186, 9, 52, s->registered != ITEM_NONE && s->registered == s->bagSelItem ? gMenuText_Deselect : gMenuText_Register,
-                       s->pressed == HIT_BAG_REGISTER, key && item && s->canEdit, HIT_BAG_REGISTER);
-    DrawTallButton(84, 186, 9, 52, Ascii(CTR_TEXT("SWITCH\nITEM", "CAMBIAR\nOBJETO", "ÉCHANGER\nOBJET", "SCAMBIA\nSTRUM.")),
-                   s->pressed == HIT_BAG_SWITCH || s->bagSwap != BAG_NO_ROW, swappable && item && s->canEdit, HIT_BAG_SWITCH);
-    DrawTallButton(166, 186, 9, 52, gText_Cancel, s->pressed == HIT_BAG_CANCEL, TRUE, HIT_BAG_CANCEL);
+    if (item)
+        for (int i = 0; i < s->bagActionCount; ++i)
+        {
+            u8 action = s->bagActions[i];
+            const u8 *label = action == BAG_ACT_GIVE      ? gMenuText_Give
+                            : action == BAG_ACT_TOSS      ? gMenuText_Toss
+                            : action == BAG_ACT_CHECK     ? gMenuText_Check
+                            : action == BAG_ACT_CHECK_TAG ? gMenuText_CheckTag
+                            : action == BAG_ACT_REGISTER  ? (s->registered != ITEM_NONE && s->registered == s->bagSelItem
+                                                             ? gMenuText_Deselect : gMenuText_Register)
+                            : (s->bagSelItem == ITEM_MACH_BIKE || s->bagSelItem == ITEM_ACRO_BIKE) && s->bagRiding
+                                                          ? gMenuText_Walk
+                                                          : gMenuText_Use;
+
+            DrawTrayButton(TRAY_X(i), 190, label, s->pressed == HIT_BAG_ACT + i,
+                           action == BAG_ACT_CHECK_TAG || s->canEdit, TRUE, HIT_BAG_ACT + i);
+        }
+    if (s->bagGive == PARTY_NO_SWAP)
+    {
+        u8 label[24];
+
+        /* SWITCH ITEM on one line. */
+        StringCopy(label, Ascii(CTR_TEXT("SWITCH\nITEM", "CAMBIAR\nOBJETO", "ÉCHANGER\nOBJET", "SCAMBIA\nSTRUM.")));
+        for (u8 *c = label; *c != EOS; ++c)
+            if (*c == CHAR_NEWLINE)
+                *c = CHAR_SPACE;
+        DrawTrayButtonW(4, 214, 14, label, s->pressed == HIT_BAG_SWITCH || s->bagSwap != BAG_NO_ROW,
+                        swappable && item && s->canEdit, FALSE, HIT_BAG_SWITCH);
+    }
+    DrawTrayButton(TRAY_X(3), 214, gText_Cancel2, s->pressed == HIT_BAG_CANCEL, TRUE, FALSE, HIT_BAG_CANCEL);
 }
 
 /*
@@ -9980,6 +10404,13 @@ static void PartyMessage(const u8 *text, u8 back)
     sPartyAct = PACT_MESSAGE;
     sPartyActBack = back;
     sPartyMsgPage = 0;
+    sPartyThen = NULL;
+}
+
+static void PartyMessageThen(const u8 *text, void (*then)(void))
+{
+    PartyMessage(text, PACT_NONE);
+    sPartyThen = then;
 }
 
 static void PartyAsk(const u8 *text, u8 ask)
@@ -10115,6 +10546,157 @@ static void PartySwitchItems(void)
     PartyItemText(text, gText_SwitchedPkmnItem, name, held);
     PartyMessage(text, PACT_NONE);
     CtrLog_Write(CTR_LOG_INPUT, "bottom screen: switched item %u for %u on %u", held, item, sPartySel);
+}
+
+/* ---- Items from the bag on a Pokémon (party_menu.c's CtrParty_*) ---- */
+
+/* CB2_ShowPartyMenuForItemUse and CB2_ChooseMonToGiveItem without the menu:
+ * the party, to pick the Pokémon, then back to the bag. */
+static void PartyStartUse(u16 item, bool8 give)
+{
+    sScreen = SCR_POKEMON;
+    sPartyView = PARTY_LIST;
+    sPartySwap = PARTY_NO_SWAP;
+    sPartyUseItem = item;
+    sPartyFromBag = TRUE;
+    sPartyThen = NULL;
+    sPartyAct = give ? PACT_GIVE : PACT_USE;
+    StringCopy(sPartyMsg, give                                           ? gText_GiveToWhichPokemon
+                          : CheckIfItemIsTMHMOrEvolutionStone(item) == 1 ? gText_TeachWhichPokemon
+                                                                         : gText_UseOnWhichPokemon);
+    sPartyMsgPage = 0;
+}
+
+static void PartyLearnDone(void);
+static void PartyLevelUpMoves(bool8 first);
+
+static void PartyNextLevelUpMove(void)
+{
+    PartyLevelUpMoves(FALSE);
+}
+
+static void PartyShowStats(void)
+{
+    sPartyAct = PACT_STATS;
+    sPartyStatsPage = 0;
+}
+
+/* gText_PkmnNeedsToReplaceMove for sLearnMove, YES / NO. */
+static void PartyAskReplace(void)
+{
+    u8 nick[POKEMON_NAME_LENGTH + 2], text[sizeof(sPartyMsg)];
+
+    GetMonNickname(&gPlayerParty[sPartySel], nick);
+    ExpandVars(text, gText_PkmnNeedsToReplaceMove, nick, gMoveNames[sLearnMove]);
+    PartyAsk(text, PASK_REPLACE_MOVE);
+}
+
+static void PartyAskStop(void)
+{
+    u8 nick[POKEMON_NAME_LENGTH + 2], text[sizeof(sPartyMsg)];
+
+    GetMonNickname(&gPlayerParty[sPartySel], nick);
+    ExpandVars(text, gText_StopLearningMove2, nick, gMoveNames[sLearnMove]);
+    PartyAsk(text, PASK_STOP_LEARNING);
+}
+
+static void PartyPickForget(void)
+{
+    StringCopy(sPartyMsg, gText_WhichMoveToForget);
+    sPartyMsgPage = 0;
+    sPartyAct = PACT_PICK_MOVE;
+    sPartyPick = PICK_FORGET;
+}
+
+/* Task_PartyMenuReplaceMove: "1, 2 and… Poof!", then learned. */
+static void PartyForget(u8 moveSlot)
+{
+    u8 nick[POKEMON_NAME_LENGTH + 2], text[sizeof(sPartyMsg)];
+    u16 old = GetMonData(&gPlayerParty[sPartySel], MON_DATA_MOVE1 + moveSlot);
+    u8 *end;
+
+    if (!CtrParty_ReplaceMove(sPartySel, moveSlot, sLearnMove, sLearnTm))
+    {
+        PartyMessageThen(gText_HMMovesCantBeForgotten2, PartyPickForget);
+        return;
+    }
+    GetMonNickname(&gPlayerParty[sPartySel], nick);
+    ExpandVars(text, gText_12PoofForgotMove, nick, gMoveNames[old]);
+    end = text + StringLength(text);
+    ExpandVars(end, gText_PkmnLearnedMove3, nick, gMoveNames[sLearnMove]);
+    PartyMessageThen(text, PartyLearnDone);
+    CtrLog_Write(CTR_LOG_INPUT, "bottom screen: move %u forgotten for %u on %u", old, sLearnMove, sPartySel);
+}
+
+/* Task_LearnNextMoveOrClosePartyMenu: a level's next move, or done. */
+static void PartyLearnDone(void)
+{
+    if (sLearnLevelUp)
+        PartyLevelUpMoves(FALSE);
+    else
+        sPartyAct = PACT_NONE;
+}
+
+/* Task_TryLearnNewMoves, then PartyMenuTryEvolution. */
+static void PartyLevelUpMoves(bool8 first)
+{
+    u8 text[sizeof(sPartyMsg)];
+    u16 move = MOVE_NONE;
+
+    switch (CtrParty_LevelUpMove(sPartySel, first, text, sizeof(text), &move))
+    {
+    case CTR_ITEM_LEARNED:
+        PartyMessageThen(text, PartyNextLevelUpMove);
+        break;
+    case CTR_ITEM_REPLACE:
+        sLearnMove = move;
+        sLearnTm = ITEM_NONE;
+        sLearnLevelUp = TRUE;
+        PartyAsk(text, PASK_REPLACE_MOVE);
+        break;
+    default:
+        /* The evolution scene, an event, takes the screens if it comes. */
+        CtrParty_TryEvolve(sPartySel);
+        sPartyAct = PACT_NONE;
+        break;
+    }
+}
+
+/* gItemUseCB on the Pokémon picked (moveSlot MAX_MON_MOVES: none yet). */
+static void PartyUseItem(u8 moveSlot)
+{
+    u8 text[sizeof(sPartyMsg)];
+    u16 move = MOVE_NONE;
+
+    switch (CtrParty_UseItem(sPartySel, sPartyUseItem, moveSlot, text, sizeof(text), sPartyStats, &move))
+    {
+    case CTR_ITEM_PICK_MOVE:
+        StringCopy(sPartyMsg, text);
+        sPartyMsgPage = 0;
+        sPartyAct = PACT_PICK_MOVE;
+        sPartyPick = PICK_PP;
+        break;
+    case CTR_ITEM_LEVEL_UP:
+        PartyMessageThen(text, PartyShowStats);
+        break;
+    case CTR_ITEM_EVOLVING:
+        sPartyAct = PACT_NONE;
+        break;
+    case CTR_ITEM_LEARNED:
+        sLearnLevelUp = FALSE;
+        PartyMessageThen(text, PartyLearnDone);
+        break;
+    case CTR_ITEM_REPLACE:
+        sLearnMove = move;
+        sLearnTm = sPartyUseItem;
+        sLearnLevelUp = FALSE;
+        PartyAsk(text, PASK_REPLACE_MOVE);
+        break;
+    default:
+        PartyMessage(text, PACT_NONE);
+        break;
+    }
+    CtrLog_Write(CTR_LOG_INPUT, "bottom screen: item %u used on %u", sPartyUseItem, sPartySel);
 }
 
 /* Task_HandleSendMailToPCYesNoInput and ...LoseMailMessageYesNoInput's YES. */
@@ -10269,8 +10851,77 @@ static bool8 PartyActTap(u8 id)
         }
         sPartyAct = sPartyActBack;
         sPartyMsgPage = 0;
-        if (sPartyAct == PACT_TARGET)
+        if (sPartyThen)
+        {
+            void (*then)(void) = sPartyThen;
+
+            sPartyThen = NULL;
+            then();
+        }
+        else if (sPartyAct == PACT_TARGET)
             StringCopy(sPartyMsg, gText_UseOnWhichPokemon);
+        break;
+    case PACT_USE:
+    case PACT_GIVE:
+        if (id == HIT_PARTY_BACK)
+            sPartyAct = PACT_NONE;
+        else if (id >= HIT_SLOT && id < HIT_SLOT + PARTY_SIZE && id - HIT_SLOT < gPlayerPartyCount)
+        {
+            u8 slot = id - HIT_SLOT;
+
+            if (!PartyEditable())
+                return TRUE;
+            /* IsSelectedMonNotEgg. */
+            if (GetMonData(&gPlayerParty[slot], MON_DATA_IS_EGG))
+            {
+                PlaySE(SE_FAILURE);
+                return TRUE;
+            }
+            sPartySel = slot;
+            if (sPartyAct == PACT_GIVE)
+            {
+                sPartyAct = PACT_NONE;
+                PartyGiveItem(slot, sPartyUseItem);
+                PlaySE(SE_SELECT);
+            }
+            else
+                PartyUseItem(MAX_MON_MOVES);
+            return TRUE;
+        }
+        else
+            return TRUE;
+        break;
+    case PACT_PICK_MOVE:
+        if (id == HIT_PARTY_BACK)
+        {
+            /* PP: ReturnToUseOnWhichMon; forgetting: stop learning? */
+            if (sPartyPick == PICK_PP)
+                PartyStartUse(sPartyUseItem, FALSE);
+            else
+                PartyAskStop();
+        }
+        else if (id >= HIT_PARTY_MOVE && id < HIT_PARTY_MOVE + MAX_MON_MOVES
+                 && GetMonData(&gPlayerParty[sPartySel], MON_DATA_MOVE1 + id - HIT_PARTY_MOVE) != MOVE_NONE)
+        {
+            if (!PartyEditable())
+                return TRUE;
+            if (sPartyPick == PICK_PP)
+            {
+                PartyUseItem(id - HIT_PARTY_MOVE);
+                return TRUE;
+            }
+            PartyForget(id - HIT_PARTY_MOVE);
+        }
+        else
+            return TRUE;
+        break;
+    case PACT_STATS:
+        if (id != HIT_PARTY_MESSAGE)
+            return TRUE;
+        if (sPartyStatsPage == 0)
+            sPartyStatsPage = 1;
+        else
+            PartyLevelUpMoves(TRUE);
         break;
     case PACT_ITEM:
         if (id == HIT_PARTY_YES && PartyEditable())
@@ -10317,6 +10968,20 @@ static bool8 PartyActTap(u8 id)
             PartyAsk(gText_MailMessageWillBeLost, PASK_LOSE_MAIL);
         else if (id == HIT_PARTY_YES && sPartyAsk == PASK_FIELD_MOVE && FieldIdle())
             PartyFieldMove(sPartyActMove, TRUE);
+        else if (id == HIT_PARTY_YES && sPartyAsk == PASK_REPLACE_MOVE)
+            PartyPickForget();
+        else if (id == HIT_PARTY_NO && sPartyAsk == PASK_REPLACE_MOVE)
+            PartyAskStop();
+        else if (id == HIT_PARTY_YES && sPartyAsk == PASK_STOP_LEARNING)
+        {
+            u8 nick[POKEMON_NAME_LENGTH + 2], text[sizeof(sPartyMsg)];
+
+            GetMonNickname(&gPlayerParty[sPartySel], nick);
+            ExpandVars(text, gText_MoveNotLearned, nick, gMoveNames[sLearnMove]);
+            PartyMessageThen(text, PartyLearnDone);
+        }
+        else if (id == HIT_PARTY_NO && sPartyAsk == PASK_STOP_LEARNING)
+            PartyAskReplace();
         else if (id == HIT_PARTY_NO)
             sPartyAct = PACT_NONE;
         else
@@ -10461,6 +11126,249 @@ static void BagItemText(u8 *dest, const u8 *template, u16 item)
     ExpandVar1(dest, template, name);
 }
 
+static void BagGive(u16 item);
+
+/* ItemMenu_UseOutOfBattle (item_use.c's CtrBag_UseItem). */
+static void BagUse(u16 item)
+{
+    u8 text[sizeof(sBagBox)], slot = PARTY_SIZE;
+
+    switch (CtrBag_UseItem(item, sBagPocket == BERRIES_POCKET, text, sizeof(text), &slot))
+    {
+    case CTR_BAG_USE_MESSAGE:
+        BagBox(text, BACT_MESSAGE, FALSE);
+        break;
+    case CTR_BAG_USE_FIELD:
+        /* On the field, as the game's bag closes for it. */
+        ResetBagScreen();
+        sScreen = SCR_MAP;
+        break;
+    case CTR_BAG_USE_PARTY:
+        PartyStartUse(item, FALSE);
+        break;
+    case CTR_BAG_USE_SACRED_ASH:
+        PartyStartUse(item, FALSE);
+        CtrParty_SacredAsh(item, text, sizeof(text));
+        PartyMessage(text, PACT_NONE);
+        break;
+    case CTR_BAG_USE_TMHM:
+        BagBox(text, BACT_ASK, FALSE);
+        sBagAsk = BASK_TEACH;
+        break;
+    case CTR_BAG_USE_FIELD_HM:
+        BagBox(text, BACT_ASK, FALSE);
+        sBagAsk = BASK_FIELD_HM;
+        sBagHmUser = slot;
+        break;
+    case CTR_BAG_USE_MAIL:
+        memset(&sBagMail, 0, sizeof(sBagMail));
+        memset(sBagMail.words, 0xFF, sizeof(sBagMail.words));
+        sBagMail.playerName[0] = EOS;
+        sBagMail.itemId = item;
+        sBagAct = BACT_MAIL;
+        break;
+    }
+    CtrLog_Write(CTR_LOG_INPUT, "bottom screen: bag use %u", item);
+}
+
+/* AskTossItems. */
+static void BagAskToss(void)
+{
+    u8 name[ITEM_NAME_LENGTH + 4], text[sizeof(sBagBox)];
+
+    CopyItemName(sBagItem, name);
+    ExpandVars(text, gText_ConfirmTossItems, name, Number(sBagTossQty, MAX_ITEM_DIGITS, STR_CONV_MODE_LEFT_ALIGN));
+    BagBox(text, BACT_ASK, TRUE);
+    sBagAsk = BASK_TOSS;
+}
+
+/* The picked item's action from the tray. */
+static void BagAction(u8 action, u16 item)
+{
+    u8 name[ITEM_NAME_LENGTH + 4], text[sizeof(sBagBox)];
+
+    sBagItem = item;
+    switch (action)
+    {
+    case BAG_ACT_USE:
+    case BAG_ACT_CHECK:
+        /* Standing still, nothing under way: as SELECT. */
+        if (!FieldIdle())
+            return;
+        PlaySE(SE_SELECT);
+        BagUse(item);
+        return;
+    case BAG_ACT_GIVE:
+        if (!PartyEditable())
+            return;
+        PlaySE(SE_SELECT);
+        if (sBagGiveTo != PARTY_NO_SWAP)
+            BagGive(item);
+        else if (!IsWritingMailAllowed(item))
+            BagBox(gText_CantWriteMail, BACT_MESSAGE, FALSE);
+        else if (GetItemImportance(item))
+        {
+            BagItemText(text, gText_Var1CantBeHeld, item);
+            BagBox(text, BACT_MESSAGE, FALSE);
+        }
+        else if (CalculatePlayerPartyCount() == 0)
+            BagBox(gText_NoPokemon, BACT_MESSAGE, FALSE);
+        else
+            PartyStartUse(item, TRUE);
+        return;
+    case BAG_ACT_TOSS:
+        if (!PartyEditable())
+            return;
+        PlaySE(SE_SELECT);
+        sBagTossQty = 1;
+        if (BagGetQuantityByPocketPosition(sBagPocket + 1, sBagSel[sBagPocket]) == 1)
+        {
+            BagAskToss();
+            return;
+        }
+        CopyItemName(item, name);
+        ExpandVar1(text, gText_TossHowManyVar1s, name);
+        BagBox(text, BACT_QTY, TRUE);
+        return;
+    case BAG_ACT_CHECK_TAG:
+        /* ItemMenu_CheckTag: the tag, drawn here (berry_tag_screen.c's). */
+        PlaySE(SE_SELECT);
+        sBagAct = BACT_TAG;
+        return;
+    case BAG_ACT_REGISTER:
+        /* ItemMenu_Register: the item on SELECT, or none if it was. */
+        if (!PartyEditable())
+            return;
+        gSaveBlock1Ptr->registeredItem = gSaveBlock1Ptr->registeredItem == item ? ITEM_NONE : item;
+        PlaySE(SE_SELECT);
+        return;
+    }
+}
+
+/* The tray while a message, a question or how many is up. */
+static void BagActTap(u8 id)
+{
+    u8 text[sizeof(sBagBox)];
+    u8 page[sizeof(sBagBox)];
+    bool8 more = MessagePage(sBagBox, sBagMsgPage, page, sizeof(page));
+
+    switch (sBagAct)
+    {
+    case BACT_MAIL:
+        if (id != HIT_PARTY_MESSAGE)
+            return;
+        sBagAct = BACT_NONE;
+        break;
+    case BACT_TAG:
+    {
+        /* TryChangeDisplayedBerry: the berry before or after, its row on show. */
+        u8 *sel = &sBagSel[sBagPocket], count = BagStacks(sBagPocket);
+
+        if (id == HIT_BAG_QTY && *sel > 0)
+            --*sel;
+        else if (id == HIT_BAG_QTY + 1 && *sel + 1 < count)
+            ++*sel;
+        else if (id == HIT_BAG_NO)
+            sBagAct = BACT_NONE;
+        else
+            return;
+        if (*sel < sBagTop[sBagPocket])
+            sBagTop[sBagPocket] = *sel;
+        else if (*sel >= sBagTop[sBagPocket] + BAG_ROWS)
+            sBagTop[sBagPocket] = *sel - BAG_ROWS + 1;
+        break;
+    }
+    case BACT_MESSAGE:
+        if (id != HIT_BAG_OK)
+            return;
+        if (more)
+            ++sBagMsgPage;
+        else
+            sBagAct = BACT_NONE;
+        break;
+    case BACT_QTY:
+        if (id >= HIT_BAG_QTY && id < HIT_BAG_QTY + 4)
+        {
+            /* AdjustQuantityAccordingToDPadInput: one wraps, ten stops. */
+            static const s8 steps[] = {-10, -1, 1, 10};
+            s32 max = BagGetQuantityByPocketPosition(sBagPocket + 1, sBagSel[sBagPocket]);
+            s32 q = sBagTossQty + steps[id - HIT_BAG_QTY];
+
+            if (steps[id - HIT_BAG_QTY] == 1 && q > max)
+                q = 1;
+            else if (steps[id - HIT_BAG_QTY] == -1 && q < 1)
+                q = max;
+            sBagTossQty = q < 1 ? 1 : q > max ? max : q;
+        }
+        else if (id == HIT_BAG_OK)
+            BagAskToss();
+        else if (id == HIT_BAG_NO)
+            sBagAct = BACT_NONE;
+        else
+            return;
+        break;
+    case BACT_ASK:
+        if (more)
+        {
+            if (id != HIT_BAG_OK)
+                return;
+            ++sBagMsgPage;
+            break;
+        }
+        if (id == HIT_BAG_NO)
+        {
+            /* An HM not used now is booted up instead (BootUpFieldHmInstead). */
+            if (sBagAsk == BASK_FIELD_HM)
+            {
+                CtrBag_TMHMText(sBagItem, text, sizeof(text));
+                BagBox(text, BACT_ASK, FALSE);
+                sBagAsk = BASK_TEACH;
+            }
+            else
+                sBagAct = BACT_NONE;
+            break;
+        }
+        if (id != HIT_BAG_YES)
+            return;
+        if (sBagAsk == BASK_TOSS)
+        {
+            u8 name[ITEM_NAME_LENGTH + 4];
+
+            /* ConfirmToss, then Task_RemoveItemFromBag. */
+            if (!PartyEditable())
+                return;
+            CopyItemName(sBagItem, name);
+            ExpandVars(text, gText_ThrewAwayVar2Var1s, name, Number(sBagTossQty, MAX_ITEM_DIGITS, STR_CONV_MODE_LEFT_ALIGN));
+            RemoveBagItem(sBagItem, sBagTossQty);
+            BagBox(text, BACT_MESSAGE, TRUE);
+            CtrLog_Write(CTR_LOG_INPUT, "bottom screen: tossed %u x%u", sBagItem, sBagTossQty);
+        }
+        else if (sBagAsk == BASK_TEACH)
+        {
+            sBagAct = BACT_NONE;
+            PartyStartUse(sBagItem, FALSE);
+        }
+        else
+        {
+            /* UseFieldHmFromBag: as the Pokémon's own move. */
+            if (!FieldIdle())
+                return;
+            if (CtrParty_UseFieldMove(sBagHmUser, CtrParty_FieldMoveOf(ItemIdToBattleMoveId(sBagItem)), FALSE, text,
+                                      sizeof(text)) == CTR_FIELD_MOVE_STARTED)
+            {
+                ResetBagScreen();
+                sScreen = SCR_MAP;
+            }
+            else
+                BagBox(text, BACT_MESSAGE, FALSE);
+        }
+        break;
+    default:
+        return;
+    }
+    PlaySE(SE_SELECT);
+}
+
 /* Task_ItemContext_GiveToParty's checks, then back to the party with it. */
 static void BagGive(u16 item)
 {
@@ -10486,6 +11394,22 @@ static void BagTap(u8 id)
     u8 count = BagStacks(sBagPocket), *sel = &sBagSel[sBagPocket];
 
     sBagMsg[0] = EOS;
+    if (sBagAct != BACT_NONE)
+    {
+        BagActTap(id);
+        return;
+    }
+    if (id >= HIT_BAG_ACT && id < HIT_BAG_ACT + 5)
+    {
+        u8 actions[5], n;
+
+        if (*sel >= count)
+            return;
+        n = BagActions(sBagPocket, BagGetItemIdByPocketPosition(sBagPocket + 1, *sel), actions);
+        if (id - HIT_BAG_ACT < n)
+            BagAction(actions[id - HIT_BAG_ACT], BagGetItemIdByPocketPosition(sBagPocket + 1, *sel));
+        return;
+    }
     /* Picking for GIVE: CANCEL (or CLOSE BAG) goes back to the party. */
     if (sBagGiveTo != PARTY_NO_SWAP)
     {

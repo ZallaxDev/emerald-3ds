@@ -1,0 +1,671 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: USE and CHECK TAG from the bottom screen's bag
+Applies after 0072-bottom-party-mail.patch; apply with tools/bootstrap.py.
+
+diff --git a/include/item_menu_icons.h b/include/item_menu_icons.h
+--- a/include/item_menu_icons.h
++++ b/include/item_menu_icons.h
+@@ -22,4 +22,10 @@
+ u8 CreateSpinningBerrySprite(u8 berryId, u8 x, u8 y, bool8 startAffine);
+ u8 CreateBerryFlavorCircleSprite(s16 x);
+ 
++#ifdef PORT_BRIDGE
++// The bottom screen's berry tag (3ds_bottom_ui.c): a berry's picture (LZ77,
++// 6x6 tiles) and palette (LZ77), by its index from 0.
++void CtrBerry_Pic(u8 berryIndex, const u32 **tiles, const u32 **palette);
++#endif
++
+ #endif // GUARD_ITEM_MENU_ICONS_H
+diff --git a/include/item_use.h b/include/item_use.h
+--- a/include/item_use.h
++++ b/include/item_use.h
+@@ -33,4 +33,23 @@
+ bool8 CanUseDigOrEscapeRopeOnCurMap(void);
+ u8 CheckIfItemIsTMHMOrEvolutionStone(u16 itemId);
+ 
++#ifdef PORT_BRIDGE
++#include "task.h"
++
++// USE from the bottom screen's bag (3ds_bottom_ui.c): CtrBag_UseItem's outcomes.
++enum {
++    CTR_BAG_USE_NONE,        // no field use
++    CTR_BAG_USE_MESSAGE,     // the bag's message, in `text`
++    CTR_BAG_USE_FIELD,       // on its way on the field, as SELECT's
++    CTR_BAG_USE_PARTY,       // on a Pokémon: CtrParty_UseItem
++    CTR_BAG_USE_SACRED_ASH,  // on the whole party: CtrParty_SacredAsh
++    CTR_BAG_USE_TMHM,        // `text` boots it up and asks to teach it
++    CTR_BAG_USE_FIELD_HM,    // `text` asks to use it now, by *slot
++    CTR_BAG_USE_MAIL,        // shown blank
++};
++TaskFunc CtrItem_FieldFunc(u16 item);
++u8 CtrBag_UseItem(u16 item, bool8 berriesPocket, u8 *text, u32 size, u8 *slot);
++void CtrBag_TMHMText(u16 item, u8 *text, u32 size);
++#endif
++
+ #endif // GUARD_ITEM_USE_H
+diff --git a/include/party_menu.h b/include/party_menu.h
+--- a/include/party_menu.h
++++ b/include/party_menu.h
+@@ -117,4 +117,26 @@
+ u8 CtrParty_MailResult(u16 *mail, u16 *oldItem);
+ #endif
+ 
++#ifdef PORT_BRIDGE
++// An item used on a Pokémon from the bottom screen's bag: CtrParty_UseItem's
++// outcomes, and the learning of a move that follows.
++enum {
++    CTR_ITEM_NO_EFFECT,     // `text`: it won't have any effect
++    CTR_ITEM_DONE,          // `text`: what it did (or why not, for a TM)
++    CTR_ITEM_PICK_MOVE,     // `text` asks which move: again with it
++    CTR_ITEM_LEVEL_UP,      // `text`; `stats` before and after (STAT_* order)
++    CTR_ITEM_EVOLVING,      // the evolution scene is on its way
++    CTR_ITEM_LEARNED,       // `text`: *move learned
++    CTR_ITEM_REPLACE,       // `text` asks to forget a move for *move
++    CTR_ITEM_NO_MORE,       // CtrParty_LevelUpMove: none left to learn
++};
++const u8 *CtrParty_ItemDescText(u8 slot, u16 item);
++u8 CtrParty_UseItem(u8 slot, u16 item, u8 moveSlot, u8 *text, u32 size, s16 *stats, u16 *move);
++u8 CtrParty_SacredAsh(u16 item, u8 *text, u32 size);
++u8 CtrParty_LevelUpMove(u8 slot, bool8 first, u8 *text, u32 size, u16 *move);
++bool8 CtrParty_ReplaceMove(u8 slot, u8 moveSlot, u16 move, u16 tmItem);
++bool8 CtrParty_TryEvolve(u8 slot);
++u8 CtrParty_FieldMoveOf(u16 move);
++#endif
++
+ #endif // GUARD_PARTY_MENU_H
+diff --git a/src/item_menu_icons.c b/src/item_menu_icons.c
+--- a/src/item_menu_icons.c
++++ b/src/item_menu_icons.c
+@@ -659,4 +659,14 @@
+ u8 CreateBerryFlavorCircleSprite(s16 x)
+ {
+     return CreateSprite(&sBerryCheckCircleSpriteTemplate, x, 116, 0);
++}
++
++#ifdef PORT_BRIDGE
++void CtrBerry_Pic(u8 berryIndex, const u32 **tiles, const u32 **palette)
++{
++    if (berryIndex >= ARRAY_COUNT(sBerryPicTable))
++        berryIndex = 0;
++    *tiles = sBerryPicTable[berryIndex].tiles;
++    *palette = sBerryPicTable[berryIndex].pal;
+ }
++#endif
+diff --git a/src/item_use.c b/src/item_use.c
+--- a/src/item_use.c
++++ b/src/item_use.c
+@@ -1260,3 +1260,210 @@
+ }
+ 
+ #undef tUsingRegisteredKeyItem
++
++#ifdef PORT_BRIDGE
++#include "battle_pike.h"
++#include "bg.h"
++#include "field_specials.h"
++#include "link.h"
++#include "map_name_popup.h"
++
++/*
++ * USE from the bottom screen's bag (3ds_bottom_ui.c), without the bag's own
++ * screen: what ItemMenu_UseOutOfBattle and the item's field function would
++ * do. An item used on a Pokémon is the bottom screen's party's (party_menu.c,
++ * CtrParty_UseItem); one used on the field runs there as a registered item
++ * does from SELECT (UseRegisteredKeyItemOnField), with the field's messages;
++ * the bag's own messages come back in `text`. The string buffers are left as
++ * they were.
++ */
++static u8 sCtrVars[3][sizeof(gStringVar1)], sCtrVar4[sizeof(gStringVar4)];
++
++static void CtrSaveStringVars(void)
++{
++    memcpy(sCtrVars[0], gStringVar1, sizeof(gStringVar1));
++    memcpy(sCtrVars[1], gStringVar2, sizeof(gStringVar2));
++    memcpy(sCtrVars[2], gStringVar3, sizeof(gStringVar3));
++    memcpy(sCtrVar4, gStringVar4, sizeof(gStringVar4));
++}
++
++// gStringVar4 into `text`, then the buffers as they were.
++static void CtrRestoreStringVars(u8 *text, u32 size)
++{
++    u32 i;
++
++    for (i = 0; i + 1 < size && gStringVar4[i] != EOS; i++)
++        text[i] = gStringVar4[i];
++    text[i] = EOS;
++    memcpy(gStringVar1, sCtrVars[0], sizeof(gStringVar1));
++    memcpy(gStringVar2, sCtrVars[1], sizeof(gStringVar2));
++    memcpy(gStringVar3, sCtrVars[2], sizeof(gStringVar3));
++    memcpy(gStringVar4, sCtrVar4, sizeof(gStringVar4));
++}
++
++// The field function, the ENIGMA BERRY's by its effect (ItemUseOutOfBattle_EnigmaBerry).
++TaskFunc CtrItem_FieldFunc(u16 item)
++{
++    TaskFunc func = GetItemFieldFunc(item);
++
++    if (func != ItemUseOutOfBattle_EnigmaBerry)
++        return func;
++    switch (GetItemEffectType(item))
++    {
++    case ITEM_EFFECT_HEAL_HP:
++    case ITEM_EFFECT_CURE_POISON:
++    case ITEM_EFFECT_CURE_SLEEP:
++    case ITEM_EFFECT_CURE_BURN:
++    case ITEM_EFFECT_CURE_FREEZE:
++    case ITEM_EFFECT_CURE_PARALYSIS:
++    case ITEM_EFFECT_CURE_ALL_STATUS:
++    case ITEM_EFFECT_ATK_EV:
++    case ITEM_EFFECT_HP_EV:
++    case ITEM_EFFECT_SPATK_EV:
++    case ITEM_EFFECT_SPDEF_EV:
++    case ITEM_EFFECT_SPEED_EV:
++    case ITEM_EFFECT_DEF_EV:
++        return ItemUseOutOfBattle_Medicine;
++    case ITEM_EFFECT_SACRED_ASH:
++        return ItemUseOutOfBattle_SacredAsh;
++    case ITEM_EFFECT_RAISE_LEVEL:
++        return ItemUseOutOfBattle_RareCandy;
++    case ITEM_EFFECT_PP_UP:
++    case ITEM_EFFECT_PP_MAX:
++        return ItemUseOutOfBattle_PPUp;
++    case ITEM_EFFECT_HEAL_PP:
++        return ItemUseOutOfBattle_PPRecovery;
++    }
++    return ItemUseOutOfBattle_CannotUse;
++}
++
++// ItemUseOutOfBattle_TMHM's messages, one page after the other.
++void CtrBag_TMHMText(u16 item, u8 *text, u32 size)
++{
++    u8 *end;
++
++    CtrSaveStringVars();
++    end = StringCopy(gStringVar4, item >= ITEM_HM01 ? gText_BootedUpHM : gText_BootedUpTM);
++    *end++ = CHAR_PROMPT_CLEAR;
++    StringCopy(gStringVar1, gMoveNames[ItemIdToBattleMoveId(item)]);
++    StringExpandPlaceholders(end, gText_TMHMContainedVar1);
++    CtrRestoreStringVars(text, size);
++    PlaySE(SE_PC_LOGIN);
++}
++
++u8 CtrBag_UseItem(u16 item, bool8 berriesPocket, u8 *text, u32 size, u8 *slot)
++{
++    TaskFunc func = CtrItem_FieldFunc(item);
++    u8 taskId, result = CTR_BAG_USE_MESSAGE;
++
++    text[0] = EOS;
++    if (func == NULL)
++        return CTR_BAG_USE_NONE;
++    // ItemUseOutOfBattle_Berry: planted where the player faces soil.
++    if (berriesPocket && IsPlayerFacingEmptyBerryTreePatch() == TRUE)
++    {
++        gSpecialVar_ItemId = item;
++        CreateTask(ItemUseOnFieldCB_Berry, 8);
++        return CTR_BAG_USE_FIELD;
++    }
++    if (func == ItemUseOutOfBattle_Mail)
++        return CTR_BAG_USE_MAIL;
++    if (func == ItemUseOutOfBattle_Medicine || func == ItemUseOutOfBattle_ReduceEV
++     || func == ItemUseOutOfBattle_SacredAsh || func == ItemUseOutOfBattle_PPRecovery
++     || func == ItemUseOutOfBattle_PPUp || func == ItemUseOutOfBattle_RareCandy
++     || func == ItemUseOutOfBattle_TMHM || func == ItemUseOutOfBattle_EvolutionStone)
++    {
++        if (CalculatePlayerPartyCount() == 0)
++        {
++            StringCopy(text, gText_NoPokemon);
++            return CTR_BAG_USE_MESSAGE;
++        }
++        if (func == ItemUseOutOfBattle_SacredAsh)
++            return CTR_BAG_USE_SACRED_ASH;
++        if (func != ItemUseOutOfBattle_TMHM)
++            return CTR_BAG_USE_PARTY;
++#ifdef PLATFORM_3DS
++        if (CanUseFieldHmFromBag(item))
++        {
++            CtrSaveStringVars();
++            *slot = FieldHmUser(ItemIdToBattleMoveId(item));
++            StringCopy(gStringVar1, gMoveNames[ItemIdToBattleMoveId(item)]);
++            StringExpandPlaceholders(gStringVar4, sText_UseFieldHmNow);
++            CtrRestoreStringVars(text, size);
++            return CTR_BAG_USE_FIELD_HM;
++        }
++#endif
++        CtrBag_TMHMText(item, text, size);
++        return CTR_BAG_USE_TMHM;
++    }
++
++    CtrSaveStringVars();
++    gSpecialVar_ItemId = item;
++    if (func == ItemUseOutOfBattle_Repel)
++    {
++        // Task_UseRepel's, at once.
++        if (VarGet(VAR_REPEL_STEP_COUNT) == 0)
++        {
++            PlaySE(SE_REPEL);
++            VarSet(VAR_REPEL_STEP_COUNT, GetItemHoldEffectParam(item));
++#ifdef PLATFORM_3DS
++            VarSet(VAR_LAST_REPEL, item);
++#endif
++            RemoveBagItem(item, 1);
++            CopyItemName(item, gStringVar2);
++            StringExpandPlaceholders(gStringVar4, gText_PlayerUsedVar2);
++        }
++        else
++        {
++            StringExpandPlaceholders(gStringVar4, gText_RepelEffectsLingered);
++        }
++    }
++    else if (func == ItemUseOutOfBattle_BlackWhiteFlute)
++    {
++        CopyItemName(item, gStringVar2);
++        if (item == ITEM_WHITE_FLUTE)
++        {
++            FlagSet(FLAG_SYS_ENC_UP_ITEM);
++            FlagClear(FLAG_SYS_ENC_DOWN_ITEM);
++            StringExpandPlaceholders(gStringVar4, gText_UsedVar2WildLured);
++        }
++        else
++        {
++            FlagSet(FLAG_SYS_ENC_DOWN_ITEM);
++            FlagClear(FLAG_SYS_ENC_UP_ITEM);
++            StringExpandPlaceholders(gStringVar4, gText_UsedVar2WildRepelled);
++        }
++        PlaySE(SE_GLASS_FLUTE);
++    }
++    else if (func == ItemUseOutOfBattle_CoinCase)
++    {
++        ConvertIntToDecimalStringN(gStringVar1, GetCoins(), STR_CONV_MODE_LEFT_ALIGN, 4);
++        StringExpandPlaceholders(gStringVar4, gText_CoinCase);
++    }
++    else if (func == ItemUseOutOfBattle_PowderJar)
++    {
++        ConvertIntToDecimalStringN(gStringVar1, GetBerryPowder(), STR_CONV_MODE_LEFT_ALIGN, 5);
++        StringExpandPlaceholders(gStringVar4, gText_PowderQty);
++    }
++    else if (func == ItemUseOutOfBattle_CannotUse || InUnionRoom() == TRUE
++          || CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE || InBattlePike() || InMultiPartnerRoom() == TRUE)
++    {
++        StringExpandPlaceholders(gStringVar4, gText_DadsAdvice);
++    }
++    else
++    {
++        // UseRegisteredKeyItemOnField, for this item.
++        HideMapNamePopUpWindow();
++        ChangeBgY_ScreenOff(0, 0, BG_COORD_SET);
++        LockPlayerFieldControls();
++        FreezeObjectEvents();
++        PlayerFreeze();
++        StopPlayerAvatar();
++        taskId = CreateTask(func, 8);
++        gTasks[taskId].data[3] = TRUE; // tUsingRegisteredKeyItem
++        result = CTR_BAG_USE_FIELD;
++    }
++    CtrRestoreStringVars(text, size);
++    return result;
++}
++#endif
+diff --git a/src/party_menu.c b/src/party_menu.c
+--- a/src/party_menu.c
++++ b/src/party_menu.c
+@@ -6850,5 +6850,361 @@
+         return result;
+     }
+     return CTR_MAIL_NONE;
++}
++#endif
++
++#ifdef PORT_BRIDGE
++/*
++ * Items used on a Pokémon from the bottom screen's bag (3ds_bottom_ui.c),
++ * without this menu: what the ItemUseCB_* functions do, their messages back in
++ * `text` (the string buffers left as they were). The bottom screen asks for a
++ * move, shows the level-up stats and goes through learning a move; the
++ * evolution scene, an event, takes the screens as it does from here.
++ */
++static u8 sCtrItemVars[3][sizeof(gStringVar1)], sCtrItemVar4[sizeof(gStringVar4)];
++
++static void CtrItemSaveVars(void)
++{
++    memcpy(sCtrItemVars[0], gStringVar1, sizeof(gStringVar1));
++    memcpy(sCtrItemVars[1], gStringVar2, sizeof(gStringVar2));
++    memcpy(sCtrItemVars[2], gStringVar3, sizeof(gStringVar3));
++    memcpy(sCtrItemVar4, gStringVar4, sizeof(gStringVar4));
++}
++
++static void CtrItemRestoreVars(u8 *text, u32 size)
++{
++    CtrCopyTextBounded(text, gStringVar4, size);
++    memcpy(gStringVar1, sCtrItemVars[0], sizeof(gStringVar1));
++    memcpy(gStringVar2, sCtrItemVars[1], sizeof(gStringVar2));
++    memcpy(gStringVar3, sCtrItemVars[2], sizeof(gStringVar3));
++    memcpy(gStringVar4, sCtrItemVar4, sizeof(gStringVar4));
++}
++
++static struct { u8 slot; u16 species; bool8 canStop; } sCtrEvolution;
++
++static void Task_CtrBeginEvolution(u8 taskId)
++{
++    if (!gPaletteFade.active)
++    {
++        DestroyTask(taskId);
++        CleanupOverworldWindowsAndTilemaps();
++        gCB2_AfterEvolution = CB2_ReturnToField;
++        BeginEvolutionScene(&gPlayerParty[sCtrEvolution.slot], sCtrEvolution.species, sCtrEvolution.canStop,
++                            sCtrEvolution.slot);
++    }
++}
++
++static void CtrStartEvolution(u8 slot, u16 species, bool8 canStop)
++{
++    sCtrEvolution.slot = slot;
++    sCtrEvolution.species = species;
++    sCtrEvolution.canStop = canStop;
++    LockPlayerFieldControls();
++    FadeScreen(FADE_TO_BLACK, 0);
++    CreateTask(Task_CtrBeginEvolution, 8);
++}
++
++// DisplayPartyMenuStdMessage's text for a slot (TMs: ABLE, NOT ABLE,
++// LEARNED; stones: NO USE), or NULL for its HP as ever.
++const u8 *CtrParty_ItemDescText(u8 slot, u16 item)
++{
++    struct Pokemon *mon = &gPlayerParty[slot];
++
++    switch (CheckIfItemIsTMHMOrEvolutionStone(item))
++    {
++    case 1:
++        switch (CanMonLearnTMTutor(mon, item, 0))
++        {
++        case CANNOT_LEARN_MOVE:
++        case CANNOT_LEARN_MOVE_IS_EGG:
++            return sDescriptionStringTable[PARTYBOX_DESC_NOT_ABLE_2];
++        case ALREADY_KNOWS_MOVE:
++            return sDescriptionStringTable[PARTYBOX_DESC_LEARNED];
++        }
++        return sDescriptionStringTable[PARTYBOX_DESC_ABLE_2];
++    case 2:
++        if (!GetMonData(mon, MON_DATA_IS_EGG) && GetEvolutionTargetSpecies(mon, EVO_MODE_ITEM_CHECK, item) != SPECIES_NONE)
++            return NULL;
++        return sDescriptionStringTable[PARTYBOX_DESC_NO_USE];
++    }
++    return NULL;
++}
++
++static u8 CtrItemNoEffect(u8 *text, u32 size)
++{
++    PlaySE(SE_SELECT);
++    CtrCopyTextBounded(text, gText_WontHaveEffect, size);
++    return CTR_ITEM_NO_EFFECT;
++}
++
++// TryUsePPItem.
++static u8 CtrUsePPItem(u8 slot, u16 item, u8 moveSlot, u8 *text, u32 size)
++{
++    if (ExecuteTableBasedItemEffect_(slot, item, moveSlot))
++        return CtrItemNoEffect(text, size);
++    PlaySE(SE_USE_ITEM);
++    RemoveBagItem(item, 1);
++    CtrItemSaveVars();
++    StringCopy(gStringVar1, gMoveNames[GetMonData(&gPlayerParty[slot], MON_DATA_MOVE1 + moveSlot)]);
++    GetMedicineItemEffectMessage(item);
++    CtrItemRestoreVars(text, size);
++    return CTR_ITEM_DONE;
++}
++
++u8 CtrParty_UseItem(u8 slot, u16 item, u8 moveSlot, u8 *text, u32 size, s16 *stats, u16 *move)
++{
++    struct Pokemon *mon = &gPlayerParty[slot];
++    TaskFunc func = CtrItem_FieldFunc(item);
++    const u8 *effect = item == ITEM_ENIGMA_BERRY ? gSaveBlock1Ptr->enigmaBerry.itemEffect : gItemEffectTable[item - ITEM_POTION];
++    u16 hp, species;
++    u8 result = CTR_ITEM_DONE;
++
++    text[0] = EOS;
++    gPartyMenu.slotId = slot;
++    if (func == ItemUseOutOfBattle_Medicine)
++    {
++        bool8 canHeal = FALSE;
++
++        hp = GetMonData(mon, MON_DATA_HP);
++        if (NotUsingHPEVItemOnShedinja(mon, item) == FALSE)
++            return CtrItemNoEffect(text, size);
++        canHeal = IsHPRecoveryItem(item) && hp != GetMonData(mon, MON_DATA_MAX_HP);
++        if (ExecuteTableBasedItemEffect_(slot, item, 0))
++            return CtrItemNoEffect(text, size);
++        if (!IsItemFlute(item))
++        {
++            PlaySE(SE_USE_ITEM);
++            RemoveBagItem(item, 1);
++        }
++        else
++        {
++            PlaySE(SE_GLASS_FLUTE);
++        }
++        CtrItemSaveVars();
++        GetMonNickname(mon, gStringVar1);
++        if (canHeal)
++        {
++            ConvertIntToDecimalStringN(gStringVar2, GetMonData(mon, MON_DATA_HP) - hp, STR_CONV_MODE_LEFT_ALIGN, 3);
++            StringExpandPlaceholders(gStringVar4, gText_PkmnHPRestoredByVar2);
++        }
++        else
++        {
++            GetMedicineItemEffectMessage(item);
++        }
++        CtrItemRestoreVars(text, size);
++    }
++    else if (func == ItemUseOutOfBattle_ReduceEV)
++    {
++        u8 effectType = GetItemEffectType(item);
++        u16 friendship = GetMonData(mon, MON_DATA_FRIENDSHIP), ev = ItemEffectToMonEv(mon, effectType);
++        bool8 cannotUse = ExecuteTableBasedItemEffect_(slot, item, 0);
++        u16 newFriendship = GetMonData(mon, MON_DATA_FRIENDSHIP), newEv = ItemEffectToMonEv(mon, effectType);
++
++        if (cannotUse || (friendship == newFriendship && ev == newEv))
++            return CtrItemNoEffect(text, size);
++        PlaySE(SE_USE_ITEM);
++        RemoveBagItem(item, 1);
++        CtrItemSaveVars();
++        GetMonNickname(mon, gStringVar1);
++        ItemEffectToStatString(effectType, gStringVar2);
++        if (friendship != newFriendship)
++            StringExpandPlaceholders(gStringVar4, ev != newEv ? gText_PkmnFriendlyBaseVar2Fell : gText_PkmnFriendlyBaseVar2CantFall);
++        else
++            StringExpandPlaceholders(gStringVar4, gText_PkmnAdoresBaseVar2Fell);
++        CtrItemRestoreVars(text, size);
++    }
++    else if (func == ItemUseOutOfBattle_PPRecovery || func == ItemUseOutOfBattle_PPUp)
++    {
++        bool8 oneMove = func == ItemUseOutOfBattle_PPUp || (effect[4] & ITEM4_HEAL_PP_ONE);
++
++        if (oneMove && moveSlot >= MAX_MON_MOVES)
++        {
++            PlaySE(SE_SELECT);
++            CtrCopyTextBounded(text, sActionStringTable[func == ItemUseOutOfBattle_PPUp ? PARTY_MSG_BOOST_PP_WHICH_MOVE
++                                                                                         : PARTY_MSG_RESTORE_WHICH_MOVE], size);
++            return CTR_ITEM_PICK_MOVE;
++        }
++        return CtrUsePPItem(slot, item, oneMove ? moveSlot : 0, text, size);
++    }
++    else if (func == ItemUseOutOfBattle_RareCandy)
++    {
++        if (GetMonData(mon, MON_DATA_LEVEL) == MAX_LEVEL)
++            return CtrItemNoEffect(text, size);
++        BufferMonStatsToTaskData(mon, stats);
++        if (ExecuteTableBasedItemEffect_(slot, item, 0))
++            return CtrItemNoEffect(text, size);
++        BufferMonStatsToTaskData(mon, &stats[NUM_STATS]);
++        PlaySE(SE_SELECT);
++        PlayFanfareByFanfareNum(FANFARE_LEVEL_UP);
++        RemoveBagItem(item, 1);
++        CtrItemSaveVars();
++        GetMonNickname(mon, gStringVar1);
++        ConvertIntToDecimalStringN(gStringVar2, GetMonData(mon, MON_DATA_LEVEL), STR_CONV_MODE_LEFT_ALIGN, 3);
++        StringExpandPlaceholders(gStringVar4, gText_PkmnElevatedToLvVar2);
++        CtrItemRestoreVars(text, size);
++        result = CTR_ITEM_LEVEL_UP;
++    }
++    else if (func == ItemUseOutOfBattle_EvolutionStone)
++    {
++        // ExecuteTableBasedItemEffect's ITEM4_EVO_STONE, from the field.
++        species = GetMonData(mon, MON_DATA_IS_EGG) ? SPECIES_NONE : GetEvolutionTargetSpecies(mon, EVO_MODE_ITEM_USE, item);
++        if (species == SPECIES_NONE)
++            return CtrItemNoEffect(text, size);
++        PlaySE(SE_SELECT);
++        RemoveBagItem(item, 1);
++        CtrStartEvolution(slot, species, FALSE);
++        result = CTR_ITEM_EVOLVING;
++    }
++    else if (func == ItemUseOutOfBattle_TMHM)
++    {
++        // ItemUseCB_TMHM and Task_LearnedMove.
++        PlaySE(SE_SELECT);
++        *move = ItemIdToBattleMoveId(item);
++        CtrItemSaveVars();
++        GetMonNickname(mon, gStringVar1);
++        StringCopy(gStringVar2, gMoveNames[*move]);
++        switch (CanMonLearnTMTutor(mon, item, 0))
++        {
++        case CANNOT_LEARN_MOVE:
++        case CANNOT_LEARN_MOVE_IS_EGG:
++            StringExpandPlaceholders(gStringVar4, gText_PkmnCantLearnMove);
++            break;
++        case ALREADY_KNOWS_MOVE:
++            StringExpandPlaceholders(gStringVar4, gText_PkmnAlreadyKnows);
++            break;
++        default:
++            if (GiveMoveToMon(mon, *move) != MON_HAS_MAX_MOVES)
++            {
++                AdjustFriendship(mon, FRIENDSHIP_EVENT_LEARN_TMHM);
++#ifdef PLATFORM_3DS
++                if (item < ITEM_HM01 && !CtrExtras_Get("infinite_tms"))
++#else
++                if (item < ITEM_HM01)
++#endif
++                    RemoveBagItem(item, 1);
++                StringExpandPlaceholders(gStringVar4, gText_PkmnLearnedMove3);
++                PlayFanfare(MUS_LEVEL_UP);
++                result = CTR_ITEM_LEARNED;
++            }
++            else
++            {
++                StringExpandPlaceholders(gStringVar4, gText_PkmnNeedsToReplaceMove);
++                result = CTR_ITEM_REPLACE;
++            }
++            break;
++        }
++        CtrItemRestoreVars(text, size);
++    }
++    else
++    {
++        return CtrItemNoEffect(text, size);
++    }
++    return result;
+ }
++
++// ItemUseCB_SacredAsh and Task_SacredAshLoop: every fainted Pokémon, a page each.
++u8 CtrParty_SacredAsh(u16 item, u8 *text, u32 size)
++{
++    u8 i, *end;
++    u16 hp;
++    bool8 hadEffect = FALSE;
++
++    CtrItemSaveVars();
++    end = gStringVar4;
++    *end = EOS;
++    for (i = 0; i < PARTY_SIZE; i++)
++    {
++        struct Pokemon *mon = &gPlayerParty[i];
++
++        if (GetMonData(mon, MON_DATA_SPECIES) == SPECIES_NONE)
++            continue;
++        hp = GetMonData(mon, MON_DATA_HP);
++        if (ExecuteTableBasedItemEffect_(i, item, 0))
++            continue;
++        if (hadEffect)
++            *end++ = CHAR_PROMPT_CLEAR;
++        hadEffect = TRUE;
++        GetMonNickname(mon, gStringVar1);
++        ConvertIntToDecimalStringN(gStringVar2, GetMonData(mon, MON_DATA_HP) - hp, STR_CONV_MODE_LEFT_ALIGN, 3);
++        end = StringExpandPlaceholders(end, gText_PkmnHPRestoredByVar2);
++    }
++    CtrItemRestoreVars(text, size);
++    if (!hadEffect)
++        return CtrItemNoEffect(text, size);
++    PlaySE(SE_USE_ITEM);
++    RemoveBagItem(item, 1);
++    return CTR_ITEM_DONE;
++}
++
++// Task_TryLearnNewMoves and Task_TryLearningNextMove: the next move the new
++// level teaches, learned, to be made room for, or none left.
++u8 CtrParty_LevelUpMove(u8 slot, bool8 first, u8 *text, u32 size, u16 *move)
++{
++    struct Pokemon *mon = &gPlayerParty[slot];
++    u16 result = MonTryLearningNewMove(mon, first);
++
++    while (result == MON_ALREADY_KNOWS_MOVE)
++        result = MonTryLearningNewMove(mon, FALSE);
++    if (result == 0)
++        return CTR_ITEM_NO_MORE;
++    *move = result == MON_HAS_MAX_MOVES ? gMoveToLearn : result;
++    CtrItemSaveVars();
++    GetMonNickname(mon, gStringVar1);
++    StringCopy(gStringVar2, gMoveNames[*move]);
++    if (result == MON_HAS_MAX_MOVES)
++    {
++        StringExpandPlaceholders(gStringVar4, gText_PkmnNeedsToReplaceMove);
++        CtrItemRestoreVars(text, size);
++        return CTR_ITEM_REPLACE;
++    }
++    StringExpandPlaceholders(gStringVar4, gText_PkmnLearnedMove3);
++    CtrItemRestoreVars(text, size);
++    PlayFanfare(MUS_LEVEL_UP);
++    return CTR_ITEM_LEARNED;
++}
++
++// Task_PartyMenuReplaceMove, then Task_LearnedMove's for a TM. An HM's move
++// can't be forgotten (CanReplaceMove): FALSE.
++bool8 CtrParty_ReplaceMove(u8 slot, u8 moveSlot, u16 move, u16 tmItem)
++{
++    struct Pokemon *mon = &gPlayerParty[slot];
++
++    if (IsMoveHm(GetMonData(mon, MON_DATA_MOVE1 + moveSlot)))
++        return FALSE;
++    RemoveMonPPBonus(mon, moveSlot);
++    SetMonMoveSlot(mon, move, moveSlot);
++    if (tmItem != ITEM_NONE)
++    {
++        AdjustFriendship(mon, FRIENDSHIP_EVENT_LEARN_TMHM);
++#ifdef PLATFORM_3DS
++        if (tmItem < ITEM_HM01 && !CtrExtras_Get("infinite_tms"))
++#else
++        if (tmItem < ITEM_HM01)
+ #endif
++            RemoveBagItem(tmItem, 1);
++    }
++    PlayFanfare(MUS_LEVEL_UP);
++    return TRUE;
++}
++
++// The FIELD_MOVE_* of a move (an HM used from the bag), FIELD_MOVES_COUNT if none.
++u8 CtrParty_FieldMoveOf(u16 move)
++{
++    u8 i;
++
++    for (i = 0; i < FIELD_MOVES_COUNT && sFieldMoves[i] != move; i++)
++        ;
++    return i;
++}
++
++// PartyMenuTryEvolution, after the moves of a level.
++bool8 CtrParty_TryEvolve(u8 slot)
++{
++    u16 species = GetEvolutionTargetSpecies(&gPlayerParty[slot], EVO_MODE_NORMAL, ITEM_NONE);
++
++    if (species == SPECIES_NONE)
++        return FALSE;
++    CtrStartEvolution(slot, species, TRUE);
++    return TRUE;
++}
++#endif

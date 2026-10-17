@@ -40,6 +40,14 @@
   stationery, TAKE sends it to the PC or keeps the blank MAIL, and a MAIL
   given is written on the game's mail screen, back to the field after.
 
+- The bottom screen's bag does what the game's bag does: an item's actions
+  (USE, GIVE, TOSS, REGISTER, CHECK TAG, as its pocket's menu has them) in
+  the tray. Field items are used on the field as with SELECT; items used on
+  a Pokémon (medicine, PP items, EV berries, Rare Candy, stones, TMs and HMs)
+  pick it on the bottom screen's party, with the moves to restore, learn or
+  forget, the level-up stats, and the evolution scene when it comes. TOSS
+  asks how many; CHECK TAG shows the berry's tag.
+
 ## 0.4.0 — 2026-10-16
 
 - The project is now called Emerald 3DS, by Zallax: new name on the HOME
