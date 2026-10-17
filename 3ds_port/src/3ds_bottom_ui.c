@@ -5846,25 +5846,101 @@ static void DrawTileRow(const u8 *tile, int row, int x, int y, const u16 *pal, b
  * of the art repeated for the width, and for a taller one the last row of
  * its upper half repeated down to the lower half.
  */
+/* The art's six tiles (left, middle and right, top and bottom; flips
+ * applied), the party menu's background round its corners cut out (what lies
+ * outside the outline, from the corners in): over any screen's. Its fill
+ * colour too. */
+static u8 sButtonTiles[2][3][32];
+static u8 sButtonFill;
+static bool8 sButtonTilesOk;
+
+static bool8 LoadButtonTiles(void)
+{
+    static const u8 cols[3] = {0, 1, 6};
+    static const u8 starts[4][2] = {{0, 0}, {15, 0}, {0, 23}, {15, 23}};
+    static const s8 steps[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    const u16 *map = sRes.cancelMap;
+    u8 px[16][24], outline;
+    bool8 out[16][24];
+    int stack[16 * 24], n = 0;
+
+    if (sButtonTilesOk)
+        return TRUE;
+    if (!map || !sRes.partyTiles)
+        return FALSE;
+    /* The three columns side by side, 24x16. */
+    for (int row = 0; row < 2; ++row)
+        for (int i = 0; i < 3; ++i)
+        {
+            u16 e = map[row * 7 + cols[i]];
+            const u8 *t = sRes.partyTiles + (e & 0x3FF) * 32;
+
+            if ((e & 0x3FF) >= sRes.partyTileCount)
+                return FALSE;
+            for (int y = 0; y < 8; ++y)
+                for (int x = 0; x < 8; ++x)
+                {
+                    int sx = (e >> 10) & 1 ? 7 - x : x, sy = (e >> 11) & 1 ? 7 - y : y;
+
+                    px[row * 8 + y][i * 8 + x] = (t[sy * 4 + sx / 2] >> ((sx & 1) * 4)) & 15;
+                }
+        }
+    /* The outline: the middle's top edge. The fill: inside it. */
+    outline = px[0][12];
+    sButtonFill = px[8][12];
+    memset(out, 0, sizeof(out));
+    for (int k = 0; k < 4; ++k)
+        if (px[starts[k][0]][starts[k][1]] != outline)
+        {
+            out[starts[k][0]][starts[k][1]] = TRUE;
+            stack[n++] = starts[k][0] * 24 + starts[k][1];
+        }
+    while (n > 0)
+    {
+        int at = stack[--n], y = at / 24, x = at % 24;
+
+        for (int k = 0; k < 4; ++k)
+        {
+            int ny = y + steps[k][0], nx = x + steps[k][1];
+
+            /* Not into the middle column, whose sides meet the next tile. */
+            if (ny < 0 || ny >= 16 || nx < 0 || nx >= 24 || (nx >= 8 && nx < 16) || out[ny][nx]
+             || px[ny][nx] == outline)
+                continue;
+            out[ny][nx] = TRUE;
+            stack[n++] = ny * 24 + nx;
+        }
+    }
+    for (int row = 0; row < 2; ++row)
+        for (int i = 0; i < 3; ++i)
+        {
+            u8 *t = sButtonTiles[row][i];
+
+            memset(t, 0, 32);
+            for (int y = 0; y < 8; ++y)
+                for (int x = 0; x < 8; ++x)
+                    if (!out[row * 8 + y][i * 8 + x])
+                        t[y * 4 + x / 2] |= px[row * 8 + y][i * 8 + x] << ((x & 1) * 4);
+        }
+    sButtonTilesOk = TRUE;
+    return TRUE;
+}
+
 static void DrawButtonArt(int x, int y, int wt, int h)
 {
     const u16 *map = sRes.cancelMap;
 
-    if (!map || !sRes.partyTiles || wt < 2 || h < 16)
+    if (wt < 2 || h < 16 || !LoadButtonTiles())
         return;
     for (int tx = 0; tx < wt; ++tx)
     {
-        int col = tx == 0 ? 0 : tx == wt - 1 ? 6 : 1;
-        u16 top = map[col], bottom = map[7 + col];
-        const u8 *topTile = sRes.partyTiles + (top & 0x3FF) * 32;
-        const Pal *pal = &sRes.partyPal[(top >> 12) % 11];
+        int i = tx == 0 ? 0 : tx == wt - 1 ? 2 : 1, col = i == 0 ? 0 : i == 1 ? 1 : 6;
+        const Pal *pal = &sRes.partyPal[(map[col] >> 12) % 11], *palBottom = &sRes.partyPal[(map[7 + col] >> 12) % 11];
 
-        if ((top & 0x3FF) >= sRes.partyTileCount || (bottom & 0x3FF) >= sRes.partyTileCount)
-            return;
-        DrawMapEntry(sRes.partyTiles, sRes.partyTileCount, top, x + tx * 8, y, sRes.partyPal);
+        DrawTile(sButtonTiles[0][i], x + tx * 8, y, pal->c, FALSE, FALSE);
         for (int py = y + 8; py < y + h - 8; ++py)
-            DrawTileRow(topTile, 7, x + tx * 8, py, pal->c, (top >> 10) & 1);
-        DrawMapEntry(sRes.partyTiles, sRes.partyTileCount, bottom, x + tx * 8, y + h - 8, sRes.partyPal);
+            DrawTileRow(sButtonTiles[0][i], 7, x + tx * 8, py, pal->c, FALSE);
+        DrawTile(sButtonTiles[1][i], x + tx * 8, y + h - 8, palBottom->c, FALSE, FALSE);
     }
 }
 
@@ -5873,8 +5949,9 @@ static void ButtonText(bool8 enabled, u16 *fg, u16 *sh)
 {
     const Pal *pal = &sRes.partyPal[3];
 
+    /* Greyed: dark, its shadow lost in the fill. */
     *fg = enabled ? pal->c[TEXT_COLOR_LIGHT_GRAY] : pal->c[TEXT_COLOR_DARK_GRAY];
-    *sh = enabled ? pal->c[TEXT_COLOR_DARK_GRAY] : pal->c[TEXT_COLOR_LIGHT_GRAY];
+    *sh = enabled ? pal->c[TEXT_COLOR_DARK_GRAY] : sButtonTilesOk ? pal->c[sButtonFill] : pal->c[TEXT_COLOR_LIGHT_GRAY];
 }
 
 /* The CANCEL art as a 56x16 button, its label in the small font. */
@@ -6664,7 +6741,7 @@ static void DrawBag(const ViewState *s)
                                                           : gMenuText_Use;
 
             DrawTrayButton(TRAY_X(i), 190, label, s->pressed == HIT_BAG_ACT + i,
-                           action == BAG_ACT_CHECK_TAG || s->canEdit, TRUE, HIT_BAG_ACT + i);
+                           action == BAG_ACT_CHECK_TAG || s->canEdit, FALSE, HIT_BAG_ACT + i);
         }
     if (s->bagGive == PARTY_NO_SWAP)
     {
