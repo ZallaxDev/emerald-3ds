@@ -4,12 +4,30 @@
 
 #include <math.h>
 
+#include "3ds_field_view.h"
 #include "3ds_platform.h"
 #include "voxel_camera.h"
 #include "voxel_world.h"
 
 #define VOXEL_DEG_TO_RAD (3.14159265358979323846f / 180.0f)
 #define VOXEL_FOLLOW 0.15f
+/* The picture's width over its height (CTR_GAME_WIDTH, CTR_GAME_HEIGHT). */
+#define VOXEL_ASPECT (400.0f / 240.0f)
+/*
+ * How far the camera may stop short of the player at an edge, in parts of
+ * its distance: up the picture, down it and to either side. The player walks
+ * on towards the edge of the picture, but not into what the diorama blurs
+ * (3ds_video.c), nor up to the top, far off and small; a little of what lies
+ * past the edge shows instead, in the distance, where that blur is.
+ */
+#define VOXEL_EDGE_UP 0.4f
+#define VOXEL_EDGE_DOWN 0.25f
+#define VOXEL_EDGE_SIDE 0.45f
+/* The player's card stands in the middle of its tile, half a tile east of the
+ * position it is given by (VoxelEntities_GetPlayerWorldPos): the camera looks
+ * there, or the player stood half a tile right of the middle of the picture.
+ * North-south the framing is the GBA's own, the player a little low. */
+#define VOXEL_TILE_MIDDLE 0.5f
 
 void VoxelCamera_Init(VoxelCamera *cam)
 {
@@ -65,19 +83,71 @@ static void AdaptDistance(VoxelCamera *cam)
     cam->pitch = (float)CtrSettings_VoxelPitch();
 }
 
+static float Between(float value, float lo, float hi)
+{
+    return value < lo ? lo : value > hi ? hi : value;
+}
+
+/*
+ * The edge of the map (3ds_field_view.h): where no other map joins it, the
+ * camera stops short of the player so that the ground it shows ends at the
+ * edge. How far it sees each way is taken where the target is, on its ground:
+ * north to where the top of the picture meets it, south to the bottom, and
+ * either side across the middle - the far corners of the picture, wider,
+ * still show a little past a side. The point the camera looks at is where
+ * the player is, or where it stops instead.
+ */
+static void StopAtEdges(const VoxelCamera *cam, float *x, float *z)
+{
+    const VoxelMapInstance *map = VoxelWorld_Instance(0);
+    unsigned closed = VoxelWorld_ClosedEdges();
+    float pitch = cam->pitch * VOXEL_DEG_TO_RAD, half = cam->fov * 0.5f * VOXEL_DEG_TO_RAD;
+    float height = tanf(pitch) * cam->distance;
+    float north, south, side;
+    float playerX = *x, playerZ = *z;
+
+    if (map == NULL || closed == 0)
+        return;
+    /* Looking at or over the horizon, the view has no northern end. */
+    if (pitch - half < 0.02f)
+        closed &= ~CTR_FIELD_EDGE_NORTH;
+    north = pitch - half >= 0.02f ? height / tanf(pitch - half) - cam->distance : 0.0f;
+    south = cam->distance - height / tanf(pitch + half);
+    side = cam->distance / cosf(pitch) * tanf(half) * VOXEL_ASPECT;
+
+    *x = CtrFieldView_Limit(*x, side, side, (float)map->originX, (float)(map->originX + map->width), closed & 3);
+    *z = CtrFieldView_Limit(*z, north, south, (float)map->originY, (float)(map->originY + map->height),
+                            (closed >> 2) & 3);
+    *x = Between(*x, playerX - VOXEL_EDGE_SIDE * cam->distance, playerX + VOXEL_EDGE_SIDE * cam->distance);
+    *z = Between(*z, playerZ - VOXEL_EDGE_DOWN * cam->distance, playerZ + VOXEL_EDGE_UP * cam->distance);
+}
+
+/* Where the camera looks for the player there, and the view's shift for the
+ * people it reaches (3ds_field_view.h). */
+static void Aim(const VoxelCamera *cam, float playerWorldX, float playerWorldZ, float *x, float *z)
+{
+    *x = playerWorldX + VOXEL_TILE_MIDDLE;
+    *z = playerWorldZ;
+    StopAtEdges(cam, x, z);
+    CtrFieldView_SetVoxelShift((int)floorf(*x - playerWorldX - VOXEL_TILE_MIDDLE + 0.5f),
+                               (int)floorf(*z - playerWorldZ + 0.5f));
+}
+
 void VoxelCamera_Snap(VoxelCamera *cam, float playerWorldX, float playerWorldZ)
 {
-    cam->targetX = playerWorldX;
-    cam->targetZ = playerWorldZ;
     AdaptDistance(cam);
+    Aim(cam, playerWorldX, playerWorldZ, &cam->targetX, &cam->targetZ);
     Place(cam);
 }
 
 void VoxelCamera_Update(VoxelCamera *cam, float playerWorldX, float playerWorldZ)
 {
-    cam->targetX += (playerWorldX - cam->targetX) * VOXEL_FOLLOW;
-    cam->targetZ += (playerWorldZ - cam->targetZ) * VOXEL_FOLLOW;
+    float x, z;
+
     AdaptDistance(cam);
+    Aim(cam, playerWorldX, playerWorldZ, &x, &z);
+    cam->targetX += (x - cam->targetX) * VOXEL_FOLLOW;
+    cam->targetZ += (z - cam->targetZ) * VOXEL_FOLLOW;
     Place(cam);
 }
 
