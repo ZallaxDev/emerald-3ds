@@ -253,6 +253,11 @@ bool CtrVideo_BottomInUse(void);
  * (settings key battle_2x), 0 0 when none: the bottom screen puts its own
  * rows back when the band leaves. */
 void CtrVideo_BottomBandRows(int *y0, int *y1);
+/* The battle's magnification as set: CTR_BATTLE_ZOOM, or 2 with BATTLE 2X on.
+ * Every view that mocks the battle (the plane editor's battle view, the
+ * filmstrip) sizes and places its pictures by it. */
+float CtrVideo_BattleZoom(void);
+bool CtrVideo_Battle2x(void);
 /* Whether it drew the whole bottom screen: the PC's boxes, a summary, the bag
  * opened from anywhere but the field. */
 bool CtrVideo_BottomWhole(void);

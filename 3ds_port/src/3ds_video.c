@@ -10799,6 +10799,16 @@ static void BottomBand(void)
     CtrBottom_BlitBand(sTextBand, BAND_Y0, BAND_Y0 + BAND_H);
 }
 
+float CtrVideo_BattleZoom(void)
+{
+    return CtrSettings_GetInt("battle_2x", 0) ? BATTLE_2X_ZOOM : CTR_BATTLE_ZOOM;
+}
+
+bool CtrVideo_Battle2x(void)
+{
+    return CtrSettings_GetInt("battle_2x", 0) != 0;
+}
+
 void CtrVideo_BottomBandRows(int *y0, int *y1)
 {
     *y0 = sBandShown ? BAND_Y0 : 0;
