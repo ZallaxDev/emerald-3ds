@@ -61,7 +61,9 @@
 #include "battle_controllers.h"
 #include "battle_main.h"
 #include "battle_message.h"
+#include "contest_effect.h"
 #include "contest_util.h"
+#include "decompress.h"
 #include "data.h"
 #include "event_data.h"
 #include "field_player_avatar.h"
@@ -71,6 +73,7 @@
 #include "item.h"
 #include "item_icon.h"
 #include "item_menu.h"
+#include "mail.h"
 #include "menu.h"
 #include "new_game.h"
 #include "overworld.h"
@@ -79,6 +82,7 @@
 #include "pokedex.h"
 #include "pokemon.h"
 #include "pokemon_icon.h"
+#include "pokeball.h"
 #include "pokemon_summary_screen.h"
 #include "pokenav.h"
 #include "region_map.h"
@@ -92,6 +96,7 @@
 #include "task.h"
 #include "text.h"
 #include "text_window.h"
+#include "tv.h"
 #include "util.h"
 #include "constants/items.h"
 #include "constants/map_types.h"
@@ -466,14 +471,30 @@ static struct
     u32 partyTileCount;
     u16 partyRaw[16 * 11];
     Pal partyPal[11];
+    /* The party menu's slot and CANCEL tilemaps (party_menu.c). */
+    u8 *slotMain, *slotMainNoHp, *slotWide, *slotWideNoHp, *slotWideEmpty;
+    u16 *cancelMap;
+    /* The summary screen: its tiles, its eight palettes and the PP text's as
+     * the ninth, the page tilemaps (PSS_PAGE_* order, then the egg's info),
+     * the STATUS and move effect boxes, the A button, the move selector. */
+    u8 *sumTiles;
+    u32 sumTileCount;
+    Pal sumPal[9];
+    u16 *sumPage[5];
+    const u16 *sumStatus, *sumEffectBattle, *sumEffectContest;
+    u8 *sumAButton, *moveSelectTiles;
+    Pal moveSelectPal;
     /* Icons. */
     Icon column[SCR_COUNT];
     u8 *typeTiles;
     Pal typePal[3];
     const u8 *categoryTiles;
     Pal categoryPal;
-    /* The SAVE view's party. */
+    /* The party's icons (SAVE, POKéMON); the status and held item marks of
+     * the game's party menu. */
     Pal monIconPal[3];
+    u8 *statusTiles, *holdTiles;
+    Pal statusPal, holdPal;
     /* Region map. */
     u8 *mapTiles;
     u32 mapTileCount;
@@ -554,6 +575,47 @@ static void LoadResources(void)
         ToPals(sRes.partyPal, sRes.partyRaw, 11);
     }
 
+    sRes.slotMain = ReadRomfs("party_menu/slot_main.bin", NULL);
+    sRes.slotMainNoHp = ReadRomfs("party_menu/slot_main_no_hp.bin", NULL);
+    sRes.slotWide = ReadRomfs("party_menu/slot_wide.bin", NULL);
+    sRes.slotWideNoHp = ReadRomfs("party_menu/slot_wide_no_hp.bin", NULL);
+    sRes.slotWideEmpty = ReadRomfs("party_menu/slot_wide_empty.bin", NULL);
+    sRes.cancelMap = ReadRomfs("party_menu/cancel_button.bin", NULL);
+    sRes.sumTiles = Unlz(gSummaryScreen_Gfx, &size);
+    sRes.sumTileCount = size / 32;
+    {
+        u16 *raw = Unlz(gSummaryScreen_Pal, NULL);
+        const u16 *pp = Port_ResolveAssetPointer(gPPTextPalette);
+
+        if (raw)
+        {
+            ToPals(sRes.sumPal, raw, 8);
+            free(raw);
+        }
+        /* LoadPalette(&gPPTextPalette, BG_PLTT_ID(8) + 1, ...): colours 1-15. */
+        for (int i = 1; pp && i < 16; ++i)
+            sRes.sumPal[8].c[i] = Rgb565(pp[i - 1]);
+    }
+    sRes.sumPage[0] = Unlz(gSummaryPage_Info_Tilemap, NULL);
+    sRes.sumPage[1] = Unlz(gSummaryPage_Skills_Tilemap, NULL);
+    sRes.sumPage[2] = Unlz(gSummaryPage_BattleMoves_Tilemap, NULL);
+    sRes.sumPage[3] = Unlz(gSummaryPage_ContestMoves_Tilemap, NULL);
+    sRes.sumPage[4] = Unlz(gSummaryPage_InfoEgg_Tilemap, NULL);
+    sRes.sumStatus = ReadRomfs("summary_screen/status_tilemap.bin", NULL);
+    sRes.sumEffectBattle = Port_ResolveAssetPointer(gSummaryScreen_MoveEffect_Battle_Tilemap);
+    sRes.sumEffectContest = Port_ResolveAssetPointer(gSummaryScreen_MoveEffect_Contest_Tilemap);
+    sRes.sumAButton = ReadRomfs("summary_screen/a_button.4bpp", NULL);
+    sRes.moveSelectTiles = Unlz(gSummaryMoveSelect_Gfx, NULL);
+    {
+        u16 *raw = Unlz(gSummaryMoveSelect_Pal, NULL);
+
+        if (raw)
+        {
+            ToPals(&sRes.moveSelectPal, raw, 1);
+            free(raw);
+        }
+    }
+
     /* The column's icons: the game's own item icons, and the PokéNav's. */
     LoadItemIcon(&sRes.column[SCR_MAP], gItemIcon_TownMap, gItemIconPalette_TownMap);
     LoadItemIcon(&sRes.column[SCR_POKEMON], gItemIcon_PokeBall, gItemIconPalette_PokeBall);
@@ -579,6 +641,18 @@ static void LoadResources(void)
     }
     for (int i = 0; i < 3; ++i)
         PalSymbol(gMonIconPaletteTable[i].data, &sRes.monIconPal[i], 1);
+    sRes.statusTiles = Unlz(gStatusGfx_Icons, NULL);
+    {
+        u16 *raw = Unlz(gStatusPal_Icons, NULL);
+
+        if (raw)
+        {
+            ToPals(&sRes.statusPal, raw, 1);
+            free(raw);
+        }
+    }
+    sRes.holdTiles = ReadRomfs("party_menu/hold_icons.4bpp", NULL);
+    PalFile("party_menu/hold_icons.gbapal", &sRes.holdPal, 1, FALSE);
 
     sRes.mapTiles = UnlzFile("pokenav/region_map/map.8bpp.lz", &size);
     sRes.mapTileCount = size / 64;
@@ -2294,7 +2368,7 @@ typedef struct
     u16 species;      /* SPECIES_NONE: empty slot */
     u16 iconSpecies;
     u8 deoxys, isEgg, level, gender, ailment, fainted;
-    u16 hp, maxHp;
+    u16 hp, maxHp, item;
     u8 nick[POKEMON_NAME_LENGTH + 2];
 } MonView;
 
@@ -2304,8 +2378,22 @@ typedef struct
     u8 mode, screen, pressed, gender, inBattle;
     u8 title;                         /* MODE_OFF on the title screen */
     u8 enabled;                       /* bit per column screen */
-    /* Party, for the SAVE screen's icons. */
+    /* Party, for the SAVE screen's icons and the POKéMON screen. */
     MonView party[PARTY_SIZE];
+    /* POKéMON: the list or partySel's summary, partySwap the one being moved
+     * (PARTY_NO_SWAP), whether the party may change now; the summary. */
+    u8 partyView, partySel, partySwap, canEdit;
+    u8 types[2], nature, ability;
+    u16 stats[NUM_STATS];
+    u16 moves[MAX_MON_MOVES];
+    u8 pp[MAX_MON_MOVES], maxPp[MAX_MON_MOVES];
+    /* The summary: its page (SUM_*), the move whose details show
+     * (SUM_NO_MOVE), and what the game's summary screen shows. */
+    u8 sumPage, sumMove, shiny, ball, otGender, ribbons, expTicks, sumOk;
+    u16 dexNum, otId;
+    u32 personality, exp, expNext;
+    u8 otName[PLAYER_NAME_LENGTH + 10];
+    u8 memo[200], eggState[80];
     /* Region map. */
     u8 mapsec, cursorX, cursorY, pickMapsec, pickX, pickY;
     u8 clockShown, clockValid, clockRate, clockPhase;
@@ -2505,6 +2593,15 @@ enum
     HIT_QUICK_BALL_PREV,
     HIT_QUICK_BALL_NEXT,
     HIT_MAP = 0x90,
+    HIT_SLOT = 0xA0,       /* + party slot */
+    HIT_PARTY_BACK = 0xA8,
+    HIT_PARTY_SWITCH,
+    HIT_PARTY_PREV,
+    HIT_PARTY_NEXT,
+    HIT_SUM_PAGE_PREV,
+    HIT_SUM_PAGE_NEXT,
+    HIT_SUM_PROMPT,
+    HIT_SUM_MOVE,          /* + move slot */
     HIT_OPTION = 0xC0,     /* + option row; +HIT_OPTION_BACK for the left arrow */
     HIT_PAGE = 0xE0,       /* + OPTIONS page tab */
 };
@@ -3114,6 +3211,232 @@ static void ReadOptionValues(u8 options[OPTION_ROWS])
     options[OPT_VOXEL_BATTLE] = CtrSettings_VoxelBattle();
 }
 
+/* ------------------------------------------------------------------------ */
+/* POKéMON: the party, drawn here while the world goes on above            */
+/* ------------------------------------------------------------------------ */
+
+/*
+ * The party is read from the save and drawn by the bottom screen itself:
+ * nothing opens the game's party menu, so the top screen keeps the game
+ * running. A tap on a Pokémon shows its summary; SWITCH moves it, which (as
+ * any change to the party) waits for the field to be free of events.
+ */
+enum { PARTY_LIST, PARTY_SUMMARY };
+#define PARTY_NO_SWAP 0xFF
+static u8 sPartyView, sPartySel, sPartySwap = PARTY_NO_SWAP;
+/* The summary's pages, PSS_PAGE_* order. */
+enum { SUM_INFO, SUM_SKILLS, SUM_BATTLE, SUM_CONTEST, SUM_PAGES };
+#define SUM_NO_MOVE 0xFF
+static u8 sSumPage, sSumMove = SUM_NO_MOVE;
+
+/* pokemon_summary_screen.c (0057): the trainer memo, or an egg's state and
+ * memo, as the summary writes them. */
+void CtrSummary_MemoText(struct Pokemon *mon, u8 *memo, u32 memoSize, u8 *eggState, u32 eggStateSize);
+
+/* The memo of the Pokémon on show, made again when it changes. Made only
+ * with no script running: the memo is written with the string buffers a
+ * message may be printing from (0057 puts them back all the same). */
+static struct
+{
+    bool8 valid;
+    u16 species;
+    u32 personality;
+    u8 memo[200], eggState[80];
+} sMemo;
+
+static void SummaryMemo(struct Pokemon *mon)
+{
+    u16 species = GetMonData(mon, MON_DATA_SPECIES_OR_EGG);
+    u32 personality = GetMonData(mon, MON_DATA_PERSONALITY);
+
+    if (sMemo.valid && sMemo.species == species && sMemo.personality == personality)
+        return;
+    sMemo.valid = FALSE;
+    sMemo.memo[0] = sMemo.eggState[0] = EOS;
+    if (ScriptContext_IsEnabled())
+        return;
+    CtrSummary_MemoText(mon, sMemo.memo, sizeof(sMemo.memo), sMemo.eggState, sizeof(sMemo.eggState));
+    sMemo.species = species;
+    sMemo.personality = personality;
+    sMemo.valid = TRUE;
+}
+
+/* The front picture of the Pokémon on show, as the summary loads it
+ * (LoadSpecialPokePic: Unown's letter, Spinda's spots), and its palette.
+ * A front picture holds all its frames (two for most species): room for
+ * as many as the game's own sprite buffers. The first is drawn. */
+static struct
+{
+    bool8 valid;
+    u16 species;
+    u32 personality;
+    u8 tiles[MON_PIC_SIZE * MAX_MON_PIC_FRAMES];
+    Pal pal;
+} sSumPic;
+
+static void SummaryPic(struct Pokemon *mon)
+{
+    u16 species = GetMonData(mon, MON_DATA_SPECIES_OR_EGG);
+    u32 personality = GetMonData(mon, MON_DATA_PERSONALITY);
+    u16 *raw;
+
+    if (sSumPic.valid && sSumPic.species == species && sSumPic.personality == personality)
+        return;
+    LoadSpecialPokePic(&gMonFrontPicTable[species], sSumPic.tiles, species, personality, TRUE);
+    raw = Unlz(GetMonFrontSpritePal(mon), NULL);
+    if (raw)
+    {
+        ToPals(&sSumPic.pal, raw, 1);
+        free(raw);
+    }
+    sSumPic.species = species;
+    sSumPic.personality = personality;
+    sSumPic.valid = TRUE;
+}
+
+/* The caught ball's picture (its first frame), each loaded once. */
+static u8 *sBallTiles[POKEBALL_COUNT];
+static Pal sBallPal[POKEBALL_COUNT];
+
+static void SummaryBall(u8 ball)
+{
+    u16 *raw;
+
+    if (ball >= POKEBALL_COUNT || sBallTiles[ball])
+        return;
+    sBallTiles[ball] = Unlz(gBallSpriteSheets[ball].data, NULL);
+    raw = Unlz(gBallSpritePalettes[ball].data, NULL);
+    if (raw)
+    {
+        ToPals(&sBallPal[ball], raw, 1);
+        free(raw);
+    }
+}
+
+/* Whether the party may change now: the player in the field, no event,
+ * script or battle under way. Walking is fine. */
+static bool8 PartyEditable(void)
+{
+    return gMain.callback2 == CB2_Overworld && !gMain.inBattle && !ScriptContext_IsEnabled()
+        && !ArePlayerFieldControlsLocked() && !gPaletteFade.active;
+}
+
+static void ResetPartyScreen(void)
+{
+    sPartyView = PARTY_LIST;
+    sPartySwap = PARTY_NO_SWAP;
+}
+
+static void SnapshotPartyMons(ViewState *s)
+{
+    for (int i = 0; i < PARTY_SIZE && i < gPlayerPartyCount; ++i)
+    {
+        struct Pokemon *mon = &gPlayerParty[i];
+        MonView *view = &s->party[i];
+        u16 species = GetMonData(mon, MON_DATA_SPECIES);
+
+        if (species == SPECIES_NONE)
+            continue;
+        view->species = species;
+        view->isEgg = GetMonData(mon, MON_DATA_IS_EGG);
+        view->iconSpecies = view->isEgg ? SPECIES_EGG : GetIconSpecies(species, GetMonData(mon, MON_DATA_PERSONALITY));
+        view->deoxys = species == SPECIES_DEOXYS;
+        GetMonData(mon, MON_DATA_NICKNAME, view->nick);
+        StringGet_Nickname(view->nick);
+        view->item = GetMonData(mon, MON_DATA_HELD_ITEM);
+        view->gender = MON_GENDERLESS;
+        if (view->isEgg)
+            continue;
+        view->level = GetMonData(mon, MON_DATA_LEVEL);
+        view->hp = GetMonData(mon, MON_DATA_HP);
+        view->maxHp = GetMonData(mon, MON_DATA_MAX_HP);
+        view->fainted = view->hp == 0;
+        view->ailment = GetMonAilment(mon);
+        /* As the party menu: no symbol where the name already shows it. */
+        if (!((species == SPECIES_NIDORAN_F || species == SPECIES_NIDORAN_M)
+              && StringCompare(view->nick, gSpeciesNames[species]) == 0))
+            view->gender = GetMonGender(mon);
+    }
+}
+
+static void SnapshotPartySummary(ViewState *s)
+{
+    static const u8 statIds[NUM_STATS] = {
+        MON_DATA_MAX_HP, MON_DATA_ATK, MON_DATA_DEF, MON_DATA_SPATK, MON_DATA_SPDEF, MON_DATA_SPEED,
+    };
+    struct Pokemon *mon = &gPlayerParty[s->partySel];
+    const MonView *view = &s->party[s->partySel];
+    u8 ppBonuses;
+
+    if (!view->species)
+        return;
+    SummaryMemo(mon);
+    SummaryPic(mon);
+    s->personality = GetMonData(mon, MON_DATA_PERSONALITY);
+    s->sumPage = view->isEgg ? SUM_INFO : sSumPage;
+    s->sumMove = s->sumPage >= SUM_BATTLE ? sSumMove : SUM_NO_MOVE;
+    StringCopy(s->memo, sMemo.memo);
+    StringCopy(s->eggState, sMemo.eggState);
+    s->ball = ItemIdToBallId(GetMonData(mon, MON_DATA_POKEBALL));
+    SummaryBall(s->ball);
+    s->sumOk = sRes.sumTiles && sRes.sumPage[0] && sRes.sumPage[4];
+    if (view->isEgg)
+        return;
+    s->shiny = IsMonShiny(mon);
+    s->dexNum = SpeciesToPokedexNum(view->species);
+    GetMonData(mon, MON_DATA_OT_NAME, s->otName);
+    s->otGender = GetMonData(mon, MON_DATA_OT_GENDER);
+    s->otId = GetMonData(mon, MON_DATA_OT_ID) & 0xFFFF;
+    s->ribbons = GetRibbonCount(mon);
+    s->types[0] = gSpeciesInfo[view->species].types[0];
+    s->types[1] = gSpeciesInfo[view->species].types[1];
+    for (int i = 0; i < NUM_STATS; ++i)
+        s->stats[i] = GetMonData(mon, statIds[i]);
+    s->nature = GetNature(mon);
+    s->ability = GetMonAbility(mon);
+    ppBonuses = GetMonData(mon, MON_DATA_PP_BONUSES);
+    for (int i = 0; i < MAX_MON_MOVES; ++i)
+    {
+        s->moves[i] = GetMonData(mon, MON_DATA_MOVE1 + i);
+        if (s->moves[i] == MOVE_NONE)
+            continue;
+        s->pp[i] = GetMonData(mon, MON_DATA_PP1 + i);
+        s->maxPp[i] = CalculatePPWithBonus(s->moves[i], ppBonuses, i);
+    }
+    if (s->sumMove != SUM_NO_MOVE && s->moves[s->sumMove] == MOVE_NONE)
+        s->sumMove = SUM_NO_MOVE;
+    /* DrawExperienceProgressBar and PrintExpPointsNextLevel. */
+    s->exp = GetMonData(mon, MON_DATA_EXP);
+    if (view->level < MAX_LEVEL)
+    {
+        const u32 *table = gExperienceTables[gSpeciesInfo[view->species].growthRate];
+        u32 between = table[view->level + 1] - table[view->level], since = s->exp - table[view->level];
+        u32 ticks = between ? (u64)since * 64 / between : 0;
+
+        s->expNext = table[view->level + 1] - s->exp;
+        s->expTicks = ticks == 0 && since != 0 ? 1 : ticks > 64 ? 64 : ticks;
+    }
+}
+
+static void SnapshotParty(ViewState *s)
+{
+    SnapshotPartyMons(s);
+    if (sPartySel >= gPlayerPartyCount)
+    {
+        sPartySel = 0;
+        sPartyView = PARTY_LIST;
+    }
+    if (sPartySwap != PARTY_NO_SWAP && sPartySwap >= gPlayerPartyCount)
+        sPartySwap = PARTY_NO_SWAP;
+    s->partyView = sPartyView;
+    s->partySel = sPartySel;
+    s->partySwap = sPartySwap;
+    s->canEdit = PartyEditable();
+    s->frame = gSaveBlock2Ptr->optionsWindowFrameType;
+    if (sPartyView == PARTY_SUMMARY)
+        SnapshotPartySummary(s);
+}
+
 static void Snapshot(ViewState *s, u8 mode, u8 pressed)
 {
     memset(s, 0, sizeof(*s));
@@ -3195,7 +3518,10 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
             }
             break;
         case SCR_POKEMON:
-            /* The game's party menu is drawn by the compositor. */
+            /* The game's own party menu (opened by the game) is drawn by the
+             * compositor; in the field the bottom screen draws the party. */
+            if (s->mode == MODE_FIELD)
+                SnapshotParty(s);
             break;
         case SCR_CARD:
             SnapshotCard(s);
@@ -3262,6 +3588,9 @@ static bool8 Prefetch(const ViewState *s)
             MonIcon(s->party[i].iconSpecies, s->party[i].deoxys);
     if (sIconBudget && s->registered != ITEM_NONE && s->mode < MODE_BATTLE_INFO)
         ItemIcon(s->registered);
+    if (sIconBudget && s->mode == MODE_FIELD && s->screen == SCR_POKEMON && s->partyView == PARTY_SUMMARY
+        && s->party[s->partySel].item != ITEM_NONE)
+        ItemIcon(s->party[s->partySel].item);
     if (sIconBudget && s->mode == MODE_BATTLE_ACTION && s->quickBall != ITEM_NONE)
         ItemIcon(s->quickBall);
     if (sIconBudget && s->mode == MODE_BATTLE_ACTION && s->safari)
@@ -4058,6 +4387,692 @@ static void DrawSaveFile(const ViewState *s)
                         Put(x + 16 + dx, y + 15 + dy, p->s);
         }
     }
+}
+
+/* The status label of the game's party menu and summary: PSN, PAR, ... FNT. */
+static void DrawAilment(u8 ailment, int x, int y)
+{
+    if (ailment != AILMENT_NONE && ailment <= AILMENT_FNT && sRes.statusTiles)
+        DrawSprite(sRes.statusTiles + (ailment - 1) * 4 * 32, 4, 1, x, y, sRes.statusPal.c);
+}
+
+static const u8 *LevelText(u8 level)
+{
+    static u8 text[12];
+
+    StringCopy(StringCopy(text, gText_LevelSymbol), Number(level, 3, STR_CONV_MODE_LEFT_ALIGN));
+    return text;
+}
+
+/*
+ * The party list is the game's party menu, laid out as party_menu.c does on
+ * the GBA's 240x160 (the SINGLE layout), PARTY_Y0 down so it sits in the
+ * middle of the 240 lines: the first Pokémon's big slot on the left, five
+ * wide ones on the right, the message box and CANCEL under them. Slots,
+ * colours, fonts and positions are the game's.
+ */
+#define PARTY_Y0 40
+
+static void SetPartyColor(Pal *pal, u8 offset, u8 id)
+{
+    pal->c[offset] = Rgb565(sRes.partyRaw[id]);
+}
+
+/* party_menu.c's LoadPartyBoxPalette for the states shown here: the slot
+ * being moved (PARTY_PAL_SWITCHING), the one under the finger (the cursor's,
+ * PARTY_PAL_SELECTED), fainted, normal, or no Pokémon. */
+static void PartyBoxPalette(Pal *pal, const MonView *m, bool8 selected, bool8 switching)
+{
+    static const u8 offsets1[] = {4, 5, 6}, offsets2[] = {1, 7, 8};
+    static const u8 normal1[] = {52, 53, 54}, normal2[] = {49, 55, 56};
+    static const u8 sel1[] = {116, 117, 118}, sel2[] = {97, 103, 104};
+    static const u8 faint1[] = {84, 85, 86}, faint2[] = {81, 87, 88};
+    static const u8 selFaint1[] = {148, 149, 150};
+    static const u8 action1[] = {100, 101, 102}, action2[] = {161, 167, 168};
+    static const u8 noMon[] = {17, 27, 28}, noMonOffsets[] = {1, 11, 12};
+    const u8 *ids1, *ids2;
+
+    if (!m->species)
+    {
+        for (int i = 0; i < 3; ++i)
+            SetPartyColor(pal, noMonOffsets[i], noMon[i]);
+        return;
+    }
+    if (switching)
+        ids1 = action1, ids2 = selected ? sel2 : action2;
+    else if (m->fainted)
+        ids1 = selected ? selFaint1 : faint1, ids2 = selected ? sel2 : faint2;
+    else
+        ids1 = selected ? sel1 : normal1, ids2 = selected ? sel2 : normal2;
+    for (int i = 0; i < 3; ++i)
+    {
+        SetPartyColor(pal, offsets1[i], ids1[i]);
+        SetPartyColor(pal, offsets2[i], ids2[i]);
+    }
+}
+
+/* sPartyBoxInfoRects: nickname, level, gender, HP, max HP and HP bar, from
+ * the slot's top left. */
+typedef struct
+{
+    u8 nameX, nameY, levelX, levelY, genderX, genderY, hpX, hpY, maxHpX, maxHpY, barX, barY;
+} SlotLayout;
+
+static const SlotLayout sMainLayout = {24, 11, 32, 20, 64, 20, 38, 37, 53, 37, 24, 35};
+static const SlotLayout sWideLayout = {22, 3, 30, 12, 62, 12, 102, 12, 117, 12, 88, 10};
+
+/* sPartyMenuSpriteCoords (SINGLE): the centres of the icon, the held item
+ * mark and the status. */
+static const u8 sSlotSprites[PARTY_SIZE][6] = {
+    {16, 40, 20, 50, 50, 52},
+    {104, 18, 108, 28, 136, 27},
+    {104, 42, 108, 52, 136, 51},
+    {104, 66, 108, 76, 136, 75},
+    {104, 90, 108, 100, 136, 99},
+    {104, 114, 108, 124, 136, 123},
+};
+
+/* The party menu's HP bar: 48 pixels in the bar colours of party_menu.c. */
+static void DrawPartyHpBar(int x, int y, u16 hp, u16 maxHp, const Pal *pal)
+{
+    static const u8 green[] = {57, 58}, yellow[] = {73, 74}, red[] = {89, 90};
+    const u8 *ids;
+    int fill;
+
+    if (maxHp == 0)
+        return;
+    fill = hp * 48 / maxHp;
+    if (hp > 0 && fill == 0)
+        fill = 1;
+    ids = hp * 2 > maxHp ? green : hp * 5 > maxHp ? yellow : red;
+    FillRect(x, y, fill, 1, Rgb565(sRes.partyRaw[ids[1]]));
+    FillRect(x, y + 1, fill, 2, Rgb565(sRes.partyRaw[ids[0]]));
+    FillRect(x + fill, y, 48 - fill, 1, pal->c[0x0D]);
+    FillRect(x + fill, y + 1, 48 - fill, 2, pal->c[0x02]);
+}
+
+static void DrawPartySlot(const ViewState *s, int i)
+{
+    const MonView *m = &s->party[i];
+    bool8 main = i == 0;
+    const SlotLayout *l = main ? &sMainLayout : &sWideLayout;
+    const u8 *map, *sprites = sSlotSprites[i];
+    int x = main ? 8 : 96, y = PARTY_Y0 + (main ? 24 : 8 + (i - 1) * 24), w = main ? 10 : 18, h = main ? 7 : 3;
+    Pal pal = sRes.partyPal[main ? 3 : 4];
+    u16 fg, sh;
+
+    if (main)
+        map = m->isEgg && sRes.slotMainNoHp ? sRes.slotMainNoHp : sRes.slotMain;
+    else if (!m->species)
+        map = sRes.slotWideEmpty;
+    else
+        map = m->isEgg && sRes.slotWideNoHp ? sRes.slotWideNoHp : sRes.slotWide;
+    if (!map)
+        return;
+    PartyBoxPalette(&pal, m, s->pressed == HIT_SLOT + i, s->partySwap == i);
+    for (int ty = 0; ty < h; ++ty)
+        for (int tx = 0; tx < w; ++tx)
+            DrawTile(sRes.partyTiles + map[ty * w + tx] * 32, x + tx * 8, y + ty * 8, pal.c, FALSE, FALSE);
+    if (!m->species)
+        return;
+
+    /* Text as sFontColorTable's default and gender entries. */
+    fg = pal.c[TEXT_COLOR_LIGHT_GRAY];
+    sh = pal.c[TEXT_COLOR_DARK_GRAY];
+    DrawStr(&sSmall, m->nick, x + l->nameX, y + l->nameY, fg, sh);
+    if (!m->isEgg)
+    {
+        u8 text[16], *end;
+
+        DrawStr(&sSmall, LevelText(m->level), x + l->levelX, y + l->levelY, fg, sh);
+        if (m->gender == MON_MALE || m->gender == MON_FEMALE)
+        {
+            u8 color = m->gender == MON_MALE ? 59 : 75;
+
+            DrawStr(&sSmall, m->gender == MON_MALE ? gText_MaleSymbol : gText_FemaleSymbol, x + l->genderX,
+                    y + l->genderY, Rgb565(sRes.partyRaw[color]), Rgb565(sRes.partyRaw[color + 1]));
+        }
+        /* DisplayPartyPokemonHP and ...MaxHP both print the slash. */
+        StringCopy(text, Number(m->hp, 3, STR_CONV_MODE_RIGHT_ALIGN));
+        end = text + StringLength(text);
+        end[0] = CHAR_SLASH;
+        end[1] = EOS;
+        DrawStr(&sSmall, text, x + l->hpX, y + l->hpY, fg, sh);
+        StringCopy(StringCopy(text, gText_Slash), Number(m->maxHp, 3, STR_CONV_MODE_RIGHT_ALIGN));
+        DrawStr(&sSmall, text, x + l->maxHpX, y + l->maxHpY, fg, sh);
+        DrawPartyHpBar(x + l->barX, y + l->barY, m->hp, m->maxHp, &pal);
+        DrawAilment(m->ailment, sprites[4] - 16, PARTY_Y0 + sprites[5] - 4);
+    }
+    /* The icon, then its held item mark, as the game's sprites. */
+    {
+        const u8 *tiles = MonIcon(m->iconSpecies, m->deoxys);
+        u8 iconPal = gMonIconPaletteIndices[m->iconSpecies];
+
+        if (tiles && iconPal < 3)
+            DrawSprite(tiles, 4, 4, sprites[0] - 16, PARTY_Y0 + sprites[1] - 16, sRes.monIconPal[iconPal].c);
+        if (m->item != ITEM_NONE && sRes.holdTiles)
+            DrawTile(sRes.holdTiles + (ItemIsMail(m->item) ? 32 : 0), sprites[2] - 4, PARTY_Y0 + sprites[3] - 4,
+                     sRes.holdPal.c, FALSE, FALSE);
+    }
+    AddHit(main ? 0 : x, y, main ? x + w * 8 : w * 8, h * 8, HIT_SLOT + i);
+}
+
+static void DrawGameButton(int x, int y, const u8 *label, bool8 pressed, bool8 enabled, u8 id);
+
+static void DrawPartyList(const ViewState *s)
+{
+    DrawPartyBackground(CW / 8, H / 8);
+    for (int i = 0; i < PARTY_SIZE; ++i)
+        DrawPartySlot(s, i);
+
+    /* The message box (sDefaultPartyMsgWindowTemplate) in the player's frame. */
+    DrawWindowFrame(s->frame, 8, PARTY_Y0 + 136, 21, 2, TXT_WHITE);
+    DrawStr(&sNormal, s->partySwap != PARTY_NO_SWAP ? gText_MoveToWhere : gText_ChoosePokemon, 8, PARTY_Y0 + 137,
+            TXT_DARK, TXT_LIGHT);
+
+    /* CANCEL: the game's button at tiles (23, 18). */
+    DrawGameButton(184, PARTY_Y0 + 144, gText_Cancel, s->pressed == HIT_PARTY_BACK, TRUE, HIT_PARTY_BACK);
+}
+
+/*
+ * The summary is the game's summary screen as pokemon_summary_screen.c draws
+ * it on the GBA's 240x160, at the top of the bottom screen: the INFO page's
+ * tilemap under every page (its left panel holds the picture, the ball, the
+ * name and level), the page's own over it, the text windows of
+ * sSummaryTemplate and the page templates, and its sprites. Under it, the
+ * party menu's background and CANCEL button art for the taps that take the
+ * place of the keys: the page, the Pokémon, back, and SWITCH.
+ */
+
+/* sTextColors: background, text and shadow, in the window's palette. */
+static const u8 sSumColors[][3] = {
+    {0, 1, 2}, {0, 3, 4}, {0, 5, 6}, {0, 7, 8}, {0, 9, 10}, {0, 11, 12}, {0, 13, 14},
+    {0, 7, 8}, {13, 15, 14}, {0, 1, 2}, {0, 3, 4}, {0, 5, 6}, {0, 7, 8},
+};
+
+/* Text as a summary window prints it, in window palette `palNum` and colour
+ * `colorId`; {COLOR} and {SHADOW} codes change them as they do there. */
+static int DrawSumText(const u8 *str, int x, int y, u8 palNum, u8 colorId)
+{
+    const u16 *pal = sRes.sumPal[palNum].c;
+    u8 fg = sSumColors[colorId][1], sh = sSumColors[colorId][2];
+    int left = x;
+
+    if (!sNormal.glyphs || !str)
+        return x;
+    while (*str != EOS)
+    {
+        u16 g;
+
+        if (*str == EXT_CTRL_CODE_BEGIN && str[1] != EOS)
+        {
+            u8 code = str[1];
+
+            if (code == EXT_CTRL_CODE_COLOR)
+                fg = str[2] & 15;
+            else if (code == EXT_CTRL_CODE_SHADOW)
+                sh = str[2] & 15;
+            else if (code == EXT_CTRL_CODE_COLOR_HIGHLIGHT_SHADOW)
+                fg = str[2] & 15, sh = str[4] & 15;
+            str += 1 + GetExtCtrlCodeLength(code);
+            continue;
+        }
+        g = NextGlyph(&str);
+        if (g == 0xFFFF)
+            break;
+        if (g == 0xFFFE)
+        {
+            x = left;
+            y += sNormal.lineHeight;
+            continue;
+        }
+        x += DrawGlyph(&sNormal, g, x, y, pal[fg], pal[sh]);
+    }
+    return x;
+}
+
+static void DrawSumTextRight(const u8 *str, int right, int y, u8 palNum, u8 colorId)
+{
+    DrawSumText(str, right - StrWidth(&sNormal, str), y, palNum, colorId);
+}
+
+static void DrawSumTextCentred(const u8 *str, int x, int w, int y, u8 palNum, u8 colorId)
+{
+    int offset = (w - StrWidth(&sNormal, str)) / 2;
+
+    DrawSumText(str, x + (offset > 0 ? offset : 0), y, palNum, colorId);
+}
+
+/* Entries of a summary tilemap, `stride` wide, from (sx, sy) for w x h
+ * tiles to tile (dx, dy); `picBank` >= 0 gives the picture's backdrop
+ * (tiles 1-8 x 4-11, SetMonPicBackgroundPalette) that bank. */
+static void DrawSumMap(const u16 *map, int stride, int sx, int sy, int w, int h, int dx, int dy, int picBank)
+{
+    if (!map || !sRes.sumTiles)
+        return;
+    for (int ty = 0; ty < h; ++ty)
+        for (int tx = 0; tx < w; ++tx)
+        {
+            u16 e = map[(sy + ty) * stride + sx + tx];
+            u32 tile = e & 0x3FF, bank = e >> 12;
+            int x = dx + tx, y = dy + ty;
+
+            if (picBank >= 0 && x >= 1 && x < 9 && y >= 4 && y < 12)
+                bank = picBank;
+            if (tile < sRes.sumTileCount && bank < ARRAY_COUNT(sRes.sumPal))
+                DrawTile(sRes.sumTiles + tile * 32, x * 8, y * 8, sRes.sumPal[bank].c, (e >> 10) & 1, (e >> 11) & 1);
+        }
+}
+
+static void DrawSpriteFlipped(const u8 *tiles, int wt, int ht, int x, int y, const u16 *pal)
+{
+    for (int ty = 0; ty < ht; ++ty)
+        for (int tx = 0; tx < wt; ++tx)
+            DrawTile(tiles + (ty * wt + tx) * 32, x + (wt - 1 - tx) * 8, y + ty * 8, pal, TRUE, FALSE);
+}
+
+/* A move type's or contest category's label from the summary's sheet. */
+static void DrawSumTypeIcon(u8 index, int x, int y)
+{
+    static const u8 contestPal[CONTEST_CATEGORIES_COUNT] = {0, 1, 1, 2, 0};
+
+    if (!sRes.typeTiles)
+        return;
+    if (index < NUMBER_OF_MON_TYPES)
+        DrawTypeIcon(index, x, y);
+    else if (index < NUMBER_OF_MON_TYPES + CONTEST_CATEGORIES_COUNT)
+        DrawSprite(sRes.typeTiles + index * 8 * 32, 4, 2, x, y,
+                   sRes.typePal[contestPal[index - NUMBER_OF_MON_TYPES]].c);
+}
+
+/* One pixel row of a 4bpp tile, `row` of its eight, at (x, y). */
+static void DrawTileRow(const u8 *tile, int row, int x, int y, const u16 *pal, bool8 hflip)
+{
+    for (int px = 0; px < 8; ++px)
+    {
+        int sx = hflip ? 7 - px : px;
+        u8 v = (tile[row * 4 + (sx >> 1)] >> ((sx & 1) * 4)) & 15;
+
+        if (v)
+            Put(x + px, y, pal[v]);
+    }
+}
+
+/*
+ * The party menu's CANCEL art (cancel_button.bin, 7x2 tiles) as a button
+ * `wt` tiles wide and `h` pixels high: its caps and edge tiles, the middle
+ * of the art repeated for the width, and for a taller one the last row of
+ * its upper half repeated down to the lower half.
+ */
+static void DrawButtonArt(int x, int y, int wt, int h)
+{
+    const u16 *map = sRes.cancelMap;
+
+    if (!map || !sRes.partyTiles || wt < 2 || h < 16)
+        return;
+    for (int tx = 0; tx < wt; ++tx)
+    {
+        int col = tx == 0 ? 0 : tx == wt - 1 ? 6 : 1;
+        u16 top = map[col], bottom = map[7 + col];
+        const u8 *topTile = sRes.partyTiles + (top & 0x3FF) * 32;
+        const Pal *pal = &sRes.partyPal[(top >> 12) % 11];
+
+        if ((top & 0x3FF) >= sRes.partyTileCount || (bottom & 0x3FF) >= sRes.partyTileCount)
+            return;
+        DrawMapEntry(sRes.partyTiles, sRes.partyTileCount, top, x + tx * 8, y, sRes.partyPal);
+        for (int py = y + 8; py < y + h - 8; ++py)
+            DrawTileRow(topTile, 7, x + tx * 8, py, pal->c, (top >> 10) & 1);
+        DrawMapEntry(sRes.partyTiles, sRes.partyTileCount, bottom, x + tx * 8, y + h - 8, sRes.partyPal);
+    }
+}
+
+/* The label colours of the art: the party menu's default text, greyed. */
+static void ButtonText(bool8 enabled, u16 *fg, u16 *sh)
+{
+    const Pal *pal = &sRes.partyPal[3];
+
+    *fg = enabled ? pal->c[TEXT_COLOR_LIGHT_GRAY] : pal->c[TEXT_COLOR_DARK_GRAY];
+    *sh = enabled ? pal->c[TEXT_COLOR_DARK_GRAY] : pal->c[TEXT_COLOR_LIGHT_GRAY];
+}
+
+/* The CANCEL art as a 56x16 button, its label in the small font. */
+static void DrawGameButton(int x, int y, const u8 *label, bool8 pressed, bool8 enabled, u8 id)
+{
+    u16 fg, sh;
+
+    pressed = pressed && enabled;
+    DrawButtonArt(x, y + pressed, 7, 16);
+    ButtonText(enabled, &fg, &sh);
+    DrawStrCentered(&sSmall, label, x + 28, y + 1 + pressed, fg, sh);
+    if (enabled)
+        AddHit(x - 1, y - 6, 58, 28, id);
+}
+
+/* A tall button with a label in the middle of it. */
+static void DrawTallButton(int x, int y, int wt, int h, const u8 *label, bool8 pressed, bool8 enabled, u8 id)
+{
+    u16 fg, sh;
+
+    pressed = pressed && enabled;
+    DrawButtonArt(x, y + pressed, wt, h);
+    ButtonText(enabled, &fg, &sh);
+    DrawStrCentered(&sSmall, label, x + wt * 4, y + (h - sSmall.height) / 2 + pressed, fg, sh);
+    if (enabled)
+        AddHit(x, y, wt * 8, h, id);
+}
+
+/* The Pokémon before or after the one on show (`step` -1 or +1), from the
+ * snapshot's party, or -1 if it is the only one. */
+static int SummaryNeighbour(const ViewState *s, int step)
+{
+    for (int i = 1; i < PARTY_SIZE; ++i)
+    {
+        int slot = (s->partySel + PARTY_SIZE + step * i) % PARTY_SIZE;
+
+        if (s->party[slot].species)
+            return slot;
+    }
+    return -1;
+}
+
+/* ◀ or ▶ to another Pokémon: its icon, its name under it, the arrow on
+ * the side it is in the party. */
+static void DrawMonButton(const ViewState *s, int x, int y, int wt, int h, int step, u8 id)
+{
+    static const u8 left[] = {CHAR_LEFT_ARROW, EOS}, right[] = {CHAR_RIGHT_ARROW, EOS};
+    int slot = SummaryNeighbour(s, step), w = wt * 8;
+    bool8 enabled = slot >= 0, pressed = enabled && s->pressed == id;
+    u16 fg, sh;
+
+    DrawButtonArt(x, y + pressed, wt, h);
+    ButtonText(enabled, &fg, &sh);
+    DrawStr(&sSmall, step < 0 ? left : right, step < 0 ? x + 5 : x + w - 11, y + (h - sSmall.height) / 2 + pressed, fg, sh);
+    if (!enabled)
+        return;
+    {
+        const MonView *m = &s->party[slot];
+        const u8 *tiles = MonIcon(m->iconSpecies, m->deoxys);
+        u8 pal = gMonIconPaletteIndices[m->iconSpecies];
+
+        if (tiles && pal < 3)
+            DrawSprite(tiles, 4, 4, x + (w - 32) / 2, y + 1 + pressed, sRes.monIconPal[pal].c);
+        DrawStrCentered(&sSmall, m->nick, x + w / 2, y + h - sSmall.height - 3 + pressed, fg, sh);
+    }
+    AddHit(x, y, w, h, id);
+}
+
+/* The left panel: dex number, picture, ball, name, species, level and
+ * gender (PrintNotEggInfo, PrintEggInfo); the STATUS box. */
+static void DrawSumPortrait(const ViewState *s)
+{
+    const MonView *m = &s->party[s->partySel];
+    u8 text[POKEMON_NAME_LENGTH + 8];
+
+    if (sSumPic.valid)
+    {
+        if (m->isEgg || IsMonSpriteNotFlipped(sSumPic.species))
+            DrawSprite(sSumPic.tiles, 8, 8, 8, 32, sSumPic.pal.c);
+        else
+            DrawSpriteFlipped(sSumPic.tiles, 8, 8, 8, 32, sSumPic.pal.c);
+    }
+    if (s->ball < POKEBALL_COUNT && sBallTiles[s->ball])
+        DrawSprite(sBallTiles[s->ball], 2, 2, 8, 128, sBallPal[s->ball].c);
+    DrawSumText(m->nick, 8, 97, 6, 1);
+    if (m->isEgg)
+        return;
+    if (s->dexNum != 0xFFFF)
+    {
+        StringCopy(StringCopy(text, gText_NumberClear01), Number(s->dexNum, 3, STR_CONV_MODE_LEADING_ZEROS));
+        DrawSumText(text, 8, 17, 7, s->shiny ? 7 : 1);
+    }
+    text[0] = CHAR_SLASH;
+    StringCopy(text + 1, gSpeciesNames[m->species]);
+    DrawSumText(text, 8, 113, 6, 1);
+    DrawSumText(LevelText(m->level), 8 + 24, 113 + 16, 6, 1);
+    if (m->species != SPECIES_NIDORAN_M && m->species != SPECIES_NIDORAN_F)
+    {
+        if (m->gender == MON_MALE)
+            DrawSumText(gText_MaleSymbol, 8 + 57, 113 + 16, 6, 3);
+        else if (m->gender == MON_FEMALE)
+            DrawSumText(gText_FemaleSymbol, 8 + 57, 113 + 16, 6, 4);
+    }
+    if (m->ailment != AILMENT_NONE)
+    {
+        DrawSumMap(sRes.sumStatus, 10, 0, 0, 10, 2, 0, 18, -1);
+        DrawSumText(gText_Status, 2, 145, 6, 1);
+        DrawAilment(m->ailment, 48, 148);
+    }
+}
+
+static void DrawSumInfo(const ViewState *s)
+{
+    const MonView *m = &s->party[s->partySel];
+    u8 text[24];
+    int x;
+
+    if (m->isEgg)
+    {
+        x = DrawSumText(gText_OTSlash, 88, 33, 6, 1);
+        DrawSumText(gText_FiveMarks, x, 33, 6, 1);
+        StringCopy(StringCopy(text, gText_IDNumber2), gText_FiveMarks);
+        DrawSumTextRight(text, 176 + 56, 33, 6, 1);
+        DrawSumText(s->eggState, 88, 73, 6, 0);
+        DrawSumText(s->memo, 88, 113, 6, 0);
+        return;
+    }
+    x = DrawSumText(gText_OTSlash, 88, 33, 6, 1);
+    DrawSumText(s->otName, x, 33, 6, s->otGender == MALE ? 5 : 6);
+    StringCopy(StringCopy(text, gText_IDNumber2), Number(s->otId, 5, STR_CONV_MODE_LEADING_ZEROS));
+    DrawSumTextRight(text, 176 + 56, 33, 6, 1);
+    DrawSumText(gText_TypeSlash, 88, 49, 6, 0);
+    DrawSumTypeIcon(s->types[0], 120, 48);
+    if (s->types[1] != s->types[0])
+        DrawSumTypeIcon(s->types[1], 160, 48);
+    DrawSumText(gAbilityNames[s->ability], 88, 73, 6, 1);
+    DrawSumText(gAbilityDescriptionPointers[s->ability], 88, 89, 6, 0);
+    DrawSumText(s->memo, 88, 113, 6, 0);
+}
+
+/* {STR_VAR_1} of a template as `value`, without the game's buffers. */
+static void ExpandVar1(u8 *dest, const u8 *src, const u8 *value)
+{
+    while (*src != EOS)
+    {
+        if (src[0] == PLACEHOLDER_BEGIN && src[1] == PLACEHOLDER_ID_STRING_VAR_1)
+        {
+            dest = StringCopy(dest, value);
+            src += 2;
+            continue;
+        }
+        *dest++ = *src++;
+    }
+    *dest = EOS;
+}
+
+static void DrawSumSkills(const ViewState *s)
+{
+    const MonView *m = &s->party[s->partySel];
+    u8 text[ITEM_NAME_LENGTH + 20];
+    const u8 *label;
+
+    if (m->item == ITEM_NONE)
+        label = gText_None;
+    else
+    {
+        CopyItemName(m->item, text);
+        label = text;
+    }
+    DrawSumTextCentred(label, 80 + 6, 72, 33, 6, 0);
+    if (s->ribbons == 0)
+        label = gText_None;
+    else
+    {
+        ExpandVar1(text, gText_RibbonsVar1, Number(s->ribbons, 2, STR_CONV_MODE_RIGHT_ALIGN));
+        label = text;
+    }
+    DrawSumTextCentred(label, 160 + 6, 70, 33, 6, 0);
+
+    DrawSumTextCentred(gText_HP4, 80 + 6, 42, 57, 6, 1);
+    DrawSumTextCentred(gText_Attack3, 80 + 6, 42, 73, 6, 1);
+    DrawSumTextCentred(gText_Defense3, 80 + 6, 42, 89, 6, 1);
+    DrawSumTextCentred(gText_SpAtk4, 176 + 2, 36, 57, 6, 1);
+    DrawSumTextCentred(gText_SpDef4, 176 + 2, 36, 73, 6, 1);
+    DrawSumTextCentred(gText_Speed2, 176 + 2, 36, 89, 6, 1);
+    /* sStatsLeftColumnLayout and sStatsRightColumnLayout. */
+    StringCopy(StringCopy(StringCopy(text, Number(m->hp, 3, STR_CONV_MODE_RIGHT_ALIGN)), gText_Slash),
+               Number(s->stats[0], 3, STR_CONV_MODE_RIGHT_ALIGN));
+    DrawSumText(text, 128 + 4, 57, 6, 0);
+    DrawSumText(Number(s->stats[1], 7, STR_CONV_MODE_RIGHT_ALIGN), 128 + 4, 73, 6, 0);
+    DrawSumText(Number(s->stats[2], 7, STR_CONV_MODE_RIGHT_ALIGN), 128 + 4, 89, 6, 0);
+    for (int i = 3; i < NUM_STATS; ++i)
+        DrawSumText(Number(s->stats[i], 3, STR_CONV_MODE_RIGHT_ALIGN), 216 + 2, 57 + (i - 3) * 16, 6, 0);
+
+    DrawSumText(gText_ExpPoints, 80 + 6, 113, 6, 1);
+    DrawSumText(gText_NextLv, 80 + 6, 129, 6, 1);
+    DrawSumTextRight(Number(s->exp, 7, STR_CONV_MODE_RIGHT_ALIGN), 192 + 42 + 2, 113, 6, 0);
+    DrawSumTextRight(Number(s->expNext, 6, STR_CONV_MODE_RIGHT_ALIGN), 192 + 42 + 2, 129, 6, 0);
+    /* The EXP bar: eight tiles at (21, 18), 0x2062 + ticks, 0x206A full. */
+    {
+        int ticks = s->expTicks;
+        u16 bar[8];
+
+        for (int i = 0; i < 8; ++i, ticks -= 8)
+            bar[i] = ticks > 7 ? 0x206A : 0x2062 + (ticks > 0 ? ticks : 0);
+        DrawSumMap(bar, 8, 0, 0, 8, 1, 21, 18, -1);
+    }
+}
+
+static void DrawSumMoves(const ViewState *s, bool8 contest)
+{
+    for (int i = 0; i < MAX_MON_MOVES; ++i)
+    {
+        u16 move = s->moves[i];
+        int y = 32 + i * 16;
+        u8 text[16];
+
+        if (move == MOVE_NONE)
+        {
+            DrawSumText(gText_OneDash, 120, y + 1, 6, 1);
+            DrawSumTextCentred(gText_TwoDashes, 192, 44, y + 1, 8, 12);
+            continue;
+        }
+        DrawSumTypeIcon(contest ? NUMBER_OF_MON_TYPES + gContestMoves[move].contestCategory : gBattleMoves[move].type, 85, y);
+        DrawSumText(gMoveNames[move], 120, y + 1, 6, 1);
+        StringCopy(StringCopy(StringCopy(StringCopy(text, gText_MoveInterfacePP), Number(s->pp[i], 2, STR_CONV_MODE_RIGHT_ALIGN)),
+                              gText_Slash), Number(s->maxPp[i], 2, STR_CONV_MODE_RIGHT_ALIGN));
+        DrawSumTextRight(text, 192 + 44, y + 1, 8, GetCurrentPpToMaxPpState(s->pp[i], s->maxPp[i]) + 9);
+        AddHit(80, y, 160, 16, HIT_SUM_MOVE + i);
+    }
+    if (s->sumMove == SUM_NO_MOVE)
+        return;
+
+    /* The move picked: the selector on its row, the effect box with its
+     * POWER and ACCURACY (APPEAL and JAM hearts), its description. */
+    if (sRes.moveSelectTiles)
+        for (int i = 0; i < 10; ++i)
+        {
+            const u8 *tiles = sRes.moveSelectTiles + (i == 0 || i == 9 ? 16 : 20) * 32;
+            int x = 81 + i * 16, y = 32 + s->sumMove * 16;
+
+            if (i == 9)
+                DrawSpriteFlipped(tiles, 2, 2, x, y, sRes.moveSelectPal.c);
+            else
+                DrawSprite(tiles, 2, 2, x, y, sRes.moveSelectPal.c);
+        }
+    {
+        u16 move = s->moves[s->sumMove];
+
+        if (!contest)
+        {
+            DrawSumMap(sRes.sumEffectBattle, 10, 0, 0, 10, 7, 0, 13, -1);
+            DrawSumText(gText_Power, 8, 121, 6, 1);
+            DrawSumText(gText_Accuracy2, 8, 137, 6, 1);
+            DrawSumText(gBattleMoves[move].power < 2 ? gText_ThreeDashes
+                                                     : Number(gBattleMoves[move].power, 3, STR_CONV_MODE_RIGHT_ALIGN),
+                        8 + 53, 121, 6, 0);
+            DrawSumText(gBattleMoves[move].accuracy == 0 ? gText_ThreeDashes
+                                                         : Number(gBattleMoves[move].accuracy, 3, STR_CONV_MODE_RIGHT_ALIGN),
+                        8 + 53, 137, 6, 0);
+            DrawSumText(gMoveDescriptionPointers[move - 1], 80, 121, 6, 0);
+        }
+        else
+        {
+            const struct ContestEffect *effect = &gContestEffects[gContestMoves[move].effect];
+            u8 appeal = effect->appeal == 0xFF ? 0xFF : effect->appeal / 10;
+            u8 jam = effect->jam == 0xFF ? 0xFF : effect->jam / 10;
+            u16 hearts[2][2][4];
+
+            DrawSumMap(sRes.sumEffectContest, 10, 0, 0, 10, 7, 0, 13, -1);
+            DrawSumText(gText_Appeal, 8, 121, 6, 1);
+            DrawSumText(gText_Jam, 8, 137, 6, 1);
+            /* DrawContestMoveHearts: two rows of four from (6, 15) and (6, 17). */
+            for (int i = 0; i < 8; ++i)
+            {
+                hearts[0][i / 4][i & 3] = appeal != 0xFF && i < appeal ? 0x103A : 0x1039;
+                hearts[1][i / 4][i & 3] = jam != 0xFF && i < jam ? 0x103C : 0x103D;
+            }
+            DrawSumMap(&hearts[0][0][0], 4, 0, 0, 4, 2, 6, 15, -1);
+            DrawSumMap(&hearts[1][0][0], 4, 0, 0, 4, 2, 6, 17, -1);
+            DrawSumText(gContestEffectDescriptionPointers[gContestMoves[move].effect], 80, 121, 6, 0);
+        }
+    }
+}
+
+static void DrawPartySummary(const ViewState *s)
+{
+    static const u8 left[] = {CHAR_LEFT_ARROW, EOS}, right[] = {CHAR_RIGHT_ARROW, EOS};
+    static const u8 *const titles[SUM_PAGES] = {gText_PkmnInfo, gText_PkmnSkills, gText_BattleMoves, gText_ContestMoves};
+    const MonView *m = &s->party[s->partySel];
+    bool8 others = FALSE;
+
+    for (int i = 0; i < PARTY_SIZE; ++i)
+        if (i != s->partySel && s->party[i].species)
+            others = TRUE;
+
+    DrawPartyBackground(CW / 8, H / 8);
+    if (s->sumOk)
+    {
+        /* The INFO page under every page (BG3), the page's own over it. */
+        DrawSumMap(sRes.sumPage[m->isEgg ? 4 : 0], 32, 0, 0, 30, 20, 0, 0, m->isEgg ? -1 : s->shiny ? 5 : 0);
+        if (s->sumPage != SUM_INFO)
+            DrawSumMap(sRes.sumPage[s->sumPage], 32, 0, 0, 30, 20, 0, 0, -1);
+        DrawSumText(titles[s->sumPage], 2, 1, 6, 1);
+        /* The prompt at (22, 0): CANCEL on INFO, INFO on the moves pages. */
+        if (s->sumPage == SUM_INFO || s->sumPage >= SUM_BATTLE)
+        {
+            const u8 *prompt = s->sumPage == SUM_INFO ? gText_Cancel2 : gText_Info;
+            int x = 176 + 62 - StrWidth(&sNormal, prompt);
+
+            if (sRes.sumAButton)
+                DrawSprite(sRes.sumAButton, 2, 2, x - 16 < 176 ? 176 : x - 16, 0, sRes.sumPal[7].c);
+            DrawSumText(prompt, x, 1, 7, 0);
+            AddHit(176, 0, 64, 16, HIT_SUM_PROMPT);
+        }
+        DrawSumPortrait(s);
+        if (s->sumPage == SUM_INFO)
+            DrawSumInfo(s);
+        else if (s->sumPage == SUM_SKILLS)
+            DrawSumSkills(s);
+        else
+            DrawSumMoves(s, s->sumPage == SUM_CONTEST);
+    }
+
+    /* The keys' work by touch: the page, the Pokémon, back and SWITCH. */
+    DrawGameButton(8, 166, left, s->pressed == HIT_SUM_PAGE_PREV, !m->isEgg, HIT_SUM_PAGE_PREV);
+    DrawGameButton(176, 166, right, s->pressed == HIT_SUM_PAGE_NEXT, !m->isEgg, HIT_SUM_PAGE_NEXT);
+    /* The Pokémon before and after, each with its icon and name. */
+    DrawMonButton(s, 2, 186, 8, 52, -1, HIT_PARTY_PREV);
+    DrawTallButton(70, 186, 6, 52, gText_Cancel, s->pressed == HIT_PARTY_BACK, TRUE, HIT_PARTY_BACK);
+    DrawTallButton(122, 186, 6, 52, gText_Switch, s->pressed == HIT_PARTY_SWITCH, others && s->canEdit, HIT_PARTY_SWITCH);
+    DrawMonButton(s, 174, 186, 8, 52, 1, HIT_PARTY_NEXT);
+}
+
+static void DrawParty(const ViewState *s)
+{
+    if (s->partyView == PARTY_SUMMARY)
+        DrawPartySummary(s);
+    else
+        DrawPartyList(s);
 }
 
 static void DrawSave(const ViewState *s)
@@ -5860,6 +6875,13 @@ static void Render(const ViewState *s)
         {
         case SCR_MAP: DrawRegionMap(s); break;
         case SCR_POKEMON:
+            /* In the field the bottom screen's own; the game's party menu
+             * (opened by the game) is the compositor's, as the bag is. */
+            if (s->mode == MODE_FIELD)
+                DrawParty(s);
+            else
+                FillRect(0, 0, CW, H, 0);
+            break;
         case SCR_BAG:
         case SCR_POKEDEX:
             /* The game's party menu, bag and Pokédex are drawn there by the compositor;
@@ -6844,13 +7866,12 @@ static void OpenAsked(u8 mode)
     /* Closed by its own button or B: back to the map, not opened again. */
     if (mode != lastMode)
     {
-        if ((lastMode == MODE_BAG_MENU && sScreen == SCR_BAG) || (lastMode == MODE_POKEDEX && sScreen == SCR_POKEDEX)
-         || (lastMode == MODE_PARTY_MENU && sScreen == SCR_POKEMON))
+        if ((lastMode == MODE_BAG_MENU && sScreen == SCR_BAG) || (lastMode == MODE_POKEDEX && sScreen == SCR_POKEDEX))
             sScreen = SCR_MAP;
         lastMode = mode;
         waited = 0;
     }
-    if (mode != MODE_FIELD || (sScreen != SCR_BAG && sScreen != SCR_POKEDEX && sScreen != SCR_POKEMON) || sSession.active
+    if (mode != MODE_FIELD || (sScreen != SCR_BAG && sScreen != SCR_POKEDEX) || sSession.active
      || sPlan.kind != PLAN_NONE)
         return;
     if (!(EnabledScreens() & (1 << sScreen)))
@@ -6860,6 +7881,85 @@ static void OpenAsked(u8 mode)
     /* Two seconds without the field coming back idle: given up. */
     else if (++waited > 120)
         sScreen = SCR_MAP;
+}
+
+/* The next Pokémon in the party from `from`, `step` +1 or -1, wrapping. */
+static u8 NextPartySlot(u8 from, s8 step)
+{
+    for (int i = 1; i < PARTY_SIZE; ++i)
+    {
+        u8 slot = (from + PARTY_SIZE + step * i) % PARTY_SIZE;
+
+        if (slot < gPlayerPartyCount && GetMonData(&gPlayerParty[slot], MON_DATA_SPECIES) != SPECIES_NONE)
+            return slot;
+    }
+    return from;
+}
+
+static void PartyTap(u8 id)
+{
+    if (sPartyView == PARTY_SUMMARY)
+    {
+        bool8 egg = GetMonData(&gPlayerParty[sPartySel], MON_DATA_IS_EGG);
+
+        if (id == HIT_PARTY_BACK || (id == HIT_SUM_PROMPT && sSumPage == SUM_INFO))
+            sPartyView = PARTY_LIST;
+        else if ((id == HIT_SUM_PAGE_PREV || id == HIT_SUM_PAGE_NEXT) && !egg)
+        {
+            sSumPage = (sSumPage + (id == HIT_SUM_PAGE_PREV ? SUM_PAGES - 1 : 1)) % SUM_PAGES;
+            sSumMove = SUM_NO_MOVE;
+        }
+        else if (id == HIT_SUM_PROMPT)
+            sSumMove = sSumMove == SUM_NO_MOVE ? 0 : SUM_NO_MOVE;
+        else if (id >= HIT_SUM_MOVE && id < HIT_SUM_MOVE + MAX_MON_MOVES)
+            sSumMove = sSumMove == id - HIT_SUM_MOVE ? SUM_NO_MOVE : id - HIT_SUM_MOVE;
+        else if (id == HIT_PARTY_PREV || id == HIT_PARTY_NEXT)
+        {
+            sPartySel = NextPartySlot(sPartySel, id == HIT_PARTY_PREV ? -1 : 1);
+            sSumMove = SUM_NO_MOVE;
+        }
+        else if (id == HIT_PARTY_SWITCH && PartyEditable())
+        {
+            sPartySwap = sPartySel;
+            sPartyView = PARTY_LIST;
+        }
+        else
+            return;
+        PlaySE(SE_SELECT);
+        return;
+    }
+    if (id == HIT_PARTY_BACK)
+    {
+        if (sPartySwap != PARTY_NO_SWAP)
+            sPartySwap = PARTY_NO_SWAP;
+        else
+            sScreen = SCR_MAP;
+        PlaySE(SE_SELECT);
+        return;
+    }
+    if (id < HIT_SLOT || id >= HIT_SLOT + PARTY_SIZE || id - HIT_SLOT >= gPlayerPartyCount)
+        return;
+    if (sPartySwap == PARTY_NO_SWAP)
+    {
+        sPartySel = id - HIT_SLOT;
+        sPartyView = PARTY_SUMMARY;
+        sSumPage = SUM_INFO;
+        sSumMove = SUM_NO_MOVE;
+        PlaySE(SE_SELECT);
+        return;
+    }
+    /* Moving one: the second tap puts it there (the same one: stays). An
+     * event that began in between leaves the party as it was. */
+    if (id - HIT_SLOT != sPartySwap && PartyEditable())
+    {
+        struct Pokemon temp = gPlayerParty[sPartySwap];
+
+        gPlayerParty[sPartySwap] = gPlayerParty[id - HIT_SLOT];
+        gPlayerParty[id - HIT_SLOT] = temp;
+        CtrLog_Write(CTR_LOG_INPUT, "bottom screen: party %u <-> %u", sPartySwap, id - HIT_SLOT);
+    }
+    sPartySwap = PARTY_NO_SWAP;
+    PlaySE(SE_SELECT);
 }
 
 static void Activate(u8 id, u8 mode)
@@ -6949,9 +8049,18 @@ static void Activate(u8 id, u8 mode)
             }
             return;
         }
+        /* POKéMON is the bottom screen's own: the world goes on above it. */
+        if (screen == SCR_POKEMON)
+        {
+            if (sScreen != SCR_POKEMON)
+                ResetPartyScreen();
+            sScreen = SCR_POKEMON;
+            sPickMapsec = MAPSEC_NONE;
+            return;
+        }
         /* The game's bag and Pokédex, as the PokéNav: they take the area
          * when they open. */
-        if (screen == SCR_BAG || screen == SCR_POKEDEX || screen == SCR_POKEMON)
+        if (screen == SCR_BAG || screen == SCR_POKEDEX)
         {
             OpenGameScreen(screen);
             return;
@@ -6968,6 +8077,10 @@ static void Activate(u8 id, u8 mode)
     case SCR_MAP:
         if (id == HIT_MAP)
             PickMapCell(sTouch.lastX, sTouch.lastY);
+        break;
+    case SCR_POKEMON:
+        if (mode == MODE_FIELD)
+            PartyTap(id);
         break;
     case SCR_SAVE:
         if (id == HIT_YES && FieldIdle())

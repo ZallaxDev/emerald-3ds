@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- POKéMON on the bottom screen no longer stops the game: the party is drawn
+  there in the game's party menu look while the world goes on above, and a
+  tap opens a Pokémon's summary in the game's summary screen look (INFO,
+  SKILLS, BATTLE MOVES and CONTEST MOVES, its picture, ball, trainer memo,
+  moves' details). SWITCH moves a Pokémon while no event is under way; the
+  arrows under the summary show the Pokémon they go to. A battle still takes
+  the bottom screen for its menus.
+
 ## 0.4.0 — 2026-10-16
 
 - The project is now called Emerald 3DS, by Zallax: new name on the HOME

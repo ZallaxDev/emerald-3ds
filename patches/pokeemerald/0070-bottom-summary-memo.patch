@@ -1,0 +1,86 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: The trainer memo for the bottom screen's summary
+Applies after 0005-port-hooks.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/pokemon_summary_screen.c b/src/pokemon_summary_screen.c
+--- a/src/pokemon_summary_screen.c
++++ b/src/pokemon_summary_screen.c
+@@ -4826,5 +4826,79 @@
+     {
+         gSprites[spriteIds[i]].data[1] = 0;
+         gSprites[spriteIds[i]].invisible = FALSE;
++    }
++}
++
++#ifdef PORT_BRIDGE
++/*
++ * The bottom screen's summary (3ds_bottom_ui.c) is drawn while the field runs,
++ * without this screen: the trainer memo it shows - or an egg's state and memo -
++ * written as this screen writes them, from a summary of `mon` filled here. The
++ * screen's own data, if it is open, and the string buffers are left as they were.
++ */
++static struct PokemonSummaryScreenData sPortSummary;
++
++static void CopyTextBounded(u8 *dest, const u8 *src, u32 size)
++{
++    u32 i;
++
++    for (i = 0; i + 1 < size && src != NULL && src[i] != EOS; i++)
++        dest[i] = src[i];
++    dest[i] = EOS;
++}
++
++void CtrSummary_MemoText(struct Pokemon *mon, u8 *memo, u32 memoSize, u8 *eggState, u32 eggStateSize)
++{
++    static u8 saved[3][sizeof(gStringVar1)], saved4[sizeof(gStringVar4)];
++    struct PokemonSummaryScreenData *open = sMonSummaryScreen;
++    const u8 *text = NULL, *state = NULL;
++    struct PokeSummary *sum;
++
++    memcpy(saved[0], gStringVar1, sizeof(gStringVar1));
++    memcpy(saved[1], gStringVar2, sizeof(gStringVar2));
++    memcpy(saved[2], gStringVar3, sizeof(gStringVar3));
++    memcpy(saved4, gStringVar4, sizeof(gStringVar4));
++    memset(&sPortSummary, 0, sizeof(sPortSummary));
++    sMonSummaryScreen = &sPortSummary;
++    sum = &sMonSummaryScreen->summary;
++    sMonSummaryScreen->monList.mons = gPlayerParty;
++    sMonSummaryScreen->currentMon = *mon;
++    while (!ExtractMonDataToSummaryStruct(mon))
++        ;
++    if (sum->isEgg)
++    {
++        if (sum->sanity == TRUE || sum->friendship > 40)
++            state = gText_EggWillTakeALongTime;
++        else if (sum->friendship <= 5)
++            state = gText_EggAboutToHatch;
++        else if (sum->friendship <= 10)
++            state = gText_EggWillHatchSoon;
++        else
++            state = gText_EggWillTakeSomeTime;
++        if (sum->sanity == TRUE)
++            text = gText_OddEggFoundByCouple;
++        else if (sum->metLocation == METLOC_FATEFUL_ENCOUNTER)
++            text = gText_PeculiarEggNicePlace;
++        else if (DidMonComeFromGBAGames() == FALSE || DoesMonOTMatchOwner() == FALSE)
++            text = gText_PeculiarEggTrade;
++        else if (sum->metLocation == METLOC_SPECIAL_EGG)
++            text = DidMonComeFromRSE() == TRUE ? gText_EggFromHotSprings : gText_EggFromTraveler;
++        else
++            text = gText_OddEggFoundByCouple;
+     }
++    else
++    {
++        BufferMonTrainerMemo();
++        text = gStringVar4;
++    }
++    if (memoSize)
++        CopyTextBounded(memo, text, memoSize);
++    if (eggStateSize)
++        CopyTextBounded(eggState, state, eggStateSize);
++    sMonSummaryScreen = open;
++    memcpy(gStringVar1, saved[0], sizeof(gStringVar1));
++    memcpy(gStringVar2, saved[1], sizeof(gStringVar2));
++    memcpy(gStringVar3, saved[2], sizeof(gStringVar3));
++    memcpy(gStringVar4, saved4, sizeof(gStringVar4));
+ }
++#endif
