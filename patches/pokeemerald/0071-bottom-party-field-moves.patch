@@ -1,0 +1,188 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: Field moves from the bottom screen's party
+Applies after 0005-port-hooks.patch; apply with tools/bootstrap.py.
+
+diff --git a/include/party_menu.h b/include/party_menu.h
+--- a/include/party_menu.h
++++ b/include/party_menu.h
+@@ -90,4 +90,17 @@
+ void GetNumMovesSelectedMonHas(void);
+ void MoveDeleterChooseMoveToForget(void);
+ 
++#ifdef PORT_BRIDGE
++// The bottom screen's party (3ds_bottom_ui.c): CtrParty_UseFieldMove's outcomes.
++enum {
++    CTR_FIELD_MOVE_FAILED,      // `text` says why
++    CTR_FIELD_MOVE_ASK,         // `text` asks; again with `confirmed` on YES
++    CTR_FIELD_MOVE_CHOOSE_MON,  // Soft-Boiled / Milk Drink: on whom
++    CTR_FIELD_MOVE_STARTED,
++};
++u8 CtrParty_FieldMoves(u8 slot, u8 *fieldMoves);
++u16 CtrParty_FieldMoveId(u8 fieldMove);
++u8 CtrParty_UseFieldMove(u8 slot, u8 fieldMove, bool8 confirmed, u8 *text, u32 textSize);
++#endif
++
+ #endif // GUARD_PARTY_MENU_H
+diff --git a/src/party_menu.c b/src/party_menu.c
+--- a/src/party_menu.c
++++ b/src/party_menu.c
+@@ -4050,9 +4050,22 @@
+     else
+         return FALSE;
+ }
++
++#ifdef PORT_BRIDGE
++static bool8 sCtrFlyMapFromBottom;
++#endif
+ 
+ void CB2_ReturnToPartyMenuFromFlyMap(void)
+ {
++#ifdef PORT_BRIDGE
++    // Opened from the bottom screen's party: cancelled, back to the field.
++    if (sCtrFlyMapFromBottom)
++    {
++        sCtrFlyMapFromBottom = FALSE;
++        SetMainCallback2(CB2_ReturnToField);
++        return;
++    }
++#endif
+     InitPartyMenu(PARTY_MENU_TYPE_FIELD, PARTY_LAYOUT_SINGLE, PARTY_ACTION_CHOOSE_MON, TRUE, PARTY_MSG_CHOOSE_MON, Task_HandleChooseMonInput, CB2_ReturnToFieldWithOpenMenu);
+ }
+ 
+@@ -6607,5 +6620,137 @@
+         }
+         if (AnyStorageMonWithMove(move) != TRUE)
+             gSpecialVar_Result = TRUE;
++    }
++}
++
++#ifdef PORT_BRIDGE
++/*
++ * The bottom screen's party (3ds_bottom_ui.c) is drawn while the field runs,
++ * without this menu: a Pokémon's field moves, and using one as CursorCb_FieldMove
++ * does - straight on the field, which needs no fade back in from the menu. The
++ * texts it would show come back in `text`; the string buffers are left as they were.
++ */
++static void CtrCopyTextBounded(u8 *dest, const u8 *src, u32 size)
++{
++    u32 i;
++
++    for (i = 0; i + 1 < size && src != NULL && src[i] != EOS; i++)
++        dest[i] = src[i];
++    dest[i] = EOS;
++}
++
++u8 CtrParty_FieldMoves(u8 slot, u8 *fieldMoves)
++{
++    u8 i, j, count = 0;
++
++    for (i = 0; i < MAX_MON_MOVES; i++)
++    {
++        for (j = 0; sFieldMoves[j] != FIELD_MOVES_COUNT; j++)
++        {
++            if (GetMonData(&gPlayerParty[slot], i + MON_DATA_MOVE1) == sFieldMoves[j])
++            {
++                fieldMoves[count++] = j;
++                break;
++            }
++        }
+     }
++    return count;
+ }
++
++u16 CtrParty_FieldMoveId(u8 fieldMove)
++{
++    return sFieldMoves[fieldMove];
++}
++
++static void Task_CtrOpenFlyMap(u8 taskId)
++{
++    if (!gPaletteFade.active)
++    {
++        PlayRainStoppingSoundEffect();
++        CleanupOverworldWindowsAndTilemaps();
++        sCtrFlyMapFromBottom = TRUE;
++        SetMainCallback2(CB2_OpenFlyMap);
++        DestroyTask(taskId);
++    }
++}
++
++static void CtrExitAreaText(const struct WarpData *warp, const u8 *question, u8 *text, u32 textSize)
++{
++    static u8 saved1[sizeof(gStringVar1)], saved4[sizeof(gStringVar4)];
++    const struct MapHeader *mapHeader = Overworld_GetMapHeaderByGroupAndId(warp->mapGroup, warp->mapNum);
++
++    memcpy(saved1, gStringVar1, sizeof(gStringVar1));
++    memcpy(saved4, gStringVar4, sizeof(gStringVar4));
++    GetMapNameGeneric(gStringVar1, mapHeader->regionMapSectionId);
++    StringExpandPlaceholders(gStringVar4, question);
++    CtrCopyTextBounded(text, gStringVar4, textSize);
++    memcpy(gStringVar1, saved1, sizeof(gStringVar1));
++    memcpy(gStringVar4, saved4, sizeof(gStringVar4));
++}
++
++u8 CtrParty_UseFieldMove(u8 slot, u8 fieldMove, bool8 confirmed, u8 *text, u32 textSize)
++{
++    const u8 *message;
++
++    text[0] = EOS;
++    if (sFieldMoveCursorCallbacks[fieldMove].fieldMoveFunc == NULL)
++        return CTR_FIELD_MOVE_FAILED;
++    gPartyMenu.slotId = slot;
++    if (MenuHelpers_IsLinkActive() == TRUE || InUnionRoom() == TRUE)
++    {
++        if (fieldMove == FIELD_MOVE_MILK_DRINK || fieldMove == FIELD_MOVE_SOFT_BOILED)
++            message = sActionStringTable[PARTY_MSG_CANT_USE_HERE];
++        else
++            message = sActionStringTable[sFieldMoveCursorCallbacks[fieldMove].msgId];
++        CtrCopyTextBounded(text, message, textSize);
++        return CTR_FIELD_MOVE_FAILED;
++    }
++    // All field moves before WATERFALL are HMs.
++    if (fieldMove <= FIELD_MOVE_WATERFALL && FlagGet(FLAG_BADGE01_GET + fieldMove) != TRUE)
++    {
++        CtrCopyTextBounded(text, gText_CantUseUntilNewBadge, textSize);
++        return CTR_FIELD_MOVE_FAILED;
++    }
++    if (sFieldMoveCursorCallbacks[fieldMove].fieldMoveFunc() != TRUE)
++    {
++        if (fieldMove == FIELD_MOVE_SURF && TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING))
++            message = sActionStringTable[PARTY_MSG_ALREADY_SURFING];
++        else if (fieldMove == FIELD_MOVE_FLASH && FlagGet(FLAG_SYS_USE_FLASH) == TRUE)
++            message = sActionStringTable[PARTY_MSG_ALREADY_IN_USE];
++        else
++            message = sActionStringTable[sFieldMoveCursorCallbacks[fieldMove].msgId];
++        CtrCopyTextBounded(text, message, textSize);
++        return CTR_FIELD_MOVE_FAILED;
++    }
++
++    // The field is already on show: nothing to fade back in from.
++    gFieldCallback2 = NULL;
++    switch (fieldMove)
++    {
++    case FIELD_MOVE_MILK_DRINK:
++    case FIELD_MOVE_SOFT_BOILED:
++        CtrCopyTextBounded(text, sActionStringTable[PARTY_MSG_USE_ON_WHICH_MON], textSize);
++        return CTR_FIELD_MOVE_CHOOSE_MON;
++    case FIELD_MOVE_TELEPORT:
++    case FIELD_MOVE_DIG:
++        if (!confirmed)
++        {
++            if (fieldMove == FIELD_MOVE_TELEPORT)
++                CtrExitAreaText(&gSaveBlock1Ptr->lastHealLocation, gText_ReturnToHealingSpot, text, textSize);
++            else
++                CtrExitAreaText(&gSaveBlock1Ptr->escapeWarp, gText_EscapeFromHere, text, textSize);
++            gPostMenuFieldCallback = NULL;
++            return CTR_FIELD_MOVE_ASK;
++        }
++        break;
++    case FIELD_MOVE_FLY:
++        LockPlayerFieldControls();
++        FadeScreen(FADE_TO_BLACK, 0);
++        CreateTask(Task_CtrOpenFlyMap, 8);
++        return CTR_FIELD_MOVE_STARTED;
++    }
++    LockPlayerFieldControls();
++    CreateTask(Task_FieldMoveWaitForFade, 8);
++    return CTR_FIELD_MOVE_STARTED;
++}
++#endif

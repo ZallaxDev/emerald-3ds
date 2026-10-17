@@ -2557,6 +2557,10 @@ typedef struct
     /* POKéMON: the list or partySel's summary, partySwap the one being moved
      * (PARTY_NO_SWAP), whether the party may change now; the summary. */
     u8 partyView, partySel, partySwap, canEdit;
+    /* Its actions box, message, YES/NO or Soft-Boiled's target (PACT_*): the
+     * actions (PACTION_*), the message. */
+    u8 partyAct, partyActCount, partyActions[MAX_MON_MOVES + 3];
+    u8 partyMsg[160];
     u8 types[2], nature, ability;
     u16 stats[NUM_STATS];
     u16 moves[MAX_MON_MOVES];
@@ -2788,6 +2792,10 @@ enum
     HIT_OK,
     HIT_YES,
     HIT_NO,
+    HIT_PARTY_ACTION,      /* + party action row */
+    HIT_PARTY_YES = 0x3C,
+    HIT_PARTY_NO,
+    HIT_PARTY_MESSAGE,
     HIT_ROW = 0x50,        /* + visible list row */
     HIT_ACTION = 0x60,     /* + action cursor */
     HIT_MOVE = 0x70,       /* + move slot */
@@ -3438,12 +3446,21 @@ static void ReadOptionValues(u8 options[OPTION_ROWS])
 /*
  * The party is read from the save and drawn by the bottom screen itself:
  * nothing opens the game's party menu, so the top screen keeps the game
- * running. A tap on a Pokémon shows its summary; SWITCH moves it, which (as
- * any change to the party) waits for the field to be free of events.
+ * running. A tap on a Pokémon opens the game's actions box: SUMMARY, its
+ * field moves, SWITCH, which moves it. A change to the party, or a field
+ * move, waits for the field to be free of events; a field move then runs on
+ * the field as the game runs it from its menu (party_menu.c's CtrParty_*).
  */
 enum { PARTY_LIST, PARTY_SUMMARY };
 #define PARTY_NO_SWAP 0xFF
 static u8 sPartyView, sPartySel, sPartySwap = PARTY_NO_SWAP;
+/* Over the list: nothing, the actions box, a message (a tap closes it, for
+ * sPartyActBack), a YES/NO question on sPartyActMove, or the Pokémon
+ * Soft-Boiled (or Milk Drink) is used on. */
+enum { PACT_NONE, PACT_MENU, PACT_MESSAGE, PACT_ASK, PACT_TARGET };
+enum { PACTION_SUMMARY, PACTION_SWITCH, PACTION_CANCEL, PACTION_FIELD_MOVE };
+static u8 sPartyAct, sPartyActBack, sPartyActMove;
+static u8 sPartyMsg[160];
 /* The summary's pages, PSS_PAGE_* order. */
 enum { SUM_INFO, SUM_SKILLS, SUM_BATTLE, SUM_CONTEST, SUM_PAGES };
 #define SUM_NO_MOVE 0xFF
@@ -3552,6 +3569,27 @@ static void ResetPartyScreen(void)
 {
     sPartyView = PARTY_LIST;
     sPartySwap = PARTY_NO_SWAP;
+    sPartyAct = PACT_NONE;
+}
+
+/* SetPartyMonFieldSelectionActions without ITEM: an egg's has no field
+ * moves (GetPartyMenuActionsType). */
+static u8 PartyActions(u8 slot, u8 *actions)
+{
+    u8 count = 0;
+
+    actions[count++] = PACTION_SUMMARY;
+    if (!GetMonData(&gPlayerParty[slot], MON_DATA_IS_EGG))
+    {
+        u8 moves[MAX_MON_MOVES], n = CtrParty_FieldMoves(slot, moves);
+
+        for (int i = 0; i < n; ++i)
+            actions[count++] = PACTION_FIELD_MOVE + moves[i];
+    }
+    if (gPlayerPartyCount > 1)
+        actions[count++] = PACTION_SWITCH;
+    actions[count++] = PACTION_CANCEL;
+    return count;
 }
 
 static void SnapshotPartyMons(ViewState *s)
@@ -3656,9 +3694,16 @@ static void SnapshotParty(ViewState *s)
     }
     if (sPartySwap != PARTY_NO_SWAP && sPartySwap >= gPlayerPartyCount)
         sPartySwap = PARTY_NO_SWAP;
+    if (sPartyView != PARTY_LIST)
+        sPartyAct = PACT_NONE;
     s->partyView = sPartyView;
     s->partySel = sPartySel;
     s->partySwap = sPartySwap;
+    s->partyAct = sPartyAct;
+    if (sPartyAct == PACT_MENU)
+        s->partyActCount = PartyActions(sPartySel, s->partyActions);
+    if (sPartyAct != PACT_NONE && sPartyAct != PACT_MENU)
+        StringCopy(s->partyMsg, sPartyMsg);
     s->canEdit = PartyEditable();
     s->frame = gSaveBlock2Ptr->optionsWindowFrameType;
     if (sPartyView == PARTY_SUMMARY)
@@ -5199,7 +5244,8 @@ static void DrawPartySlot(const ViewState *s, int i)
         map = m->isEgg && sRes.slotWideNoHp ? sRes.slotWideNoHp : sRes.slotWide;
     if (!map)
         return;
-    PartyBoxPalette(&pal, m, s->pressed == HIT_SLOT + i, s->partySwap == i);
+    PartyBoxPalette(&pal, m, s->pressed == HIT_SLOT + i || (s->partyAct != PACT_NONE && s->partySel == i),
+                    s->partySwap == i);
     for (int ty = 0; ty < h; ++ty)
         for (int tx = 0; tx < w; ++tx)
             DrawTile(sRes.partyTiles + map[ty * w + tx] * 32, x + tx * 8, y + ty * 8, pal.c, FALSE, FALSE);
@@ -5249,11 +5295,104 @@ static void DrawPartySlot(const ViewState *s, int i)
 
 static void DrawGameButton(int x, int y, const u8 *label, bool8 pressed, bool8 enabled, u8 id);
 
+/*
+ * The actions, a message, a question or Soft-Boiled's target in the bands
+ * the GBA's layout leaves free above and below the list, rather than the
+ * game's boxes over it: the message in the top band (WIN_MSG's width, one
+ * line or two), the actions as the CANCEL art in two rows in the bottom
+ * one - the field moves (four at most, as a Pokémon's moves) in the field
+ * moves' blue, then SUMMARY, SWITCH, ITEM and CANCEL.
+ */
+#define TRAY_ROW1_Y 182
+#define TRAY_ROW2_Y 210
+#define TRAY_X(i) (4 + (i) * 59)
+
+static void DrawButtonArt(int x, int y, int wt, int h);
+static void ButtonText(bool8 enabled, u16 *fg, u16 *sh);
+
+static void DrawTrayButton(int x, int y, const u8 *label, bool8 pressed, bool8 enabled, bool8 move, u8 id)
+{
+    const Font *font = StrWidth(&sSmall, label) <= 52 ? &sSmall : &sNarrow;
+    u16 fg, sh;
+
+    pressed = pressed && enabled;
+    DrawButtonArt(x, y + pressed, 7, 16);
+    ButtonText(enabled, &fg, &sh);
+    if (move && enabled)
+        fg = TXT_LBLUE, sh = TXT_BLUE;
+    DrawStrCentered(font, label, x + 28, y + (font == &sSmall) + pressed, fg, sh);
+    if (enabled)
+        AddHit(x - 1, y - 6, 58, 28, id);
+}
+
+static void DrawTopMessage(const ViewState *s, const u8 *text)
+{
+    bool8 two = StrLines(text) > 1;
+    int y = two ? 6 : 14;
+
+    DrawWindowFrame(s->frame, 8, y, 28, two ? 4 : 2, TXT_WHITE);
+    DrawStr(&sNormal, text, 8, y + 1, TXT_DARK, TXT_LIGHT);
+}
+
+static void DrawPartyActions(const ViewState *s)
+{
+    static const u8 row2[] = {PACTION_SUMMARY, PACTION_SWITCH, 0xFF, PACTION_CANCEL};
+    u8 text[64];
+    int moves = 0;
+
+    StringExpandPlaceholders(text, gText_DoWhatWithPokemon);
+    DrawTopMessage(s, text);
+    for (int i = 0; i < s->partyActCount; ++i)
+    {
+        u8 action = s->partyActions[i];
+
+        if (action >= PACTION_FIELD_MOVE)
+            DrawTrayButton(TRAY_X(moves++), TRAY_ROW1_Y,
+                           gMoveNames[CtrParty_FieldMoveId(action - PACTION_FIELD_MOVE)],
+                           s->pressed == HIT_PARTY_ACTION + i, TRUE, TRUE, HIT_PARTY_ACTION + i);
+    }
+    /* ITEM (giving and taking) isn't here yet; SWITCH needs another. */
+    for (int k = 0; k < 4; ++k)
+    {
+        int i = 0;
+
+        while (i < s->partyActCount && s->partyActions[i] != row2[k])
+            ++i;
+        DrawTrayButton(TRAY_X(k), TRAY_ROW2_Y,
+                       k == 0 ? gText_Summary5 : k == 1 ? gText_Switch2 : k == 2 ? gText_Item : gText_Cancel2,
+                       s->pressed == HIT_PARTY_ACTION + i, i < s->partyActCount, FALSE, HIT_PARTY_ACTION + i);
+    }
+}
+
 static void DrawPartyList(const ViewState *s)
 {
     DrawPartyBackground(CW / 8, H / 8);
     for (int i = 0; i < PARTY_SIZE; ++i)
         DrawPartySlot(s, i);
+
+    switch (s->partyAct)
+    {
+    case PACT_MENU:
+        DrawPartyActions(s);
+        return;
+    case PACT_MESSAGE:
+        /* A tap anywhere, or OK, closes it. */
+        DrawTopMessage(s, s->partyMsg);
+        AddHit(0, 0, CW, H, HIT_PARTY_MESSAGE);
+        DrawTrayButton(TRAY_X(1) + 30, TRAY_ROW1_Y, gText_Ok2, s->pressed == HIT_PARTY_MESSAGE, TRUE, FALSE,
+                       HIT_PARTY_MESSAGE);
+        return;
+    case PACT_ASK:
+        DrawTopMessage(s, s->partyMsg);
+        DrawTrayButton(TRAY_X(1), TRAY_ROW1_Y, gText_Yes, s->pressed == HIT_PARTY_YES, TRUE, FALSE, HIT_PARTY_YES);
+        DrawTrayButton(TRAY_X(2), TRAY_ROW1_Y, gText_No, s->pressed == HIT_PARTY_NO, TRUE, FALSE, HIT_PARTY_NO);
+        return;
+    case PACT_TARGET:
+        DrawTopMessage(s, s->partyMsg);
+        DrawTrayButton(TRAY_X(3), TRAY_ROW2_Y, gText_Cancel2, s->pressed == HIT_PARTY_BACK, TRUE, FALSE,
+                       HIT_PARTY_BACK);
+        return;
+    }
 
     /* The message box (sDefaultPartyMsgWindowTemplate) in the player's frame. */
     DrawWindowFrame(s->frame, 8, PARTY_Y0 + 136, 21, 2, TXT_WHITE);
@@ -9664,8 +9803,154 @@ static void SwapPartyMonMoves(struct Pokemon *mon, u8 a, u8 b)
     CtrLog_Write(CTR_LOG_INPUT, "bottom screen: moves %u <-> %u", a, b);
 }
 
+static void PartyMessage(const u8 *text, u8 back)
+{
+    StringCopy(sPartyMsg, text);
+    sPartyAct = PACT_MESSAGE;
+    sPartyActBack = back;
+}
+
+/* CursorCb_FieldMove: the game's checks and the move itself; a message as
+ * the game's when it can't be used. On its way, the bottom screen goes back
+ * to the map, as the game's menu closes. */
+static void PartyFieldMove(u8 fieldMove, bool8 confirmed)
+{
+    u8 text[sizeof(sPartyMsg)];
+
+    switch (CtrParty_UseFieldMove(sPartySel, fieldMove, confirmed, text, sizeof(text)))
+    {
+    case CTR_FIELD_MOVE_FAILED:
+        PartyMessage(text, PACT_NONE);
+        break;
+    case CTR_FIELD_MOVE_ASK:
+        StringCopy(sPartyMsg, text);
+        sPartyAct = PACT_ASK;
+        sPartyActMove = fieldMove;
+        break;
+    case CTR_FIELD_MOVE_CHOOSE_MON:
+        StringCopy(sPartyMsg, text);
+        sPartyAct = PACT_TARGET;
+        break;
+    default:
+        CtrLog_Write(CTR_LOG_INPUT, "bottom screen: field move %u by %u", fieldMove, sPartySel);
+        sPartyAct = PACT_NONE;
+        sScreen = SCR_MAP;
+        break;
+    }
+}
+
+/* fldeff_softboiled.c, without the party menu: a fifth of the user's HP to
+ * one that is neither fainted, full, an egg nor the user itself. */
+static void PartySoftBoiled(u8 target)
+{
+    struct Pokemon *user = &gPlayerParty[sPartySel], *mon = &gPlayerParty[target];
+    u16 hp = GetMonData(mon, MON_DATA_HP), maxHp = GetMonData(mon, MON_DATA_MAX_HP);
+    u16 cost = GetMonData(user, MON_DATA_MAX_HP) / 5, userHp = GetMonData(user, MON_DATA_HP), gain;
+    u8 nick[POKEMON_NAME_LENGTH + 2], number[4];
+
+    if (hp == 0 || target == sPartySel || hp == maxHp || GetMonData(mon, MON_DATA_IS_EGG))
+    {
+        PartyMessage(gText_CantBeUsedOnPkmn, PACT_TARGET);
+        return;
+    }
+    if (userHp <= cost)
+    {
+        PartyMessage(gText_NotEnoughHp, PACT_NONE);
+        return;
+    }
+    gain = maxHp - hp < cost ? maxHp - hp : cost;
+    userHp -= cost;
+    hp += gain;
+    SetMonData(user, MON_DATA_HP, &userHp);
+    SetMonData(mon, MON_DATA_HP, &hp);
+    PlaySE(SE_USE_ITEM);
+    GetMonNickname(mon, nick);
+    StringCopy(number, Number(gain, 3, STR_CONV_MODE_LEFT_ALIGN));
+    ExpandVars(sPartyMsg, gText_PkmnHPRestoredByVar2, nick, number);
+    sPartyAct = PACT_MESSAGE;
+    sPartyActBack = PACT_NONE;
+    CtrLog_Write(CTR_LOG_INPUT, "bottom screen: soft-boiled %u -> %u (%u)", sPartySel, target, gain);
+}
+
+/* The list's boxes over it: the actions, a message, YES/NO, the target. */
+static bool8 PartyActTap(u8 id)
+{
+    switch (sPartyAct)
+    {
+    case PACT_MENU:
+        if (id >= HIT_PARTY_ACTION && id < HIT_PARTY_ACTION + MAX_MON_MOVES + 3)
+        {
+            u8 actions[MAX_MON_MOVES + 3], n = PartyActions(sPartySel, actions), action;
+
+            if (id - HIT_PARTY_ACTION >= n)
+                return TRUE;
+            action = actions[id - HIT_PARTY_ACTION];
+            if (action >= PACTION_FIELD_MOVE)
+            {
+                /* As SWITCH: not in the middle of an event, nor of a step. */
+                if (!FieldIdle())
+                    return TRUE;
+                PlaySE(SE_SELECT);
+                PartyFieldMove(action - PACTION_FIELD_MOVE, FALSE);
+                return TRUE;
+            }
+            if (action == PACTION_SWITCH && !PartyEditable())
+                return TRUE;
+            sPartyAct = PACT_NONE;
+            if (action == PACTION_SUMMARY)
+            {
+                sPartyView = PARTY_SUMMARY;
+                sSumPage = SUM_INFO;
+                sSumMove = sSumMoveSwap = SUM_NO_MOVE;
+            }
+            else if (action == PACTION_SWITCH)
+                sPartySwap = sPartySel;
+        }
+        else if (id >= HIT_SLOT && id < HIT_SLOT + PARTY_SIZE && id - HIT_SLOT < gPlayerPartyCount)
+            sPartySel = id - HIT_SLOT;
+        else
+            return TRUE;
+        break;
+    case PACT_MESSAGE:
+        if (id != HIT_PARTY_MESSAGE)
+            return TRUE;
+        sPartyAct = sPartyActBack;
+        if (sPartyAct == PACT_TARGET)
+            StringCopy(sPartyMsg, gText_UseOnWhichPokemon);
+        break;
+    case PACT_ASK:
+        if (id == HIT_PARTY_YES && FieldIdle())
+            PartyFieldMove(sPartyActMove, TRUE);
+        else if (id == HIT_PARTY_NO)
+            sPartyAct = PACT_NONE;
+        else
+            return TRUE;
+        break;
+    case PACT_TARGET:
+        if (id == HIT_PARTY_BACK)
+            sPartyAct = PACT_NONE;
+        else if (id >= HIT_SLOT && id < HIT_SLOT + PARTY_SIZE && id - HIT_SLOT < gPlayerPartyCount)
+        {
+            if (!FieldIdle())
+                return TRUE;
+            PartySoftBoiled(id - HIT_SLOT);
+            if (sPartyAct == PACT_MESSAGE && sPartyActBack == PACT_NONE)
+                return TRUE;
+        }
+        else
+            return TRUE;
+        break;
+    default:
+        return FALSE;
+    }
+    PlaySE(SE_SELECT);
+    return TRUE;
+}
+
 static void PartyTap(u8 id)
 {
+    if (sPartyView == PARTY_LIST && PartyActTap(id))
+        return;
     if (sPartyView == PARTY_SUMMARY)
     {
         bool8 egg = GetMonData(&gPlayerParty[sPartySel], MON_DATA_IS_EGG);
@@ -9729,9 +10014,7 @@ static void PartyTap(u8 id)
     if (sPartySwap == PARTY_NO_SWAP)
     {
         sPartySel = id - HIT_SLOT;
-        sPartyView = PARTY_SUMMARY;
-        sSumPage = SUM_INFO;
-        sSumMove = sSumMoveSwap = SUM_NO_MOVE;
+        sPartyAct = PACT_MENU;
         PlaySE(SE_SELECT);
         return;
     }

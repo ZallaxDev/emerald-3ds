@@ -27,6 +27,12 @@
   Pokémon ranked by a condition, and its condition screen) are drawn on the
   bottom screen too, in the game's look.
 
+- A tap on a Pokémon on the bottom screen opens its actions (SUMMARY, its
+  field moves, SWITCH) as buttons in the bands above and below the party,
+  not over it. Fly, Surf, Cut, Flash, Teleport, Dig, Soft-Boiled and the
+  other field moves are used from there as from the game's menu, on the
+  field while it runs; Fly's map, cancelled, goes back to the field.
+
 ## 0.4.0 — 2026-10-16
 
 - The project is now called Emerald 3DS, by Zallax: new name on the HOME
