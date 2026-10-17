@@ -424,9 +424,9 @@ static bool sSceneFailed;
  */
 static bool sBattle2x;
 #define BATTLE_2X_ZOOM 2.0f
-/* The text box's rows of the bottom screen, 1:1, along its bottom edge. */
+/* The text box's rows of the bottom screen, 1:1, along its top edge. */
 #define BAND_H 48
-#define BAND_Y0 (CTR_BOTTOM_HEIGHT - BAND_H)
+#define BAND_Y0 0
 static uint16_t sTextBand[CTR_BOTTOM_WIDTH * BAND_H];
 static bool sBandShown;
 static uint32_t sSceneUsedFrame, sSceneFailFrame;
@@ -10796,13 +10796,13 @@ static void BottomBand(void)
             column[BAND_H - 1 - r] = colour;
         }
     }
-    CtrBottom_BlitBand(sTextBand, BAND_Y0, CTR_BOTTOM_HEIGHT);
+    CtrBottom_BlitBand(sTextBand, BAND_Y0, BAND_Y0 + BAND_H);
 }
 
 void CtrVideo_BottomBandRows(int *y0, int *y1)
 {
     *y0 = sBandShown ? BAND_Y0 : 0;
-    *y1 = sBandShown ? CTR_BOTTOM_HEIGHT : 0;
+    *y1 = sBandShown ? BAND_Y0 + BAND_H : 0;
 }
 
 void CtrVideo_Present(void)
