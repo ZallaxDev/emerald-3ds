@@ -1694,6 +1694,30 @@ static bool BorderWaterLevel(int x, int y, float *level, float *shift)
     return true;
 }
 
+/* Join the stood top's edge to the water's displaced edge. Extending a
+ * vertical face only to the water's height leaves its Z displacement open.
+ * Use the same endpoint order as the ordinary cardinal faces, including the
+ * normally hidden north face when the cell on that side is water. */
+static void BorderWaterJoin(VoxelBuilder *b, int x, int y, int side, float top,
+                            float level, float shift,
+                            float u0, float v0, float u1, float v1)
+{
+    float ax, az, bx, bz, shade;
+
+    switch (side)
+    {
+    case 0: ax = x + 1; az = y; bx = x; bz = y; shade = SHADE_NORTH; break;
+    case 1: ax = x; az = y + 1; bx = x + 1; bz = y + 1; shade = SHADE_SOUTH; break;
+    case 2: ax = x; az = y; bx = x; bz = y + 1; shade = SHADE_WEST; break;
+    default: ax = x + 1; az = y + 1; bx = x + 1; bz = y; shade = SHADE_EAST; break;
+    }
+    VoxelBuilder_Quad(b,
+        &(VoxelVertex){ax, level, az + shift, u0, v1, shade},
+        &(VoxelVertex){bx, level, bz + shift, u1, v1, shade},
+        &(VoxelVertex){bx, top, bz, u1, v0, shade},
+        &(VoxelVertex){ax, top, az, u0, v0, shade});
+}
+
 void VoxelMesh_EmitBorder(VoxelBuilder *builder, int x0, int y0, int x1, int y1)
 {
     float u0, v0, u1, v1;
@@ -1718,7 +1742,7 @@ void VoxelMesh_EmitBorder(VoxelBuilder *builder, int x0, int y0, int x1, int y1)
             /* Only where the border meets something else: the inside of a
              * belt that reaches the whole way to the horizon is never seen,
              * and drawing it is most of the tiles in the window. */
-            bool south, east, west, southW, eastW, westW;
+            bool south, east, west;
             float level = 0.0f, shift = 0.0f;
 
             if (!BorderAt(x, y))
@@ -1737,13 +1761,24 @@ void VoxelMesh_EmitBorder(VoxelBuilder *builder, int x0, int y0, int x1, int y1)
              && VoxelTree_Part(VoxelWorld_Instance(0)->secondaryTileset,
                                VoxelWorld_BorderMetatile(x, y)) >= 0)
                 continue; /* flat trunks and tilted crowns are appended later */
-            /* a standing cell beside a flat one of water shows its face too */
-            southW = BorderAt(x, y + 1) && BorderWaterLevel(x, y + 1, &level, &shift);
-            eastW = BorderAt(x + 1, y) && BorderWaterLevel(x + 1, y, &level, &shift);
-            westW = BorderAt(x - 1, y) && BorderWaterLevel(x - 1, y, &level, &shift);
-            south = !BorderAt(x, y + 1) || southW;
-            east = !BorderAt(x + 1, y) || eastW;
-            west = !BorderAt(x - 1, y) || westW;
+            /* Water-facing walls reach the displaced plane, rather than
+             * ending on the unshifted cell grid. Ordinary map-facing walls
+             * retain their original course-by-course texture. */
+            {
+                static const int dir[4][2] = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}};
+                for (int side = 0; side < 4; ++side)
+                {
+                    int nx = x + dir[side][0], ny = y + dir[side][1];
+                    bool water = BorderAt(nx, ny) && BorderWaterLevel(nx, ny, &level, &shift);
+                    if (water
+                     && MetatileUV(builder, VoxelWorld_BorderMetatile(x, y), &u0, &v0, &u1, &v1))
+                        BorderWaterJoin(builder, x, y, side, (float)courses, level, shift,
+                                        u0, v0, u1, v1);
+                }
+            }
+            south = !BorderAt(x, y + 1);
+            east = !BorderAt(x + 1, y);
+            west = !BorderAt(x - 1, y);
             /* Laid as drawn, a cell's top is its own drawing; stood where it
              * is tiled, the column reads the rows above it. */
             if (MetatileUV(builder, VoxelWorld_BorderMetatile(x, drawn ? y : y - (int)courses + 1),
@@ -1765,18 +1800,6 @@ void VoxelMesh_EmitBorder(VoxelBuilder *builder, int x0, int y0, int x1, int y1)
                 if (south) VoxelMesh_South(builder, wx, wz, yBottom, yTop, 0.0f, u0, v0, u1, v1);
                 if (east) VoxelMesh_East(builder, wx, wz, yBottom, yTop, 0.0f, u0, v0, u1, v1);
                 if (west) VoxelMesh_West(builder, wx, wz, yBottom, yTop, 0.0f, u0, v0, u1, v1);
-            }
-            /* Beside a belt of water lowered under the map's ground (its one
-             * plane, BorderWaterLevel), the stood cell's faces go on down to
-             * it: they stopped at the ground and left a slit over the sea. */
-            if (level < -0.05f && (southW || eastW || westW)
-             && MetatileUV(builder, VoxelWorld_BorderMetatile(x, y), &u0, &v0, &u1, &v1))
-            {
-                float vb = v1 - (v1 - v0) * (-level < 1.0f ? -level : 1.0f);
-
-                if (southW) VoxelMesh_South(builder, wx, wz, level, 0.0f, 0.0f, u0, vb, u1, v1);
-                if (eastW) VoxelMesh_East(builder, wx, wz, level, 0.0f, 0.0f, u0, vb, u1, v1);
-                if (westW) VoxelMesh_West(builder, wx, wz, level, 0.0f, 0.0f, u0, vb, u1, v1);
             }
         }
 }

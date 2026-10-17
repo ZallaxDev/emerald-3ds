@@ -40,7 +40,8 @@ static VoxelAtlasMap sAtlas;
 static float sLift[H][W];
 static bool sWater[H][W];
 static bool sDrawn;           /* a drawn map: every point moved south by its height */
-static int sStoodWestOf = -1000; /* border cells with x < this stand up; the rest are water */
+static bool sBorderSplitY, sWaterBefore;
+static int sStoodWestOf = -1000; /* split coordinate; default water lies east of it */
 static int16_t sGrid[H][W][VOXEL_RELIEF_SIDE * VOXEL_RELIEF_SIDE];
 static int16_t sDepth[H][W][VOXEL_RELIEF_SIDE * VOXEL_RELIEF_SIDE];
 
@@ -111,7 +112,11 @@ VoxelVisualShape VoxelWorld_ClassifyTile(int x, int y)
     if (!Inside(x, y)) return VOXEL_SHAPE_VOID;
     return sWater[y - sMap.originY][x - sMap.originX] ? VOXEL_SHAPE_WATER : VOXEL_SHAPE_FLAT;
 }
-bool VoxelWorld_BorderIsWater(int x, int y) { (void)y; return x >= sStoodWestOf; }
+bool VoxelWorld_BorderIsWater(int x, int y)
+{
+    bool after = (sBorderSplitY ? y : x) >= sStoodWestOf;
+    return sWaterBefore ? !after : after;
+}
 int VoxelWorld_BorderMetatile(int x, int y)
 {
     return VoxelWorld_BorderIsWater(x, y) ? BORDER_WATER : BORDER_STOOD;
@@ -138,6 +143,7 @@ static void Reset(int layout)
     memset(sWater, 0, sizeof(sWater));
     sDrawn = false;
     sStoodWestOf = -1000;
+    sBorderSplitY = sWaterBefore = false;
     sMap.indoor = false;
     sMap.layoutId = layout; /* a new map: the belt's plane is worked out again */
 }
@@ -266,6 +272,48 @@ static void BorderAllAt(float level)
         assert(fabsf(sBorderV[i].y - level) < 1e-4f);
 }
 
+/* Sample the complete joined face between a stood border top and each
+ * displaced water edge, rather than only checking its height at one point. */
+static void CheckBorderJoins(void)
+{
+    static const int dir[4][2] = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}};
+    static const float along[] = {0.0f, 0.125f, 0.5f, 0.875f, 1.0f};
+    for (int sign = -1; sign <= 1; sign += 2)
+        for (int d = 0; d < 4; ++d)
+        {
+            float plane = sign * 0.5f;
+            int x = d < 2 ? -2 : (d == 2 ? 0 : -1);
+            int y = d >= 2 ? -2 : (d == 0 ? 0 : -1);
+            Reset(20 + (sign + 1) * 4 + d);
+            sDrawn = true;
+            sBorderSplitY = d < 2;
+            sWaterBefore = d == 0 || d == 2;
+            sStoodWestOf = 0;
+            for (int cy = 0; cy < H; ++cy)
+                for (int cx = 0; cx < W; ++cx)
+                {
+                    sWater[cy][cx] = true;
+                    sLift[cy][cx] = plane;
+                }
+            assert(!VoxelWorld_BorderIsWater(x, y));
+            assert(VoxelWorld_BorderIsWater(x + dir[d][0], y + dir[d][1]));
+            Build();
+            for (unsigned a = 0; a < sizeof(along) / sizeof(along[0]); ++a)
+                for (int step = 0; step <= 4; ++step)
+                {
+                    float t = step / 4.0f;
+                    float px = x + (d < 2 ? along[a] : (d == 3 ? 1.0f : 0.0f));
+                    float z = y + (d >= 2 ? along[a] : (d == 1 ? 1.0f : 0.0f));
+                    if (!Covered(px, 2.0f + (plane - 2.0f) * t, z + plane * t))
+                    {
+                        fprintf(stderr, "open stood/water join: sign %d side %d along %.3f t %.2f\n",
+                                sign, d, along[a], t);
+                        abort();
+                    }
+                }
+        }
+}
+
 int main(void)
 {
     for (unsigned i = 0; i < 64; ++i) sAtlas.slotOf[i] = (uint16_t)(i + 1);
@@ -360,7 +408,9 @@ int main(void)
     assert(Covered(0.0f, 1.0f, -0.5f));
     assert(Covered(0.5f, -0.5f, -1.25f)); /* shifted north water top */
 
+    CheckBorderJoins();
+
     puts("PASS water border: one plane at uneven corners, skirts on every side incl. south, "
-         "drawn-map shift, stood belt unchanged, indoor untouched, stood faces down to the plane");
+         "drawn-map shift, indoor untouched, stood/water joins in all directions and both shift signs");
     return 0;
 }
