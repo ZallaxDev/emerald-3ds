@@ -484,6 +484,18 @@ static struct
     const u16 *sumStatus, *sumEffectBattle, *sumEffectContest;
     u8 *moveSelectTiles;
     Pal moveSelectPal;
+    /* The bag screen (item_menu.c): its tiles and tilemap, its two palettes
+     * for each player, the bag picture per player and its palette, the HM
+     * and SELECT marks, the scroll arrows and their red palette. */
+    u8 *bagTiles;
+    u32 bagTileCount;
+    u16 *bagMap;
+    Pal bagPal[2][2];
+    u8 *bagSprite[2];
+    Pal bagSpritePal;
+    const u8 *hmIcon;
+    u8 *selectIcon, *scrollTiles;
+    Pal scrollPal;
     /* Icons. */
     Icon column[SCR_COUNT];
     u8 *typeTiles;
@@ -605,6 +617,31 @@ static void LoadResources(void)
     sRes.sumEffectBattle = Port_ResolveAssetPointer(gSummaryScreen_MoveEffect_Battle_Tilemap);
     sRes.sumEffectContest = Port_ResolveAssetPointer(gSummaryScreen_MoveEffect_Contest_Tilemap);
     sRes.moveSelectTiles = Unlz(gSummaryMoveSelect_Gfx, NULL);
+    sRes.bagTiles = Unlz(gBagScreen_Gfx, &size);
+    sRes.bagTileCount = size / 32;
+    sRes.bagMap = Unlz(gBagScreen_GfxTileMap, NULL);
+    {
+        const u32 *pals[2] = {gBagScreenMale_Pal, gBagScreenFemale_Pal};
+        u16 *raw;
+
+        for (int g = 0; g < 2; ++g)
+            if ((raw = Unlz(pals[g], NULL)) != NULL)
+            {
+                ToPals(sRes.bagPal[g], raw, 2);
+                free(raw);
+            }
+        sRes.bagSprite[MALE] = Unlz(gBagMaleTiles, NULL);
+        sRes.bagSprite[FEMALE] = Unlz(gBagFemaleTiles, NULL);
+        if ((raw = Unlz(gBagPalette, NULL)) != NULL)
+        {
+            ToPals(&sRes.bagSpritePal, raw, 1);
+            free(raw);
+        }
+    }
+    sRes.hmIcon = Port_ResolveAssetPointer(gBagMenuHMIcon_Gfx);
+    sRes.selectIcon = ReadRomfs("bag/select_button.4bpp", NULL);
+    sRes.scrollTiles = UnlzFile("interface/scroll_indicator.4bpp.lz", NULL);
+    PalFile("interface/red.gbapal", &sRes.scrollPal, 1, FALSE);
     {
         u16 *raw = Unlz(gSummaryMoveSelect_Pal, NULL);
 
@@ -1174,7 +1211,7 @@ typedef struct
     u8 height, lineHeight;
 } Font;
 
-static Font sSmall, sNormal;
+static Font sSmall, sNormal, sNarrow;
 
 static const u16 *ResolveFontBase(const u16 *glyphs)
 {
@@ -1196,6 +1233,11 @@ static void ResolveFonts(void)
     sNormal.widths = gFontNormalLatinGlyphWidths;
     sNormal.height = 16;
     sNormal.lineHeight = 16;
+    /* The bag's item list (FONT_NARROW): the normal font's glyph layout. */
+    sNarrow.glyphs = ResolveFontBase(gFontNarrowLatinGlyphs);
+    sNarrow.widths = gFontNarrowLatinGlyphWidths;
+    sNarrow.height = 15;
+    sNarrow.lineHeight = 16;
 }
 
 /* Walks a game string: returns the next glyph, 0xFFFE for a line break or
@@ -2393,6 +2435,11 @@ typedef struct
     u32 personality, exp, expNext;
     u8 otName[PLAYER_NAME_LENGTH + 10];
     u8 memo[200], eggState[80];
+    /* BAG: the pocket, its first row on show, its stacks, the row picked
+     * (BAG_NO_ROW; the stacks' count is CANCEL), the one being moved, and the
+     * rows on show. */
+    u8 bagPocket, bagTop, bagCount, bagSel, bagSwap, bagOk;
+    u16 bagItem[8], bagQty[8], bagSelItem;
     /* Region map. */
     u8 mapsec, cursorX, cursorY, pickMapsec, pickX, pickY;
     u8 clockShown, clockValid, clockRate, clockPhase;
@@ -2600,6 +2647,15 @@ enum
     HIT_SUM_PAGE_PREV,
     HIT_SUM_PAGE_NEXT,
     HIT_SUM_MOVE,          /* + move slot */
+    HIT_BAG_POCKET_PREV = 0xB4,
+    HIT_BAG_POCKET_NEXT,
+    HIT_BAG_UP,
+    HIT_BAG_DOWN,
+    HIT_BAG_PAGE_UP,
+    HIT_BAG_PAGE_DOWN,
+    HIT_BAG_REGISTER,
+    HIT_BAG_SWITCH,
+    HIT_BAG_CANCEL,
     HIT_OPTION = 0xC0,     /* + option row; +HIT_OPTION_BACK for the left arrow */
     HIT_PAGE = 0xE0,       /* + OPTIONS page tab */
 };
@@ -3439,6 +3495,64 @@ static void SnapshotParty(ViewState *s)
         SnapshotPartySummary(s);
 }
 
+/* ------------------------------------------------------------------------ */
+/* BAG: the pockets, drawn here while the world goes on above              */
+/* ------------------------------------------------------------------------ */
+
+/*
+ * The bag is read from the save and drawn by the bottom screen itself, as
+ * the party is: nothing opens the game's bag. Each pocket keeps its first
+ * row on show and its picked row, as gBagPosition keeps them for the game.
+ * REGISTER and SWITCH ITEM (the game's SELECT: an item moved to another
+ * place in its pocket) wait for the field to be free of events.
+ */
+#define BAG_ROWS 8
+#define BAG_NO_ROW 0xFF
+static u8 sBagPocket, sBagTop[POCKETS_COUNT], sBagSel[POCKETS_COUNT] = {BAG_NO_ROW, BAG_NO_ROW, BAG_NO_ROW, BAG_NO_ROW,
+                                                                          BAG_NO_ROW};
+static u8 sBagSwap = BAG_NO_ROW;
+
+static u8 BagStacks(u8 pocket)
+{
+    u8 n = 0;
+
+    while (n < gBagPockets[pocket].capacity && gBagPockets[pocket].itemSlots[n].itemId != ITEM_NONE)
+        ++n;
+    return n;
+}
+
+static void ResetBagScreen(void)
+{
+    sBagSwap = BAG_NO_ROW;
+}
+
+static void SnapshotBag(ViewState *s)
+{
+    u8 count = BagStacks(sBagPocket), rows = count + 1;  /* and CANCEL */
+
+    if (sBagSel[sBagPocket] != BAG_NO_ROW && sBagSel[sBagPocket] > count)
+        sBagSel[sBagPocket] = BAG_NO_ROW;
+    if (sBagSwap != BAG_NO_ROW && sBagSwap >= count)
+        sBagSwap = BAG_NO_ROW;
+    if (sBagTop[sBagPocket] + BAG_ROWS > rows)
+        sBagTop[sBagPocket] = rows > BAG_ROWS ? rows - BAG_ROWS : 0;
+    s->bagPocket = sBagPocket;
+    s->bagTop = sBagTop[sBagPocket];
+    s->bagCount = count;
+    s->bagSel = sBagSel[sBagPocket];
+    s->bagSwap = sBagSwap;
+    s->canEdit = PartyEditable();
+    s->bagOk = sRes.bagTiles && sRes.bagMap;
+    for (int i = 0; i < BAG_ROWS && s->bagTop + i < count; ++i)
+    {
+        s->bagItem[i] = BagGetItemIdByPocketPosition(sBagPocket + 1, s->bagTop + i);
+        s->bagQty[i] = BagGetQuantityByPocketPosition(sBagPocket + 1, s->bagTop + i);
+    }
+    s->bagSelItem = s->bagSel == BAG_NO_ROW ? ITEM_NONE
+                  : s->bagSel == count       ? ITEM_LIST_END
+                                             : BagGetItemIdByPocketPosition(sBagPocket + 1, s->bagSel);
+}
+
 static void Snapshot(ViewState *s, u8 mode, u8 pressed)
 {
     memset(s, 0, sizeof(*s));
@@ -3528,6 +3642,11 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
         case SCR_CARD:
             SnapshotCard(s);
             break;
+        case SCR_BAG:
+            /* The game's own bag (from a shop, the PC...) is the compositor's. */
+            if (s->mode == MODE_FIELD)
+                SnapshotBag(s);
+            break;
         case SCR_SAVE:
             SnapshotSave(s);
             s->saveStep = sSaveStep;
@@ -3593,6 +3712,8 @@ static bool8 Prefetch(const ViewState *s)
     if (sIconBudget && s->mode == MODE_FIELD && s->screen == SCR_POKEMON && s->partyView == PARTY_SUMMARY
         && s->party[s->partySel].item != ITEM_NONE)
         ItemIcon(s->party[s->partySel].item);
+    if (sIconBudget && s->mode == MODE_FIELD && s->screen == SCR_BAG && s->bagSelItem != ITEM_NONE)
+        ItemIcon(s->bagSelItem);
     if (sIconBudget && s->mode == MODE_BATTLE_ACTION && s->quickBall != ITEM_NONE)
         ItemIcon(s->quickBall);
     if (sIconBudget && s->mode == MODE_BATTLE_ACTION && s->safari)
@@ -5096,6 +5217,231 @@ static void DrawPartySummary(const ViewState *s)
                        (move ? moves > 1 : others) && s->canEdit, HIT_PARTY_SWITCH);
     }
     DrawMonButton(s, 182, 186, 7, 52, 1, HIT_PARTY_NEXT);
+}
+
+/*
+ * The bag is the game's bag screen as item_menu.c draws it on the GBA's
+ * 240x160, at the top of the bottom screen: its tilemap, the bag picture of
+ * the pocket, the pocket's name and its square in the row of five, the
+ * pocket and list arrows, the list (FONT_NARROW: names, numbers, quantities,
+ * the HM and SELECT marks, the cursor), the item's icon and description.
+ * Under it, in the bag's own stripes, taps in place of the keys.
+ */
+static const u16 sBagFrame[POCKETS_COUNT] = {
+    [ITEMS_POCKET] = 64, [BALLS_POCKET] = 192, [TMHM_POCKET] = 256, [BERRIES_POCKET] = 320, [KEYITEMS_POCKET] = 128,
+};
+
+static void DrawBagMap(const u16 *map, int stride, int sx, int sy, int w, int h, int dx, int dy, const Pal *pals)
+{
+    for (int ty = 0; ty < h; ++ty)
+        for (int tx = 0; tx < w; ++tx)
+        {
+            u16 e = map[(sy + ty) * stride + sx + tx];
+
+            if ((e >> 12) < 2)
+                DrawMapEntry(sRes.bagTiles, sRes.bagTileCount, e, (dx + tx) * 8, (dy + ty) * 8, pals);
+        }
+}
+
+/* A sprite with either flip, in the GBA's one-dimensional layout. */
+static void DrawSpriteFlip(const u8 *tiles, int wt, int ht, int x, int y, const u16 *pal, bool8 hflip, bool8 vflip)
+{
+    for (int ty = 0; ty < ht; ++ty)
+        for (int tx = 0; tx < wt; ++tx)
+            DrawTile(tiles + (ty * wt + tx) * 32, x + (hflip ? wt - 1 - tx : tx) * 8, y + (vflip ? ht - 1 - ty : ty) * 8, pal,
+                     hflip, vflip);
+}
+
+/* A list or description line: {CLEAR} and {CLEAR_TO} move on as the
+ * game's text printer does (the TM, HM and berry rows' columns). */
+static int DrawBagText(const Font *font, const u8 *str, int x, int y, u16 fg, u16 sh)
+{
+    int left = x;
+
+    while (str && *str != EOS)
+    {
+        u16 g;
+
+        if (*str == EXT_CTRL_CODE_BEGIN && (str[1] == EXT_CTRL_CODE_CLEAR || str[1] == EXT_CTRL_CODE_CLEAR_TO))
+        {
+            x = str[1] == EXT_CTRL_CODE_CLEAR ? x + str[2] : left + str[2];
+            str += 3;
+            continue;
+        }
+        g = NextGlyph(&str);
+        if (g == 0xFFFF)
+            break;
+        if (g == 0xFFFE)
+        {
+            x = left;
+            y += font->lineHeight;
+            continue;
+        }
+        x += DrawGlyph(font, g, x, y, fg, sh);
+    }
+    return x;
+}
+
+/* {STR_VAR_1} and {STR_VAR_2} of a template, without the game's buffers. */
+static void ExpandVars(u8 *dest, const u8 *src, const u8 *var1, const u8 *var2)
+{
+    while (*src != EOS)
+    {
+        if (src[0] == PLACEHOLDER_BEGIN && (src[1] == PLACEHOLDER_ID_STRING_VAR_1 || src[1] == PLACEHOLDER_ID_STRING_VAR_2))
+        {
+            dest = StringCopy(dest, src[1] == PLACEHOLDER_ID_STRING_VAR_1 ? var1 : var2);
+            src += 2;
+            continue;
+        }
+        if (src[0] == EXT_CTRL_CODE_BEGIN)
+        {
+            u8 n = 1 + GetExtCtrlCodeLength(src[1]);
+
+            while (n-- && *src != EOS)
+                *dest++ = *src++;
+            continue;
+        }
+        *dest++ = *src++;
+    }
+    *dest = EOS;
+}
+
+/* GetItemNameFromPocket: TMs, HMs and berries numbered. */
+static void BagItemName(u8 *dest, u8 pocket, u16 item)
+{
+    u8 number[4], name[ITEM_NAME_LENGTH + 4];
+
+    if (pocket == TMHM_POCKET)
+    {
+        StringCopy(name, gMoveNames[ItemIdToBattleMoveId(item)]);
+        if (item >= ITEM_HM01)
+        {
+            ConvertIntToDecimalStringN(number, item - ITEM_HM01 + 1, STR_CONV_MODE_LEADING_ZEROS, 1);
+            ExpandVars(dest, gText_NumberItem_HM, number, name);
+        }
+        else
+        {
+            ConvertIntToDecimalStringN(number, item - ITEM_TM01 + 1, STR_CONV_MODE_LEADING_ZEROS, 2);
+            ExpandVars(dest, gText_NumberItem_TMBerry, number, name);
+        }
+    }
+    else if (pocket == BERRIES_POCKET)
+    {
+        ConvertIntToDecimalStringN(number, item - FIRST_BERRY_INDEX + 1, STR_CONV_MODE_LEADING_ZEROS, 2);
+        CopyItemName(item, name);
+        ExpandVars(dest, gText_NumberItem_TMBerry, number, name);
+    }
+    else
+        CopyItemName(item, dest);
+}
+
+static void DrawBag(const ViewState *s)
+{
+    static const u8 left[] = {CHAR_LEFT_ARROW, EOS}, right[] = {CHAR_RIGHT_ARROW, EOS};
+    static const u8 up[] = {CHAR_UP_ARROW, EOS}, down[] = {CHAR_DOWN_ARROW, EOS};
+    const Pal *pals = sRes.bagPal[s->gender == FEMALE];
+    u16 fg = pals[1].c[TEXT_COLOR_WHITE], sh = pals[1].c[TEXT_COLOR_LIGHT_GRAY];
+    u8 text[64];
+    bool8 key = s->bagPocket == KEYITEMS_POCKET;
+    bool8 item = s->bagSel != BAG_NO_ROW && s->bagSel < s->bagCount;
+    bool8 swappable = s->bagPocket != TMHM_POCKET && s->bagPocket != BERRIES_POCKET && s->bagCount > 1;
+
+    if (!s->bagOk)
+        return;
+    /* The bag's backdrop, and its stripes under it for the taps. */
+    DrawBagMap(sRes.bagMap, 32, 0, 0, 30, 20, 0, 0, pals);
+    for (int ty = 20; ty < H / 8; ++ty)
+        for (int tx = 0; tx < 30; ++tx)
+            DrawBagMap(sRes.bagMap, 32, 0, 6 + (ty & 1), 1, 1, tx, ty, pals);
+    /* The pocket's square in the row of five (DrawPocketIndicatorSquare). */
+    for (int i = 0; i < POCKETS_COUNT; ++i)
+    {
+        u16 square = i == s->bagPocket ? 0x102B : 0x1017;
+
+        DrawBagMap(&square, 1, 0, 0, 1, 1, 5 + i, 3, pals);
+    }
+    if (sRes.bagSprite[s->gender])
+        DrawSprite(sRes.bagSprite[s->gender] + sBagFrame[s->bagPocket] * 32, 8, 8, 36, 34, sRes.bagSpritePal.c);
+    DrawStrCentered(&sNormal, gPocketNamesStringsTable[s->bagPocket], 32 + 32, 9, pals[1].c[TEXT_COLOR_WHITE],
+                    pals[1].c[TEXT_COLOR_RED]);
+    /* The pocket arrows (sBagScrollArrowsTemplate), the list's (172: 12, 148). */
+    if (sRes.scrollTiles)
+    {
+        if (s->bagPocket > 0)
+            DrawSpriteFlip(sRes.scrollTiles, 2, 2, 20, 8, sRes.scrollPal.c, FALSE, FALSE);
+        if (s->bagPocket < POCKETS_COUNT - 1)
+            DrawSpriteFlip(sRes.scrollTiles, 2, 2, 92, 8, sRes.scrollPal.c, TRUE, FALSE);
+        if (s->bagTop > 0)
+            DrawSpriteFlip(sRes.scrollTiles + 4 * 32, 2, 2, 164, 4, sRes.scrollPal.c, FALSE, FALSE);
+        if (s->bagTop + BAG_ROWS < s->bagCount + 1)
+            DrawSpriteFlip(sRes.scrollTiles + 4 * 32, 2, 2, 164, 140, sRes.scrollPal.c, FALSE, TRUE);
+    }
+    AddHit(0, 0, 56, 32, HIT_BAG_POCKET_PREV);
+    AddHit(56, 0, 56, 32, HIT_BAG_POCKET_NEXT);
+    AddHit(112, 0, 128, 16, HIT_BAG_UP);
+    AddHit(112, 144, 128, 16, HIT_BAG_DOWN);
+
+    /* The list: WIN_ITEM_LIST at (14, 2), rows of 16 from y 1, names at 8. */
+    for (int i = 0; i < BAG_ROWS; ++i)
+    {
+        int row = s->bagTop + i, y = 16 + 1 + i * 16;
+
+        if (row > s->bagCount)
+            break;
+        if (row == s->bagSel || row == s->bagSwap)
+        {
+            const Pal *p = &pals[1];
+            bool8 grey = row == s->bagSwap && row != s->bagSel;
+
+            DrawStr(&sNormal, gText_SelectorArrow2, 112, y, grey ? p->c[TEXT_COLOR_LIGHT_GRAY] : fg,
+                    grey ? p->c[TEXT_COLOR_GREEN] : sh);
+        }
+        AddHit(112, y - 1, 128, 16, HIT_ROW + i);
+        if (row == s->bagCount)
+        {
+            DrawBagText(&sNarrow, gText_CloseBag, 120, y, fg, sh);
+            continue;
+        }
+        BagItemName(text, s->bagPocket, s->bagItem[i]);
+        if (s->bagItem[i] >= ITEM_HM01 && s->bagItem[i] <= ITEM_HM08 && sRes.hmIcon)
+            DrawSprite(sRes.hmIcon, 2, 2, 120, y - 1, pals[1].c);
+        DrawBagText(&sNarrow, text, 120, y, fg, sh);
+        if (s->bagPocket == BERRIES_POCKET || (!key && GetItemImportance(s->bagItem[i]) == FALSE))
+        {
+            u8 qty[8];
+
+            ExpandVar1(qty, gText_xVar1, Number(s->bagQty[i], s->bagPocket == BERRIES_POCKET ? BERRY_CAPACITY_DIGITS
+                                                                                           : BAG_ITEM_CAPACITY_DIGITS,
+                                                 STR_CONV_MODE_RIGHT_ALIGN));
+            DrawBagText(&sNarrow, qty, 112 + 119 - StrWidth(&sNarrow, qty), y, fg, sh);
+        }
+        else if (s->registered != ITEM_NONE && s->registered == s->bagItem[i] && sRes.selectIcon)
+            DrawSprite(sRes.selectIcon, 3, 2, 112 + 96, y - 1, pals[1].c);
+    }
+
+    /* The picked row: its icon (24, 88) and description (WIN_DESCRIPTION). */
+    if (s->bagSelItem != ITEM_NONE)
+    {
+        DrawItemIcon(s->bagSelItem, 8, 72);
+        if (s->bagSelItem == ITEM_LIST_END)
+        {
+            ExpandVar1(text, gText_ReturnToVar1, gBagMenu_ReturnToStrings[ITEMMENULOCATION_FIELD]);
+            DrawBagText(&sNormal, text, 3, 104 + 1, fg, sh);
+        }
+        else
+            DrawBagText(&sNormal, GetItemDescription(s->bagSelItem), 3, 104 + 1, fg, sh);
+    }
+
+    /* The keys' work by touch: pocket, scroll, then the item's actions. */
+    DrawGameButton(2, 166, left, s->pressed == HIT_BAG_POCKET_PREV, s->bagPocket > 0, HIT_BAG_POCKET_PREV);
+    DrawGameButton(62, 166, up, s->pressed == HIT_BAG_PAGE_UP, s->bagTop > 0, HIT_BAG_PAGE_UP);
+    DrawGameButton(122, 166, down, s->pressed == HIT_BAG_PAGE_DOWN, s->bagTop + BAG_ROWS < s->bagCount + 1, HIT_BAG_PAGE_DOWN);
+    DrawGameButton(182, 166, right, s->pressed == HIT_BAG_POCKET_NEXT, s->bagPocket < POCKETS_COUNT - 1, HIT_BAG_POCKET_NEXT);
+    DrawTallButton(2, 186, 9, 52, s->registered != ITEM_NONE && s->registered == s->bagSelItem ? gMenuText_Deselect : gMenuText_Register,
+                   s->pressed == HIT_BAG_REGISTER, key && item && s->canEdit, HIT_BAG_REGISTER);
+    DrawTallButton(84, 186, 9, 52, Ascii(CTR_TEXT("SWITCH\nITEM", "CAMBIAR\nOBJETO", "ÉCHANGER\nOBJET", "SCAMBIA\nSTRUM.")),
+                   s->pressed == HIT_BAG_SWITCH || s->bagSwap != BAG_NO_ROW, swappable && item && s->canEdit, HIT_BAG_SWITCH);
+    DrawTallButton(166, 186, 9, 52, gText_Cancel, s->pressed == HIT_BAG_CANCEL, TRUE, HIT_BAG_CANCEL);
 }
 
 static void DrawParty(const ViewState *s)
@@ -6914,6 +7260,13 @@ static void Render(const ViewState *s)
                 FillRect(0, 0, CW, H, 0);
             break;
         case SCR_BAG:
+            if (s->mode == MODE_FIELD)
+            {
+                DrawBag(s);
+                break;
+            }
+            FillRect(0, 0, CW, H, 0);
+            break;
         case SCR_POKEDEX:
             /* The game's party menu, bag and Pokédex are drawn there by the compositor;
              * black until they are, as they fade in from black, and while
@@ -7897,12 +8250,12 @@ static void OpenAsked(u8 mode)
     /* Closed by its own button or B: back to the map, not opened again. */
     if (mode != lastMode)
     {
-        if ((lastMode == MODE_BAG_MENU && sScreen == SCR_BAG) || (lastMode == MODE_POKEDEX && sScreen == SCR_POKEDEX))
+        if (lastMode == MODE_POKEDEX && sScreen == SCR_POKEDEX)
             sScreen = SCR_MAP;
         lastMode = mode;
         waited = 0;
     }
-    if (mode != MODE_FIELD || (sScreen != SCR_BAG && sScreen != SCR_POKEDEX) || sSession.active
+    if (mode != MODE_FIELD || sScreen != SCR_POKEDEX || sSession.active
      || sPlan.kind != PLAN_NONE)
         return;
     if (!(EnabledScreens() & (1 << sScreen)))
@@ -8031,6 +8384,99 @@ static void PartyTap(u8 id)
     PlaySE(SE_SELECT);
 }
 
+static void BagScroll(int rows)
+{
+    int total = BagStacks(sBagPocket) + 1, top = sBagTop[sBagPocket] + rows;
+
+    if (top > total - BAG_ROWS)
+        top = total - BAG_ROWS;
+    if (top < 0)
+        top = 0;
+    if (top != sBagTop[sBagPocket])
+        PlaySE(SE_SELECT);
+    sBagTop[sBagPocket] = top;
+}
+
+static void BagTap(u8 id)
+{
+    u8 count = BagStacks(sBagPocket), *sel = &sBagSel[sBagPocket];
+
+    if (id != HIT_BAG_SWITCH && !(id >= HIT_ROW && id < HIT_ROW + BAG_ROWS) && id != HIT_BAG_UP && id != HIT_BAG_DOWN
+     && id != HIT_BAG_PAGE_UP && id != HIT_BAG_PAGE_DOWN)
+        sBagSwap = BAG_NO_ROW;
+    switch (id)
+    {
+    case HIT_BAG_POCKET_PREV:
+    case HIT_BAG_POCKET_NEXT:
+        if (id == HIT_BAG_POCKET_PREV ? sBagPocket > 0 : sBagPocket < POCKETS_COUNT - 1)
+        {
+            sBagPocket += id == HIT_BAG_POCKET_PREV ? -1 : 1;
+            PlaySE(SE_SELECT);
+        }
+        return;
+    case HIT_BAG_UP:
+    case HIT_BAG_DOWN:
+        BagScroll(id == HIT_BAG_UP ? -1 : 1);
+        return;
+    case HIT_BAG_PAGE_UP:
+    case HIT_BAG_PAGE_DOWN:
+        BagScroll(id == HIT_BAG_PAGE_UP ? -(BAG_ROWS - 1) : BAG_ROWS - 1);
+        return;
+    case HIT_BAG_CANCEL:
+        sScreen = SCR_MAP;
+        PlaySE(SE_SELECT);
+        return;
+    case HIT_BAG_REGISTER:
+        /* ItemMenu_Register: the item on SELECT, or none if it was. */
+        if (sBagPocket == KEYITEMS_POCKET && *sel < count && PartyEditable())
+        {
+            u16 item = BagGetItemIdByPocketPosition(sBagPocket + 1, *sel);
+
+            gSaveBlock1Ptr->registeredItem = gSaveBlock1Ptr->registeredItem == item ? ITEM_NONE : item;
+            PlaySE(SE_SELECT);
+        }
+        return;
+    case HIT_BAG_SWITCH:
+        if (sBagSwap != BAG_NO_ROW)
+            sBagSwap = BAG_NO_ROW;
+        else if (*sel < count && count > 1 && sBagPocket != TMHM_POCKET && sBagPocket != BERRIES_POCKET && PartyEditable())
+            sBagSwap = *sel;
+        else
+            return;
+        PlaySE(SE_SELECT);
+        return;
+    }
+    if (id < HIT_ROW || id >= HIT_ROW + BAG_ROWS)
+        return;
+    {
+        u8 row = sBagTop[sBagPocket] + (id - HIT_ROW);
+
+        if (row > count)
+            return;
+        if (sBagSwap != BAG_NO_ROW)
+        {
+            /* The item moved there, the others closing up (the game's
+             * SELECT): onto CANCEL, it goes last. */
+            u8 to = row >= count ? count - 1 : row;
+
+            if (to != sBagSwap && PartyEditable())
+            {
+                /* MoveItemSlotInList takes the gap it goes into: after the
+                 * row tapped when moving down. */
+                MoveItemSlotInList(gBagPockets[sBagPocket].itemSlots, sBagSwap, to > sBagSwap ? to + 1 : to);
+                *sel = to;
+                CtrLog_Write(CTR_LOG_INPUT, "bottom screen: bag pocket %u item %u -> %u", sBagPocket, sBagSwap, to);
+            }
+            sBagSwap = BAG_NO_ROW;
+        }
+        else if (row == count && *sel == count)
+            sScreen = SCR_MAP;   /* CANCEL picked again: the bag closes */
+        else
+            *sel = *sel == row ? BAG_NO_ROW : row;
+        PlaySE(SE_SELECT);
+    }
+}
+
 static void Activate(u8 id, u8 mode)
 {
     if (id == HIT_NONE)
@@ -8127,9 +8573,18 @@ static void Activate(u8 id, u8 mode)
             sPickMapsec = MAPSEC_NONE;
             return;
         }
-        /* The game's bag and Pokédex, as the PokéNav: they take the area
-         * when they open. */
-        if (screen == SCR_BAG || screen == SCR_POKEDEX)
+        /* BAG is the bottom screen's own too. */
+        if (screen == SCR_BAG)
+        {
+            if (sScreen != SCR_BAG)
+                ResetBagScreen();
+            sScreen = SCR_BAG;
+            sPickMapsec = MAPSEC_NONE;
+            return;
+        }
+        /* The game's Pokédex, as the PokéNav: it takes the area when it
+         * opens. */
+        if (screen == SCR_POKEDEX)
         {
             OpenGameScreen(screen);
             return;
@@ -8150,6 +8605,10 @@ static void Activate(u8 id, u8 mode)
     case SCR_POKEMON:
         if (mode == MODE_FIELD)
             PartyTap(id);
+        break;
+    case SCR_BAG:
+        if (mode == MODE_FIELD)
+            BagTap(id);
         break;
     case SCR_SAVE:
         if (id == HIT_YES && FieldIdle())

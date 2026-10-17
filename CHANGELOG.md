@@ -10,6 +10,12 @@
   arrows under the summary show the Pokémon they go to. A battle still takes
   the bottom screen for its menus.
 
+- BAG on the bottom screen no longer stops the game either: the pockets are
+  drawn there in the game's bag look (the bag of the pocket, its list with
+  quantities and TM/HM/berry numbers, the item's icon and description).
+  REGISTER puts a key item on Y, and SWITCH ITEM moves an item in its
+  pocket as SELECT does, while no event is under way.
+
 ## 0.4.0 — 2026-10-16
 
 - The project is now called Emerald 3DS, by Zallax: new name on the HOME
