@@ -1,6 +1,8 @@
 /* Include the real world implementation so fixtures can arrange overlapping
  * instances and compare its batched hash with its scalar raw-block reader. */
 #include <assert.h>
+/* field_camera.h declares it only for PLATFORM_3DS. */
+unsigned int GetMapClosedEdges(void);
 #include "../src/voxel/voxel_world.c"
 
 struct MapHeader gMapHeader;
@@ -38,6 +40,7 @@ static u32 sSizedBytes;
 u32 Port_GetAssetSizeExact(const void *p) { return p == sSizedAsset ? sSizedBytes : 0; }
 void LZDecompressWram(const u32 *src, void *dst) { (void)src; (void)dst; }
 void CB2_Overworld(void) {}
+u32 GetMapClosedEdges(void) { return 0; }
 void CB2_OverworldBasic(void) {}
 const struct MapHeader *const GetMapHeaderFromConnection(const struct MapConnection *c)
 { (void)c; return NULL; }
