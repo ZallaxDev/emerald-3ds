@@ -70,6 +70,17 @@ void CtrBottom_BlitRect(const uint16_t *canvas, int x0, int y0, int x1, int y1)
     sFlushTicks = svcGetSystemTick() - t1;
 }
 
+void CtrBottom_BlitBand(const uint16_t *band, int y0, int y1)
+{
+    u16 *fb = Framebuffer();
+    int first = CTR_BOTTOM_HEIGHT - y1, count = y1 - y0;
+
+    if (!fb || count <= 0) return;
+    for (int x = 0; x < CTR_BOTTOM_WIDTH; ++x)
+        memcpy(fb + x * CTR_BOTTOM_HEIGHT + first, band + x * count, (size_t)count * sizeof(u16));
+    GSPGPU_FlushDataCache(fb, (u32)CTR_BOTTOM_WIDTH * CTR_BOTTOM_HEIGHT * sizeof(u16));
+}
+
 /*
  * The whole canvas at level/4 of its brightness (0 black, 4 as it is), for
  * the fades. RGB565 halves and quarters with a shift and a mask, two pixels

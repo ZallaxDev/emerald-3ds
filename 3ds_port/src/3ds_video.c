@@ -405,13 +405,30 @@ static int sSceneColumn;
  * picture ends; below that, behind the box's margins, the scene's last line
  * is carried down (ScenePlaceFrom).
  */
-#define BATTLE_SCENE_BOX_BOTTOM (112 + (int)ceilf((CTR_BATTLE_BOX_TOP - (CTR_GAME_HEIGHT - 48)) / CTR_BATTLE_ZOOM))
+#define BATTLE_SCENE_BOX_BOTTOM (sBattle2x ? 112 : 112 + (int)ceilf((CTR_BATTLE_BOX_TOP - (CTR_GAME_HEIGHT - 48)) / CTR_BATTLE_ZOOM))
 /* Or the whole picture, with no text box to go behind (BattleSceneBottom). */
 static int BattleSceneBottom(void);
 #define BATTLE_SCENE_BOTTOM BattleSceneBottom()
 static C3D_Tex sSceneTex;
 static C3D_RenderTarget *sScene;
 static bool sSceneFailed;
+/*
+ * EXPERIMENT - the battle at an exact 2x (OPTIONS > ENHANCEMENTS "BATTLE
+ * 2X", settings key battle_2x): the scene surface, composed at SCENE_ZOOM,
+ * is drawn 1:1 - every GBA pixel a 2x2 block, no filter - with GBA columns
+ * 20..220 and lines 0..112 filling the screen; the 8 lines above the picture
+ * are the sky the opponent's rise (CTR_BATTLE_ENEMY_RISE) opens up. The text
+ * box has no room left on the top screen: it goes to the bottom screen
+ * (BottomBand), and the info boxes, kept at their 1.4x size, are brought in
+ * from the cropped edges (HudDrawCrisp).
+ */
+static bool sBattle2x;
+#define BATTLE_2X_ZOOM 2.0f
+/* The text box's rows of the bottom screen, 1:1, along its bottom edge. */
+#define BAND_H 48
+#define BAND_Y0 (CTR_BOTTOM_HEIGHT - BAND_H)
+static uint16_t sTextBand[CTR_BOTTOM_WIDTH * BAND_H];
+static bool sBandShown;
 static uint32_t sSceneUsedFrame, sSceneFailFrame;
 /* Layers (Layers mask bits) the current composition pass leaves out. */
 static unsigned sLayerExclude;
@@ -2744,8 +2761,8 @@ static bool HudCrispPossible(void)
         if (k < 0 || !HudEntry(i, &p, &x, &y, &w, &h))
             continue;
         /* The picture's extent in GBA pixels. */
-        w = (int)ceilf(CTR_HUD_W / CTR_BATTLE_ZOOM);
-        h = (int)ceilf(CTR_HUD_H / CTR_BATTLE_ZOOM);
+        w = (int)ceilf(CTR_HUD_W / (sBattle2x ? BATTLE_2X_ZOOM : CTR_BATTLE_ZOOM));
+        h = (int)ceilf(CTR_HUD_H / (sBattle2x ? BATTLE_2X_ZOOM : CTR_BATTLE_ZOOM));
         if (!HudWindowsShow(x, y, w, h)) return false;
         for (unsigned j = 0; j < 128; ++j)
         {
@@ -2858,8 +2875,19 @@ static void HudDrawCrisp(unsigned depth)
         else if (depth == HUD_SCENERY_DEPTH) shift = BattleSceneryShift();
         if (!any) HudBlend(4, true);
         any = true;
-        HudDrawPicture((unsigned)k, roundf((x + CTR_VIEW_X) * sZoom + sOffX + shift),
-                       roundf((y + CTR_VIEW_Y) * sZoom + sOffY), 1, false);
+        {
+            float sx = roundf((x + CTR_VIEW_X) * sZoom + sOffX + shift), sy = roundf((y + CTR_VIEW_Y) * sZoom + sOffY);
+
+            /* At 2x the view crops 20 GBA columns a side and the box keeps
+             * its 1.4x picture: one past an edge is brought in to it. */
+            if (sBattle2x)
+            {
+                if (sx > CTR_GAME_WIDTH - 2 - CTR_HUD_W) sx = CTR_GAME_WIDTH - 2 - CTR_HUD_W;
+                if (sx < 2) sx = 2;
+                if (sy < 2) sy = 2;
+            }
+            HudDrawPicture((unsigned)k, sx, sy, 1, false);
+        }
         ++sStats.sprites;
     }
     C2D_Flush();
@@ -3255,6 +3283,15 @@ static void DrawBattleText(unsigned bg)
     int fill0 = 240 - BATTLE_BAND_CAP + VIEW_LEFT, fill1 = VIEW_RIGHT - BATTLE_BAND_CAP;
     int x0 = fill0, x1 = fill1, y0 = BATTLE_BAND_TOP, y1 = 160;
 
+    if (sBattle2x)
+    {
+        /* The box is on the bottom screen (BottomBand): here only the
+         * windows above it, where the game put them. */
+        uint32_t before = sStats.tiles;
+        DrawBattleCut(bg, 0, 240, 0, BATTLE_BAND_TOP, 0);
+        if (sStats.tiles != before) sTextAbove = true;
+        return;
+    }
     if (DrawBattleTextHd(bg)) return;
     /* Above the text box: windows, where the game put them. */
     uint32_t before = sStats.tiles;
@@ -8663,7 +8700,7 @@ static void RenderBattleStereo(uint32_t clear, float slider, C3D_Tex *world)
         C2D_ViewReset();
         Blend(5, false, false);
         /* Only the text box's lines when nothing of BG0 is above it. */
-        if (textOnce && !sTextAbove)
+        if (textOnce && !sTextAbove && !sBattle2x)
         {
             const float top = BATTLE_BAND_TOP * sZoom + sOffY;
             const Tex3DS_SubTexture band = {CTR_GAME_WIDTH, (u16)(CTR_GAME_HEIGHT - top), 0, 1 - top / 256.0f,
@@ -10683,6 +10720,91 @@ static void VoxelVramManage(void)
 }
 #endif
 
+/* GBA BGR555 to the bottom screen's RGB565. */
+static uint16_t BandColour(unsigned c)
+{
+    unsigned r = c & 31, g = (c >> 5) & 31, b = (c >> 10) & 31;
+
+    return (uint16_t)(r << 11 | (g << 1 | g >> 4) << 5 | b);
+}
+
+/*
+ * The 2x battle's text box on the bottom screen: BG0's lines 112..159 as the
+ * GBA shows them, 1:1 along the bottom of the screen, widened to its 320
+ * columns the way DrawBattleText widens the box to the top screen's: the
+ * box's left and right caps (BATTLE_BAND_CAP) on the screen's edges, the
+ * GBA's middle 208 columns - the message window's - in the middle, the gaps
+ * either side filled with each row's middle tile. Drawn by the CPU into a
+ * band in the framebuffer's layout and copied over the bottom screen's own
+ * drawing (CtrBottom_BlitBand); not while that shows a battle menu of its
+ * own, which stands in for the GBA's. The bottom screen puts its rows back
+ * when the band leaves (CtrVideo_BottomBandRows).
+ */
+static void BottomBand(void)
+{
+    unsigned control = Reg(8), size = control >> 14;
+    unsigned map = ((control >> 8) & 31) * 0x800, chars = ((control >> 2) & 3) * 0x4000;
+    unsigned scrollX = Reg(0x10) & 511, scrollY = Reg(0x12) & 511;
+    unsigned rows = (size & 2) ? 64 : 32, first = scrollX >> 3;
+    const int middle0 = BATTLE_BAND_CAP + (CTR_BOTTOM_WIDTH - 240) / 2, middle1 = middle0 + 240 - 2 * BATTLE_BAND_CAP;
+    uint16_t backdrop = BandColour(sMemory.palette[0]);
+    unsigned middles[BAND_H / 8 + 1];
+
+    sBandShown = sBattle2x && (Reg(0) & 0x100) && !(Reg(0) & 128) && !(control & 128) && !CtrBottom_BattleMenuShown();
+    if (!sBandShown) return;
+    /* Each tile row's middle tile (DrawBattleText), 0 for a row with none. */
+    for (unsigned r = 0; r < BAND_H / 8 + 1; ++r)
+    {
+        unsigned row = ((BATTLE_BAND_TOP + r * 8 + scrollY) >> 3) & (rows - 1);
+        unsigned cap = MapEntry(map, size, first, row), inner = MapEntry(map, size, first + 1, row);
+        unsigned next = MapEntry(map, size, first + 2, row);
+
+        middles[r] = !cap && !inner ? 0 : next == inner ? inner : (inner & ~1023u) | ((inner + 1) & 1023);
+    }
+    for (int sx = 0; sx < CTR_BOTTOM_WIDTH; ++sx)
+    {
+        uint16_t *column = sTextBand + sx * BAND_H;
+        int gx = -1;
+
+        if (sx < BATTLE_BAND_CAP) gx = sx;
+        else if (sx >= CTR_BOTTOM_WIDTH - BATTLE_BAND_CAP) gx = sx - (CTR_BOTTOM_WIDTH - 240);
+        else if (sx >= middle0 && sx < middle1) gx = sx - (middle0 - BATTLE_BAND_CAP);
+        for (int r = 0; r < BAND_H; ++r)
+        {
+            unsigned gy = BATTLE_BAND_TOP + r + scrollY, entry, address, px, py, index;
+            uint16_t colour = backdrop;
+
+            if (gx >= 0)
+            {
+                unsigned x = gx + scrollX;
+
+                entry = MapEntry(map, size, x >> 3, (gy >> 3) & (rows - 1));
+                px = x & 7;
+            }
+            else
+            {
+                entry = middles[((BATTLE_BAND_TOP + r + scrollY) >> 3) - ((BATTLE_BAND_TOP + scrollY) >> 3)];
+                px = sx & 7;
+            }
+            py = gy & 7;
+            if (entry & 1024) px = 7 - px;
+            if (entry & 2048) py = 7 - py;
+            address = chars + (entry & 1023) * 32 + py * 4 + px / 2;
+            index = entry && address < 0x10000 ? (sMemory.vram[address] >> ((px & 1) * 4)) & 15 : 0;
+            if (index) colour = BandColour(sMemory.palette[(entry >> 12) * 16 + index]);
+            /* A column runs bottom to top. */
+            column[BAND_H - 1 - r] = colour;
+        }
+    }
+    CtrBottom_BlitBand(sTextBand, BAND_Y0, CTR_BOTTOM_HEIGHT);
+}
+
+void CtrVideo_BottomBandRows(int *y0, int *y1)
+{
+    *y0 = sBandShown ? BAND_Y0 : 0;
+    *y1 = sBandShown ? CTR_BOTTOM_HEIGHT : 0;
+}
+
 void CtrVideo_Present(void)
 {
     /* The frame's entry tick: its preparation, before FrameBegin. */
@@ -10752,11 +10874,14 @@ void CtrVideo_Present(void)
     sBattle = sBattleRequested && !sStage && !sCentred;
     sInBattle = sBattleRequested;
     sTransition = sTransitionRequested && sLineRegs && !sStage && !sCentred && !sBattle;
-    sZoom = sBattle ? CTR_BATTLE_ZOOM : 1.0f;
-    /* GBA (120, 112) - the middle of the scene's bottom edge - on screen (200, 192). */
+    sBattle2x = sBattle && CtrSettings_GetInt("battle_2x", 0) != 0;
+    sZoom = sBattle ? (sBattle2x ? BATTLE_2X_ZOOM : CTR_BATTLE_ZOOM) : 1.0f;
+    /* GBA (120, 112) - the middle of the scene's bottom edge - on screen (200, 192);
+     * at 2x on (200, 240), the screen's bottom edge, the text box gone below. */
     sOffX = sBattle ? CTR_GAME_WIDTH / 2 - 120 * sZoom : 0.0f;
-    sOffY = sBattle ? CTR_GAME_HEIGHT - 48 - 112 * sZoom : 0.0f;
+    sOffY = sBattle ? CTR_GAME_HEIGHT - (sBattle2x ? 0 : 48) - 112 * sZoom : 0.0f;
     sShiftZoom = sZoom;
+    BottomBand();
     if (sStage || sCentred)
     {
         sViewX = CTR_STAGE_X;
@@ -10841,6 +10966,13 @@ void CtrVideo_Present(void)
             fwrite(sTop->frameBuf.colorBuf, 4, 240 * 400, dump);
             if (sStereo && sTopRight) fwrite(sTopRight->frameBuf.colorBuf, 4, 240 * 400, dump);
             else { static uint32_t zero[240 * 400]; fwrite(zero, 4, 240 * 400, dump); }
+            /* And the bottom screen's framebuffer (RGB565, column-major). */
+            {
+                const uint8_t *fb = gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, NULL, NULL);
+                static uint16_t none[320 * 240];
+
+                fwrite(fb ? (const void *)fb : (const void *)none, 2, 320 * 240, dump);
+            }
             fflush(dump);
         }
     }

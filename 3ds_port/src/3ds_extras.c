@@ -245,6 +245,8 @@ const CtrExtra gCtrExtras[] =
     /* The lead Pokémon walking behind the player, on HGSS's sprites from the
      * data pack (src/follower_mon.c). */
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_ENHANCEMENTS, 1), CTR_TEXT("FOLLOWER", "ACOMPAÑANTE", "COMPAGNON", "COMPAGNO"), "follower", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
+    /* EXPERIMENT: the battle field at an exact 2x, its text box on the bottom screen (3ds_video.c, sBattle2x). */
+    {CTR_EXTRAS_SCREEN(CTR_EXTRAS_ENHANCEMENTS, 1), CTR_TEXT("BATTLE 2X", "COMBATE 2X", "COMBAT 2X", "LOTTA 2X"), "battle_2x", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
     {0},
 };
 

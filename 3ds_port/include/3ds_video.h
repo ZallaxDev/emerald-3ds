@@ -249,6 +249,10 @@ void CtrVideo_SetFieldLight(bool on, int x, int y, int radius);
 /* Whether the last frame drew a game screen into the bottom screen: the
  * PokéNav or the bag into its left area, or one over all of it. */
 bool CtrVideo_BottomInUse(void);
+/* The rows [y0, y1) of the bottom screen the 2x battle's text box takes
+ * (settings key battle_2x), 0 0 when none: the bottom screen puts its own
+ * rows back when the band leaves. */
+void CtrVideo_BottomBandRows(int *y0, int *y1);
 /* Whether it drew the whole bottom screen: the PC's boxes, a summary, the bag
  * opened from anywhere but the field. */
 bool CtrVideo_BottomWhole(void);
