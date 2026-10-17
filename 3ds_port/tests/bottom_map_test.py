@@ -16,7 +16,7 @@ def main():
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-typedef uint8_t u8; typedef uint16_t u16; typedef bool bool8;
+typedef uint8_t u8; typedef uint16_t u16; typedef int16_t s16; typedef bool bool8;
 #define TRUE true
 #define FALSE false
 #define W 320
@@ -65,6 +65,7 @@ typedef uint8_t u8; typedef uint16_t u16; typedef bool bool8;
 #define TXT_DARK 6
 #define TXT_LIGHT 7
 typedef struct { u8 screen,mode,inBattle,bagView,mapsec,cursorX,cursorY,gender,pickMapsec,pickX,pickY,pressed,enabled;
+    u8 mapZoom,mapFly,pickType,pickPos; s16 mapViewX,mapViewY;
     u8 clockShown,clockValid,clockRate,clockPhase,blink,cursor,options[OPTION_ROWS]; u16 clockMinute;
     u8 optPage,optSub,optFocus,focus,extras[OPTION_ROWS],safari; u16 quickBall,quickBallCount; } ViewState;
 typedef struct {int x0,y0,x1,y1;} Rect;
@@ -102,13 +103,20 @@ static void DrawStrIn(const int*font,const u8*text,int x0,int x1,int y0,int y1,i
     Fill(x0+2,y0+2,x1-x0-4,y1-y0-4,color);
 }
 static void AddHit(int a,int b,int c,int d,int e) {(void)a;(void)b;(void)c;(void)d;(void)e;}
+/* Zoom, the Fly map and the place panel are drawn only when on: not here. */
+static void DrawZoomedMap(const ViewState *s) {(void)s;}
+static void DrawFlyIcons(const ViewState *s) {(void)s;}
+static void DrawMapPanel(const ViewState *s) {(void)s;}
+static void DrawFlyBars(const ViewState *s) {(void)s;}
+static void DrawZoomButton(const ViewState *s) {(void)s;}
 static void CtrBottom_BlitRect(const u16 *p,int x0,int y0,int x1,int y1) {
     ++blits;
     for(int x=x0;x<x1;++x) for(int y=y0;y<y1;++y) fb[x*H+H-1-y]=p[x*H+H-1-y];
 }
 '''
     for name in ('static void RectInit(', 'static void RectAdd(', 'static bool8 OptionsAreaOnly(',
-                 'static void DrawRegionName(', 'static void DrawMapClock(', 'static void DrawMapMarks(', 'static void DrawRegionMap(',
+                 'static void DrawRegionName(', 'static void DrawMapClock(', 'static void MapToScreen(',
+                 'static void DrawCellMark(', 'static void DrawMapMarks(', 'static void DrawRegionMap(',
                  'static bool8 MapCursorOnlyMoved(', 'static void MarkRect(',
                  'static bool8 MoveMapCursor(', 'static bool8 DirtyRect('):
         source += function(bottom, name)

@@ -5162,10 +5162,38 @@ static void DrawMapButton(int x, int y, int w, int h, const u8 *label, bool8 ena
         AddHit(x, y, w, h, id);
 }
 
-static void DrawRegionMap(const ViewState *s)
+/* The Fly map's bars: FLY to where? above; the place, FLY and CANCEL below. */
+static void DrawFlyBars(const ViewState *s)
+{
+    bool8 canFly = s->pickMapsec != MAPSEC_NONE
+                && (s->pickType == MAPSECTYPE_CITY_CANFLY || s->pickType == MAPSECTYPE_BATTLE_FRONTIER);
+
+    DrawPlate(CLOCK_X, CLOCK_Y, CLOCK_W, CLOCK_H, &sLook.plate, 0, FALSE);
+    DrawStrIn(&sSmall, gText_FlyToWhere, CLOCK_X + 4, CLOCK_X + CLOCK_W - 4, CLOCK_Y, CLOCK_Y + CLOCK_H, TXT_DARK,
+              TXT_LIGHT);
+    if (s->pickMapsec != MAPSEC_NONE)
+    {
+        u8 name[32];
+
+        GetMapName(name, s->pickMapsec, 0);
+        DrawPlate(NAME_X, NAME_Y, 114, NAME_H, canFly ? &sLook.chosen : &sLook.plate, 0, FALSE);
+        DrawStrIn(&sNarrow, name, NAME_X + 1, NAME_X + 113, NAME_Y + 1, NAME_Y + NAME_H - 2,
+                  canFly ? TXT_WHITE : TXT_DARK, canFly ? sLook.chosenShadow : TXT_LIGHT);
+    }
+    DrawMapButton(122, NAME_Y, 56, NAME_H, gMoveNames[MOVE_FLY], canFly, s->pressed == HIT_MAP_FLY, HIT_MAP_FLY);
+    DrawMapButton(181, NAME_Y, 54, NAME_H, gText_Cancel, TRUE, s->pressed == HIT_MAP_CANCEL, HIT_MAP_CANCEL);
+}
+
+static void DrawZoomButton(const ViewState *s)
 {
     static const u8 plus[] = {CHAR_PLUS, EOS}, minus[] = {CHAR_HYPHEN, EOS};
 
+    DrawMapButton(ZOOM_X, CLOCK_Y, ZOOM_W, CLOCK_H, s->mapZoom ? minus : plus, TRUE, s->pressed == HIT_MAP_ZOOM,
+                  HIT_MAP_ZOOM);
+}
+
+static void DrawRegionMap(const ViewState *s)
+{
     if (s->mapZoom)
         DrawZoomedMap(s);
     if (s->mapFly)
@@ -5174,33 +5202,13 @@ static void DrawRegionMap(const ViewState *s)
     AddHit(MAP_WIN_X0, MAP_WIN_Y0, MAP_WIN_X1 - MAP_WIN_X0, MAP_WIN_Y1 - MAP_WIN_Y0, HIT_MAP);
     DrawMapPanel(s);
     if (s->mapFly)
-    {
-        /* The Fly map: FLY to where?; its name, FLY and CANCEL below. */
-        bool8 canFly = s->pickMapsec != MAPSEC_NONE
-                    && (s->pickType == MAPSECTYPE_CITY_CANFLY || s->pickType == MAPSECTYPE_BATTLE_FRONTIER);
-
-        DrawPlate(CLOCK_X, CLOCK_Y, CLOCK_W, CLOCK_H, &sLook.plate, 0, FALSE);
-        DrawStrIn(&sSmall, gText_FlyToWhere, CLOCK_X + 4, CLOCK_X + CLOCK_W - 4, CLOCK_Y, CLOCK_Y + CLOCK_H, TXT_DARK,
-                  TXT_LIGHT);
-        if (s->pickMapsec != MAPSEC_NONE)
-        {
-            u8 name[32];
-
-            GetMapName(name, s->pickMapsec, 0);
-            DrawPlate(NAME_X, NAME_Y, 114, NAME_H, canFly ? &sLook.chosen : &sLook.plate, 0, FALSE);
-            DrawStrIn(&sNarrow, name, NAME_X + 1, NAME_X + 113, NAME_Y + 1, NAME_Y + NAME_H - 2,
-                      canFly ? TXT_WHITE : TXT_DARK, canFly ? sLook.chosenShadow : TXT_LIGHT);
-        }
-        DrawMapButton(122, NAME_Y, 56, NAME_H, gMoveNames[MOVE_FLY], canFly, s->pressed == HIT_MAP_FLY, HIT_MAP_FLY);
-        DrawMapButton(181, NAME_Y, 54, NAME_H, gText_Cancel, TRUE, s->pressed == HIT_MAP_CANCEL, HIT_MAP_CANCEL);
-    }
+        DrawFlyBars(s);
     else
     {
         DrawRegionName(s);
         DrawMapClock(s);
     }
-    DrawMapButton(ZOOM_X, CLOCK_Y, ZOOM_W, CLOCK_H, s->mapZoom ? minus : plus, TRUE, s->pressed == HIT_MAP_ZOOM,
-                  HIT_MAP_ZOOM);
+    DrawZoomButton(s);
 }
 
 /* The view zoomed in round a cell: in the middle of what the panel leaves. */
@@ -12902,7 +12910,7 @@ static bool8 MapCursorOnlyMoved(const ViewState *now, const ViewState *shown)
     if (now->screen != SCR_MAP || now->mode == MODE_OFF || now->mode >= MODE_BATTLE_INFO
      || now->inBattle || now->bagView == BAG_VIEW_WHOLE
      || now->mapsec == MAPSEC_NONE || shown->mapsec == MAPSEC_NONE
-     || now->mapZoom || now->mapFly || now->pickMapsec != MAPSEC_NONE
+     || now->mapZoom || now->mapFly
      || (now->cursorX == shown->cursorX && now->cursorY == shown->cursorY
          && now->mapsec == shown->mapsec))
         return FALSE;
