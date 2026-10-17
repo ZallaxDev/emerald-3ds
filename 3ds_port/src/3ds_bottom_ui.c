@@ -77,6 +77,7 @@
 #include "item_menu.h"
 #include "mail.h"
 #include "menu.h"
+#include "menu_helpers.h"
 #include "new_game.h"
 #include "overworld.h"
 #include "palette.h"
@@ -2559,7 +2560,7 @@ typedef struct
     u8 partyView, partySel, partySwap, canEdit;
     /* Its actions box, message, YES/NO or Soft-Boiled's target (PACT_*): the
      * actions (PACTION_*), the message. */
-    u8 partyAct, partyActCount, partyActions[MAX_MON_MOVES + 3];
+    u8 partyAct, partyActCount, partyActions[MAX_MON_MOVES + 4], partyMore;
     u8 partyMsg[160];
     u8 types[2], nature, ability;
     u16 stats[NUM_STATS];
@@ -2575,7 +2576,8 @@ typedef struct
     /* BAG: the pocket, its first row on show, its stacks, the row picked
      * (BAG_NO_ROW; the stacks' count is CANCEL), the one being moved, and the
      * rows on show. */
-    u8 bagPocket, bagTop, bagCount, bagSel, bagSwap, bagOk;
+    u8 bagPocket, bagTop, bagCount, bagSel, bagSwap, bagOk, bagGive;
+    u8 bagMsg[96];
     u16 bagItem[8], bagQty[8], bagSelItem;
     /* POKéNAV: the main menu or Match Call; the options shown (NAV_OPT_*
      * order), the one picked, the blue light's blink; Match Call's list
@@ -3454,12 +3456,16 @@ static void ReadOptionValues(u8 options[OPTION_ROWS])
 enum { PARTY_LIST, PARTY_SUMMARY };
 #define PARTY_NO_SWAP 0xFF
 static u8 sPartyView, sPartySel, sPartySwap = PARTY_NO_SWAP;
-/* Over the list: nothing, the actions box, a message (a tap closes it, for
- * sPartyActBack), a YES/NO question on sPartyActMove, or the Pokémon
- * Soft-Boiled (or Milk Drink) is used on. */
-enum { PACT_NONE, PACT_MENU, PACT_MESSAGE, PACT_ASK, PACT_TARGET };
-enum { PACTION_SUMMARY, PACTION_SWITCH, PACTION_CANCEL, PACTION_FIELD_MOVE };
-static u8 sPartyAct, sPartyActBack, sPartyActMove;
+/* Over the list: nothing, the actions, a message (a tap closes it, for
+ * sPartyActBack), a YES/NO question (sPartyAsk: a field move's, on
+ * sPartyActMove, or switching the held item for sPartyGiveItem), the
+ * Pokémon Soft-Boiled (or Milk Drink) is used on, or GIVE / TAKE. A message
+ * goes page by page (sPartyMsgPage), as the game's {PAUSE} prompts. */
+enum { PACT_NONE, PACT_MENU, PACT_MESSAGE, PACT_ASK, PACT_TARGET, PACT_ITEM };
+enum { PACTION_SUMMARY, PACTION_SWITCH, PACTION_ITEM, PACTION_CANCEL, PACTION_FIELD_MOVE };
+enum { PASK_FIELD_MOVE, PASK_SWITCH_ITEMS };
+static u8 sPartyAct, sPartyActBack, sPartyActMove, sPartyAsk, sPartyMsgPage;
+static u16 sPartyGiveItem;
 static u8 sPartyMsg[160];
 /* The summary's pages, PSS_PAGE_* order. */
 enum { SUM_INFO, SUM_SKILLS, SUM_BATTLE, SUM_CONTEST, SUM_PAGES };
@@ -3588,8 +3594,50 @@ static u8 PartyActions(u8 slot, u8 *actions)
     }
     if (gPlayerPartyCount > 1)
         actions[count++] = PACTION_SWITCH;
+    if (!GetMonData(&gPlayerParty[slot], MON_DATA_IS_EGG) && !ItemIsMail(GetMonData(&gPlayerParty[slot], MON_DATA_HELD_ITEM)))
+        actions[count++] = PACTION_ITEM;
     actions[count++] = PACTION_CANCEL;
     return count;
+}
+
+/* Page `page` of a message into `out`: up to its next prompt ({PAUSE}'s
+ * \p or \l), and whether one more follows. */
+static bool8 MessagePage(const u8 *text, u8 page, u8 *out, u32 size)
+{
+    u32 n = 0;
+
+    for (;;)
+    {
+        u8 c = *text;
+
+        if (c == EOS)
+            break;
+        if (c == CHAR_PROMPT_CLEAR || c == CHAR_PROMPT_SCROLL)
+        {
+            ++text;
+            if (page == 0)
+                break;
+            --page;
+            continue;
+        }
+        if (c == EXT_CTRL_CODE_BEGIN && text[1] != EOS)
+        {
+            u8 len = 1 + GetExtCtrlCodeLength(text[1]);
+
+            while (len-- && *text != EOS)
+            {
+                if (page == 0 && n + 1 < size)
+                    out[n++] = *text;
+                ++text;
+            }
+            continue;
+        }
+        if (page == 0 && n + 1 < size)
+            out[n++] = c;
+        ++text;
+    }
+    out[n] = EOS;
+    return *text != EOS;
 }
 
 static void SnapshotPartyMons(ViewState *s)
@@ -3702,8 +3750,8 @@ static void SnapshotParty(ViewState *s)
     s->partyAct = sPartyAct;
     if (sPartyAct == PACT_MENU)
         s->partyActCount = PartyActions(sPartySel, s->partyActions);
-    if (sPartyAct != PACT_NONE && sPartyAct != PACT_MENU)
-        StringCopy(s->partyMsg, sPartyMsg);
+    if (sPartyAct == PACT_MESSAGE || sPartyAct == PACT_ASK || sPartyAct == PACT_TARGET)
+        s->partyMore = MessagePage(sPartyMsg, sPartyMsgPage, s->partyMsg, sizeof(s->partyMsg));
     s->canEdit = PartyEditable();
     s->frame = gSaveBlock2Ptr->optionsWindowFrameType;
     if (sPartyView == PARTY_SUMMARY)
@@ -3736,9 +3784,16 @@ static u8 BagStacks(u8 pocket)
     return n;
 }
 
+/* GIVE from the party: the Pokémon the bag picks an item for
+ * (PARTY_NO_SWAP: none), and a message where the description goes. */
+static u8 sBagGiveTo = PARTY_NO_SWAP;
+static u8 sBagMsg[96];
+
 static void ResetBagScreen(void)
 {
     sBagSwap = BAG_NO_ROW;
+    sBagGiveTo = PARTY_NO_SWAP;
+    sBagMsg[0] = EOS;
 }
 
 static void SnapshotBag(ViewState *s)
@@ -3756,6 +3811,10 @@ static void SnapshotBag(ViewState *s)
     s->bagCount = count;
     s->bagSel = sBagSel[sBagPocket];
     s->bagSwap = sBagSwap;
+    if (sBagGiveTo != PARTY_NO_SWAP && sBagGiveTo >= gPlayerPartyCount)
+        sBagGiveTo = PARTY_NO_SWAP;
+    s->bagGive = sBagGiveTo;
+    StringCopy(s->bagMsg, sBagMsg);
     s->canEdit = PartyEditable();
     s->bagOk = sRes.bagTiles && sRes.bagMap;
     for (int i = 0; i < BAG_ROWS && s->bagTop + i < count; ++i)
@@ -5336,7 +5395,7 @@ static void DrawTopMessage(const ViewState *s, const u8 *text)
 
 static void DrawPartyActions(const ViewState *s)
 {
-    static const u8 row2[] = {PACTION_SUMMARY, PACTION_SWITCH, 0xFF, PACTION_CANCEL};
+    static const u8 row2[] = {PACTION_SUMMARY, PACTION_SWITCH, PACTION_ITEM, PACTION_CANCEL};
     u8 text[64];
     int moves = 0;
 
@@ -5351,7 +5410,7 @@ static void DrawPartyActions(const ViewState *s)
                            gMoveNames[CtrParty_FieldMoveId(action - PACTION_FIELD_MOVE)],
                            s->pressed == HIT_PARTY_ACTION + i, TRUE, TRUE, HIT_PARTY_ACTION + i);
     }
-    /* ITEM (giving and taking) isn't here yet; SWITCH needs another. */
+    /* SWITCH needs another Pokémon; an egg holds nothing; MAIL isn't here. */
     for (int k = 0; k < 4; ++k)
     {
         int i = 0;
@@ -5382,8 +5441,21 @@ static void DrawPartyList(const ViewState *s)
         DrawTrayButton(TRAY_X(1) + 30, TRAY_ROW1_Y, gText_Ok2, s->pressed == HIT_PARTY_MESSAGE, TRUE, FALSE,
                        HIT_PARTY_MESSAGE);
         return;
+    case PACT_ITEM:
+        DrawTopMessage(s, gText_DoWhatWithItem);
+        DrawTrayButton(TRAY_X(1), TRAY_ROW1_Y, gMenuText_Give, s->pressed == HIT_PARTY_YES, TRUE, FALSE, HIT_PARTY_YES);
+        DrawTrayButton(TRAY_X(2), TRAY_ROW1_Y, gText_Take, s->pressed == HIT_PARTY_NO, TRUE, FALSE, HIT_PARTY_NO);
+        DrawTrayButton(TRAY_X(3), TRAY_ROW2_Y, gText_Cancel2, s->pressed == HIT_PARTY_BACK, TRUE, FALSE,
+                       HIT_PARTY_BACK);
+        return;
     case PACT_ASK:
         DrawTopMessage(s, s->partyMsg);
+        if (s->partyMore)
+        {
+            DrawTrayButton(TRAY_X(1) + 30, TRAY_ROW1_Y, gText_Ok2, s->pressed == HIT_PARTY_MESSAGE, TRUE, FALSE,
+                           HIT_PARTY_MESSAGE);
+            return;
+        }
         DrawTrayButton(TRAY_X(1), TRAY_ROW1_Y, gText_Yes, s->pressed == HIT_PARTY_YES, TRUE, FALSE, HIT_PARTY_YES);
         DrawTrayButton(TRAY_X(2), TRAY_ROW1_Y, gText_No, s->pressed == HIT_PARTY_NO, TRUE, FALSE, HIT_PARTY_NO);
         return;
@@ -6129,9 +6201,13 @@ static void DrawBag(const ViewState *s)
     if (s->bagSelItem != ITEM_NONE)
     {
         DrawItemIcon(s->bagSelItem, 8, 72);
-        if (s->bagSelItem == ITEM_LIST_END)
+        if (s->bagMsg[0] != EOS)
+            DrawBagText(&sNormal, s->bagMsg, 3, 104 + 1, fg, sh);
+        else if (s->bagSelItem == ITEM_LIST_END)
         {
-            ExpandVar1(text, gText_ReturnToVar1, gBagMenu_ReturnToStrings[ITEMMENULOCATION_FIELD]);
+            ExpandVar1(text, gText_ReturnToVar1, gBagMenu_ReturnToStrings[s->bagGive != PARTY_NO_SWAP
+                                                                          ? ITEMMENULOCATION_PARTY
+                                                                          : ITEMMENULOCATION_FIELD]);
             DrawBagText(&sNormal, text, 3, 104 + 1, fg, sh);
         }
         else
@@ -6143,8 +6219,13 @@ static void DrawBag(const ViewState *s)
     DrawGameButton(62, 166, up, s->pressed == HIT_BAG_PAGE_UP, s->bagTop > 0, HIT_BAG_PAGE_UP);
     DrawGameButton(122, 166, down, s->pressed == HIT_BAG_PAGE_DOWN, s->bagTop + BAG_ROWS < s->bagCount + 1, HIT_BAG_PAGE_DOWN);
     DrawGameButton(182, 166, right, s->pressed == HIT_BAG_POCKET_NEXT, s->bagPocket < POCKETS_COUNT - 1, HIT_BAG_POCKET_NEXT);
-    DrawTallButton(2, 186, 9, 52, s->registered != ITEM_NONE && s->registered == s->bagSelItem ? gMenuText_Deselect : gMenuText_Register,
-                   s->pressed == HIT_BAG_REGISTER, key && item && s->canEdit, HIT_BAG_REGISTER);
+    /* Picking an item for a Pokémon: GIVE in REGISTER's place. */
+    if (s->bagGive != PARTY_NO_SWAP)
+        DrawTallButton(2, 186, 9, 52, gMenuText_Give, s->pressed == HIT_BAG_REGISTER, item && s->canEdit,
+                       HIT_BAG_REGISTER);
+    else
+        DrawTallButton(2, 186, 9, 52, s->registered != ITEM_NONE && s->registered == s->bagSelItem ? gMenuText_Deselect : gMenuText_Register,
+                       s->pressed == HIT_BAG_REGISTER, key && item && s->canEdit, HIT_BAG_REGISTER);
     DrawTallButton(84, 186, 9, 52, Ascii(CTR_TEXT("SWITCH\nITEM", "CAMBIAR\nOBJETO", "ÉCHANGER\nOBJET", "SCAMBIA\nSTRUM.")),
                    s->pressed == HIT_BAG_SWITCH || s->bagSwap != BAG_NO_ROW, swappable && item && s->canEdit, HIT_BAG_SWITCH);
     DrawTallButton(166, 186, 9, 52, gText_Cancel, s->pressed == HIT_BAG_CANCEL, TRUE, HIT_BAG_CANCEL);
@@ -9808,7 +9889,108 @@ static void PartyMessage(const u8 *text, u8 back)
     StringCopy(sPartyMsg, text);
     sPartyAct = PACT_MESSAGE;
     sPartyActBack = back;
+    sPartyMsgPage = 0;
 }
+
+static void PartyAsk(const u8 *text, u8 ask)
+{
+    StringCopy(sPartyMsg, text);
+    sPartyAct = PACT_ASK;
+    sPartyAsk = ask;
+    sPartyMsgPage = 0;
+}
+
+static bool8 PartyMessageMore(void)
+{
+    u8 page[sizeof(sPartyMsg)];
+
+    return MessagePage(sPartyMsg, sPartyMsgPage, page, sizeof(page));
+}
+
+/* A nickname and an item's name for the game's party texts. */
+static void PartyItemText(u8 *dest, const u8 *template, const u8 *var1, u16 item)
+{
+    u8 name[ITEM_NAME_LENGTH + 4];
+
+    CopyItemName(item, name);
+    ExpandVars(dest, template, var1, name);
+}
+
+/* CB2_GiveHoldItem without the menu: given, or asked to switch with the
+ * one held (Task_SwitchHoldItemsPrompt). */
+static void PartyGiveItem(u8 slot, u16 item)
+{
+    struct Pokemon *mon = &gPlayerParty[slot];
+    u16 held = GetMonData(mon, MON_DATA_HELD_ITEM);
+    u8 nick[POKEMON_NAME_LENGTH + 2], text[sizeof(sPartyMsg)];
+
+    sScreen = SCR_POKEMON;
+    sPartyView = PARTY_LIST;
+    sPartySel = slot;
+    sPartySwap = PARTY_NO_SWAP;
+    GetMonNickname(mon, nick);
+    sPartyGiveItem = item;
+    if (held != ITEM_NONE)
+    {
+        PartyItemText(text, gText_PkmnAlreadyHoldingItemSwitch, nick, held);
+        PartyAsk(text, PASK_SWITCH_ITEMS);
+        return;
+    }
+    SetMonData(mon, MON_DATA_HELD_ITEM, &item);
+    RemoveBagItem(item, 1);
+    PartyItemText(text, gText_PkmnWasGivenItem, nick, item);
+    PartyMessage(text, PACT_NONE);
+    CtrLog_Write(CTR_LOG_INPUT, "bottom screen: gave item %u to %u", item, slot);
+}
+
+/* Task_HandleSwitchItemsYesNoInput's YES: the held one back to the bag, if
+ * it has room. */
+static void PartySwitchItems(void)
+{
+    struct Pokemon *mon = &gPlayerParty[sPartySel];
+    u16 held = GetMonData(mon, MON_DATA_HELD_ITEM), item = sPartyGiveItem;
+    u8 name[ITEM_NAME_LENGTH + 4], text[sizeof(sPartyMsg)];
+
+    if (CheckBagHasItem(item, 1) != TRUE)
+    {
+        sPartyAct = PACT_NONE;
+        return;
+    }
+    RemoveBagItem(item, 1);
+    if (AddBagItem(held, 1) == FALSE)
+    {
+        AddBagItem(item, 1);
+        PartyMessage(gText_BagFullCouldNotRemoveItem, PACT_NONE);
+        return;
+    }
+    SetMonData(mon, MON_DATA_HELD_ITEM, &item);
+    CopyItemName(item, name);
+    PartyItemText(text, gText_SwitchedPkmnItem, name, held);
+    PartyMessage(text, PACT_NONE);
+    CtrLog_Write(CTR_LOG_INPUT, "bottom screen: switched item %u for %u on %u", held, item, sPartySel);
+}
+
+/* CursorCb_TakeItem. */
+static void PartyTakeItem(void)
+{
+    struct Pokemon *mon = &gPlayerParty[sPartySel];
+    u16 item = GetMonData(mon, MON_DATA_HELD_ITEM), none = ITEM_NONE;
+    u8 nick[POKEMON_NAME_LENGTH + 2], text[sizeof(sPartyMsg)];
+
+    GetMonNickname(mon, nick);
+    if (item == ITEM_NONE)
+        ExpandVar1(text, gText_PkmnNotHolding, nick);
+    else if (AddBagItem(item, 1) == FALSE)
+        StringCopy(text, gText_BagFullCouldNotRemoveItem);
+    else
+    {
+        SetMonData(mon, MON_DATA_HELD_ITEM, &none);
+        PartyItemText(text, gText_ReceivedItemFromPkmn, nick, item);
+        CtrLog_Write(CTR_LOG_INPUT, "bottom screen: took item %u from %u", item, sPartySel);
+    }
+    PartyMessage(text, PACT_NONE);
+}
+
 
 /* CursorCb_FieldMove: the game's checks and the move itself; a message as
  * the game's when it can't be used. On its way, the bottom screen goes back
@@ -9823,13 +10005,13 @@ static void PartyFieldMove(u8 fieldMove, bool8 confirmed)
         PartyMessage(text, PACT_NONE);
         break;
     case CTR_FIELD_MOVE_ASK:
-        StringCopy(sPartyMsg, text);
-        sPartyAct = PACT_ASK;
+        PartyAsk(text, PASK_FIELD_MOVE);
         sPartyActMove = fieldMove;
         break;
     case CTR_FIELD_MOVE_CHOOSE_MON:
         StringCopy(sPartyMsg, text);
         sPartyAct = PACT_TARGET;
+        sPartyMsgPage = 0;
         break;
     default:
         CtrLog_Write(CTR_LOG_INPUT, "bottom screen: field move %u by %u", fieldMove, sPartySel);
@@ -9869,6 +10051,7 @@ static void PartySoftBoiled(u8 target)
     ExpandVars(sPartyMsg, gText_PkmnHPRestoredByVar2, nick, number);
     sPartyAct = PACT_MESSAGE;
     sPartyActBack = PACT_NONE;
+    sPartyMsgPage = 0;
     CtrLog_Write(CTR_LOG_INPUT, "bottom screen: soft-boiled %u -> %u (%u)", sPartySel, target, gain);
 }
 
@@ -9878,9 +10061,9 @@ static bool8 PartyActTap(u8 id)
     switch (sPartyAct)
     {
     case PACT_MENU:
-        if (id >= HIT_PARTY_ACTION && id < HIT_PARTY_ACTION + MAX_MON_MOVES + 3)
+        if (id >= HIT_PARTY_ACTION && id < HIT_PARTY_ACTION + MAX_MON_MOVES + 4)
         {
-            u8 actions[MAX_MON_MOVES + 3], n = PartyActions(sPartySel, actions), action;
+            u8 actions[MAX_MON_MOVES + 4], n = PartyActions(sPartySel, actions), action;
 
             if (id - HIT_PARTY_ACTION >= n)
                 return TRUE;
@@ -9896,7 +10079,7 @@ static bool8 PartyActTap(u8 id)
             }
             if (action == PACTION_SWITCH && !PartyEditable())
                 return TRUE;
-            sPartyAct = PACT_NONE;
+            sPartyAct = action == PACTION_ITEM ? PACT_ITEM : PACT_NONE;
             if (action == PACTION_SUMMARY)
             {
                 sPartyView = PARTY_SUMMARY;
@@ -9914,12 +10097,40 @@ static bool8 PartyActTap(u8 id)
     case PACT_MESSAGE:
         if (id != HIT_PARTY_MESSAGE)
             return TRUE;
+        if (PartyMessageMore())
+        {
+            ++sPartyMsgPage;
+            break;
+        }
         sPartyAct = sPartyActBack;
+        sPartyMsgPage = 0;
         if (sPartyAct == PACT_TARGET)
             StringCopy(sPartyMsg, gText_UseOnWhichPokemon);
         break;
+    case PACT_ITEM:
+        if (id == HIT_PARTY_YES && PartyEditable())
+        {
+            /* GIVE: the bag, to pick the item (CB2_SelectBagItemToGive). */
+            ResetBagScreen();
+            sBagGiveTo = sPartySel;
+            sPartyAct = PACT_NONE;
+            sScreen = SCR_BAG;
+        }
+        else if (id == HIT_PARTY_NO && PartyEditable())
+            PartyTakeItem();
+        else if (id == HIT_PARTY_BACK)
+            sPartyAct = PACT_NONE;
+        else
+            return TRUE;
+        break;
     case PACT_ASK:
-        if (id == HIT_PARTY_YES && FieldIdle())
+        if (id == HIT_PARTY_MESSAGE && PartyMessageMore())
+            ++sPartyMsgPage;
+        else if (PartyMessageMore())
+            return TRUE;
+        else if (id == HIT_PARTY_YES && sPartyAsk == PASK_SWITCH_ITEMS && PartyEditable())
+            PartySwitchItems();
+        else if (id == HIT_PARTY_YES && sPartyAsk == PASK_FIELD_MOVE && FieldIdle())
             PartyFieldMove(sPartyActMove, TRUE);
         else if (id == HIT_PARTY_NO)
             sPartyAct = PACT_NONE;
@@ -10045,9 +10256,73 @@ static void BagScroll(int rows)
     sBagTop[sBagPocket] = top;
 }
 
+/* {STR_VAR_1} of a bag text as an item's name. */
+static void BagItemText(u8 *dest, const u8 *template, u16 item)
+{
+    u8 name[ITEM_NAME_LENGTH + 4];
+
+    CopyItemName(item, name);
+    ExpandVar1(dest, template, name);
+}
+
+/* Task_ItemContext_GiveToParty's checks, then back to the party with it;
+ * MAIL (written as it is given) is the game's party menu's. */
+static void BagGive(u16 item)
+{
+    if (!IsWritingMailAllowed(item))
+        StringCopy(sBagMsg, gText_CantWriteMail);
+    else if (ItemIsMail(item))
+        CtrLocale_ToGame(sBagMsg, sizeof(sBagMsg),
+                         CTR_TEXT("Give MAIL from the START\nmenu's POKéMON.",
+                                  "Da CARTAS desde POKéMON\nen el menú START.",
+                                  "Donnez les LETTRES via\nPOKéMON du menu START.",
+                                  "Dai i MESSAGGI da\nPOKéMON nel menu START."));
+    else if (!IsHoldingItemAllowed(item))
+        BagItemText(sBagMsg, gText_Var1CantBeHeldHere, item);
+    else if (sBagPocket == KEYITEMS_POCKET || GetItemImportance(item))
+        BagItemText(sBagMsg, gText_Var1CantBeHeld, item);
+    else
+    {
+        u8 slot = sBagGiveTo;
+
+        ResetBagScreen();
+        PartyGiveItem(slot, item);
+        return;
+    }
+    PlaySE(SE_FAILURE);
+}
+
 static void BagTap(u8 id)
 {
     u8 count = BagStacks(sBagPocket), *sel = &sBagSel[sBagPocket];
+
+    sBagMsg[0] = EOS;
+    /* Picking for GIVE: CANCEL (or CLOSE BAG) goes back to the party. */
+    if (sBagGiveTo != PARTY_NO_SWAP)
+    {
+        bool8 back = id == HIT_BAG_CANCEL
+                  || (id >= HIT_ROW && id < HIT_ROW + BAG_ROWS && sBagTop[sBagPocket] + (id - HIT_ROW) == count
+                      && *sel == count);
+
+        if (back)
+        {
+            ResetBagScreen();
+            sScreen = SCR_POKEMON;
+            PlaySE(SE_SELECT);
+            return;
+        }
+        if (id == HIT_BAG_REGISTER)
+        {
+            if (*sel < count && PartyEditable())
+            {
+                PlaySE(SE_SELECT);
+                BagGive(BagGetItemIdByPocketPosition(sBagPocket + 1, *sel));
+            }
+            return;
+        }
+        if (id == HIT_BAG_SWITCH)
+            return;
+    }
 
     if (id != HIT_BAG_SWITCH && !(id >= HIT_ROW && id < HIT_ROW + BAG_ROWS) && id != HIT_BAG_UP && id != HIT_BAG_DOWN
      && id != HIT_BAG_PAGE_UP && id != HIT_BAG_PAGE_DOWN)

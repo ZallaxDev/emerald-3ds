@@ -33,6 +33,11 @@
   other field moves are used from there as from the game's menu, on the
   field while it runs; Fly's map, cancelled, goes back to the field.
 
+- ITEM in the bottom screen's party: GIVE picks the item in the bottom
+  screen's bag (and offers to switch it with the one held), TAKE puts the
+  held item back in the bag, with the game's messages. MAIL is still given
+  from the START menu's POKéMON.
+
 ## 0.4.0 — 2026-10-16
 
 - The project is now called Emerald 3DS, by Zallax: new name on the HOME
