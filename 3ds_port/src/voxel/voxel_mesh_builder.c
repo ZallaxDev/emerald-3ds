@@ -815,7 +815,7 @@ static void EmitSeamSkirt(VoxelBuilder *b, const VoxelMapInstance *inst, int x, 
          && nx < inst->originX + inst->width && ny < inst->originY + inst->height)
             continue;
         other = VoxelWorld_GetInstanceAt(nx, ny);
-        if (other == NULL && !inst->indoor && d != 1)
+        if (other == NULL && !inst->indoor)
         {
             /*
              * The belt past the last map (VoxelMesh_EmitBorder) stands at the
@@ -823,7 +823,8 @@ static void EmitSeamSkirt(VoxelBuilder *b, const VoxelMapInstance *inst, int x, 
              * Route 117's wood - left a step up to it with nothing in it, a
              * band of the clear colour along the map's edge. It is closed by
              * a wall of the edge cell's own drawing, from the edge up to the
-             * belt. Not along the south edge: there the belt stands in front.
+             * belt. Not along the south edge of a stood belt: there the belt
+             * stands in front (a belt of water stands nothing, see below).
              * Its foot is the edge as the cell draws it, point by point of
              * the lattice: a rock or a slope at the edge stands each point at
              * its own height, and that far south (voxel_relief.h), and a foot
@@ -832,40 +833,70 @@ static void EmitSeamSkirt(VoxelBuilder *b, const VoxelMapInstance *inst, int x, 
              * belt laid as the drawing (VoxelRelief_Belt): that meets every
              * edge at its height, and the map's faces close the steps.
              */
+            /*
+             * A belt of water is flat and stands nothing in front, so it is
+             * closed on every side, the south one too, and both ways: an edge
+             * over its plane (BorderWaterLevel) hangs a skirt down to it, an
+             * edge under it stands one up. Each skirt runs from the edge's
+             * lattice points to the plane's own edge - its level and its
+             * shift south - so a drawn map's skirt lies along the 45-degree
+             * view, edge on, and the drawing reads as before.
+             */
             const VoxelMapInstance *ring = VoxelWorld_Instance(0);
             float belt = ring != NULL ? VoxelRelief_Base(ring) - VoxelRelief_Base(inst) : 0.0f;
             const int16_t *grid = VoxelRelief_Cell(inst, x, y);
             const int16_t *depth = VoxelRelief_Depth(inst, x, y);
             const unsigned last = VOXEL_RELIEF_SIDE - 1;
             float footH[VOXEL_RELIEF_SIDE], footZ[VOXEL_RELIEF_SIDE], along[VOXEL_RELIEF_SIDE];
-            float lowest, level, shift;
+            float beltZ[VOXEL_RELIEF_SIDE];
+            float lowest, highest, level = 0.0f, shift = 0.0f, skew = 0.0f;
+            bool water;
 
             if (ring == NULL || VoxelRelief_Belt(ring) != 0)
                 continue;
-            /* a belt of water lies at its own level (BorderWaterLevel) */
-            if (BorderWaterLevel(nx, ny, &level, &shift))
-                belt += level;
-            lowest = belt;
+            water = BorderWaterLevel(nx, ny, &level, &shift);
+            /* a stood belt hides the south edge behind its own face */
+            if (d == 1 && !water)
+                continue;
+            belt += level;
+            lowest = highest = belt;
             for (unsigned k = 0; k < VOXEL_RELIEF_SIDE; ++k)
             {
-                /* the north row, or the west or east column */
-                unsigned i = d == 0 ? k : k * VOXEL_RELIEF_SIDE + (d == 2 ? 0 : last);
+                /* the north row, the south row, or the west or east column */
+                unsigned i = d == 0 ? k
+                           : d == 1 ? last * VOXEL_RELIEF_SIDE + k
+                           : k * VOXEL_RELIEF_SIDE + (d == 2 ? 0 : last);
+                float line = (float)y + (d == 0 ? 0.0f : d == 1 ? 1.0f : 0.0f)
+                           + (d >= 2 ? k / (float)last : 0.0f);
+
                 along[k] = k / (float)last;
                 footH[k] = (grid ? grid[i] : 0) / 16.0f;
-                footZ[k] = (float)y + (d == 0 ? 0.0f : along[k]) + (depth ? depth[i] : 0) / 16.0f;
+                footZ[k] = line + (depth ? depth[i] : 0) / 16.0f;
+                /* where the belt's cell ends: unmoved for a stood belt */
+                beltZ[k] = d == 0 && !water ? (float)y : line + shift;
                 if (footH[k] < lowest)
                     lowest = footH[k];
+                if (footH[k] > highest)
+                    highest = footH[k];
+                if (fabsf(footZ[k] - beltZ[k]) > skew)
+                    skew = fabsf(footZ[k] - beltZ[k]);
             }
-            if (lowest >= belt - 0.05f)
+            if (water ? (lowest >= belt - 0.05f && highest <= belt + 0.05f && skew <= 0.02f)
+                      : lowest >= belt - 0.05f)
                 continue;
             if (!uv && !(uv = VoxelMesh_TileUV(b, x, y, &u0, &v0, &u1, &v1)))
                 return;
             for (unsigned k = 0; k < last; ++k)
             {
                 float hA = belt - footH[k], hB = belt - footH[k + 1];
-                float fA = hA < 1.0f ? hA : 1.0f, fB = hB < 1.0f ? hB : 1.0f;
+                /* a skirt hanging down reads its drawing as far as it falls */
+                float mA = water ? fabsf(hA) : hA, mB = water ? fabsf(hB) : hB;
+                float fA = mA < 1.0f ? mA : 1.0f, fB = mB < 1.0f ? mB : 1.0f;
 
-                if (hA <= 0.05f && hB <= 0.05f)
+                if (water ? (fabsf(hA) <= 0.05f && fabsf(hB) <= 0.05f
+                             && fabsf(footZ[k] - beltZ[k]) <= 0.02f
+                             && fabsf(footZ[k + 1] - beltZ[k + 1]) <= 0.02f)
+                          : (hA <= 0.05f && hB <= 0.05f))
                     continue;
                 if (d == 0) /* faces south, on the map's north edge, where the belt's face ends */
                 {
@@ -875,24 +906,34 @@ static void EmitSeamSkirt(VoxelBuilder *b, const VoxelMapInstance *inst, int x, 
                     VoxelBuilder_Quad(b,
                         &(VoxelVertex){xa, footH[k],     footZ[k],     ua, v0 + (v1 - v0) * fA, SHADE_SOUTH},
                         &(VoxelVertex){xb, footH[k + 1], footZ[k + 1], ub, v0 + (v1 - v0) * fB, SHADE_SOUTH},
-                        &(VoxelVertex){xb, belt,         (float)y,     ub, v0,                  SHADE_SOUTH},
-                        &(VoxelVertex){xa, belt,         (float)y,     ua, v0,                  SHADE_SOUTH});
+                        &(VoxelVertex){xb, belt,         beltZ[k + 1], ub, v0,                  SHADE_SOUTH},
+                        &(VoxelVertex){xa, belt,         beltZ[k],     ua, v0,                  SHADE_SOUTH});
+                }
+                else if (d == 1) /* the south edge over a belt of water */
+                {
+                    float xa = wx + along[k], xb = wx + along[k + 1];
+                    float ua = u0 + (u1 - u0) * along[k], ub = u0 + (u1 - u0) * along[k + 1];
+
+                    VoxelBuilder_Quad(b,
+                        &(VoxelVertex){xb, footH[k + 1], footZ[k + 1], ub, v1,                  SHADE_SOUTH},
+                        &(VoxelVertex){xa, footH[k],     footZ[k],     ua, v1,                  SHADE_SOUTH},
+                        &(VoxelVertex){xa, belt,         beltZ[k],     ua, v1 - (v1 - v0) * fA, SHADE_SOUTH},
+                        &(VoxelVertex){xb, belt,         beltZ[k + 1], ub, v1 - (v1 - v0) * fB, SHADE_SOUTH});
                 }
                 else
                 {
-                    float za = (float)y + along[k], zb = (float)y + along[k + 1];
                     float va = v0 + (v1 - v0) * along[k], vb = v0 + (v1 - v0) * along[k + 1];
 
                     if (d == 2) /* faces east, on the west edge */
                         VoxelBuilder_Quad(b,
-                            &(VoxelVertex){wx, belt,         zb,           u0,                  vb, SHADE_EAST},
-                            &(VoxelVertex){wx, belt,         za,           u0,                  va, SHADE_EAST},
+                            &(VoxelVertex){wx, belt,         beltZ[k + 1], u0,                  vb, SHADE_EAST},
+                            &(VoxelVertex){wx, belt,         beltZ[k],     u0,                  va, SHADE_EAST},
                             &(VoxelVertex){wx, footH[k],     footZ[k],     u0 + (u1 - u0) * fA, va, SHADE_EAST},
                             &(VoxelVertex){wx, footH[k + 1], footZ[k + 1], u0 + (u1 - u0) * fB, vb, SHADE_EAST});
                     else /* faces west, on the east edge */
                         VoxelBuilder_Quad(b,
-                            &(VoxelVertex){wx + 1.0f, belt,         za,           u1,                  va, SHADE_WEST},
-                            &(VoxelVertex){wx + 1.0f, belt,         zb,           u1,                  vb, SHADE_WEST},
+                            &(VoxelVertex){wx + 1.0f, belt,         beltZ[k],     u1,                  va, SHADE_WEST},
+                            &(VoxelVertex){wx + 1.0f, belt,         beltZ[k + 1], u1,                  vb, SHADE_WEST},
                             &(VoxelVertex){wx + 1.0f, footH[k + 1], footZ[k + 1], u1 - (u1 - u0) * fB, vb, SHADE_WEST},
                             &(VoxelVertex){wx + 1.0f, footH[k],     footZ[k],     u1 - (u1 - u0) * fA, va, SHADE_WEST});
                 }
@@ -1560,29 +1601,96 @@ static bool BorderAt(int x, int y)
  * is no wall: stood two courses up like a wood it was a step of sea standing
  * over the map's own, a raised rim round the whole of the harbour. Water lies
  * flush with the ground (ShapeHeight), and the belt's lies flush with the
- * map's: at the level of the map's edge cell nearest it when that is water
- * (a sea lowered under the land, Rustboro's, goes on at its own level), at
- * the map's ground otherwise. Over instance 0's base, as the belt is built.
+ * map's.
+ *
+ * One plane for the whole belt: the level (and shift south) of the lowest of
+ * the map's edge cells of water that face the void - a sea lowered under the
+ * land, Rustboro's, goes on at its own level -, the map's ground when none
+ * does. Taken cell by cell from the nearest edge, two belt cells side by side
+ * (at a corner, or where the edge's water changes level) stood at different
+ * levels and shifts, flat with no faces between them: slits onto the clear
+ * colour. With one plane the belt is whole, and every edge that is not at
+ * the plane is closed by EmitSeamSkirt. Over instance 0's base, as the belt
+ * is built.
+ *
+ * Worked out once per map (the perimeter's classification is not cheap) and
+ * kept while instance 0 is the same map at the same place.
  */
+static struct
+{
+    const VoxelMapInstance *ring;
+    int layoutId, mapGroup, mapNum, originX, originY, width, height;
+    float level, shift;
+} sBeltPlane;
+
+static bool EdgeFacesVoid(const VoxelMapInstance *ring, int x, int y)
+{
+    static const int kDir[4][2] = { {0, -1}, {0, 1}, {-1, 0}, {1, 0} };
+
+    for (int d = 0; d < 4; ++d)
+    {
+        int nx = x + kDir[d][0], ny = y + kDir[d][1];
+
+        if (nx >= ring->originX && ny >= ring->originY
+         && nx < ring->originX + ring->width && ny < ring->originY + ring->height)
+            continue;
+        if (VoxelWorld_GetInstanceAt(nx, ny) == NULL)
+            return true;
+    }
+    return false;
+}
+
+static void BeltWaterPlane(const VoxelMapInstance *ring, float *level, float *shift)
+{
+    if (sBeltPlane.ring != ring || sBeltPlane.layoutId != ring->layoutId
+     || sBeltPlane.mapGroup != ring->mapGroup || sBeltPlane.mapNum != ring->mapNum
+     || sBeltPlane.originX != ring->originX || sBeltPlane.originY != ring->originY
+     || sBeltPlane.width != ring->width || sBeltPlane.height != ring->height)
+    {
+        int x0 = ring->originX, y0 = ring->originY;
+        int x1 = x0 + ring->width - 1, y1 = y0 + ring->height - 1;
+        bool found = false;
+        float lv = 0.0f, sh = 0.0f;
+
+        for (int y = y0; y <= y1; ++y)
+            for (int x = x0; x <= x1; x += (y == y0 || y == y1 || x1 <= x0) ? 1 : x1 - x0)
+            {
+                float lift;
+
+                if (VoxelMesh_Classify(x, y) != VOXEL_SHAPE_WATER || !EdgeFacesVoid(ring, x, y))
+                    continue;
+                lift = VoxelRelief_CellLift(ring, x, y);
+                if (!found || lift < lv - 0.001f)
+                {
+                    lv = lift;
+                    sh = VoxelRelief_CellShift(ring, x, y);
+                    found = true;
+                }
+            }
+        sBeltPlane.ring = ring;
+        sBeltPlane.layoutId = ring->layoutId;
+        sBeltPlane.mapGroup = ring->mapGroup;
+        sBeltPlane.mapNum = ring->mapNum;
+        sBeltPlane.originX = ring->originX;
+        sBeltPlane.originY = ring->originY;
+        sBeltPlane.width = ring->width;
+        sBeltPlane.height = ring->height;
+        sBeltPlane.level = lv;
+        sBeltPlane.shift = sh;
+    }
+    *level = sBeltPlane.level;
+    *shift = sBeltPlane.shift;
+}
+
 static bool BorderWaterLevel(int x, int y, float *level, float *shift)
 {
     const VoxelMapInstance *ring = VoxelWorld_Instance(0);
-    int ex, ey;
 
     if (ring == NULL || ring->indoor || VoxelRelief_Belt(ring) != 0
+     || ring->width <= 0 || ring->height <= 0
      || !VoxelWorld_BorderIsWater(x, y))
         return false;
-    ex = x < ring->originX ? ring->originX
-       : x >= ring->originX + ring->width ? ring->originX + ring->width - 1 : x;
-    ey = y < ring->originY ? ring->originY
-       : y >= ring->originY + ring->height ? ring->originY + ring->height - 1 : y;
-    *level = 0.0f;
-    *shift = 0.0f;
-    if (VoxelMesh_Classify(ex, ey) == VOXEL_SHAPE_WATER)
-    {
-        *level = VoxelRelief_CellLift(ring, ex, ey);
-        *shift = VoxelRelief_CellShift(ring, ex, ey);
-    }
+    BeltWaterPlane(ring, level, shift);
     return true;
 }
 
@@ -1610,14 +1718,16 @@ void VoxelMesh_EmitBorder(VoxelBuilder *builder, int x0, int y0, int x1, int y1)
             /* Only where the border meets something else: the inside of a
              * belt that reaches the whole way to the horizon is never seen,
              * and drawing it is most of the tiles in the window. */
-            bool south, east, west;
-            float level, shift;
+            bool south, east, west, southW, eastW, westW;
+            float level = 0.0f, shift = 0.0f;
 
             if (!BorderAt(x, y))
                 continue;
             if (BorderWaterLevel(x, y, &level, &shift))
             {
-                /* flat, and no faces: the map's own edge closes any step */
+                /* flat on the belt's one plane, and no faces: its cells meet
+                 * edge to edge, and EmitSeamSkirt closes the map's edge down
+                 * (or up) to it */
                 if (MetatileUV(builder, VoxelWorld_BorderMetatile(x, y), &u0, &v0, &u1, &v1))
                     VoxelMesh_Top(builder, wx, wz + shift, level, 0.0f,
                                   u0, v0, u1, v1, SHADE_TOP);
@@ -1628,9 +1738,12 @@ void VoxelMesh_EmitBorder(VoxelBuilder *builder, int x0, int y0, int x1, int y1)
                                VoxelWorld_BorderMetatile(x, y)) >= 0)
                 continue; /* flat trunks and tilted crowns are appended later */
             /* a standing cell beside a flat one of water shows its face too */
-            south = !BorderAt(x, y + 1) || BorderWaterLevel(x, y + 1, &level, &shift);
-            east = !BorderAt(x + 1, y) || BorderWaterLevel(x + 1, y, &level, &shift);
-            west = !BorderAt(x - 1, y) || BorderWaterLevel(x - 1, y, &level, &shift);
+            southW = BorderAt(x, y + 1) && BorderWaterLevel(x, y + 1, &level, &shift);
+            eastW = BorderAt(x + 1, y) && BorderWaterLevel(x + 1, y, &level, &shift);
+            westW = BorderAt(x - 1, y) && BorderWaterLevel(x - 1, y, &level, &shift);
+            south = !BorderAt(x, y + 1) || southW;
+            east = !BorderAt(x + 1, y) || eastW;
+            west = !BorderAt(x - 1, y) || westW;
             /* Laid as drawn, a cell's top is its own drawing; stood where it
              * is tiled, the column reads the rows above it. */
             if (MetatileUV(builder, VoxelWorld_BorderMetatile(x, drawn ? y : y - (int)courses + 1),
@@ -1652,6 +1765,18 @@ void VoxelMesh_EmitBorder(VoxelBuilder *builder, int x0, int y0, int x1, int y1)
                 if (south) VoxelMesh_South(builder, wx, wz, yBottom, yTop, 0.0f, u0, v0, u1, v1);
                 if (east) VoxelMesh_East(builder, wx, wz, yBottom, yTop, 0.0f, u0, v0, u1, v1);
                 if (west) VoxelMesh_West(builder, wx, wz, yBottom, yTop, 0.0f, u0, v0, u1, v1);
+            }
+            /* Beside a belt of water lowered under the map's ground (its one
+             * plane, BorderWaterLevel), the stood cell's faces go on down to
+             * it: they stopped at the ground and left a slit over the sea. */
+            if (level < -0.05f && (southW || eastW || westW)
+             && MetatileUV(builder, VoxelWorld_BorderMetatile(x, y), &u0, &v0, &u1, &v1))
+            {
+                float vb = v1 - (v1 - v0) * (-level < 1.0f ? -level : 1.0f);
+
+                if (southW) VoxelMesh_South(builder, wx, wz, level, 0.0f, 0.0f, u0, vb, u1, v1);
+                if (eastW) VoxelMesh_East(builder, wx, wz, level, 0.0f, 0.0f, u0, vb, u1, v1);
+                if (westW) VoxelMesh_West(builder, wx, wz, level, 0.0f, 0.0f, u0, vb, u1, v1);
             }
         }
 }
