@@ -142,8 +142,10 @@ void CtrCycle_Frame(void)
 
 void CtrCycle_Input(CtrInputSample *sample)
 {
-    /* In battle, A every 12 frames: FIGHT, the first move, the messages. */
-    if (gMain.inBattle && sFrame % 12 < 2)
+    /* In battle, A every 12 frames: FIGHT, the first move, the messages.
+     * Before the field is up, A every 40: the title and the main menu
+     * (CONTINUE is the default). */
+    if ((gMain.inBattle && sFrame % 12 < 2) || (gMain.callback2 != CB2_Overworld && !gMain.inBattle && sFrame % 40 < 2))
         sample->buttons |= 1;
 }
 

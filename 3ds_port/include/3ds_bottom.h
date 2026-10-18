@@ -21,6 +21,12 @@
 void CtrBottom_Blit(const uint16_t *canvas, int x0, int x1);
 /* Same, restricted to rows [y0, y1) of those columns. */
 void CtrBottom_BlitRect(const uint16_t *canvas, int x0, int y0, int x1, int y1);
+/* A band of rows [y0, y1) across the whole screen, laid out as the screen's
+ * columns of (y1 - y0) pixels each, bottom to top (the 2x battle's text box). */
+void CtrBottom_BlitBand(const uint16_t *band, int y0, int y1);
+/* Game side: whether the screen shows a battle menu of its own (actions,
+ * moves, a target), which stands in for the GBA's text box. */
+bool CtrBottom_BattleMenuShown(void);
 /* What the last Blit or BlitRect spent copying to the screen and flushing the
  * data cache, in system ticks (0 if nothing was sent): the slow-redraw log. */
 void CtrBottom_LastBlitTicks(uint64_t *copy, uint64_t *flush);

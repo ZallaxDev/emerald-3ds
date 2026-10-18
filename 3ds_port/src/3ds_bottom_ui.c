@@ -7698,6 +7698,11 @@ void CtrBottom_SoftReset(void)
     sForceRedraw = TRUE;
 }
 
+bool CtrBottom_BattleMenuShown(void)
+{
+    return sShown.mode != 0xFF && sShown.mode >= MODE_BATTLE_ACTION;
+}
+
 void CtrBottom_Frame(void)
 {
     static u32 frames;
@@ -7709,6 +7714,18 @@ void CtrBottom_Frame(void)
     if (!sRes.ready)
         return;
     ++frames;
+    /* The 2x battle's text band over the canvas (CtrVideo_BottomBandRows):
+     * its rows of the canvas are put back when it leaves. */
+    {
+        static int bandY0, bandY1;
+        int y0, y1;
+
+        CtrVideo_BottomBandRows(&y0, &y1);
+        if ((y0 != bandY0 || y1 != bandY1) && bandY1 > bandY0)
+            CtrBottom_BlitRect(sCanvas, 0, bandY0, W, bandY1);
+        bandY0 = y0;
+        bandY1 = y1;
+    }
     /* Last frame's press is over, also on the frames the battle's entrance
      * skips RunPlan and RunNav: a press left in would stay held through it. */
     sInjected = 0;
