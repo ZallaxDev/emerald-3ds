@@ -3412,11 +3412,15 @@ static void DrawBattleText(unsigned bg)
     if (DrawBattleTextHd(bg)) return;
     if (sBattle2x)
     {
-        /* No HD pane (a link battle's menus, no memory for it): the GBA's
-         * box goes to the bottom screen (BottomBand); here only the windows
-         * above it, where the game put them. */
+        /* No HD pane (a link battle's menus, no memory for it, the intro's
+         * frames with the box scrolled up above its place): the GBA's box
+         * goes to the bottom screen (BottomBand); here only the windows
+         * above it, where the game put them - not the box's own rows a
+         * scroll lifts into them, which flashed at the bottom left. */
         uint32_t before = sStats.tiles;
-        DrawBattleCut(bg, 0, 240, 0, BATTLE_BAND_TOP, 0);
+        int up = scrollY < 256 ? (int)scrollY : 0;
+
+        DrawBattleCut(bg, 0, 240, 0, BATTLE_BAND_TOP - up, 0);
         if (sStats.tiles != before) sTextAbove = true;
         return;
     }
