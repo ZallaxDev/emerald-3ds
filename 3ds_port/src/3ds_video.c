@@ -5530,11 +5530,13 @@ static void DrawObjectAt(int x, int y, unsigned attr1, unsigned attr2, unsigned 
             bool flipX = (attr1 & 0x1000) != 0, flipY = (attr1 & 0x2000) != 0;
 
             /* The player's own Pokémon composed with the scene at 2x with
-             * MON fade on (a frame a move blends, the flat path): its last
+             * MON fade on (a frame a move blends, the flat path, and as the
+             * OBJ window mask a stat change makes of it, which shapes the
+             * stripes - faded with it): its last
              * tile rows at the ramp's alpha, each row its own batch with
              * the tint stepped - as the placed slots fade (DrawFeetFaded). */
             bool feet = sBattle2x && sFade2x == 2 && sBattle && !sSlotComposing && x < 120 && boxH >= 32
-                     && y + (int)boxH / 2 > CTR_BATTLE_SIDE_SPLIT && mode != 2;
+                     && y + (int)boxH / 2 > CTR_BATTLE_SIDE_SPLIT;
             C2D_ImageTint tintSaved = sTint;
 
             /* A batch just opened: its blend state and tint. */
