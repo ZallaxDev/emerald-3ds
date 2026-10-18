@@ -434,12 +434,19 @@ static bool sBandShown;
  * sight below the screen while the message window is empty (sBoxOut 0..1).
  * The info boxes line up HUD_2X_MARGIN in from their side's edge. */
 #define BOX_2X_MARGIN 20
-/* GBA lines of ground below the picture's end shown at 2x, the picture that
- * much higher: the player's Pokémon and its box clear of the pane, which
- * lies on the ground under them, over a fade of the screen's last lines. */
-#define BATTLE_2X_LOW 10
-#define BOX_2X_FADE_H 44
-#define BOX_2X_FADE_ALPHA 0.55f
+/*
+ * With a message, one motion (BoxFrame's sBoxOut, 0 in, 1 out): the pane
+ * slides up from below the screen, the whole picture - the player's Pokémon
+ * and its box with it - lifts BOX_2X_LIFT screen pixels, and four bands
+ * above the pane's edge fade the Pokémon's feet into the pane's own colour,
+ * 20/40/55/80 percent from the top band down. BATTLE_2X_LOW lines of ground
+ * below the picture's end are composed for the lifted frames.
+ */
+#define BATTLE_2X_LOW 8
+#define BOX_2X_LIFT 16
+#define BOX_2X_BAND_H 6
+static const float sBoxFadeAlpha[4] = {0.20f, 0.40f, 0.55f, 0.80f};
+static uint32_t sBoxFill = 0xFF80A080u;
 #define BOX_2X_ALPHA 0xD0
 #define HUD_2X_MARGIN 28
 static float sBoxOut;
@@ -3001,6 +3008,11 @@ static bool BoxTexture(void)
     memset(sTextTex.data, 0, TEXT_TEX_W * TEXT_TEX_H * 2);
     C3D_TexFlush(&sTextTex);
     sBoxCapW = cw;
+    {
+        uint32_t c = middle[(ch / 2) * mw];
+
+        sBoxFill = C2D_Color32(c >> 24, (c >> 16) & 255, (c >> 8) & 255, 255);
+    }
     sBoxArtH = ch;
     sBoxArtY = cy;
     memset(sBoxEntries, 0xFF, sizeof(sBoxEntries));
@@ -3085,6 +3097,7 @@ static void BoxFrame(void)
             sBoxDecided = sBoxBarsUp = false;
         sBoxSlide = -1;
         sBoxBattleFrames = 0;
+        sBoxOut = 1.0f;
         /* The next battle's message window is read afresh, and the last
          * one's text cleared: the next opens on the empty box, which only
          * clears the texture when it held a window. */
@@ -3276,7 +3289,7 @@ static bool DrawBattleTextHd(unsigned bg)
     }
     y0 = sBoxArtY + down + BoxOffset();
     sBoxShown = sStats.frames;
-    sBoxY = y0;
+    sBoxY = sBattle2x ? y0 - 4 * BOX_2X_BAND_H : y0;
     if (y0 >= CTR_GAME_HEIGHT) return true;
     /* Layers set the blend for BG0: its effects bit is in the key. */
     HudBlend(bg, (sBlendKey >> 8) & 1);
@@ -3296,12 +3309,16 @@ static bool DrawBattleTextHd(unsigned bg)
         BoxFadeTint(&art);
         if (sBattle2x)
         {
-            /* The screen's last lines fade down behind the pane, as far as
-             * it is in: the ground falls away under the message. */
-            const float a = BOX_2X_FADE_ALPHA * (1.0f - sBoxOut);
-            const uint32_t clear = C2D_Color32f(0.05f, 0.08f, 0.10f, 0.0f), dark = C2D_Color32f(0.05f, 0.08f, 0.10f, a);
+            /* The bands above the pane's edge, moving up with it, fading
+             * what stands there into the pane's colour as far as it is in. */
+            const float in = 1.0f - sBoxOut;
 
-            C2D_DrawRectangle(0, CTR_GAME_HEIGHT - BOX_2X_FADE_H, 0, CTR_GAME_WIDTH, BOX_2X_FADE_H, clear, clear, dark, dark);
+            for (unsigned b = 0; b < 4; ++b)
+            {
+                uint32_t colour = (sBoxFill & 0x00FFFFFFu) | ((uint32_t)(sBoxFadeAlpha[b] * in * 255.0f + 0.5f) << 24);
+
+                C2D_DrawRectSolid(m, y0 - (4 - b) * BOX_2X_BAND_H, 0, CTR_GAME_WIDTH - 2 * m, BOX_2X_BAND_H, colour);
+            }
             for (unsigned c = 0; c < 4; ++c)
                 art.corners[c].color = (art.corners[c].color & 0x00FFFFFFu) | ((uint32_t)BOX_2X_ALPHA << 24);
         }
@@ -10977,7 +10994,8 @@ void CtrVideo_Present(void)
     /* GBA (120, 112) - the middle of the scene's bottom edge - on screen (200, 192);
      * at 2x on (200, 240), the screen's bottom edge, the text box gone below. */
     sOffX = sBattle ? CTR_GAME_WIDTH / 2 - 120 * sZoom : 0.0f;
-    sOffY = sBattle ? CTR_GAME_HEIGHT - (sBattle2x ? 0 : 48) - (112 + (sBattle2x ? BATTLE_2X_LOW : 0)) * sZoom : 0.0f;
+    sOffY = sBattle ? CTR_GAME_HEIGHT - (sBattle2x ? 0 : 48) - 112 * sZoom : 0.0f;
+    if (sBattle2x) sOffY -= roundf(BOX_2X_LIFT * (1.0f - sBoxOut));
     sShiftZoom = sZoom;
     BottomBand();
     if (sStage || sCentred)
