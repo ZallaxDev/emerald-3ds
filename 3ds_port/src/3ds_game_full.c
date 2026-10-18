@@ -80,6 +80,7 @@
 #include "3ds_audio.h"
 #include "3ds_bottom.h"
 #include "3ds_dex_top.h"
+#include "3ds_extras.h"
 #include "3ds_sprite_ids.h"
 
 #include <stdio.h>
@@ -707,17 +708,14 @@ bool CtrGame_FieldPoison(void)
     return FldEffPoison_IsActive() != 0;
 }
 
-/* Called at AgbMain entry (cold boot and soft reset), and by the portable
- * new-game hook. The emulated GBA timer is not a running timer.
- * Scenarios retain their historical seed path so existing recordings replay.
- * This is a gameplay seed, not a cryptographic random number or a shiny boost.
- * A zero result and collisions are valid in the original 16-bit seed space. */
-u16 Port_RngSeed(u16 fallback)
+/* The console's timing folded into the original 16-bit seed space. The
+ * emulated GBA timer is not a running timer. This is a gameplay seed, not a
+ * cryptographic random number or a shiny boost. A zero result and collisions
+ * are valid in the original 16-bit seed space. */
+static u16 TimingSeed(void)
 {
     uint64_t seed;
 
-    if (CtrScenario_Active())
-        return fallback;
     seed = CtrPlatform_Ticks() ^ ((uint64_t)CtrPlatform_WallSeconds() + UINT64_C(0x9e3779b97f4a7c15));
     /* SplitMix64's finalizer folds high tick/time bits into the low seed bits. */
     seed = (seed ^ (seed >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
@@ -726,12 +724,25 @@ u16 Port_RngSeed(u16 fallback)
     return (u16)(seed ^ (seed >> 16) ^ (seed >> 32) ^ (seed >> 48));
 }
 
+/* Called at AgbMain entry (cold boot and soft reset). Off by default (OPTIONS'
+ * RANDOM BOOT SEED, settings.txt boot_seed=): the fallback, Emerald's own zero
+ * seed, which zero-seed RNG manipulation is built on. Scenarios retain their
+ * historical seed path so existing recordings replay. */
+u16 Port_RngSeed(u16 fallback)
+{
+    if (CtrScenario_Active() || CtrExtras_Get(CTR_BOOT_SEED_KEY) != 1)
+        return fallback;
+    return TimingSeed();
+}
+
 /* PORTABLE generates both trainer-ID halves from Random(). Reseed immediately
- * before that reachable path, but leave the existing scenario stream untouched. */
+ * before that reachable path, whatever the boot seed option says (the portable
+ * path has no GBA timer to take it from), but leave the existing scenario
+ * stream untouched. */
 void Port_ReseedForNewGame(void)
 {
     if (!CtrScenario_Active())
-        SeedRng(Port_RngSeed(0));
+        SeedRng(TimingSeed());
 }
 
 /* AgbMain never returns, so a reset request restarts the process state here. */

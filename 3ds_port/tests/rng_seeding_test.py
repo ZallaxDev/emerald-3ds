@@ -1,6 +1,7 @@
 """Exercise the production seed source and boot/new-game call sites on the host."""
 import argparse
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 
@@ -24,6 +25,7 @@ def main():
                         help='bootstrapped upstream tree with production patches applied')
     args = parser.parse_args()
     code = (ROOT / 'src/3ds_game_full.c').read_text()
+    timing_fn = function(code, 'static u16 TimingSeed(void)')
     seed_fn = function(code, 'u16 Port_RngSeed(u16 fallback)')
     source_tree = args.source_tree or ROOT.parent
     if not (source_tree / 'src/new_game.c').is_file():
@@ -39,6 +41,15 @@ def main():
     new_game = function(new_game_src, 'void NewGameInitData(void)')
     reseed_fn = function(code, 'void Port_ReseedForNewGame(void)')
     assert 'SeedRng(Port_RngSeed(0))' in callsite
+    # The boot seed option: its key, and its OPTIONS row, OFF by default.
+    header = (ROOT / 'include/3ds_extras.h').read_text()
+    key = re.search(r'#define CTR_BOOT_SEED_KEY "([a-z_]+)"', header).group(1)
+    extras = (ROOT / 'src/3ds_extras.c').read_text()
+    rows = re.findall(r'\{CTR_EXTRAS_SCREEN\(CTR_EXTRAS_OPTIONS, 1\), CTR_TEXT\(("[^"]+", ){3}"[^"]+"\), '
+                      r'CTR_BOOT_SEED_KEY, 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL\}', extras)
+    assert len(rows) == 1, 'one OPTIONS row for the boot seed, two values, OFF by default'
+    assert 'CtrExtras_Get(CTR_BOOT_SEED_KEY)' in seed_fn
+    assert 'CtrExtras_Get' not in reseed_fn and 'TimingSeed()' in reseed_fn
     assert 'Port_ReseedForNewGame();' in trainer
     assert 'InitPlayerTrainerId();' in new_game
     assert agb.index('InitMainCallbacks();') < begin < agb.index('ClearDma3Requests();')
@@ -52,6 +63,7 @@ def main():
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint8_t u8;
@@ -65,6 +77,14 @@ static unsigned randomCalls;
 static struct { u8 playerTrainerId[4]; } saveBlock2;
 #define gSaveBlock2Ptr (&saveBlock2)
 static bool CtrScenario_Active(void) { return scenario; }
+static int bootSeed = 1; /* OPTIONS' RANDOM BOOT SEED; OFF is tested below */
+static unsigned optionReads;
+static int CtrExtras_Get(const char *key)
+{
+    ++optionReads;
+    assert(strcmp(key, CTR_BOOT_SEED_KEY) == 0);
+    return bootSeed;
+}
 static uint64_t CtrPlatform_Ticks(void) { ++reads; return ticks; }
 static int64_t CtrPlatform_WallSeconds(void) { ++reads; return wall; }
 static void SeedRng(u16 seed) { ++calls; lastSeed = seed; rng = seed; }
@@ -86,7 +106,8 @@ static void SetTrainerId(u32 id, u8 *dst)
 void SeedRngWithRtc(void) { ++rtcCalls; }
 #endif
 '''
-    harness += seed_fn + '\n' + reseed_fn + '\nstatic void Boot(void)\n{\n' + callsite + '\n}\n' + trainer
+    harness = '#define CTR_BOOT_SEED_KEY "%s"\n' % key + harness
+    harness += timing_fn + '\n' + seed_fn + '\n' + reseed_fn + '\nstatic void Boot(void)\n{\n' + callsite + '\n}\n' + trainer
     harness += r'''
 int main(void)
 {
@@ -187,7 +208,48 @@ int main(void)
 #else
     assert(randomCalls == 1);
 #endif
-    puts("PASS RNG seed: production boot/new-game, scenario stream, variation, bounds");
+    /* RANDOM BOOT SEED off (the default): boot and soft reset keep
+     * Emerald's zero seed without reading the console's timing, and a new
+     * game still reseeds the portable trainer-ID path from it. */
+    scenario = false;
+    bootSeed = 0;
+    reads = optionReads = 0;
+    assert(Port_RngSeed(0) == 0);
+    assert(Port_RngSeed(0xabcd) == 0xabcd);
+    assert(reads == 0 && optionReads == 2);
+    bootSeed = 2; /* only 1 is ON; CtrExtras_Get clamps, this is belt and braces */
+    assert(Port_RngSeed(0) == 0);
+    bootSeed = 0;
+    calls = rtcCalls = reads = 0;
+    lastSeed = 0xffff;
+    Boot();
+#if defined(PLATFORM_3DS) && defined(PORT_BRIDGE)
+    assert(calls == 1 && lastSeed == 0 && reads == 0 && rtcCalls == 0);
+#elif defined(BUGFIX)
+    assert(calls == 0 && rtcCalls == 1);
+#else
+    assert(calls == 0 && rtcCalls == 0);
+#endif
+    ticks += UINT64_C(7654321);
+    bootSeed = 1;
+    next = Port_RngSeed(0);
+    bootSeed = 0;
+    calls = reads = optionReads = 0;
+    InitPlayerTrainerId();
+#if defined(PLATFORM_3DS) && defined(PORT_BRIDGE) && defined(PORTABLE)
+    assert(calls == 1 && reads == 2 && lastSeed == next && optionReads == 0);
+#else
+    assert(calls == 0 && reads == 0);
+#endif
+    /* Scenarios ignore the option: zero at boot, no new-game reseed. */
+    bootSeed = 1;
+    scenario = true;
+    reads = 0;
+    assert(Port_RngSeed(0) == 0 && reads == 0);
+    calls = 0;
+    InitPlayerTrainerId();
+    assert(calls == 0 && reads == 0);
+    puts("PASS RNG seed: production boot/new-game, boot seed option, scenario stream, variation, bounds");
     return 0;
 }
 '''
