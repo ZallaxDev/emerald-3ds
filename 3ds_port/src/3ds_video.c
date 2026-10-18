@@ -8484,6 +8484,8 @@ static void DrawFeetFaded(C2D_Image image, float x, float y, float scale, bool f
         C2D_DrawImageAt((C2D_Image){image.tex, &upper}, x, y, 0, NULL, scale, scale);
         C2D_DrawImageAt((C2D_Image){image.tex, &lower}, x, y + (th - feet) * scale, 0, &tint, scale, scale);
     }
+}
+
 static void SlotsPlaceBegin(C3D_RenderTarget *target)
 {
     BlendForget();
