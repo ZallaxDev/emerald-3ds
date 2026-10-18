@@ -458,8 +458,15 @@ static unsigned sFade2x;
 /* "2X PANE ALPHA" (battle_2x_alpha): the pane's opacity, 85 .. 25 percent. */
 static const uint8_t sPaneAlphas[5] = {0xD9, 0xB3, 0x8C, 0x66, 0x40};
 static unsigned sPaneAlpha2x;
+/* The alpha the pane's fill texels were last written with: the rim and the
+ * text stay whole, only the fill is see-through (BoxTexFill). */
+static unsigned sBoxTexAlpha = 255;
 /* Sprites composed into a slot (SlotsCompose), faded when placed instead. */
 static bool sSlotComposing;
+/* At 2x the player's side's sprites right of the middle - its info boxes,
+ * the party ball trays of the intro - sit UI_2X_UP GBA lines higher, off the
+ * pane; every OAM reader goes through BattleObjY, so slots and placement agree. */
+#define UI_2X_UP 6
 static uint32_t sBoxFill = 0xFF80A080u;
 #define HUD_2X_MARGIN 28
 static float sBoxOut;
@@ -2711,6 +2718,13 @@ static int HudLeftHalf(unsigned i)
 
 /* A visible OAM entry's place in GBA coordinates, wrapped as the battle reads
  * it: a sprite drawn, or with `window` one in the OBJ window's mode. */
+static int BattleObjY(int x, int y, int h)
+{
+    if (sBattle2x && sBattle && x >= 120 && x < 240 && y < 160 && y + h / 2 > CTR_BATTLE_SIDE_SPLIT)
+        return y - UI_2X_UP;
+    return y;
+}
+
 static bool OamPlace(unsigned i, bool window, unsigned *priority, int *x, int *y, int *w, int *h)
 {
     static const uint8_t dimensions[3][4][2] = {
@@ -2727,7 +2741,7 @@ static bool OamPlace(unsigned i, bool window, unsigned *priority, int *x, int *y
     *w = dimensions[shape][attr1 >> 14][0] * (affine && (attr0 & 0x200) ? 2 : 1);
     *h = dimensions[shape][attr1 >> 14][1] * (affine && (attr0 & 0x200) ? 2 : 1);
     *x = attr1 & 511;
-    *y = attr0 & 255;
+    *y = BattleObjY((int)*x, (int)(attr0 & 255), *h);
     if (*x + *w > 512) *x -= 512;
     if (*y + *h > 256) *y -= 256;
     /* Below the picture: where the GBA parks its unused entries (y 160),
@@ -2979,6 +2993,42 @@ static uint32_t sBoxShown = ~0u;
 static int sBoxSlide = -1;
 static uint32_t sBoxBattleFrames;
 
+/* A texel of the panel's flat fill (within a little of the middle column's
+ * centre colour), as against its rim, shadow and highlights. */
+static bool BoxFillTexel(uint32_t texel, uint32_t fill)
+{
+    int dr = (int)(texel >> 24) - (int)(fill >> 24), dg = (int)((texel >> 16) & 255) - (int)((fill >> 16) & 255);
+    int db = (int)((texel >> 8) & 255) - (int)((fill >> 8) & 255);
+
+    return (texel & 255) == 255 && dr > -20 && dr < 20 && dg > -20 && dg < 20 && db > -20 && db < 20;
+}
+
+/* The panel's art into its texture, the fill's texels at `alpha`. */
+static void BoxTexFill(unsigned alpha)
+{
+    const uint32_t *cap, *middle;
+    int cx, cy, cw, ch, mx, my, mw, mh;
+    uint32_t *data = sBoxTex.data, fill;
+
+    cap = CtrBattleHud_BoxArt(false, &cx, &cy, &cw, &ch);
+    middle = CtrBattleHud_BoxArt(true, &mx, &my, &mw, &mh);
+    if (!cap || !middle || !data) return;
+    fill = middle[(ch / 2) * mw];
+    memset(data, 0, BOX_TEX_W * BOX_TEX_H * 4);
+    for (int y = 0; y < ch; ++y)
+    {
+        for (int x = 0; x <= cw; ++x)
+        {
+            uint32_t texel = x < cw ? cap[y * cw + x] : middle[y * mw];
+
+            if (alpha < 255 && BoxFillTexel(texel, fill)) texel = (texel & ~255u) | alpha;
+            data[CtrVideo_Texel(x < cw ? x : BOX_MIDDLE_X, y, BOX_TEX_W)] = texel;
+        }
+    }
+    C3D_TexFlush(&sBoxTex);
+    sBoxTexAlpha = alpha;
+}
+
 static bool BoxTexture(void)
 {
     const uint32_t *cap, *middle;
@@ -3009,15 +3059,8 @@ static bool BoxTexture(void)
     C3D_TexSetWrap(&sBoxTex, GPU_CLAMP_TO_EDGE, GPU_CLAMP_TO_EDGE);
     C3D_TexSetFilter(&sTextTex, GPU_NEAREST, GPU_NEAREST);
     C3D_TexSetWrap(&sTextTex, GPU_CLAMP_TO_EDGE, GPU_CLAMP_TO_EDGE);
-    data = sBoxTex.data;
-    memset(data, 0, BOX_TEX_W * BOX_TEX_H * 4);
-    for (int y = 0; y < ch; ++y)
-    {
-        for (int x = 0; x < cw; ++x)
-            data[CtrVideo_Texel(x, y, BOX_TEX_W)] = cap[y * cw + x];
-        data[CtrVideo_Texel(BOX_MIDDLE_X, y, BOX_TEX_W)] = middle[y * mw];
-    }
-    C3D_TexFlush(&sBoxTex);
+    (void)data;
+    BoxTexFill(255);
     memset(sTextTex.data, 0, TEXT_TEX_W * TEXT_TEX_H * 2);
     C3D_TexFlush(&sTextTex);
     sBoxCapW = cw;
@@ -3170,6 +3213,7 @@ static void BoxFrame(void)
     {
         float offset = BoxOffset();
 
+        if (sBattle2x) offset = 0;   /* the pane's motion is its own at 2x */
         CtrBattleHud_LiftPlayerTrainer((int)lroundf(offset > 0 ? offset * (BOX_TRAINER_HIDDEN / BOX_HIDDEN)
                                                                : offset / CTR_BATTLE_ZOOM));
     }
@@ -3320,6 +3364,11 @@ static bool DrawBattleTextHd(unsigned bg)
         const float m = sBattle2x ? BOX_2X_MARGIN : 0;
 
         BoxFadeTint(&art);
+        {
+            unsigned want = sBattle2x ? sPaneAlphas[sPaneAlpha2x] : 255;
+
+            if (want != sBoxTexAlpha) BoxTexFill(want);
+        }
         if (sBattle2x)
         {
             if (sFade2x == 1)
@@ -3331,8 +3380,6 @@ static bool DrawBattleTextHd(unsigned bg)
 
                 C2D_DrawRectangle(m, y0 - BOX_2X_EDGE, 0, CTR_GAME_WIDTH - 2 * m, BOX_2X_EDGE, clear, clear, full, full);
             }
-            for (unsigned c = 0; c < 4; ++c)
-                art.corners[c].color = (art.corners[c].color & 0x00FFFFFFu) | ((uint32_t)sPaneAlphas[sPaneAlpha2x] << 24);
         }
 
         C2D_DrawImageAt((C2D_Image){&sBoxTex, &left}, m + shift, y0, 0, &art, 1, 1);
@@ -5620,7 +5667,7 @@ static void DrawObjects(unsigned priority, bool effects)
         unsigned width = dimensions[shape][attr1 >> 14][0], height = dimensions[shape][attr1 >> 14][1];
         unsigned boxW = affine && (attr0 & 0x200) ? width * 2 : width;
         unsigned boxH = affine && (attr0 & 0x200) ? height * 2 : height;
-        int x = attr1 & 511, y = attr0 & 255;
+        int x = attr1 & 511, y = BattleObjY(x, (int)(attr0 & 255), (int)boxH);
         if (sStage || sCentred || sBattle || sTransitionCompose)
         {
             /*
@@ -6327,7 +6374,7 @@ static bool ObjWindowBounds(int *x0, int *y0, int *x1, int *y1)
         h = dimensions[shape][attr1 >> 14][1] << twice;
         /* The GBA's reading, as DrawObjects has it for these screens. */
         x = (int)(attr1 & 511);
-        y = (int)(attr0 & 255);
+        y = BattleObjY(x, (int)(attr0 & 255), h);
         if (x + w > 512) x -= 512;
         if (y + h > 256) y -= 256;
         if (!any || x < *x0) *x0 = x;
@@ -8046,7 +8093,7 @@ static bool BattleSprites(unsigned *furthest, bool *apart)
         w = dimensions[shape][attr1 >> 14][0] << twice;
         h = dimensions[shape][attr1 >> 14][1] << twice;
         x = (int)(attr1 & 511);
-        y = (int)(attr0 & 255);
+        y = BattleObjY(x, (int)(attr0 & 255), h);
         if (x + w > 512) x -= 512;
         if (y + h > 256) y -= 256;
         full = y;
@@ -10567,7 +10614,7 @@ static bool BlendBox(unsigned slots, int *x0, int *y0, int *x1, int *y1)
         w = dimensions[shape][attr1 >> 14][0] << twice;
         h = dimensions[shape][attr1 >> 14][1] << twice;
         x = (int)(attr1 & 511);
-        y = (int)(attr0 & 255);
+        y = BattleObjY(x, (int)(attr0 & 255), h);
         if (field)
         {
             if ((sFogOam[i >> 5] | sLatticeOam[i >> 5] | sParticleOam[i >> 5]) & (1u << (i & 31))) return false;
