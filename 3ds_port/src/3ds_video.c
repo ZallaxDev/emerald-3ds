@@ -444,8 +444,19 @@ static bool sBandShown;
  */
 #define BATTLE_2X_LOW 8
 #define BOX_2X_LIFT 16
-#define BOX_2X_BAND_H 6
-static const float sBoxFadeAlpha[4] = {0.20f, 0.40f, 0.55f, 0.80f};
+/*
+ * "2X TEXT FADE" (settings key battle_2x_fade): 0 the pane alone; 1 PANE, a
+ * BOX_2X_EDGE gradient of the pane's colour above its edge; 2 MON, the
+ * player's own Pokémon fading to nothing over its last FEET_FADE_GBA lines
+ * (its slot or cell drawn with a vertex alpha ramp, nothing extra composed),
+ * the picture lifted BOX_2X_LIFT_MON instead. The flat (slider down) path
+ * composes the sprites with the scenery and cannot fade them.
+ */
+#define BOX_2X_EDGE 24
+#define BOX_2X_LIFT_MON 24
+#define FEET_FADE_GBA 14
+#define FEET_FADE_ALPHA 0.08f
+static unsigned sFade2x;
 static uint32_t sBoxFill = 0xFF80A080u;
 #define BOX_2X_ALPHA 0xD0
 #define HUD_2X_MARGIN 28
@@ -3289,7 +3300,7 @@ static bool DrawBattleTextHd(unsigned bg)
     }
     y0 = sBoxArtY + down + BoxOffset();
     sBoxShown = sStats.frames;
-    sBoxY = sBattle2x ? y0 - 4 * BOX_2X_BAND_H : y0;
+    sBoxY = sBattle2x && sFade2x == 1 ? y0 - BOX_2X_EDGE : y0;
     if (y0 >= CTR_GAME_HEIGHT) return true;
     /* Layers set the blend for BG0: its effects bit is in the key. */
     HudBlend(bg, (sBlendKey >> 8) & 1);
@@ -3309,15 +3320,14 @@ static bool DrawBattleTextHd(unsigned bg)
         BoxFadeTint(&art);
         if (sBattle2x)
         {
-            /* The bands above the pane's edge, moving up with it, fading
-             * what stands there into the pane's colour as far as it is in. */
-            const float in = 1.0f - sBoxOut;
-
-            for (unsigned b = 0; b < 4; ++b)
+            if (sFade2x == 1)
             {
-                uint32_t colour = (sBoxFill & 0x00FFFFFFu) | ((uint32_t)(sBoxFadeAlpha[b] * in * 255.0f + 0.5f) << 24);
+                /* The pane's colour rising above its edge, from nothing to
+                 * the pane's own strength, as far as the pane is in. */
+                const uint32_t clear = sBoxFill & 0x00FFFFFFu;
+                const uint32_t full = clear | ((uint32_t)(BOX_2X_ALPHA * (1.0f - sBoxOut)) << 24);
 
-                C2D_DrawRectSolid(m, y0 - (4 - b) * BOX_2X_BAND_H, 0, CTR_GAME_WIDTH - 2 * m, BOX_2X_BAND_H, colour);
+                C2D_DrawRectangle(m, y0 - BOX_2X_EDGE, 0, CTR_GAME_WIDTH - 2 * m, BOX_2X_EDGE, clear, clear, full, full);
             }
             for (unsigned c = 0; c < 4; ++c)
                 art.corners[c].color = (art.corners[c].color & 0x00FFFFFFu) | ((uint32_t)BOX_2X_ALPHA << 24);
@@ -8353,6 +8363,38 @@ static void SlotsCompose(void)
 
 /* The slots on `target` for the eye being drawn, each at its group's depth:
  * those behind the backgrounds in front of sprites, or those before them. */
+/*
+ * A slot or cell of the player's own Pokémon at 2x with MON fade on: its
+ * last FEET_FADE_GBA lines drawn with a vertex ramp from whole to
+ * FEET_FADE_ALPHA. The texels are premultiplied, so the ramp scales colour
+ * and alpha alike: a black tint blended in by 1 - a, alpha a.
+ */
+static void DrawFeetFaded(C2D_Image image, float x, float y, float scale, bool fade)
+{
+    const Tex3DS_SubTexture *cut = image.subtex;
+    int th = cut->height, feet = FEET_FADE_GBA * (int)SCENE_ZOOM;
+
+    if (!fade || th <= feet)
+    {
+        C2D_DrawImageAt(image, x, y, 0, NULL, scale, scale);
+        return;
+    }
+    {
+        float vSplit = cut->top + (cut->bottom - cut->top) * (float)(th - feet) / th;
+        const Tex3DS_SubTexture upper = {cut->width, (u16)(th - feet), cut->left, cut->top, cut->right, vSplit};
+        const Tex3DS_SubTexture lower = {cut->width, (u16)feet, cut->left, vSplit, cut->right, cut->bottom};
+        C2D_ImageTint tint;
+
+        for (unsigned c = 0; c < 4; ++c)
+        {
+            float a = c < 2 ? 1.0f : FEET_FADE_ALPHA;
+
+            tint.corners[c].color = C2D_Color32f(0, 0, 0, a);
+            tint.corners[c].blend = 1.0f - a;
+        }
+        C2D_DrawImageAt((C2D_Image){image.tex, &upper}, x, y, 0, NULL, scale, scale);
+        C2D_DrawImageAt((C2D_Image){image.tex, &lower}, x, y + (th - feet) * scale, 0, &tint, scale, scale);
+    }
 static void SlotsPlaceBegin(C3D_RenderTarget *target)
 {
     BlendForget();
@@ -8411,10 +8453,11 @@ static void SlotsPlace(C3D_RenderTarget *target, bool front, bool patches)
             1 - slot->sy / (float)tex->height, (slot->sx + tw) / (float)tex->width,
             1 - (slot->sy + th) / (float)tex->height};
 
-        C2D_DrawImageAt((C2D_Image){tex, &cut},
-                        (slot->x - 1) * sZoom + sOffX
-                            + (slot->patch ? -sEyeParallax * BATTLE_BACK_DEPTH : BattleSpriteShift(slot->centre)),
-                        (slot->y - 1) * sZoom + sOffY, 0, NULL, scale, scale);
+        DrawFeetFaded((C2D_Image){tex, &cut},
+                      (slot->x - 1) * sZoom + sOffX
+                          + (slot->patch ? -sEyeParallax * BATTLE_BACK_DEPTH : BattleSpriteShift(slot->centre)),
+                      (slot->y - 1) * sZoom + sOffY, scale,
+                      sBattle2x && sFade2x == 2 && !slot->patch && slot->centre > CTR_BATTLE_SIDE_SPLIT);
     }
     C2D_Flush();
     while (loose && next < sLooseCount)
@@ -10995,7 +11038,8 @@ void CtrVideo_Present(void)
      * at 2x on (200, 240), the screen's bottom edge, the text box gone below. */
     sOffX = sBattle ? CTR_GAME_WIDTH / 2 - 120 * sZoom : 0.0f;
     sOffY = sBattle ? CTR_GAME_HEIGHT - (sBattle2x ? 0 : 48) - 112 * sZoom : 0.0f;
-    if (sBattle2x) sOffY -= roundf(BOX_2X_LIFT * (1.0f - sBoxOut));
+    sFade2x = (unsigned)CtrSettings_GetInt("battle_2x_fade", 0);
+    if (sBattle2x) sOffY -= roundf((sFade2x == 2 ? BOX_2X_LIFT_MON : BOX_2X_LIFT) * (1.0f - sBoxOut));
     sShiftZoom = sZoom;
     BottomBand();
     if (sStage || sCentred)

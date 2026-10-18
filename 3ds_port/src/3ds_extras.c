@@ -22,6 +22,7 @@
 
 const char *const gCtrExtrasOffOn[2] = {CTR_TEXT("OFF", "NO", "NON", "NO"), CTR_TEXT("ON", "SÍ", "OUI", "SÌ")};
 
+static const char *const sFade2x[] = {CTR_TEXT("OFF", "NO", "NON", "NO"), CTR_TEXT("PANE", "PANEL", "PANNEAU", "PANNELLO"), CTR_TEXT("MON", "MON", "MON", "MON")};
 static const char *const sDayNight[] = {CTR_TEXT("OFF", "NO", "NON", "NO"), "AUTO"};
 static const char *const sClockSpeeds[] = {"1X", "6X", "12X", "24X", "60X", "120X"};
 static const char *const sTimedEncounters[] = {CTR_TEXT("ORIGINAL", "ORIGINAL", "ORIGINAL", "ORIGINALE"),
@@ -247,6 +248,7 @@ const CtrExtra gCtrExtras[] =
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_ENHANCEMENTS, 1), CTR_TEXT("FOLLOWER", "ACOMPAÑANTE", "COMPAGNON", "COMPAGNO"), "follower", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
     /* EXPERIMENT: the battle field at an exact 2x, its text box on the bottom screen (3ds_video.c, sBattle2x). */
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_ENHANCEMENTS, 1), CTR_TEXT("BATTLE 2X", "COMBATE 2X", "COMBAT 2X", "LOTTA 2X"), "battle_2x", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
+    {CTR_EXTRAS_SCREEN(CTR_EXTRAS_ENHANCEMENTS, 1), CTR_TEXT("2X TEXT FADE", "FUNDIDO TEXTO 2X", "FONDU TEXTE 2X", "DISSOLV. TESTO 2X"), "battle_2x_fade", 3, 0, sFade2x, NULL, NULL, NULL},
     {0},
 };
 
