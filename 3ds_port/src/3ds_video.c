@@ -405,7 +405,7 @@ static int sSceneColumn;
  * picture ends; below that, behind the box's margins, the scene's last line
  * is carried down (ScenePlaceFrom).
  */
-#define BATTLE_SCENE_BOX_BOTTOM (sBattle2x ? 112 : 112 + (int)ceilf((CTR_BATTLE_BOX_TOP - (CTR_GAME_HEIGHT - 48)) / CTR_BATTLE_ZOOM))
+#define BATTLE_SCENE_BOX_BOTTOM (sBattle2x ? 112 + BATTLE_2X_LOW : 112 + (int)ceilf((CTR_BATTLE_BOX_TOP - (CTR_GAME_HEIGHT - 48)) / CTR_BATTLE_ZOOM))
 /* Or the whole picture, with no text box to go behind (BattleSceneBottom). */
 static int BattleSceneBottom(void);
 #define BATTLE_SCENE_BOTTOM BattleSceneBottom()
@@ -434,6 +434,12 @@ static bool sBandShown;
  * sight below the screen while the message window is empty (sBoxOut 0..1).
  * The info boxes line up HUD_2X_MARGIN in from their side's edge. */
 #define BOX_2X_MARGIN 20
+/* GBA lines of ground below the picture's end shown at 2x, the picture that
+ * much higher: the player's Pokémon and its box clear of the pane, which
+ * lies on the ground under them, over a fade of the screen's last lines. */
+#define BATTLE_2X_LOW 10
+#define BOX_2X_FADE_H 44
+#define BOX_2X_FADE_ALPHA 0.55f
 #define BOX_2X_ALPHA 0xD0
 #define HUD_2X_MARGIN 28
 static float sBoxOut;
@@ -3289,8 +3295,16 @@ static bool DrawBattleTextHd(unsigned bg)
 
         BoxFadeTint(&art);
         if (sBattle2x)
+        {
+            /* The screen's last lines fade down behind the pane, as far as
+             * it is in: the ground falls away under the message. */
+            const float a = BOX_2X_FADE_ALPHA * (1.0f - sBoxOut);
+            const uint32_t clear = C2D_Color32f(0.05f, 0.08f, 0.10f, 0.0f), dark = C2D_Color32f(0.05f, 0.08f, 0.10f, a);
+
+            C2D_DrawRectangle(0, CTR_GAME_HEIGHT - BOX_2X_FADE_H, 0, CTR_GAME_WIDTH, BOX_2X_FADE_H, clear, clear, dark, dark);
             for (unsigned c = 0; c < 4; ++c)
                 art.corners[c].color = (art.corners[c].color & 0x00FFFFFFu) | ((uint32_t)BOX_2X_ALPHA << 24);
+        }
 
         C2D_DrawImageAt((C2D_Image){&sBoxTex, &left}, m + shift, y0, 0, &art, 1, 1);
         C2D_DrawImageAt((C2D_Image){&sBoxTex, &middle}, m + cap + shift, y0, 0, &art, CTR_GAME_WIDTH - 2 * (m + cap), 1);
@@ -10963,7 +10977,7 @@ void CtrVideo_Present(void)
     /* GBA (120, 112) - the middle of the scene's bottom edge - on screen (200, 192);
      * at 2x on (200, 240), the screen's bottom edge, the text box gone below. */
     sOffX = sBattle ? CTR_GAME_WIDTH / 2 - 120 * sZoom : 0.0f;
-    sOffY = sBattle ? CTR_GAME_HEIGHT - (sBattle2x ? 0 : 48) - 112 * sZoom : 0.0f;
+    sOffY = sBattle ? CTR_GAME_HEIGHT - (sBattle2x ? 0 : 48) - (112 + (sBattle2x ? BATTLE_2X_LOW : 0)) * sZoom : 0.0f;
     sShiftZoom = sZoom;
     BottomBand();
     if (sStage || sCentred)
