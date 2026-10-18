@@ -430,7 +430,7 @@ static bool sBattle2x;
 static uint16_t sTextBand[CTR_BOTTOM_WIDTH * BAND_H];
 static bool sBandShown;
 /* The 2x battle's text box: the HD panel on the top screen as a glass pane,
- * BOX_2X_MARGIN in from the sides, BOX_2X_ALPHA of its colour, slid out of
+ * BOX_2X_MARGIN in from the sides, sPaneAlphas of its colour, slid out of
  * sight below the screen while the message window is empty (sBoxOut 0..1).
  * The info boxes line up HUD_2X_MARGIN in from their side's edge. */
 #define BOX_2X_MARGIN 20
@@ -448,17 +448,19 @@ static bool sBandShown;
  * "2X TEXT FADE" (settings key battle_2x_fade): 0 the pane alone; 1 PANE, a
  * BOX_2X_EDGE gradient of the pane's colour above its edge; 2 MON, the
  * player's own Pokémon fading to nothing over its last FEET_FADE_GBA lines
- * (its slot or cell drawn with a vertex alpha ramp, nothing extra composed),
- * the picture lifted BOX_2X_LIFT_MON instead. The flat (slider down) path
- * composes the sprites with the scenery and cannot fade them.
+ * (its slot or cell drawn with a vertex alpha ramp when placed, its tile rows
+ * with a stepped tint when composed with the scene; nothing extra composed).
  */
 #define BOX_2X_EDGE 24
-#define BOX_2X_LIFT_MON 24
 #define FEET_FADE_GBA 14
 #define FEET_FADE_ALPHA 0.08f
 static unsigned sFade2x;
+/* "2X PANE ALPHA" (battle_2x_alpha): the pane's opacity, 85 .. 25 percent. */
+static const uint8_t sPaneAlphas[5] = {0xD9, 0xB3, 0x8C, 0x66, 0x40};
+static unsigned sPaneAlpha2x;
+/* Sprites composed into a slot (SlotsCompose), faded when placed instead. */
+static bool sSlotComposing;
 static uint32_t sBoxFill = 0xFF80A080u;
-#define BOX_2X_ALPHA 0xD0
 #define HUD_2X_MARGIN 28
 static float sBoxOut;
 /* The screen line the HD panel was last drawn at (BattleTextBand's band). */
@@ -3325,12 +3327,12 @@ static bool DrawBattleTextHd(unsigned bg)
                 /* The pane's colour rising above its edge, from nothing to
                  * the pane's own strength, as far as the pane is in. */
                 const uint32_t clear = sBoxFill & 0x00FFFFFFu;
-                const uint32_t full = clear | ((uint32_t)(BOX_2X_ALPHA * (1.0f - sBoxOut)) << 24);
+                const uint32_t full = clear | ((uint32_t)(sPaneAlphas[sPaneAlpha2x] * (1.0f - sBoxOut)) << 24);
 
                 C2D_DrawRectangle(m, y0 - BOX_2X_EDGE, 0, CTR_GAME_WIDTH - 2 * m, BOX_2X_EDGE, clear, clear, full, full);
             }
             for (unsigned c = 0; c < 4; ++c)
-                art.corners[c].color = (art.corners[c].color & 0x00FFFFFFu) | ((uint32_t)BOX_2X_ALPHA << 24);
+                art.corners[c].color = (art.corners[c].color & 0x00FFFFFFu) | ((uint32_t)sPaneAlphas[sPaneAlpha2x] << 24);
         }
 
         C2D_DrawImageAt((C2D_Image){&sBoxTex, &left}, m + shift, y0, 0, &art, 1, 1);
@@ -5480,11 +5482,40 @@ static void DrawObjectAt(int x, int y, unsigned attr1, unsigned attr2, unsigned 
         {
             bool flipX = (attr1 & 0x1000) != 0, flipY = (attr1 & 0x2000) != 0;
 
+            /* The player's own Pokémon composed with the scene at 2x with
+             * MON fade on (a frame a move blends, the flat path): its last
+             * tile rows at the ramp's alpha, each row its own batch with
+             * the tint stepped - as the placed slots fade (DrawFeetFaded). */
+            bool feet = sBattle2x && sFade2x == 2 && sBattle && !sSlotComposing && x < 120 && boxH >= 32
+                     && y + (int)boxH / 2 > CTR_BATTLE_SIDE_SPLIT && mode != 2;
+            C2D_ImageTint tintSaved = sTint;
+
             /* A batch just opened: its blend state and tint. */
             if (sSpriteCount == 0) Blend(4, effects, mode == 1);
             batchKey = key;
             sSpritePending = true;
             for (unsigned ty = 0; ty < height / 8; ++ty)
+            {
+                float a = 1.0f;
+
+                if (feet)
+                {
+                    float mid = (float)(ty * 8 + 4), top = (float)boxH - FEET_FADE_GBA;
+
+                    if (mid > top) a = 1.0f - (1.0f - FEET_FADE_ALPHA) * (mid - top) / FEET_FADE_GBA;
+                    if (a < 1.0f)
+                    {
+                        SpriteBatchFlush();
+                        sSpritePending = true;
+                        for (unsigned c = 0; c < 4; ++c)
+                        {
+                            float b = 1.0f - a;
+
+                            sTint.corners[c].color = C2D_Color32f(0, 0, 0, a);
+                            sTint.corners[c].blend = tintSaved.corners[c].blend > b ? tintSaved.corners[c].blend : b;
+                        }
+                    }
+                }
                 for (unsigned tx = 0; tx < width / 8; ++tx)
                 {
                     unsigned sx = flipX ? width / 8 - 1 - tx : tx;
@@ -5499,6 +5530,13 @@ static void DrawObjectAt(int x, int y, unsigned attr1, unsigned attr2, unsigned 
                     ++sFastUsed;
                     ++sSpriteCount;
                 }
+                if (a < 1.0f)
+                {
+                    SpriteBatchFlush();
+                    sSpritePending = true;
+                    sTint = tintSaved;
+                }
+            }
             return;
         }
         SpriteBatchFlush();
@@ -7056,6 +7094,7 @@ static void SceneCacheSync(unsigned exclude)
  */
 static void BattleSceneCompose(int margin, unsigned exclude)
 {
+    sSlotComposing = false;
     float zoom = sZoom, offX = sOffX, offY = sOffY;
     /*
      * The surface holds the lowest SCENE_H / SCENE_ZOOM lines of the scene.
@@ -8293,6 +8332,7 @@ static void DrawnClear(C3D_RenderTarget *target, uint32_t color, float x, float 
 /* Every slot's sprite into it, undisplaced. */
 static void SlotsCompose(void)
 {
+    sSlotComposing = true;
     float zoom = sZoom, offX = sOffX, offY = sOffY;
 
     sZoom = SCENE_ZOOM;
@@ -11038,8 +11078,13 @@ void CtrVideo_Present(void)
      * at 2x on (200, 240), the screen's bottom edge, the text box gone below. */
     sOffX = sBattle ? CTR_GAME_WIDTH / 2 - 120 * sZoom : 0.0f;
     sOffY = sBattle ? CTR_GAME_HEIGHT - (sBattle2x ? 0 : 48) - 112 * sZoom : 0.0f;
-    sFade2x = (unsigned)CtrSettings_GetInt("battle_2x_fade", 0);
-    if (sBattle2x) sOffY -= roundf((sFade2x == 2 ? BOX_2X_LIFT_MON : BOX_2X_LIFT) * (1.0f - sBoxOut));
+    sFade2x = (unsigned)CtrSettings_GetInt("battle_2x_fade", 2);
+    sPaneAlpha2x = (unsigned)CtrSettings_GetInt("battle_2x_alpha", 0);
+    if (sPaneAlpha2x > 4) sPaneAlpha2x = 4;
+    /* The picture always BOX_2X_LIFT higher at 2x: lifted only with a
+     * message, the intro's trainer seemed to play twice as the pane came. */
+    if (sBattle2x) sOffY -= BOX_2X_LIFT;
+    sSlotComposing = false;
     sShiftZoom = sZoom;
     BottomBand();
     if (sStage || sCentred)
