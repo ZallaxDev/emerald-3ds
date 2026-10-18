@@ -44,6 +44,11 @@ typedef struct
     const uint8_t *(*text)(void);
 } CtrExtra;
 
+/* OPTIONS' RANDOM BOOT SEED: 1 seeds the RNG from the console's timing at boot
+ * and on a soft reset (Port_RngSeed, 3ds_game_full.c); 0, the default, keeps
+ * Emerald's zero seed. */
+#define CTR_BOOT_SEED_KEY "boot_seed"
+
 extern const CtrExtra gCtrExtras[];
 extern const char *const gCtrExtrasOffOn[2];   /* "OFF", "ON" */
 extern const unsigned gCtrExtraCount;

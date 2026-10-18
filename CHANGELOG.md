@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- RANDOM BOOT SEED, a new line on OPTIONS' second screen (`boot_seed=` in
+  settings.txt), OFF by default: boot and soft reset keep Emerald's zero RNG
+  seed, so zero-seed RNG manipulation works as on the GBA. ON seeds them from
+  the console's timing instead. A new game always reseeds from the console's
+  timing before the trainer ID is drawn, whatever this option says. Recorded
+  scenarios replay as before.
+
 - Pokédex on the top screen: while the Pokédex is open on the bottom
   screen, the top shows the device itself - the red shell, lens and lights,
   a screen window - with the Pokémon of the info page, or under the list's

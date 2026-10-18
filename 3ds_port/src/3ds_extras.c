@@ -215,6 +215,10 @@ const CtrExtra gCtrExtras[] =
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("3D WORLD", "MUNDO 3D", "MONDE 3D", "MONDO 3D"), "voxel_stereo", 3, 0, sVoxelStereo, NULL, NULL, NULL},
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("3D DEPTH", "PROFUNDIDAD 3D", "PROFONDEUR 3D", "PROFOND. 3D"), "voxel_depth", 7, 3, sVoxelDepths, NULL, NULL, NULL},
 #endif
+    /* The RNG's seed at boot and on a soft reset: Emerald's zero by default,
+     * the console's timing when on (3ds_game_full.c, Port_RngSeed). Read
+     * when AgbMain starts, so a change applies from the next soft reset. */
+    {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("RANDOM BOOT SEED", "SEMILLA ALEATORIA", "GRAINE ALÉATOIRE", "SEME CASUALE"), CTR_BOOT_SEED_KEY, 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("SPEED", "VELOC. JUEGO", "VITESSE", "VELOCITÀ"), "speed", 0, 0, NULL, NULL, SpeedStep, SpeedText},
     /* The game and the music keep real time on a slow frame; the sound
      * engine mixes on the DSP's clock (3ds_platform.c, 3ds_audio.c). */
