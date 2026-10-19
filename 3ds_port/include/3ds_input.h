@@ -38,5 +38,7 @@ typedef struct {
 void CtrInput_Update(CtrInput *state, const CtrInputSample *sample);
 void CtrInput_Scan(void);
 void CtrInput_Clear(void);
+/* Stops what the scan started (the ir:rst service of the second stick). */
+void CtrInput_Shutdown(void);
 const CtrInput *CtrInput_Get(void);
 #endif

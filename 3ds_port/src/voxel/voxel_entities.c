@@ -15,6 +15,7 @@
 #include "field_player_avatar.h"
 #include "constants/field_effects.h"
 #include "constants/event_object_movement.h"
+#include "constants/event_objects.h"
 #include "gba/io_reg.h"
 #include "port_platform.h"
 #include "3ds_log.h"
@@ -22,6 +23,7 @@
 #include "3ds_video.h"
 #include "voxel_building.h"
 #include "voxel_entities.h"
+#include "voxel_freemove.h"
 #include "voxel_grade.h"
 #include "voxel_relief.h"
 #include "voxel_world.h"
@@ -76,6 +78,35 @@ static u8 sSlotEffect[VOXEL_SPRITE_SLOTS];
 static int sPlayerVertexFirst = -1;
 
 int VoxelEntities_PlayerVertexFirst(void) { return sPlayerVertexFirst; }
+
+int VoxelEntities_PlayerFacing(void)
+{
+    const struct ObjectEvent *obj;
+
+    if (gPlayerAvatar.objectEventId >= OBJECT_EVENTS_COUNT)
+        return 0;
+    obj = &gObjectEvents[gPlayerAvatar.objectEventId];
+    /* DIR_SOUTH..DIR_EAST are 1..4; the diagonals and none are not a facing. */
+    return obj->active && obj->facingDirection >= DIR_SOUTH && obj->facingDirection <= DIR_EAST
+         ? obj->facingDirection : 0;
+}
+
+/*
+ * The axes a card at (cx, cz) is drawn along: `right` along its width, scaled
+ * by `narrow`, and `toward` the camera along the ground. On the orbit every
+ * card shares the camera's yaw; in the free-roam rig each turns to face the
+ * eye, which a head that stands among them (and looks anywhere) needs.
+ */
+static void CardAxes(const VoxelCamera *camera, float cx, float cz, float narrow,
+                     float *rightX, float *rightZ, float *towardX, float *towardZ)
+{
+    float yawRad = VoxelCamera_CardYaw(camera, cx, cz) * (3.14159265358979323846f / 180.0f);
+
+    *rightX = cosf(yawRad) * narrow;
+    *rightZ = -sinf(yawRad) * narrow;
+    *towardX = sinf(yawRad);
+    *towardZ = cosf(yawRad);
+}
 
 void VoxelEntities_Reset(void)
 {
@@ -176,6 +207,18 @@ static float GetMovementProgress(const struct ObjectEvent *obj, const struct Spr
     return t;
 }
 
+static bool IsPlayerObject(const struct ObjectEvent *obj)
+{
+    return gPlayerAvatar.objectEventId < OBJECT_EVENTS_COUNT
+        && obj == &gObjectEvents[gPlayerAvatar.objectEventId];
+}
+
+/* The game moves the player itself: a jump over a ledge, with its arc. */
+static bool GameOwnsPlayer(const struct ObjectEvent *obj)
+{
+    return (obj->singleMovementActive || obj->heldMovementActive) && IsJumpAction(obj->movementActionId);
+}
+
 static bool GetObjectWorldPos(const struct ObjectEvent *obj, const struct Sprite *sprite,
                               float *outX, float *outZ)
 {
@@ -187,6 +230,23 @@ static bool GetObjectWorldPos(const struct ObjectEvent *obj, const struct Sprite
 
     *outX = prevX + (curX - prevX) * t;
     *outZ = prevZ + (curZ - prevZ) * t;
+    if (IsPlayerObject(obj))
+    {
+        /*
+         * Free walking (voxel_freemove.h): the player stands where the
+         * stick has taken it, not where a grid step has got to. Everything
+         * placed from the player - the card, what it stands in, the camera -
+         * follows from here.
+         */
+        VoxelFreeMove *move = VoxelFreeMove_Get();
+
+        VoxelFreeMove_Sync(move, obj->currentCoords.x, obj->currentCoords.y);
+        if (move->blend > 0.0f && !GameOwnsPlayer(obj))
+        {
+            *outX += ((curX + move->ox) - *outX) * move->blend;
+            *outZ += ((curZ + move->oz) - *outZ) * move->blend;
+        }
+    }
     return true;
 }
 
@@ -436,12 +496,25 @@ static void PictureSize(const struct Sprite *sprite, const struct ObjectEvent *o
 }
 
 /*
+ * A picture to show in place of the one the game has in its VRAM: the frame
+ * of the object's own picture table that faces the camera the way the object
+ * faces in the world (ApparentFrame).
+ */
+typedef struct
+{
+    const u8 *tiles;
+    u32 bytes;
+    bool flipX, flipY;
+} FrameOverride;
+
+/*
  * Brings a slot up to date with its sprite (an object's, or NULL for a field
  * effect). Returns true if it was re-decoded, which only happens when
- * something the picture depends on actually changed.
+ * something the picture depends on actually changed. `frame` replaces the
+ * picture in the game's VRAM with another of the object's frames.
  */
 static bool RefreshSlot(unsigned index, const struct Sprite *sprite, const struct ObjectEvent *obj,
-                        uint16_t *atlas)
+                        uint16_t *atlas, const FrameOverride *frame)
 {
     VoxelSpriteSlot *slot = &sSlots[index];
     /* Static, not automatic: this runs in the VBlank handler and 4.5 KiB of
@@ -462,7 +535,16 @@ static bool RefreshSlot(unsigned index, const struct Sprite *sprite, const struc
     if (w > (int)VOXEL_SPRITE_SLOT_DIM || h > (int)VOXEL_SPRITE_SLOT_DIM)
         return false;
 
-    sourceBytes = GatherSource(sprite, w, h, color256, source);
+    if (frame != NULL && frame->tiles != NULL && !color256 && frame->bytes == (u32)(w * h / 2)
+     && frame->bytes <= VOXEL_SPRITE_MAX_BYTES)
+    {
+        memcpy(source, frame->tiles, frame->bytes);
+        sourceBytes = frame->bytes;
+        flipX = frame->flipX;
+        flipY = frame->flipY;
+    }
+    else
+        sourceBytes = GatherSource(sprite, w, h, color256, source);
     paletteBytes = color256 ? 256 * 2 : 16 * 2;
     /* OBJ palettes are the second half of PLTT; 8bpp uses it as one bank.
      * One given an ext palette shows that, as the 2D compositor does. */
@@ -1169,6 +1251,185 @@ static int EffectOwner(const struct Sprite *sprite, const VoxelObjectCard *objec
     return best;
 }
 
+/* ── Facing the camera ───────────────────────────────────────────────────── */
+
+/*
+ * Object pictures are one frame per way an object faces (and a few more to
+ * walk by), the game choosing by the direction it faces in the world. From a
+ * camera that looks any way, the picture to show is the one for the way the
+ * object faces *across the camera*: facing the camera, the front; away from
+ * it, the back; to the camera's left or right, that side. On the orbit
+ * camera (looking north) this is the picture the game chose, so only the
+ * free-roam camera needs it.
+ *
+ * It is taken from the object's own animation table, which keeps the walk
+ * cycle: the same position in the same animation, of the facing the camera
+ * sees. The standard table (every NPC that walks) and the player's lay their
+ * animations out in groups of four, south, north, west, east, which is what
+ * makes this a matter of changing the number's last two bits. Any other
+ * table (a Pokémon, a boulder, a door) is shown as the game has it.
+ */
+#define VOXEL_ANIM_STD_COUNT 20
+#define VOXEL_ANIM_PLAYER_COUNT 24
+#define VOXEL_PI 3.14159265358979323846f
+
+static const union AnimCmd *const *sStandardAnims;
+static const union AnimCmd *const *sPlayerAnims;
+
+static void FindAnimTables(void)
+{
+    if (sStandardAnims == NULL)
+        sStandardAnims = GetObjectEventGraphicsInfo(OBJ_EVENT_GFX_MAN_1)->anims;
+    if (sPlayerAnims == NULL)
+        sPlayerAnims = GetObjectEventGraphicsInfo(OBJ_EVENT_GFX_BRENDAN_NORMAL)->anims;
+}
+
+/* The bearing (yaw: 0 south, pi/2 east) of a group's member. */
+static float AnimFacingAngle(unsigned member)
+{
+    static const float angle[4] = {0.0f, VOXEL_PI, -0.5f * VOXEL_PI, 0.5f * VOXEL_PI};
+
+    return angle[member & 3u];
+}
+
+/* The member (south, north, west, east) an object facing `facing` shows to a
+ * camera that sees it from `toCamera` (both bearings). */
+static unsigned ApparentMember(float facing, float toCamera)
+{
+    float delta = facing - toCamera;
+
+    while (delta > VOXEL_PI) delta -= 2.0f * VOXEL_PI;
+    while (delta <= -VOXEL_PI) delta += 2.0f * VOXEL_PI;
+    if (delta >= -0.25f * VOXEL_PI && delta <= 0.25f * VOXEL_PI)
+        return 0; /* towards the camera: the front */
+    if (delta > 0.25f * VOXEL_PI && delta <= 0.75f * VOXEL_PI)
+        return 3; /* across it to the right: east's picture */
+    if (delta < -0.25f * VOXEL_PI && delta >= -0.75f * VOXEL_PI)
+        return 2;
+    return 1;
+}
+
+/* The frame to show for an object card at (cx, cz), or false to show the
+ * game's own. */
+static bool ApparentFrame(const struct ObjectEvent *obj, const struct Sprite *sprite,
+                          const VoxelCamera *camera, float cx, float cz, int w, int h,
+                          FrameOverride *out)
+{
+    const struct ObjectEventGraphicsInfo *info;
+    const struct SpriteFrameImage *image;
+    const union AnimCmd *cmd;
+    VoxelFreeMove *move = VoxelFreeMove_Get();
+    unsigned num, base, target, index;
+    bool player = IsPlayerObject(obj), walking = false;
+    float facing, toCamera;
+    u32 size;
+
+    if (camera->cardBlend <= 0.0f || sprite->anims == NULL || sprite->oam.bpp != 0)
+        return false;
+    FindAnimTables();
+    num = sprite->animNum;
+    if (sprite->anims == sPlayerAnims)
+    {
+        if (!player && num >= VOXEL_ANIM_STD_COUNT)
+            return false;
+        if (num >= VOXEL_ANIM_PLAYER_COUNT)
+            return false;
+    }
+    else if (sprite->anims == sStandardAnims)
+    {
+        if (num >= VOXEL_ANIM_STD_COUNT)
+            return false;
+    }
+    else
+        return false;
+    info = GetObjectEventGraphicsInfo(obj->graphicsId);
+    if (info == NULL || info->images == NULL)
+        return false;
+
+    base = num & ~3u;
+    facing = AnimFacingAngle(num);
+    if (player && move->blend > 0.0f && !GameOwnsPlayer(obj))
+    {
+        /* Walking free, the player faces where it walks, and walks while it
+         * moves, with the cycle by the distance it has gone. */
+        if (VoxelFreeMove_Moving(move))
+        {
+            facing = move->heading;
+            walking = true;
+            base = num >= VOXEL_ANIM_STD_COUNT ? VOXEL_ANIM_STD_COUNT : 4u;
+        }
+    }
+    toCamera = VoxelCamera_CardYaw(camera, cx, cz) * (VOXEL_PI / 180.0f);
+    target = base + ApparentMember(facing, toCamera);
+    index = sprite->animCmdIndex;
+    if (walking)
+    {
+        float cycle = move->travel - floorf(move->travel);
+
+        index = (unsigned)(cycle * 4.0f) & 3u;
+    }
+    cmd = &sprite->anims[target][index];
+    if (cmd->type < 0)
+    {
+        cmd = &sprite->anims[target][0];
+        if (cmd->type < 0)
+            return false;
+    }
+    image = &info->images[cmd->frame.imageValue];
+    size = Port_GetSpriteFrameSize(image->data, image->size);
+    if (size != (u32)(w * h / 2))
+        return false;
+    out->tiles = Port_PeekSpriteFramePointer(image->data, size, image->offset);
+    out->bytes = size;
+    out->flipX = cmd->frame.hFlip != 0;
+    out->flipY = cmd->frame.vFlip != 0;
+    return out->tiles != NULL;
+}
+
+void VoxelEntities_WarmPlayerFrames(void)
+{
+    const struct ObjectEvent *obj;
+    const struct ObjectEventGraphicsInfo *info;
+    const struct Sprite *sprite;
+    unsigned seen[32], seenCount = 0;
+
+    if (gPlayerAvatar.objectEventId >= OBJECT_EVENTS_COUNT)
+        return;
+    obj = &gObjectEvents[gPlayerAvatar.objectEventId];
+    if (!obj->active || obj->spriteId >= MAX_SPRITES)
+        return;
+    sprite = &gSprites[obj->spriteId];
+    FindAnimTables();
+    if (sprite->anims != sPlayerAnims || sprite->oam.bpp != 0)
+        return;
+    info = GetObjectEventGraphicsInfo(obj->graphicsId);
+    if (info == NULL || info->images == NULL)
+        return;
+    /* Every picture the player's animations show, read now - on the game's
+     * thread, a frame at a time as the game does for the one it plays -
+     * rather than on the render thread the first time it is turned to. */
+    for (unsigned anim = 0; anim < VOXEL_ANIM_PLAYER_COUNT; ++anim)
+    {
+        const union AnimCmd *cmds = sprite->anims[anim];
+
+        for (unsigned c = 0; cmds[c].type >= 0 && c < 8; ++c)
+        {
+            unsigned value = (unsigned)cmds[c].frame.imageValue, i;
+            const struct SpriteFrameImage *image;
+            u32 size;
+
+            for (i = 0; i < seenCount && seen[i] != value; ++i)
+                ;
+            if (i < seenCount || seenCount >= ARRAY_COUNT(seen))
+                continue;
+            seen[seenCount++] = value;
+            image = &info->images[value];
+            size = Port_GetSpriteFrameSize(image->data, image->size);
+            (void)Port_ResolveSpriteFramePointer(image->data, size, image->offset);
+        }
+    }
+}
+
 unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamera *camera,
                             VoxelBuilder *shadows, VoxelBuilder *reflections)
 {
@@ -1183,12 +1444,8 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
      * characters small, all of it on the height big. Still upright, so it
      * sorts against walls as before. Shadow and reflection are the card's
      * own, so they take the same size. */
-    float yawRad = camera->yaw * (3.14159265358979323846f / 180.0f);
-    float narrow = sqrtf(cosf(camera->pitch * (3.14159265358979323846f / 180.0f)));
+    float narrow = sqrtf(cosf(VoxelCamera_CardPitch(camera) * (3.14159265358979323846f / 180.0f)));
     float stretch = 1.0f / narrow;
-    float rightX = cosf(yawRad) * narrow, rightZ = -sinf(yawRad) * narrow;
-    /* Towards the camera, along the ground. */
-    float towardX = sinf(yawRad), towardZ = cosf(yawRad);
     float pixel = stretch / VOXEL_PIXELS_PER_TILE;
     /* Static, not automatic: this runs in the VBlank handler. */
     static VoxelObjectCard objects[OBJECT_EVENTS_COUNT];
@@ -1259,8 +1516,18 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
         if (fabsf(worldX - camera->targetX) > 24.0f
          || fabsf(worldZ - camera->targetZ) > 24.0f)
             continue;
-        if (RefreshSlot(i, sprite, obj, atlas))
-            ++updates;
+        {
+            FrameOverride frame;
+            int pictureW, pictureH;
+            bool facingCamera;
+
+            PictureSize(sprite, obj, &pictureW, &pictureH);
+            frame.tiles = NULL;
+            facingCamera = ApparentFrame(obj, sprite, camera, worldX + 0.5f, worldZ + 0.5f,
+                                         pictureW, pictureH, &frame);
+            if (RefreshSlot(i, sprite, obj, atlas, facingCamera ? &frame : NULL))
+                ++updates;
+        }
         if (!sSlots[i].valid)
             continue;
         {
@@ -1384,9 +1651,13 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
     {
         VoxelObjectCard *card = &objects[i];
         float rise, dusk;
+        float rightX, rightZ, towardX, towardZ;
 
         if (!card->drawn)
             continue;
+        (void)towardX; (void)towardZ;
+        CardAxes(camera, card->worldX + 0.5f, card->worldZ + 0.5f, narrow,
+                 &rightX, &rightZ, &towardX, &towardZ);
         /* Through an open door: gone, shadow and all. */
         dusk = DoorLight(&door, card->worldX + 0.5f, card->worldZ + 0.5f);
         if (dusk <= 0.0f)
@@ -1404,6 +1675,10 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
             EmitCastShadow(shadows, &sSlots[i], i, card->worldX, card->worldZ, rightX, rightZ,
                            stretch, card->shade, card->rise > 0.0f ? rise : 0.0f, card->deck);
 #endif
+        /* In the head of the player (1ST) the card would fill the lens from
+         * inside: its cast shadow stays, the card and its reflection go. */
+        if (camera->hidePlayer && i == gPlayerAvatar.objectEventId)
+            continue;
         if (reflections != NULL && gObjectEvents[i].hasReflection)
             EmitReflection(reflections, &sSlots[i], i, card->worldX, card->worldZ,
                            rightX, rightZ, stretch);
@@ -1421,7 +1696,7 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
         const VoxelObjectCard *reference;
         int h, x, base;
 
-        if (RefreshSlot(effect->slot, sprite, NULL, atlas))
+        if (RefreshSlot(effect->slot, sprite, NULL, atlas, NULL))
             ++updates;
         if (!sSlots[effect->slot].valid)
             continue;
@@ -1458,7 +1733,10 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
             float along = (x - object->screenX) / VOXEL_PIXELS_PER_TILE;
             /* The owner's feet on the ground, lifted by what it rides. */
             float rise = object->rise + (object->feet - base - sprite->y2) * pixel;
+            float rightX, rightZ, towardX, towardZ;
 
+            CardAxes(camera, object->worldX + 0.5f, object->worldZ + 0.5f, narrow,
+                     &rightX, &rightZ, &towardX, &towardZ);
             EmitBillboard(builder, &sSlots[effect->slot], effect->slot,
                           object->worldX + 0.5f, object->worldZ + 0.5f,
                           rightX * along + towardX * depth, rightZ * along + towardZ * depth,
@@ -1508,9 +1786,13 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
                 EmitDecal(builder, &sSlots[effect->slot], effect->slot, cx, cz, 0.0f, reference->shade);
                 continue;
             }
+            float rightX, rightZ, towardX, towardZ;
+
             cz = reference->worldZ + 0.5f + (base - reference->base) / VOXEL_PIXELS_PER_TILE;
             if (fabsf(cx - camera->targetX) > 24.0f || fabsf(cz - camera->targetZ) > 24.0f)
                 continue;
+            CardAxes(camera, cx, cz, narrow, &rightX, &rightZ, &towardX, &towardZ);
+            (void)towardX; (void)towardZ;
             EmitBillboard(builder, &sSlots[effect->slot], effect->slot, cx, cz, 0.0f, 0.0f,
                           -sprite->y2 * pixel, reference->deck, rightX, rightZ, stretch,
                           reference->shade, SpriteScale(sprite));

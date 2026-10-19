@@ -38,6 +38,12 @@ static const char *const sShinyOdds[] = {"1/8192", "1/4096", "1/1024", "1/256", 
 #if CTR_VOXEL_ENABLED
 static const char *const sVoxelStereo[] = {CTR_TEXT("AUTO", "AUTO", "AUTO", "AUTO"), CTR_TEXT("ON", "SÍ", "OUI", "SÌ"), CTR_TEXT("OFF", "NO", "NON", "NO")};
 static const char *const sVoxelDepths[] = {"25%", "50%", "75%", "100%", "125%", "150%", "200%"};
+/* The camera (3ds_freecam.h): the orbit, from the player's eyes, or from
+ * behind their shoulder. */
+/* How the player walks with the camera on 1ST or 3RD: by the grid's four
+ * directions, or free over walkable tiles (voxel_freemove.h). */
+static const char *const sVoxelMove[] = {CTR_TEXT("GRID", "CUADRÍCULA", "GRILLE", "GRIGLIA"), CTR_TEXT("FREE", "LIBRE", "LIBRE", "LIBERO")};
+static const char *const sVoxelCamera[] = {CTR_TEXT("ORBIT", "ORBITAL", "ORBITE", "ORBITA"), CTR_TEXT("1ST", "1ª", "1RE", "1ª"), CTR_TEXT("3RD", "3ª", "3E", "3ª")};
 #endif
 /*
  * Pokedex (CHEATS): the Hoenn Pokedex complete, the National Pokedex
@@ -203,6 +209,8 @@ const CtrExtra gCtrExtras[] =
 #if CTR_VOXEL_ENABLED
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("3D WORLD", "MUNDO 3D", "MONDE 3D", "MONDO 3D"), "voxel_stereo", 3, 0, sVoxelStereo, NULL, NULL, NULL},
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("3D DEPTH", "PROFUNDIDAD 3D", "PROFONDEUR 3D", "PROFOND. 3D"), "voxel_depth", 7, 3, sVoxelDepths, NULL, NULL, NULL},
+    {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("CAMERA", "CÁMARA", "CAMÉRA", "CAMERA"), "voxel_camera", 3, 0, sVoxelCamera, NULL, NULL, NULL},
+    {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("MOVE", "MOVIMIENTO", "DÉPLACEMENT", "MOVIMENTO"), "voxel_move", 2, 1, sVoxelMove, NULL, NULL, NULL},
 #endif
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("SPEED", "VELOC. JUEGO", "VITESSE", "VELOCITÀ"), "speed", 0, 0, NULL, NULL, SpeedStep, SpeedText},
     /* The game and the music keep real time on a slow frame; the sound
@@ -284,7 +292,7 @@ int CtrExtras_Get(const char *key)
 bool CtrExtras_NeedsVoxel(const CtrExtra *extra)
 {
 #if CTR_VOXEL_ENABLED
-    return extra->values == sVoxelStereo || extra->values == sVoxelDepths;
+    return extra->values == sVoxelStereo || extra->values == sVoxelDepths || extra->values == sVoxelCamera || extra->values == sVoxelMove;
 #else
     (void)extra;
     return false;

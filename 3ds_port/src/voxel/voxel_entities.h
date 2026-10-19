@@ -56,6 +56,14 @@ void VoxelEntities_GetPlayerWorldPos(float *worldX, float *worldZ);
 float VoxelEntities_PlayerDeck(void);
 /* First vertex of the emitted player quad, or -1 when invisible/not emitted. */
 int VoxelEntities_PlayerVertexFirst(void);
+/* The way the player faces, as the decompilation's DIR_* (1 south, 2 north,
+ * 3 west, 4 east), or 0 when there is none to speak of (no player yet, a
+ * diagonal): the free-roam camera starts its look from it. */
+int VoxelEntities_PlayerFacing(void);
+/* Reads every picture the player's animations show, so that the render
+ * thread, which shows the one that faces the camera (free-roam camera), finds
+ * them in memory. Call from the game's thread. */
+void VoxelEntities_WarmPlayerFrames(void);
 
 /*
  * Re-decodes the slots whose sprite changed and appends one billboard per

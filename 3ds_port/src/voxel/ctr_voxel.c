@@ -259,6 +259,14 @@ static VoxelVertex *sDynamicScratch;   /* billboard builder output */
 static VoxelGpuVertex *sStaging;       /* chunk uploads, linear */
 static unsigned sStagingUsed, sChunkUploads;
 static VoxelGpuVertex *sDynamic;       /* billboards and shadows, linear */
+/* The tree crowns turned to the free-roam rig's eye, drawn again every frame
+ * (BuildCrowns): cards of the chunks on screen, nearest first come, the rest
+ * staying as built. 72 KiB of linear memory; without it the crowns stay as
+ * built. */
+#define VOXEL_CROWN_CARDS 768u
+#define VOXEL_CROWN_VERTICES (VOXEL_CROWN_CARDS * 6u)
+static VoxelGpuVertex *sCrownDyn;
+static unsigned sCrownVertices;
 static VoxelBuilder sBuilder;
 static VoxelCamera sCamera;
 static VoxelAtlasSlot sAtlases[VOXEL_ATLAS_SLOTS];
@@ -650,6 +658,13 @@ typedef struct
     unsigned bytes, count, terrainCount;
     unsigned terrainFirst[VOXEL_ATLAS_PAGES + 1u];
     unsigned buildingFirst; /* trees are [terrainCount, buildingFirst) */
+    /* ... the ground under them and the small trees' bases in [terrainCount,
+     * crownFirst), the crown cards as built in [crownFirst, buildingFirst):
+     * which the free-roam rig leaves out for the same cards turned to its eye,
+     * from `crowns` (DrawCrowns). NULL when it has none, or none to turn. */
+    unsigned crownFirst;
+    VoxelCrown *crowns;
+    unsigned crownCount;
     int buildingPage;       /* texture page of [buildingFirst, count) */
     uint32_t stamp;         /* last frame the view or the prefetch ring saw it */
     uint32_t viewStamp;     /* last frame it was on screen */
@@ -696,6 +711,7 @@ typedef struct
 {
     const VoxelChunk *chunk;
     int worldX, worldZ; /* the chunk corner's place in the world this frame */
+    bool turnedCrowns;  /* its crowns come from the frame's own (BuildCrowns) */
 } VoxelChunkDraw;
 
 static VoxelChunkDraw sDraws[VOXEL_DRAW_MAX];
@@ -764,13 +780,21 @@ static float CameraTanX(void);
  * the middle camera's edge, with room to spare. */
 #define VOXEL_STEREO_CULL_SLACK 4.0f
 
+/* The near plane of this frame's camera: the orbit's, or in the free-roam
+ * rig (voxel_freecam.h) nearly at the lens, where the eye stands close to
+ * what it sees. */
+static float NearPlane(void)
+{
+    return VoxelCamera_Near(&sCamera, VOXEL_NEAR);
+}
+
 static void CameraMatrices(C3D_Mtx *projection, C3D_Mtx *view, bool fit, int eye)
 {
     float screen, iod = eye >= 0 && sStereoSlider > 0.0f ? StereoIod(&screen) : 0.0f;
 
     Mtx_Persp(projection, C3D_AngleFromDegrees(sCamera.fov),
               (float)CTR_GAME_WIDTH / (float)CTR_GAME_HEIGHT,
-              VOXEL_NEAR, VOXEL_FAR, false);
+              NearPlane(), VOXEL_FAR, false);
     if (iod > 0.0f)
     {
         /*
@@ -791,7 +815,7 @@ static void CameraMatrices(C3D_Mtx *projection, C3D_Mtx *view, bool fit, int eye
         FitToLogicalSurface(projection);
     Mtx_LookAt(view,
                FVec3_New(sCamera.x, sCamera.y, sCamera.z),
-               FVec3_New(sCamera.targetX, sCamera.targetY, sCamera.targetZ),
+               FVec3_New(sCamera.lookX, sCamera.lookY, sCamera.lookZ),
                FVec3_New(0.0f, 1.0f, 0.0f), false);
 }
 
@@ -806,7 +830,7 @@ static bool ProjectWorldPoint(const C3D_Mtx *view, float x, float y, float z, fl
     float vz = view->r[2].x * x + view->r[2].y * y + view->r[2].z * z + view->r[2].w;
     float tanY;
 
-    if (vz > -VOXEL_NEAR)
+    if (vz > -NearPlane())
         return false;
     tanY = tanf(C3D_AngleFromDegrees(sCamera.fov) * 0.5f);
     *screenX = (vx / -vz / (tanY * (float)CTR_GAME_WIDTH / (float)CTR_GAME_HEIGHT) + 1.0f) * 0.5f * CTR_GAME_WIDTH
@@ -879,6 +903,9 @@ static void UpdateFrustum(void)
     float tallest = VoxelBuildings_MaxTop();
     float heights[2];
     float rect[4] = {sCamera.targetX, sCamera.targetZ, sCamera.targetX, sCamera.targetZ};
+    /* How far the view's rectangle goes: the orbit's, or in the rig the
+     * distance the haze takes the world at. */
+    float reach = VoxelCamera_Reach(&sCamera, (float)VOXEL_VIEW_REACH_MAX);
     const C3D_FVec *r;
 
     CameraMatrices(&projection, &view, false, -1);
@@ -891,7 +918,7 @@ static void UpdateFrustum(void)
 
         Mtx_Persp(&projection, C3D_AngleFromDegrees(sCamera.fov),
                   widen * (float)CTR_GAME_WIDTH / (float)CTR_GAME_HEIGHT,
-                  VOXEL_NEAR, VOXEL_FAR, false);
+                  NearPlane(), VOXEL_FAR, false);
         tanX *= widen;
     }
     Mtx_Multiply(&clip, &projection, &view);
@@ -933,14 +960,14 @@ static void UpdateFrustum(void)
 
                 /* A ray that never comes down to that height (or does so
                  * behind the eye) is followed out to the bound instead. */
-                if (t < 0.0f || t > 4.0f * VOXEL_VIEW_REACH_MAX)
-                    t = 4.0f * VOXEL_VIEW_REACH_MAX;
+                if (t < 0.0f || t > 4.0f * reach)
+                    t = 4.0f * reach;
                 GrowRect(rect, sCamera.x + dx * t, sCamera.z + dz * t);
             }
         }
     {
-        float lo[2] = {sCamera.targetX - VOXEL_VIEW_REACH_MAX, sCamera.targetZ - VOXEL_VIEW_REACH_MAX};
-        float hi[2] = {sCamera.targetX + VOXEL_VIEW_REACH_MAX, sCamera.targetZ + VOXEL_VIEW_REACH_MAX};
+        float lo[2] = {sCamera.targetX - reach, sCamera.targetZ - reach};
+        float hi[2] = {sCamera.targetX + reach, sCamera.targetZ + reach};
 
         for (int k = 0; k < 2; ++k)
         {
@@ -1946,6 +1973,7 @@ static void ReleaseChunk(VoxelChunk *chunk)
     if (chunk->used)
         ChunkUnindex(chunk);
     VoxelArena_Free(&sChunkArena, chunk->vram);
+    free(chunk->crowns);
     memset(chunk, 0, sizeof(*chunk));
 }
 
@@ -2162,6 +2190,8 @@ bool CtrVoxel_Init(void)
     sDynamic = linearAlloc(VOXEL_DYNAMIC_VERTICES * sizeof(VoxelGpuVertex));
     if (sDynamic == NULL)
         goto fail;
+    /* Optional: the free-roam rig's turned crowns; without it they stay as built. */
+    sCrownDyn = linearAlloc(VOXEL_CROWN_VERTICES * sizeof(VoxelGpuVertex));
     VoxelRegions_Init();
     VoxelRelief_Init();
     VoxelSign_Init();
@@ -2341,6 +2371,10 @@ void CtrVoxel_Shutdown(void)
     sStaging = NULL;
     linearFree(sDynamic);
     sDynamic = NULL;
+    if (sCrownDyn != NULL)
+        linearFree(sCrownDyn);
+    sCrownDyn = NULL;
+    sCrownVertices = 0;
     if (sDvlb != NULL)
     {
         shaderProgramFree(&sProgram);
@@ -2941,8 +2975,8 @@ typedef enum { BUILD_OK, BUILD_NO_STAGING, BUILD_NO_VRAM } BuildResult;
 
 enum
 {
-    JOB_GROUND, JOB_TREES, JOB_MODELS, /* map chunks */
-    JOB_BORDER, JOB_BORDER_TREES,      /* belt chunks */
+    JOB_GROUND, JOB_TREES, JOB_CROWNS, JOB_MODELS, /* map chunks */
+    JOB_BORDER, JOB_BORDER_TREES, JOB_BORDER_CROWNS, /* belt chunks */
     JOB_SORT, JOB_PACK,                /* into the GPU's vertex format */
     JOB_STATICS,                       /* its static models' meshes */
     JOB_DONE
@@ -2964,7 +2998,7 @@ static struct
     int phase, row, col;
     unsigned waitIndex;
     bool overdue;
-    unsigned terrainCount, buildingFirst;
+    unsigned terrainCount, crownFirst, buildingFirst;
     unsigned terrainFirst[VOXEL_ATLAS_PAGES + 1u];
     unsigned sortPage, sortScan, sortWrite;
     VoxelBuildingCursor models;
@@ -2984,6 +3018,12 @@ static struct
     int gx0, gz0, gx1, gz1;
     float gy0, gy1;
 } sJob;
+
+/* The crown cards the build in hand has recorded (voxel_tree.h): a chunk's
+ * is at most its cells and the row each may add. */
+#define VOXEL_JOB_CROWNS (2u * VOXEL_CHUNK * VOXEL_CHUNK)
+static VoxelCrown sJobCrownItems[VOXEL_JOB_CROWNS];
+static VoxelCrownList sJobCrowns = {sJobCrownItems, VOXEL_JOB_CROWNS, 0, false};
 
 static unsigned sJobStarts, sJobCancels;
 static float sCancelledBuildMs;
@@ -3023,6 +3063,10 @@ static void JobStart(const ChunkSite *site, VoxelAtlasSlot *atlas, uint32_t hash
     VoxelBuilder_Init(&sBuilder, sScratch, VOXEL_CHUNK_SCRATCH);
     sBuilder.statics = sJobStatics;
     sBuilder.staticCapacity = VOXEL_CHUNK_STATICS;
+    sJobCrowns.count = 0;
+    sJobCrowns.overflow = false;
+    sBuilder.crowns = &sJobCrowns;
+    sJob.crownFirst = 0;
     VoxelBuilder_SetAtlas(&sBuilder, &atlas->map);
     VoxelBuilder_SetOrigin(&sBuilder, site->baseX, site->baseY);
     /* The whole map stands at its base (voxel_relief.h), the belt round the
@@ -3178,7 +3222,20 @@ static void JobStep(void)
     case JOB_TREES:
         if (sJob.row == site->y0 && sJob.col == site->x0)
             sJob.terrainCount = sBuilder.count;
-        VoxelTree_EmitInstance(&sBuilder, inst, sJob.col, sJob.row, sJob.col + 1, sJob.row + 1);
+        VoxelTree_EmitInstance(&sBuilder, inst, sJob.col, sJob.row, sJob.col + 1, sJob.row + 1,
+                               VOXEL_TREE_TOPS);
+        if (++sJob.col < site->x1)
+            return;
+        sJob.col = site->x0;
+        if (++sJob.row < site->y1)
+            return;
+        sJob.row = site->y0;
+        sJob.crownFirst = sBuilder.count;
+        sJob.phase = JOB_CROWNS;
+        return;
+    case JOB_CROWNS:
+        VoxelTree_EmitInstance(&sBuilder, inst, sJob.col, sJob.row, sJob.col + 1, sJob.row + 1,
+                               VOXEL_TREE_CROWNS);
         if (++sJob.col < site->x1)
             return;
         sJob.col = site->x0;
@@ -3207,7 +3264,20 @@ static void JobStep(void)
         return;
     case JOB_BORDER_TREES:
         /* One lit crown cell: a row can exceed the whole post-submit budget. */
-        VoxelTree_EmitBorder(&sBuilder, sJob.col, sJob.row, sJob.col + 1, sJob.row + 1);
+        VoxelTree_EmitBorder(&sBuilder, sJob.col, sJob.row, sJob.col + 1, sJob.row + 1,
+                             VOXEL_TREE_TOPS);
+        if (++sJob.col < site->x1)
+            return;
+        sJob.col = site->x0;
+        if (++sJob.row < site->y1)
+            return;
+        sJob.row = site->y0;
+        sJob.crownFirst = sBuilder.count;
+        sJob.phase = JOB_BORDER_CROWNS;
+        return;
+    case JOB_BORDER_CROWNS:
+        VoxelTree_EmitBorder(&sBuilder, sJob.col, sJob.row, sJob.col + 1, sJob.row + 1,
+                             VOXEL_TREE_CROWNS);
         if (++sJob.col < site->x1)
             return;
         sJob.col = site->x0;
@@ -3346,7 +3416,24 @@ static BuildResult JobFinish(VoxelChunk *chunk)
     chunk->uncovered = sBuilder.uncovered != 0;
     chunk->count = sBuilder.count;
     chunk->terrainCount = sJob.terrainCount;
+    chunk->crownFirst = sJob.crownFirst;
     chunk->buildingFirst = sJob.buildingFirst;
+    /* The crowns to turn: kept only whole (a card the build had no room for
+     * would vanish when the rest were turned). */
+    free(chunk->crowns);
+    chunk->crowns = NULL;
+    chunk->crownCount = 0;
+    if (sJobCrowns.count != 0 && !sJobCrowns.overflow && !sBuilder.dropped)
+    {
+        VoxelCrown *copy = malloc(sJobCrowns.count * sizeof(VoxelCrown));
+
+        if (copy != NULL)
+        {
+            memcpy(copy, sJobCrownItems, sJobCrowns.count * sizeof(VoxelCrown));
+            chunk->crowns = copy;
+            chunk->crownCount = sJobCrowns.count;
+        }
+    }
     memcpy(chunk->terrainFirst, sJob.terrainFirst, sizeof(chunk->terrainFirst));
     chunk->gx0 = sJob.gx0;
     chunk->gz0 = sJob.gz0;
@@ -3413,6 +3500,91 @@ static void PackDynamic(const VoxelVertex *src, unsigned count, VoxelGpuVertex *
     }
 #endif
     Pack(src, count, dst);
+}
+
+/*
+ * The tree crowns for the free-roam rig. A crown is a card leant towards the
+ * orbit's fixed view, built into its chunk; from a head that looks anywhere
+ * that is a slab seen from its side. While the rig is engaged (the cards of
+ * the billboards, VoxelCamera.cardBlend) each chunk on screen that has
+ * records of its crowns leaves the built ones out and has them here instead:
+ * every card turned about its trunk to face the eye, and by as much of the
+ * way as the cards are blended, so that on the orbit's side of the blend
+ * they are the built ones exactly (yaw 0).
+ *
+ * A chunk whose cards do not all fit the frame's room keeps its built ones;
+ * the cards behind the eye or past its reach are left out, being unseen.
+ */
+static void BuildCrowns(void)
+{
+    const float blend = sCamera.cardBlend;
+    const bool exact = blend >= 0.999f;
+    const float eyeX = sCamera.x, eyeZ = sCamera.z;
+    float lookX = sCamera.lookX - sCamera.x, lookZ = sCamera.lookZ - sCamera.z;
+    const float reach = VOXEL_CAMERA_FREE_REACH + 3.0f;
+    float lookLength = sqrtf(lookX * lookX + lookZ * lookZ);
+    VoxelVertex quad[6];
+    unsigned vertices = 0;
+
+    sCrownVertices = 0;
+    if (sCrownDyn == NULL || blend <= 0.0005f)
+        return;
+    if (lookLength > 0.0001f)
+    {
+        lookX /= lookLength;
+        lookZ /= lookLength;
+    }
+    else
+        lookX = lookZ = 0.0f; /* straight up or down: nothing is behind */
+    for (unsigned d = 0; d < sDrawCount; ++d)
+    {
+        const VoxelChunk *chunk = sDraws[d].chunk;
+        float worldX = (float)sDraws[d].worldX, worldZ = (float)sDraws[d].worldZ;
+        float offsetX = (float)(sDraws[d].worldX - sDynamicX);
+        float offsetZ = (float)(sDraws[d].worldZ - sDynamicZ);
+
+        if (chunk->crowns == NULL || chunk->crownCount == 0
+         || vertices + chunk->crownCount * 6u > VOXEL_CROWN_VERTICES)
+            continue;
+        for (unsigned i = 0; i < chunk->crownCount; ++i)
+        {
+            const VoxelCrown *crown = &chunk->crowns[i];
+            float dx = eyeX - (worldX + crown->px), dz = eyeZ - (worldZ + crown->pz);
+            float distance2 = dx * dx + dz * dz, s, c;
+
+            /* The eye is at (dx, dz) from the trunk; the card is at -(dx, dz)
+             * from the eye: behind it when that is against the look. */
+            if (distance2 > reach * reach || -(dx * lookX + dz * lookZ) < -3.0f)
+                continue;
+            if (distance2 < 1.0e-6f)
+            {
+                s = 0.0f;
+                c = 1.0f;
+            }
+            else if (exact)
+            {
+                float inverse = 1.0f / sqrtf(distance2);
+
+                s = dx * inverse;
+                c = dz * inverse;
+            }
+            else
+            {
+                /* Part of the way from the orbit's yaw (0) to the eye's. */
+                float angle = atan2f(dx, dz) * blend;
+
+                s = sinf(angle);
+                c = cosf(angle);
+            }
+            VoxelTree_CrownVertices(crown, s, c, offsetX, offsetZ, quad);
+            PackDynamic(quad, 6, sCrownDyn + vertices);
+            vertices += 6;
+        }
+        sDraws[d].turnedCrowns = true;
+    }
+    sCrownVertices = vertices;
+    if (vertices != 0)
+        GSPGPU_FlushDataCache(sCrownDyn, vertices * sizeof(VoxelGpuVertex));
 }
 
 /* The draft's vertices a cell at a time, by the fast packing where the console
@@ -3554,7 +3726,10 @@ static VoxelChunk *DraftChunk(const ChunkSite *site, VoxelAtlasSlot *atlas, Voxe
     chunk->atlasGeneration = atlas->generation;
     chunk->atlasExtension = atlas->extension;
     chunk->uncovered = uncovered != 0;
-    chunk->count = chunk->terrainCount = chunk->buildingFirst = total;
+    chunk->count = chunk->terrainCount = chunk->crownFirst = chunk->buildingFirst = total;
+    free(chunk->crowns);
+    chunk->crowns = NULL;
+    chunk->crownCount = 0;
     memcpy(chunk->terrainFirst, terrainFirst, sizeof(chunk->terrainFirst));
     chunk->gx0 = chunk->gz0 = 0;
     chunk->gx1 = chunk->gz1 = VOXEL_CHUNK;
@@ -3776,6 +3951,7 @@ static void Draw(VoxelChunk *chunk, int worldX, int worldZ)
     sDraws[sDrawCount].chunk = chunk;
     sDraws[sDrawCount].worldX = worldX;
     sDraws[sDrawCount].worldZ = worldZ;
+    sDraws[sDrawCount].turnedCrowns = false;
     ++sDrawCount;
     sStats.vertices += chunk->count;
     sStats.draftsVisible += chunk->draft;
@@ -4239,7 +4415,8 @@ static void NoteBuildCost(VoxelChunk *chunk, const ChunkSite *site, float ms, ui
                      site->border ? " border" : "", ms, (unsigned long)frames, chunk->count,
                      sJob.rays, sJob.steps, sJob.surfaces,
                      TicksMs(sJob.phaseTicks[JOB_GROUND] + sJob.phaseTicks[JOB_BORDER]),
-                     TicksMs(sJob.phaseTicks[JOB_TREES] + sJob.phaseTicks[JOB_BORDER_TREES]),
+                     TicksMs(sJob.phaseTicks[JOB_TREES] + sJob.phaseTicks[JOB_BORDER_TREES]
+                           + sJob.phaseTicks[JOB_CROWNS] + sJob.phaseTicks[JOB_BORDER_CROWNS]),
                      TicksMs(sJob.phaseTicks[JOB_MODELS] + sJob.phaseTicks[JOB_STATICS]),
                      TicksMs(sJob.phaseTicks[JOB_PACK] + sJob.phaseTicks[JOB_DONE]));
     }
@@ -4442,7 +4619,7 @@ static unsigned RunJobs(uint64_t started, float holeMs, float aheadMs, bool inFr
             static uint32_t lastSlowSlice;
             if (TicksMs(ticks) > 2.0f && sFrame - lastSlowSlice >= 120u)
             {
-                static const char *names[] = {"ground", "trees", "models", "border", "border-trees", "sort", "pack", "statics", "upload"};
+                static const char *names[] = {"ground", "trees", "crowns", "models", "border", "border-trees", "border-crowns", "sort", "pack", "statics", "upload"};
                 lastSlowSlice = sFrame;
                 CtrLog_Write(CTR_LOG_VIDEO, "VOXEL slice %s of %d:%d cell=%d,%d: %.2fms remaining=%.2f view=%d rays=%u misses=%u",
                              names[phase], sJob.site.inst->mapGroup, sJob.site.inst->mapNum,
@@ -4993,6 +5170,7 @@ void CtrVoxel_BeginBattle(void)
         return;
     memset(&sBattle, 0, sizeof(sBattle));
     sBattle.on = true;
+    VoxelCamera_ToOrbit(&sCamera);
     sBattle.field = sCamera;
 }
 
@@ -5565,7 +5743,10 @@ bool CtrVoxel_Update(void)
         /* A battle on a map the field never drew: the field's camera is the
          * one the cut just placed on the player. */
         if (sBattle.on)
+        {
+            VoxelCamera_ToOrbit(&sCamera);
             sBattle.field = sCamera;
+        }
     }
     else if (!sBattle.on)
     {
@@ -5693,6 +5874,7 @@ bool CtrVoxel_Update(void)
         sDynamicX = (int)floorf(sCamera.targetX);
         sDynamicZ = (int)floorf(sCamera.targetZ);
         sSpriteVertices = sReflectionVertices = 0;
+        sCrownVertices = 0;
         sLampVertices = sLampGroundVertices = 0;
         sLampReady = false;
         LampsRelease(false);
@@ -5755,6 +5937,8 @@ bool CtrVoxel_Update(void)
             CtrLog_Write(CTR_LOG_ERROR, "VOXEL: no staging room for billboards");
         }
         sStats.spritesMs = (float)((svcGetSystemTick() - spritesStart) * 1000.0 / SYSCLOCK_ARM11);
+        /* The crowns of the trees, turned to the eye while the rig is on. */
+        BuildCrowns();
     }
     ReportPackErrors("the billboards around", sDynamicX, sDynamicZ, mapGroup, mapNum);
 
@@ -5763,7 +5947,8 @@ bool CtrVoxel_Update(void)
     for (unsigned i = 0; i < VOXEL_CHUNK_SLOTS; ++i)
         if (sChunks[i].used)
             ++sStats.chunks;
-    sStats.vertices += sSpriteVertices + sReflectionVertices + sLampVertices + sLampGroundVertices;
+    sStats.vertices += sSpriteVertices + sReflectionVertices + sLampVertices + sLampGroundVertices
+                     + sCrownVertices;
 #if CTR_VOXEL_LIGHTING
     sStats.vertices += sShadowVertices;
 #endif
@@ -6243,8 +6428,26 @@ static VoxelLight LightFor(bool indoor)
 static void SetGrade(const VoxelLight *light)
 {
     float eye = sCamera.distance / cosf(C3D_AngleFromDegrees(sCamera.pitch));
-    float fogStart = eye * light->hazeStart;
-    float fogScale = light->haze / (eye * light->hazeRamp);
+    float haze = light->haze;
+    float fogStart, fogScale;
+
+    /*
+     * In the free-roam rig the eye stands on the ground and the view is long:
+     * the haze is measured to the rig's reach instead of the orbit's short
+     * eye-to-player distance, and rises to the whole of the colour by that
+     * distance, so that the world's far edge is the haze (and the sky behind
+     * it, CtrVoxel_SkyColour) instead of a cut. Indoors there is none.
+     */
+    if (haze > 0.001f && sCamera.rig > 0.0f)
+    {
+        float reach = VOXEL_CAMERA_FREE_REACH * 0.9f;
+        float span = light->hazeStart + light->hazeRamp;
+
+        eye += (reach / span - eye) * sCamera.rig;
+        haze += (1.0f - haze) * sCamera.rig;
+    }
+    fogStart = eye * light->hazeStart;
+    fogScale = haze / (eye * light->hazeRamp);
 
     /* Halved: the texture environment scales by two. */
     C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadeTint,
@@ -6256,7 +6459,7 @@ static void SetGrade(const VoxelLight *light)
     C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniGrade, 1.0f / (1.0f - VOXEL_GRADE_SHADE_LOW),
                   -VOXEL_GRADE_SHADE_LOW / (1.0f - VOXEL_GRADE_SHADE_LOW), 0.0f, 0.0f);
     /* haze = (-viewZ - start) * scale = viewZ * -scale - start * scale */
-    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniFog, -fogScale, -fogStart * fogScale, light->haze, 0.0f);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniFog, -fogScale, -fogStart * fogScale, haze, 0.0f);
 }
 
 /*
@@ -7085,6 +7288,8 @@ static void PrepareFades(void)
 
 /* What the distance fades to this frame (VoxelLight.hazeRgb). */
 static float sHazeRgb[3];
+/* How far this frame's haze is the sky (the free-roam rig outdoors, else 0). */
+static float sSkyShare;
 
 /* The haze colour a sprite pass uses: the world's, faded as the world is. */
 static uint32_t SpriteHaze(void)
@@ -7163,6 +7368,29 @@ static void BuildingGlowEnv(C3D_Tex *mask, float strength, const VoxelLight *dap
     C3D_TexEnvSrc(env, C3D_Alpha, GPU_TEXTURE0, GPU_TEXTURE0, GPU_TEXTURE0);
     C3D_TexEnvFunc(env, C3D_Alpha, GPU_REPLACE);
     C3D_TexEnvColor(env, 0xFFA0D8FFu);
+}
+
+/* The free-roam camera's horizon: the world's far edge is the haze (SetGrade),
+ * so what is behind it is the haze's colour, not the game's backdrop. */
+uint32_t CtrVoxel_SkyColour(uint32_t backdrop)
+{
+    float rgb[3];
+
+    if (!sReady || sSkyShare <= 0.0f)
+        return backdrop;
+    for (int c = 0; c < 3; ++c)
+    {
+        float from = (float)((backdrop >> (8 * c)) & 255u) / 255.0f;
+
+        rgb[c] = from + (sHazeRgb[c] - from) * sSkyShare;
+    }
+    return FadeColour(1.0f, rgb);
+}
+
+/* Whether the free-roam camera is what the world is drawn from. */
+bool CtrVoxel_FreeLook(void)
+{
+    return sReady && sCamera.rig > 0.5f;
 }
 
 /* Outdoors and under the ground; a building keeps the game's own sprites. */
@@ -7685,6 +7913,7 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
     /* texture0 x graded colour (dappled), then the distance haze, then the fade. */
     PrepareFades();
     memcpy(sHazeRgb, light.hazeRgb, sizeof(sHazeRgb));
+    sSkyShare = light.haze > 0.001f ? sCamera.rig : 0.0f;
     TerrainTexEnv(dapples ? &light : NULL);
     FadeFor(false);
     C3D_TexEnvInit(C3D_GetTexEnv(5));
@@ -7724,7 +7953,8 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
             unsigned first = pass < VOXEL_ATLAS_PAGES ? chunk->terrainFirst[pass]
                            : pass == VOXEL_ATLAS_PAGES ? chunk->terrainCount : chunk->buildingFirst;
             unsigned count = pass < VOXEL_ATLAS_PAGES ? chunk->terrainFirst[pass + 1u] - first
-                           : pass == VOXEL_ATLAS_PAGES ? chunk->buildingFirst - first
+                           : pass == VOXEL_ATLAS_PAGES
+                             ? (sDraws[i].turnedCrowns ? chunk->crownFirst : chunk->buildingFirst) - first
                            : chunk->count - first;
             C3D_Tex *tex;
 
@@ -7754,6 +7984,19 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
             }
             BindVertices(chunk->vram);
             C3D_DrawArrays(GPU_TRIANGLES, (int)first, (int)count);
+        }
+        /* The crowns turned to the free-roam rig's eye, where the chunks left
+         * out their built ones (BuildCrowns). */
+        if (pass == VOXEL_ATLAS_PAGES && sCrownVertices != 0 && sTreeAtlas.data != NULL)
+        {
+            SetModelView(&view, sDynamicX, sDynamicZ);
+#if CTR_VOXEL_LIGHTING
+            if (dapples)
+                DappleUniforms(sDynamicX, sDynamicZ, 0.0f);
+#endif
+            C3D_TexBind(0, &sTreeAtlas);
+            BindVertices(sCrownDyn);
+            C3D_DrawArrays(GPU_TRIANGLES, 0, (int)sCrownVertices);
         }
         if (pass == VOXEL_ATLAS_PAGES + 1u && sHaveBuildings)
             DrawStatics(&view, dapples ? &light : NULL, glowing);
@@ -8012,8 +8255,13 @@ static float StereoIod(float *screen)
     float dx = sCamera.x - sCamera.targetX, dy = sCamera.y - sCamera.targetY, dz = sCamera.z - sCamera.targetZ;
     float focus = sqrtf(dx * dx + dy * dy + dz * dz) * VOXEL_STEREO_FOCUS;
 
-    if (focus < VOXEL_NEAR * 2.0f)
-        focus = VOXEL_NEAR * 2.0f;
+    /* In the rig the eye is in the head: the plane of zero parallax is where
+     * the rig puts it, a little way ahead (what is held in front of you
+     * stands out of the picture, the rest behind it). */
+    if (sCamera.rig > 0.0f && sCamera.focusDistance > 0.0f)
+        focus += (sCamera.focusDistance - focus) * sCamera.rig;
+    if (focus < NearPlane() * 2.0f)
+        focus = NearPlane() * 2.0f;
     *screen = focus;
     /* A point at infinity lands iod / (2 x screen x tanX) of the half width
      * off centre: that is VOXEL_STEREO_FAR_PX pixels at the full slider. */

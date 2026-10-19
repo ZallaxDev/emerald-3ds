@@ -2,6 +2,7 @@
 #define CTR_VOXEL_H
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <citro3d.h>
 
 bool CtrVoxel_Init(void);
@@ -46,6 +47,12 @@ float CtrVoxel_Bloom(void);
 /* Whether the world draws the game's fog itself (in the scene, see
  * ctr_voxel.c): the compositor then leaves the fog's flat sprites out. */
 bool CtrVoxel_DrawsFog(void);
+/* The free-roam camera (OPTIONS' CAMERA, 3ds_freecam.h): the colour behind
+ * the world's far edge, which is the haze (`backdrop`, an ABGR8888 clear
+ * colour, when there is none), and whether it is what is drawn - the
+ * tilt-shift blur of the orbit is left out then. */
+uint32_t CtrVoxel_SkyColour(uint32_t backdrop);
+bool CtrVoxel_FreeLook(void);
 /* The dark of a cave over the frame just drawn: an alpha texture to lay in
  * black, centred on (x, y) of the logical surface, size pixels across, at
  * amount. NULL when there is none. */

@@ -78,6 +78,8 @@ typedef struct
     /* When not negative, the light every corner gets instead of its own
      * sample: one sample for a small object drawn as many faces. */
     float lightingConstant;
+    /* Where a tree's crown cards are noted as well as emitted (NULL: not). */
+    struct VoxelCrownList *crowns;
     /* Where static models are noted instead of emitted (NULL: emitted). */
     VoxelStaticDraw *statics;
     unsigned staticCapacity, staticCount;

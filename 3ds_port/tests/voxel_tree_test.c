@@ -20,6 +20,8 @@ static bool sGeneral = true;
 static int sTiles[] = {0x1D6, 0x1D7, 0x1E6, 0x1E7};
 static VoxelAtlasMap sAtlas;
 static VoxelVertex sWhole[1024], sParts[1024];
+static VoxelCrown sCrowns[64];
+static VoxelCrownList sList = {sCrowns, 64, 0, false};
 
 bool VoxelWorld_UsesTreeSprites(const VoxelMapInstance *inst)
 {
@@ -86,6 +88,72 @@ static void Init(VoxelBuilder *b, VoxelVertex *v)
                           sMap.originX + 4, sMap.originY + 4);
 }
 
+/*
+ * Each recorded card is the card built: turned by nothing, it comes out as
+ * the builder's own triangles, and turned by a quarter it is the same card
+ * about the same trunk, now leaning along the other axis.
+ */
+static void CheckCrowns(const VoxelBuilder *b)
+{
+    const unsigned first = 24; /* after the tops */
+
+    assert(!sList.overflow && sList.count == 4 && b->count == first + 6 * sList.count);
+    for (unsigned i = 0; i < sList.count; ++i)
+    {
+        const VoxelCrown *crown = &sList.items[i];
+        VoxelVertex out[6], quarter[6];
+
+        VoxelTree_CrownVertices(crown, 0.0f, 1.0f, 0.0f, 0.0f, out);
+        for (unsigned k = 0; k < 6; ++k)
+        {
+            const VoxelVertex *built = &b->vertices[first + 6 * i + k];
+
+            assert(fabsf(out[k].x - built->x) < 0.003f);
+            assert(fabsf(out[k].y - built->y) < 0.003f);
+            assert(fabsf(out[k].z - built->z) < 0.003f);
+            assert(fabsf(out[k].u - built->u) < 0.0001f && fabsf(out[k].v - built->v) < 0.0001f);
+            assert(fabsf(out[k].shade - built->shade) < 0.001f);
+        }
+        /* The trunk's axis: the two halves of a tree share it. */
+        assert(sList.items[0].px == sList.items[1].px || sList.items[0].px == sList.items[2].px);
+
+        /* A camera to the east (yaw 90 degrees): the card stands at the same
+         * trunk, as far from it, as high, and leans west, away from the eye. */
+        VoxelTree_CrownVertices(crown, 1.0f, 0.0f, 0.0f, 0.0f, quarter);
+        for (unsigned k = 0; k < 6; ++k)
+        {
+            float rb = hypotf(out[k].x - crown->px, out[k].z - crown->pz);
+            float rq = hypotf(quarter[k].x - crown->px, quarter[k].z - crown->pz);
+
+            assert(fabsf(rb - rq) < 0.0001f && quarter[k].y == out[k].y);
+        }
+        assert(quarter[0].x < quarter[5].x);               /* top is west of the foot */
+        assert(fabsf(quarter[0].z - quarter[5].z) < 0.0001f);
+        assert(quarter[1].z < quarter[0].z);               /* its right edge is north now */
+        /* Moved by the frame's offset, nothing else. */
+        VoxelTree_CrownVertices(crown, 0.0f, 1.0f, 3.0f, -2.0f, quarter);
+        assert(fabsf(quarter[0].x - out[0].x - 3.0f) < 0.0001f
+            && fabsf(quarter[0].z - out[0].z + 2.0f) < 0.0001f);
+    }
+}
+
+/* The two passes over a rectangle, as the build runs them (ctr_voxel.c). */
+static void EmitTrees(VoxelBuilder *b, int x0, int y0, int x1, int y1)
+{
+    VoxelTree_EmitInstance(b, &sMap, x0, y0, x1, y1, VOXEL_TREE_TOPS);
+    VoxelTree_EmitInstance(b, &sMap, x0, y0, x1, y1, VOXEL_TREE_CROWNS);
+}
+
+/* ... and cell by cell, tops of every cell before the crowns of any. */
+static void EmitTreeCells(VoxelBuilder *b, int x0, int y0, int x1, int y1, int w, int h)
+{
+    for (int pass = 0; pass < 2; ++pass)
+        for (int y = y0; y < y1; y += h)
+            for (int x = x0; x < x1; x += w)
+                VoxelTree_EmitInstance(b, &sMap, x, y, x + w, y + h,
+                                       pass == 0 ? VOXEL_TREE_TOPS : VOXEL_TREE_CROWNS);
+}
+
 int main(void)
 {
     VoxelBuilder whole, parts;
@@ -94,7 +162,8 @@ int main(void)
     Init(&whole, sWhole);
     VoxelMesh_EmitInstance(&whole, &sMap, 7, 7, 9, 9);
     assert(whole.count == 0); /* no original ground artwork or extruded region */
-    VoxelTree_EmitInstance(&whole, &sMap, 7, 7, 9, 9);
+    whole.crowns = &sList;
+    EmitTrees(&whole, 7, 7, 9, 9);
     assert(whole.count == 48 && whole.dropped == 0);
     for (unsigned i = 0; i < whole.count; ++i)
     {
@@ -114,20 +183,18 @@ int main(void)
         }
     }
     assert(ground == 24 && crown == 24);
-    assert(sWhole[6].z < sWhole[8].z && sWhole[6].y > sWhole[8].y);
+    /* The tops first, then the crowns: the first card leans north. */
+    assert(sWhole[24].z < sWhole[26].z && sWhole[24].y > sWhole[26].y);
+    CheckCrowns(&whole);
 
     Init(&parts, sParts);
-    for (int y = 0; y < 2; ++y)
-        for (int x = 0; x < 2; ++x)
-            VoxelTree_EmitInstance(&parts, &sMap, x * 8, y * 8, (x + 1) * 8, (y + 1) * 8);
+    EmitTreeCells(&parts, 0, 0, 16, 16, 8, 8);
     assert(parts.count == whole.count);
     assert(memcmp(sWhole, sParts, whole.count * sizeof(VoxelVertex)) == 0);
 
     /* Streaming emits one cell per slice; preserve vertices and order. */
     Init(&parts, sParts);
-    for (int y = 0; y < 2; ++y)
-        for (int x = 0; x < 2; ++x)
-            VoxelTree_EmitInstance(&parts, &sMap, x + 7, y + 7, x + 8, y + 8);
+    EmitTreeCells(&parts, 7, 7, 9, 9, 1, 1);
     assert(parts.count == whole.count);
     assert(memcmp(sWhole, sParts, whole.count * sizeof(VoxelVertex)) == 0);
 
@@ -135,7 +202,7 @@ int main(void)
     sMap.originX = -3;
     sMap.originY = -5;
     Init(&parts, sParts);
-    VoxelTree_EmitInstance(&parts, &sMap, -3, -5, -1, -3);
+    EmitTrees(&parts, -3, -5, -1, -3);
     assert(parts.count == whole.count);
     for (unsigned i = 0; i < whole.count; ++i)
     {
@@ -149,22 +216,26 @@ int main(void)
     VoxelMesh_BeginWindow(-5, -7, 1, 1);
     VoxelMesh_EmitBorder(&parts, -5, -7, 1, 1);
     assert(parts.count == 0); /* no raised belt under the replacement */
-    VoxelTree_EmitBorder(&parts, -5, -7, 1, 1);
+    VoxelTree_EmitBorder(&parts, -5, -7, 1, 1, VOXEL_TREE_TOPS);
+    VoxelTree_EmitBorder(&parts, -5, -7, 1, 1, VOXEL_TREE_CROWNS);
     assert(parts.count == (6 * 8 - 4) * 12 && parts.dropped == 0);
 
     unsigned borderCount = parts.count;
     memcpy(sWhole, sParts, borderCount * sizeof(VoxelVertex));
     Init(&parts, sParts);
-    for (int y = -7; y < 1; ++y)
-        for (int x = -5; x < 1; ++x)
-            VoxelTree_EmitBorder(&parts, x, y, x + 1, y + 1);
+    for (int pass = 0; pass < 2; ++pass)
+        for (int y = -7; y < 1; ++y)
+            for (int x = -5; x < 1; ++x)
+                VoxelTree_EmitBorder(&parts, x, y, x + 1, y + 1,
+                                     pass == 0 ? VOXEL_TREE_TOPS : VOXEL_TREE_CROWNS);
     assert(parts.count == borderCount);
     assert(memcmp(sWhole, sParts, borderCount * sizeof(VoxelVertex)) == 0);
 
     sGeneral = false;
     Init(&parts, sParts);
-    VoxelTree_EmitInstance(&parts, &sMap, -3, -5, -1, -3);
-    VoxelTree_EmitBorder(&parts, -5, -7, 1, 1);
+    EmitTrees(&parts, -3, -5, -1, -3);
+    VoxelTree_EmitBorder(&parts, -5, -7, 1, 1, VOXEL_TREE_TOPS);
+    VoxelTree_EmitBorder(&parts, -5, -7, 1, 1, VOXEL_TREE_CROWNS);
     assert(parts.count == 0);
     assert(VoxelTree_Part(NULL, 0x026) == -1); /* secret base tree */
     assert(VoxelTree_Part(NULL, 0x1D9) == -1); /* rock */
@@ -177,7 +248,7 @@ int main(void)
     sAtlas.slotOf[0x00D] = 2;
     Init(&parts, sParts);
     VoxelMesh_EmitInstance(&parts, &sMap, -3, -5, -1, -3);
-    VoxelTree_EmitInstance(&parts, &sMap, -3, -5, -1, -3);
+    EmitTrees(&parts, -3, -5, -1, -3);
     assert(parts.count == 24 && parts.uncovered == 0);
     for (unsigned i = 0; i < parts.count; ++i)
         assert(parts.vertices[i].y == 0);
@@ -200,7 +271,7 @@ int main(void)
     for (unsigned i = 0; i < parts.count; ++i)
         assert(parts.vertices[i].y == 0 && parts.vertices[i].z <= 1);
     parts.count = 0;
-    VoxelTree_EmitInstance(&parts, &sMap, -3, -5, -1, -3);
+    EmitTrees(&parts, -3, -5, -1, -3);
     assert(parts.count == 24 && parts.dropped == 0);
     for (unsigned i = 0; i < parts.count; ++i)
     {
@@ -216,8 +287,8 @@ int main(void)
             assert(v->u <= 48.0f / VOXEL_TREE_TEXTURE_DIM);
     }
     /* Leaning north from its trunk into the cell above, as tall as it is long. */
-    assert(parts.vertices[6].z < parts.vertices[8].z && parts.vertices[6].y > parts.vertices[8].y);
-    assert(parts.vertices[6].z < 1 && fabsf(parts.vertices[6].y - 1.432089f) < 0.0001f);
+    assert(parts.vertices[12].z < parts.vertices[14].z && parts.vertices[12].y > parts.vertices[14].y);
+    assert(parts.vertices[12].z < 1 && fabsf(parts.vertices[12].y - 1.432089f) < 0.0001f);
 
     /* A staggered wood's lower row is a whole tree: trunks and both rows. */
     assert(VoxelTree_Part(NULL, 0x1F3) == 2 && VoxelTree_Part(NULL, 0x1F2) == 3);
@@ -225,14 +296,14 @@ int main(void)
     sTiles[0] = 0x1D4; sTiles[1] = 0x1D5;
     sTiles[2] = 0x1F3; sTiles[3] = 0x1F2;
     Init(&parts, sParts);
-    VoxelTree_EmitInstance(&parts, &sMap, -3, -5, -1, -3);
+    EmitTrees(&parts, -3, -5, -1, -3);
     assert(parts.count == 4 * 2 * 6 && parts.dropped == 0);
 
     /* A roof over the lower row: the crown keeps that row, its ground does
      * not become a trunk. */
     sTiles[2] = 0x008; sTiles[3] = 0x009;
     Init(&parts, sParts);
-    VoxelTree_EmitInstance(&parts, &sMap, -3, -5, -1, -3);
+    EmitTrees(&parts, -3, -5, -1, -3);
     assert(parts.count == (2 * 2 + 2) * 6 && parts.dropped == 0);
     for (unsigned i = 0; i < parts.count; ++i)
         if (parts.vertices[i].y == 0 && parts.vertices[i].u >= 32.0f / VOXEL_TREE_TEXTURE_DIM)

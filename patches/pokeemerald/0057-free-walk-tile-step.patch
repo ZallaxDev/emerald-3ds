@@ -1,0 +1,28 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: free walk tile step
+Applies after 0056-follower-pokemon.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/field_control_avatar.c b/src/field_control_avatar.c
+--- a/src/field_control_avatar.c
++++ b/src/field_control_avatar.c
+@@ -36,6 +36,7 @@
+ #include "constants/trainer_hill.h"
+ #ifdef PLATFORM_3DS
+ #include "follower_mon.h"
++#include "3ds_freecam.h"
+ #endif
+ 
+ static EWRAM_DATA u8 sWildEncounterImmunitySteps = 0;
+@@ -126,6 +127,13 @@ void FieldGetPlayerInput(struct FieldInput *input, u16 newKeys, u16 heldKeys)
+             input->tookStep = TRUE;
+         if (forcedMove == FALSE && tileTransitionState == T_TILE_CENTER)
+             input->checkStandardWildEncounter = TRUE;
++#ifdef PLATFORM_3DS
++        if (CtrFreeMove_TookStep())
++        {
++            input->tookStep = TRUE;
++            input->checkStandardWildEncounter = TRUE;
++        }
++#endif
+     }
+ 
+     if (heldKeys & DPAD_UP)

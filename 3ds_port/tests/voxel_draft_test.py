@@ -76,12 +76,14 @@ typedef struct {
     const void *primary, *secondary, *layout;
     VoxelAtlasSlot *atlas; uint32_t atlasGeneration;
     VoxelGpuVertex *vram;
-    unsigned bytes, count, terrainCount, terrainFirst[VOXEL_ATLAS_PAGES + 1u], buildingFirst;
+    unsigned bytes, count, terrainCount, terrainFirst[VOXEL_ATLAS_PAGES + 1u], crownFirst, buildingFirst;
     int buildingPage;
     uint32_t stamp, viewStamp;
     int gx0, gz0, gx1, gz1; float gy0, gy1, buildMs;
     bool uncovered; uint32_t atlasExtension; bool draft;
     unsigned staticCount;
+    void *crowns;
+    unsigned crownCount;
 } VoxelChunk;
 typedef struct {
     VoxelVertex *vertices; unsigned capacity, count, dropped;

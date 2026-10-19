@@ -32,3 +32,12 @@ whose port modifications are distributed under the MIT License:
 What was reused is the *logic*: map instance construction, metatile
 classification, the 512x512 metatile atlas composition and the follow camera.
 Every file here that touches the GPU is written against Citro3D.
+
+## Free-roam camera
+
+`voxel_freecam.{c,h}` and the camera rig in `voxel_camera.c` follow the
+behaviour of the FirstPerson, ThirdPerson and FreeMove scripts of the voxel
+mod (voxels_files.zip) - boom, look, blend and steering - written anew in C
+over the decompilation's grid. `voxel_freemove.{c,h}` is original to this
+port. The scripts' own license has not been confirmed: check it with their
+author before a release that ships this code.

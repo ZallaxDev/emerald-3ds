@@ -58,6 +58,7 @@ static void C3D_TexSetWrap(C3D_Tex *t, int a, int b) { (void)t; (void)a; (void)b
 /* No building pages' arena here: nothing is borrowed, every page is VRAM. */
 static void AtlasPageRelease(C3D_Tex *tex) { if (tex->data) C3D_TexDelete(tex); }
 static bool AtlasPageBorrow(C3D_Tex *tex) { (void)tex; return false; }
+typedef enum { VOXEL_TREE_TOPS, VOXEL_TREE_CROWNS } VoxelTreePass;
 typedef struct { bool draft; } VoxelChunk;
 typedef struct { ChunkSite site; VoxelAtlasSlot *atlas; VoxelChunk *chunk; uint32_t hash;
     bool hashKnown, done; unsigned key, need, waitIndex; } BuildRequest;
@@ -66,7 +67,7 @@ static BuildRequest sRequests[VOXEL_REQUESTS_MAX];
 static uint8_t sWaitHead[128], sWaitNext[VOXEL_REQUESTS_MAX];
 #define VOXEL_DRAFT_STARVE_FRAMES 90u
 static unsigned sRequestCount, sFrame, starts;
-enum { JOB_GROUND, JOB_TREES, JOB_MODELS, JOB_BORDER, JOB_BORDER_TREES, JOB_SORT, JOB_PACK, JOB_STATICS, JOB_DONE };
+enum { JOB_GROUND, JOB_TREES, JOB_CROWNS, JOB_MODELS, JOB_BORDER, JOB_BORDER_TREES, JOB_BORDER_CROWNS, JOB_SORT, JOB_PACK, JOB_STATICS, JOB_DONE };
 #define VOXEL_GROUND_SLICE_CELLS 1
 #define VOXEL_MODEL_SLICE_TRIANGLES 64
 #define VOXEL_STATIC_SLICE_TRIANGLES 64
@@ -75,7 +76,7 @@ static float sPhaseMs[JOB_DONE + 1];
 static uint32_t sPhaseFrame[JOB_DONE + 1];
 static bool sHolesOnly = true, validJob = true;
 static struct { bool active, forView, hole, overdue; unsigned waitIndex; ChunkSite site;
-    int phase, row, col, models; unsigned buildingFirst;
+    int phase, row, col, models; unsigned buildingFirst, crownFirst;
     unsigned sortPage, sortScan, sortWrite, terrainCount, terrainFirst[5], staticIndex; } sJob;
 typedef struct { float u, marker; } VoxelVertex;
 static VoxelVertex sScratch[6000];
@@ -120,9 +121,9 @@ static void EmitCells(bool trees, int x0, int y0, int x1, int y1) {
     }
 }
 #define VoxelMesh_EmitGroundRow(b, inst, x0, x1, y) ((void)(b), (void)(inst), EmitCells(false, x0, y, x1, (y)+1))
-#define VoxelTree_EmitInstance(b, inst, x0, y0, x1, y1) ((void)(b), (void)(inst), EmitCells(true, x0, y0, x1, y1))
+#define VoxelTree_EmitInstance(b, inst, x0, y0, x1, y1, pass) do { (void)(b); (void)(inst); (void)(pass); EmitCells(true, x0, y0, x1, y1); } while(0)
 #define VoxelMesh_EmitBorder(b, x0, y0, x1, y1) ((void)(b), EmitCells(false, x0, y0, x1, y1))
-#define VoxelTree_EmitBorder(b, x0, y0, x1, y1) ((void)(b), EmitCells(true, x0, y0, x1, y1))
+#define VoxelTree_EmitBorder(b, x0, y0, x1, y1, pass) do { (void)(b); (void)(pass); EmitCells(true, x0, y0, x1, y1); } while(0)
 #define VoxelBuildings_EmitSome(...) true
 static bool JobPack(void) { return true; }
 '''
@@ -329,10 +330,10 @@ int main(void) {
         sJob.site = (ChunkSite){.inst = &inst, .x1 = 8, .y1 = 8};
         sJob.phase = border ? JOB_BORDER : JOB_GROUND;
         unsigned steps = 0;
-        while (sJob.phase < JOB_SORT) { JobStep(); assert(++steps <= 128); }
-        assert(sJob.terrainCount == 64*6 && sJob.buildingFirst == 64*18);
+        while (sJob.phase < JOB_SORT) { JobStep(); assert(++steps <= 256); }
+        assert(sJob.terrainCount == 64*6 && sJob.buildingFirst == 64*30);
         assert(sJob.col == 0 && sJob.row == 0);
-        for (unsigned c = 0; c < 64; ++c) assert(cells[0][c] == 1 && cells[1][c] == 1);
+        for (unsigned c = 0; c < 64; ++c) assert(cells[0][c] == 1 && cells[1][c] == 2);
     }
     /* A chunk with no static models is done once packed; one with models is
      * done once each is converted (or found cached), a slice a step. */

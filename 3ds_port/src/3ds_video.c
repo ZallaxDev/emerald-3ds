@@ -9092,8 +9092,9 @@ static void RenderVoxelTo(C3D_RenderTarget *target, int eye, uint32_t clear, boo
         CTR_GAME_WIDTH / 512.0f, 1 - CTR_GAME_HEIGHT / 256.0f};
     float bloom;
 
-    /* C2D_TargetClear clears colour and depth, which the 3D pass needs. */
-    C2D_TargetClear(sLogical, clear);
+    /* C2D_TargetClear clears colour and depth, which the 3D pass needs. The
+     * free-roam camera's horizon is the world's haze (CtrVoxel_SkyColour). */
+    C2D_TargetClear(sLogical, CtrVoxel_SkyColour(clear));
     CtrVoxel_Draw(sLogical, eye);
     sSceneOn = NULL; /* drawn on with C3D_FrameDrawOn, behind SceneOn's back */
 
@@ -9120,7 +9121,9 @@ static void RenderVoxelTo(C3D_RenderTarget *target, int eye, uint32_t clear, boo
     C2D_ViewReset();
     Blend(5, false, false);
     C2D_DrawImageAt((C2D_Image){&sSurface, &logical}, 0, 0, 0, NULL, 1, 1);
-    if (CtrSettings_VoxelBlur())
+    /* The tilt-shift blurs the picture's top and bottom as a miniature's:
+     * from the player's eyes it would blur the horizon. */
+    if (CtrSettings_VoxelBlur() && !CtrVoxel_FreeLook())
         VoxelDiorama();
     if (bloom > 0.005f)
         VoxelBloomCompose(bloom);
