@@ -141,6 +141,8 @@ bool8 CtrBirch_IsGenderSelect(void);
 u8 CtrBirch_GetGender(void);
 void CtrBirch_SelectGender(u8 gender);
 void CtrBirch_ConfirmGender(void);
+bool8 CtrBirch_IsNameConfirm(void);
+void CtrBirch_ConfirmName(bool8 yes);
 
 bool8 CtrNaming_IsOpen(void);
 const u8 *CtrNaming_GetText(void);
@@ -2288,6 +2290,7 @@ enum
 {
     MODE_OFF,
     MODE_BIRCH_GENDER,
+    MODE_BIRCH_NAME_CONFIRM,
     MODE_NAMING,
     MODE_FIELD,
     MODE_PARTY_MENU,
@@ -2536,7 +2539,7 @@ enum
 #define HIT_OPTION_BACK 16
 
 typedef struct { s16 x, y, w, h; u8 id; } Hit;
-static Hit sHits[96];
+static Hit sHits[128];
 static u8 sHitCount;
 static u8 sNamingPage;
 
@@ -2619,6 +2622,8 @@ static u8 CurrentMode(void)
 {
     if (CtrNaming_IsOpen())
         return MODE_NAMING;
+    if (CtrBirch_IsNameConfirm())
+        return MODE_BIRCH_NAME_CONFIRM;
     if (CtrBirch_IsGenderSelect())
         return MODE_BIRCH_GENDER;
     if (gMain.callback2 == CB2_Overworld)
@@ -3159,11 +3164,19 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
         s->gender = CtrBirch_GetGender();
         return;
     }
+    if (s->mode == MODE_BIRCH_NAME_CONFIRM)
+    {
+        s->gender = gSaveBlock2Ptr->playerGender;
+        if (gSaveBlock2Ptr->playerName[0] != EOS)
+            StringCopyN(s->name, gSaveBlock2Ptr->playerName, sizeof(s->name));
+        return;
+    }
     if (s->mode == MODE_NAMING)
     {
         const u8 *name = CtrNaming_GetText();
         if (name)
             StringCopyN(s->name, name, sizeof(s->name));
+        s->gender = gSaveBlock2Ptr->playerGender;
         s->cursor = CtrNaming_GetCaretPos();
         s->optSub = sNamingPage;
         s->blink = (sFrames >> 4) & 1;
@@ -5829,211 +5842,422 @@ static void MapCacheTake(void)
 
 static void DrawBirchGender(const ViewState *s)
 {
-    CopyCache(CACHE_WIDE);
+    u16 emeraldGreen = PackRgb(24, 180, 88);
 
+    /* Amber / orange ORAS background */
+    FillRect(0, 0, W, H, PackRgb(242, 166, 38));
+
+    /* Top title */
     DrawStrCentered(&sNormal,
                     Ascii(CTR_TEXT("ARE YOU A BOY OR A GIRL?",
                                    "¿ERES CHICO O CHICA?",
                                    "ES-TU UN GARÇON OU UNE FILLE ?",
                                    "SEI UN RAGAZZO O UNA RAGAZZA?")),
-                    W / 2, 28, TXT_DARK, TXT_LIGHT);
+                    W / 2, 6, TXT_WHITE, PackRgb(80, 50, 10));
+
+    /* Main Container panel */
+    FillRect(10, 22, 300, 154, PackRgb(248, 178, 54));
+    FillRect(10, 22, 300, 2, PackRgb(255, 255, 255));
+    FillRect(10, 174, 300, 2, PackRgb(255, 255, 255));
+    FillRect(10, 22, 2, 154, PackRgb(255, 255, 255));
+    FillRect(308, 22, 2, 154, PackRgb(255, 255, 255));
+    FillRect(12, 168, 296, 6, PackRgb(55, 55, 60));
 
     /* Boy card */
     {
-        int x = 28, y = 65, w = 120, h = 90;
+        int x = 22, y = 28, w = 130, h = 134;
         bool8 chosen = (s->gender == 0);
         bool8 pressed = (s->pressed == HIT_BIRCH_BOY);
-        const PlateLook *look = chosen ? &sLook.chosen : &sLook.plate;
-        u16 fg = chosen ? TXT_WHITE : TXT_DARK;
-        u16 sh = chosen ? sLook.chosenShadow : TXT_LIGHT;
 
-        DrawPlate(x, y, w, h, look, 0, pressed);
-        DrawStrCentered(&sNormal,
-                        Ascii(CTR_TEXT("BOY ♂", "CHICO ♂", "GARÇON ♂", "RAGAZZO ♂")),
-                        x + w / 2, y + 36 + pressed, fg, sh);
+        /* Card background */
+        FillRect(x, y, w, h, chosen ? PackRgb(36, 128, 106) : PackRgb(24, 76, 64));
+
+        /* Inner gold border */
+        FillRect(x, y, w, 1, PackRgb(230, 205, 120));
+        FillRect(x, y + h - 1, w, 1, PackRgb(230, 205, 120));
+        FillRect(x, y, 1, h, PackRgb(230, 205, 120));
+        FillRect(x + w - 1, y, 1, h, PackRgb(230, 205, 120));
+
+        /* Sprite */
+        if (sRes.trainerPic[MALE])
+            DrawSprite(sRes.trainerPic[MALE], 8, 8, x + (w - 64) / 2, y + 10, sRes.trainerPicPal[MALE].c);
+
+        /* Name badge */
+        int bx = x + 10, by = y + 96, bw = w - 20, bh = 28;
+        FillRect(bx, by, bw, bh, PackRgb(16, 28, 32));
+        FillRect(bx, by, bw, 1, PackRgb(40, 60, 70));
+        DrawStrCentered(&sNormal, Ascii(CTR_TEXT("BOY ♂", "CHICO ♂", "GARÇON ♂", "RAGAZZO ♂")),
+                        bx + bw / 2, by + 6, TXT_WHITE, TXT_DARK);
+
+        /* Emerald green corner brackets when chosen */
+        if (chosen)
+        {
+            u16 brk = emeraldGreen;
+            FillRect(x - 2, y - 2, 14, 4, brk);
+            FillRect(x - 2, y - 2, 4, 14, brk);
+            FillRect(x + w - 12, y - 2, 14, 4, brk);
+            FillRect(x + w - 2, y - 2, 4, 14, brk);
+            FillRect(x - 2, y + h - 2, 14, 4, brk);
+            FillRect(x - 2, y + h - 12, 4, 14, brk);
+            FillRect(x + w - 12, y + h - 2, 14, 4, brk);
+            FillRect(x + w - 2, y + h - 12, 4, 14, brk);
+        }
         AddHit(x, y, w, h, HIT_BIRCH_BOY);
     }
 
     /* Girl card */
     {
-        int x = 172, y = 65, w = 120, h = 90;
+        int x = 168, y = 28, w = 130, h = 134;
         bool8 chosen = (s->gender == 1);
         bool8 pressed = (s->pressed == HIT_BIRCH_GIRL);
-        const PlateLook *look = chosen ? &sLook.chosen : &sLook.plate;
-        u16 fg = chosen ? TXT_WHITE : TXT_DARK;
-        u16 sh = chosen ? sLook.chosenShadow : TXT_LIGHT;
 
-        DrawPlate(x, y, w, h, look, 0, pressed);
-        DrawStrCentered(&sNormal,
-                        Ascii(CTR_TEXT("GIRL ♀", "CHICA ♀", "FILLE ♀", "RAGAZZA ♀")),
-                        x + w / 2, y + 36 + pressed, fg, sh);
+        /* Card background */
+        FillRect(x, y, w, h, chosen ? PackRgb(164, 46, 58) : PackRgb(96, 24, 32));
+
+        /* Inner gold border */
+        FillRect(x, y, w, 1, PackRgb(230, 205, 120));
+        FillRect(x, y + h - 1, w, 1, PackRgb(230, 205, 120));
+        FillRect(x, y, 1, h, PackRgb(230, 205, 120));
+        FillRect(x + w - 1, y, 1, h, PackRgb(230, 205, 120));
+
+        /* Sprite */
+        if (sRes.trainerPic[FEMALE])
+            DrawSprite(sRes.trainerPic[FEMALE], 8, 8, x + (w - 64) / 2, y + 10, sRes.trainerPicPal[FEMALE].c);
+
+        /* Name badge */
+        int bx = x + 10, by = y + 96, bw = w - 20, bh = 28;
+        FillRect(bx, by, bw, bh, PackRgb(36, 20, 26));
+        FillRect(bx, by, bw, 1, PackRgb(70, 40, 50));
+        DrawStrCentered(&sNormal, Ascii(CTR_TEXT("GIRL ♀", "CHICA ♀", "FILLE ♀", "RAGAZZA ♀")),
+                        bx + bw / 2, by + 6, TXT_WHITE, TXT_DARK);
+
+        /* Emerald green corner brackets when chosen */
+        if (chosen)
+        {
+            u16 brk = emeraldGreen;
+            FillRect(x - 2, y - 2, 14, 4, brk);
+            FillRect(x - 2, y - 2, 4, 14, brk);
+            FillRect(x + w - 12, y - 2, 14, 4, brk);
+            FillRect(x + w - 2, y - 2, 4, 14, brk);
+            FillRect(x - 2, y + h - 2, 14, 4, brk);
+            FillRect(x - 2, y + h - 12, 4, 14, brk);
+            FillRect(x + w - 12, y + h - 2, 14, 4, brk);
+            FillRect(x + w - 2, y + h - 12, 4, 14, brk);
+        }
         AddHit(x, y, w, h, HIT_BIRCH_GIRL);
     }
 
-    /* Confirm button */
+    /* Confirm button at bottom (Emerald green accent!) */
     {
-        int x = 90, y = 175, w = 140, h = 36;
+        int x = 75, y = 186, w = 170, h = 44;
         bool8 pressed = (s->pressed == HIT_BIRCH_CONFIRM);
+        u16 bg = pressed ? PackRgb(36, 224, 120) : PackRgb(24, 168, 82);
 
-        DrawPlate(x, y, w, h, &sLook.plate, 0, pressed);
-        DrawStrCentered(&sNormal,
-                        Ascii(CTR_TEXT("CONFIRM", "CONFIRMAR", "CONFIRMER", "CONFERMA")),
-                        x + w / 2, y + 10 + pressed, TXT_DARK, TXT_LIGHT);
+        FillRect(x + 2, y, w - 4, h, bg);
+        FillRect(x, y + 2, w, h - 4, bg);
+        FillRect(x + 2, y + 1, w - 4, 2, PackRgb(56, 224, 130));
+        FillRect(x + 2, y + h - 3, w - 4, 2, PackRgb(12, 100, 48));
+
+        DrawStrCentered(&sNormal, Ascii(CTR_TEXT("CONFIRM ▶", "CONFIRMAR ▶", "CONFIRMER ▶", "CONFERMA ▶")),
+                        x + w / 2, y + 14 + pressed, TXT_WHITE, PackRgb(10, 60, 25));
         AddHit(x, y, w, h, HIT_BIRCH_CONFIRM);
     }
 }
 
-static const u8 sKeyboardPages[3][40] = {
-    /* Page 0: UPPERCASE */
+static void DrawBirchNameConfirm(const ViewState *s)
+{
+    u16 emeraldGreen = PackRgb(24, 180, 88);
+
+    /* Amber / orange ORAS background */
+    FillRect(0, 0, W, H, PackRgb(242, 166, 38));
+
+    /* Dialog box */
     {
-        CHAR_1, CHAR_2, CHAR_3, CHAR_4, CHAR_5, CHAR_6, CHAR_7, CHAR_8, CHAR_9, CHAR_0,
+        int x = 16, y = 20, w = 288, h = 90;
+
+        FillRect(x + 2, y, w - 4, h, PackRgb(252, 252, 254));
+        FillRect(x, y + 2, w, h - 4, PackRgb(252, 252, 254));
+        FillRect(x + 2, y, w - 4, 1, PackRgb(204, 208, 216));
+        FillRect(x + 2, y + h - 1, w - 4, 1, PackRgb(204, 208, 216));
+        FillRect(x, y + 2, 1, h - 4, PackRgb(204, 208, 216));
+        FillRect(x + w - 1, y + 2, 1, h - 4, PackRgb(204, 208, 216));
+
+        /* Avatar circular platform on left */
+        int cx = x + 40, cy = y + 45;
+        for (int dy = -26; dy <= 26; ++dy)
+            for (int dx = -26; dx <= 26; ++dx)
+                if (dx * dx + dy * dy <= 676)
+                    Put(cx + dx, cy + dy, PackRgb(65, 72, 85));
+
+        if (sRes.trainerPic[s->gender])
+            DrawSprite(sRes.trainerPic[s->gender], 8, 8, cx - 32, cy - 28, sRes.trainerPicPal[s->gender].c);
+
+        /* Birch's question on right */
+        int tx = x + 84, ty = y + 26;
+        DrawStr(&sNormal, Ascii(CTR_TEXT("Your name is", "¿Te llamas", "Tu t'appelles", "Ti chiami")), tx, ty, TXT_DARK, TXT_LIGHT);
+        int endX = DrawStr(&sNormal, s->name, tx, ty + 20, emeraldGreen, PackRgb(12, 100, 48));
+        u8 qStr[2] = {CHAR_QUESTION_MARK, EOS};
+        DrawStr(&sNormal, qStr, endX + 2, ty + 20, TXT_DARK, TXT_LIGHT);
+    }
+
+    /* YES button (Emerald Green!) */
+    {
+        int x = 24, y = 130, w = 128, h = 80;
+        bool8 pressed = (s->pressed == HIT_YES);
+        u16 bg = pressed ? PackRgb(36, 224, 120) : PackRgb(24, 168, 82);
+
+        FillRect(x + 2, y, w - 4, h, bg);
+        FillRect(x, y + 2, w, h - 4, bg);
+        FillRect(x + 2, y + 1, w - 4, 2, PackRgb(56, 224, 130));
+        FillRect(x + 2, y + h - 3, w - 4, 2, PackRgb(12, 100, 48));
+
+        DrawStrCentered(&sNormal, Ascii(CTR_TEXT("YES ▶", "SÍ ▶", "OUI ▶", "SÌ ▶")),
+                        x + w / 2, y + 32 + pressed, TXT_WHITE, PackRgb(10, 60, 25));
+        AddHit(x, y, w, h, HIT_YES);
+    }
+
+    /* NO button */
+    {
+        int x = 168, y = 130, w = 128, h = 80;
+        bool8 pressed = (s->pressed == HIT_NO);
+        u16 bg = pressed ? PackRgb(65, 78, 105) : PackRgb(43, 53, 81);
+
+        FillRect(x + 2, y, w - 4, h, bg);
+        FillRect(x, y + 2, w, h - 4, bg);
+        FillRect(x + 2, y + 1, w - 4, 2, PackRgb(66, 80, 117));
+        FillRect(x + 2, y + h - 3, w - 4, 2, PackRgb(26, 32, 51));
+
+        DrawStrCentered(&sNormal, Ascii(CTR_TEXT("NO ▶", "NO ▶", "NON ▶", "NO ▶")),
+                        x + w / 2, y + 32 + pressed, TXT_WHITE, PackRgb(15, 20, 30));
+        AddHit(x, y, w, h, HIT_NO);
+    }
+}
+
+static void DrawOrasKey(int x, int y, int w, int h, const u8 *label, bool8 pressed, bool8 isAccent)
+{
+    u16 base, highlight, shadow;
+    if (isAccent)
+    {
+        base = pressed ? PackRgb(36, 224, 120) : PackRgb(24, 168, 82);
+        highlight = PackRgb(56, 224, 130);
+        shadow = PackRgb(12, 100, 48);
+    }
+    else
+    {
+        base = pressed ? PackRgb(28, 192, 96) : PackRgb(43, 53, 81);
+        highlight = pressed ? PackRgb(56, 224, 130) : PackRgb(66, 80, 117);
+        shadow = pressed ? PackRgb(12, 100, 48) : PackRgb(26, 32, 51);
+    }
+
+    FillRect(x + 1, y, w - 2, h, base);
+    FillRect(x, y + 1, w, h - 2, base);
+    FillRect(x + 1, y + 1, w - 2, 1, highlight);
+    FillRect(x + 1, y + h - 2, w - 2, 1, shadow);
+
+    DrawStrCentered(&sNormal, label, x + w / 2, y + (h - 16) / 2 + 1 + pressed, TXT_WHITE, PackRgb(15, 25, 20));
+}
+
+static const u8 sOrasKeys[3][45] = {
+    /* Page 0: UPPERCASE (Spanish ORAS layout) */
+    {
+        /* Row 0: 11 keys */
+        CHAR_MALE, CHAR_FEMALE, CHAR_PLUS, CHAR_HYPHEN, CHAR_MULT_SIGN, CHAR_SLASH, CHAR_EQUALS, CHAR_PERCENT, CHAR_LEFT_PAREN, CHAR_RIGHT_PAREN, CHAR_PERIOD,
+        /* Row 1: 10 keys */
         CHAR_Q, CHAR_W, CHAR_E, CHAR_R, CHAR_T, CHAR_Y, CHAR_U, CHAR_I, CHAR_O, CHAR_P,
-        CHAR_A, CHAR_S, CHAR_D, CHAR_F, CHAR_G, CHAR_H, CHAR_J, CHAR_K, CHAR_L, CHAR_N_TILDE,
-        CHAR_Z, CHAR_X, CHAR_C, CHAR_V, CHAR_B, CHAR_N, CHAR_M, CHAR_HYPHEN, CHAR_PERIOD, CHAR_SLASH
+        /* Row 2: 12 keys */
+        CHAR_A, CHAR_S, CHAR_D, CHAR_F, CHAR_G, CHAR_H, CHAR_J, CHAR_K, CHAR_L, CHAR_N_TILDE, CHAR_C_CEDILLA, CHAR_U_DIAERESIS,
+        /* Row 3: 12 keys */
+        CHAR_Z, CHAR_X, CHAR_C, CHAR_V, CHAR_B, CHAR_N, CHAR_M, CHAR_A_ACUTE, CHAR_E_ACUTE, CHAR_I_ACUTE, CHAR_O_ACUTE, CHAR_U_ACUTE,
     },
-    /* Page 1: LOWERCASE */
+    /* Page 1: LOWERCASE (Spanish ORAS layout) */
     {
-        CHAR_1, CHAR_2, CHAR_3, CHAR_4, CHAR_5, CHAR_6, CHAR_7, CHAR_8, CHAR_9, CHAR_0,
+        /* Row 0: 11 keys */
+        CHAR_MALE, CHAR_FEMALE, CHAR_PLUS, CHAR_HYPHEN, CHAR_MULT_SIGN, CHAR_SLASH, CHAR_EQUALS, CHAR_PERCENT, CHAR_LEFT_PAREN, CHAR_RIGHT_PAREN, CHAR_PERIOD,
+        /* Row 1: 10 keys */
         CHAR_q, CHAR_w, CHAR_e, CHAR_r, CHAR_t, CHAR_y, CHAR_u, CHAR_i, CHAR_o, CHAR_p,
-        CHAR_a, CHAR_s, CHAR_d, CHAR_f, CHAR_g, CHAR_h, CHAR_j, CHAR_k, CHAR_l, CHAR_n_TILDE,
-        CHAR_z, CHAR_x, CHAR_c, CHAR_v, CHAR_b, CHAR_n, CHAR_m, CHAR_COMMA, CHAR_SGL_QUOTE_RIGHT, CHAR_PERIOD
+        /* Row 2: 12 keys */
+        CHAR_a, CHAR_s, CHAR_d, CHAR_f, CHAR_g, CHAR_h, CHAR_j, CHAR_k, CHAR_l, CHAR_n_TILDE, CHAR_c_CEDILLA, CHAR_u_DIAERESIS,
+        /* Row 3: 12 keys */
+        CHAR_z, CHAR_x, CHAR_c, CHAR_v, CHAR_b, CHAR_n, CHAR_m, CHAR_a_ACUTE, CHAR_e_ACUTE, CHAR_i_ACUTE, CHAR_o_ACUTE, CHAR_u_ACUTE,
     },
-    /* Page 2: SYMBOLS & ACCENTS */
+    /* Page 2: NUMBERS & SYMBOLS */
     {
-        CHAR_A_ACUTE, CHAR_E_ACUTE, CHAR_I_ACUTE, CHAR_O_ACUTE, CHAR_U_ACUTE,
-        CHAR_a_ACUTE, CHAR_e_ACUTE, CHAR_i_ACUTE, CHAR_o_ACUTE, CHAR_u_ACUTE,
-        CHAR_A_GRAVE, CHAR_E_GRAVE, CHAR_I_GRAVE, CHAR_O_GRAVE, CHAR_U_GRAVE,
-        CHAR_a_GRAVE, CHAR_e_GRAVE, CHAR_i_GRAVE, CHAR_o_GRAVE, CHAR_u_GRAVE,
-        CHAR_A_CIRCUMFLEX, CHAR_E_CIRCUMFLEX, CHAR_I_CIRCUMFLEX, CHAR_O_CIRCUMFLEX, CHAR_U_CIRCUMFLEX,
-        CHAR_a_CIRCUMFLEX, CHAR_e_CIRCUMFLEX, CHAR_i_CIRCUMFLEX, CHAR_o_CIRCUMFLEX, CHAR_u_CIRCUMFLEX,
-        CHAR_INV_EXCL_MARK, CHAR_EXCL_MARK, CHAR_INV_QUESTION_MARK, CHAR_QUESTION_MARK,
-        CHAR_MALE, CHAR_FEMALE, CHAR_AMPERSAND, CHAR_PERCENT, CHAR_LEFT_PAREN, CHAR_RIGHT_PAREN
+        /* Row 0: 11 keys */
+        CHAR_0, CHAR_1, CHAR_2, CHAR_3, CHAR_4, CHAR_5, CHAR_6, CHAR_7, CHAR_8, CHAR_9, CHAR_0,
+        /* Row 1: 10 keys */
+        CHAR_EXCL_MARK, CHAR_QUESTION_MARK, CHAR_INV_EXCL_MARK, CHAR_INV_QUESTION_MARK, CHAR_PERIOD, CHAR_COMMA, CHAR_COLON, CHAR_SEMICOLON, CHAR_DBL_QUOTE_LEFT, CHAR_SGL_QUOTE_LEFT,
+        /* Row 2: 12 keys */
+        CHAR_AMPERSAND, CHAR_SUPER_ER, CHAR_SUPER_RE, CHAR_SUPER_E, CHAR_LESS_THAN, CHAR_GREATER_THAN, CHAR_ELLIPSIS, CHAR_CURRENCY, CHAR_FEMININE_ORDINAL, CHAR_MASCULINE_ORDINAL, CHAR_O_DIAERESIS, CHAR_A_DIAERESIS,
+        /* Row 3: 12 keys */
+        CHAR_A_GRAVE, CHAR_E_GRAVE, CHAR_I_GRAVE, CHAR_O_GRAVE, CHAR_U_GRAVE, CHAR_A_CIRCUMFLEX, CHAR_E_CIRCUMFLEX, CHAR_I_CIRCUMFLEX, CHAR_O_CIRCUMFLEX, CHAR_U_CIRCUMFLEX, CHAR_OE, CHAR_oe,
     }
 };
 
 static u8 GetKeyboardChar(u8 page, u8 idx)
 {
-    if (page >= 3 || idx >= 40)
+    if (page >= 3 || idx >= 45)
         return 0;
-    return sKeyboardPages[page][idx];
+    return sOrasKeys[page][idx];
 }
 
 static void DrawNamingKeyboard(const ViewState *s)
 {
-    int keyW = 28;
-    int keyH = 30;
-    int spacingX = 3;
-    int spacingY = 4;
-    int startX = 6;
-    int startY = 52;
     u8 page = s->optSub;
+    u16 emeraldGreen = PackRgb(24, 180, 88);
 
-    CopyCache(CACHE_WIDE);
+    /* Amber / orange ORAS background */
+    FillRect(0, 0, W, H, PackRgb(242, 166, 38));
 
-    /* Text preview bar at the top */
+    /* Top text display bar */
     {
-        int bx = 6, by = 8, bw = 308, bh = 36;
-        int tx = bx + 14, ty = by + 10;
+        int bx = 6, by = 4, bw = 308, bh = 38;
+        int tx = bx + 54, ty = by + 11;
         int endX;
 
-        DrawPlate(bx, by, bw, bh, &sLook.plate, 0, FALSE);
+        /* White rounded box */
+        FillRect(bx + 2, by, bw - 4, bh, PackRgb(252, 252, 254));
+        FillRect(bx, by + 2, bw, bh - 4, PackRgb(252, 252, 254));
+        FillRect(bx + 2, by, bw - 4, 1, PackRgb(204, 208, 216));
+        FillRect(bx + 2, by + bh - 1, bw - 4, 1, PackRgb(204, 208, 216));
+        FillRect(bx, by + 2, 1, bh - 4, PackRgb(204, 208, 216));
+        FillRect(bx + bw - 1, by + 2, 1, bh - 4, PackRgb(204, 208, 216));
+
+        /* Avatar circular platform on left */
+        int cx = bx + 26, cy = by + 19;
+        for (int dy = -15; dy <= 15; ++dy)
+            for (int dx = -18; dx <= 18; ++dx)
+                if (dy * dy * 18 * 18 + dx * dx * 15 * 15 <= 18 * 18 * 15 * 15)
+                    Put(cx + dx, cy + dy, PackRgb(65, 72, 85));
+
+        /* Draw player avatar if available */
+        if (sRes.trainerPic[s->gender])
+        {
+            DrawSprite(sRes.trainerPic[s->gender], 8, 8, cx - 32, cy - 28, sRes.trainerPicPal[s->gender].c);
+        }
+
+        /* Name text */
         if (s->name[0] != EOS)
             endX = DrawStr(&sNormal, s->name, tx, ty, TXT_DARK, TXT_LIGHT);
         else
             endX = tx;
 
+        /* Emerald green blinking cursor */
         if (s->blink && CtrNaming_GetCaretPos() < CtrNaming_GetMaxChars())
-            FillRect(endX + 2, ty, 2, 16, TXT_DARK);
+            FillRect(endX + 3, ty, 2, 16, emeraldGreen);
+
+        /* Dashed slot underlines */
+        u8 maxChars = CtrNaming_GetMaxChars();
+        if (maxChars == 0) maxChars = 7;
+        for (int i = 0; i < maxChars; ++i)
+            FillRect(tx + i * 16, by + 30, 10, 2, PackRgb(180, 186, 196));
     }
 
-    /* 4 rows of 10 character keys */
-    for (int row = 0; row < 4; ++row)
-    {
-        for (int col = 0; col < 10; ++col)
-        {
-            int idx = row * 10 + col;
-            u8 ch = GetKeyboardChar(page, idx);
-            if (ch != 0)
-            {
-                int x = startX + col * (keyW + spacingX);
-                int y = startY + row * (keyH + spacingY);
-                bool8 pressed = (s->pressed == HIT_NAMING_KEY + idx);
-                u8 str[2];
-                str[0] = ch;
-                str[1] = EOS;
+    /* Keyboard container */
+    int kbx = 6, kby = 45, kbw = 308, kbh = 190;
+    FillRect(kbx + 2, kby, kbw - 4, kbh, PackRgb(27, 34, 54));
+    FillRect(kbx, kby + 2, kbw, kbh - 4, PackRgb(27, 34, 54));
+    FillRect(kbx + 2, kby, kbw - 4, 1, PackRgb(48, 58, 86));
+    FillRect(kbx + 2, kby + kbh - 1, kbw - 4, 1, PackRgb(48, 58, 86));
+    FillRect(kbx, kby + 2, 1, kbh - 4, PackRgb(48, 58, 86));
+    FillRect(kbx + kbw - 1, kby + 2, 1, kbh - 4, PackRgb(48, 58, 86));
 
-                DrawPlate(x, y, keyW, keyH, &sLook.plate, 0, pressed);
-                DrawStrCentered(&sNormal, str, x + keyW / 2, y + 7 + pressed, TXT_DARK, TXT_LIGHT);
-                AddHit(x, y, keyW, keyH, HIT_NAMING_KEY + idx);
-            }
-        }
+    /* Row 0: 11 keys + Borrar */
+    int y0 = 49, h0 = 25;
+    for (int col = 0; col < 11; ++col)
+    {
+        int idx = col;
+        u8 ch = GetKeyboardChar(page, idx);
+        int x = 8 + col * 20;
+        int w = 19;
+        bool8 pressed = (s->pressed == HIT_NAMING_KEY + idx);
+        u8 str[2] = {ch, EOS};
+
+        DrawOrasKey(x, y0, w, h0, str, pressed, FALSE);
+        AddHit(x, y0, w, h0, HIT_NAMING_KEY + idx);
+    }
+    {
+        int x = 230, w = 82;
+        bool8 pressed = (s->pressed == HIT_NAMING_BACKSPACE);
+        DrawOrasKey(x, y0, w, h0, Ascii(CTR_TEXT("Del", "Borrar", "Effacer", "Canc")), pressed, TRUE);
+        AddHit(x, y0, w, h0, HIT_NAMING_BACKSPACE);
     }
 
-    /* Control row at the bottom (Row 4, Y = 194) */
+    /* Row 1: 10 keys + Enter/Confirm */
+    int y1 = 77, h1 = 25;
+    for (int col = 0; col < 10; ++col)
     {
-        /* Shift / Page (A/a) */
-        {
-            int x = 6, y = 194, w = 44, h = 36;
-            bool8 pressed = (s->pressed == HIT_NAMING_PAGE);
-            bool8 active = (page == 1);
-            const PlateLook *look = active ? &sLook.chosen : &sLook.plate;
-            u16 fg = active ? TXT_WHITE : TXT_DARK;
-            u16 sh = active ? sLook.chosenShadow : TXT_LIGHT;
+        int idx = 11 + col;
+        u8 ch = GetKeyboardChar(page, idx);
+        int x = 8 + col * 22;
+        int w = 21;
+        bool8 pressed = (s->pressed == HIT_NAMING_KEY + idx);
+        u8 str[2] = {ch, EOS};
 
-            DrawPlate(x, y, w, h, look, 0, pressed);
-            DrawStrCentered(&sNormal, Ascii("A/a"), x + w / 2, y + 10 + pressed, fg, sh);
-            AddHit(x, y, w, h, HIT_NAMING_PAGE);
-        }
+        DrawOrasKey(x, y1, w, h1, str, pressed, FALSE);
+        AddHit(x, y1, w, h1, HIT_NAMING_KEY + idx);
+    }
+    {
+        int x = 230, w = 82;
+        bool8 pressed = (s->pressed == HIT_NAMING_OK);
+        DrawOrasKey(x, y1, w, h1, Ascii(CTR_TEXT("OK", "VALE", "OK", "OK")), pressed, TRUE);
+        AddHit(x, y1, w, h1, HIT_NAMING_OK);
+    }
 
-        /* Symbols & Accents */
-        {
-            int x = 54, y = 194, w = 46, h = 36;
-            bool8 pressed = (s->pressed == HIT_NAMING_SYMBOLS);
-            bool8 active = (page == 2);
-            const PlateLook *look = active ? &sLook.chosen : &sLook.plate;
-            u16 fg = active ? TXT_WHITE : TXT_DARK;
-            u16 sh = active ? sLook.chosenShadow : TXT_LIGHT;
+    /* Row 2: 12 keys across */
+    int y2 = 105, h2 = 25;
+    for (int col = 0; col < 12; ++col)
+    {
+        int idx = 21 + col;
+        u8 ch = GetKeyboardChar(page, idx);
+        int x = 8 + col * 25;
+        int w = 24;
+        bool8 pressed = (s->pressed == HIT_NAMING_KEY + idx);
+        u8 str[2] = {ch, EOS};
 
-            DrawPlate(x, y, w, h, look, 0, pressed);
-            DrawStrCentered(&sNormal, active ? Ascii("ABC") : Ascii("Sym"), x + w / 2, y + 10 + pressed, fg, sh);
-            AddHit(x, y, w, h, HIT_NAMING_SYMBOLS);
-        }
+        DrawOrasKey(x, y2, w, h2, str, pressed, FALSE);
+        AddHit(x, y2, w, h2, HIT_NAMING_KEY + idx);
+    }
 
+    /* Row 3: 12 keys across */
+    int y3 = 133, h3 = 25;
+    for (int col = 0; col < 12; ++col)
+    {
+        int idx = 33 + col;
+        u8 ch = GetKeyboardChar(page, idx);
+        int x = 8 + col * 25;
+        int w = 24;
+        bool8 pressed = (s->pressed == HIT_NAMING_KEY + idx);
+        u8 str[2] = {ch, EOS};
+
+        DrawOrasKey(x, y3, w, h3, str, pressed, FALSE);
+        AddHit(x, y3, w, h3, HIT_NAMING_KEY + idx);
+    }
+
+    /* Row 4: Controls (Y = 162, H = 34) */
+    int y4 = 162, h4 = 34;
+    {
+        /* 123 / ABC symbols toggle */
+        int x = 8, w = 48;
+        bool8 pressed = (s->pressed == HIT_NAMING_SYMBOLS);
+        bool8 isSym = (page == 2);
+        DrawOrasKey(x, y4, w, h4, isSym ? Ascii("ABC") : Ascii("123"), pressed, isSym);
+        AddHit(x, y4, w, h4, HIT_NAMING_SYMBOLS);
+    }
+    {
         /* Space */
-        {
-            int x = 104, y = 194, w = 90, h = 36;
-            bool8 pressed = (s->pressed == HIT_NAMING_SPACE);
-
-            DrawPlate(x, y, w, h, &sLook.plate, 0, pressed);
-            DrawStrCentered(&sNormal,
-                            Ascii(CTR_TEXT("SPACE", "ESPACIO", "ESPACE", "SPAZIO")),
-                            x + w / 2, y + 10 + pressed, TXT_DARK, TXT_LIGHT);
-            AddHit(x, y, w, h, HIT_NAMING_SPACE);
-        }
-
-        /* Backspace / Delete */
-        {
-            int x = 198, y = 194, w = 56, h = 36;
-            bool8 pressed = (s->pressed == HIT_NAMING_BACKSPACE);
-
-            DrawPlate(x, y, w, h, &sLook.plate, 0, pressed);
-            DrawStrCentered(&sNormal,
-                            Ascii(CTR_TEXT("DEL", "BORRAR", "EFFACER", "CANC")),
-                            x + w / 2, y + 10 + pressed, TXT_DARK, TXT_LIGHT);
-            AddHit(x, y, w, h, HIT_NAMING_BACKSPACE);
-        }
-
-        /* OK / Confirm */
-        {
-            int x = 258, y = 194, w = 56, h = 36;
-            bool8 pressed = (s->pressed == HIT_NAMING_OK);
-
-            DrawPlate(x, y, w, h, &sLook.chosen, 0, pressed);
-            DrawStrCentered(&sNormal,
-                            Ascii(CTR_TEXT("OK", "VALE", "OK", "OK")),
-                            x + w / 2, y + 10 + pressed, TXT_WHITE, sLook.chosenShadow);
-            AddHit(x, y, w, h, HIT_NAMING_OK);
-        }
+        int x = 60, w = 176;
+        bool8 pressed = (s->pressed == HIT_NAMING_SPACE);
+        DrawOrasKey(x, y4, w, h4, Ascii(CTR_TEXT("Space", "Espacio", "Espace", "Spazio")), pressed, TRUE);
+        AddHit(x, y4, w, h4, HIT_NAMING_SPACE);
+    }
+    {
+        /* Shift / Caps */
+        int x = 240, w = 72;
+        bool8 pressed = (s->pressed == HIT_NAMING_PAGE);
+        bool8 isShift = (page == 0); // Active when uppercase
+        u8 shiftStr[2] = {CHAR_UP_ARROW, EOS};
+        DrawOrasKey(x, y4, w, h4, shiftStr, pressed, isShift);
+        AddHit(x, y4, w, h4, HIT_NAMING_PAGE);
     }
 }
 
@@ -6087,6 +6311,10 @@ static void Render(const ViewState *s)
     else if (s->mode == MODE_BIRCH_GENDER)
     {
         DrawBirchGender(s);
+    }
+    else if (s->mode == MODE_BIRCH_NAME_CONFIRM)
+    {
+        DrawBirchNameConfirm(s);
     }
     else if (s->mode == MODE_NAMING)
     {
@@ -7146,6 +7374,18 @@ static void Activate(u8 id, u8 mode)
         }
         return;
     }
+    if (mode == MODE_BIRCH_NAME_CONFIRM)
+    {
+        if (id == HIT_YES)
+        {
+            CtrBirch_ConfirmName(TRUE);
+        }
+        else if (id == HIT_NO)
+        {
+            CtrBirch_ConfirmName(FALSE);
+        }
+        return;
+    }
     if (mode == MODE_NAMING)
     {
         if (id == HIT_NAMING_PAGE)
@@ -7171,7 +7411,7 @@ static void Activate(u8 id, u8 mode)
         {
             CtrNaming_Confirm();
         }
-        else if (id >= HIT_NAMING_KEY && id < HIT_NAMING_KEY + 40)
+        else if (id >= HIT_NAMING_KEY && id < HIT_NAMING_KEY + 45)
         {
             u8 keyIdx = id - HIT_NAMING_KEY;
             u8 ch = GetKeyboardChar(sNamingPage, keyIdx);
