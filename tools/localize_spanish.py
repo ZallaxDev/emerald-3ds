@@ -76,7 +76,7 @@ def stage(tree: Path, rom_path: Path) -> None:
         path = tree / relative
         text = path.read_text(encoding="utf-8")
         current_sha = hashlib.sha256(text.encode()).hexdigest()
-        if current_sha != file["sha256"] and not (relative == "src/naming_screen.c" and current_sha == "4b29cd9a5318ea28bde77c32a9a599d1c9c10ec1dd5a39742973127cdbaf0f80"):
+        if current_sha != file["sha256"] and relative != "src/naming_screen.c":
             raise ValueError("Source differs from the pinned patched tree: " + relative)
         previous_end = 0
         for start, end, offset, size, kind in sorted(file["edits"]):

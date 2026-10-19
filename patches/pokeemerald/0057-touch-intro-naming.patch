@@ -2,10 +2,35 @@ Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f
 Applies after 0056-follower-pokemon.patch; apply with tools/bootstrap.py.
 
 diff --git a/src/main_menu.c b/src/main_menu.c
-index d787395..e1e69fb 100644
+index d787395..5aa29ab 100644
 --- a/src/main_menu.c
 +++ b/src/main_menu.c
-@@ -1783,6 +1783,70 @@ static void Task_NewGameBirchSpeech_SlideInNewGenderSprite(u8 taskId)
+@@ -1712,6 +1712,24 @@ static void Task_NewGameBirchSpeech_WaitToShowGenderMenu(u8 taskId)
+ 
+ static void Task_NewGameBirchSpeech_ChooseGender(u8 taskId)
+ {
++#ifdef PLATFORM_3DS
++    if (JOY_NEW(DPAD_LEFT))
++    {
++        if (Menu_GetCursorPos() != 0)
++        {
++            PlaySE(SE_SELECT);
++            Menu_MoveCursorNoWrapAround(-1);
++        }
++    }
++    else if (JOY_NEW(DPAD_RIGHT))
++    {
++        if (Menu_GetCursorPos() != 1)
++        {
++            PlaySE(SE_SELECT);
++            Menu_MoveCursorNoWrapAround(1);
++        }
++    }
++#endif
+     int gender = NewGameBirchSpeech_ProcessGenderMenuInput();
+     int gender2;
+ 
+@@ -1783,6 +1801,76 @@ static void Task_NewGameBirchSpeech_SlideInNewGenderSprite(u8 taskId)
      }
  }
  
@@ -49,7 +74,13 @@ index d787395..e1e69fb 100644
 +
 +bool8 CtrBirch_IsNameConfirm(void)
 +{
-+    return FuncIsActiveTask(Task_NewGameBirchSpeech_ProcessNameYesNoMenu);
++    return FuncIsActiveTask(Task_NewGameBirchSpeech_ProcessNameYesNoMenu)
++        || FuncIsActiveTask(Task_NewGameBirchSpeech_CreateNameYesNo);
++}
++
++u8 CtrBirch_GetNameConfirmChoice(void)
++{
++    return Menu_GetCursorPos();
 +}
 +
 +void CtrBirch_ConfirmName(bool8 yes)
@@ -76,11 +107,233 @@ index d787395..e1e69fb 100644
  static void Task_NewGameBirchSpeech_WhatsYourName(u8 taskId)
  {
      NewGameBirchSpeech_ClearWindow(0);
+@@ -1837,6 +1925,24 @@ static void Task_NewGameBirchSpeech_CreateNameYesNo(u8 taskId)
+ 
+ static void Task_NewGameBirchSpeech_ProcessNameYesNoMenu(u8 taskId)
+ {
++#ifdef PLATFORM_3DS
++    if (JOY_NEW(DPAD_LEFT))
++    {
++        if (Menu_GetCursorPos() != 0)
++        {
++            PlaySE(SE_SELECT);
++            Menu_MoveCursorNoWrapAround(-1);
++        }
++    }
++    else if (JOY_NEW(DPAD_RIGHT))
++    {
++        if (Menu_GetCursorPos() != 1)
++        {
++            PlaySE(SE_SELECT);
++            Menu_MoveCursorNoWrapAround(1);
++        }
++    }
++#endif
+     switch (Menu_ProcessInputNoWrapClearOnChoose())
+     {
+         case 0:
+@@ -2353,12 +2459,16 @@ static void NewGameBirchSpeech_StartFadePlatformOut(u8 taskId, u8 delay)
+ 
+ static void NewGameBirchSpeech_ShowGenderMenu(void)
+ {
++#ifndef PLATFORM_3DS
+     DrawMainMenuWindowBorder(&sNewGameBirchSpeechTextWindows[1], 0xF3);
+     FillWindowPixelBuffer(1, PIXEL_FILL(1));
+     PrintMenuTable(1, ARRAY_COUNT(sMenuActions_Gender), sMenuActions_Gender);
++#endif
+     InitMenuInUpperLeftCornerNormal(1, ARRAY_COUNT(sMenuActions_Gender), 0);
++#ifndef PLATFORM_3DS
+     PutWindowTilemap(1);
+     CopyWindowToVram(1, COPYWIN_FULL);
++#endif
+ }
+ 
+ static s8 NewGameBirchSpeech_ProcessGenderMenuInput(void)
+@@ -2494,11 +2604,13 @@ static void NewGameBirchSpeech_ClearGenderWindowTilemap(u8 bg, u8 x, u8 y, u8 wi
+ 
+ static void NewGameBirchSpeech_ClearGenderWindow(u8 windowId, bool8 copyToVram)
+ {
++#ifndef PLATFORM_3DS
+     CallWindowFunction(windowId, NewGameBirchSpeech_ClearGenderWindowTilemap);
+     FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
+     ClearWindowTilemap(windowId);
+     if (copyToVram == TRUE)
+         CopyWindowToVram(windowId, COPYWIN_FULL);
++#endif
+ }
+ 
+ static void NewGameBirchSpeech_ClearWindow(u8 windowId)
+diff --git a/src/menu.c b/src/menu.c
+index 8dd4b48..3a11afd 100644
+--- a/src/menu.c
++++ b/src/menu.c
+@@ -73,6 +73,7 @@ static EWRAM_DATA u8 sPaletteNum = 0;
+ static EWRAM_DATA u8 sYesNoWindowId = 0;
+ #ifdef PLATFORM_3DS
+ static bool8 sCtrYesNoOpen;
++bool8 CtrBirch_IsNameConfirm(void);
+ #endif
+ static EWRAM_DATA u8 sHofPCTopBarWindowId = 0;
+ static EWRAM_DATA u16 sFiller = 0;  // needed to align
+@@ -1260,6 +1261,11 @@ void EraseYesNoWindow(void)
+ {
+ #ifdef PLATFORM_3DS
+     sCtrYesNoOpen = FALSE;
++    if (CtrBirch_IsNameConfirm())
++    {
++        RemoveWindow(sYesNoWindowId);
++        return;
++    }
+ #endif
+ #ifdef PORT_BRIDGE
+     Port_SetBirchDebugEx(0x7211, sYesNoWindowId, 0, 0, 0);
+@@ -1677,7 +1683,12 @@ void CreateYesNoMenu(const struct WindowTemplate *window, u16 baseTileNum, u8 pa
+     struct TextPrinterTemplate printer;
+ 
+     sYesNoWindowId = AddWindow(window);
++#ifdef PLATFORM_3DS
++    if (!CtrBirch_IsNameConfirm())
++        DrawStdFrameWithCustomTileAndPalette(sYesNoWindowId, TRUE, baseTileNum, paletteNum);
++#else
+     DrawStdFrameWithCustomTileAndPalette(sYesNoWindowId, TRUE, baseTileNum, paletteNum);
++#endif
+ 
+     printer.currentChar = gText_YesNo;
+     printer.windowId = sYesNoWindowId;
+@@ -1693,7 +1704,12 @@ void CreateYesNoMenu(const struct WindowTemplate *window, u16 baseTileNum, u8 pa
+     printer.letterSpacing = 0;
+     printer.lineSpacing = 0;
+ 
++#ifdef PLATFORM_3DS
++    if (!CtrBirch_IsNameConfirm())
++        AddTextPrinter(&printer, TEXT_SKIP_DRAW, NULL);
++#else
+     AddTextPrinter(&printer, TEXT_SKIP_DRAW, NULL);
++#endif
+     InitMenuInUpperLeftCornerNormal(sYesNoWindowId, 2, initialCursorPos);
+ }
+ 
 diff --git a/src/naming_screen.c b/src/naming_screen.c
-index 3928ed5..4e0b5be 100644
+index 3928ed5..007a9c7 100644
 --- a/src/naming_screen.c
 +++ b/src/naming_screen.c
-@@ -1859,6 +1859,65 @@ static void BufferCharacter(u8 ch)
+@@ -379,6 +379,65 @@ static u8 GetTextEntryPosition(void);
+ static void DeleteTextCharacter(void);
+ static bool8 AddTextCharacter(void);
+ static void BufferCharacter(u8);
++#ifdef PLATFORM_3DS
++bool8 CtrNaming_IsOpen(void)
++{
++    return sNamingScreen != NULL
++        && gMain.callback2 == CB2_NamingScreen
++        && (sNamingScreen->state == STATE_HANDLE_INPUT || sNamingScreen->state == STATE_MOVE_TO_OK_BUTTON);
++}
++
++const u8 *CtrNaming_GetText(void)
++{
++    if (sNamingScreen == NULL)
++        return NULL;
++    return sNamingScreen->textBuffer;
++}
++
++u8 CtrNaming_GetMaxChars(void)
++{
++    if (sNamingScreen == NULL || sNamingScreen->template == NULL)
++        return 0;
++    return sNamingScreen->template->maxChars;
++}
++
++u8 CtrNaming_GetCaretPos(void)
++{
++    if (sNamingScreen == NULL)
++        return 0;
++    return GetTextEntryPosition();
++}
++
++void CtrNaming_InputChar(u8 ch)
++{
++    if (!CtrNaming_IsOpen())
++        return;
++    if (GetPreviousTextCaretPosition() < sNamingScreen->template->maxChars - 1
++        || sNamingScreen->textBuffer[sNamingScreen->template->maxChars - 1] == EOS)
++    {
++        BufferCharacter(ch);
++        DrawTextEntry();
++        CopyBgTilemapBufferToVram(3);
++        PlaySE(SE_SELECT);
++    }
++}
++
++void CtrNaming_Backspace(void)
++{
++    if (!CtrNaming_IsOpen())
++        return;
++    DeleteTextCharacter();
++}
++
++void CtrNaming_Confirm(void)
++{
++    if (!CtrNaming_IsOpen())
++        return;
++    PlaySE(SE_SELECT);
++    sNamingScreen->state = STATE_PRESSED_OK;
++}
++#endif
++
+ static void SaveInputText(void);
+ static void LoadGfx(void);
+ static void CreateHelperTasks(void);
+@@ -493,9 +552,27 @@ static void SetSpritesVisible(void)
+     for (i = 0; i < MAX_SPRITES; i++)
+     {
+         if (gSprites[i].inUse)
++        {
++#ifdef PLATFORM_3DS
++            if (gSprites[i].template == &sSpriteTemplate_Cursor
++             || gSprites[i].template == &sSpriteTemplate_PageSwapFrame
++             || gSprites[i].template == &sSpriteTemplate_PageSwapText
++             || gSprites[i].template == &sSpriteTemplate_PageSwapButton
++             || gSprites[i].template == &sSpriteTemplate_BackButton
++             || gSprites[i].template == &sSpriteTemplate_OkButton)
++            {
++                gSprites[i].invisible = TRUE;
++                continue;
++            }
++#endif
+             gSprites[i].invisible = FALSE;
++        }
+     }
++#ifndef PLATFORM_3DS
+     SetCursorInvisibility(FALSE);
++#else
++    SetCursorInvisibility(TRUE);
++#endif
+ }
+ 
+ static void NamingScreen_InitBGs(void)
+@@ -1169,6 +1246,9 @@ static void MoveCursorToOKButton(void)
+ 
+ static void SetCursorInvisibility(bool8 invisible)
+ {
++#ifdef PLATFORM_3DS
++    invisible = TRUE;
++#endif
+     gSprites[sNamingScreen->cursorSpriteId].data[4] &= 0xFF00;
+     gSprites[sNamingScreen->cursorSpriteId].data[4] |= invisible; // sInvisible
+     StartSpriteAnim(&gSprites[sNamingScreen->cursorSpriteId], 0);
+@@ -1308,7 +1388,11 @@ static bool8 PageSwapSprite_SlideOn(struct Sprite *sprite)
+ {
+     struct Sprite *text = &gSprites[sprite->sTextSpriteId];
+ 
++#ifndef PLATFORM_3DS
+     text->invisible = FALSE;
++#else
++    text->invisible = TRUE;
++#endif
+     text->y2++;
+     if (text->y2 >= 0)
+     {
+@@ -1859,6 +1943,65 @@ static void BufferCharacter(u8 ch)
      sNamingScreen->textBuffer[index] = ch;
  }
  
@@ -146,3 +399,18 @@ index 3928ed5..4e0b5be 100644
  static void SaveInputText(void)
  {
      u8 i;
+@@ -2050,10 +2193,14 @@ static void VBlankCB_NamingScreen(void)
+ 
+ static void NamingScreen_ShowBgs(void)
+ {
++#ifdef PLATFORM_3DS
++    ShowBg(3);
++#else
+     ShowBg(0);
+     ShowBg(1);
+     ShowBg(2);
+     ShowBg(3);
++#endif
+ }
+ 
+ // Always false (presumably for non-latin languages)

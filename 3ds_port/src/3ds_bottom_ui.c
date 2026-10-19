@@ -2618,6 +2618,11 @@ bool8 __attribute__((weak)) CtrBattle_QuickBallCycle(s8 direction)
     return FALSE;
 }
 
+u8 __attribute__((weak)) CtrBirch_GetNameConfirmChoice(void)
+{
+    return 0;
+}
+
 static u8 CurrentMode(void)
 {
     if (CtrNaming_IsOpen())
@@ -3167,6 +3172,7 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
     if (s->mode == MODE_BIRCH_NAME_CONFIRM)
     {
         s->gender = gSaveBlock2Ptr->playerGender;
+        s->cursor = CtrBirch_GetNameConfirmChoice();
         if (gSaveBlock2Ptr->playerName[0] != EOS)
             StringCopyN(s->name, gSaveBlock2Ptr->playerName, sizeof(s->name));
         return;
@@ -6003,8 +6009,9 @@ static void DrawBirchNameConfirm(const ViewState *s)
     /* YES button (Emerald Green!) */
     {
         int x = 24, y = 130, w = 128, h = 80;
+        bool8 chosen = (s->cursor == 0);
         bool8 pressed = (s->pressed == HIT_YES);
-        u16 bg = pressed ? PackRgb(36, 224, 120) : PackRgb(24, 168, 82);
+        u16 bg = pressed ? PackRgb(36, 224, 120) : (chosen ? PackRgb(28, 180, 90) : PackRgb(20, 140, 70));
 
         FillRect(x + 2, y, w - 4, h, bg);
         FillRect(x, y + 2, w, h - 4, bg);
@@ -6013,14 +6020,28 @@ static void DrawBirchNameConfirm(const ViewState *s)
 
         DrawStrCentered(&sNormal, Ascii(CTR_TEXT("YES ▶", "SÍ ▶", "OUI ▶", "SÌ ▶")),
                         x + w / 2, y + 32 + pressed, TXT_WHITE, PackRgb(10, 60, 25));
+
+        if (chosen)
+        {
+            u16 brk = emeraldGreen;
+            FillRect(x - 2, y - 2, 14, 4, brk);
+            FillRect(x - 2, y - 2, 4, 14, brk);
+            FillRect(x + w - 12, y - 2, 14, 4, brk);
+            FillRect(x + w - 2, y - 2, 4, 14, brk);
+            FillRect(x - 2, y + h - 2, 14, 4, brk);
+            FillRect(x - 2, y + h - 12, 4, 14, brk);
+            FillRect(x + w - 12, y + h - 2, 14, 4, brk);
+            FillRect(x + w - 2, y + h - 12, 4, 14, brk);
+        }
         AddHit(x, y, w, h, HIT_YES);
     }
 
     /* NO button */
     {
         int x = 168, y = 130, w = 128, h = 80;
+        bool8 chosen = (s->cursor == 1);
         bool8 pressed = (s->pressed == HIT_NO);
-        u16 bg = pressed ? PackRgb(65, 78, 105) : PackRgb(43, 53, 81);
+        u16 bg = pressed ? PackRgb(65, 78, 105) : (chosen ? PackRgb(55, 68, 98) : PackRgb(36, 44, 68));
 
         FillRect(x + 2, y, w - 4, h, bg);
         FillRect(x, y + 2, w, h - 4, bg);
@@ -6029,6 +6050,19 @@ static void DrawBirchNameConfirm(const ViewState *s)
 
         DrawStrCentered(&sNormal, Ascii(CTR_TEXT("NO ▶", "NO ▶", "NON ▶", "NO ▶")),
                         x + w / 2, y + 32 + pressed, TXT_WHITE, PackRgb(15, 20, 30));
+
+        if (chosen)
+        {
+            u16 brk = emeraldGreen;
+            FillRect(x - 2, y - 2, 14, 4, brk);
+            FillRect(x - 2, y - 2, 4, 14, brk);
+            FillRect(x + w - 12, y - 2, 14, 4, brk);
+            FillRect(x + w - 2, y - 2, 4, 14, brk);
+            FillRect(x - 2, y + h - 2, 14, 4, brk);
+            FillRect(x - 2, y + h - 12, 4, 14, brk);
+            FillRect(x + w - 12, y + h - 2, 14, 4, brk);
+            FillRect(x + w - 2, y + h - 12, 4, 14, brk);
+        }
         AddHit(x, y, w, h, HIT_NO);
     }
 }
