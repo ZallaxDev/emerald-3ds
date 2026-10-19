@@ -1,0 +1,123 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: touch-screen intro gender selection and naming keyboard
+Applies after 0056-follower-pokemon.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/main_menu.c b/src/main_menu.c
+index d787395..e1e69fb 100644
+--- a/src/main_menu.c
++++ b/src/main_menu.c
+@@ -1783,6 +1783,45 @@ static void Task_NewGameBirchSpeech_SlideInNewGenderSprite(u8 taskId)
+     }
+ }
+ 
++#ifdef PLATFORM_3DS
++bool8 CtrBirch_IsGenderSelect(void)
++{
++    if (FuncIsActiveTask(Task_NewGameBirchSpeech_ChooseGender)
++     || FuncIsActiveTask(Task_NewGameBirchSpeech_SlideOutOldGenderSprite)
++     || FuncIsActiveTask(Task_NewGameBirchSpeech_SlideInNewGenderSprite))
++        return TRUE;
++    return FALSE;
++}
++
++u8 CtrBirch_GetGender(void)
++{
++    return Menu_GetCursorPos();
++}
++
++void CtrBirch_SelectGender(u8 gender)
++{
++    u8 taskId = FindTaskIdByFunc(Task_NewGameBirchSpeech_ChooseGender);
++    if (taskId == TASK_NONE || gender > FEMALE)
++        return;
++    if (Menu_GetCursorPos() != gender)
++    {
++        Menu_MoveCursorNoWrapAround(gender - Menu_GetCursorPos());
++    }
++}
++
++void CtrBirch_ConfirmGender(void)
++{
++    u8 taskId = FindTaskIdByFunc(Task_NewGameBirchSpeech_ChooseGender);
++    if (taskId == TASK_NONE)
++        return;
++    u8 gender = Menu_GetCursorPos();
++    PlaySE(SE_SELECT);
++    gSaveBlock2Ptr->playerGender = gender;
++    NewGameBirchSpeech_ClearGenderWindow(1, 1);
++    gTasks[taskId].func = Task_NewGameBirchSpeech_WhatsYourName;
++}
++#endif
++
+ static void Task_NewGameBirchSpeech_WhatsYourName(u8 taskId)
+ {
+     NewGameBirchSpeech_ClearWindow(0);
+diff --git a/src/naming_screen.c b/src/naming_screen.c
+index 3928ed5..4e0b5be 100644
+--- a/src/naming_screen.c
++++ b/src/naming_screen.c
+@@ -1859,6 +1859,65 @@ static void BufferCharacter(u8 ch)
+     sNamingScreen->textBuffer[index] = ch;
+ }
+ 
++#ifdef PLATFORM_3DS
++bool8 CtrNaming_IsOpen(void)
++{
++    return sNamingScreen != NULL
++        && gMain.callback2 == CB2_NamingScreen
++        && (sNamingScreen->state == STATE_HANDLE_INPUT || sNamingScreen->state == STATE_MOVE_TO_OK_BUTTON);
++}
++
++const u8 *CtrNaming_GetText(void)
++{
++    if (sNamingScreen == NULL)
++        return NULL;
++    return sNamingScreen->textBuffer;
++}
++
++u8 CtrNaming_GetMaxChars(void)
++{
++    if (sNamingScreen == NULL || sNamingScreen->template == NULL)
++        return 0;
++    return sNamingScreen->template->maxChars;
++}
++
++u8 CtrNaming_GetCaretPos(void)
++{
++    if (sNamingScreen == NULL)
++        return 0;
++    return GetTextEntryPosition();
++}
++
++void CtrNaming_InputChar(u8 ch)
++{
++    if (!CtrNaming_IsOpen())
++        return;
++    if (GetPreviousTextCaretPosition() < sNamingScreen->template->maxChars - 1
++        || sNamingScreen->textBuffer[sNamingScreen->template->maxChars - 1] == EOS)
++    {
++        BufferCharacter(ch);
++        DrawTextEntry();
++        CopyBgTilemapBufferToVram(3);
++        PlaySE(SE_SELECT);
++    }
++}
++
++void CtrNaming_Backspace(void)
++{
++    if (!CtrNaming_IsOpen())
++        return;
++    DeleteTextCharacter();
++}
++
++void CtrNaming_Confirm(void)
++{
++    if (!CtrNaming_IsOpen())
++        return;
++    PlaySE(SE_SELECT);
++    sNamingScreen->state = STATE_PRESSED_OK;
++}
++#endif
++
+ static void SaveInputText(void)
+ {
+     u8 i;
