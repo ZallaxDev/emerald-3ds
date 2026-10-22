@@ -180,6 +180,9 @@ This runs `make release`, writes the recipe, assembles
 (including the ROM scan and, for the web payload, the manifest and its hashes)
 and writes `dist/SHA256SUMS.txt`.
 
+Pass `--platform macOS` to produce a macOS standalone builder ZIP
+(`Emerald3DS-v<version>-macOS.zip`) instead of the default Windows package.
+
 The web payload can also be made on its own from any release's `payload/`
 folder, for example the one inside an already published Windows ZIP:
 
