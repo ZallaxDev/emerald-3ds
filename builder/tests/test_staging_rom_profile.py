@@ -13,7 +13,7 @@ spec.loader.exec_module(staging)
 class StagingRomProfileTests(unittest.TestCase):
     def test_pack_fingerprint_matches_compiled_language(self):
         for language, code in (("ENGLISH", "BPEE"), ("SPANISH", "BPES"),
-                               ("FRENCH", "BPEF"), ("ITALIAN", "BPEI")):
+                               ("FRENCH", "BPEF"), ("ITALIAN", "BPEI"), ("GERMAN", "BPED")):
             with self.subTest(language=language), tempfile.TemporaryDirectory() as temporary:
                 folder = Path(temporary)
                 romfs = folder / "romfs"
@@ -38,11 +38,14 @@ class StagingRomProfileTests(unittest.TestCase):
             destination = folder / "fixture.pak"
             arguments = ["pak", "--romfs", str(romfs), "--out", str(destination),
                          "--game-config", str(configuration)]
-            with patch.object(staging.pak, "sha1_of", return_value=staging.SUPPORTED_ROM_SHA1):
-                with self.assertRaisesRegex(ValueError, "does not match"):
-                    staging.main(arguments + ["--rom", str(folder / "wrong.gba")])
-            self.assertFalse(destination.exists())
-            configuration.write_text("#define GAME_LANGUAGE (LANGUAGE_GERMAN)\n")
+            for language in ("SPANISH", "GERMAN"):
+                with self.subTest(language=language):
+                    configuration.write_text("#define GAME_LANGUAGE (LANGUAGE_" + language + ")\n")
+                    with patch.object(staging.pak, "sha1_of", return_value=staging.SUPPORTED_ROM_SHA1):
+                        with self.assertRaisesRegex(ValueError, "does not match"):
+                            staging.main(arguments + ["--rom", str(folder / "wrong.gba")])
+                    self.assertFalse(destination.exists())
+            configuration.write_text("#define GAME_LANGUAGE (LANGUAGE_JAPANESE)\n")
             with self.assertRaisesRegex(ValueError, "Cannot determine"):
                 staging.main(arguments)
             self.assertFalse(destination.exists())

@@ -10,6 +10,7 @@ contains a ROM, a data pack or anything extracted from the game.
 | `Emerald3DS-es.3dsx` | the same for the Spanish variant (installed as `Emerald3DS.3dsx`) |
 | `Emerald3DS-fr.3dsx` | the same for the French variant (installed as `Emerald3DS.3dsx`) |
 | `Emerald3DS-it.3dsx` | the same for the Italian variant (installed as `Emerald3DS.3dsx`) |
+| `Emerald3DS-de.3dsx` | the same for the German variant (installed as `Emerald3DS.3dsx`) |
 | `Emerald3DS-Forwarder.cia` | optional HOME Menu shortcut that starts the installed 3DSX (Luma3DS) |
 | `Emerald3DS-WebPayload.zip` | the web builder (website): payload, builder package, licences, `web-manifest.json` |
 | `web-manifest.json` | the same manifest on its own, read by the website without downloading the payload |
@@ -126,20 +127,21 @@ One release covers every language: there is never a release per language.
 The 3DS executable cannot be shared (the game data it links against differs
 in size between languages, so each has its own data ABI), but everything else
 is: `payload/` holds the English executable and recipe plus the voxel
-generators, and `payload/es/` (resp. `payload/fr/`, `payload/it/`) the Spanish (resp.
-French, Italian)
+generators, and `payload/es/` (resp. `payload/fr/`, `payload/it/`, `payload/de/`) the Spanish (resp.
+French, Italian, German)
 executable and recipe. The builders
 (Windows and web) pick the variant whose recipe was made from the player's ROM;
 `web-manifest.json` describes the English one at its top level and the others
 in `variants` (a site that predates it ignores them and stays English-only).
 
 `build_release.py --spanish-rom <clean BPES ROM> --french-rom <clean BPEF ROM>
---italian-rom <clean BPEI ROM>`
+--italian-rom <clean BPEI ROM> --german-rom <clean BPED ROM>`
 adds the localized variants: each copies this tree's sources (every file Git
 does not ignore) to `build/release-es` (resp. `build/release-fr`), localizes
 them with `tools/localize_spanish.py` (docs/SPANISH.md) or
 `tools/localize_french.py` (docs/FRENCH.md) or `tools/localize_italian.py`
-(docs/ITALIAN.md), builds the engine there and writes
+(docs/ITALIAN.md) or `tools/localize_german.py` (docs/GERMAN.md), builds the
+engine there and writes
 its recipe with the symbol names of `build/spanish-reference.s` (resp.
 `build/french-reference.s`). Without either option the release is English-only,
 as before.

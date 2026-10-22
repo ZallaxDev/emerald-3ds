@@ -129,7 +129,8 @@ def cmd_engine(args) -> None:
 # The ROM each language's tree is built from (its localize_*.py), by the
 # GAME_LANGUAGE its include/constants/global.h compiles.
 GAME_LANGUAGE_ROMS = {"LANGUAGE_ENGLISH": "BPEE", "LANGUAGE_SPANISH": "BPES",
-                      "LANGUAGE_FRENCH": "BPEF", "LANGUAGE_ITALIAN": "BPEI"}
+                      "LANGUAGE_FRENCH": "BPEF", "LANGUAGE_ITALIAN": "BPEI",
+                      "LANGUAGE_GERMAN": "BPED"}
 
 
 def cmd_pak(args) -> None:

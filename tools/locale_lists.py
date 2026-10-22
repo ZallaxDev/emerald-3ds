@@ -35,6 +35,13 @@ def _symbol(symbols: str, name: str) -> tuple[int, int]:
 
 def stage_id_lists(tree: Path, source: bytes, symbols_path: Path, writes: dict) -> None:
     symbols = gzip.decompress(symbols_path.read_bytes()).decode()
+    offsets = {name: _symbol(symbols, name) for name, relative, _ in GROUPS
+               if (tree / relative).is_file()}
+    stage_id_lists_at_offsets(tree, source, offsets, writes)
+
+
+def stage_id_lists_at_offsets(tree: Path, source: bytes, offsets: dict, writes: dict) -> None:
+    """Use verified ROM coordinates when a complete reference symbol file is unavailable."""
     for name, relative, constants in GROUPS:
         path = tree / relative
         if not path.is_file():
@@ -49,7 +56,11 @@ def stage_id_lists(tree: Path, source: bytes, symbols_path: Path, writes: dict) 
             if entry not in defines:
                 raise ValueError("%s: %s has no numeric value" % (relative, entry))
             by_id[int(defines[entry])] = entry
-        offset, size = _symbol(symbols, name)
+        location = offsets.get(name)
+        if (not isinstance(location, (list, tuple)) or len(location) != 2
+                or any(type(value) is not int for value in location)):
+            raise ValueError("Missing or invalid ROM list coordinates: " + name)
+        offset, size = location
         if size != 2 * len(names) or not 0 <= offset <= len(source) - size:
             raise ValueError("%s: the ROM's list does not fit the source list" % name)
         ids = list(struct.unpack_from("<%dH" % len(names), source, offset))

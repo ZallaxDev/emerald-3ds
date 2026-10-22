@@ -391,6 +391,11 @@ verify: verify-randomizer-locales
 verify-randomizer-locales:
 	$(PYTHON) tests/randomizer_locale_test.py --tree $(ROOT)
 
+verify: verify-locale-columns
+.PHONY: verify-locale-columns
+verify-locale-columns:
+	$(PYTHON) tests/locale_column_test.py
+
 build/randomizer_test$(EXESUFFIX): tests/randomizer_test.c src/3ds_randomizer_core.c include/3ds_randomizer.h
 	@mkdir -p build
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/randomizer_test.c src/3ds_randomizer_core.c -o $@
