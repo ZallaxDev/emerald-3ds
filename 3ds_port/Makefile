@@ -278,6 +278,11 @@ pak: romfs/engine/abi.bin
 devdata: romfs/engine/abi.bin
 	"$(PYTHON)" $(SCRIPTS)/staging.py devdata --romfs romfs --out build/devdata
 
+verify: verify-relief-rounding
+.PHONY: verify-relief-rounding
+verify-relief-rounding:
+	$(PYTHON) tests/voxel_relief_rounding_test.py
+
 verify: all verify-input
 	"$(PYTHON)" scripts/verify_build.py --devkitarm "$(DEVKITARM)" --stage 9 --video 1 --full 1
 
