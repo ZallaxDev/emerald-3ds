@@ -2302,6 +2302,16 @@ typedef struct
     u8 nick[POKEMON_NAME_LENGTH + 2];
 } MonView;
 
+/* A battler the target choice shows (species SPECIES_NONE: nobody there):
+ * its party icon, whether the move can be aimed at it. */
+typedef struct
+{
+    u16 species, iconSpecies, hp, maxHp;
+    u8 deoxys;
+    u8 level, gender, type, live;
+    u8 nick[POKEMON_NAME_LENGTH + 1];
+} TargetView;
+
 /* A row of the map's wild Pokemon list (map extras): a species of one
  * method's table, its slots' levels and chances added up. */
 #define ENC_ROWS 12
@@ -2358,6 +2368,7 @@ typedef struct
     u8 safariBalls;
     u8 partyBalls[PARTY_SIZE];        /* PARTY_BALL_*, as the game's party indicator */
     struct ChooseMoveStruct moves4;
+    TargetView targets[MAX_BATTLERS_COUNT];   /* by target plate */
     u8 text[256];
 } ViewState;
 
@@ -2524,10 +2535,8 @@ enum
     HIT_ROW = 0x50,        /* + visible list row */
     HIT_ACTION = 0x60,     /* + action cursor */
     HIT_MOVE = 0x70,       /* + move slot */
-    HIT_TARGET_LEFT = 0x80,
-    HIT_TARGET_RIGHT,
-    HIT_TARGET_OK,
-    HIT_QUICK_BALL,        /* throw the selected ball */
+    HIT_TARGET = 0x80,     /* + target plate */
+    HIT_QUICK_BALL = 0x84, /* throw the selected ball */
     HIT_QUICK_BALL_PREV,
     HIT_QUICK_BALL_NEXT,
     HIT_MAP = 0x90,
@@ -2935,14 +2944,86 @@ void CtrBattleMenu_MoveInput(u8 *cursor, const u16 *moves)
         gMain.newKeys = (gMain.newKeys & ~A_BUTTON) | B_BUTTON;
 }
 
+/*
+ * The target plates two by two as the battle stands on the top screen: the
+ * opponents above (their right one is on the left), the player's side below.
+ */
+static const u8 sTargetPlatePos[MAX_BATTLERS_COUNT] = {
+    B_POSITION_OPPONENT_RIGHT, B_POSITION_OPPONENT_LEFT, B_POSITION_PLAYER_LEFT, B_POSITION_PLAYER_RIGHT,
+};
+
+static u8 TargetPlate(u8 battler)
+{
+    for (int i = 0; i < MAX_BATTLERS_COUNT; ++i)
+        if (sTargetPlatePos[i] == GetBattlerPosition(battler))
+            return i;
+    return 0;
+}
+
+/* HandleInputChooseTarget's test: someone there, and not the user itself
+ * unless its move may be aimed at the user. */
+static bool8 TargetLive(u8 battler, u8 user)
+{
+    u16 move;
+
+    if (battler >= gBattlersCount || (gAbsentBattlerFlags & (1u << battler)))
+        return FALSE;
+    if (GetBattlerSide(battler) == B_SIDE_OPPONENT || battler != user)
+        return TRUE;
+    move = GetMonData(&gPlayerParty[gBattlerPartyIndexes[user]], MON_DATA_MOVE1 + gMoveSelectionCursor[user]);
+    return (gBattleMoves[move].target & MOVE_TARGET_USER_OR_SELECTED) != 0;
+}
+
+/* The plate a press from plate moves to along axis (1 across, 2 up and
+ * down); up and down take the other column when the plate above is empty. */
+static u8 TargetStep(u8 plate, u8 axis, u8 user)
+{
+    u8 next = plate ^ axis;
+
+    if (TargetLive(GetBattlerAtPosition(sTargetPlatePos[next]), user))
+        return next;
+    next ^= 1;
+    if (axis == 2 && TargetLive(GetBattlerAtPosition(sTargetPlatePos[next]), user))
+        return next;
+    return plate;
+}
+
+/* What the game's left and right do to the cursor, straight to a battler. */
+static void SetTargetCursor(u8 battler)
+{
+    if (battler == gMultiUsePlayerCursor)
+        return;
+    PlaySE(SE_SELECT);
+    gSprites[gBattlerSpriteIds[gMultiUsePlayerCursor]].callback = SpriteCB_HideAsMoveTarget;
+    EndBounceEffect(gMultiUsePlayerCursor, BOUNCE_HEALTHBOX);
+    gMultiUsePlayerCursor = battler;
+    gSprites[gBattlerSpriteIds[battler]].callback = SpriteCB_ShowAsMoveTarget;
+}
+
 void CtrBattleMenu_TargetInput(void)
 {
-    u8 tap = TakeBattleTap(ASK_TARGET);
+    u8 tap = TakeBattleTap(ASK_TARGET), user = gActiveBattler, plate = TargetPlate(gMultiUsePlayerCursor), next = plate;
+    u16 dpad = gMain.newKeys & DPAD_ANY;
 
-    if (tap == HIT_TARGET_LEFT) gMain.newKeys |= DPAD_LEFT;
-    else if (tap == HIT_TARGET_RIGHT) gMain.newKeys |= DPAD_RIGHT;
-    else if (tap == HIT_TARGET_OK) gMain.newKeys |= A_BUTTON;
-    else if (tap == HIT_CANCEL) gMain.newKeys |= B_BUTTON;
+    gMain.newKeys &= ~DPAD_ANY;
+    if (dpad & (DPAD_UP | DPAD_DOWN))
+        next = TargetStep(plate, 2, user);
+    else if (dpad & (DPAD_LEFT | DPAD_RIGHT))
+        next = TargetStep(plate, 1, user);
+    if (next != plate)
+        SetTargetCursor(GetBattlerAtPosition(sTargetPlatePos[next]));
+    if (tap >= HIT_TARGET && tap < HIT_TARGET + MAX_BATTLERS_COUNT)
+    {
+        u8 battler = GetBattlerAtPosition(sTargetPlatePos[tap - HIT_TARGET]);
+
+        if (TargetLive(battler, user))
+        {
+            SetTargetCursor(battler);
+            gMain.newKeys |= A_BUTTON;
+        }
+    }
+    else if (tap == HIT_CANCEL)
+        gMain.newKeys |= B_BUTTON;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -3110,6 +3191,36 @@ static void SnapshotPartyBalls(ViewState *s)
     }
     while (n < PARTY_SIZE)
         s->partyBalls[n++] = PARTY_BALL_EMPTY;
+}
+
+/* The battlers the target plates show. */
+static void SnapshotTargets(ViewState *s, u8 user)
+{
+    for (int i = 0; i < MAX_BATTLERS_COUNT; ++i)
+    {
+        TargetView *t = &s->targets[i];
+        u8 b = GetBattlerAtPosition(sTargetPlatePos[i]);
+        const struct BattlePokemon *mon = &gBattleMons[b];
+
+        if (b >= gBattlersCount || (gAbsentBattlerFlags & (1u << b)) || mon->species == SPECIES_NONE)
+            continue;
+        t->species = mon->species;
+        t->iconSpecies = GetIconSpecies(mon->species, mon->personality);
+        t->deoxys = mon->species == SPECIES_DEOXYS;
+        t->hp = mon->hp;
+        t->maxHp = mon->maxHP;
+        t->level = mon->level;
+        t->gender = GetGenderFromSpeciesAndPersonality(mon->species, mon->personality);
+        t->type = mon->types[0];
+        t->live = TargetLive(b, user);
+        {
+            int k = 0;
+
+            for (; k < POKEMON_NAME_LENGTH && mon->nickname[k] != EOS; ++k)
+                t->nick[k] = mon->nickname[k];
+            t->nick[k] = EOS;
+        }
+    }
 }
 
 static void CopyText(u8 *dst, int size, const u8 *src)
@@ -3407,13 +3518,21 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
         break;
     }
     case MODE_BATTLE_MOVE:
-    case MODE_BATTLE_TARGET:
     {
         u8 b = sAsked.battler;
         SnapshotBattle(s);
         s->battler = b;
         s->cursor = sMoveCancel ? MAX_MON_MOVES : gMoveSelectionCursor[b];
         memcpy(&s->moves4, &gBattleBufferA[b][4], sizeof(s->moves4));
+        break;
+    }
+    case MODE_BATTLE_TARGET:
+    {
+        u8 b = sAsked.battler;
+        SnapshotBattle(s);
+        s->battler = b;
+        s->cursor = TargetPlate(gMultiUsePlayerCursor);
+        SnapshotTargets(s, b);
         break;
     }
     case MODE_BATTLE_INFO:
@@ -3429,6 +3548,9 @@ static bool8 Prefetch(const ViewState *s)
     for (int i = 0; i < PARTY_SIZE && sIconBudget; ++i)
         if (s->party[i].species)
             MonIcon(s->party[i].iconSpecies, s->party[i].deoxys);
+    for (int i = 0; i < MAX_BATTLERS_COUNT && sIconBudget && s->mode == MODE_BATTLE_TARGET; ++i)
+        if (s->targets[i].species)
+            MonIcon(s->targets[i].iconSpecies, s->targets[i].deoxys);
     if (sIconBudget && s->registered != ITEM_NONE && s->mode < MODE_BATTLE_INFO)
         ItemIcon(s->registered);
     if (sIconBudget && s->mode == MODE_BATTLE_ACTION && s->quickBall != ITEM_NONE)
@@ -5054,7 +5176,8 @@ static const u8 *Times(u32 n)
  * included (WarmBattleMenus) - and moving the cursor, a blink or a press is
  * then a copy of two such pictures: no blending, no label, no icon.
  */
-enum { CP_FIGHT, CP_BALL, CP_BAG, CP_MON, CP_RUN, CP_MOVE0, CP_CANCEL = CP_MOVE0 + MAX_MON_MOVES, CP_COUNT };
+enum { CP_FIGHT, CP_BALL, CP_BAG, CP_MON, CP_RUN, CP_MOVE0, CP_CANCEL = CP_MOVE0 + MAX_MON_MOVES, CP_TARGET0,
+       CP_COUNT = CP_TARGET0 + MAX_BATTLERS_COUNT };
 #define CP_LOOKS 4
 
 typedef struct
@@ -5416,26 +5539,79 @@ static void DrawBattleMoves(const ViewState *s)
                HIT_CANCEL, CancelBody, s, 0);
 }
 
-/* Left and right move the game's target cursor; OK is what A does. */
+/*
+ * The target choice: the battlers where the moves were, opponents above, in
+ * their first type's colour, each with its party icon, name, level and HP
+ * (the figures for the player's side only, as its health boxes have them).
+ * One the move cannot reach is grey and takes no tap.
+ */
+static void TargetBody(const ViewState *s, int i)
+{
+    const TargetView *t = &s->targets[i];
+    int x = i & 1 ? 164 : 6, y = i & 2 ? 106 : 20, oy, tx;
+    Rgb colour = t->live && t->type < NUMBER_OF_MON_TYPES ? sTypeColour[t->type] : sHueEmpty;
+    Rgb dark = PLATE_DARK(colour), shadow = PLATE_SHADOW(colour);
+    u8 text[16];
+
+    oy = DrawBattlePlate(BTA_MOVE, x, y, MOVE_W, MOVE_H, colour,
+                         t->live ? PlateState(s, HIT_TARGET + i, s->cursor == i) : BTA_NORMAL, s->blink,
+                         t->live ? HIT_TARGET + i : HIT_NONE);
+    if (!t->species || PlateOutsideClip(x, y, MOVE_W, MOVE_H))
+        return;
+    {
+        const u8 *tiles = MonIcon(t->iconSpecies, t->deoxys);
+        u8 pal = gMonIconPaletteIndices[t->iconSpecies];
+
+        if (tiles && pal < 3)
+            DrawSpriteCentred(tiles, 4, 4, 2 * (x + 26), 2 * (oy + 46), sRes.monIconPal[pal].c);
+    }
+    DrawSmoothStr(&sNormal, t->nick, x + MOVE_W / 2 - SmoothInkWidth(&sNormal, t->nick, 4) / 2, oy + 5, 4, sWhite,
+                  dark, &shadow);
+    text[0] = CHAR_LV;
+    StringCopy(text + 1, Number(t->level, 3, STR_CONV_MODE_LEFT_ALIGN));
+    tx = DrawStr(&sSmall, text, x + 50, oy + 32, TXT_DARK, TXT_LIGHT);
+    if (t->gender != MON_GENDERLESS && t->species != SPECIES_NIDORAN_F && t->species != SPECIES_NIDORAN_M)
+    {
+        text[0] = t->gender == MON_FEMALE ? CHAR_FEMALE : CHAR_MALE;
+        text[1] = EOS;
+        DrawStr(&sSmall, text, tx + 4, oy + 32, t->gender == MON_FEMALE ? TXT_RED : TXT_BLUE,
+                t->gender == MON_FEMALE ? TXT_LRED : TXT_LBLUE);
+    }
+    /* The health box's bar: green over half, yellow over a fifth, then red. */
+    {
+        int bx = x + 50, by = oy + 48, bw = 90, fill = t->maxHp ? (t->hp * (bw - 2) + t->maxHp - 1) / t->maxHp : 0;
+        u16 bar = t->hp * 2 > t->maxHp ? PackRgb(88, 208, 128) : t->hp * 5 > t->maxHp ? PackRgb(248, 224, 0)
+                                                                                    : PackRgb(248, 88, 40);
+
+        FillRect(bx, by, bw, 6, PackRgb(dark.r, dark.g, dark.b));
+        FillRect(bx + 1, by + 1, bw - 2, 4, PackRgb(80, 104, 88));
+        FillRect(bx + 1, by + 1, fill, 4, bar);
+    }
+    if (GetBattlerSide(GetBattlerAtPosition(sTargetPlatePos[i])) == B_SIDE_PLAYER)
+    {
+        StringCopy(text, Number(t->hp, 3, STR_CONV_MODE_LEFT_ALIGN));
+        StringAppend(text, gText_Slash);
+        StringAppend(text, Number(t->maxHp, 3, STR_CONV_MODE_LEFT_ALIGN));
+        DrawStrRight(&sSmall, text, x + MOVE_W - 10, oy + 56, TXT_DARK, TXT_LIGHT);
+    }
+}
+
 static void DrawBattleTarget(const ViewState *s)
 {
-    static const u8 left[] = {CHAR_LEFT_ARROW, EOS}, right[] = {CHAR_RIGHT_ARROW, EOS}, ok[] = {CHAR_O, CHAR_K, EOS};
-    const struct { s16 x, y; Rgb hue; const u8 *label; u8 hit; } plates[4] = {
-        {6, ACT_Y, sHueRun, left, HIT_TARGET_LEFT},
-        {164, ACT_Y, sHueRun, right, HIT_TARGET_RIGHT},
-        {6, ROW_Y, sHueFight, ok, HIT_TARGET_OK},
-        {164, ROW_Y, sHueCancel, gText_Cancel2, HIT_CANCEL},
-    };
-
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < MAX_BATTLERS_COUNT; ++i)
     {
-        Rgb dark = PLATE_DARK(plates[i].hue), shadow = PLATE_SHADOW(plates[i].hue);
-        int oy = DrawBattlePlate(BTA_TARGET, plates[i].x, plates[i].y, MOVE_W, ROW_H, plates[i].hue,
-                                 PlateState(s, plates[i].hit, plates[i].hit == HIT_TARGET_OK), s->blink, plates[i].hit);
+        const TargetView *t = &s->targets[i];
+        u32 stamp = Mix(Mix(Mix(Mix(Mix(7, i), t->iconSpecies | (t->deoxys << 16)), t->species),
+                            t->hp | (t->maxHp << 16)), t->level | (t->gender << 8) | (t->type << 16) | (t->live << 24));
 
-        DrawSmoothStr(&sNormal, plates[i].label, plates[i].x + 85 - SmoothInkWidth(&sNormal, plates[i].label, 8) / 2,
-                      oy + 22, 8, sCream, dark, &shadow);
+        for (int k = 0; k < POKEMON_NAME_LENGTH + 1; ++k)
+            stamp = Mix(stamp, t->nick[k]);
+        DrawCached(CP_TARGET0 + i, t->live ? PlateState(s, HIT_TARGET + i, s->cursor == i) : BTA_NORMAL, stamp,
+                   i & 1 ? 164 : 6, i & 2 ? 106 : 20, BTA_MOVE, MOVE_W, MOVE_H, t->live ? HIT_TARGET + i : HIT_NONE,
+                   TargetBody, s, i);
     }
+    DrawCached(CP_CANCEL, PlateState(s, HIT_CANCEL, FALSE), 5, 84, 192, BTA_CANCEL, 152, 26, HIT_CANCEL, CancelBody,
+               s, 0);
 }
 
 /*
@@ -6290,14 +6466,14 @@ static bool8 RectAddPlate(Rect *r, u8 id)
 }
 
 /* The battle cursor's plate: the action (or the quick ball, 4), the move
- * (or CANCEL), or OK when choosing a target. */
+ * (or CANCEL), or the target. */
 static u8 BattleCursorHit(const ViewState *s, u8 cursor)
 {
     if (s->mode == MODE_BATTLE_ACTION)
         return cursor == 4 ? HIT_QUICK_BALL : HIT_ACTION + cursor;
     if (s->mode == MODE_BATTLE_MOVE)
         return cursor == MAX_MON_MOVES ? HIT_CANCEL : HIT_MOVE + cursor;
-    return HIT_TARGET_OK;
+    return HIT_TARGET + cursor;
 }
 
 /*
