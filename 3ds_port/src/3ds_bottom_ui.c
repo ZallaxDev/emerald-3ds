@@ -5552,9 +5552,10 @@ static void GreyPal(u16 *dst, const u16 *src)
 
 /*
  * The target choice: the battlers where the moves were, opponents above in
- * red, the player's side below in blue, each with its party icon, name, level and HP (the figures for the player's
- * side only, as its health boxes have them). One the move cannot reach is
- * grey through and through and takes no tap.
+ * red, the player's side below in blue, each with its party icon, name,
+ * level and HP (the figures for the player's side only, as its health boxes
+ * have them). One the move cannot reach is grey through and through and
+ * takes no tap; an empty place has no plate at all.
  */
 static void TargetBody(const ViewState *s, int i)
 {
@@ -5625,6 +5626,8 @@ static void DrawBattleTarget(const ViewState *s)
         u32 stamp = Mix(Mix(Mix(Mix(Mix(7, i), t->iconSpecies | (t->deoxys << 16)), t->species),
                             t->hp | (t->maxHp << 16)), t->level | (t->gender << 8) | (t->live << 16));
 
+        if (!t->species)
+            continue;
         for (int k = 0; k < POKEMON_NAME_LENGTH + 1; ++k)
             stamp = Mix(stamp, t->nick[k]);
         DrawCached(CP_TARGET0 + i, t->live ? PlateState(s, HIT_TARGET + i, s->cursor == i) : BTA_NORMAL, stamp,
