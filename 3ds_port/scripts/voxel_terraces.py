@@ -2255,9 +2255,14 @@ def modelled(members):
     """{cell: the cell its model stands on}: every cell a building's model
     owns (romfs/voxel/buildings.bin, as voxel_engine_view reads it), the
     model standing on its rectangle's bottom-left cell, as voxel_building.c
-    stands it. Empty without the file."""
+    stands it. Empty without the file, and empty unless VOXEL_RELIEF_BUILDINGS
+    is set: the builder runs the relief and the buildings side by side
+    (builder/emerald3ds_builder/voxel.py), so whether the file is there yet
+    would decide the relief, and the release's CRC with it."""
     import voxel_engine_view as ev
     import voxel_relief_fixes as vrf
+    if not os.environ.get("VOXEL_RELIEF_BUILDINGS"):
+        return {}
     if not _BUILDINGS:
         try:
             _BUILDINGS.append(ev.Buildings())
