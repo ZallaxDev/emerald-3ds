@@ -108,6 +108,43 @@ static bool DecodeOk(const uint8_t *record)
     return CtrNuz_Decode(record, &state, &crc, &size);
 }
 
+/* The bit-by-bit CRC-32 the table replaced: the records already on cards
+ * were written with it. */
+static uint32_t BitwiseCrc32(uint32_t crc, const uint8_t *bytes, size_t size)
+{
+    crc = ~crc;
+    while (size-- > 0)
+    {
+        crc ^= *bytes++;
+        for (unsigned bit = 0; bit < 8; ++bit)
+            crc = (crc >> 1) ^ (0xEDB88320u & (0u - (crc & 1u)));
+    }
+    return ~crc;
+}
+
+static void TestCrc(void)
+{
+    static uint8_t buffer[4099];
+    uint32_t seed = 0x12345678u;
+
+    for (unsigned round = 0; round < 64; ++round)
+    {
+        size_t size = round == 0 ? 0 : (seed >> 7) % sizeof(buffer);
+        uint32_t start = round & 1 ? seed : 0;
+
+        for (size_t i = 0; i < size; ++i)
+        {
+            seed = seed * 1664525u + 1013904223u;
+            buffer[i] = (uint8_t)(seed >> 24);
+        }
+        seed = seed * 1664525u + 1013904223u;
+        assert(CtrNuz_Crc32(start, buffer, size) == BitwiseCrc32(start, buffer, size));
+        /* In pieces as in one go. */
+        assert(CtrNuz_Crc32(CtrNuz_Crc32(start, buffer, size / 3), buffer + size / 3, size - size / 3)
+               == BitwiseCrc32(start, buffer, size));
+    }
+}
+
 static void TestCore(void)
 {
     static CtrNuzState state, decoded;
@@ -281,27 +318,27 @@ static void TestSession(void)
 
     CtrNuzSession_NewGame(&session);
     assert(CtrNuz_IsEmpty(&session.state));
-    assert(CtrNuzSession_ShouldWrite(&session));
+    assert(CtrNuzSession_ShouldWrite(&session, true));
     assert(CtrNuzSession_Label(&session) == CTR_NUZ_LABEL_NEW);
 
     /* No record: nothing to write until something is marked. */
     CtrNuzSession_Loaded(&session, CTR_NUZ_LINK_NONE);
-    assert(!CtrNuzSession_ShouldWrite(&session));
+    assert(!CtrNuzSession_ShouldWrite(&session, true));
     /* Another save's record: never applied, never replaced by an empty tracker. */
     CtrNuz_SetArea(&session.state, 3, CTR_NUZ_CAUGHT);
     CtrNuzSession_Loaded(&session, CTR_NUZ_LINK_OTHER);
     assert(CtrNuz_IsEmpty(&session.state));
-    assert(!CtrNuzSession_ShouldWrite(&session));
+    assert(!CtrNuzSession_ShouldWrite(&session, true));
     assert(CtrNuzSession_Label(&session) == CTR_NUZ_LABEL_OTHER_SAVE);
     CtrNuzSession_Loaded(&session, CTR_NUZ_LINK_DAMAGED);
     assert(CtrNuzSession_Label(&session) == CTR_NUZ_LABEL_DAMAGED);
-    assert(!CtrNuzSession_ShouldWrite(&session));
+    assert(!CtrNuzSession_ShouldWrite(&session, true));
 
     /* An edit is written by the next save. */
     CtrNuz_SetArea(&session.state, 3, CTR_NUZ_MISSED);
     CtrNuzSession_Edited(&session);
     assert(CtrNuzSession_Label(&session) == CTR_NUZ_LABEL_UNSAVED);
-    assert(CtrNuzSession_ShouldWrite(&session));
+    assert(CtrNuzSession_ShouldWrite(&session, true));
     CtrNuzSession_Written(&session, false);
     assert(CtrNuzSession_Label(&session) == CTR_NUZ_LABEL_WRITE_FAILED);
     assert(session.dirty);
@@ -314,7 +351,28 @@ static void TestSession(void)
     assert(CtrNuz_Area(&session.state, 3) == CTR_NUZ_MISSED);
     CtrNuz_SetArea(&session.state, 3, CTR_NUZ_UNUSED);
     CtrNuzSession_Edited(&session);
-    assert(CtrNuz_IsEmpty(&session.state) && CtrNuzSession_ShouldWrite(&session));
+    assert(CtrNuz_IsEmpty(&session.state) && CtrNuzSession_ShouldWrite(&session, true));
+
+    /* The tracker off: an empty unedited tracker writes nothing, a new game
+     * included; marks, and edits not yet saved, are still written. */
+    CtrNuzSession_NewGame(&session);
+    assert(!CtrNuzSession_ShouldWrite(&session, false));
+    assert(CtrNuzSession_ShouldWrite(&session, true));
+    CtrNuzSession_Loaded(&session, CTR_NUZ_LINK_MATCHED);
+    assert(CtrNuz_IsEmpty(&session.state) && !CtrNuzSession_ShouldWrite(&session, false));
+    CtrNuz_SetArea(&session.state, 7, CTR_NUZ_CAUGHT);
+    CtrNuzSession_Edited(&session);
+    assert(CtrNuzSession_ShouldWrite(&session, false));
+    CtrNuzSession_Written(&session, true);
+    assert(CtrNuzSession_ShouldWrite(&session, false));
+    CtrNuz_SetArea(&session.state, 7, CTR_NUZ_UNUSED);
+    CtrNuzSession_Edited(&session);
+    assert(CtrNuz_IsEmpty(&session.state) && CtrNuzSession_ShouldWrite(&session, false));
+    CtrNuzSession_Written(&session, true);
+    assert(!CtrNuzSession_ShouldWrite(&session, false) && CtrNuzSession_ShouldWrite(&session, true));
+    /* Off then on again: the same rules as before it went off. */
+    CtrNuzSession_Loaded(&session, CTR_NUZ_LINK_OTHER);
+    assert(!CtrNuzSession_ShouldWrite(&session, false) && !CtrNuzSession_ShouldWrite(&session, true));
 }
 
 static void TestStore(void)
@@ -421,6 +479,7 @@ int main(void)
 {
     char folder[] = "/tmp/emerald-nuzlocke-XXXXXX";
 
+    TestCrc();
     TestCore();
     TestSession();
     TestShedinja();

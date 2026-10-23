@@ -80,7 +80,7 @@ class RandomizerLocaleTests(unittest.TestCase):
         return json.loads(gzip.decompress(path.read_bytes()))
 
     def test_text_targets_and_rom_references_are_preserved(self):
-        fixture = json.loads((ROOT / "3ds_port/tests/randomizer_locale_targets.json").read_text())
+        fixture = json.loads((ROOT / "3ds_port/tests/randomizer_locale_targets.json").read_text(encoding="utf-8"))
         text = (TREE / "src/battle_main.c").read_text(encoding="utf-8")
         for language in ("spanish", "french", "italian"):
             edits = self.manifest(language)["files"]["src/battle_main.c"]["edits"]
@@ -151,9 +151,9 @@ class RandomizerLocaleTests(unittest.TestCase):
                             replacement = "{" + module.encoded(data[offset:offset + length]) + "}"
                             expected = expected[:start] + replacement + expected[end:]
                         module.stage(tree, rom.source)
-                        self.assertEqual(path.read_text(), expected)
+                        self.assertEqual(path.read_text(encoding="utf-8"), expected)
                         self.assertTrue((tree / ".emerald3ds-locale").exists())
-                        self.assertIn("TRAINER_MON_SPECIES", path.read_text())
+                        self.assertIn("TRAINER_MON_SPECIES", path.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

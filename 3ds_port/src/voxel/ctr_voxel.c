@@ -344,7 +344,6 @@ void CtrVoxel_NotifyTilesetAnimWrite(unsigned firstTile, unsigned tileCount)
 static bool AtlasJobBusy(void);
 static void AtlasJobCancel(void);
 static CtrVoxelStats sStats;
-static const char *sStatus = "init";
 static uint32_t sFrame;
 
 /*
@@ -1135,8 +1134,13 @@ static int sDynamicX, sDynamicZ; /* the billboards' origin this frame */
 #define VOXEL_BUILDING_PAGES 4
 #define VOXEL_PAGE_SLICE (64u * 1024u) /* texels per read: 128 KiB */
 /* Pages take their whole power-of-two texture (PageBytes): the Battle
- * Frontier's two halves, in view together, are 512 KiB each. */
-#define VOXEL_PAGE_VRAM_BUDGET (1024u * 1024u)
+ * Frontier's two halves, in view together, are 512 KiB each. 64 KiB more
+ * for the small page drawn beside two of them: on Route 110 by Slateport
+ * its page 23 (512 KiB padded), Slateport's page 1 (512 KiB) and a 16 KiB
+ * one are all on screen, and with 1 MiB Slateport's buildings waited for the
+ * small one to leave the view. Paid for by the top screens' depth buffers
+ * (TopScreenTarget, 375 KiB). */
+#define VOXEL_PAGE_VRAM_BUDGET (1088u * 1024u)
 /* Atlas pages that may borrow a gap of the pages' arena (AtlasPageBorrow). */
 #define VOXEL_ATLAS_BORROW_MAX 2u
 /* The arena's pieces: a page's texture and its window mask, and the
@@ -1649,6 +1653,69 @@ static uint32_t FramesAgo(uint32_t age)
     return sFrame > age ? sFrame - age : 0u;
 }
 
+/*
+ * Would freeing all that WantPage may free for a page leave a gap of `bytes`:
+ * the victim's texture, the droppable pages, their masks and the masks not
+ * drawn from in two frames - and with `masks` every other mask too? The arena
+ * is first fit, as the chunks' (ChunkRoomPossible). Pages were freed one by
+ * one until the new one fitted, and when it never did they had gone for
+ * nothing, to stream straight back in: on Route 110 by Slateport the city's
+ * 512 KiB page asked for room every other frame beside another of 512 KiB,
+ * freed one of the two 16 KiB pages each time - the other was still streaming
+ * back - and pages 16 and 46 were read some 300 times in ten seconds while
+ * the city stood without its buildings (port.log 2026-10-21).
+ */
+static bool PageRoomPossible(const BuildingPageSlot *victim, unsigned bytes, uint32_t keep, bool masks)
+{
+    bool freed[VOXEL_PAGE_PIECES];
+    uint32_t align = sPageArena.align;
+
+    memset(freed, 0, sizeof(freed));
+    for (unsigned i = 0; i < VOXEL_BUILDING_PAGES; ++i)
+    {
+        const BuildingPageSlot *slot = &sPageSlots[i];
+        uint32_t last = slot->glowDropping ? slot->glowDropped : slot->glowUsed;
+        bool page = slot == victim || PageDroppable(slot, keep);
+        int piece;
+
+        if (page && (piece = VoxelArena_PieceOf(&sPageArena, slot->tex.data)) >= 0)
+            freed[piece] = true;
+        if ((page || masks || (sFrame - last >= 2u && !StreamHolds(slot)))
+         && (piece = VoxelArena_PieceOf(&sPageArena, slot->glow.data)) >= 0)
+            freed[piece] = true;
+    }
+    return VoxelArena_LargestGapFreeing(&sPageArena, freed) >= ((bytes + align - 1u) & ~(align - 1u));
+}
+
+/* A page that found no room: asked for again later, and how soon. */
+static void PageNoRoom(const BuildingPageSlot *victim, int page, unsigned w, unsigned h, bool quiet)
+{
+    bool soon = false;
+
+    if (quiet)
+    {
+        sPageRingRetry[page] = sFrame + VOXEL_PAGE_QUIET_RETRY_FRAMES;
+        return;
+    }
+    /* A page not needed this frame - the map left behind by a warp - is
+     * droppable in a frame or two: ask again then, not seconds later, or the
+     * new map stands without its buildings meanwhile. */
+    for (unsigned i = 0; i < VOXEL_BUILDING_PAGES; ++i)
+        if (&sPageSlots[i] != victim && sPageSlots[i].tex.data != NULL
+         && sPageSlots[i].used != sFrame)
+            soon = true;
+    sPageRetry[page] = sFrame + (soon ? 2u : VOXEL_PAGE_RETRY_FRAMES);
+    if (!soon && !sPageNoRoomLogged[page])
+    {
+        sPageNoRoomLogged[page] = true;
+        ++sStats.errors;
+        CtrLog_Write(CTR_LOG_ERROR, "VOXEL: no room for the %ux%u building page %d "
+                     "(largest gap %lu of %lu KiB); retrying later",
+                     w, h, page, (unsigned long)(VoxelArena_LargestGap(&sPageArena) >> 10),
+                     (unsigned long)(sPageArena.size >> 10));
+    }
+}
+
 static void WantPage(int page, uint32_t keep, bool quiet)
 {
     BuildingPageSlot *victim = NULL;
@@ -1688,6 +1755,18 @@ static void WantPage(int page, uint32_t keep, bool quiet)
     }
     if (victim == NULL || !VoxelBuildings_PageSize((unsigned)page, &w, &h, &th))
         return;
+    /* Nothing given up for a page that would not fit even then (see
+     * PageRoomPossible): the masks first, if dropping them would do. */
+    if ((victim->tex.data == NULL || victim->w != w || victim->h != h)
+     && !PageRoomPossible(victim, PageBytes(w, th), keep, false))
+    {
+        if (!quiet && PageRoomPossible(victim, PageBytes(w, th), keep, true)
+         && GlowDropOthers(victim))
+            sPageRetry[page] = sFrame + 3u;
+        else
+            PageNoRoom(victim, page, w, h, quiet);
+        return;
+    }
     /* The texture is kept for a page of the same size; the mask is the old
      * page's, and goes (the slot is droppable: not drawn from in two frames). */
     GlowFree(victim);
@@ -1732,37 +1811,10 @@ static void WantPage(int page, uint32_t keep, bool quiet)
             sPageRetry[page] = sFrame + 3u;
             return;
         }
-        if (drop == NULL && quiet)
-        {
-            victim->page = -1;
-            sPageRingRetry[page] = sFrame + VOXEL_PAGE_QUIET_RETRY_FRAMES;
-            return;
-        }
         if (drop == NULL)
         {
-            /* A page not needed this frame - the map left behind by a warp -
-             * is droppable in a frame or two: ask again then, not seconds
-             * later, or the new map stands without its buildings meanwhile. */
-            bool soon = false;
-
-            for (unsigned i = 0; i < VOXEL_BUILDING_PAGES; ++i)
-                if (&sPageSlots[i] != victim && sPageSlots[i].tex.data != NULL
-                 && sPageSlots[i].used != sFrame)
-                    soon = true;
             victim->page = -1;
-            sPageRetry[page] = sFrame + (soon ? 2u : VOXEL_PAGE_RETRY_FRAMES);
-            if (!soon)
-            {
-                if (!sPageNoRoomLogged[page])
-                {
-                    sPageNoRoomLogged[page] = true;
-                    ++sStats.errors;
-                    CtrLog_Write(CTR_LOG_ERROR, "VOXEL: no room for the %ux%u building page %d "
-                                 "(largest gap %lu of %lu KiB); retrying later",
-                                 w, h, page, (unsigned long)(VoxelArena_LargestGap(&sPageArena) >> 10),
-                                 (unsigned long)(sPageArena.size >> 10));
-                }
-            }
+            PageNoRoom(victim, page, w, h, quiet);
             return;
         }
         PageFree(drop);
@@ -2437,16 +2489,10 @@ void CtrVoxel_Shutdown(void)
 
 bool CtrVoxel_IsAvailable(void)
 {
-#if CTR_VOXEL_ENABLED
     if (sReady && !sParked && VoxelWorld_IsMapAvailable())
         return true;
-    /* Not an overworld frame: the 2D compositor owns it. Recorded so the
-     * overlay can tell "not the overworld" from "the voxel path broke". */
-    sStatus = sReady ? "2d" : "off";
+    /* Not an overworld frame: the 2D compositor owns it. */
     return false;
-#else
-    return false;
-#endif
 }
 
 const CtrVoxelStats *CtrVoxel_GetStats(void) { return &sStats; }
@@ -5537,10 +5583,7 @@ bool CtrVoxel_Update(void)
     uint64_t started;
 
     if (!sReady || sParked)
-    {
-        sStatus = sReady ? "parked" : "off";
         return false;
-    }
     /* The game has left the battle: the field is drawn again, as it was. */
     if (sBattle.on && !VoxelBattle_GameInBattle())
         CtrVoxel_EndBattle();
@@ -5562,10 +5605,7 @@ bool CtrVoxel_Update(void)
     ReadAhead();
     inst = VoxelWorld_Instance(0);
     if (inst == NULL)
-    {
-        sStatus = "nomap";
         return false;
-    }
 
     {
         /*
@@ -5866,9 +5906,21 @@ bool CtrVoxel_Update(void)
     sStats.updateMs = (float)((svcGetSystemTick() - started) * 1000.0 / SYSCLOCK_ARM11);
     if (sStats.updateMs > sStats.updatePeakMs)
         sStats.updatePeakMs = sStats.updateMs;
-    sStatus = sAtlasCapacityBlocked ? "capacity"
-            : sWarmupUntil != 0 && sStats.chunksMissing != 0 ? "loading"
-            : sDrawCount != 0 ? "on" : "nomesh";
+    /* A map on screen without its atlas: the frame is the 2D picture (or
+     * the battle's 2D scenery). Logged once the run of them is over, so a
+     * console log tells a flash of 2D from the world switched off. */
+    {
+        static unsigned sBlockedRun;
+
+        if (sAtlasCapacityBlocked)
+            ++sBlockedRun;
+        else if (sBlockedRun != 0)
+        {
+            CtrLog_Write(CTR_LOG_VIDEO, "VOXEL: %u frame%s drawn flat for want of an atlas's VRAM%s",
+                         sBlockedRun, sBlockedRun == 1 ? "" : "s", sBattle.on ? " (battle)" : "");
+            sBlockedRun = 0;
+        }
+    }
     return sDrawCount != 0 && !sAtlasCapacityBlocked
         && !(sWarmupUntil != 0 && sStats.chunksMissing != 0);
 }
@@ -5933,6 +5985,63 @@ unsigned long CtrVoxel_ReleaseIdleVram(void)
                      freed >> 10, (unsigned long)vramSpaceFree());
     }
     return freed;
+}
+
+/*
+ * The battle's scene surface, a menu's layers: one block of VRAM, which one
+ * atlas or two off screen usually make. Released all at once, the atlases of
+ * the maps beside the player went too - a battle's start composed them again
+ * under its transition (port.log 2026-10-21: two atlases and their chunks
+ * rebuilt there, a third that no longer fitted for the whole battle), and
+ * the field came back without them. In view or being composed, an atlas
+ * stays unless nothing else makes the room.
+ */
+unsigned long CtrVoxel_ReleaseIdleVramFor(uint32_t bytes, bool inView)
+{
+    const VoxelMapInstance *current = VoxelWorld_Instance(0);
+    unsigned long freed = 0;
+
+    if (!sReady)
+        return 0;
+    while (CtrGpuMem_LargestVram() < bytes)
+    {
+        VoxelAtlasSlot *victim = NULL;
+        unsigned victimPages = 0;
+
+        for (unsigned i = 0; i < VOXEL_ATLAS_SLOTS; ++i)
+        {
+            VoxelAtlasSlot *slot = &sAtlases[i];
+            unsigned pages = 0;
+
+            if (slot->tex.data == NULL || (AtlasJobBusy() && slot == sAtlasJob.slot) || AtlasInView(slot)
+             || (current != NULL && slot->primaryTileset == current->primaryTileset
+                 && slot->secondaryTileset == current->secondaryTileset))
+                continue;
+            for (unsigned p = 0; p < VOXEL_ATLAS_PAGES; ++p)
+                pages += AtlasTex(slot, p)->data != NULL && !AtlasPageBorrowed(AtlasTex(slot, p));
+            if (pages != 0 && (victim == NULL || slot->stamp < victim->stamp))
+            {
+                victim = slot;
+                victimPages = pages;
+            }
+        }
+        if (victim == NULL)
+            break;
+        FreeAtlasTextures(victim);
+        AnimForget(victim);
+        memset(&victim->tex, 0, sizeof(victim->tex));
+        victim->valid = false;
+        freed += victimPages * VOXEL_ATLAS_PIXELS * sizeof(uint16_t);
+    }
+    if (freed != 0)
+    {
+        sAtlasCapped = false;
+        CtrLog_Write(CTR_LOG_VIDEO, "VOXEL: %lu KiB of atlases out of view released for %lu KiB (VRAM free=%lu)",
+                     freed >> 10, (unsigned long)(bytes >> 10), (unsigned long)vramSpaceFree());
+    }
+    if (!inView || CtrGpuMem_LargestVram() >= bytes)
+        return freed;
+    return freed + CtrVoxel_ReleaseIdleVram();
 }
 
 /*
@@ -6054,11 +6163,6 @@ void CtrVoxel_ArenaUse(uint32_t *chunkUsed, uint32_t *chunkLargest, uint32_t *pa
     *chunkLargest = sChunkBlock != NULL ? VoxelArena_LargestGap(&sChunkArena) : 0;
     *pageUsed = sPageArena.used;
     *pageLargest = sPageBlock != NULL ? VoxelArena_LargestGap(&sPageArena) : 0;
-}
-
-const char *CtrVoxel_Status(void)
-{
-    return sReady ? sStatus : "off";
 }
 
 /* ── Draw ───────────────────────────────────────────────────────────────── */
@@ -6588,12 +6692,6 @@ static void MakeRays(void)
  * light in the air lies over everything. The fade environment still applies,
  * so a fade to black takes the rays with it.
  */
-#ifdef CTR_F8_LOAD
-/* Phase F8's load (see VOXEL_MOTES_ROOM): the rays drawn this many times. */
-static unsigned sRayLayers = 1;
-static uint32_t sF8Drawn[2];
-#endif
-
 static void DrawRays(const VoxelLight *light, const VoxelLight *unlit)
 {
     float angle = C3D_AngleFromDegrees(VOXEL_RAY_ANGLE);
@@ -6640,13 +6738,7 @@ static void DrawRays(const VoxelLight *light, const VoxelLight *unlit)
     C3D_DepthTest(false, GPU_ALWAYS, GPU_WRITE_COLOR);
     C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, GPU_SRC_ALPHA, GPU_ONE, GPU_ZERO, GPU_ONE);
     BindVertices(sRays);
-#ifdef CTR_F8_LOAD
-    for (unsigned layer = 0; layer < sRayLayers; ++layer)
-        C3D_DrawArrays(GPU_TRIANGLES, 0, (int)sRayCount);
-    ++sF8Drawn[1];
-#else
     C3D_DrawArrays(GPU_TRIANGLES, 0, (int)sRayCount);
-#endif
     C3D_DepthTest(true, GPU_GREATER, GPU_WRITE_ALL);
     C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD,
                    GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA, GPU_ZERO, GPU_ONE);
@@ -6666,19 +6758,6 @@ static void DrawRays(const VoxelLight *light, const VoxelLight *unlit)
  * has finished by then (the frame begins by waiting for it).
  */
 #define VOXEL_MOTES 32
-/*
- * Phase F8's measurement of the room left for effects (-DCTR_F8_LOAD, never a
- * player's build): every 600 frames of the voxel world the dust's count and
- * how many times the rays are drawn over themselves step through 32/64/128
- * and x1/x2/x3, logged, so the console's profile gives what each load costs.
- */
-#ifdef CTR_F8_LOAD
-#define VOXEL_MOTES_ROOM 128
-static unsigned sMoteCount = VOXEL_MOTES;
-#else
-#define VOXEL_MOTES_ROOM VOXEL_MOTES
-#define sMoteCount VOXEL_MOTES
-#endif
 #define VOXEL_MOTE_VERTICES 12
 #define VOXEL_MOTE_HALF_X 11.0f /* tiles each side of the camera's target */
 #define VOXEL_MOTE_HALF_Z 9.0f
@@ -6691,7 +6770,7 @@ static unsigned sMoteCount = VOXEL_MOTES;
 
 static void MakeMotes(void)
 {
-    sMotes = linearAlloc(VOXEL_MOTES_ROOM * VOXEL_MOTE_VERTICES * sizeof(VoxelGpuVertex));
+    sMotes = linearAlloc(VOXEL_MOTES * VOXEL_MOTE_VERTICES * sizeof(VoxelGpuVertex));
     if (sMotes == NULL)
         CtrLog_Write(CTR_LOG_ERROR, "VOXEL: no linear memory for the sunlit dust");
 }
@@ -6739,7 +6818,7 @@ static void DrawMotes(const C3D_Mtx *view, const VoxelLight *light, const VoxelL
     VoxelGpuVertex *v = sMotes;
     C3D_TexEnv *env;
 
-    for (unsigned i = 0; i < sMoteCount; ++i)
+    for (unsigned i = 0; i < VOXEL_MOTES; ++i)
     {
         float phase = MoteRandom(i, 1) * 6.2832f;
         /* Where it has drifted to in the anchored world, then brought into
@@ -6769,7 +6848,7 @@ static void DrawMotes(const C3D_Mtx *view, const VoxelLight *light, const VoxelL
         MoteVertex(&v[11], x + ux, y + uy, z + uz, 0.0f);
         v += VOXEL_MOTE_VERTICES;
     }
-    GSPGPU_FlushDataCache(sMotes, sMoteCount * VOXEL_MOTE_VERTICES * sizeof(VoxelGpuVertex));
+    GSPGPU_FlushDataCache(sMotes, VOXEL_MOTES * VOXEL_MOTE_VERTICES * sizeof(VoxelGpuVertex));
 
     SetModelView(view, originX, originZ);
     SetGrade(unlit);
@@ -6790,10 +6869,7 @@ static void DrawMotes(const C3D_Mtx *view, const VoxelLight *light, const VoxelL
     C3D_DepthTest(true, GPU_GREATER, GPU_WRITE_COLOR);
     C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, GPU_SRC_ALPHA, GPU_ONE, GPU_ZERO, GPU_ONE);
     BindVertices(sMotes);
-    C3D_DrawArrays(GPU_TRIANGLES, 0, sMoteCount * VOXEL_MOTE_VERTICES);
-#ifdef CTR_F8_LOAD
-    ++sF8Drawn[0];
-#endif
+    C3D_DrawArrays(GPU_TRIANGLES, 0, VOXEL_MOTES * VOXEL_MOTE_VERTICES);
     C3D_DepthTest(true, GPU_GREATER, GPU_WRITE_ALL);
     C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD,
                    GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA, GPU_ZERO, GPU_ONE);
@@ -8083,25 +8159,6 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
         FadeFor(false);
         DrawFogBanks(&view, &light, cave, fog * (1.0f - neutral));
     }
-#ifdef CTR_F8_LOAD
-    {
-        static uint32_t frames, phase = ~0u;
-        static const unsigned motes[3] = {32, 64, 128};
-
-        if (frames++ % 600 == 0)
-        {
-            if (phase != ~0u)
-                CtrLog_Write(CTR_LOG_VIDEO, "F8 load done: motes=%u rays=x%u drawn in %lu/%lu frames", sMoteCount,
-                             sRayLayers, (unsigned long)sF8Drawn[0], (unsigned long)sF8Drawn[1]);
-            phase = (phase + 1) % 9;
-            sMoteCount = motes[phase % 3];
-            sRayLayers = 1 + phase / 3;
-            sF8Drawn[0] = sF8Drawn[1] = 0;
-            CtrLog_Write(CTR_LOG_VIDEO, "F8 load motes=%u rays=x%u from voxel frame %lu", sMoteCount, sRayLayers,
-                         (unsigned long)frames);
-        }
-    }
-#endif
     /* Before the rays, which leave the orthographic projection behind. */
     if (sMotes != NULL && light.motes > 0.005f)
         DrawMotes(&view, &light, &unlit);

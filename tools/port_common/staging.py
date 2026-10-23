@@ -56,6 +56,7 @@ ENGINE_PATTERNS = [
     "gamedata/*.rel",
     "voxel/trees.rgba5551",
     "bottom/battle.bin",
+    "bottom/menu.bin",
     "battle/hud.bin",
 ]
 OPTIONAL_PATTERNS = [
@@ -105,10 +106,10 @@ def cmd_abi(args) -> None:
     blob = struct.pack("<I", abi)
     if not out.exists() or out.read_bytes() != blob:
         out.write_bytes(blob)
-    manifest = args.romfs / "engine" / "data_manifest.txt"
-    text = "".join("%08x %9d %s\n" % (c, s, p) for p, s, c in items)
-    if not manifest.exists() or manifest.read_text() != text:
-        manifest.write_text(text, encoding="ascii", newline="\n")
+    # The per-file list once written next to abi.bin (data_manifest.txt,
+    # ~400 KiB) was read by nothing and shipped in every RomFS; a copy left
+    # by an older build goes too, since the RomFS is packed whole.
+    (args.romfs / "engine" / "data_manifest.txt").unlink(missing_ok=True)
     print("staging: engine ABI %08x over %d data files (%.1f MiB)"
           % (abi, len(items), sum(s for _, s, _ in items) / 1048576))
 

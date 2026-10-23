@@ -390,6 +390,13 @@ void VoxelWorld_BuildInstances(void)
     FillInstance(&sInstances[0], &gMapHeader,
                  gSaveBlock1Ptr->location.mapGroup,
                  gSaveBlock1Ptr->location.mapNum, 0, 0);
+    /* Its layout is the save block's: a script that swaps it in
+     * (setmaplayoutindex - Route 130's Mirage Island, Route 131's Sky Pillar,
+     * the Sky Pillar's clean floors, Route 111 without its tower)
+     * sets that and gMapHeader.mapLayout, never gMapHeader.mapLayoutId
+     * (overworld.c, SetCurrentMapLayout). Keyed by the header's, the
+     * relief, regions and buildings were the default layout's. */
+    sInstances[0].layoutId = gSaveBlock1Ptr->mapLayoutId;
     sInstanceCount = 1;
     AddConnections(&sInstances[0], false);
     near = sInstanceCount;

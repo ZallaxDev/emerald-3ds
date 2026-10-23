@@ -69,7 +69,7 @@ SCRATCH = 8192 + 64 * 18          # ctr_voxel.c VOXEL_CHUNK_SCRATCH
 # its own block, the largest ~80 KiB. To confirm on the console: no "no
 # linear memory" line in port.log.
 STATIC_BUDGET = 160 * 1024
-PAGE_ARENA = 1024 * 1024          # ctr_voxel.c VOXEL_PAGE_VRAM_BUDGET
+PAGE_ARENA = 1088 * 1024          # ctr_voxel.c VOXEL_PAGE_VRAM_BUDGET
 SHAPE_FLAT, SHAPE_WATER = 0, 7    # voxel_world.h VoxelVisualShape
 SUN_DX, SUN_DZ, AMBIENT = 0.85, 0.55, 0.70
 TREE_DIM = 128

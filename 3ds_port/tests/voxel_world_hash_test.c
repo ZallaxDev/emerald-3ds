@@ -136,6 +136,31 @@ static void TileLoadTests(void)
     puts("PASS tile streaming: bounded literal/match/raw writes, overlap, truncation and bounds");
 }
 
+/* A layout a script swaps in (SetCurrentMapLayout) changes the save block's
+ * id and the header's layout pointer, not the header's id: the current map's
+ * instance takes the save block's, which keys its relief and buildings. */
+static void LayoutSwapTest(void)
+{
+    struct SaveBlock1 save = {0};
+    struct MapLayout swapped = {.width = 20, .height = 30};
+
+    gSaveBlock1Ptr = &save;
+    gMapHeader = (struct MapHeader){.mapLayout = &swapped, .mapLayoutId = 10};
+    save.mapLayoutId = 11;
+    VoxelWorld_BuildInstances();
+    assert(VoxelWorld_InstanceCount() == 1);
+    assert(VoxelWorld_Instance(0)->layoutId == 11);
+    assert(VoxelWorld_Instance(0)->layout == &swapped);
+    assert(VoxelWorld_Instance(0)->width == 20 && VoxelWorld_Instance(0)->height == 30);
+    save.mapLayoutId = 10;
+    VoxelWorld_BuildInstances();
+    assert(VoxelWorld_Instance(0)->layoutId == 10);
+    gSaveBlock1Ptr = NULL;
+    gMapHeader = (struct MapHeader){0};
+    sInstanceCount = 0;
+    puts("PASS layout swap: the current map's instance keys on the save block's layout id");
+}
+
 int main(void)
 {
     u16 live[32 * 32], a[16 * 16], b[16 * 16];
@@ -191,6 +216,7 @@ int main(void)
     assert(VoxelWorld_IsVisibleReflectiveSurface(1, 0));
     MaterialAndPayloadTests();
     TileLoadTests();
+    LayoutSwapTest();
     puts("PASS world hash: scalar equivalence, live digest, overlaps, negative origins, missing maps, live edits, clipping; Fortree puddle art");
     return 0;
 }

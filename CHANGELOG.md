@@ -8,6 +8,34 @@
   3DS's frame rate sharply the first time a target, or the second mon's
   move, was chosen. The second mon's moves have pictures of their own, so
   warming them no longer throws out the first mon's.
+  
+- Bottom screen map: a magnifier button in the map's bottom right corner
+  zooms in on the player's place and back out. Touching a place on the map
+  picks it: zoomed in, a panel shows its name and, for a city or town, its
+  picture, or the landmarks there. Based on @luksgrin's pull request #108.
+
+- Fly on the bottom screen: FLY from the party menu, or the HM from the Bag,
+  opens the bottom screen's map as the Fly map, with the places you can fly
+  to marked. Touch a place, then FLY in the header, or A; CANCEL or B goes
+  back to the party or the Bag. Meanwhile the dock is locked and the game's
+  buttons wait. The PokéNav's HOENN MAP entry is gone: the bottom screen's MAP
+  is that map, zoom included. Based on @luksgrin's pull request #108.
+
+- Battle speed, by @maxxandres (pull request #149): in a battle (wild or
+  trainer) R speeds the game up and L slows it down, 1x, 1.5x, 2x, 3x and 4x,
+  and a badge in the top right corner shows the speed for two seconds after
+  each press.
+  It is a speed of its own: until the first press the battle follows the
+  SPEED the player uses in the overworld, and then keeps its own
+  (`battle_speed=` in settings.txt). The bag, the party and the summary opened
+  from a battle, and the field, keep the overworld's SPEED; a local wireless
+  session and the measured scenarios stay at 1x. In the battle L and R no
+  longer reach the game; with the game's L=A button mode L stays A and R
+  alone goes round the speeds, 4x back to 1x. The soft reset,
+  L+R+START+SELECT, still works. The bottom screen's focus ring and the intervals of its
+  background refreshes now go by the clock, so they keep their pace at any
+  speed. The quick ball moves from R to X
+  (patch 0006-quick-ball); the ball button on the bottom screen is as before.
 
 - Soft reset is now L+R+START+SELECT, as in the 3DS games, instead of the
   GBA's A+B+START+SELECT.

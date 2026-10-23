@@ -26,7 +26,6 @@ typedef struct
     void (*vblank)(void);
     void (*videoPresent)(void);
     void (*audioFrame)(void);
-    void (*reset)(void);
     void (*shutdown)(void);
 } CtrPlatformHooks;
 
@@ -35,7 +34,6 @@ void CtrPlatform_Shutdown(void);
 bool CtrPlatform_BeginFrame(void);
 void CtrPlatform_EndFrame(void);
 void CtrPlatform_SetHooks(const CtrPlatformHooks *hooks);
-void CtrPlatform_RequestReset(void);
 void CtrPlatform_RequestExit(void);
 void CtrPlatform_Fatal(const char *reason) __attribute__((noreturn));
 void CtrPlatform_ShowDataError(const char *title, const char *detail) __attribute__((noreturn));
@@ -46,8 +44,9 @@ float CtrPlatform_TickMs(uint64_t ticks);
 uint64_t CtrPlatform_FrameCount(void);
 const CtrTiming *CtrPlatform_GetTiming(void);
 void CtrPlatform_NoteBottom(float ms);
-void CtrPlatform_Diagnostic(uint32_t gameFrames, uint32_t aPresses, uint32_t checks);
 void CtrPlatform_ReportMemory(const char *stage);
+/* Bytes the application heap can still give: free in its arena and past it. */
+size_t CtrPlatform_HeapRoom(void);
 /*
  * Threads and locks for the port's own workers, usable from game translation
  * units. A CtrLock is a libctru LightLock. A thread is started detached, one
@@ -145,6 +144,22 @@ void CtrSettings_SetInt(const char *key, int value);
  * 3 being 1.5x (OPTIONS, ZR/ZL). */
 int CtrSettings_SpeedHalves(void);
 void CtrSettings_StepSpeed(int direction, bool wrap);
+/* The battle scene's own speed, in the same halves: the overworld's SPEED
+ * until L or R is pressed in a battle (settings.txt battle_speed=). */
+int CtrSettings_BattleSpeedHalves(void);
+void CtrSettings_StepBattleSpeed(int direction, bool wrap);
+/* The game says each frame whether the battle scene itself is on (not the
+ * bag, the party or the summary a battle opens). While it is, and no link or
+ * measured scenario holds the speed, L and R are the battle speed's keys
+ * (CtrPlatform_BattleSpeedKeys) and the frames follow it. */
+void CtrPlatform_SetBattleScene(bool on);
+bool CtrPlatform_BattleSpeedKeys(void);
+/* L (-1) or R (+1) pressed in the battle scene; shows the speed badge. With
+ * `wrap` (R alone, when L is A) the speed goes round from 4x to 1x. */
+void CtrPlatform_StepBattleSpeed(int direction, bool wrap);
+/* The speed the badge on the top screen's corner shows, in halves, or 0: in
+ * the battle scene, for two seconds after each press of L or R. */
+int CtrPlatform_BattleSpeedBadge(void);
 /* False on a fast-forwarded frame that is not shown: the sound engine skips
  * it, so music and effects keep their own speed (3ds_sound.c). */
 bool CtrPlatform_SoundTick(void);
@@ -153,11 +168,7 @@ void CtrGame_Init(void);
 /* The game's variables back to how AgbMain first saw them, AgbMain again:
  * returns only when the reset is unavailable. */
 void CtrGame_SoftReset(void);
-void CtrGame_Frame(void);
 void CtrGame_VBlank(void);
-uint32_t CtrGame_Frames(void);
-uint32_t CtrGame_APresses(void);
-uint32_t CtrGame_Checks(void);
 /* The field is on screen (CB2_Overworld), whichever way it is drawn. */
 bool CtrGame_IsOverworld(void);
 bool CtrGame_IsOutdoor(void);

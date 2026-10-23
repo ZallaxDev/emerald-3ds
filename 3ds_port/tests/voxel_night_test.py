@@ -84,6 +84,7 @@ void VoxelBuilder_Tri(VoxelBuilder *builder, const VoxelVertex *a, const VoxelVe
 void VoxelBuilder_Quad(VoxelBuilder *builder, const VoxelVertex *a, const VoxelVertex *b,
                        const VoxelVertex *c, const VoxelVertex *d)
 { (void)builder, (void)a, (void)b, (void)c, (void)d; }
+float VoxelBuilder_StretchZ(const VoxelBuilder *builder, float z) { (void)builder; return z; }
 float VoxelRelief_CellLift(const VoxelMapInstance *inst, int x, int y) { (void)inst, (void)x, (void)y; return 0.0f; }
 float VoxelRelief_CellShift(const VoxelMapInstance *inst, int x, int y) { (void)inst, (void)x, (void)y; return 0.0f; }
 int VoxelWorld_GetMetatileId(int worldX, int worldY) { (void)worldX, (void)worldY; return 0; }

@@ -5,7 +5,8 @@
  * the choice of starter from the professor's bag, the communication error
  * screen, the Berry Blender, the wireless minigames and contests;
  * and into pokenav.c, pokemon_storage_system.c (the PC's boxes),
- * pokemon_summary_screen.c, item_menu.c (the bag), pokedex.c and trade.c,
+ * pokemon_summary_screen.c, item_menu.c (the bag), pokedex.c, trade.c and
+ * trainer_card.c (the field's card, with the classic menus),
  * whose screens are shown on the bottom screen instead.
  *
  * Unlike a stage (ctr_gba_stage.h) nothing is invented around the picture:
@@ -46,6 +47,8 @@
 #define SetVBlankCallback CtrCentredTrade_SetVBlankCallback
 #elif defined(CTR_CENTRED_BLENDER)
 #define SetVBlankCallback CtrCentredBlender_SetVBlankCallback
+#elif defined(CTR_CENTRED_CARD)
+#define SetVBlankCallback CtrCentredCard_SetVBlankCallback
 #else
 #define SetVBlankCallback CtrCentred_SetVBlankCallback
 #endif

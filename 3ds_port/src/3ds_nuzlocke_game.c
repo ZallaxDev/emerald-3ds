@@ -224,7 +224,7 @@ void CtrNuzlocke_Loaded(const void *save, size_t size)
 
 void CtrNuzlocke_Saved(const void *save, size_t size)
 {
-    if (CtrNuzSession_ShouldWrite(&sSession))
+    if (CtrNuzSession_ShouldWrite(&sSession, Enabled()))
         CtrNuzSession_Written(&sSession, CtrNuzStore_Save(&sSession.state, save, size));
 }
 
@@ -472,4 +472,55 @@ const uint8_t *CtrNuzlockeUi_LinkText(void)
     CtrNuzLabel label = CtrNuzSession_Label(&sSession);
 
     return SetText(text, sLabelText[label < CTR_NUZ_LABEL_COUNT ? label : CTR_NUZ_LABEL_NEW]);
+}
+
+int CtrNuzlockeUi_Enabled(void)
+{
+    return Enabled();
+}
+
+int CtrNuzlockeUi_AreaStatus(void)
+{
+    unsigned area;
+
+    if (!Enabled() || !CurrentArea(&area))
+        return -1;
+    return CtrNuz_Area(&sSession.state, area);
+}
+
+void CtrNuzlockeUi_RecordAs(int status)
+{
+    if (status < 0 || status >= CTR_NUZ_STATUS_COUNT)
+        return;
+    sChoice = (CtrNuzStatus)status;
+    CtrNuzlockeUi_Record();
+}
+
+int CtrNuzlockeUi_Slot(void)
+{
+    unsigned count = PartyCount();
+
+    return count == 0 ? -1 : (int)(sSlot % count);
+}
+
+void CtrNuzlockeUi_SetSlot(int slot)
+{
+    if (slot < 0 || (unsigned)slot >= PartyCount() || GetMonData(&gPlayerParty[slot], MON_DATA_SPECIES) == 0)
+        return;
+    if (sSlot != slot)
+        sArm = ARM_NONE;
+    sSlot = slot;
+}
+
+int CtrNuzlockeUi_SlotFallen(int slot)
+{
+    struct Pokemon *mon;
+
+    if (!Enabled() || slot < 0 || (unsigned)slot >= PartyCount())
+        return 0;
+    mon = &gPlayerParty[slot];
+    if (GetMonData(mon, MON_DATA_SPECIES) == 0 || IsEgg(mon))
+        return 0;
+    return CtrNuz_IsFallen(&sSession.state, GetMonData(mon, MON_DATA_PERSONALITY), GetMonData(mon, MON_DATA_OT_ID),
+                           GetMonData(mon, MON_DATA_SPECIES) == SPECIES_SHEDINJA);
 }
