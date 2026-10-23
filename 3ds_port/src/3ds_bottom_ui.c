@@ -3674,7 +3674,11 @@ static u8 PlateState(const ViewState *s, u8 hit, bool8 focused)
  * the run of each column the plate covers whole is copied with memcpy, only
  * its edges and shadow are blended. FIGHT's has Rayquaza in it already.
  */
-#define TINT_SLOTS 56
+/* Every plate of a double battle's menus in all its looks: the actions, both
+ * mons' moves (each move type its own colour), CANCEL and the target menu,
+ * 47 + 16 at most; a few to spare. Made only as used: a slot costs its
+ * pixels (w * h * 3 bytes, 36 KiB for a move plate) once it holds a plate. */
+#define TINT_SLOTS 72
 
 typedef struct
 {
@@ -3957,7 +3961,10 @@ static const u8 *Times(u32 n)
  * included (WarmBattleMenus) - and moving the cursor, a blink or a press is
  * then a copy of two such pictures: no blending, no label, no icon.
  */
-enum { CP_FIGHT, CP_BALL, CP_BAG, CP_MON, CP_RUN, CP_MOVE0, CP_CANCEL = CP_MOVE0 + MAX_MON_MOVES, CP_COUNT };
+/* A double battle's second mon (the player's right) has move pictures of its
+ * own: sharing the first one's, warming one mon's moves threw out the other's. */
+enum { CP_FIGHT, CP_BALL, CP_BAG, CP_MON, CP_RUN, CP_MOVE0, CP_CANCEL = CP_MOVE0 + MAX_MON_MOVES,
+       CP_MOVE_RIGHT0, CP_COUNT = CP_MOVE_RIGHT0 + MAX_MON_MOVES };
 #define CP_LOOKS 4
 
 typedef struct
@@ -4292,6 +4299,7 @@ static void MoveBody(const ViewState *s, int i)
 static void DrawMovePlate(const ViewState *s, int i)
 {
     int x = i & 1 ? 164 : 6, y = i & 2 ? 106 : 20;
+    int pid = (s->isDouble && GetBattlerPosition(s->battler) == B_POSITION_PLAYER_RIGHT ? CP_MOVE_RIGHT0 : CP_MOVE0) + i;
     u16 move = s->moves4.moves[i];
     /* The category icon follows ENHANCEMENTS' PHYS/SPEC SPLIT. */
     u32 stamp = Mix(Mix(Mix(Mix(Mix(4, move), s->moves4.currentPp[i]), s->moves4.maxPp[i]), i), MoveSplitEnabled());
@@ -4299,7 +4307,7 @@ static void DrawMovePlate(const ViewState *s, int i)
     if (move == MOVE_NONE)
         MoveBody(s, i);
     else
-        DrawCached(CP_MOVE0 + i, PlateState(s, HIT_MOVE + i, s->cursor == i), stamp, x, y, BTA_MOVE, MOVE_W, MOVE_H,
+        DrawCached(pid, PlateState(s, HIT_MOVE + i, s->cursor == i), stamp, x, y, BTA_MOVE, MOVE_W, MOVE_H,
                    HIT_MOVE + i, MoveBody, s, i);
 }
 
@@ -4345,8 +4353,9 @@ static void DrawBattleTarget(const ViewState *s)
 
 /*
  * While the turn plays out (the backdrop alone) the next menus are made
- * ready, one plate or label a frame: the action menu as it will come and the
- * moves of the mon on the left, with the focus ring's two blink tones. The
+ * ready, one plate or label a frame: the action menu as it will come, the
+ * moves of the mon on the left and, in a double battle, the target menu,
+ * with the focus ring's two blink tones. The
  * menus are walked with an empty clip, so nothing is drawn: only the one
  * piece missing is built. When they come they are copied together instead
  * of worked out in the frame they appear in. A pressed plate is built when
@@ -4380,10 +4389,38 @@ static float sWarmCompMs = 1.0f;
  */
 #define WARM_COMP_ROOM_MS 5.0f
 
+/* The moves of `battler` as its move menu will show them. */
+static void WarmMoves(struct ChooseMoveStruct *moves, u8 battler)
+{
+    for (int i = 0; i < MAX_MON_MOVES; ++i)
+    {
+        moves->moves[i] = gBattleMons[battler].moves[i];
+        moves->currentPp[i] = gBattleMons[battler].pp[i];
+        moves->maxPp[i] = CalculatePPWithBonus(gBattleMons[battler].moves[i], gBattleMons[battler].ppBonuses, i);
+    }
+}
+
+/* The player's second mon in a double battle, whose moves the player picks
+ * too, or MAX_BATTLERS_COUNT: not a double battle, a partner's mon (multi
+ * battles, Steven's), or none there. */
+static u8 WarmRightBattler(void)
+{
+    u8 right;
+
+    if (!(gBattleTypeFlags & BATTLE_TYPE_DOUBLE) || (gBattleTypeFlags & (BATTLE_TYPE_MULTI | BATTLE_TYPE_INGAME_PARTNER)))
+        return MAX_BATTLERS_COUNT;
+    right = GetBattlerAtPosition(B_POSITION_PLAYER_RIGHT);
+    if (right >= MAX_BATTLERS_COUNT || (gAbsentBattlerFlags & (1u << right)) || gBattleMons[right].hp == 0)
+        return MAX_BATTLERS_COUNT;
+    return right;
+}
+
 /* What the next menus will show, as the game will hand it to Snapshot. */
 static void WarmView(ViewState *v, u8 battler)
 {
     memset(v, 0, sizeof(*v));
+    v->battler = battler;
+    v->isDouble = (gBattleTypeFlags & BATTLE_TYPE_DOUBLE) != 0;
     v->safari = (gBattleTypeFlags & BATTLE_TYPE_SAFARI) != 0;
     v->quickBall = v->safari ? ITEM_NONE : CtrBattle_QuickBallItem();
     v->pressed = HIT_NONE;
@@ -4391,12 +4428,7 @@ static void WarmView(ViewState *v, u8 battler)
         v->safariBalls = gNumSafariBalls;
     if (v->quickBall != ITEM_NONE)
         v->quickBallCount = CountTotalItemQuantityInBag(v->quickBall);
-    for (int i = 0; i < MAX_MON_MOVES; ++i)
-    {
-        v->moves4.moves[i] = gBattleMons[battler].moves[i];
-        v->moves4.currentPp[i] = gBattleMons[battler].pp[i];
-        v->moves4.maxPp[i] = CalculatePPWithBonus(gBattleMons[battler].moves[i], gBattleMons[battler].ppBonuses, i);
-    }
+    WarmMoves(&v->moves4, battler);
     SnapshotPartyBalls(v);
 }
 
@@ -4406,7 +4438,7 @@ static bool8 sBattleMenusReady;
 
 static void WarmBattleMenus(void)
 {
-    static ViewState v;
+    static ViewState v, vr;
     uint64_t start;
     float slice;
     u8 battler = GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
@@ -4417,6 +4449,19 @@ static void WarmBattleMenus(void)
     if (!sBta.file || battler >= MAX_BATTLERS_COUNT || sBuildBudget != 0xFF)
         return;
     WarmView(&v, battler);
+    /* The second mon's move menu, drawn from a copy holding its moves. */
+    vr = v;
+    vr.battler = WarmRightBattler();
+    if (vr.battler < MAX_BATTLERS_COUNT)
+        WarmMoves(&vr.moves4, vr.battler);
+    key = Mix(key, vr.battler);
+    for (int i = 0; i < MAX_MON_MOVES && vr.battler < MAX_BATTLERS_COUNT; ++i)
+    {
+        key = Mix(key, vr.moves4.moves[i]);
+        key = Mix(key, vr.moves4.currentPp[i]);
+        key = Mix(key, vr.moves4.maxPp[i]);
+    }
+    key = Mix(key, v.isDouble);
     key = Mix(key, v.safari);
     key = Mix(key, v.quickBall);
     key = Mix(key, v.quickBallCount);
@@ -4462,10 +4507,16 @@ static void WarmBattleMenus(void)
      * focus on each plate in both blink tones, then each plate pressed. First
      * the tints and labels (phase 0), then each look's picture (phase 1,
      * DrawCached): moving the cursor onto a plate that was never lit built its
-     * tint in the frame it was lit, and drawing one is still blending. */
+     * tint in the frame it was lit, and drawing one is still blending. A
+     * double battle's target menu and its second mon's moves come last:
+     * built when they first came up, they took an Old 3DS's frame (a sharp
+     * drop the first time a target, or the second mon's move, was chosen). */
     {
+        static const u8 targetHits[] = {HIT_TARGET_LEFT, HIT_TARGET_RIGHT, HIT_TARGET_OK, HIT_CANCEL};
         static int idx;
-        int nA = v.quickBall != ITEM_NONE ? 5 : 4, per = nA + MAX_MON_MOVES + 1, total = per * 3;
+        int nA = v.quickBall != ITEM_NONE ? 5 : 4, nM = MAX_MON_MOVES + 1;
+        int nT = v.isDouble ? (int)ARRAY_COUNT(targetHits) : 0;
+        int nR = vr.battler < MAX_BATTLERS_COUNT ? MAX_MON_MOVES : 0, per = nA + nM + nT + nR, total = per * 3;
 
         if (sWarmIdxKey != key)
         {
@@ -4480,8 +4531,9 @@ static void WarmBattleMenus(void)
             && CtrPlatform_TickMs(CtrPlatform_Ticks() - start) < (idx >= total ? room : slice))
         {
             int c = idx % total, r = c % per;
-            bool8 action = r < nA;
-            int n = action ? r : r - nA;
+            bool8 action = r < nA, right = r >= nA + nM + nT, target = !right && r >= nA + nM;
+            int n = action ? r : right ? r - nA - nM - nT : target ? r - nA - nM : r - nA;
+            ViewState *w = right ? &vr : &v;
             uint64_t passStart = CtrPlatform_Ticks();
 
             /* A plate's picture is made whole in its pass: only when what it
@@ -4496,18 +4548,22 @@ static void WarmBattleMenus(void)
 
             sCompBuild = idx >= total;
             sCompBudget = 1;
-            v.mode = action ? MODE_BATTLE_ACTION : MODE_BATTLE_MOVE;
-            v.blink = c < per * 2 ? c / per : 0;
-            v.cursor = 0;
-            v.pressed = HIT_NONE;
+            w->mode = action ? MODE_BATTLE_ACTION : target ? MODE_BATTLE_TARGET : MODE_BATTLE_MOVE;
+            w->blink = c < per * 2 ? c / per : 0;
+            w->cursor = 0;
+            w->pressed = HIT_NONE;
             if (c >= per * 2)
-                v.pressed = action ? (n == 4 ? HIT_QUICK_BALL : HIT_ACTION + n) : (n == MAX_MON_MOVES ? HIT_CANCEL : HIT_MOVE + n);
+                w->pressed = action ? (n == 4 ? HIT_QUICK_BALL : HIT_ACTION + n)
+                           : target ? targetHits[n]
+                           : (n == MAX_MON_MOVES ? HIT_CANCEL : HIT_MOVE + n);
             else
-                v.cursor = n;
+                w->cursor = n;
             if (action)
-                DrawBattleActions(&v);
+                DrawBattleActions(w);
+            else if (target)
+                DrawBattleTarget(w);
             else
-                DrawBattleMoves(&v);
+                DrawBattleMoves(w);
             sCompBuild = FALSE;
             if (idx >= total && sCompBudget == 0)
             {

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Double battles: the bottom screen's target menu and the second mon's move
+  menu are made ready while the turn plays out, with the action menu and the
+  first mon's moves. Built when they first came up, they dropped an Old
+  3DS's frame rate sharply the first time a target, or the second mon's
+  move, was chosen. The second mon's moves have pictures of their own, so
+  warming them no longer throws out the first mon's.
+  
 - Bottom screen map: a magnifier button in the map's bottom right corner
   zooms in on the player's place and back out. Touching a place on the map
   picks it: zoomed in, a panel shows its name and, for a city or town, its
