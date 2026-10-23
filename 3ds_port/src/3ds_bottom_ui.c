@@ -413,7 +413,21 @@ static void *Unlz(const void *src, u32 *outSize)
 static void *UnlzFile(const char *path, u32 *outSize)
 {
     void *packed = ReadRomfs(path, NULL);
-    void *data = Unlz(packed, outSize);
+    u32 size = 0;
+    void *data = Unlz(packed, &size);
+    char plain[96];
+    size_t n = strlen(path);
+
+    /* Graphics with English words, redrawn for a translated build: the
+     * path without its ".lz", as the game's own sheets are named. */
+    if (data != NULL && n > 3 && n - 3 < sizeof(plain))
+    {
+        memcpy(plain, path, n - 3);
+        plain[n - 3] = '\0';
+        Port_TransformAsset(plain, data, size);
+    }
+    if (outSize != NULL)
+        *outSize = size;
 
     free(packed);
     return data;
