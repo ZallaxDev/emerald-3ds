@@ -5551,8 +5551,8 @@ static void GreyPal(u16 *dst, const u16 *src)
 }
 
 /*
- * The target choice: the battlers where the moves were, opponents above,
- * each with its party icon, name, level and HP (the figures for the player's
+ * The target choice: the battlers where the moves were, opponents above in
+ * red, the player's side below in blue, each with its party icon, name, level and HP (the figures for the player's
  * side only, as its health boxes have them). One the move cannot reach is
  * grey through and through and takes no tap.
  */
@@ -5560,7 +5560,7 @@ static void TargetBody(const ViewState *s, int i)
 {
     const TargetView *t = &s->targets[i];
     int x = i & 1 ? 164 : 6, y = i & 2 ? 106 : 20, oy, tx;
-    Rgb colour = t->live ? sHueRun : sHueEmpty;
+    Rgb colour = !t->live ? sHueEmpty : i < 2 ? sHueFight : sHueRun;
     Rgb dark = PLATE_DARK(colour), shadow = PLATE_SHADOW(colour);
     u16 dim = PackRgb(dark.r, dark.g, dark.b), faint = PackRgb(200, 200, 204);
     u8 text[16];
