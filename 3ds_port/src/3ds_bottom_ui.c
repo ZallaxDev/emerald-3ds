@@ -2308,7 +2308,7 @@ typedef struct
 {
     u16 species, iconSpecies, hp, maxHp;
     u8 deoxys;
-    u8 level, gender, type, live;
+    u8 level, gender, live;
     u8 nick[POKEMON_NAME_LENGTH + 1];
 } TargetView;
 
@@ -3211,7 +3211,6 @@ static void SnapshotTargets(ViewState *s, u8 user)
         t->maxHp = mon->maxHP;
         t->level = mon->level;
         t->gender = GetGenderFromSpeciesAndPersonality(mon->species, mon->personality);
-        t->type = mon->types[0];
         t->live = TargetLive(b, user);
         {
             int k = 0;
@@ -5539,18 +5538,31 @@ static void DrawBattleMoves(const ViewState *s)
                HIT_CANCEL, CancelBody, s, 0);
 }
 
+/* A palette in greys, lightened: an icon on a plate that takes no tap. */
+static void GreyPal(u16 *dst, const u16 *src)
+{
+    for (int k = 0; k < 16; ++k)
+    {
+        int r = (src[k] >> 11) << 3, g = ((src[k] >> 5) & 63) << 2, b = (src[k] & 31) << 3;
+        int v = (r * 3 + g * 6 + b) / 10 / 2 + 100;
+
+        dst[k] = PackRgb(v, v, v);
+    }
+}
+
 /*
- * The target choice: the battlers where the moves were, opponents above, in
- * their first type's colour, each with its party icon, name, level and HP
- * (the figures for the player's side only, as its health boxes have them).
- * One the move cannot reach is grey and takes no tap.
+ * The target choice: the battlers where the moves were, opponents above,
+ * each with its party icon, name, level and HP (the figures for the player's
+ * side only, as its health boxes have them). One the move cannot reach is
+ * grey through and through and takes no tap.
  */
 static void TargetBody(const ViewState *s, int i)
 {
     const TargetView *t = &s->targets[i];
     int x = i & 1 ? 164 : 6, y = i & 2 ? 106 : 20, oy, tx;
-    Rgb colour = t->live && t->type < NUMBER_OF_MON_TYPES ? sTypeColour[t->type] : sHueEmpty;
+    Rgb colour = t->live ? sHueRun : sHueEmpty;
     Rgb dark = PLATE_DARK(colour), shadow = PLATE_SHADOW(colour);
+    u16 dim = PackRgb(dark.r, dark.g, dark.b), faint = PackRgb(200, 200, 204);
     u8 text[16];
 
     oy = DrawBattlePlate(BTA_MOVE, x, y, MOVE_W, MOVE_H, colour,
@@ -5562,29 +5574,38 @@ static void TargetBody(const ViewState *s, int i)
         const u8 *tiles = MonIcon(t->iconSpecies, t->deoxys);
         u8 pal = gMonIconPaletteIndices[t->iconSpecies];
 
+        u16 grey[16];
+
         if (tiles && pal < 3)
-            DrawSpriteCentred(tiles, 4, 4, 2 * (x + 26), 2 * (oy + 46), sRes.monIconPal[pal].c);
+        {
+            if (!t->live)
+                GreyPal(grey, sRes.monIconPal[pal].c);
+            DrawSpriteCentred(tiles, 4, 4, 2 * (x + 26), 2 * (oy + 46), t->live ? sRes.monIconPal[pal].c : grey);
+        }
     }
     DrawSmoothStr(&sNormal, t->nick, x + MOVE_W / 2 - SmoothInkWidth(&sNormal, t->nick, 4) / 2, oy + 5, 4, sWhite,
                   dark, &shadow);
     text[0] = CHAR_LV;
     StringCopy(text + 1, Number(t->level, 3, STR_CONV_MODE_LEFT_ALIGN));
-    tx = DrawStr(&sSmall, text, x + 50, oy + 32, TXT_DARK, TXT_LIGHT);
+    tx = DrawStr(&sSmall, text, x + 50, oy + 32, t->live ? TXT_DARK : dim, t->live ? TXT_LIGHT : faint);
     if (t->gender != MON_GENDERLESS && t->species != SPECIES_NIDORAN_F && t->species != SPECIES_NIDORAN_M)
     {
         text[0] = t->gender == MON_FEMALE ? CHAR_FEMALE : CHAR_MALE;
         text[1] = EOS;
-        DrawStr(&sSmall, text, tx + 4, oy + 32, t->gender == MON_FEMALE ? TXT_RED : TXT_BLUE,
-                t->gender == MON_FEMALE ? TXT_LRED : TXT_LBLUE);
+        if (!t->live)
+            DrawStr(&sSmall, text, tx + 4, oy + 32, dim, faint);
+        else
+            DrawStr(&sSmall, text, tx + 4, oy + 32, t->gender == MON_FEMALE ? TXT_RED : TXT_BLUE,
+                    t->gender == MON_FEMALE ? TXT_LRED : TXT_LBLUE);
     }
     /* The health box's bar: green over half, yellow over a fifth, then red. */
     {
         int bx = x + 50, by = oy + 48, bw = 90, fill = t->maxHp ? (t->hp * (bw - 2) + t->maxHp - 1) / t->maxHp : 0;
-        u16 bar = t->hp * 2 > t->maxHp ? PackRgb(88, 208, 128) : t->hp * 5 > t->maxHp ? PackRgb(248, 224, 0)
-                                                                                    : PackRgb(248, 88, 40);
+        u16 bar = !t->live ? PackRgb(176, 176, 180) : t->hp * 2 > t->maxHp ? PackRgb(88, 208, 128)
+                : t->hp * 5 > t->maxHp ? PackRgb(248, 224, 0) : PackRgb(248, 88, 40);
 
-        FillRect(bx, by, bw, 6, PackRgb(dark.r, dark.g, dark.b));
-        FillRect(bx + 1, by + 1, bw - 2, 4, PackRgb(80, 104, 88));
+        FillRect(bx, by, bw, 6, dim);
+        FillRect(bx + 1, by + 1, bw - 2, 4, t->live ? PackRgb(80, 104, 88) : PackRgb(120, 120, 126));
         FillRect(bx + 1, by + 1, fill, 4, bar);
     }
     if (GetBattlerSide(GetBattlerAtPosition(sTargetPlatePos[i])) == B_SIDE_PLAYER)
@@ -5592,7 +5613,7 @@ static void TargetBody(const ViewState *s, int i)
         StringCopy(text, Number(t->hp, 3, STR_CONV_MODE_LEFT_ALIGN));
         StringAppend(text, gText_Slash);
         StringAppend(text, Number(t->maxHp, 3, STR_CONV_MODE_LEFT_ALIGN));
-        DrawStrRight(&sSmall, text, x + MOVE_W - 10, oy + 56, TXT_DARK, TXT_LIGHT);
+        DrawStrRight(&sSmall, text, x + MOVE_W - 10, oy + 56, t->live ? TXT_DARK : dim, t->live ? TXT_LIGHT : faint);
     }
 }
 
@@ -5602,7 +5623,7 @@ static void DrawBattleTarget(const ViewState *s)
     {
         const TargetView *t = &s->targets[i];
         u32 stamp = Mix(Mix(Mix(Mix(Mix(7, i), t->iconSpecies | (t->deoxys << 16)), t->species),
-                            t->hp | (t->maxHp << 16)), t->level | (t->gender << 8) | (t->type << 16) | (t->live << 24));
+                            t->hp | (t->maxHp << 16)), t->level | (t->gender << 8) | (t->live << 16));
 
         for (int k = 0; k < POKEMON_NAME_LENGTH + 1; ++k)
             stamp = Mix(stamp, t->nick[k]);
