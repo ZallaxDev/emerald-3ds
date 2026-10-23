@@ -1373,6 +1373,23 @@ static void DrawFootprint(const u8 *bits, int x, int y)
                     Put(x + (t & 1) * 8 + col, y + (t >> 1) * 8 + row, ink);
 }
 
+/* The entry, written for the game's narrower window in four lines, over
+ * the box's whole width in three: its line breaks become spaces, and it
+ * wraps in the normal font, or in the narrow one when that takes four. */
+static void DrawDexDescription(const u8 *text, int x, int y, int w)
+{
+    u8 joined[256];
+    int i;
+
+    for (i = 0; i < (int)sizeof(joined) - 1 && text[i] != EOS; ++i)
+        joined[i] = text[i] == CHAR_NEWLINE ? CHAR_SPACE : text[i];
+    joined[i] = EOS;
+    if (TextLinesBy(joined, x, y, w, 13, 4, &sNormal, &sNormal, STYLE_INK, FALSE) <= 3)
+        TextLinesBy(joined, x, y, w, 13, 3, &sNormal, &sNormal, STYLE_INK, TRUE);
+    else
+        TextLines(joined, x, y, w, 13, 3, &sNarrow, STYLE_INK, TRUE);
+}
+
 static void DrawDexInfo(const ViewState *s)
 {
     const struct CtrDexView *v = &s->dx;
@@ -1399,7 +1416,7 @@ static void DrawDexInfo(const ViewState *s)
     }
     oy = Plate(AREA_X, y + 100, AREA_W, AREA_Y + AREA_H - y - 100, sLight, PLATE_STATE_NORMAL);
     if (v->description)
-        TextLines(v->description, AREA_X + 10, oy + 2, AREA_W - 20, 13, 3, &sNormal, STYLE_INK, TRUE);
+        DrawDexDescription(v->description, AREA_X + 10, oy + 2, AREA_W - 20);
 }
 
 /* The list's START menu over the list, as the game's slides up over it: its

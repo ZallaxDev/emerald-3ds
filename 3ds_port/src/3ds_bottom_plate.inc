@@ -1473,6 +1473,9 @@ static int TextIn(const u8 *str, int x, int y, int w, int h, const Font *font, c
     return end;
 }
 
+static int TextLinesBy(const u8 *str, int x, int y, int w, int lineH, int max, const Font *narrow, const Font *font,
+                       u8 style, bool8 draw);
+
 /*
  * A text over up to `max` lines of [x, x + w), `lineH` apart: its own line
  * breaks kept, and a line too wide even in the narrow cut wrapped at its
@@ -1481,11 +1484,19 @@ static int TextIn(const u8 *str, int x, int y, int w, int h, const Font *font, c
 static int TextLines(const u8 *str, int x, int y, int w, int lineH, int max, const Font *font, u8 style, bool8 draw)
 {
     const Font *narrow = IsSmall(font) ? &sSmallNarrow : &sNarrow;
-    u8 line[256];
-    int lines = 0;
 
     if (!narrow->glyphs)
         narrow = font;
+    return TextLinesBy(str, x, y, w, lineH, max, narrow, font, style, draw);
+}
+
+/* TextLines, wrapped where `narrow` (the font that measures) runs out. */
+static int TextLinesBy(const u8 *str, int x, int y, int w, int lineH, int max, const Font *narrow, const Font *font,
+                       u8 style, bool8 draw)
+{
+    u8 line[256];
+    int lines = 0;
+
     while (str && *str != EOS && lines < max)
     {
         const u8 *p = str, *end = str, *next = str, *space = NULL;

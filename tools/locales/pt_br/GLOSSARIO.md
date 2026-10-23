@@ -209,6 +209,7 @@ Os nomes dos POKéMON não se traduzem.
 | Devon Corporation / Mr. Stone | CORPORAÇÃO DEVON / SR. STONE | |
 | Pokémon Trainer's School | ESCOLA DE TREINADORES POKéMON | |
 | Fossil Regenerator / Shipyard | REGENERADOR DE FÓSSEIS / ESTALEIRO | |
+| Trade Center (CLUBE SEM FIO) | CENTRO DE TROCAS | `event_scripts.s`, 23/10; a CENTRAL DE TROCAS da FRONTEIRA é outra coisa (troca de Pontos de Batalha) |
 | Wallpaper “FRIENDS” (PC) | “AMIGOS” | o pai da WALDA cita o nome: o menu do PC (`gPCText_Friends`, em `strings.c`) deve usar o mesmo |
 
 ## Nomes de itens
