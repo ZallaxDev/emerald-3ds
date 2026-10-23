@@ -1,0 +1,121 @@
+# Textos gerais de data/event_scripts.s: placas do CENTRO POKéMON e do
+# POKé MART, SELECT sem item registrado, o jogador que apaga, POKéRUS, MT
+# ou MO achada, a árvore estranha e outros avisos dos scripts.
+
+[gText_PokemartSign] 505113cfca
+“Itens escolhidos para você!”\n
+POKé MART$
+
+[gText_PokemonCenterSign] 8c51d5ca41
+“Revigore seus parceiros cansados!”\n
+CENTRO POKéMON$
+
+[gText_MomOrDadMightLikeThisProgram] c972c0dc7b
+{STR_VAR_1} pode gostar do programa.\n
+… … … … … … … … … … … … … … … …\p
+Melhor ir andando!$
+
+[gText_WhichFloorWouldYouLike] 3521c6ed75
+Bem-vindo à LOJA DE DEPARTAMENTOS\n
+de LILYCOVE.\p
+Para qual andar você quer ir?$
+
+[gText_SandstormIsVicious] 2457eab70f
+A tempestade de areia está forte.\n
+Não dá pra seguir em frente.$
+
+[gText_SelectWithoutRegisteredItem] 0d286bda8d
+Dá pra registrar um item da BOLSA\n
+no SELECT, para usar mais rápido.$
+
+[gText_PokemonTrainerSchoolEmail] e514ab540c
+Tem um e-mail da ESCOLA DE\n
+TREINADORES POKéMON.\p
+… … … … … …\p
+Um POKéMON pode aprender até\n
+quatro golpes.\p
+Um TREINADOR mostra o que sabe\n
+nos golpes que escolhe pros POKéMON.\p
+… … … … … …$
+
+[gText_PlayerHouseBootPC] 65e0936607
+{PLAYER} ligou o PC.$
+
+[gText_PokeblockLinkCanceled] 2e60f250e7
+A conexão foi cancelada.$
+
+[gText_UnusedNicknameReceivedPokemon] 40cb85ccbe
+Quer dar um apelido para\n
+o {STR_VAR_2} que você recebeu?$
+
+[gText_PlayerWhitedOut] fb2fabb2b9
+{PLAYER} não tem mais\n
+POKéMON em condições de lutar!\p
+{PLAYER} apagou!$
+
+[gText_RegisteredTrainerinPokeNav] 28d3a6075d
+{STR_VAR_1} {STR_VAR_2} foi\n
+registrado no POKéNAV.$
+
+[gText_ComeBackWithSecretPower] 69d3dcb5f1
+Você conhece a MT PODER SECRETO?\p
+O nosso grupo adora a MT PODER\n
+SECRETO.\p
+Um dos nossos membros vai te dar uma.\n
+Volte e me mostre quando tiver.\p
+Aí você entra pro grupo, e a gente\n
+te vende coisas boas em segredo.$
+
+[gText_PokerusExplanation] ef21dda05f
+Seus POKéMON podem estar infectados\n
+com o POKéRUS.\p
+Pouco se sabe sobre o POKéRUS,\n
+só que são formas de vida\l
+microscópicas que se prendem\l
+aos POKéMON.\p
+Dizem que, infectados, os POKéMON\n
+crescem excepcionalmente bem.$
+
+[gText_DoorOpenedFarAway] 883d8e0f5b
+Parece que uma porta se abriu\n
+em algum lugar bem longe.$
+
+[gText_BigHoleInTheWall] 0be310613c
+Tem um buraco grande na parede.$
+
+[gText_SorryWirelessClubAdjustments] 68708d0cdc
+Sinto muito.\n
+O CLUBE SEM FIO POKéMON\l
+está em manutenção agora.$
+
+[gText_UndergoingAdjustments] 8d7dea7bd4
+Parece que está\n
+em manutenção…$
+
+[gText_SorryTradeCenterInspections] 1181d22376
+Sinto muito. O CENTRO DE TROCAS\n
+está passando por uma inspeção.$
+
+[gText_SorryRecordCornerPreparation] 52fd5801a4
+Sinto muito. O CANTO DOS RECORDES\n
+está em preparação.$
+
+[gText_PlayerHandedOverTheItem] b1004dd743
+{PLAYER} entregou o item\n
+{STR_VAR_1}.$
+
+[gText_ThankYouForAccessingMysteryGift] 06566e3077
+Obrigado por usar o sistema de\n
+PRESENTE MISTERIOSO.$
+
+[gText_PlayerFoundOneTMHM] 1d04945bb6
+{PLAYER} achou uma {STR_VAR_1}\n
+{STR_VAR_2}!$
+
+[gText_Sudowoodo_Attacked] 75240706d4
+A árvore estranha não gosta\n
+do REGADOR!\p
+A árvore estranha atacou!$
+
+[gText_LegendaryFlewAway] 30cf7e7f11
+{STR_VAR_1} foi embora voando!$
