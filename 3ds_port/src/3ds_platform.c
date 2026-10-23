@@ -1,6 +1,7 @@
 #include <3ds.h>
 #include <stdlib.h>
 #include <malloc.h>
+#include <unistd.h>
 #include <string.h>
 #include "3ds_platform.h"
 #include "3ds_daynight.h"
@@ -9,14 +10,12 @@
 #include "3ds_video.h"
 #include "3ds_assets.h"
 #include "3ds_local.h"
+#include "3ds_bottom.h"
 #include "voxel/ctr_voxel.h"
-/* The bottom-screen diagnostic overlay: off, and no longer toggled by SELECT.
- * The figures it showed are still logged periodically to the SD card. */
-static bool sOverlay = false;
 
 static CtrPlatformHooks sHooks;
 static aptHookCookie sAptHook;
-static bool sInitialized, sExit, sReset, sWaiting;
+static bool sInitialized, sExit, sWaiting;
 static uint64_t sFrames, sStart, sLastFrame, sFrameMs;
 static uint64_t sWorkStart, sLastTick, sExitStart;
 static CtrTiming sTiming;
@@ -39,6 +38,7 @@ static void Lifecycle(APT_HookType type, void *parameter)
             LocalLink_AfterWake();
         CtrDayNight_Resume();
         CtrInput_Clear();
+        CtrBottom_OnResume();
         sLastFrame = CtrPlatform_Milliseconds();
         sLastTick = sExitStart = 0;
         CtrLog_Write(CTR_LOG_BOOT, "resume");
@@ -110,7 +110,6 @@ bool CtrPlatform_Init(void)
         CtrLog_Write(CTR_LOG_ERROR, "platform init: GPU video failed");
         return false;
     }
-    CtrLog_SetOverlay(sOverlay);
     /* A console without dumped DSP firmware still plays; it just plays silent.
      * CtrAudio_Init says so in the log and the game is left running. */
     CtrAudio_Init();
@@ -129,14 +128,31 @@ void CtrPlatform_SetHooks(const CtrPlatformHooks *hooks)
 }
 
 /* Free memory in the two pools a 3DSX actually competes for: the application
- * heap newlib allocates from, and the linear heap the GPU can address. */
+ * heap newlib allocates from, and the linear heap the GPU can address.
+ * mallinfo's free is only what the arena holds now; the heap still grows by
+ * sbrk up to fake_heap_end (__system_allocateHeaps), so the room it really
+ * has left is both. */
+extern char *fake_heap_end;
+
+size_t CtrPlatform_HeapRoom(void)
+{
+    struct mallinfo info = mallinfo();
+    char *top = sbrk(0);
+
+    return info.fordblks + (top != (char *)-1 && top < fake_heap_end ? (size_t)(fake_heap_end - top) : 0);
+}
+
 void CtrPlatform_ReportMemory(const char *stage)
 {
     struct mallinfo info = mallinfo();
+    char *top = sbrk(0);
+    size_t grow = top != (char *)-1 && top < fake_heap_end ? (size_t)(fake_heap_end - top) : 0;
 
-    CtrLog_Write(CTR_LOG_BOOT, "memory %s: heap used=%u free=%u, linear free=%lu, VRAM free=%lu",
+    CtrLog_Write(CTR_LOG_BOOT, "memory %s: heap used=%u free=%u, linear free=%lu, VRAM free=%lu, "
+                 "heap room=%lu KiB (%lu KiB past the arena)",
                  stage, (unsigned)info.uordblks, (unsigned)info.fordblks,
-                 (unsigned long)linearSpaceFree(), (unsigned long)vramSpaceFree());
+                 (unsigned long)linearSpaceFree(), (unsigned long)vramSpaceFree(),
+                 (unsigned long)((info.fordblks + grow) >> 10), (unsigned long)(grow >> 10));
 }
 
 _Static_assert(sizeof(CtrLock) == sizeof(LightLock), "CtrLock is a LightLock");
@@ -174,7 +190,6 @@ void CtrPlatform_SleepUs(unsigned microseconds)
 }
 
 void CtrPlatform_RequestExit(void) { sExit = true; }
-void CtrPlatform_RequestReset(void) { sReset = true; }
 
 bool CtrPlatform_BeginFrame(void)
 {
@@ -197,15 +212,6 @@ bool CtrPlatform_BeginFrame(void)
         }
     }
     else sExitStart = 0;
-    if (sReset)
-    {
-        sReset = false;
-        CtrLog_Write(CTR_LOG_BOOT, "logical reset");
-        if (sHooks.reset)
-            sHooks.reset();
-        else
-            CTR_UNIMPLEMENTED("reset hook");
-    }
     return true;
 }
 
@@ -246,6 +252,9 @@ static float sPresentMs = 4.0f;
 #define PACE_HZ 59.8261f           /* the LCD's refresh */
 #define PACE_LET_GO_FRAMES 4.0f
 static bool sPace;
+/* A battle's party menu, summary or bag up (the top screen held over the
+ * battle, which waits under it): hidden frames there too (PaceUpdate). */
+static bool sPaceMenus;
 static uint64_t sPaceStart;
 static float sPaceFrames;
 /* This frame went through pacing, not fast-forward (FrameShown): a frame it
@@ -276,11 +285,19 @@ static bool PaceBehind(uint64_t now)
 }
 
 /* The setting, read once a frame; the sound engine follows it. The field
- * only: the voxel world is what costs the frame there, and a battle's own
- * timing (its intro's slides, its cries) is best left as the GBA's. */
+ * only (and a battle's menus, below): the voxel world is what costs the
+ * frame there, and a battle's own timing (its intro's slides, its cries) is
+ * best left as the GBA's. */
 static void PaceUpdate(void)
 {
-    bool on = CtrSettings_GetInt(PACE_KEY, 0) != 0 && !CtrVideo_InBattle();
+    bool setting = CtrSettings_GetInt(PACE_KEY, 0) != 0;
+    bool on = setting && !CtrVideo_InBattle();
+    /* Nothing of the battle's own runs under its menus, only theirs: there
+     * the game keeps the display's time too, a slow redraw of the bottom
+     * screen's view costing the picture a step and not the game. The sound
+     * engine stays on the game's frames, as in the rest of the battle: a
+     * hidden frame ticks it (sPacedFrame), so the music keeps its tempo. */
+    bool menus = setting && CtrVideo_InBattle() && CtrVideo_TopHeld();
 
     if (on != sPace)
     {
@@ -288,16 +305,62 @@ static void PaceUpdate(void)
         sPaceStart = 0;
         CtrAudio_SetClock(on);
     }
+    if (menus != sPaceMenus)
+    {
+        sPaceMenus = menus;
+        sPaceStart = 0;
+    }
+}
+
+/*
+ * The battle scene's speed (CtrSettings_BattleSpeedHalves): while the battle
+ * itself is on screen, its own speed paces the frames; the bag, the party and
+ * the summary a battle opens, and the field, keep the overworld's SPEED. The
+ * game reports the scene once a frame (CtrGame_WaitFrame). A link session
+ * plays at 1x for everyone and a measured scenario is recorded at 1x, so
+ * neither takes the battle's keys or speed.
+ */
+#define BADGE_MS 2000
+static bool sBattleScene;
+static uint64_t sBadgeUntil;
+
+void CtrPlatform_SetBattleScene(bool on)
+{
+    sBattleScene = on;
+}
+
+bool CtrPlatform_BattleSpeedKeys(void)
+{
+    return sBattleScene && !LocalLink_InSession() && !CtrScenario_Active();
+}
+
+void CtrPlatform_StepBattleSpeed(int direction, bool wrap)
+{
+    CtrSettings_StepBattleSpeed(direction, wrap);
+    /* Shown even at an end of the range, so the press is answered. */
+    sBadgeUntil = CtrPlatform_Milliseconds() + BADGE_MS;
+}
+
+int CtrPlatform_BattleSpeedBadge(void)
+{
+    int halves;
+
+    if (!CtrPlatform_BattleSpeedKeys())
+        return 0;
+    halves = CtrSettings_BattleSpeedHalves();
+    return CtrPlatform_Milliseconds() < sBadgeUntil ? halves : 0;
 }
 
 static bool FrameShown(uint64_t now)
 {
     /* In a local wireless session everyone plays at the same speed: the link
      * code times out on a partner that runs slower. */
-    unsigned speed = LocalLink_InSession() ? 2 : CtrSettings_SpeedHalves();
+    unsigned speed = LocalLink_InSession() ? 2
+                   : CtrPlatform_BattleSpeedKeys() ? CtrSettings_BattleSpeedHalves()
+                   : CtrSettings_SpeedHalves();
     float since = sShownTick ? (now - sShownTick) * 1000.0f / SYSCLOCK_ARM11 : FRAME_MS;
 
-    sPacedFrame = sPace && speed <= 2;
+    sPacedFrame = (sPace || sPaceMenus) && speed <= 2;
     if (sPacedFrame)
     {
         bool behind = PaceBehind(now);
@@ -395,66 +458,6 @@ void CtrPlatform_EndFrame(void)
     if (sTiming.workMs > 1000.0f / 60) ++sTiming.slowFrames;
     CtrProf_EndFrame(sTiming.workMs, CtrVideo_GetStats()->waitMs, sFrames);
     sWaiting = false;
-}
-
-void CtrPlatform_Diagnostic(uint32_t frames, uint32_t aPresses, uint32_t checks)
-{
-    const CtrInput *input = CtrInput_Get();
-    if (sFrames % 30 != 0 || !sOverlay) return;
-    const CtrVideoStats *video = CtrVideo_GetStats();
-    const struct CtrAssetStats *assets = CtrAssets_GetStats();
-    const CtrAudioStats *audio = CtrAudio_Stats();
-    const CtrVoxelStats *voxel = CtrVoxel_GetStats();
-    char text[1020];
-    snprintf(text, sizeof(text),
-        "Emerald 3DS\n"
-        "FPS: %5.1f FRAME: %-10lu\n"
-        "Frame:%6.2f Work:%6.2f ms\n"
-        "Peak:%6.2f Slow:%-8lu\n"
-        "CPU:%6.2f ms GPU:%6.2f ms\n"
-        "Assets:%4lu/%lu  %lu/%lu KiB\n"
-        "Hit:%-7lu Miss:%-7lu\n"
-        "Evict:%-5lu Err:%-5lu Peak:%lu KiB\n"
-        "Tiles:%4lu Upload:%4lu Verr:%lu\n"
-        "Audio:%s q%lu/%d u:%-4lu d:%lu\n"
-        "Mix:%5.2f Sub:%4.2f ms V:%-2lu\n"
-        "Song:%-4lu Peak:%-5lu %.0f Hz\n"
-        "Held:%03x Down:%03x Touch:%d\n"
-        "Voxel:%-7s atl%lu msh%lu ch%lu/%lu gap%lu\n"
-        "Vtx:%-6lu spr%-5lu drop%lu\n"
-        "Lin:%4lu Vram:%4lu KiB\n"
-        "Voxel err:%lu\n"
-        "Mesh:%5.1f Peak:%6.1f ms\n"
-        "Elapsed:%llu s\n"
-        "SELECT: overlay  X: reset\n"
-        "START+SELECT 1s: exit",
-        video->fps, (unsigned long)frames,
-        sTiming.frameMs, sTiming.workMs, sTiming.peakWorkMs, (unsigned long)sTiming.slowFrames,
-        video->cpuMs, video->gpuMs,
-        (unsigned long)assets->loads, (unsigned long)assets->entries,
-        (unsigned long)(assets->bytes >> 10), (unsigned long)(assets->budget >> 10),
-        (unsigned long)assets->hits, (unsigned long)assets->misses,
-        (unsigned long)assets->evictions, (unsigned long)assets->errors,
-        (unsigned long)(assets->peakBytes >> 10),
-        (unsigned long)video->tiles, (unsigned long)video->uploads, (unsigned long)video->errors,
-        CtrAudio_Available() ? "on " : "off",
-        (unsigned long)audio->queued, CTR_AUDIO_TARGET_DEPTH,
-        (unsigned long)audio->underruns, (unsigned long)audio->drops,
-        audio->mixMs, audio->submitMs, (unsigned long)audio->voices,
-        (unsigned long)audio->song, (unsigned long)audio->peak, audio->rateHz,
-        input->held, input->down, input->touchActive,
-        CtrVoxel_Status(),
-        (unsigned long)voxel->atlasRebuilds, (unsigned long)voxel->meshRebuilds,
-        (unsigned long)voxel->visibleChunks, (unsigned long)voxel->chunks,
-        (unsigned long)voxel->chunksMissing,
-        (unsigned long)voxel->vertices, (unsigned long)voxel->spriteUpdates,
-        (unsigned long)voxel->dropped,
-        voxel->linearFree >> 10, voxel->vramFree >> 10,
-        (unsigned long)voxel->errors,
-        voxel->meshMs, voxel->meshPeakMs,
-        (unsigned long long)((sLastFrame - sStart) / 1000));
-    (void)aPresses; (void)checks;
-    CtrLog_DrawOverlay(text);
 }
 
 void CtrPlatform_Shutdown(void)

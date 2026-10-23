@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* The Birch channel out of line, for callers without its prototype. */
+#define PORT_BIRCH_DEBUG_OUT_OF_LINE
 #include "port_platform.h"
 #include "port_log.h"
 #include "3ds_data.h"
@@ -50,11 +52,6 @@ void Port_Log_Printf(const char *fmt, ...)
     CtrLog_Write(CTR_LOG_GAME, "%s", line);
 }
 
-void Port_Log_Init(void) {}
-void Port_Log_SetEnabled(unsigned char enabled) { g_PortLogActive = enabled; }
-unsigned char Port_Log_IsEnabled(void) { return g_PortLogActive; }
-void Port_Log_VBlankProtect(void) {}
-
 void CtrAssets_Fatal(const char *detail)
 {
     static char message[192];
@@ -65,30 +62,15 @@ void CtrAssets_Fatal(const char *detail)
 
 /* ── Debug channels ─────────────────────────────────────────────────────── */
 
-volatile u16 gPortDbgBirchTag, gPortDbgBirchA, gPortDbgBirchB, gPortDbgBirchC, gPortDbgBirchD;
-volatile u16 gPortDbgDmaTag, gPortDbgDmaA, gPortDbgDmaB, gPortDbgDmaC, gPortDbgDmaD;
-volatile u16 gPortDbgDma2Tag, gPortDbgDma2A, gPortDbgDma2B, gPortDbgDma2C, gPortDbgDma2D;
-volatile u16 gPortDbgAudioTag, gPortDbgAudioA, gPortDbgAudioB, gPortDbgAudioC, gPortDbgAudioD;
-volatile u16 gPortDbgAssetTag, gPortDbgAssetA, gPortDbgAssetB, gPortDbgAssetC;
-
+/* Empty, as the inline ones in port_platform.h: nothing reads them. */
 void Port_SetBirchDebugEx(u16 tag, u16 a, u16 b, u16 c, u16 d)
 {
-    gPortDbgBirchTag = tag; gPortDbgBirchA = a; gPortDbgBirchB = b;
-    gPortDbgBirchC = c; gPortDbgBirchD = d;
+    (void)tag; (void)a; (void)b; (void)c; (void)d;
 }
 
-void Port_SetBirchDebug(u16 tag, u16 a, u16 b, u16 c) { Port_SetBirchDebugEx(tag, a, b, c, 0); }
-
-void Port_SetDmaDebugEx(u16 tag, u16 a, u16 b, u16 c, u16 d)
+void Port_SetBirchDebug(u16 tag, u16 a, u16 b, u16 c)
 {
-    gPortDbgDmaTag = tag; gPortDbgDmaA = a; gPortDbgDmaB = b; gPortDbgDmaC = c; gPortDbgDmaD = d;
-}
-
-void Port_SetDmaDebug(u16 tag, u16 a, u16 b, u16 c) { Port_SetDmaDebugEx(tag, a, b, c, 0); }
-
-void Port_SetDmaDebug2(u16 tag, u16 a, u16 b, u16 c, u16 d)
-{
-    gPortDbgDma2Tag = tag; gPortDbgDma2A = a; gPortDbgDma2B = b; gPortDbgDma2C = c; gPortDbgDma2D = d;
+    (void)tag; (void)a; (void)b; (void)c;
 }
 
 /*
@@ -104,9 +86,7 @@ void Port_SetAudioDebugEx(u16 tag, u16 a, u16 b, u16 c, u16 d)
     static uint64_t mixStart, partStart;
     static uint64_t parts[4];
 
-    gPortDbgAudioTag = tag; gPortDbgAudioA = a; gPortDbgAudioB = b;
-    gPortDbgAudioC = c; gPortDbgAudioD = d;
-
+    (void)a; (void)b; (void)c; (void)d;
     if ((tag & 0xFFF0) != 0x0D00)
         return;
     if (tag == 0x0D00)
@@ -149,29 +129,6 @@ void Port_SetAudioDebugEx(u16 tag, u16 a, u16 b, u16 c, u16 d)
             memset(parts, 0, sizeof(parts));
         }
     }
-}
-
-void Port_SetAssetDebugEx(u16 tag, u16 a, u16 b, u16 c, u16 d)
-{
-    (void)d;
-    gPortDbgAssetTag = tag; gPortDbgAssetA = a; gPortDbgAssetB = b; gPortDbgAssetC = c;
-}
-
-void Port_SetAssetDebug(u16 tag, u16 a, u16 b, u16 c) { Port_SetAssetDebugEx(tag, a, b, c, 0); }
-
-void Port_SetGfxTilesetDebug(u8 secondary, u16 size, u8 nonzero)
-{
-    (void)secondary; (void)size; (void)nonzero;
-}
-
-void Port_SetGfxPaletteDebug(u8 secondary, u8 nonzero, u8 resolved)
-{
-    (void)secondary; (void)nonzero; (void)resolved;
-}
-
-void Port_SetGfxMetatileDebug(u16 id, u8 resolved, u16 first, u16 second)
-{
-    (void)id; (void)resolved; (void)first; (void)second;
 }
 
 /* Safe point between main-loop callbacks: the only place payloads may retire. */
@@ -370,37 +327,6 @@ void Port_PreloadLatinFonts(void)
 
     for (i = 0; i < ARRAY_COUNT(sLatinFonts); i++)
         LoadLatinFont(i);
-}
-
-void Port_TextPreload(void)
-{
-    Port_PreloadLatinFonts();
-}
-
-bool Port_FontProbe_ReadNormalLatinGlyph(u16 glyphId, u8 *outBuf, u32 outSize)
-{
-    const u8 *raw;
-    u32 offset = (u32)glyphId * 0x40;
-
-    if (outBuf == NULL || outSize < 0x40 || !LoadLatinFont(4))
-        return false;
-    raw = sLatinFonts[4].raw;
-    if (offset + 0x40 > sLatinFonts[4].size)
-        return false;
-    memcpy(outBuf, raw + offset, 0x40);
-    return true;
-}
-
-const void *Port_FontProbe_GetNormalLatinStubBase(void)
-{
-    return sLatinFonts[4].stubBase;
-}
-
-u16 Port_FontProbe_CompareNormalLatinGlyph(u16 glyphId)
-{
-    u8 glyph[0x40];
-
-    return Port_FontProbe_ReadNormalLatinGlyph(glyphId, glyph, sizeof(glyph)) ? 0 : 0xFFFF;
 }
 
 /* ── Save storage ───────────────────────────────────────────────────────────

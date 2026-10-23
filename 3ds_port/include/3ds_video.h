@@ -98,6 +98,7 @@ void CtrVideo_Bind(CtrVideoMemory memory);
 void CtrVideo_Present(void);
 /* Keep showing the last top-screen frame instead of the game's screen. */
 void CtrVideo_HoldTop(bool hold);
+bool CtrVideo_TopHeld(void);
 /* OAM entries belonging to field weather, tagged while BuildOamBuffer sorts sprites. */
 /*
  * The true y of the sprite that wrote OAM entries [first, end). OAM keeps 8
@@ -308,12 +309,6 @@ void CtrVideo_MarkScreenOam(unsigned first, unsigned end);
  * the machine rather than where the window layer has its text. */
 void CtrVideo_MarkMachineOam(unsigned first, unsigned end);
 const CtrVideoStats *CtrVideo_GetStats(void);
-void CtrScene_Init(void);
-void CtrScene_Update(void);
-unsigned CtrScene_Mode(void);
-void CtrCursor_Init(const void *tiles, const uint16_t *palette);
-void CtrCursor_Update(bool visible);
-void CtrCursor_GetPosition(int *x, int *y);
 
 /* Pure, SDK-free address/format helpers, also used by host regression tests. */
 uint32_t CtrVideo_TextMapOffset(unsigned x, unsigned y, unsigned size);

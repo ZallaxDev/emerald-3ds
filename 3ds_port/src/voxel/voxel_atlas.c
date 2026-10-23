@@ -25,6 +25,9 @@
 #define TILES_PER_TILESET 512u
 #define SUBTILE_PX 8u
 
+/* In texels; see VoxelAtlas_SlotUV. */
+#define VOXEL_ATLAS_EDGE_INSET (1.0f / 32.0f)
+
 void VoxelAtlas_SlotUV(unsigned slot, float *u0, float *v0, float *u1, float *v1)
 {
     unsigned page = slot / VOXEL_ATLAS_MAX_SLOTS;
@@ -32,11 +35,21 @@ void VoxelAtlas_SlotUV(unsigned slot, float *u0, float *v0, float *u1, float *v1
     float x = (float)(slot % VOXEL_ATLAS_COLUMNS) * VOXEL_ATLAS_SLOT;
     float y = (float)(slot / VOXEL_ATLAS_COLUMNS) * VOXEL_ATLAS_SLOT;
 
-    /* Row 0 in memory is v=1, the same convention the 2D compositor uses. */
+    /*
+     * Row 0 in memory is v=1, the same convention the 2D compositor uses.
+     * The slot's rows stop a thirty-second of a texel short of its north and
+     * south edges. The slots touch, with no gutter, and while the camera
+     * scrolls north or south a tile's edge passes through pixel centres now
+     * and then: the sample there sits on v0 or v1 exactly, and a rounding
+     * error in the interpolation (or, at v0, nearest sampling's choice of
+     * the larger side) took a row of the slot above or below - a one-pixel
+     * line of another metatile's art right along the tile edge. Inside the
+     * slot no sample moves by more than that thirty-second.
+     */
     *u0 = page * 2.0f + x / VOXEL_ATLAS_W;
     *u1 = page * 2.0f + (x + VOXEL_ATLAS_SLOT) / VOXEL_ATLAS_W;
-    *v0 = 1.0f - y / VOXEL_ATLAS_H;
-    *v1 = 1.0f - (y + VOXEL_ATLAS_SLOT) / VOXEL_ATLAS_H;
+    *v0 = 1.0f - (y + VOXEL_ATLAS_EDGE_INSET) / VOXEL_ATLAS_H;
+    *v1 = 1.0f - (y + VOXEL_ATLAS_SLOT - VOXEL_ATLAS_EDGE_INSET) / VOXEL_ATLAS_H;
 }
 
 void VoxelAtlas_SolidUV(VoxelSolidColor color, float *u0, float *v0, float *u1, float *v1)

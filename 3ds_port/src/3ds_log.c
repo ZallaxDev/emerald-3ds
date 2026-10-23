@@ -7,8 +7,6 @@
 #include "3ds_log.h"
 
 static PrintConsole sConsole;
-static PrintConsole sOverlay;
-static bool sOverlayVisible;
 static const char *const sTags[] =
 {
     "BOOT", "VIDEO", "INPUT", "FS", "AUDIO", "GAME", "ERROR"
@@ -378,30 +376,10 @@ void CtrLog_Close(void)
     sBinFile = NULL;
 }
 
-void CtrLog_SetOverlay(bool enabled)
-{
-    LightLock_Lock(&sConsoleLock);
-    sOverlayVisible = enabled;
-    /* Hidden and never shown: no console, nothing on the bottom screen. */
-    if (!enabled && !sConsoleReady)
-    {
-        LightLock_Unlock(&sConsoleLock);
-        return;
-    }
-    EnsureConsole();
-    consoleSelect(&sConsole);
-    consoleSetWindow(&sConsole, 0, 0, 40, 30);
-    consoleClear();
-    /* Without the log rows the overlay has the whole screen. */
-    sOverlay = sConsole;
-    LightLock_Unlock(&sConsoleLock);
-}
-
 /* With the log off the screen, a fatal error would otherwise leave it blank. */
 void CtrLog_ShowFatal(const char *reason)
 {
     LightLock_Lock(&sConsoleLock);
-    sOverlayVisible = false;
     EnsureConsole();
     consoleSelect(&sConsole);
     consoleSetWindow(&sConsole, 0, 0, 40, 30);
@@ -409,30 +387,5 @@ void CtrLog_ShowFatal(const char *reason)
     printf("\x1b[1;1HFATAL: %.32s", reason);
     printf("\x1b[3;1HLog (if debug.txt exists): port.log");
     printf("\x1b[5;1HSTART: exit");
-    LightLock_Unlock(&sConsoleLock);
-}
-
-void CtrLog_DrawOverlay(const char *text)
-{
-    if (!sOverlayVisible) return;
-    LightLock_Lock(&sConsoleLock);
-    consoleSelect(&sOverlay);
-    /* libctru flushes BOTH LCD buffers at every newline. Position rows with
-     * ANSI instead: the GPU frame-end flush covers the completed overlay. */
-    unsigned row = 1;
-    while (*text && row <= 30)
-    {
-        const char *end = strchr(text, '\n');
-        size_t length = end ? (size_t)(end - text) : strlen(text);
-        char line[41];
-        size_t visible = length < 40 ? length : 40;
-        memset(line, ' ', 40);
-        memcpy(line, text, visible);
-        line[40] = 0;
-        printf("\x1b[%u;1H%s", row++, line);
-        text += length;
-        if (*text == '\n') ++text;
-    }
-    consoleSelect(&sConsole);
     LightLock_Unlock(&sConsoleLock);
 }

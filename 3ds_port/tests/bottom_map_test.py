@@ -80,7 +80,6 @@ typedef bool bool8;
 #define H 240
 #define CTR_BOTTOM_WIN_X 40
 #define CTR_BOTTOM_WIN_Y 40
-#define CTR_VOXEL_ENABLED 1
 #define PARTY_SIZE 6
 #define POKEMON_NAME_LENGTH 10
 #define PLAYER_NAME_LENGTH 7
@@ -101,7 +100,7 @@ typedef bool bool8;
 struct ChooseMoveStruct { u8 data[64]; };
 /* The game's screens' views (3ds_game_views.h): only compared here. */
 struct CtrPartyView { u8 state, cursor, data[350]; u8 iconFrame[6]; s8 iconLift[6]; };
-struct CtrSummaryView { u8 state, page, data[400]; };
+struct CtrSummaryView { u8 state, page, data[400]; const u8 *picTiles; u32 picSum; };
 struct CtrBagView { u8 state, pocket, data[700]; };
 struct CtrDexView { u8 state, national, data[300]; };
 '''
@@ -127,6 +126,8 @@ struct CtrDexView { u8 state, national, data[300]; };
         source += define(shell, name)
     for name in ('MAP_PIC_W', 'MAP_PIC_H'):
         source += define((ROOT / 'src/3ds_bottom_field.inc').read_text(encoding='utf-8'), name)
+    for name in ('SUM_TAB_H', 'SUM_Y', 'SUM_LEFT_W', 'SUM_PIC_BOTTOM'):
+        source += define((ROOT / 'src/3ds_bottom_game.inc').read_text(encoding='utf-8'), name)
     for name in ('OPT_PANEL_Y', 'OPT_PANEL_H'):
         source += define(options, name)
     source += r'''
@@ -459,6 +460,13 @@ static void TestMark(void) {
     a.encView=1;b=a;b.mapsec=32;assert(!MapCursorOnlyMoved(&b,&a));
     a.encView=0;a.clockNotice=1;b=a;b.cursorX++;assert(!MapCursorOnlyMoved(&b,&a));
     a=Field(SCR_CARD);a.mapsec=2;b=a;b.cursorX=1;assert(!MapCursorOnlyMoved(&b,&a));
+    /* Zoomed in the mark still moves alone; zooming or panning is all new,
+     * and nothing walks on the Fly map. */
+    a=Field(SCR_MAP);a.mapsec=2;a.cursorX=9;a.cursorY=8;a.mapZoom=1;a.mapViewX=40;
+    b=a;b.cursorX++;assert(MapCursorOnlyMoved(&b,&a));
+    b.mapZoom=0;assert(!MapCursorOnlyMoved(&b,&a));
+    b=a;b.cursorX++;b.mapViewX+=8;assert(!MapCursorOnlyMoved(&b,&a));
+    a.mapZoom=0;a.mapFly=1;b=a;b.cursorX++;assert(!MapCursorOnlyMoved(&b,&a));
 }
 int main(void) {
     (void)sCanvas;(void)gSpeciesNames;(void)blits;
@@ -471,7 +479,7 @@ int main(void) {
     TestMark();
     puts("PASS bottom screen: wild list tables/timed grass/methods/pages of rows/Altering Cave, seen-only masking, "
          "taps and clock banner gating; dock and header layout; copies round the game's window; partial redraws "
-         "(clock, Repel, held button and title, focus, options panel and tabs, native views) and whole-redraw fallbacks; the mark moving alone");
+         "(clock, Repel, held button and title, focus, options panel and tabs, native views) and whole-redraw fallbacks; the mark moving alone, zoomed too, never on the Fly map");
 }
 '''
     (ROOT / 'build').mkdir(exist_ok=True)

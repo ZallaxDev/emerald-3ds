@@ -173,6 +173,16 @@ static bool8 DescIsYes(u8 desc)
         && desc != PARTYBOX_DESC_DONT_HAVE;
 }
 
+/* What the mon holds, as the party menu shows it: the item or mail sign at
+ * the foot of its icon, right of its centre, still while the icon hops. */
+static void PartyHeldSign(const ViewState *s, int slot, int cx, int cy)
+{
+    u8 held = s->party[slot].held;
+
+    if (held != HELD_NONE && sRes.holdTiles)
+        DrawSprite(sRes.holdTiles + (held == HELD_MAIL ? 32 : 0), 1, 1, cx, cy + 6, sRes.holdPal.c);
+}
+
 static void DrawPartyLead(const ViewState *s, int slot)
 {
     const MonView *mon = &s->party[slot];
@@ -185,6 +195,7 @@ static void DrawPartyLead(const ViewState *s, int slot)
     if (!mon->species)
         return;
     PartyIconAt(s, slot, x + 19, oy + 20);
+    PartyHeldSign(s, slot, x + 19, oy + 20);
     if (!mon->isEgg)
     {
         StyledRight(&sSmall, LevelText(mon->level), x + 98, oy + 6, STYLE_WHITE);
@@ -219,6 +230,7 @@ static void DrawPartyBox(const ViewState *s, int slot, int by)
     }
     oy = PlateEx(x, by, w, PARTY_ROW_H, PartyBoxColour(s, slot), PartyBoxState(s, slot), 36, 30, PlateCut(PARTY_ROW_H), 0);
     PartyIconAt(s, slot, x + 18, oy + 15);
+    PartyHeldSign(s, slot, x + 18, oy + 15);
     StyledStr(FitFont(&sNormal, mon->nick, 80), mon->nick, x + 44, TextY(oy, 16, &sNormal) + 1, STYLE_WHITE);
     if (!mon->isEgg)
     {
@@ -469,22 +481,31 @@ static bool8 SummaryMovesPage(const struct CtrSummaryView *v)
     return v->page == 2 || v->page == 3;
 }
 
-/* The tabs; choosing or moving a move, only its page's and CANCEL. */
+/* The tabs; choosing or moving a move, only its page's and CANCEL. With
+ * CANCEL (choosing, moving or replacing a move) the tabs have three places
+ * and CANCEL the fourth: the last three tabs when the last one is to show
+ * (CONTEST its page, or open while replacing), else the first three. */
 static void DrawSummaryTabs(const ViewState *s)
 {
     const struct CtrSummaryView *v = &s->sv;
     bool8 picking = v->movesMode == CTR_SUM_MOVES_CHOOSE || v->movesMode == CTR_SUM_MOVES_SWITCH;
     bool8 cancel = v->movesMode != CTR_SUM_MOVES_VIEW;
     int n = 4, x = AREA_X, gap = 2, tw = (AREA_W - gap * (n - 1)) / n;
+    int first = 0, count = n;
 
-    for (int i = 0; i < n; ++i)
+    if (cancel)
+    {
+        bool8 lastShown = v->page == n - 1 || (!picking && n - 1 >= v->minPage && n - 1 <= v->maxPage);
+
+        count = n - 1;
+        first = lastShown ? 1 : 0;
+    }
+    for (int i = first; i < first + count; ++i)
     {
         bool8 live = i == v->page, open = i >= v->minPage && i <= v->maxPage && !(picking && !live);
         bool8 pressed = s->pressed == HIT_SUM_TAB + i;
         int oy;
 
-        if (cancel && i == n - 1 && !(open && !live))
-            break;
         oy = Plate(x, AREA_Y, tw, SUM_TAB_H, live || pressed ? sEmerald : open ? sLight : sGroupOff,
                    pressed ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
         TextIn(SummaryTabName(i), x, oy, tw, SUM_TAB_H, &sSmall, 'c', live || pressed ? STYLE_WHITE : open ? STYLE_INK
@@ -507,6 +528,60 @@ static void DrawSummaryTabs(const ViewState *s)
     }
 }
 
+/* The picture's part of the summary's left plate, above the name: where the
+ * mon moves, the part redrawn while only it does (DirtyRect). */
+#define SUM_PIC_BOTTOM (SUM_Y + 74)
+
+/*
+ * The mon as its sprite shows it now (CtrSummaryView's pic): the frame and
+ * colours of its OBJ tiles, centred on (cx, cy), moved, turned and scaled by
+ * its animation as the GBA draws an affine sprite - each pixel of its box
+ * mapped through the matrix back into the 64x64 picture - and kept to the
+ * box (x0, y0)-(x1, y1).
+ */
+static void DrawSummaryPicLive(const struct CtrSummaryView *v, int cx, int cy, int x0, int y0, int x1, int y1)
+{
+    bool8 affine = v->picAffine & ST_OAM_AFFINE_ON_MASK;
+    int half = v->picAffine == ST_OAM_AFFINE_DOUBLE ? 64 : 32;
+    u16 pal[16];
+
+    for (int i = 0; i < 16; ++i)
+        pal[i] = Rgb565(v->picPal[i]);
+    cx += v->picX;
+    cy += v->picY;
+    for (int py = -half; py < half; ++py)
+    {
+        int y = cy + py;
+
+        if (y < y0 || y >= y1)
+            continue;
+        for (int px = -half; px < half; ++px)
+        {
+            int x = cx + px, tx, ty;
+            u8 byte;
+
+            if (x < x0 || x >= x1)
+                continue;
+            if (affine)
+            {
+                tx = ((v->picMatrix[0] * px + v->picMatrix[1] * py) >> 8) + 32;
+                ty = ((v->picMatrix[2] * px + v->picMatrix[3] * py) >> 8) + 32;
+                if (tx < 0 || tx >= 64 || ty < 0 || ty >= 64)
+                    continue;
+            }
+            else
+            {
+                tx = v->picHFlip ? 31 - px : px + 32;
+                ty = py + 32;
+            }
+            byte = v->picTiles[((ty >> 3) * 8 + (tx >> 3)) * 32 + (ty & 7) * 4 + ((tx & 7) >> 1)];
+            byte = tx & 1 ? byte >> 4 : byte & 15;
+            if (byte)
+                Put(x, y, pal[byte]);
+        }
+    }
+}
+
 static void DrawSummaryMon(const ViewState *s)
 {
     const struct CtrSummaryView *v = &s->sv;
@@ -516,8 +591,9 @@ static void DrawSummaryMon(const ViewState *s)
     oy = PlateEx(x, SUM_Y, SUM_LEFT_W, SUM_H, sEmerald, PLATE_STATE_NORMAL, SUM_LEFT_W - 14, 15, PlateCut(SUM_H), 0);
     if (v->loading)
         return;
-    slot = FrontPic(SummaryPicSpecies(v), v->shiny);
-    if (slot >= 0)
+    if (v->picTiles)
+        DrawSummaryPicLive(v, x + 46, oy + 36, x + 2, SUM_Y + 2, x + SUM_LEFT_W - 2, min(oy + 70, SUM_PIC_BOTTOM));
+    else if ((slot = FrontPic(SummaryPicSpecies(v), v->shiny)) >= 0)
         DrawSprite(sFronts[slot].tiles, 8, 8, x + 14, oy + 4, sFronts[slot].pal.c);
     StyledStr(FitFont(&sNormal, v->nick, 78), v->nick, x + 8, oy + 72, STYLE_INK);
     if (!v->isEgg)
@@ -854,7 +930,9 @@ enum
 };
 #define BAG_LEFT_W 104
 #define BAG_LIST_X (AREA_X + BAG_LEFT_W + 4)
-#define BAG_LIST_W (AREA_W - BAG_LEFT_W - 4)
+/* Right of the list, its scroll bar, as the Pokédex's. */
+#define BAG_LIST_W (AREA_W - BAG_LEFT_W - 4 - 12)
+#define BAG_BAR_X (BAG_LIST_X + BAG_LIST_W + 2)
 #define BAG_ROW_H 14
 #define BAG_LIST_TOP (AREA_Y + 3)
 #define BAG_LIST_H (CTR_BAG_ROWS * BAG_ROW_H + 6)
@@ -921,6 +999,19 @@ static void DrawBagList(const ViewState *s)
         /* Where the item being moved would go: a line over that row. */
         if (v->state == CTR_BAG_VIEW_SWAP && i == v->cursor && !moving)
             FillRect(x + 4, ry - 1, w - 8, 2, PackRgb(sEmerald.r, sEmerald.g, sEmerald.b));
+    }
+    /* The scroll bar: the rows shown out of those the pocket has, the thumb
+     * as long as the page is of the whole. */
+    Plate(BAG_BAR_X, AREA_Y, 10, BAG_LIST_H, sGroupOff, PLATE_STATE_NORMAL);
+    if (v->total > v->numRows && v->numRows > 0)
+    {
+        int th = BAG_LIST_H * v->numRows / v->total, room;
+
+        if (th < 18)
+            th = 18;
+        room = BAG_LIST_H - th;
+        Plate(BAG_BAR_X, AREA_Y + room * min(v->scroll, v->total - v->numRows) / (v->total - v->numRows), 10, th,
+              sEmerald, PLATE_STATE_NORMAL);
     }
 }
 

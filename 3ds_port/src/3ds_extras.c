@@ -46,10 +46,8 @@ static const char *const sShinyOdds[] = {"1/8192", "1/4096", "1/1024", "1/256", 
  * the slider's full travel goes, in percent of the renderer's depth. Read
  * only with the voxel overworld on: a build without it has no cells for
  * them, and with it off they are greyed (CtrExtras_NeedsVoxel). */
-#if CTR_VOXEL_ENABLED
 static const char *const sVoxelStereo[] = {CTR_TEXT("AUTO", "AUTO", "AUTO", "AUTO", "AUTO", "AUTO"), CTR_TEXT("ON", "SÍ", "OUI", "SÌ", "EIN", "SIM"), CTR_TEXT("OFF", "NO", "NON", "NO", "AUS", "NENHUM")};
 static const char *const sVoxelDepths[] = {"25%", "50%", "75%", "100%", "125%", "150%", "200%"};
-#endif
 /*
  * Pokedex (CHEATS): the Hoenn Pokedex complete, the National Pokedex
  * unlocked, or complete (and unlocked): every Pokemon seen and caught. OPTIONS
@@ -211,10 +209,8 @@ static const u8 *SpeedText(void)
 const CtrExtra gCtrExtras[] =
 {
     /* Features add their lines here. */
-#if CTR_VOXEL_ENABLED
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("3D WORLD", "MUNDO 3D", "MONDE 3D", "MONDO 3D", "3D-WELT", "MUNDO 3D"), "voxel_stereo", 3, 0, sVoxelStereo, NULL, NULL, NULL},
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("3D DEPTH", "PROFUNDIDAD 3D", "PROFONDEUR 3D", "PROFOND. 3D", "3D-TIEFE", "PROFUNDIDADE 3D"), "voxel_depth", 7, 3, sVoxelDepths, NULL, NULL, NULL},
-#endif
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("SPEED", "VELOC. JUEGO", "VITESSE", "VELOCITÀ", "TEMPO", "VELOCIDADE"), "speed", 0, 0, NULL, NULL, SpeedStep, SpeedText},
     /* The game and the music keep real time on a slow frame; the sound
      * engine mixes on the DSP's clock (3ds_platform.c, 3ds_audio.c). */
@@ -302,18 +298,5 @@ int CtrExtras_Get(const char *key)
 
 bool CtrExtras_NeedsVoxel(const CtrExtra *extra)
 {
-#if CTR_VOXEL_ENABLED
     return extra->values == sVoxelStereo || extra->values == sVoxelDepths;
-#else
-    (void)extra;
-    return false;
-#endif
-}
-
-bool CtrExtras_PageUsed(unsigned page)
-{
-    for (unsigned i = 0; i < gCtrExtraCount; ++i)
-        if (CTR_EXTRAS_TAB(gCtrExtras[i].page) == page)
-            return true;
-    return false;
 }

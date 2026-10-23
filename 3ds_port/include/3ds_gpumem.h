@@ -21,7 +21,6 @@ typedef struct
     uint32_t untracked;
 } CtrGpuMemStats;
 
-const CtrGpuMemStats *CtrGpuMem_Stats(void);
 /* The largest VRAM block an allocation could still get, found by trying. */
 uint32_t CtrGpuMem_LargestVram(void);
 /* Totals, then every site holding memory or changed since the last report. */

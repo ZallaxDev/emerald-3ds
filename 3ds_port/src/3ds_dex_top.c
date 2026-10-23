@@ -61,7 +61,11 @@ static uint32_t sSky;
 
 /* The textures, and whether they hold what was handed over. */
 static C3D_Tex sPictureTex, sBackdropTex;
-static bool sTexAllocated, sTexFailed;
+static bool sTexAllocated, sTexFailLogged;
+/* Frames to wait before trying to make them again after linear memory ran
+ * short: a moment's shortage does not take the device away for the session. */
+#define TEX_RETRY_FRAMES 120
+static unsigned sTexRetry;
 static bool sPictureDirty, sBackdropDirty, sBackdropShown;
 static uint32_t sTick;
 
@@ -74,10 +78,13 @@ void CtrDexTop_Show(uint16_t national, const uint16_t *picture, unsigned frames,
     if (sFrames) memcpy(sPicture, picture, sFrames * sizeof(sPicture[0]));
     snprintf(sName, sizeof(sName), "%s", sNational && name ? name : "");
     sPictureDirty = true;
-    /* The last Pokémon's terrain is not shown under this one. */
-    sBackdropShown = false;
-    sBackdropRows = 0;
-    sBackdropDirty = false;
+    /* The backdrop is kept: the game side sends a new one (BackdropBegin)
+     * when this Pokémon's terrain is not the last one's. */
+}
+
+bool CtrDexTop_BackdropComplete(void)
+{
+    return sBackdropRows == BACKDROP_H;
 }
 
 void CtrDexTop_BackdropBegin(void)
@@ -102,22 +109,31 @@ bool CtrDexTop_Active(void) { return sActive; }
 static bool TexturesReady(void)
 {
     if (sTexAllocated) return true;
-    if (sTexFailed) return false;
+    if (sTexRetry != 0)
+    {
+        --sTexRetry;
+        return false;
+    }
     if (!C3D_TexInit(&sPictureTex, DIM, PICTURE_TEX_H, GPU_RGBA5551))
     {
-        sTexFailed = true;
-        CtrLog_Write(CTR_LOG_ERROR, "Pokedex top: no linear memory for its picture (free=%lu)",
-                     (unsigned long)linearSpaceFree());
+        sTexRetry = TEX_RETRY_FRAMES;
+        if (!sTexFailLogged)
+            CtrLog_Write(CTR_LOG_ERROR, "Pokedex top: no linear memory for its picture (free=%lu)",
+                         (unsigned long)linearSpaceFree());
+        sTexFailLogged = true;
         return false;
     }
     if (!C3D_TexInit(&sBackdropTex, BACKDROP_W, BACKDROP_H, GPU_RGBA5551))
     {
         C3D_TexDelete(&sPictureTex);
-        sTexFailed = true;
-        CtrLog_Write(CTR_LOG_ERROR, "Pokedex top: no linear memory for its backdrop (free=%lu)",
-                     (unsigned long)linearSpaceFree());
+        sTexRetry = TEX_RETRY_FRAMES;
+        if (!sTexFailLogged)
+            CtrLog_Write(CTR_LOG_ERROR, "Pokedex top: no linear memory for its backdrop (free=%lu)",
+                         (unsigned long)linearSpaceFree());
+        sTexFailLogged = true;
         return false;
     }
+    sTexFailLogged = false;
     C3D_TexSetFilter(&sPictureTex, GPU_NEAREST, GPU_NEAREST);
     C3D_TexSetWrap(&sPictureTex, GPU_CLAMP_TO_EDGE, GPU_CLAMP_TO_EDGE);
     C3D_TexSetFilter(&sBackdropTex, GPU_LINEAR, GPU_LINEAR);
@@ -162,6 +178,8 @@ void CtrDexTop_Upload(void)
 
 void CtrDexTop_Idle(void)
 {
+    /* Not shown: the next time it is, the textures are tried at once. */
+    sTexRetry = 0;
     if (!sTexAllocated) return;
     C3D_TexDelete(&sPictureTex);
     C3D_TexDelete(&sBackdropTex);

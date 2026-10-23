@@ -9,14 +9,47 @@
 /* ------------------------------------------------------------------------ */
 
 /*
- * The region map 1:1 in its window: the GBA's 248x160 picture (31 by 20 of
- * its tiles), the player's mark on it, a tapped cell's cursor. The area's
- * name is the header's title; with AREA WILD LIST on, the title is the
- * toggle between the map and the area's wild Pokémon.
+ * The region map in its window: the GBA's 248x160 picture (31 by 20 of its
+ * tiles), 1:1 or zoomed in twice the size as the PokéNav's A shows it, the
+ * player's mark on it, a tapped cell's cursor. The area's name is the
+ * header's title; with AREA WILD LIST on, the title is the toggle between the
+ * map and the area's wild Pokémon. The zoom, the place panel and the Fly map
+ * come from public PR #108 (luksgrin), drawn with this screen's plates.
  */
 #define MAP_PIC_W 248
 #define MAP_PIC_H 160
+/* The zoom button, inside the picture's bottom right corner (the sea). */
+#define ZOOM_W 24
+#define ZOOM_H 24
+#define ZOOM_X (MAP_ORIGIN_X + MAP_PIC_W - 4 - ZOOM_W)
+#define ZOOM_Y (MAP_ORIGIN_Y + MAP_PIC_H - 4 - ZOOM_H)
+/* Zoomed in, the picked place's panel at the picture's top, on the side
+ * away from the place: a town's layout, or a route's landmarks. */
+#define PANEL_Y (MAP_ORIGIN_Y + 4)
+#define PANEL_CITY_W 104
+#define PANEL_MARKS_W 132
+#define PANEL_TITLE_H 18
+#define PANEL_ROW_H 16
+#define PANEL_MARKS_MAX 4
 
+/* A map pixel's colour, from the picture's top left. */
+static u16 MapPixel(int mx, int my)
+{
+    u8 tile = 0, v;
+
+    if (!sRes.mapTiles)
+        return sRes.mapPal[0];
+    /* The map is a 64x64 affine map; the ocean around Hoenn is tile 0. */
+    if (sRes.mapMap && mx >= 0 && my >= 0 && mx < 64 * 8 && my < 64 * 8)
+        tile = sRes.mapMap[(my >> 3) * 64 + (mx >> 3)];
+    if (tile >= sRes.mapTileCount)
+        return sRes.mapPal[0];
+    /* The map's colours are loaded at palette 7: indices 112 up. */
+    v = sRes.mapTiles[tile * 64 + (my & 7) * 8 + (mx & 7)];
+    return v >= 112 && v < 144 ? sRes.mapPal[v - 112] : sRes.mapPal[0];
+}
+
+/* One 8x8 tile of the map 1:1, for the Pokédex's area page. */
 static void DrawMapTile8(u8 tile, int x, int y)
 {
     const u8 *src;
@@ -45,46 +78,125 @@ static void RestoreClip(const int saved[4])
     ClipPop(saved);
 }
 
-/* The backdrop with the map's window and the map in it, once, into its cache. */
-static void BuildMapCache(void)
+/* Map pixels to the screen, as the view has them. */
+static void MapToScreen(const ViewState *s, int mx, int my, int *sx, int *sy)
 {
-    int saved[4];
+    if (s->mapZoom)
+    {
+        *sx = MAP_ORIGIN_X + (mx - s->mapViewX) * 2;
+        *sy = MAP_ORIGIN_Y + (my - s->mapViewY) * 2;
+    }
+    else
+    {
+        *sx = MAP_ORIGIN_X + mx;
+        *sy = MAP_ORIGIN_Y + my;
+    }
+}
+
+/* A cursor cell's centre on the screen (cells as the region map's cursor has
+ * them: the picture's 8x8 tiles). */
+static void CellCentre(const ViewState *s, int cx, int cy, int *sx, int *sy)
+{
+    MapToScreen(s, cx * 8 + 4, cy * 8 + 4, sx, sy);
+}
+
+/* The view the map's cache holds: zoomed or not, and its top left. */
+static s16 sMapCacheView[3] = {-1, 0, 0};
+
+/* The backdrop with the map's window and the map in it, into its cache: 1:1,
+ * or zoomed in from (vx, vy). Drawn whole whatever redraw asks for it. */
+static void BuildMapCache(bool8 zoom, int vx, int vy)
+{
+    int clip[4] = {sClipX0, sClipY0, sClipX1, sClipY1}, ox = sOX, saved[4];
+    u16 *dst = sDst;
 
     if (!sCache[CACHE_MAP])
         return;
+    sClipX0 = sClipY0 = 0;
+    sClipX1 = W;
+    sClipY1 = H;
+    sOX = 0;
     memcpy(sCache[CACHE_MAP], sCache[CACHE_MENU], sizeof(sCanvas));
     sDst = sCache[CACHE_MAP];
     DrawChamferFrame(MAP_WIN_X, MAP_WIN_Y, MAP_WIN_W, MAP_WIN_H, 4, 2);
     ClipToMapWindow(saved);
-    FillRect(MAP_ORIGIN_X, MAP_ORIGIN_Y, MAP_PIC_W, MAP_PIC_H, sRes.mapPal[0]);
-    /* The map is a 64x64 affine map; the ocean around Hoenn is tile 0. */
-    for (int ty = 0; ty < MAP_PIC_H / 8; ++ty)
-        for (int tx = 0; tx < MAP_PIC_W / 8; ++tx)
-            DrawMapTile8(sRes.mapMap ? sRes.mapMap[ty * 64 + tx] : 0, MAP_ORIGIN_X + tx * 8, MAP_ORIGIN_Y + ty * 8);
+    if (zoom)
+    {
+        for (int y = 0; y < MAP_PIC_H; y += 2)
+            for (int x = 0; x < MAP_PIC_W; x += 2)
+                FillRect(MAP_ORIGIN_X + x, MAP_ORIGIN_Y + y, 2, 2, MapPixel(vx + x / 2, vy + y / 2));
+    }
+    else
+    {
+        for (int y = 0; y < MAP_PIC_H; ++y)
+            for (int x = 0; x < MAP_PIC_W; ++x)
+                Put(MAP_ORIGIN_X + x, MAP_ORIGIN_Y + y, MapPixel(x, y));
+    }
     RestoreClip(saved);
-    sDst = sCanvas;
+    sDst = dst;
+    sOX = ox;
+    sClipX0 = clip[0];
+    sClipY0 = clip[1];
+    sClipX1 = clip[2];
+    sClipY1 = clip[3];
+    sMapCacheView[0] = zoom;
+    sMapCacheView[1] = vx;
+    sMapCacheView[2] = vy;
+}
+
+/* The cache with the view this state shows, made again only when it moves. */
+static void EnsureMapCache(const ViewState *s)
+{
+    int zoom = s->mapZoom != 0, vx = zoom ? s->mapViewX : 0, vy = zoom ? s->mapViewY : 0;
+
+    if (sMapCacheView[0] != zoom || sMapCacheView[1] != vx || sMapCacheView[2] != vy)
+        BuildMapCache(zoom, vx, vy);
+}
+
+/* The PokéNav's large cursor, for the map zoomed in; loaded the first time. */
+static u8 *sCursorLarge;
+static bool8 sCursorLargeTried;
+
+static const u8 *LargeCursor(void)
+{
+    if (!sCursorLargeTried)
+    {
+        sCursorLarge = UnlzFile("pokenav/region_map/cursor_large.4bpp.lz", NULL);
+        sCursorLargeTried = TRUE;
+    }
+    return sCursorLarge;
 }
 
 /* The player's mark and a picked cell's cursor, inside the window. */
 static void DrawMapMarks(const ViewState *s)
 {
-    int saved[4];
+    int saved[4], x, y;
 
     ClipToMapWindow(saved);
     if (s->mapsec != MAPSEC_NONE && sRes.playerIcon[s->gender])
-        DrawSprite(sRes.playerIcon[s->gender], 2, 2, MAP_ORIGIN_X + s->cursorX * 8 - 4,
-                   MAP_ORIGIN_Y + s->cursorY * 8 - 4, sRes.playerIconPal[s->gender].c);
-    if (s->pickMapsec != MAPSEC_NONE && sRes.cursorTiles)
-        DrawSprite(sRes.cursorTiles, 2, 2, MAP_ORIGIN_X + s->pickX * 8 - 4, MAP_ORIGIN_Y + s->pickY * 8 - 4,
-                   sRes.cursorPal.c);
+    {
+        CellCentre(s, s->cursorX, s->cursorY, &x, &y);
+        DrawSprite(sRes.playerIcon[s->gender], 2, 2, x - 8, y - 8, sRes.playerIconPal[s->gender].c);
+    }
+    if (s->pickMapsec != MAPSEC_NONE)
+    {
+        CellCentre(s, s->pickX, s->pickY, &x, &y);
+        if (s->mapZoom && LargeCursor())
+            DrawSprite(sCursorLarge, 4, 4, x - 16, y - 16, sRes.cursorPal.c);
+        else if (sRes.cursorTiles)
+            DrawSprite(sRes.cursorTiles, 2, 2, x - 8, y - 8, sRes.cursorPal.c);
+    }
     RestoreClip(saved);
 }
 
 /* The mark's 2x2 tiles at a cursor cell, clipped to the map's picture. */
-static void MarkRect(u8 cx, u8 cy, int *x0, int *y0, int *x1, int *y1)
+static void MarkRect(const ViewState *s, u8 cx, u8 cy, int *x0, int *y0, int *x1, int *y1)
 {
-    *x0 = MAP_ORIGIN_X + cx * 8 - 4;
-    *y0 = MAP_ORIGIN_Y + cy * 8 - 4;
+    int x, y;
+
+    CellCentre(s, cx, cy, &x, &y);
+    *x0 = x - 8;
+    *y0 = y - 8;
     *x1 = *x0 + 16;
     *y1 = *y0 + 16;
     if (*x0 < MAP_ORIGIN_X) *x0 = MAP_ORIGIN_X;
@@ -95,25 +207,255 @@ static void MarkRect(u8 cx, u8 cy, int *x0, int *y0, int *x1, int *y1)
     if (*y1 < *y0) *y1 = *y0;
 }
 
-/* The section under a tapped map cell, as the region map's cursor finds it. */
+/*
+ * The Fly map's icons (CreateFlyDestIcons, TryCreateRedOutlineFlyDestIcons):
+ * each town and city, lit if visited; the Battle Frontier's red outline.
+ * Their sprites kept an 8x8 sprite's centre, so their top left is the
+ * section's cell's (the outline's 4 pixels up and left). Zoomed in, twice
+ * the size, as the map under them.
+ */
+static u8 *sFlyIcons;
+static Pal sFlyIconPal;
+static bool8 sFlyIconsTried;
+
+static void DrawSpriteDouble(const u8 *tiles, int wt, int ht, int x, int y, const u16 *pal)
+{
+    for (int ty = 0; ty < ht; ++ty)
+        for (int tx = 0; tx < wt; ++tx)
+        {
+            const u8 *tile = tiles + (ty * wt + tx) * 32;
+
+            for (int py = 0; py < 8; ++py)
+                for (int px = 0; px < 8; ++px)
+                {
+                    u8 v = (tile[py * 4 + (px >> 1)] >> ((px & 1) * 4)) & 15;
+
+                    if (v)
+                        FillRect(x + (tx * 8 + px) * 2, y + (ty * 8 + py) * 2, 2, 2, pal[v]);
+                }
+        }
+}
+
+static void DrawFlyIcon(const ViewState *s, int mx, int my, int wt, int ht, int frame)
+{
+    int x, y;
+
+    MapToScreen(s, mx, my, &x, &y);
+    if (s->mapZoom)
+        DrawSpriteDouble(sFlyIcons + frame * 32, wt, ht, x, y, sFlyIconPal.c);
+    else
+        DrawSprite(sFlyIcons + frame * 32, wt, ht, x, y, sFlyIconPal.c);
+}
+
+static void DrawFlyIcons(const ViewState *s)
+{
+    int saved[4];
+
+    if (!sFlyIconsTried)
+    {
+        sFlyIcons = UnlzFile("pokenav/region_map/fly_target_icons.4bpp.lz", NULL);
+        PalFile("pokenav/region_map/fly_target_icons.gbapal", &sFlyIconPal, 1, FALSE);
+        sFlyIconsTried = TRUE;
+    }
+    if (!sFlyIcons)
+        return;
+    ClipToMapWindow(saved);
+    for (int mapsec = MAPSEC_LITTLEROOT_TOWN; mapsec <= MAPSEC_EVER_GRANDE_CITY; ++mapsec)
+    {
+        const struct RegionMapLocation *e = &gRegionMapEntries[mapsec];
+        int wt = e->width == 2 ? 2 : 1, ht = wt == 1 && e->height == 2 ? 2 : 1;
+        int frame = wt == 2 ? 1 : ht == 2 ? 3 : 0;
+
+        if (!((s->flyVisited >> (mapsec - MAPSEC_LITTLEROOT_TOWN)) & 1))
+            frame += 5;
+        DrawFlyIcon(s, (e->x + 1) * 8, (e->y + 2) * 8, wt, ht, frame);
+    }
+    if (s->flyFrontier)
+    {
+        const struct RegionMapLocation *e = &gRegionMapEntries[MAPSEC_BATTLE_FRONTIER];
+
+        DrawFlyIcon(s, (e->x + 1) * 8 - 4, (e->y + 2) * 8 - 4, 2, 2, 10);
+    }
+    RestoreClip(saved);
+}
+
+/*
+ * The picked place's panel, zoomed in, as the PokéNav map's window has it
+ * (UpdateMapSecInfoWindow): a town or city one can fly to, its layout
+ * (DrawCityMap); a route, the landmarks found so far (PrintLandmarkNames).
+ */
+static u8 *sCityTiles;
+static u32 sCityTileCount;
+static Pal sCityPal;
+static bool8 sCityTilesTried;
+static const u32 *sCityMapKey;
+static u16 *sCityMap;
+
+static const u32 *MapCityPicture(u8 mapsec, u8 type, u8 pos)
+{
+    return mapsec != MAPSEC_NONE && type == MAPSECTYPE_CITY_CANFLY ? CtrPokenav_CityMap(mapsec, pos) : NULL;
+}
+
+/* The panel's width, 0 without one. */
+static int MapPanelWidth(const ViewState *s)
+{
+    if (!s->mapZoom || s->pickMapsec == MAPSEC_NONE)
+        return 0;
+    if (MapCityPicture(s->pickMapsec, s->pickType, s->pickPos))
+        return PANEL_CITY_W;
+    return s->landmarks ? PANEL_MARKS_W : 0;
+}
+
+/* The panel on the right if the place is on the picture's left half. */
+static bool8 MapPanelRight(int cx)
+{
+    return cx * 8 + 4 < MAP_PIC_W / 2;
+}
+
+static void MapPanelRect(const ViewState *s, int *x, int *w, int *h)
+{
+    *w = MapPanelWidth(s);
+    *x = MapPanelRight(s->pickX) ? MAP_ORIGIN_X + MAP_PIC_W - 4 - *w : MAP_ORIGIN_X + 4;
+    *h = MapCityPicture(s->pickMapsec, s->pickType, s->pickPos) ? PANEL_TITLE_H + 8 + 80 + 6
+                                                                 : PANEL_TITLE_H + 8 + s->landmarks * PANEL_ROW_H + 4;
+}
+
+static void DrawMapPanel(const ViewState *s)
+{
+    const u32 *city;
+    u8 name[32];
+    int x, w, h, oy, ty;
+
+    if (!MapPanelWidth(s))
+        return;
+    MapPanelRect(s, &x, &w, &h);
+    city = MapCityPicture(s->pickMapsec, s->pickType, s->pickPos);
+    oy = Plate(x, PANEL_Y, w, h, sCreamPlate, PLATE_STATE_NORMAL);
+    GetMapName(name, s->pickMapsec, 0);
+    ty = Plate(x + 4, oy + 4, w - 8, PANEL_TITLE_H, sEmerald, PLATE_STATE_NORMAL);
+    TextIn(name, x + 4, ty, w - 8, PANEL_TITLE_H, FitFont(&sSmall, name, w - 20), 'c', STYLE_WHITE, 6);
+    /* A tap on the panel picks nothing under it. */
+    AddHit(x, PANEL_Y, w, h, HIT_MAP_PANEL);
+    if (city)
+    {
+        if (!sCityTilesTried)
+        {
+            u32 size = 0;
+
+            sCityTiles = Unlz(CtrPokenav_CityZoomTiles(), &size);
+            sCityTileCount = size / 32;
+            PalFile("pokenav/region_map/zoom_tiles.gbapal", &sCityPal, 1, FALSE);
+            sCityTilesTried = TRUE;
+        }
+        if (sCityMapKey != city)
+        {
+            free(sCityMap);
+            sCityMap = Unlz(city, NULL);
+            sCityMapKey = city;
+        }
+        if (sCityTiles && sCityMap)
+        {
+            Pal pals[16];
+
+            /* The pictures name their tiles' palette bank as the PokéNav
+             * loads it; here the one palette is every bank. */
+            for (int i = 0; i < 16; ++i)
+                pals[i] = sCityPal;
+            for (int cy = 0; cy < 10; ++cy)
+                for (int cx = 0; cx < 10; ++cx)
+                    DrawMapEntry(sCityTiles, sCityTileCount, sCityMap[cy * 10 + cx], x + (w - 80) / 2 + cx * 8,
+                                 oy + PANEL_TITLE_H + 8 + cy * 8, pals);
+        }
+        return;
+    }
+    for (int i = 0; i < s->landmarks; ++i)
+    {
+        const u8 *mark = GetLandmarkName(s->pickMapsec, s->pickPos, i);
+
+        if (mark)
+            StyledStr(FitFont(&sSmall, mark, w - 16), mark, x + 8,
+                      TextY(oy + PANEL_TITLE_H + 8 + i * PANEL_ROW_H, PANEL_ROW_H, &sSmall), STYLE_INK);
+    }
+}
+
+/* The zoom button, emerald while zoomed in; its glass says which way. */
+static void DrawZoomButton(const ViewState *s)
+{
+    bool8 pressed = s->pressed == HIT_MAP_ZOOM;
+    int oy = Plate(ZOOM_X, ZOOM_Y, ZOOM_W, ZOOM_H, s->mapZoom || pressed ? sEmerald : sLight,
+                   pressed ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+
+    IconCentred(s->mapZoom ? sArtZoomOut : sArtZoomIn, 2, 2 * ZOOM_X + ZOOM_W, 2 * oy + ZOOM_H - 1, sArtPal.c, FALSE);
+    AddHit(ZOOM_X - 2, ZOOM_Y - 2, ZOOM_W + 4, ZOOM_H + 4, HIT_MAP_ZOOM);
+}
+
+/* Whether a rectangle of the screen meets what is drawn over the map and is
+ * not in its cache: the zoom button, the place panel. */
+static bool8 MapOverlayMeets(const ViewState *s, int x0, int y0, int x1, int y1)
+{
+    int px, pw, ph, b[4];
+
+    PlateBounds(ZOOM_X, ZOOM_Y, ZOOM_W, ZOOM_H, &b[0], &b[1], &b[2], &b[3]);
+    if (RectsMeet(x0, y0, x1, y1, b[0], b[1], b[2], b[3]))
+        return TRUE;
+    if (!MapPanelWidth(s))
+        return FALSE;
+    MapPanelRect(s, &px, &pw, &ph);
+    PlateBounds(px, PANEL_Y, pw, ph, &b[0], &b[1], &b[2], &b[3]);
+    return RectsMeet(x0, y0, x1, y1, b[0], b[1], b[2], b[3]);
+}
+
+/* The view zoomed in round a cell: in the middle of what the panel leaves. */
+static void MapZoomTo(int cx, int cy, int panelW)
+{
+    int free = MAP_PIC_W - (panelW ? panelW + 8 : 0);
+    int left = panelW && !MapPanelRight(cx) ? panelW + 8 : 0;
+    int vx = cx * 8 + 4 - (left + free / 2) / 2, vy = cy * 8 + 4 - MAP_PIC_H / 4;
+
+    sMapViewX = vx < 0 ? 0 : vx > MAP_PIC_W / 2 ? MAP_PIC_W / 2 : vx;
+    sMapViewY = vy < 0 ? 0 : vy > MAP_PIC_H / 2 ? MAP_PIC_H / 2 : vy;
+}
+
+/* How many landmarks a route's panel lists (PrintLandmarkNames). */
+static u8 MapLandmarks(u8 mapsec, u8 type, u8 pos)
+{
+    u8 n = 0;
+
+    if (type == MAPSECTYPE_ROUTE || type == MAPSECTYPE_BATTLE_FRONTIER)
+        while (n < PANEL_MARKS_MAX && GetLandmarkName(mapsec, pos, n))
+            ++n;
+    return n;
+}
+
+/* A place's panel width once picked, as MapPanelWidth will have it. */
+static int PickPanelWidth(u8 mapsec, u8 pos)
+{
+    u8 type = CtrRegionMap_MapSecType(mapsec);
+
+    if (MapCityPicture(mapsec, type, pos))
+        return PANEL_CITY_W;
+    return MapLandmarks(mapsec, type, pos) ? PANEL_MARKS_W : 0;
+}
+
+/* The section under a tapped cell, as the region map's cursor finds it
+ * (GetRegionMapSecIdAt), and the cell's place in it; zoomed in, the view
+ * comes round it. */
 static void PickMapCell(int x, int y)
 {
-    int cx = (x - MAP_ORIGIN_X + 64) / 8 - 8, cy = (y - MAP_ORIGIN_Y + 64) / 8 - 8;
+    int mx = sMapZoom ? sMapViewX + (x - MAP_ORIGIN_X) / 2 : x - MAP_ORIGIN_X;
+    int my = sMapZoom ? sMapViewY + (y - MAP_ORIGIN_Y) / 2 : y - MAP_ORIGIN_Y;
+    int cx = mx >> 3, cy = my >> 3;
+    u16 mapsec = mx >= 0 && my >= 0 ? GetRegionMapSecIdAt(cx, cy) : MAPSEC_NONE;
 
     sPickMapsec = MAPSEC_NONE;
-    for (int i = 0; i < MAPSEC_NONE; ++i)
-    {
-        const struct RegionMapLocation *e = &gRegionMapEntries[i];
-        int ex = e->x + 1, ey = e->y + 2;
-
-        if (e->width && cx >= ex && cy >= ey && cx < ex + e->width && cy < ey + e->height)
-        {
-            sPickMapsec = i;
-            sPickX = cx;
-            sPickY = cy;
-            return;
-        }
-    }
+    if (mapsec == MAPSEC_NONE)
+        return;
+    sPickMapsec = mapsec;
+    sPickX = cx;
+    sPickY = cy;
+    sPickPos = CtrRegionMap_PosWithinMapSec(cx, cy, mapsec);
+    if (sMapZoom)
+        MapZoomTo(cx, cy, PickPanelWidth(mapsec, sPickPos));
 }
 
 /* The wild list, where the map is: a cream plate, the method's title bar
@@ -220,14 +562,63 @@ static void DrawRegionMap(const ViewState *s)
     }
     else
     {
+        if (s->mapFly)
+            DrawFlyIcons(s);
         DrawMapMarks(s);
         AddHit(MAP_ORIGIN_X, MAP_ORIGIN_Y, MAP_PIC_W, MAP_PIC_H, HIT_MAP);
+        DrawMapPanel(s);
+        DrawZoomButton(s);
     }
     if (s->clockNotice)
     {
         DrawClockNotice(s);
         AddHit(NOTICE_X, NOTICE_Y, NOTICE_W, NOTICE_H, HIT_CLOCK_NOTICE);
     }
+}
+
+/*
+ * The header while the Fly map is up (FLY from the party or the bag's HM):
+ * Y grey, the destination as the title - emerald when one can fly there -
+ * then FLY where the Repel and the clock were and CANCEL where the clock and
+ * RUN were. The dock is locked meanwhile; MAP, the screen's own, cancels too.
+ */
+#define FLY_X REPEL_X
+#define FLY_W 80
+#define FLY_CANCEL_X (FLY_X + FLY_W + 2)
+#define FLY_CANCEL_W (RUN_X + RUN_W - FLY_CANCEL_X)
+
+static void DrawFlyHeader(const ViewState *s)
+{
+    bool8 flyPressed = s->flyCanFly && s->pressed == HIT_MAP_FLY, cancelPressed = s->pressed == HIT_MAP_FLY_CANCEL;
+    const u8 *title = gText_FlyToWhere;
+    u8 name[32];
+    int oy;
+
+    if (s->pickMapsec != MAPSEC_NONE)
+    {
+        GetMapName(name, s->pickMapsec, 0);
+        title = name;
+    }
+    if (s->flyCanFly)
+    {
+        oy = Plate(TITLE_X, HEAD_Y, TITLE_W, HEAD_H, sEmerald, PLATE_STATE_NORMAL);
+        TextIn(title, TITLE_X, oy, TITLE_W, HEAD_H, FitFont(&sNormal, title, TITLE_W - 12), 'c', STYLE_WHITE, 6);
+    }
+    else
+    {
+        oy = PlateEx(TITLE_X, HEAD_Y, TITLE_W, HEAD_H, sLight, PLATE_STATE_NORMAL, TITLE_W - 10, 30, PlateCut(HEAD_H), 0);
+        TextIn(title, TITLE_X, oy, TITLE_W - 8, HEAD_H, FitFont(&sNormal, title, TITLE_W - 16), 'l', STYLE_INK, 7);
+    }
+    oy = Plate(FLY_X, HEAD_Y, FLY_W, HEAD_H, !s->flyCanFly ? sOffGrey : flyPressed ? sEmerald : sFieldBlue,
+               flyPressed ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+    TextIn(gMoveNames[MOVE_FLY], FLY_X, oy, FLY_W, HEAD_H, &sNormal, 'c', s->flyCanFly ? STYLE_WHITE : STYLE_GRAY, 4);
+    if (s->flyCanFly)
+        AddHit(FLY_X, HEAD_Y - 2, FLY_W, HEAD_H + 4, HIT_MAP_FLY);
+    oy = Plate(FLY_CANCEL_X, HEAD_Y, FLY_CANCEL_W, HEAD_H, cancelPressed ? sEmerald : sCancelGrey,
+               cancelPressed ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+    TextIn(gText_Cancel2, FLY_CANCEL_X, oy, FLY_CANCEL_W, HEAD_H, FitFont(&sNormal, gText_Cancel2, FLY_CANCEL_W - 8), 'c',
+           STYLE_WHITE, 4);
+    AddHit(FLY_CANCEL_X, HEAD_Y - 2, W - FLY_CANCEL_X, HEAD_H + 4, HIT_MAP_FLY_CANCEL);
 }
 
 /* ------------------------------------------------------------------------ */

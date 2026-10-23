@@ -48,12 +48,9 @@ typedef enum
 /* Chooses and validates the backend. On failure CtrData_ErrorTitle and
  * CtrData_ErrorDetail describe what the player has to do. */
 bool CtrData_Init(void);
-void CtrData_Shutdown(void);
-CtrDataBackend CtrData_GetBackend(void);
 const char *CtrData_BackendName(void);
 const char *CtrData_ErrorTitle(void);
 const char *CtrData_ErrorDetail(void);
-uint32_t CtrData_EngineAbi(void);
 
 /* A read-only stdio stream over one data file, or NULL if it does not exist.
  * fseek/ftell/fread/fclose work as on any file. Safe to call from several
@@ -64,6 +61,9 @@ bool CtrData_Size(const char *path, uint32_t *outSize);
 /* The whole file in a malloc'd buffer (one extra zero byte past the end), or
  * NULL. The caller frees it. */
 void *CtrData_Load(const char *path, uint32_t *outSize);
+/* A file CtrData_Load will soon be asked for, read ahead on a worker so that
+ * the read is not in the frame that wants it (a few, small: sprites). */
+void CtrData_Prefetch(const char *path);
 /* Where a file lies in the data pack, so that neighbouring files can be read
  * in one go with CtrData_ReadRange. False under any other backend. */
 bool CtrData_Locate(const char *path, uint64_t *outOffset, uint32_t *outSize);

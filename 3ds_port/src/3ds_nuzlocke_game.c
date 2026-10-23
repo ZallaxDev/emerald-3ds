@@ -224,7 +224,7 @@ void CtrNuzlocke_Loaded(const void *save, size_t size)
 
 void CtrNuzlocke_Saved(const void *save, size_t size)
 {
-    if (CtrNuzSession_ShouldWrite(&sSession))
+    if (CtrNuzSession_ShouldWrite(&sSession, Enabled()))
         CtrNuzSession_Written(&sSession, CtrNuzStore_Save(&sSession.state, save, size));
 }
 

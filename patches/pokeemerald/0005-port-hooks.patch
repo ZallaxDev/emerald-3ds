@@ -251,6 +251,19 @@ index edbd2c09fa7b34782edf5e5e0f5b4f3f5d6d1969..3e6ac74740b8efac11a2bd9e2249f8d9
 +#endif
  
  #endif //GUARD_FIELD_CAMERA_H
+diff --git a/include/field_effect.h b/include/field_effect.h
+index 699a784cf5b86bde6a86346e14a856a62b8bba01..c0d2917b6cd9bbd64832a86872a4816a9b07a31b 100644
+--- a/include/field_effect.h
++++ b/include/field_effect.h
+@@ -47,4 +47,8 @@ void FreeResourcesAndDestroySprite(struct Sprite *sprite, u8 spriteId);
+ u8 CreateMonSprite_PicBox(u16 species, s16 x, s16 y, u8 subpriority);
+ void StartEscapeRopeFieldEffect(void);
+ 
++#ifdef PORT_BRIDGE
++void CtrFly_Start(void);
++#endif
++
+ #endif // GUARD_FIELD_EFFECTS_H
 diff --git a/include/field_player_avatar.h b/include/field_player_avatar.h
 index 005a48f2d564ab06e292568130397c131b6b56ba..d8d827cbe294b573a4391b13c360ffe82c378775 100644
 --- a/include/field_player_avatar.h
@@ -621,6 +634,22 @@ index 15c92cc2a7ad3d124231c7e40ef35981e2cc8b79..61da70445470c6018a00aa0fe1f4e3c0
  }
  
  #endif // GUARD_PALETTE_H
+diff --git a/include/party_menu.h b/include/party_menu.h
+index 386437c121e233cf73c60cc131356589f847c204..eb7554bb38946dcaa1de8a9f22c41ec5f155ad50 100644
+--- a/include/party_menu.h
++++ b/include/party_menu.h
+@@ -90,4 +90,11 @@ void BufferMoveDeleterNicknameAndMove(void);
+ void GetNumMovesSelectedMonHas(void);
+ void MoveDeleterChooseMoveToForget(void);
+ 
++#ifdef PORT_BRIDGE
++void CtrParty_Fly(u8 slot, u16 mapSecId, u8 posWithinMapSec);
++#endif
++#ifdef PLATFORM_3DS
++void CtrBottom_OpenFlyMap(u8 slot, bool8 fromBag);
++#endif
++
+ #endif // GUARD_PARTY_MENU_H
 diff --git a/include/pokemon.h b/include/pokemon.h
 index 3d75157f91f437bc310ce4a21208cc696a4f19ab..53f7f02fd0d9202a64b73152f04e10f360a19382 100644
 --- a/include/pokemon.h
@@ -635,7 +664,7 @@ index 3d75157f91f437bc310ce4a21208cc696a4f19ab..53f7f02fd0d9202a64b73152f04e10f3
   /* 0x02 */ u16 metLevel:7;
   /* 0x02 */ u16 metGame:4;
 diff --git a/include/pokenav.h b/include/pokenav.h
-index b5488242348b042dded9c6b10979920a34b8362f..553d2ad0f60654ec1ccb6c26dcefed9db626b7ae 100644
+index b5488242348b042dded9c6b10979920a34b8362f..5d92f2073dfc9ae5d7e88e6cacebc75446d29e20 100644
 --- a/include/pokenav.h
 +++ b/include/pokenav.h
 @@ -17,7 +17,7 @@ struct PokenavMonListItem
@@ -665,6 +694,18 @@ index b5488242348b042dded9c6b10979920a34b8362f..553d2ad0f60654ec1ccb6c26dcefed9d
  int GetIndexDeltaOfNextCheckPageDown(int index);
  int GetIndexDeltaOfNextCheckPageUp(int index);
  bool32 IsRematchEntryRegistered(int rematchIndex);
+@@ -496,4 +496,11 @@ void CreateRibbonsSummaryLoopedTask(s32 id);
+ u32 IsRibbonsSummaryLoopedTaskActive(void);
+ void FreeRibbonsSummaryScreen2(void);
+ 
++#ifdef PORT_BRIDGE
++// The bottom screen's map (3ds_bottom_ui.c): a town's layout picture (LZ77,
++// 10x10 tiles of CtrPokenav_CityZoomTiles), NULL if it has none.
++const u32 *CtrPokenav_CityMap(u16 mapSecId, u8 posWithinMapSec);
++const u32 *CtrPokenav_CityZoomTiles(void);
++#endif
++
+ #endif // GUARD_POKENAV_H
 diff --git a/include/rayquaza_scene.h b/include/rayquaza_scene.h
 index 6a51b9a45ff79edfb46d1c4bf9bc2e902df021e1..422b59127324bc724c04b1d60ea26e5fbf42d1b5 100644
 --- a/include/rayquaza_scene.h
@@ -680,7 +721,7 @@ index 6a51b9a45ff79edfb46d1c4bf9bc2e902df021e1..422b59127324bc724c04b1d60ea26e5f
  
  #endif // GUARD_RAYQUAZA_SCENE_H
 diff --git a/include/region_map.h b/include/region_map.h
-index abdb44b16ce3afb7bd017b52eeedfd5842d652b5..2bca9e7f7d44b5a76b8fb1ea9b296ed2d85d5dcb 100644
+index abdb44b16ce3afb7bd017b52eeedfd5842d652b5..686f4659903dfa087ecdf5832c539f4c10694a82 100644
 --- a/include/region_map.h
 +++ b/include/region_map.h
 @@ -26,7 +26,7 @@ enum {
@@ -713,6 +754,18 @@ index abdb44b16ce3afb7bd017b52eeedfd5842d652b5..2bca9e7f7d44b5a76b8fb1ea9b296ed2
  void ShowRegionMapForPokedexAreaScreen(struct RegionMap *regionMap);
  void PokedexAreaScreen_UpdateRegionMapVariablesAndVideoRegs(s16 x, s16 y);
  void CB2_OpenFlyMap(void);
+@@ -117,4 +117,11 @@ void SetRegionMapDataForZoom(void);
+ 
+ extern const struct RegionMapLocation gRegionMapEntries[];
+ 
++#ifdef PORT_BRIDGE
++// The bottom screen's map and Fly (3ds_bottom_ui.c), from a cursor cell.
++u8 CtrRegionMap_MapSecType(u16 mapSecId);
++u8 CtrRegionMap_PosWithinMapSec(u16 x, u16 y, u16 mapSecId);
++void CtrRegionMap_SetFlyDestination(u16 mapSecId, u8 posWithinMapSec);
++#endif
++
+ #endif //GUARD_REGION_MAP_H
 diff --git a/include/rtc.h b/include/rtc.h
 index 6059688285fea40c5a9253d5cf9bb195d35ec01a..7a3d3d524ba33c6b44c544cc3c0043ee90b0a6b5 100644
 --- a/include/rtc.h
@@ -5199,7 +5252,7 @@ index 9d69337c0eea507d35cf27e4ba1b5898126076b2..c675eaecf6893937035f25d5c21a5a54
          return StartDoorAnimationTask(gfx, sDoorCloseAnimFrames, x, y);
  }
 diff --git a/src/field_effect.c b/src/field_effect.c
-index 5dcc4b3c080e2d787f66252ac2daaab00c741575..4951d5e72feb1bbe404b72b015b9b4b99b0e8489 100644
+index 5dcc4b3c080e2d787f66252ac2daaab00c741575..1116486d3b02a88173453a45e840664c6d6caf6d 100644
 --- a/src/field_effect.c
 +++ b/src/field_effect.c
 @@ -31,6 +31,12 @@
@@ -5512,6 +5565,24 @@ index 5dcc4b3c080e2d787f66252ac2daaab00c741575..4951d5e72feb1bbe404b72b015b9b4b9
      sprite = &gSprites[monSprite];
      sprite->callback = SpriteCallbackDummy;
      sprite->oam.priority = 0;
+@@ -3916,3 +4018,17 @@ static void Task_MoveDeoxysRock(u8 taskId)
+ #undef tVelocityY
+ #undef tMoveSteps
+ #undef tObjEventId
++
++#ifdef PORT_BRIDGE
++// FieldCallback_UseFly from the field as it is (the bottom screen's Fly map,
++// party_menu.c's CtrParty_Fly): no fade to come in from, the player perhaps
++// walking.
++void CtrFly_Start(void)
++{
++    CreateTask(Task_UseFly, 0);
++    LockPlayerFieldControls();
++    // The player may be mid-step: it ends it (FlyOutFieldEffect_FieldMovePose
++    // waits for that), held from taking another.
++    FreezeObjectEventsExceptOne(gPlayerAvatar.objectEventId);
++}
++#endif
 diff --git a/src/field_effect_helpers.c b/src/field_effect_helpers.c
 old mode 100755
 new mode 100644
@@ -7016,7 +7087,7 @@ index 169ef002a665712e92f6fec36a86ee7888067a17..a154bacf5122bbebb940f2bc4240811e
 diff --git a/src/item_menu.c b/src/item_menu.c
 old mode 100755
 new mode 100644
-index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a3f628ccd
+index 09bc25c90b99e98c0097771871daa4384159047c..b718e627d59b5c42e4e2b7575f0095ccf21f570f
 --- a/src/item_menu.c
 +++ b/src/item_menu.c
 @@ -24,6 +24,7 @@
@@ -7041,7 +7112,21 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
  
  #define TAG_POCKET_SCROLL_ARROW 110
  #define TAG_BAG_SCROLL_ARROW    111
-@@ -209,6 +217,33 @@ static void ConfirmToss(u8);
+@@ -142,6 +150,13 @@ static void PrintItemDescription(int);
+ static void BagMenu_PrintCursorAtPos(u8, u8);
+ static void BagMenu_Print(u8, u8, const u8 *, u8, u8, u8, u8, u8, u8);
+ static void Task_CloseBagMenu(u8);
++#ifdef PLATFORM_3DS
++// The bottom screen's dock may have chosen another screen to open instead.
++#define CTR_LEAVE_TO(cb) CtrBottom_LeaveTo(cb)
++MainCallback CtrBottom_LeaveTo(MainCallback field);
++#else
++#define CTR_LEAVE_TO(cb) (cb)
++#endif
+ static u8 AddItemMessageWindow(u8);
+ static void RemoveItemMessageWindow(u8);
+ static void ReturnToItemList(u8);
+@@ -209,6 +224,34 @@ static void ConfirmToss(u8);
  static void CancelToss(u8);
  static void ConfirmSell(u8);
  static void CancelSell(u8);
@@ -7062,6 +7147,7 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
 +static bool8 CtrBag_SwapTouch(u8 taskId);
 +static bool8 CtrBag_ContextTouch(s8 *selection);
 +static u8 CtrBag_QuantityTouch(s16 *count, u16 max, u8 windowType);
++static void CtrBag_StopTouch(void);
 +static void CtrBag_Prefetch(void);
 +static void CtrBag_CopyText(u8 *dst, const u8 *src);
 +static u8 sCtrBagText[CTR_VIEW_TEXT], sCtrBagMsg[CTR_VIEW_TEXT];
@@ -7075,7 +7161,7 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
  
  static const struct BgTemplate sBgTemplates_ItemMenu[] =
  {
-@@ -577,7 +612,7 @@ void CB2_ChooseBerry(void)
+@@ -577,7 +620,7 @@ void CB2_ChooseBerry(void)
  }
  
  // Choosing berry for Berry Blender or Berry Crush
@@ -7084,7 +7170,7 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
  {
      GoToBagMenu(ITEMMENULOCATION_BERRY_BLENDER_CRUSH, BERRIES_POCKET, exitCallback);
  }
-@@ -611,7 +646,7 @@ void QuizLadyOpenBagMenu(void)
+@@ -611,7 +654,7 @@ void QuizLadyOpenBagMenu(void)
      gSpecialVar_Result = FALSE;
  }
  
@@ -7093,7 +7179,16 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
  {
      gBagMenu = AllocZeroed(sizeof(*gBagMenu));
      if (gBagMenu == NULL)
-@@ -642,6 +677,9 @@ void GoToBagMenu(u8 location, u8 pocket, MainCallback exitCallback)
+@@ -636,12 +679,18 @@ void GoToBagMenu(u8 location, u8 pocket, MainCallback exitCallback)
+         gBagMenu->pocketSwitchArrowsTask = TASK_NONE;
+         memset(gBagMenu->spriteIds, SPRITE_NONE, sizeof(gBagMenu->spriteIds));
+         memset(gBagMenu->windowIds, WINDOW_NONE, sizeof(gBagMenu->windowIds));
++#ifdef PLATFORM_3DS
++        CtrBag_StopTouch();
++#endif
+         SetMainCallback2(CB2_Bag);
+     }
+ }
  
  void CB2_BagMenuRun(void)
  {
@@ -7103,7 +7198,16 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
      RunTasks();
      AnimateSprites();
      BuildOamBuffer();
-@@ -1159,11 +1197,14 @@ u8 GetItemListPosition(u8 pocketId)
+@@ -1089,7 +1138,7 @@ static void Task_CloseBagMenu(u8 taskId)
+         if (gBagMenu->newScreenCallback != NULL)
+             SetMainCallback2(gBagMenu->newScreenCallback);
+         else
+-            SetMainCallback2(gBagPosition.exitCallback);
++            SetMainCallback2(CTR_LEAVE_TO(gBagPosition.exitCallback));
+ 
+         BagDestroyPocketScrollArrowPair();
+         ResetSpriteData();
+@@ -1159,11 +1208,14 @@ u8 GetItemListPosition(u8 pocketId)
      return gBagPosition.scrollPosition[pocketId] + gBagPosition.cursorPosition[pocketId];
  }
  
@@ -7119,7 +7223,7 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
      FillWindowPixelBuffer(tMsgWindowId, PIXEL_FILL(1));
      DisplayMessageAndContinueTask(taskId, tMsgWindowId, 10, 13, fontId, GetPlayerTextSpeedDelay(), str, callback);
      ScheduleBgCopyTilemapToVram(1);
-@@ -1242,6 +1283,10 @@ static void Task_BagMenu_HandleInput(u8 taskId)
+@@ -1242,6 +1294,10 @@ static void Task_BagMenu_HandleInput(u8 taskId)
          }
  
          listPosition = ListMenu_ProcessInput(tListTaskId);
@@ -7130,7 +7234,17 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
          ListMenuGetScrollAndRow(tListTaskId, scrollPos, cursorPos);
          switch (listPosition)
          {
-@@ -1456,6 +1501,11 @@ static void Task_HandleSwappingItemsInput(u8 taskId)
+@@ -1315,6 +1371,9 @@ static void SwitchBagPocket(u8 taskId, s16 deltaBagPocketId, bool16 skipEraseLis
+     s16 *data = gTasks[taskId].data;
+     u8 newPocket;
+ 
++#ifdef PLATFORM_3DS
++    CtrBag_StopTouch();
++#endif
+     tPocketSwitchState = 0;
+     tPocketSwitchTimer = 0;
+     tPocketSwitchDir = deltaBagPocketId;
+@@ -1456,6 +1515,11 @@ static void Task_HandleSwappingItemsInput(u8 taskId)
              ListMenuGetScrollAndRow(tListTaskId, &gBagPosition.scrollPosition[gBagPosition.pocket], &gBagPosition.cursorPosition[gBagPosition.pocket]);
              DoItemSwap(taskId);
          }
@@ -7142,7 +7256,17 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
          else
          {
              s32 input = ListMenu_ProcessInput(tListTaskId);
-@@ -1693,6 +1743,10 @@ static void Task_ItemContext_SingleRow(u8 taskId)
+@@ -1528,6 +1592,9 @@ static void CancelItemSwap(u8 taskId)
+ 
+ static void OpenContextMenu(u8 taskId)
+ {
++#ifdef PLATFORM_3DS
++    CtrBag_StopTouch();
++#endif
+     switch (gBagPosition.location)
+     {
+     case ITEMMENULOCATION_BATTLE:
+@@ -1693,6 +1760,10 @@ static void Task_ItemContext_SingleRow(u8 taskId)
      if (MenuHelpers_ShouldWaitForLinkRecv() != TRUE)
      {
          s8 selection = Menu_ProcessInputNoWrap();
@@ -7153,7 +7277,7 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
          switch (selection)
          {
          case MENU_NOTHING_CHOSEN:
-@@ -1714,6 +1768,19 @@ static void Task_ItemContext_MultipleRows(u8 taskId)
+@@ -1714,6 +1785,19 @@ static void Task_ItemContext_MultipleRows(u8 taskId)
      if (MenuHelpers_ShouldWaitForLinkRecv() != TRUE)
      {
          s8 cursorPos = Menu_GetCursorPos();
@@ -7173,7 +7297,7 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
          if (JOY_NEW(DPAD_UP))
          {
              if (cursorPos > 0 && IsValidContextMenuPos(cursorPos - 2))
-@@ -1848,18 +1915,21 @@ static void CancelToss(u8 taskId)
+@@ -1848,18 +1932,21 @@ static void CancelToss(u8 taskId)
  static void Task_ChooseHowManyToToss(u8 taskId)
  {
      s16 *data = gTasks[taskId].data;
@@ -7198,7 +7322,7 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
      {
          PlaySE(SE_SELECT);
          BagMenu_RemoveWindow(ITEMWIN_QUANTITY);
-@@ -1887,7 +1957,7 @@ static void Task_RemoveItemFromBag(u8 taskId)
+@@ -1887,7 +1974,7 @@ static void Task_RemoveItemFromBag(u8 taskId)
      u16 *scrollPos = &gBagPosition.scrollPosition[gBagPosition.pocket];
      u16 *cursorPos = &gBagPosition.cursorPosition[gBagPosition.pocket];
  
@@ -7207,7 +7331,7 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
      {
          PlaySE(SE_SELECT);
          RemoveBagItem(gSpecialVar_ItemId, tItemCount);
-@@ -1957,7 +2027,7 @@ static void PrintItemCantBeHeld(u8 taskId)
+@@ -1957,7 +2044,7 @@ static void PrintItemCantBeHeld(u8 taskId)
  
  static void HandleErrorMessage(u8 taskId)
  {
@@ -7216,7 +7340,7 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
      {
          PlaySE(SE_SELECT);
          CloseItemMessage(taskId);
-@@ -2127,18 +2197,21 @@ static void InitSellHowManyInput(u8 taskId)
+@@ -2127,18 +2214,21 @@ static void InitSellHowManyInput(u8 taskId)
  static void Task_ChooseHowManyToSell(u8 taskId)
  {
      s16 *data = gTasks[taskId].data;
@@ -7241,7 +7365,7 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
      {
          PlaySE(SE_SELECT);
          BagMenu_PrintCursor(tListTaskId, COLORID_NORMAL);
-@@ -2180,7 +2253,7 @@ static void SellItem(u8 taskId)
+@@ -2180,7 +2270,7 @@ static void SellItem(u8 taskId)
  
  static void WaitAfterItemSell(u8 taskId)
  {
@@ -7250,7 +7374,7 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
      {
          PlaySE(SE_SELECT);
          RemoveMoneyWindow();
-@@ -2211,18 +2284,21 @@ static void Task_ItemContext_Deposit(u8 taskId)
+@@ -2211,18 +2301,21 @@ static void Task_ItemContext_Deposit(u8 taskId)
  static void Task_ChooseHowManyToDeposit(u8 taskId)
  {
      s16 *data = gTasks[taskId].data;
@@ -7275,7 +7399,7 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
      {
          PlaySE(SE_SELECT);
          PrintItemDescription(tListPosition);
-@@ -2264,7 +2340,7 @@ static void WaitDepositErrorMessage(u8 taskId)
+@@ -2264,7 +2357,7 @@ static void WaitDepositErrorMessage(u8 taskId)
  {
      s16 *data = gTasks[taskId].data;
  
@@ -7284,7 +7408,7 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
      {
          PlaySE(SE_SELECT);
          PrintItemDescription(tListPosition);
-@@ -2462,6 +2538,10 @@ static void LoadBagMenuTextWindows(void)
+@@ -2462,6 +2555,10 @@ static void LoadBagMenuTextWindows(void)
  
  static void BagMenu_Print(u8 windowId, u8 fontId, const u8 *str, u8 left, u8 top, u8 letterSpacing, u8 lineSpacing, u8 speed, u8 colorIndex)
  {
@@ -7295,7 +7419,19 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
      AddTextPrinterParameterized4(windowId, fontId, left, top, letterSpacing, lineSpacing, sFontColorTable[colorIndex], speed, str);
  }
  
-@@ -2594,3 +2674,582 @@ static void PrintTMHMMoveData(u16 itemId)
+@@ -2473,6 +2570,11 @@ static u8 UNUSED BagMenu_GetWindowId(u8 windowType)
+ static u8 BagMenu_AddWindow(u8 windowType)
+ {
+     u8 *windowId = &gBagMenu->windowIds[windowType];
++#ifdef PLATFORM_3DS
++    // How many: counted from 1, not from a touch or a button left over.
++    if (*windowId == WINDOW_NONE && (windowType == ITEMWIN_QUANTITY || windowType == ITEMWIN_QUANTITY_WIDE))
++        CtrBag_StopTouch();
++#endif
+     if (*windowId == WINDOW_NONE)
+     {
+         *windowId = AddWindow(&sContextMenuWindowTemplates[windowType]);
+@@ -2594,3 +2696,610 @@ static void PrintTMHMMoveData(u16 itemId)
          CopyWindowToVram(WIN_TMHM_INFO, COPYWIN_GFX);
      }
  }
@@ -7353,11 +7489,13 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
 +    return gBagMenu != NULL && gMain.callback2 == CB2_BagMenuRun;
 +}
 +
-+// The bag in the bottom screen's window: from the field, or from the field's
-+// party menu (GIVE); from a battle, a shop or the PC it has the whole screen.
++// The bag in the bottom screen's window: from the field, from the field's
++// party menu (GIVE), or from a battle's own menu; from a shop, the PC or a
++// berry machine it has the whole screen.
 +bool8 CtrBag_InWindow(void)
 +{
 +    return gBagPosition.location == ITEMMENULOCATION_FIELD
++        || gBagPosition.location == ITEMMENULOCATION_BATTLE
 +        || (gBagPosition.location == ITEMMENULOCATION_PARTY && !gMain.inBattle);
 +}
 +
@@ -7398,6 +7536,14 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
 +        sCtrTouch.held = FALSE;
 +        break;
 +    }
++}
++
++// A list let go coasting, a touch, a count the bottom screen's buttons asked
++// for: dropped when the bag opens, the pocket changes or a window comes up.
++static void CtrBag_StopTouch(void)
++{
++    memset(&sCtrTouch, 0, sizeof(sCtrTouch));
++    sCtrCountDelta = 0;
 +}
 +
 +// The dock's BAG button, while the list takes input: the bag closes, as B
@@ -7706,25 +7852,20 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
 +/* A list entry's name for the bottom screen, which has no text printer: the
 + * gaps the game leaves after a TM's or a berry's number become a space, and
 + * an HM, its number drawn after the bag's HM mark, is spelt as the mark and
-+ * the number ("HM01"). */
++ * the number, then its move ("HM01 CUT"). */
 +static void CtrBag_RowName(u8 *dest, const u8 *src, u16 item)
 +{
 +    u16 j = 0;
 +
 +    if (item >= ITEM_HM01 && item <= ITEM_HM08)
 +    {
-+        u8 *end;
-+
 +        const char *mark = CTR_TEXT("HM", "MO", "CS", "MN", "MO");
 +
 +        dest[0] = CHAR_A + (mark[0] - 'A');
 +        dest[1] = CHAR_A + (mark[1] - 'A');
-+        end = ConvertIntToDecimalStringN(dest + 2, item - ITEM_HM01 + 1, STR_CONV_MODE_LEADING_ZEROS, 2);
-+        *end++ = CHAR_SPACE;
-+        CopyItemName(item, gStringVar4);
-+        StringCopyN(end, gStringVar4, CTR_BAG_NAME - 1 - (end - dest));
-+        dest[CTR_BAG_NAME - 1] = EOS;
-+        return;
++        j = ConvertIntToDecimalStringN(dest + 2, item - ITEM_HM01 + 1, STR_CONV_MODE_LEADING_ZEROS, 2) - dest;
++        dest[j++] = CHAR_SPACE;
++        src = gMoveNames[ItemIdToBattleMoveId(item)];
 +    }
 +    while (*src != EOS && j < CTR_BAG_NAME - 1)
 +    {
@@ -7773,6 +7914,23 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
 +    }
 +}
 +
++// What a message shows last: the text after its last \p.
++static void CtrBag_LastPage(u8 *dst, const u8 *src)
++{
++    u16 i, page = 0;
++
++    for (i = 0; i < CTR_VIEW_TEXT && src[i] != EOS; i++)
++    {
++        if (src[i] == EXT_CTRL_CODE_BEGIN && i + 1 < CTR_VIEW_TEXT && src[i + 1] != EOS)
++            i += GetExtCtrlCodeLength(src[i + 1]);
++        else if (src[i] == CHAR_PROMPT_CLEAR)
++            page = i + 1;
++    }
++    for (i = 0; page < CTR_VIEW_TEXT - 1 && src[page] != EOS; i++)
++        dst[i] = src[page++];
++    dst[i] = EOS;
++}
++
 +// Where the bag is, for the bottom screen to draw it itself. FALSE while
 +// there is nothing to read (a pocket switching, the bag coming or going):
 +// the bottom screen keeps what it showed. The bag from anywhere but the
@@ -7793,7 +7951,15 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
 +    view->pocketSwitch = !gBagMenu->pocketSwitchDisabled;
 +    view->item = gSpecialVar_ItemId;
 +    memcpy(view->text, sCtrBagText, sizeof(view->text));
-+    if (gBagMenu->windowIds[ITEMWIN_MESSAGE] != WINDOW_NONE)
++    // A question asked in the message window (a TM's "Teach...?"): its
++    // last page is the yes/no's prompt.
++    if (CtrMenu_YesNoOpen())
++    {
++        view->state = CTR_BAG_VIEW_YESNO;
++        if (gBagMenu->windowIds[ITEMWIN_MESSAGE] != WINDOW_NONE)
++            CtrBag_LastPage(view->text, sCtrBagMsg);
++    }
++    else if (gBagMenu->windowIds[ITEMWIN_MESSAGE] != WINDOW_NONE)
 +    {
 +        view->state = CTR_BAG_VIEW_MESSAGE;
 +        memcpy(view->msg, sCtrBagMsg, sizeof(view->msg));
@@ -7804,8 +7970,6 @@ index 09bc25c90b99e98c0097771871daa4384159047c..c60691054cb9b5e7d324950812f7ad2a
 +        view->state = CTR_BAG_VIEW_MESSAGE;
 +        memcpy(view->msg, sCtrBagText, sizeof(view->msg));
 +    }
-+    else if (CtrMenu_YesNoOpen())
-+        view->state = CTR_BAG_VIEW_YESNO;
 +    else if ((taskId = FindTaskIdByFunc(Task_ChooseHowManyToToss)) != TASK_NONE)
 +    {
 +        view->state = CTR_BAG_VIEW_QUANTITY;
@@ -9923,7 +10087,7 @@ index f77c82608a3758f56be66c67f9b7f6af79d9dc2a..6162dbf47b48e1217a757fee69aca22b
      x = 0x10000;
      return x / y;
 diff --git a/src/menu.c b/src/menu.c
-index dd43e310dc8c83c350a0bb714113cc95cc46969e..546e738d1108e3962b4bda6e69dd5faa1bf741c3 100644
+index dd43e310dc8c83c350a0bb714113cc95cc46969e..61c0dc4cd8f5deb013662137eb14584d7ac0169b 100644
 --- a/src/menu.c
 +++ b/src/menu.c
 @@ -20,6 +20,11 @@
@@ -9984,7 +10148,22 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..546e738d1108e3962b4bda6e69dd5faa
      .width = 5,
      .height = 4,
      .paletteNum = 15,
-@@ -986,8 +1012,14 @@ s8 Menu_ProcessInput(void)
+@@ -911,6 +937,14 @@ static u8 InitMenu(u8 windowId, u8 fontId, u8 left, u8 top, u8 cursorHeight, u8
+     sMenu.fontId = fontId;
+     sMenu.optionHeight = cursorHeight;
+     sMenu.APressMuted = muteAPress;
++#ifdef PLATFORM_3DS
++    // A list, not a grid: a grid's columns left from the menu before (the
++    // bag's 2x2 actions) would have the taps read in two columns
++    // (CtrMenu_EntryAt, CtrMenu_PostEntry): every odd entry missed.
++    sMenu.columns = 0;
++    sMenu.rows = 0;
++    sMenu.optionWidth = 0;
++#endif
+ 
+     pos = initialCursorPos;
+ 
+@@ -986,8 +1020,14 @@ s8 Menu_ProcessInput(void)
  {
      if (JOY_NEW(A_BUTTON))
      {
@@ -9999,7 +10178,7 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..546e738d1108e3962b4bda6e69dd5faa
          return sMenu.cursorPos;
      }
      else if (JOY_NEW(B_BUTTON))
-@@ -1201,6 +1233,9 @@ static void CreateYesNoMenuAtPos(const struct WindowTemplate *window, u8 fontId,
+@@ -1201,6 +1241,9 @@ static void CreateYesNoMenuAtPos(const struct WindowTemplate *window, u8 fontId,
      AddTextPrinter(&printer, TEXT_SKIP_DRAW, NULL);
  
      InitMenuNormal(sYesNoWindowId, fontId, left, top, GetFontAttribute(fontId, FONTATTR_MAX_LETTER_HEIGHT), 2, initialCursorPos);
@@ -10009,7 +10188,7 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..546e738d1108e3962b4bda6e69dd5faa
  }
  
  static void UNUSED CreateYesNoMenuInTopLeft(const struct WindowTemplate *window, u8 fontId, u16 baseTileNum, u8 paletteNum)
-@@ -1211,6 +1246,15 @@ static void UNUSED CreateYesNoMenuInTopLeft(const struct WindowTemplate *window,
+@@ -1211,6 +1254,15 @@ static void UNUSED CreateYesNoMenuInTopLeft(const struct WindowTemplate *window,
  s8 Menu_ProcessInputNoWrapClearOnChoose(void)
  {
      s8 result = Menu_ProcessInputNoWrap();
@@ -10025,7 +10204,7 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..546e738d1108e3962b4bda6e69dd5faa
      if (result != MENU_NOTHING_CHOSEN)
          EraseYesNoWindow();
      return result;
-@@ -1218,8 +1262,20 @@ s8 Menu_ProcessInputNoWrapClearOnChoose(void)
+@@ -1218,8 +1270,20 @@ s8 Menu_ProcessInputNoWrapClearOnChoose(void)
  
  void EraseYesNoWindow(void)
  {
@@ -10046,7 +10225,22 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..546e738d1108e3962b4bda6e69dd5faa
  }
  
  static void PrintMenuActionGridText(u8 windowId, u8 fontId, u8 left, u8 top, u8 width, u8 height, u8 columns, u8 rows, const struct MenuAction *menuActions)
-@@ -1643,6 +1699,9 @@ void CreateYesNoMenu(const struct WindowTemplate *window, u16 baseTileNum, u8 pa
+@@ -1566,6 +1630,14 @@ u8 InitMenuInUpperLeftCorner(u8 windowId, u8 itemCount, u8 initialCursorPos, boo
+     sMenu.fontId = FONT_NORMAL;
+     sMenu.optionHeight = 16;
+     sMenu.APressMuted = APressMuted;
++#ifdef PLATFORM_3DS
++    // A list, not a grid: a grid's columns left from the menu before (the
++    // bag's 2x2 actions) would have the taps read in two columns
++    // (CtrMenu_EntryAt, CtrMenu_PostEntry): every odd entry missed.
++    sMenu.columns = 0;
++    sMenu.rows = 0;
++    sMenu.optionWidth = 0;
++#endif
+ 
+     pos = initialCursorPos;
+ 
+@@ -1643,6 +1715,9 @@ void CreateYesNoMenu(const struct WindowTemplate *window, u16 baseTileNum, u8 pa
  
      AddTextPrinter(&printer, TEXT_SKIP_DRAW, NULL);
      InitMenuInUpperLeftCornerNormal(sYesNoWindowId, 2, initialCursorPos);
@@ -10056,7 +10250,7 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..546e738d1108e3962b4bda6e69dd5faa
  }
  
  void PrintMenuGridTable(u8 windowId, u8 optionWidth, u8 columns, u8 rows, const struct MenuAction *menuActions)
-@@ -1783,11 +1842,24 @@ void *DecompressAndCopyTileDataToVram(u8 bgId, const void *src, u32 size, u16 of
+@@ -1783,11 +1858,24 @@ void *DecompressAndCopyTileDataToVram(u8 bgId, const void *src, u32 size, u16 of
      if (sTempTileDataBufferIdx < ARRAY_COUNT(sTempTileDataBuffer))
      {
          void *ptr = malloc_and_decompress(src, &sizeOut);
@@ -10081,7 +10275,7 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..546e738d1108e3962b4bda6e69dd5faa
              sTempTileDataBuffer[sTempTileDataBufferIdx++] = ptr;
          }
          return ptr;
-@@ -1799,13 +1871,26 @@ void DecompressAndLoadBgGfxUsingHeap(u8 bgId, const void *src, u32 size, u16 off
+@@ -1799,13 +1887,26 @@ void DecompressAndLoadBgGfxUsingHeap(u8 bgId, const void *src, u32 size, u16 off
  {
      u32 sizeOut;
      void *ptr = malloc_and_decompress(src, &sizeOut);
@@ -10108,7 +10302,7 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..546e738d1108e3962b4bda6e69dd5faa
      }
  }
  
-@@ -1821,18 +1906,67 @@ void task_free_buf_after_copying_tile_data_to_vram(u8 taskId)
+@@ -1821,18 +1922,67 @@ void task_free_buf_after_copying_tile_data_to_vram(u8 taskId)
  void *malloc_and_decompress(const void *src, u32 *size)
  {
      void *ptr;
@@ -10184,7 +10378,7 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..546e738d1108e3962b4bda6e69dd5faa
  }
  
  u16 copy_decompressed_tile_data_to_vram(u8 bgId, const void *src, u16 size, u16 offset, u8 mode)
-@@ -2097,7 +2231,7 @@ void ListMenuLoadStdPalAt(u8 palOffset, u8 palId)
+@@ -2097,7 +2247,7 @@ void ListMenuLoadStdPalAt(u8 palOffset, u8 palId)
  
  void BlitMenuInfoIcon(u8 windowId, u8 iconId, u16 x, u16 y)
  {
@@ -10193,7 +10387,7 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..546e738d1108e3962b4bda6e69dd5faa
  }
  
  void BufferSaveMenuText(u8 textId, u8 *dest, u8 color)
-@@ -2145,3 +2279,145 @@ void BufferSaveMenuText(u8 textId, u8 *dest, u8 color)
+@@ -2145,3 +2295,150 @@ void BufferSaveMenuText(u8 textId, u8 *dest, u8 color)
              break;
      }
  }
@@ -10259,9 +10453,11 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..546e738d1108e3962b4bda6e69dd5faa
 +// A tap on a game screen shown on the 3DS bottom screen (the bag), in pixels
 +// of that screen, for whatever waits for input there to take: a menu, a
 +// yes/no box, a message waiting to go on. A tap nothing took for half a
-+// second is dropped, so it does not act later on something else.
++// second is dropped, so it does not act later on something else. A tap on a
++// message (CtrMenu_PostAck) only goes on with a message: one left over when
++// the message has gone is dropped, not a B for the menu after it.
 +static struct {
-+    bool8 pending;
++    bool8 pending, ack;
 +    s16 x, y;
 +    u32 frame;
 +} sCtrTap;
@@ -10269,6 +10465,7 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..546e738d1108e3962b4bda6e69dd5faa
 +void CtrMenu_PostTap(s16 x, s16 y)
 +{
 +    sCtrTap.pending = TRUE;
++    sCtrTap.ack = FALSE;
 +    sCtrTap.x = x;
 +    sCtrTap.y = y;
 +    sCtrTap.frame = gMain.vblankCounter1;
@@ -10279,7 +10476,7 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..546e738d1108e3962b4bda6e69dd5faa
 +    if (!sCtrTap.pending)
 +        return FALSE;
 +    sCtrTap.pending = FALSE;
-+    if (gMain.vblankCounter1 - sCtrTap.frame > 30)
++    if (sCtrTap.ack || gMain.vblankCounter1 - sCtrTap.frame > 30)
 +        return FALSE;
 +    *x = sCtrTap.x;
 +    *y = sCtrTap.y;
@@ -10312,14 +10509,16 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..546e738d1108e3962b4bda6e69dd5faa
 +void CtrMenu_PostAck(void)
 +{
 +    CtrMenu_PostTap(-1, -1);
++    sCtrTap.ack = TRUE;
 +}
 +
 +// A message waiting for A or B: any tap goes on.
 +bool8 CtrMenu_TakeAck(void)
 +{
-+    s16 x, y;
-+
-+    return CtrMenu_TakeTap(&x, &y);
++    if (!sCtrTap.pending)
++        return FALSE;
++    sCtrTap.pending = FALSE;
++    return gMain.vblankCounter1 - sCtrTap.frame <= 30;
 +}
 +
 +// A yes/no box: YES or NO tapped is chosen, a tap away from it is B.
@@ -10456,7 +10655,7 @@ index 84f44be626d0c115dc9e06e45ca94cf1b4c3e6bd..d99ebf275b5aa7ea6f61c7e070fa63fb
      case 4:
          {
 diff --git a/src/mon_markings.c b/src/mon_markings.c
-index 1de8e413fd09bc2e8008c79ab21f93f4fd54b302..c27fadb273075a5a01c5910560897f7036bc0324 100644
+index 1de8e413fd09bc2e8008c79ab21f93f4fd54b302..504b5a832c1396e9f3182fa9e0225b1c41d83399 100644
 --- a/src/mon_markings.c
 +++ b/src/mon_markings.c
 @@ -9,6 +9,9 @@
@@ -10566,7 +10765,7 @@ index 1de8e413fd09bc2e8008c79ab21f93f4fd54b302..c27fadb273075a5a01c5910560897f70
 +    return TRUE;
 +}
 +
-+// Puts the cursor on a row (CtrPokenavMenu_SetCursor).
++// Puts the cursor on a row (NavNext, 3ds_bottom_ui.c).
 +void CtrMonMarkings_SetCursor(s8 cursor)
 +{
 +    if (sMenu != NULL && cursor >= 0 && cursor <= SELECTION_CANCEL)
@@ -11542,10 +11741,24 @@ index 09a4b91ebda42cf2be405742d77ef4412c31f7e2..07039d3b7dbcf5b9ad51a763474bb792
 diff --git a/src/party_menu.c b/src/party_menu.c
 old mode 100755
 new mode 100644
-index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803bb110d033
+index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..d6720e2e5c86b64f5fd2691f4d19dc009599e2d7
 --- a/src/party_menu.c
 +++ b/src/party_menu.c
-@@ -485,11 +485,49 @@ static bool8 SetUpFieldMove_Dive(void);
+@@ -341,6 +341,13 @@ static void Task_HandleSelectionMenuInput(u8);
+ static void CB2_ShowPokemonSummaryScreen(void);
+ static void UpdatePartyToBattleOrder(void);
+ static void CB2_ReturnToPartyMenuFromSummaryScreen(void);
++#ifdef PLATFORM_3DS
++// The bottom screen's dock may have chosen another screen to open instead.
++#define CTR_LEAVE_TO(cb) CtrBottom_LeaveTo(cb)
++MainCallback CtrBottom_LeaveTo(MainCallback field);
++#else
++#define CTR_LEAVE_TO(cb) (cb)
++#endif
+ static void SlidePartyMenuBoxOneStep(u8);
+ static void Task_SlideSelectedSlotsOffscreen(u8);
+ static void SwitchPartyMon(void);
+@@ -485,11 +492,52 @@ static bool8 SetUpFieldMove_Dive(void);
  #include "data/pokemon/tutor_learnsets.h"
  #include "data/party_menu.h"
  
@@ -11570,13 +11783,15 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
 +// every time the mon list takes input until the menu is gone (leaving).
 +static bool8 sCtrCloseAsked, sCtrLeaving;
 +// What the bottom screen's own view reads (CtrParty_GetView): the prompt
-+// shown, the message printed and whether it is still up, each box's
-+// description.
++// shown, the message printed (all of it, the view takes the page on show)
++// and whether it is still up, each box's description.
 +#include "3ds_game_views.h"
 +static bool8 sCtrMessageUp;
-+static u8 sCtrPrompt[CTR_VIEW_TEXT], sCtrMessage[CTR_VIEW_TEXT];
++static u8 sCtrPrompt[CTR_VIEW_TEXT], sCtrMessage[0x200];
++static const u8 *sCtrMessageSrc;
 +static u8 sCtrDesc[PARTY_SIZE];
-+static void CtrParty_CopyText(u8 *dst, const u8 *src);
++static void CtrParty_CopyText(u8 *dst, const u8 *src, u16 size);
++s16 CtrText_PrinterPage(u8 windowId, const u8 *str);
 +#else
 +#define PARTY_AB_NEW() JOY_NEW(A_BUTTON | B_BUTTON)
 +#endif
@@ -11590,12 +11805,13 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
 +    sCtrCloseAsked = sCtrLeaving = FALSE;
 +    sCtrMessageUp = FALSE;
 +    sCtrPrompt[0] = sCtrMessage[0] = EOS;
++    sCtrMessageSrc = NULL;
 +    memset(sCtrDesc, CTR_PARTY_DESC_NONE, sizeof(sCtrDesc));
 +#endif
      ResetPartyMenu();
      sPartyMenuInternal = Alloc(sizeof(struct PartyMenuInternal));
      if (sPartyMenuInternal == NULL)
-@@ -836,6 +874,9 @@ static void RenderPartyMenuBox(u8 slot)
+@@ -836,6 +884,9 @@ static void RenderPartyMenuBox(u8 slot)
      }
      else
      {
@@ -11605,7 +11821,7 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
          if (GetMonData(&gPlayerParty[slot], MON_DATA_SPECIES) == SPECIES_NONE)
          {
              DrawEmptySlot(sPartyMenuBoxes[slot].windowId);
-@@ -1198,8 +1239,19 @@ static bool8 PartyBoxPal_ParnterOrDisqualifiedInArena(u8 slot)
+@@ -1198,8 +1249,19 @@ static bool8 PartyBoxPal_ParnterOrDisqualifiedInArena(u8 slot)
  
  static void DrawCancelConfirmButtons(void)
  {
@@ -11625,7 +11841,16 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
      ScheduleBgCopyTilemapToVram(1);
  }
  
-@@ -1256,13 +1308,286 @@ u8 GetPartyMenuType(void)
+@@ -1238,7 +1300,7 @@ static void Task_ClosePartyMenuAndSetCB2(u8 taskId)
+         if (sPartyMenuInternal->exitCallback != NULL)
+             SetMainCallback2(sPartyMenuInternal->exitCallback);
+         else
+-            SetMainCallback2(gPartyMenu.exitCallback);
++            SetMainCallback2(CTR_LEAVE_TO(gPartyMenu.exitCallback));
+ 
+         ResetSpriteData();
+         FreePartyPointers();
+@@ -1256,13 +1318,330 @@ u8 GetPartyMenuType(void)
      return gPartyMenu.menuType;
  }
  
@@ -11735,8 +11960,8 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
 +}
 +
 +// A string as the bottom screen shows it: its placeholders expanded, cut to
-+// the view's room.
-+static void CtrParty_CopyText(u8 *dst, const u8 *src)
++// size.
++static void CtrParty_CopyText(u8 *dst, const u8 *src, u16 size)
 +{
 +    static u8 sExpanded[0x200];
 +    u16 i;
@@ -11746,9 +11971,45 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
 +        StringExpandPlaceholders(sExpanded, src);
 +        src = sExpanded;
 +    }
-+    for (i = 0; i < CTR_VIEW_TEXT - 1 && src[i] != EOS; i++)
++    for (i = 0; i < size - 1 && src[i] != EOS; i++)
 +        dst[i] = src[i];
 +    dst[i] = EOS;
++}
++
++// The page of the message the window shows (the last once it is printed),
++// as the view's text: the bottom screen has room for a page, and the last
++// one is the question over a yes/no.
++static void CtrParty_MessagePage(u8 *dst)
++{
++    s16 page = CtrText_PrinterPage(WIN_MSG, sCtrMessageSrc);
++    u16 i, j, start = 0, size = sizeof(sCtrMessage);
++
++    for (i = 0; i < size && sCtrMessage[i] != EOS && page != 0; i++)
++    {
++        if (sCtrMessage[i] == EXT_CTRL_CODE_BEGIN && i + 1 < size && sCtrMessage[i + 1] != EOS)
++        {
++            i += GetExtCtrlCodeLength(sCtrMessage[i + 1]);
++        }
++        else if (sCtrMessage[i] == CHAR_PROMPT_CLEAR && i + 1 < size && sCtrMessage[i + 1] != EOS)
++        {
++            start = i + 1;
++            page--;
++        }
++    }
++    // Up to the next \p, a control code only whole.
++    for (i = start, j = 0; i < size && sCtrMessage[i] != EOS && sCtrMessage[i] != CHAR_PROMPT_CLEAR;)
++    {
++        u16 len = 1;
++
++        if (sCtrMessage[i] == EXT_CTRL_CODE_BEGIN && i + 1 < size && sCtrMessage[i + 1] != EOS)
++            len += GetExtCtrlCodeLength(sCtrMessage[i + 1]);
++        if (j + len > CTR_VIEW_TEXT - 1 || i + len > size)
++            break;
++        memcpy(&dst[j], &sCtrMessage[i], len);
++        i += len;
++        j += len;
++    }
++    dst[j] = EOS;
 +}
 +
 +static void Task_HandleSelectionMenuInput(u8 taskId);
@@ -11759,6 +12020,15 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
 +// going out): the bottom screen keeps what it showed. A state NONE is one
 +// it does not draw: a window it has no view of (a level up's stats), a
 +// menu other than the field's.
++// The party menu in the bottom screen's window, drawn natively or not: the
++// field's, and a battle's own (SWITCH, an item used on a mon); a contest's,
++// a facility's or a trade's has the whole screen.
++bool8 CtrParty_InWindow(void)
++{
++    return gMain.inBattle ? gPartyMenu.menuType == PARTY_MENU_TYPE_IN_BATTLE
++                          : gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD;
++}
++
 +bool8 CtrParty_GetView(struct CtrPartyView *view)
 +{
 +    u8 i;
@@ -11767,7 +12037,7 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
 +    view->moving = view->chosen = -1;
 +    if (sPartyMenuInternal == NULL)
 +        return FALSE;
-+    if (gMain.inBattle || gPartyMenu.menuType != PARTY_MENU_TYPE_FIELD || sPartyMenuInternal->chooseHalf)
++    if (!CtrParty_InWindow() || sPartyMenuInternal->chooseHalf)
 +        return TRUE;
 +    view->cursor = *GetCurrentPartySlotPtr();
 +    if (gPartyMenu.action == PARTY_ACTION_SWITCH || gPartyMenu.action == PARTY_ACTION_SOFTBOILED)
@@ -11794,7 +12064,7 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
 +    view->yesNo = CtrMenu_YesNoOpen();
 +    view->cancelEntry = -1;
 +    if (sCtrMessageUp)
-+        memcpy(view->msg, sCtrMessage, sizeof(view->msg));
++        CtrParty_MessagePage(view->msg);
 +    if (sPartyMenuInternal->windowId[1] != WINDOW_NONE)
 +        memcpy(view->prompt, sCtrPrompt, sizeof(view->prompt));
 +    // A short message the game puts in the prompt's box and waits on (a
@@ -11885,8 +12155,7 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
 +// bottom screen draws it from the start.
 +bool8 CtrParty_Building(void)
 +{
-+    return gMain.callback2 == CB2_InitPartyMenu && sPartyMenuInternal != NULL && !gMain.inBattle
-+        && gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD;
++    return gMain.callback2 == CB2_InitPartyMenu && sPartyMenuInternal != NULL && CtrParty_InWindow();
 +}
 +
 +const u8 *CtrParty_DescText(u8 desc)
@@ -11912,7 +12181,7 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
          {
          case A_BUTTON: // Selected mon
              HandleChooseMonSelection(taskId, slotPtr);
-@@ -1721,6 +2046,9 @@ static void Task_PrintAndWaitForText(u8 taskId)
+@@ -1721,6 +2100,9 @@ static void Task_PrintAndWaitForText(u8 taskId)
          {
              ClearStdWindowAndFrameToTransparent(WIN_MSG, FALSE);
              ClearWindowTilemap(WIN_MSG);
@@ -11922,7 +12191,7 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
          }
          DestroyTask(taskId);
      }
-@@ -1748,6 +2076,9 @@ static void Task_ReturnToChooseMonAfterText(u8 taskId)
+@@ -1748,6 +2130,9 @@ static void Task_ReturnToChooseMonAfterText(u8 taskId)
      {
          ClearStdWindowAndFrameToTransparent(WIN_MSG, FALSE);
          ClearWindowTilemap(WIN_MSG);
@@ -11932,7 +12201,7 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
          if (MenuHelpers_IsLinkActive() == TRUE)
          {
              gTasks[taskId].func = Task_WaitForLinkAndReturnToChooseMon;
-@@ -2152,6 +2483,15 @@ static void BlitBitmapToPartyWindow(u8 windowId, const u8 *b, u8 c, u8 x, u8 y,
+@@ -2152,6 +2537,15 @@ static void BlitBitmapToPartyWindow(u8 windowId, const u8 *b, u8 c, u8 x, u8 y,
      u8 *pixels = AllocZeroed(height * width * 32);
      u8 i, j;
  
@@ -11948,7 +12217,7 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
      if (pixels != NULL)
      {
          for (i = 0; i < height; i++)
-@@ -2435,6 +2775,10 @@ static void DisplayPartyPokemonHPBar(u16 hp, u16 maxhp, struct PartyMenuBox *men
+@@ -2435,6 +2829,10 @@ static void DisplayPartyPokemonHPBar(u16 hp, u16 maxhp, struct PartyMenuBox *men
  
  static void DisplayPartyPokemonDescriptionText(u8 stringID, struct PartyMenuBox *menuBox, u8 c)
  {
@@ -11959,28 +12228,29 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
      if (c)
      {
          int width = ((menuBox->infoRects->descTextLeft % 8) + menuBox->infoRects->descTextWidth + 7) / 8;
-@@ -2497,6 +2841,9 @@ void DisplayPartyMenuStdMessage(u32 stringId)
+@@ -2497,6 +2895,9 @@ void DisplayPartyMenuStdMessage(u32 stringId)
          }
          DrawStdFrameWithCustomTileAndPalette(*windowPtr, FALSE, 0x4F, 13);
          StringExpandPlaceholders(gStringVar4, sActionStringTable[stringId]);
 +#ifdef PLATFORM_3DS
-+        CtrParty_CopyText(sCtrPrompt, gStringVar4);
++        CtrParty_CopyText(sCtrPrompt, gStringVar4, sizeof(sCtrPrompt));
 +#endif
          AddTextPrinterParameterized(*windowPtr, FONT_NORMAL, gStringVar4, 0, 1, 0, 0);
          ScheduleBgCopyTilemapToVram(2);
      }
-@@ -2565,6 +2912,10 @@ static u8 DisplaySelectionWindow(u8 windowType)
+@@ -2565,6 +2966,11 @@ static u8 DisplaySelectionWindow(u8 windowType)
  
  static void PrintMessage(const u8 *text)
  {
 +#ifdef PLATFORM_3DS
 +    sCtrMessageUp = TRUE;
-+    CtrParty_CopyText(sCtrMessage, text);
++    sCtrMessageSrc = text;
++    CtrParty_CopyText(sCtrMessage, text, sizeof(sCtrMessage));
 +#endif
      DrawStdFrameWithCustomTileAndPalette(WIN_MSG, FALSE, 0x4F, 13);
      gTextFlags.canABSpeedUpPrint = TRUE;
      AddTextPrinterParameterized2(WIN_MSG, FONT_NORMAL, text, GetPlayerTextSpeedDelay(), 0, TEXT_COLOR_DARK_GRAY, TEXT_COLOR_WHITE, TEXT_COLOR_LIGHT_GRAY);
-@@ -2744,10 +3095,16 @@ static void Task_HandleSelectionMenuInput(u8 taskId)
+@@ -2744,10 +3150,25 @@ static void Task_HandleSelectionMenuInput(u8 taskId)
          s8 input;
          s16 *data = gTasks[taskId].data;
  
@@ -11989,6 +12259,15 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
 -        else
 -            input = ProcessMenuInput_other();
 +#ifdef PLATFORM_3DS
++        // Left for another screen from the dock with a mon's menu up: the
++        // party menu closes from here (its windows go with it), not back to
++        // the list first.
++        if (sCtrCloseAsked && sCtrLeaving)
++        {
++            sCtrCloseAsked = FALSE;
++            Task_ClosePartyMenu(taskId);
++            return;
++        }
 +        input = CtrParty_MenuTouch();
 +        if (input == MENU_NOTHING_CHOSEN)
 +#endif
@@ -12001,7 +12280,21 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
  
          data[0] = Menu_GetCursorPos();
          switch (input)
-@@ -3837,7 +4194,7 @@ static u16 GetFieldMoveMonSpecies(void)
+@@ -3750,7 +4171,13 @@ static void CursorCb_FieldMove(u8 taskId)
+                 sPartyMenuInternal->data[0] = fieldMove;
+                 break;
+             case FIELD_MOVE_FLY:
++#ifdef PLATFORM_3DS
++                // the bottom screen's map is the Fly map (3ds_bottom_ui.c)
++                CtrBottom_OpenFlyMap(gPartyMenu.slotId, FALSE);
++                gPartyMenu.exitCallback = CB2_ReturnToField;
++#else
+                 gPartyMenu.exitCallback = CB2_OpenFlyMap;
++#endif
+                 Task_ClosePartyMenu(taskId);
+                 break;
+             default:
+@@ -3837,7 +4264,7 @@ static u16 GetFieldMoveMonSpecies(void)
  
  static void Task_CancelAfterAorBPress(u8 taskId)
  {
@@ -12010,7 +12303,7 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
          CursorCb_Cancel1(taskId);
  }
  
-@@ -4590,7 +4947,14 @@ static void ShowMoveSelectWindow(u8 slot)
+@@ -4590,7 +5017,14 @@ static void ShowMoveSelectWindow(u8 slot)
  
  static void Task_HandleWhichMoveInput(u8 taskId)
  {
@@ -12025,7 +12318,7 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
  
      if (input != MENU_NOTHING_CHOSEN)
      {
-@@ -4797,7 +5161,7 @@ static void Task_DoLearnedMoveFanfareAfterText(u8 taskId)
+@@ -4797,7 +5231,7 @@ static void Task_DoLearnedMoveFanfareAfterText(u8 taskId)
  
  static void Task_LearnNextMoveOrClosePartyMenu(u8 taskId)
  {
@@ -12034,7 +12327,7 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
      {
          if (gPartyMenu.learnMoveState == 1)
          {
-@@ -5008,7 +5372,7 @@ static void UpdateMonDisplayInfoAfterRareCandy(u8 slot, struct Pokemon *mon)
+@@ -5008,7 +5442,7 @@ static void UpdateMonDisplayInfoAfterRareCandy(u8 slot, struct Pokemon *mon)
  
  static void Task_DisplayLevelUpStatsPg1(u8 taskId)
  {
@@ -12043,7 +12336,7 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
      {
          PlaySE(SE_SELECT);
          DisplayLevelUpStatsPg1(taskId);
-@@ -5018,7 +5382,7 @@ static void Task_DisplayLevelUpStatsPg1(u8 taskId)
+@@ -5018,7 +5452,7 @@ static void Task_DisplayLevelUpStatsPg1(u8 taskId)
  
  static void Task_DisplayLevelUpStatsPg2(u8 taskId)
  {
@@ -12052,7 +12345,7 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
      {
          PlaySE(SE_SELECT);
          DisplayLevelUpStatsPg2(taskId);
-@@ -5049,7 +5413,7 @@ static void Task_TryLearnNewMoves(u8 taskId)
+@@ -5049,7 +5483,7 @@ static void Task_TryLearnNewMoves(u8 taskId)
  {
      u16 learnMove;
  
@@ -12061,7 +12354,7 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
      {
          RemoveLevelUpStatsWindow();
          learnMove = MonTryLearningNewMove(&gPlayerParty[gPartyMenu.slotId], TRUE);
-@@ -5686,7 +6050,7 @@ static void Task_ValidateChosenHalfParty(u8 taskId)
+@@ -5686,7 +6120,7 @@ static void Task_ValidateChosenHalfParty(u8 taskId)
  
  static void Task_ContinueChoosingHalfParty(u8 taskId)
  {
@@ -12070,6 +12363,25 @@ index 7cde1a018c33c86da6ede1b0e7d3259869774cb0..c784b98fef09f9eb5cbc7214d775803b
      {
          PlaySE(SE_SELECT);
          DisplayPartyMenuStdMessage(PARTY_MSG_CHOOSE_MON);
+@@ -6428,3 +6862,18 @@ void IsLastMonThatKnowsSurf(void)
+             gSpecialVar_Result = TRUE;
+     }
+ }
++
++#ifdef PORT_BRIDGE
++/*
++ * FLY picked on the bottom screen's map (3ds_bottom_ui.c), with nothing under
++ * way on the field: the destination CB_ExitFlyMap sets, then the flight as
++ * FieldCallback_UseFly starts it - from the field as it is, nothing to fade
++ * back in from. The player is held from here on.
++ */
++void CtrParty_Fly(u8 slot, u16 mapSecId, u8 posWithinMapSec)
++{
++    gPartyMenu.slotId = slot;
++    CtrRegionMap_SetFlyDestination(mapSecId, posWithinMapSec);
++    CtrFly_Start();
++}
++#endif
 diff --git a/src/player_pc.c b/src/player_pc.c
 index 43239582ce6cb1653a489f55cf9048c0eb9bc018..50f6fd4e7a2b60efd5f5b2878bc208db5197fd75 100644
 --- a/src/player_pc.c
@@ -12188,7 +12500,7 @@ index 8ecf7f6e1dc7c037df41c0f7d277fbd4be55e5b7..f3d1fa446ec2efadd88ab25b78ae2ee1
      u16 scrollOffset;
  };
 diff --git a/src/pokedex.c b/src/pokedex.c
-index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d3d6e5bd5 100644
+index 96eedafad5662896c619ab5feac632fe93d257d0..70c7db640e25a3c7293862f9cfd0a8f4c7e062e9 100644
 --- a/src/pokedex.c
 +++ b/src/pokedex.c
 @@ -28,6 +28,12 @@
@@ -12204,7 +12516,21 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
  
  enum
  {
-@@ -308,6 +314,56 @@ static void PrintSelectorArrow(u32);
+@@ -213,6 +219,13 @@ static void Task_OpenInfoScreenAfterMonMovement(u8);
+ static void Task_WaitForExitInfoScreen(u8);
+ static void Task_WaitForExitSearch(u8);
+ static void Task_ClosePokedex(u8);
++#ifdef PLATFORM_3DS
++// The bottom screen's dock may have chosen another screen to open instead.
++#define CTR_LEAVE_TO(cb) CtrBottom_LeaveTo(cb)
++MainCallback CtrBottom_LeaveTo(MainCallback field);
++#else
++#define CTR_LEAVE_TO(cb) (cb)
++#endif
+ static void Task_OpenSearchResults(u8);
+ static void Task_HandleSearchResultsInput(u8);
+ static void Task_WaitForSearchResultsScroll(u8);
+@@ -308,6 +321,59 @@ static void PrintSelectorArrow(u32);
  static void PrintSearchParameterTitle(u32, const u8 *);
  static void ClearSearchParameterBoxText(void);
  
@@ -12250,6 +12576,9 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
 +static u8 CtrDex_SearchMenuAction(u8 taskId);
 +static u8 CtrDex_SearchParamAction(u8 taskId);
 +static u8 CtrDex_AnyTapAction(void);
++static bool8 CtrDex_Leaving(void);
++static void Task_CtrLeaveInfoScreen(u8 taskId);
++static void Task_CtrCloseFromInfoScreen(u8 taskId);
 +// Where PrintInfoScreenText puts its text instead of printing it, once
 +// (CtrPokedex_GetView's height and weight, as the entry prints them).
 +static u8 *sCtrCapture;
@@ -12261,7 +12590,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
  // const rom data
  #include "data/pokemon/pokedex_orders.h"
  
-@@ -1614,6 +1670,9 @@ void CB2_OpenPokedex(void)
+@@ -1614,6 +1680,9 @@ void CB2_OpenPokedex(void)
      case 2:
          sPokedexView = AllocZeroed(sizeof(struct PokedexView));
          ResetPokedexView(sPokedexView);
@@ -12271,7 +12600,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
          CreateTask(Task_OpenPokedexMainPage, 0);
          sPokedexView->dexMode = gSaveBlock2Ptr->pokedex.mode;
          if (!IsNationalPokedexEnabled())
-@@ -1672,7 +1731,11 @@ static void Task_HandlePokedexInput(u8 taskId)
+@@ -1672,7 +1741,11 @@ static void Task_HandlePokedexInput(u8 taskId)
      }
      else
      {
@@ -12284,7 +12613,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
          {
              UpdateSelectedMonSpriteId();
              BeginNormalPaletteFade(~(1 << (gSprites[sPokedexView->selectedMonSpriteId].oam.paletteNum + 16)), 0, 0, 0x10, RGB_BLACK);
-@@ -1681,7 +1744,7 @@ static void Task_HandlePokedexInput(u8 taskId)
+@@ -1681,7 +1754,7 @@ static void Task_HandlePokedexInput(u8 taskId)
              PlaySE(SE_PIN);
              FreeWindowAndBgBuffers();
          }
@@ -12293,7 +12622,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
          {
              sPokedexView->menuY = 0;
              sPokedexView->menuIsOpen = TRUE;
-@@ -1689,7 +1752,7 @@ static void Task_HandlePokedexInput(u8 taskId)
+@@ -1689,7 +1762,7 @@ static void Task_HandlePokedexInput(u8 taskId)
              gTasks[taskId].func = Task_HandlePokedexStartMenuInput;
              PlaySE(SE_SELECT);
          }
@@ -12302,7 +12631,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
          {
              PlaySE(SE_SELECT);
              BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 0x10, RGB_BLACK);
-@@ -1703,7 +1766,7 @@ static void Task_HandlePokedexInput(u8 taskId)
+@@ -1703,7 +1776,7 @@ static void Task_HandlePokedexInput(u8 taskId)
              PlaySE(SE_PC_LOGIN);
              FreeWindowAndBgBuffers();
          }
@@ -12311,7 +12640,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
          {
              BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 0x10, RGB_BLACK);
              gTasks[taskId].func = Task_ClosePokedex;
-@@ -1736,7 +1799,10 @@ static void Task_HandlePokedexStartMenuInput(u8 taskId)
+@@ -1736,7 +1809,10 @@ static void Task_HandlePokedexStartMenuInput(u8 taskId)
      }
      else
      {
@@ -12323,7 +12652,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
          {
              switch (sPokedexView->menuCursorPos)
              {
-@@ -1767,7 +1833,7 @@ static void Task_HandlePokedexStartMenuInput(u8 taskId)
+@@ -1767,7 +1843,7 @@ static void Task_HandlePokedexStartMenuInput(u8 taskId)
          }
  
          //Exit menu when Start or B is pressed
@@ -12332,7 +12661,28 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
          {
              sPokedexView->menuIsOpen = FALSE;
              gTasks[taskId].func = Task_HandlePokedexInput;
-@@ -1875,7 +1941,11 @@ static void Task_HandleSearchResultsInput(u8 taskId)
+@@ -1811,6 +1887,11 @@ static void Task_WaitForExitInfoScreen(u8 taskId)
+         sLastSelectedPokemon = sPokedexView->selectedPokemon;
+         sPokeBallRotation = sPokedexView->pokeBallRotation;
+         gTasks[taskId].func = Task_OpenPokedexMainPage;
++#ifdef PLATFORM_3DS
++        // Left for another screen: closed from here, the list never shown.
++        if (CtrDex_Leaving())
++            gTasks[taskId].func = Task_CtrCloseFromInfoScreen;
++#endif
+     }
+ }
+ 
+@@ -1852,7 +1933,7 @@ static void Task_ClosePokedex(u8 taskId)
+         ClearMonSprites();
+         FreeWindowAndBgBuffers();
+         DestroyTask(taskId);
+-        SetMainCallback2(CB2_ReturnToFieldWithOpenMenu);
++        SetMainCallback2(CTR_LEAVE_TO(CB2_ReturnToFieldWithOpenMenu));
+         m4aMPlayVolumeControl(&gMPlayInfo_BGM, TRACKS_ALL, 0x100);
+         Free(sPokedexView);
+     }
+@@ -1875,7 +1956,11 @@ static void Task_HandleSearchResultsInput(u8 taskId)
      }
      else
      {
@@ -12345,7 +12695,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
          {
              u32 a;
  
-@@ -1887,7 +1957,7 @@ static void Task_HandleSearchResultsInput(u8 taskId)
+@@ -1887,7 +1972,7 @@ static void Task_HandleSearchResultsInput(u8 taskId)
              PlaySE(SE_PIN);
              FreeWindowAndBgBuffers();
          }
@@ -12354,7 +12704,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
          {
              sPokedexView->menuY = 0;
              sPokedexView->menuIsOpen = TRUE;
-@@ -1895,7 +1965,7 @@ static void Task_HandleSearchResultsInput(u8 taskId)
+@@ -1895,7 +1980,7 @@ static void Task_HandleSearchResultsInput(u8 taskId)
              gTasks[taskId].func = Task_HandleSearchResultsStartMenuInput;
              PlaySE(SE_SELECT);
          }
@@ -12363,7 +12713,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
          {
              BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 0x10, RGB_BLACK);
              gTasks[taskId].tLoadScreenTaskId = LoadSearchMenu();
-@@ -1904,7 +1974,7 @@ static void Task_HandleSearchResultsInput(u8 taskId)
+@@ -1904,7 +1989,7 @@ static void Task_HandleSearchResultsInput(u8 taskId)
              PlaySE(SE_PC_LOGIN);
              FreeWindowAndBgBuffers();
          }
@@ -12372,7 +12722,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
          {
              BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 0x10, RGB_BLACK);
              gTasks[taskId].func = Task_ReturnToPokedexFromSearchResults;
-@@ -1936,7 +2006,10 @@ static void Task_HandleSearchResultsStartMenuInput(u8 taskId)
+@@ -1936,7 +2021,10 @@ static void Task_HandleSearchResultsStartMenuInput(u8 taskId)
      }
      else
      {
@@ -12384,7 +12734,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
          {
              switch (sPokedexView->menuCursorPos)
              {
-@@ -1972,7 +2045,7 @@ static void Task_HandleSearchResultsStartMenuInput(u8 taskId)
+@@ -1972,7 +2060,7 @@ static void Task_HandleSearchResultsStartMenuInput(u8 taskId)
          }
  
          //Exit menu when Start or B is pressed
@@ -12393,7 +12743,33 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
          {
              sPokedexView->menuIsOpen = FALSE;
              gTasks[taskId].func = Task_HandleSearchResultsInput;
-@@ -2147,11 +2220,11 @@ static bool8 LoadPokedexListPage(u8 page)
+@@ -2014,6 +2102,10 @@ static void Task_WaitForExitSearchResultsInfoScreen(u8 taskId)
+     {
+         // Exiting, back to search results
+         gTasks[taskId].func = Task_OpenSearchResults;
++#ifdef PLATFORM_3DS
++        if (CtrDex_Leaving())
++            gTasks[taskId].func = Task_CtrCloseFromInfoScreen;
++#endif
+     }
+ }
+ 
+@@ -2021,6 +2113,14 @@ static void Task_ReturnToPokedexFromSearchResults(u8 taskId)
+ {
+     if (!gPaletteFade.active)
+     {
++#ifdef PLATFORM_3DS
++        // Left for another screen: closed from the results, not the list.
++        if (CtrDex_Leaving())
++        {
++            gTasks[taskId].func = Task_ClosePokedexFromSearchResultsStartMenu;
++            return;
++        }
++#endif
+         sPokedexView->pokeBallRotation = sPokedexView->pokeBallRotationBackup;
+         sPokedexView->selectedPokemon = sPokedexView->selectedPokemonBackup;
+         sPokedexView->dexMode = sPokedexView->dexModeBackup;
+@@ -2147,11 +2247,11 @@ static bool8 LoadPokedexListPage(u8 page)
  static void LoadPokedexBgPalette(bool8 isSearchResults)
  {
      if (isSearchResults == TRUE)
@@ -12408,7 +12784,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
      LoadPalette(GetOverworldTextboxPalettePtr(), BG_PLTT_ID(15), PLTT_SIZE_4BPP);
  }
  
-@@ -2596,7 +2669,11 @@ static u16 TryDoPokedexScroll(u16 selectedMon, u16 ignored)
+@@ -2596,7 +2696,11 @@ static u16 TryDoPokedexScroll(u16 selectedMon, u16 ignored)
      u16 startingPos;
      u8 scrollDir = 0;
  
@@ -12420,7 +12796,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
      {
          scrollDir = 1;
          selectedMon = GetNextPosition(1, selectedMon, 0, sPokedexView->pokemonListCount - 1);
-@@ -2604,7 +2681,11 @@ static u16 TryDoPokedexScroll(u16 selectedMon, u16 ignored)
+@@ -2604,7 +2708,11 @@ static u16 TryDoPokedexScroll(u16 selectedMon, u16 ignored)
          CreateMonListEntry(1, selectedMon, ignored);
          PlaySE(SE_DEX_SCROLL);
      }
@@ -12432,7 +12808,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
      {
          scrollDir = 2;
          selectedMon = GetNextPosition(0, selectedMon, 0, sPokedexView->pokemonListCount - 1);
-@@ -2662,7 +2743,11 @@ static void UpdateSelectedMonSpriteId(void)
+@@ -2662,7 +2770,11 @@ static void UpdateSelectedMonSpriteId(void)
      {
          u16 spriteId = sPokedexView->monSpriteIds[i];
  
@@ -12444,7 +12820,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
              sPokedexView->selectedMonSpriteId = spriteId;
      }
  }
-@@ -2672,7 +2757,11 @@ static bool8 TryDoInfoScreenScroll(void)
+@@ -2672,7 +2784,11 @@ static bool8 TryDoInfoScreenScroll(void)
      u16 nextPokemon;
      u16 selectedPokemon = sPokedexView->selectedPokemon;
  
@@ -12456,7 +12832,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
      {
          nextPokemon = selectedPokemon;
          while (nextPokemon != 0)
-@@ -2697,7 +2786,11 @@ static bool8 TryDoInfoScreenScroll(void)
+@@ -2697,7 +2813,11 @@ static bool8 TryDoInfoScreenScroll(void)
              return TRUE;
          }
      }
@@ -12468,7 +12844,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
      {
          nextPokemon = selectedPokemon;
          while (nextPokemon < sPokedexView->pokemonListCount - 1)
-@@ -3076,7 +3169,7 @@ static void SpriteCB_Scrollbar(struct Sprite *sprite)
+@@ -3076,7 +3196,7 @@ static void SpriteCB_Scrollbar(struct Sprite *sprite)
      if (sPokedexView->currentPage != PAGE_MAIN && sPokedexView->currentPage != PAGE_SEARCH_RESULTS)
          DestroySprite(sprite);
      else
@@ -12477,7 +12853,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
  }
  
  static void SpriteCB_ScrollArrow(struct Sprite *sprite)
-@@ -3176,6 +3269,18 @@ static void PrintInfoScreenText(const u8 *str, u8 left, u8 top)
+@@ -3176,6 +3296,18 @@ static void PrintInfoScreenText(const u8 *str, u8 left, u8 top)
      color[1] = TEXT_DYNAMIC_COLOR_6;
      color[2] = TEXT_COLOR_LIGHT_GRAY;
  
@@ -12496,7 +12872,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
      AddTextPrinterParameterized4(0, FONT_NORMAL, left, top, 0, 0, color, TEXT_SKIP_DRAW, str);
  }
  
-@@ -3370,14 +3475,17 @@ static void Task_HandleInfoScreenInput(u8 taskId)
+@@ -3370,14 +3502,17 @@ static void Task_HandleInfoScreenInput(u8 taskId)
          PlaySE(SE_DEX_SCROLL);
          return;
      }
@@ -12516,7 +12892,67 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
      {
          switch (sPokedexView->selectedScreen)
          {
-@@ -3527,6 +3635,11 @@ static void Task_SwitchScreensFromAreaScreen(u8 taskId)
+@@ -3474,6 +3609,45 @@ static void Task_ExitInfoScreen(u8 taskId)
+     }
+ }
+ 
++#ifdef PLATFORM_3DS
++// The bottom screen's dock left the Pokédex for another screen while one of
++// the entry's pages was up (CtrPokedex_Close): AREA, CRY or SIZE, having
++// freed its own, ends the info screen as INFO's B does, not going back to
++// INFO first.
++static void Task_CtrLeaveInfoScreen(u8 taskId)
++{
++    FreeInfoScreenWindowAndBgBuffers();
++    DestroyTask(taskId);
++}
++
++// Then the Pokédex closes as from the list (Task_ClosePokedex), the list not
++// loaded again: its buffers went with the info screen's (FreeWindowAndBgBuffers
++// would free them twice), and its mon sprites freed themselves as the page
++// changed - the one chosen went with the entry, so ClearMonSprites, which
++// still has its id, is not called either.
++static void Task_CtrCloseFromInfoScreen(u8 taskId)
++{
++    if (!gPaletteFade.active)
++    {
++        // From the search results, the list's own order, as
++        // Task_ClosePokedexFromSearchResultsStartMenu keeps it.
++        if (sPokedexView->isSearchResults)
++        {
++            sPokedexView->dexMode = sPokedexView->dexModeBackup;
++            sPokedexView->dexOrder = sPokedexView->dexOrderBackup;
++        }
++        gSaveBlock2Ptr->pokedex.mode = sPokedexView->dexMode;
++        if (!IsNationalPokedexEnabled())
++            gSaveBlock2Ptr->pokedex.mode = DEX_MODE_HOENN;
++        gSaveBlock2Ptr->pokedex.order = sPokedexView->dexOrder;
++        DestroyTask(taskId);
++        SetMainCallback2(CTR_LEAVE_TO(CB2_ReturnToFieldWithOpenMenu));
++        m4aMPlayVolumeControl(&gMPlayInfo_BGM, TRACKS_ALL, 0x100);
++        Free(sPokedexView);
++    }
++}
++#endif
++
+ static void Task_LoadAreaScreen(u8 taskId)
+ {
+     switch (gMain.state)
+@@ -3518,6 +3692,13 @@ static void Task_SwitchScreensFromAreaScreen(u8 taskId)
+ {
+     if (!gPaletteFade.active)
+     {
++#ifdef PLATFORM_3DS
++        if (sPokedexView->screenSwitchState == 1 && CtrDex_Leaving())
++        {
++            gTasks[taskId].func = Task_CtrLeaveInfoScreen;
++            return;
++        }
++#endif
+         switch (sPokedexView->screenSwitchState)
+         {
+         case 1:
+@@ -3527,6 +3708,11 @@ static void Task_SwitchScreensFromAreaScreen(u8 taskId)
          case 2:
              gTasks[taskId].func = Task_LoadCryScreen;
              break;
@@ -12528,7 +12964,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
          }
      }
  }
-@@ -3644,7 +3757,10 @@ static void Task_HandleCryScreenInput(u8 taskId)
+@@ -3644,7 +3830,10 @@ static void Task_HandleCryScreenInput(u8 taskId)
      else
          LoadPlayArrowPalette(FALSE);
  
@@ -12540,7 +12976,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
      {
          LoadPlayArrowPalette(TRUE);
          CryScreenPlayButton(NationalPokedexNumToSpecies(sPokedexListItem->dexNum));
-@@ -3652,7 +3768,7 @@ static void Task_HandleCryScreenInput(u8 taskId)
+@@ -3652,7 +3841,7 @@ static void Task_HandleCryScreenInput(u8 taskId)
      }
      else if (!gPaletteFade.active)
      {
@@ -12549,7 +12985,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
          {
              BeginNormalPaletteFade(PALETTES_ALL & ~(0x14), 0, 0, 0x10, RGB_BLACK);
              m4aMPlayContinue(&gMPlayInfo_BGM);
-@@ -3661,7 +3777,7 @@ static void Task_HandleCryScreenInput(u8 taskId)
+@@ -3661,7 +3850,7 @@ static void Task_HandleCryScreenInput(u8 taskId)
              PlaySE(SE_PC_OFF);
              return;
          }
@@ -12558,7 +12994,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
           || (JOY_NEW(L_BUTTON) && gSaveBlock2Ptr->optionsButtonMode == OPTIONS_BUTTON_MODE_LR))
          {
              BeginNormalPaletteFade(PALETTES_ALL & ~(0x14), 0, 0, 0x10, RGB_BLACK);
-@@ -3671,7 +3787,7 @@ static void Task_HandleCryScreenInput(u8 taskId)
+@@ -3671,7 +3860,7 @@ static void Task_HandleCryScreenInput(u8 taskId)
              PlaySE(SE_DEX_PAGE);
              return;
          }
@@ -12567,7 +13003,21 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
           || (JOY_NEW(R_BUTTON) && gSaveBlock2Ptr->optionsButtonMode == OPTIONS_BUTTON_MODE_LR))
          {
              if (!sPokedexListItem->owned)
-@@ -3824,14 +3940,17 @@ static void Task_LoadSizeScreen(u8 taskId)
+@@ -3697,6 +3886,13 @@ static void Task_SwitchScreensFromCryScreen(u8 taskId)
+     {
+         FreeCryScreen();
+         FreeAndDestroyMonPicSprite(gTasks[taskId].tMonSpriteId);
++#ifdef PLATFORM_3DS
++        if (sPokedexView->screenSwitchState == 1 && CtrDex_Leaving())
++        {
++            gTasks[taskId].func = Task_CtrLeaveInfoScreen;
++            return;
++        }
++#endif
+         switch (sPokedexView->screenSwitchState)
+         {
+         default:
+@@ -3824,14 +4020,17 @@ static void Task_LoadSizeScreen(u8 taskId)
  
  static void Task_HandleSizeScreenInput(u8 taskId)
  {
@@ -12587,7 +13037,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
       || (JOY_NEW(L_BUTTON) && gSaveBlock2Ptr->optionsButtonMode == OPTIONS_BUTTON_MODE_LR))
      {
          BeginNormalPaletteFade(PALETTES_ALL & ~(0x14), 0, 0, 0x10, RGB_BLACK);
-@@ -3839,6 +3958,15 @@ static void Task_HandleSizeScreenInput(u8 taskId)
+@@ -3839,6 +4038,15 @@ static void Task_HandleSizeScreenInput(u8 taskId)
          gTasks[taskId].func = Task_SwitchScreensFromSizeScreen;
          PlaySE(SE_DEX_PAGE);
      }
@@ -12603,7 +13053,21 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
  }
  
  static void Task_SwitchScreensFromSizeScreen(u8 taskId)
-@@ -3856,6 +3984,11 @@ static void Task_SwitchScreensFromSizeScreen(u8 taskId)
+@@ -3847,6 +4055,13 @@ static void Task_SwitchScreensFromSizeScreen(u8 taskId)
+     {
+         FreeAndDestroyMonPicSprite(gTasks[taskId].tMonSpriteId);
+         FreeAndDestroyTrainerPicSprite(gTasks[taskId].tTrainerSpriteId);
++#ifdef PLATFORM_3DS
++        if (sPokedexView->screenSwitchState == 1 && CtrDex_Leaving())
++        {
++            gTasks[taskId].func = Task_CtrLeaveInfoScreen;
++            return;
++        }
++#endif
+         switch (sPokedexView->screenSwitchState)
+         {
+         default:
+@@ -3856,6 +4071,11 @@ static void Task_SwitchScreensFromSizeScreen(u8 taskId)
          case 2:
              gTasks[taskId].func = Task_LoadCryScreen;
              break;
@@ -12615,7 +13079,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
          }
      }
  }
-@@ -4038,11 +4171,11 @@ static void Task_HandleCaughtMonPageInput(u8 taskId)
+@@ -4038,11 +4258,11 @@ static void Task_HandleCaughtMonPageInput(u8 taskId)
      // Flicker caught screen color
      else if (++gTasks[taskId].tPalTimer & 16)
      {
@@ -12629,7 +13093,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
      }
  }
  
-@@ -4587,7 +4720,13 @@ static void UNUSED PrintDecimalNum(u8 windowId, u16 num, u8 left, u8 top)
+@@ -4587,7 +4807,13 @@ static void UNUSED PrintDecimalNum(u8 windowId, u16 num, u8 left, u8 top)
  static void DrawFootprint(u8 windowId, u16 dexNum)
  {
      u8 footprint4bpp[TILE_SIZE_4BPP * NUM_FOOTPRINT_TILES];
@@ -12643,7 +13107,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
      u16 tileIdx = 0;
      u16 i, j;
  
-@@ -4856,7 +4995,7 @@ static void Task_LoadSearchMenu(u8 taskId)
+@@ -4856,7 +5082,7 @@ static void Task_LoadSearchMenu(u8 taskId)
                  CopyToBgTilemapBuffer(3, gPokedexSearchMenuHoenn_Tilemap, 0, 0);
              else
                  CopyToBgTilemapBuffer(3, gPokedexSearchMenuNational_Tilemap, 0, 0);
@@ -12652,7 +13116,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
              gMain.state = 1;
          }
          break;
-@@ -4930,13 +5069,16 @@ static void Task_SwitchToSearchMenuTopBar(u8 taskId)
+@@ -4930,13 +5156,16 @@ static void Task_SwitchToSearchMenuTopBar(u8 taskId)
  
  static void Task_HandleSearchTopBarInput(u8 taskId)
  {
@@ -12671,7 +13135,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
      {
          switch (gTasks[taskId].tTopBarItem)
          {
-@@ -5004,14 +5146,17 @@ static void Task_HandleSearchMenuInput(u8 taskId)
+@@ -5004,14 +5233,17 @@ static void Task_HandleSearchMenuInput(u8 taskId)
              movementMap = sSearchMovementMap_SearchNatDex;
      }
  
@@ -12691,7 +13155,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
      {
          if (gTasks[taskId].tMenuItem == SEARCH_OK)
          {
-@@ -5114,7 +5259,10 @@ static void Task_WaitAndCompleteSearch(u8 taskId)
+@@ -5114,7 +5346,10 @@ static void Task_WaitAndCompleteSearch(u8 taskId)
  
  static void Task_SearchCompleteWaitForInput(u8 taskId)
  {
@@ -12703,7 +13167,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
      {
          if (sPokedexView->pokemonListCount != 0)
          {
-@@ -5167,7 +5315,10 @@ static void Task_HandleSearchParameterInput(u8 taskId)
+@@ -5167,7 +5402,10 @@ static void Task_HandleSearchParameterInput(u8 taskId)
      cursorPos = &gTasks[taskId].data[sSearchOptions[menuItem].taskDataCursorPos];
      scrollOffset = &gTasks[taskId].data[sSearchOptions[menuItem].taskDataScrollOffset];
      maxOption = sSearchOptions[menuItem].numOptions - 1;
@@ -12715,7 +13179,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
      {
          PlaySE(SE_PIN);
          ClearSearchParameterBoxText();
-@@ -5177,7 +5328,7 @@ static void Task_HandleSearchParameterInput(u8 taskId)
+@@ -5177,7 +5415,7 @@ static void Task_HandleSearchParameterInput(u8 taskId)
          CopyBgTilemapBufferToVram(3);
          return;
      }
@@ -12724,7 +13188,7 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
      {
          PlaySE(SE_BALL);
          ClearSearchParameterBoxText();
-@@ -5659,3 +5810,1034 @@ static void ClearSearchParameterBoxText(void)
+@@ -5659,3 +5897,1039 @@ static void ClearSearchParameterBoxText(void)
  {
      ClearSearchMenuRect(144, 8, 96, 96);
  }
@@ -12951,6 +13415,11 @@ index 96eedafad5662896c619ab5feac632fe93d257d0..b083bb91f041897c7758e0a19dee5a7d
 +
 +// What comes before a tap: leaving, the POKéDEX button, or what the screen
 +// before left for this one.
++static bool8 CtrDex_Leaving(void)
++{
++    return sCtrDex.leave;
++}
++
 +static u8 CtrDex_Pending(void)
 +{
 +    u8 act;
@@ -13780,7 +14249,7 @@ index 06bd05a87b89bb2adc6292e22bf5047d6a7d9d8f..b3d87d96494274b9a7c949e315ddeac6
 diff --git a/src/pokedex_area_screen.c b/src/pokedex_area_screen.c
 old mode 100755
 new mode 100644
-index c3211ed45408e629f5dcbfe64bc2ab81cf3623f5..2568b5efdefc13957875fa5166410a9949768fe7
+index c3211ed45408e629f5dcbfe64bc2ab81cf3623f5..a3ab66639d5d5c9b48e2f6cae24d0f3471a9908d
 --- a/src/pokedex_area_screen.c
 +++ b/src/pokedex_area_screen.c
 @@ -19,6 +19,21 @@
@@ -13823,7 +14292,18 @@ index c3211ed45408e629f5dcbfe64bc2ab81cf3623f5..2568b5efdefc13957875fa5166410a99
      /*0x660*/ struct Sprite *areaMarkerSprites[MAX_AREA_MARKERS];
      /*0x6E0*/ u16 numAreaMarkerSprites;
      /*0x6E2*/ u16 alteringCaveCounter;
-@@ -95,7 +110,7 @@ static void FindMapsWithMon(u16);
+@@ -89,13 +104,18 @@ struct
+     /*0xF70*/ u8 charBuffer[64];
+     /*0xFB0*/ struct Sprite *areaUnknownSprites[3];
+     /*0xFBC*/ u8 areaUnknownGraphicsBuffer[0x600];
++#ifdef PLATFORM_3DS
++    // The bottom screen's cells where the mon lives, found once.
++    bool8 ctrAreaRowsFound;
++    u32 ctrAreaRows[CTR_DEX_AREA_ROWS];
++#endif
+ } static EWRAM_DATA *sPokedexAreaScreen = NULL;
+ 
+ static void FindMapsWithMon(u16);
  static void BuildAreaGlowTilemap(void);
  static void SetAreaHasMon(u16, u16);
  static void SetSpecialMapHasMon(u16, u16);
@@ -13832,7 +14312,7 @@ index c3211ed45408e629f5dcbfe64bc2ab81cf3623f5..2568b5efdefc13957875fa5166410a99
  static bool8 MapHasSpecies(const struct WildPokemonHeader *, u16);
  static bool8 MonListHasSpecies(const struct WildPokemonInfo *, u16, u16);
  static void DoAreaGlow(void);
-@@ -104,6 +119,9 @@ static void CreateAreaMarkerSprites(void);
+@@ -104,6 +124,9 @@ static void CreateAreaMarkerSprites(void);
  static void LoadAreaUnknownGraphics(void);
  static void CreateAreaUnknownSprites(void);
  static void Task_HandlePokedexAreaScreenInput(u8);
@@ -13842,7 +14322,7 @@ index c3211ed45408e629f5dcbfe64bc2ab81cf3623f5..2568b5efdefc13957875fa5166410a99
  static void ResetPokedexAreaMapBg(void);
  static void DestroyAreaScreenSprites(void);
  
-@@ -112,7 +130,7 @@ static const u32 sAreaGlow_Gfx[] = INCBIN_U32("graphics/pokedex/area_glow.4bpp.l
+@@ -112,7 +135,7 @@ static const u32 sAreaGlow_Gfx[] = INCBIN_U32("graphics/pokedex/area_glow.4bpp.l
  
  static const u16 sSpeciesHiddenFromAreaScreen[] = { SPECIES_WYNAUT };
  
@@ -13851,7 +14331,7 @@ index c3211ed45408e629f5dcbfe64bc2ab81cf3623f5..2568b5efdefc13957875fa5166410a99
  {
      MAPSEC_MARINE_CAVE,
      MAPSEC_UNDERWATER_MARINE_CAVE,
-@@ -125,7 +143,7 @@ static const u16 sFeebasData[][3] =
+@@ -125,7 +148,7 @@ static const u16 sFeebasData[][3] =
      {NUM_SPECIES}
  };
  
@@ -13860,7 +14340,7 @@ index c3211ed45408e629f5dcbfe64bc2ab81cf3623f5..2568b5efdefc13957875fa5166410a99
  {
      {MAPSEC_SKY_PILLAR,       FLAG_LANDMARK_SKY_PILLAR},
      {MAPSEC_SEAFLOOR_CAVERN,  FLAG_LANDMARK_SEAFLOOR_CAVERN},
-@@ -224,7 +242,12 @@ static bool8 DrawAreaGlow(void)
+@@ -224,7 +247,12 @@ static bool8 DrawAreaGlow(void)
      case 3:
          if (!FreeTempTileDataBuffersIfPossible())
          {
@@ -13873,7 +14353,7 @@ index c3211ed45408e629f5dcbfe64bc2ab81cf3623f5..2568b5efdefc13957875fa5166410a99
              sPokedexAreaScreen->drawAreaGlowState++;
          }
          return TRUE;
-@@ -336,7 +359,7 @@ static void SetSpecialMapHasMon(u16 mapGroup, u16 mapNum)
+@@ -336,7 +364,7 @@ static void SetSpecialMapHasMon(u16 mapGroup, u16 mapNum)
  
      if (sPokedexAreaScreen->numSpecialAreas < MAX_AREA_MARKERS)
      {
@@ -13882,7 +14362,7 @@ index c3211ed45408e629f5dcbfe64bc2ab81cf3623f5..2568b5efdefc13957875fa5166410a99
          if (regionMapSectionId < MAPSEC_NONE)
          {
              // Don't highlight the area if it's a moving area (Marine/Terra Cave)
-@@ -370,7 +393,7 @@ static void SetSpecialMapHasMon(u16 mapGroup, u16 mapNum)
+@@ -370,7 +398,7 @@ static void SetSpecialMapHasMon(u16 mapGroup, u16 mapNum)
      }
  }
  
@@ -13891,7 +14371,7 @@ index c3211ed45408e629f5dcbfe64bc2ab81cf3623f5..2568b5efdefc13957875fa5166410a99
  {
      return Overworld_GetMapHeaderByGroupAndId(mapGroup, mapNum)->regionMapSectionId;
  }
-@@ -666,6 +689,11 @@ static void Task_HandlePokedexAreaScreenInput(u8 taskId)
+@@ -666,6 +694,11 @@ static void Task_HandlePokedexAreaScreenInput(u8 taskId)
              return;
          break;
      case 1:
@@ -13903,7 +14383,7 @@ index c3211ed45408e629f5dcbfe64bc2ab81cf3623f5..2568b5efdefc13957875fa5166410a99
          if (JOY_NEW(B_BUTTON))
          {
              gTasks[taskId].data[1] = 1;
-@@ -710,7 +738,7 @@ static void CreateAreaMarkerSprites(void)
+@@ -710,7 +743,7 @@ static void CreateAreaMarkerSprites(void)
      static s16 x;
      static s16 y;
      static s16 i;
@@ -13912,7 +14392,7 @@ index c3211ed45408e629f5dcbfe64bc2ab81cf3623f5..2568b5efdefc13957875fa5166410a99
      static s16 numSprites;
  
      LoadSpriteSheet(&sAreaMarkerSpriteSheet);
-@@ -795,3 +823,36 @@ static void CreateAreaUnknownSprites(void)
+@@ -795,3 +828,41 @@ static void CreateAreaUnknownSprites(void)
          }
      }
  }
@@ -13928,11 +14408,16 @@ index c3211ed45408e629f5dcbfe64bc2ab81cf3623f5..2568b5efdefc13957875fa5166410a99
 +
 +    if (sPokedexAreaScreen == NULL || !FuncIsActiveTask(Task_HandlePokedexAreaScreenInput))
 +        return FALSE;
-+    for (i = 0; i < sPokedexAreaScreen->numOverworldAreas; i++)
-+        for (y = 0; y < AREA_SCREEN_HEIGHT && y < CTR_DEX_AREA_ROWS; y++)
-+            for (x = 0; x < AREA_SCREEN_WIDTH; x++)
-+                if (GetRegionMapSecIdAt(x, y) == sPokedexAreaScreen->overworldAreasWithMons[i].regionMapSectionId)
-+                    view->areaRows[y] |= 1u << x;
++    if (!sPokedexAreaScreen->ctrAreaRowsFound)
++    {
++        for (i = 0; i < sPokedexAreaScreen->numOverworldAreas; i++)
++            for (y = 0; y < AREA_SCREEN_HEIGHT && y < CTR_DEX_AREA_ROWS; y++)
++                for (x = 0; x < AREA_SCREEN_WIDTH; x++)
++                    if (GetRegionMapSecIdAt(x, y) == sPokedexAreaScreen->overworldAreasWithMons[i].regionMapSectionId)
++                        sPokedexAreaScreen->ctrAreaRows[y] |= 1u << x;
++        sPokedexAreaScreen->ctrAreaRowsFound = TRUE;
++    }
++    memcpy(view->areaRows, sPokedexAreaScreen->ctrAreaRows, sizeof(view->areaRows));
 +    for (i = 0; i < sPokedexAreaScreen->numSpecialAreas && view->marks < CTR_DEX_AREA_MARKS; i++)
 +    {
 +        u16 mapSecId = sPokedexAreaScreen->specialAreaRegionMapSectionIds[i];
@@ -15145,7 +15630,7 @@ index 19541d88d810356d59f29b0029babb7da6dc9415..696f799fb0c0b8a4fa8cdc6326fb7e4a
      for (i = 0; i < sTilemapUtil[id].cur.height; i++)
      {
 diff --git a/src/pokemon_summary_screen.c b/src/pokemon_summary_screen.c
-index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8df292ae32 100644
+index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe96736bb1b35 100644
 --- a/src/pokemon_summary_screen.c
 +++ b/src/pokemon_summary_screen.c
 @@ -2,6 +2,9 @@
@@ -15276,7 +15761,37 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
  {
      [PSS_PAGE_INFO] = Task_PrintInfoPage,
      [PSS_PAGE_SKILLS] = Task_PrintSkillsPage,
-@@ -1475,8 +1461,8 @@ static void SetDefaultTilemaps(void)
+@@ -1097,6 +1083,18 @@ static const struct SpriteTemplate sSpriteTemplate_StatusCondition =
+ static const u16 sMarkings_Pal[] = INCBIN_U16("graphics/summary_screen/markings.gbapal");
+ 
+ // code
++#ifdef PLATFORM_3DS
++// The dock chose another screen: closing goes there (CloseSummaryScreen).
++static bool8 sCtrLeave;
++// A tab's page reached in one slide (CtrSummary_ChangePageTo).
++static bool8 sCtrPageJumped;
++static void CtrSummary_ChangePageTo(u8 taskId, s8 target);
++MainCallback CtrBottom_LeaveTo(MainCallback field);
++bool8 CtrBottom_LeavePending(void);
++bool8 CtrSummary_InWindow(void);
++void CB2_ReturnToFieldWithOpenMenu(void);
++#endif
++
+ void ShowPokemonSummaryScreen(u8 mode, void *mons, u8 monIndex, u8 maxMonIndex, void (*callback)(void))
+ {
+     sMonSummaryScreen = AllocZeroed(sizeof(*sMonSummaryScreen));
+@@ -1105,6 +1103,10 @@ void ShowPokemonSummaryScreen(u8 mode, void *mons, u8 monIndex, u8 maxMonIndex,
+     sMonSummaryScreen->curMonIndex = monIndex;
+     sMonSummaryScreen->maxMonIndex = maxMonIndex;
+     sMonSummaryScreen->callback = callback;
++#ifdef PLATFORM_3DS
++    sCtrLeave = FALSE;
++    sCtrPageJumped = FALSE;
++#endif
+ 
+     if (mode == SUMMARY_MODE_BOX)
+         sMonSummaryScreen->isBoxMon = TRUE;
+@@ -1475,8 +1477,8 @@ static void SetDefaultTilemaps(void)
  {
      if (sMonSummaryScreen->currPageIndex != PSS_PAGE_BATTLE_MOVES && sMonSummaryScreen->currPageIndex != PSS_PAGE_CONTEST_MOVES)
      {
@@ -15287,7 +15802,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
      }
      else
      {
-@@ -1491,7 +1477,7 @@ static void SetDefaultTilemaps(void)
+@@ -1491,7 +1493,7 @@ static void SetDefaultTilemaps(void)
      }
  
      if (sMonSummaryScreen->summary.ailment == AILMENT_NONE)
@@ -15296,18 +15811,40 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
      else if (sMonSummaryScreen->currPageIndex != PSS_PAGE_BATTLE_MOVES && sMonSummaryScreen->currPageIndex != PSS_PAGE_CONTEST_MOVES)
          PutWindowTilemap(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS);
  
-@@ -1503,6 +1489,10 @@ static void FreeSummaryScreen(void)
+@@ -1503,6 +1505,10 @@ static void FreeSummaryScreen(void)
  {
      FreeAllWindowBuffers();
      Free(sMonSummaryScreen);
 +#ifdef PLATFORM_3DS
-+    // The bottom screen asks for the summary every frame (CtrSummary_FieldOpen).
++    // The bottom screen asks for the summary every frame (CtrSummary_InWindow).
 +    sMonSummaryScreen = NULL;
 +#endif
  }
  
  static void BeginCloseSummaryScreen(u8 taskId)
-@@ -1529,10 +1519,382 @@ static void CloseSummaryScreen(u8 taskId)
+@@ -1515,6 +1521,21 @@ static void CloseSummaryScreen(u8 taskId)
+ {
+     if (MenuHelpers_ShouldWaitForLinkRecv() != TRUE && !gPaletteFade.active)
+     {
++#ifdef PLATFORM_3DS
++        // Left for another screen from the bottom screen's dock: not back to
++        // the party menu, which has freed all it had, but where it would go
++        // as it closes - the screen chosen, or the field (CtrBottom_LeaveTo).
++        // Its cursor stays on the mon, as on the way back.
++        // A leave the bottom screen has dropped by now (its tap not taken
++        // at once) is not one: back to the party menu, as B.
++        if (sCtrLeave && CtrBottom_LeavePending() && CtrSummary_InWindow()
++         && gPartyMenu.exitCallback == CB2_ReturnToFieldWithOpenMenu)
++        {
++            gPartyMenu.slotId = sMonSummaryScreen->curMonIndex;
++            SetMainCallback2(CtrBottom_LeaveTo(gPartyMenu.exitCallback));
++        }
++        else
++#endif
+         SetMainCallback2(sMonSummaryScreen->callback);
+         gLastViewedMonIndex = sMonSummaryScreen->curMonIndex;
+         SummaryScreen_DestroyAnimDelayTask();
+@@ -1529,10 +1550,437 @@ static void CloseSummaryScreen(u8 taskId)
      }
  }
  
@@ -15465,8 +16002,8 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
 +    sCtrMemoPid = sMonSummaryScreen->summary.pid;
 +}
 +
-+// A tab asked for another page: one page at a time towards it, as the page
-+// dots turn it. FALSE when there is none to turn.
++// A tab asked for another page: straight to it (CtrSummary_ChangePageTo).
++// FALSE when there is none to turn.
 +static bool8 CtrSummary_TurnToTarget(u8 taskId)
 +{
 +    s8 target = sCtrPageTarget;
@@ -15481,14 +16018,64 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
 +        sCtrPageTarget = -1;
 +        return FALSE;
 +    }
-+    ChangePage(taskId, target > sMonSummaryScreen->currPageIndex ? 1 : -1);
++    CtrSummary_ChangePageTo(taskId, target);
 +    return TRUE;
 +}
 +
-+bool8 CtrSummary_FieldOpen(void)
++// The mon's sprite as the GBA shows it this frame: the tiles in its OBJ
++// VRAM (the frame its animation is on, Spinda's spots), its colours, its
++// offset and its matrix while it is scaled or turned. Copied, so a view
++// kept after the summary has gone still has them.
++static void CtrSummary_ViewPic(struct CtrSummaryView *view)
 +{
-+    return sMonSummaryScreen != NULL && !gMain.inBattle && !sMonSummaryScreen->isBoxMon
-+        && gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD && sMonSummaryScreen->monList.mons == gPlayerParty;
++    static u8 sTiles[MON_PIC_SIZE] __attribute__((aligned(4)));
++    static u16 sPal[16];
++    u8 spriteId = sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_MON];
++    const struct Sprite *sprite;
++    u32 sum = 0;
++    u16 i;
++
++    // Changing mon: the new one's frame goes to VRAM in a VBlank after its
++    // sprite is made, the old one's still there until then; its still
++    // picture in the meantime.
++    if (FuncIsActiveTask(Task_ChangeSummaryMon))
++        return;
++    if (spriteId == SPRITE_NONE || spriteId >= MAX_SPRITES)
++        return;
++    sprite = &gSprites[spriteId];
++    if (!sprite->inUse || sprite->oam.shape != SPRITE_SHAPE(64x64) || sprite->oam.size != SPRITE_SIZE(64x64))
++        return;
++    memcpy(sTiles, (const u8 *)(OBJ_VRAM0 + sprite->oam.tileNum * TILE_SIZE_4BPP), sizeof(sTiles));
++    memcpy(sPal, &gPlttBufferUnfaded[OBJ_PLTT_ID(sprite->oam.paletteNum)], sizeof(sPal));
++    for (i = 0; i < sizeof(sTiles) / 4; i++)
++        sum = sum * 31 + ((const u32 *)sTiles)[i];
++    for (i = 0; i < 16; i++)
++        sum = sum * 31 + sPal[i];
++    view->picTiles = sTiles;
++    view->picPal = sPal;
++    view->picSum = sum;
++    view->picX = sprite->x2;
++    view->picY = sprite->y2;
++    view->picHFlip = sprite->oam.matrixNum >> 3 & 1;
++    view->picAffine = sprite->oam.affineMode;
++    if (sprite->oam.affineMode & ST_OAM_AFFINE_ON_MASK)
++    {
++        view->picHFlip = FALSE;
++        view->picMatrix[0] = gOamMatrices[sprite->oam.matrixNum].a;
++        view->picMatrix[1] = gOamMatrices[sprite->oam.matrixNum].b;
++        view->picMatrix[2] = gOamMatrices[sprite->oam.matrixNum].c;
++        view->picMatrix[3] = gOamMatrices[sprite->oam.matrixNum].d;
++    }
++}
++
++// The summary in the bottom screen's window: the field party menu's, and a
++// battle's own (its moves locked); from the boxes it has the whole screen.
++bool8 CtrSummary_InWindow(void)
++{
++    if (sMonSummaryScreen == NULL || sMonSummaryScreen->isBoxMon || sMonSummaryScreen->monList.mons != gPlayerParty)
++        return FALSE;
++    return gMain.inBattle ? sMonSummaryScreen->mode == SUMMARY_MODE_LOCK_MOVES
++                          : gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD;
 +}
 +
 +// Where the summary is, for the bottom screen to draw it (3ds_game_views.h).
@@ -15504,7 +16091,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
 +        sCtrPageTarget = -1;
 +        return FALSE;
 +    }
-+    if (!CtrSummary_FieldOpen())
++    if (!CtrSummary_InWindow())
 +        return TRUE;
 +    view->state = CTR_SUM_VIEW_PAGE;
 +    view->page = sMonSummaryScreen->currPageIndex;
@@ -15533,6 +16120,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
 +    view->picSpecies = sum->species2;
 +    view->pid = sum->pid;
 +    view->shiny = IsMonShiny(mon);
++    CtrSummary_ViewPic(view);
 +    view->level = sum->level;
 +    view->gender = sum->isEgg ? MON_GENDERLESS : GetMonGender(mon);
 +    view->ailment = sum->ailment;
@@ -15603,6 +16191,10 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
 +            CtrSummary_Tap(CTR_MOVE_LEFT + 8, CTR_MOVE_TOP + index * CTR_MOVE_ROW + CTR_MOVE_ROW / 2);
 +        break;
 +    case CTR_SUM_TAP_BACK:
++        CtrSummary_Tap(200, 8);
++        break;
++    case CTR_SUM_TAP_LEAVE:
++        sCtrLeave = TRUE;
 +        CtrSummary_Tap(200, 8);
 +        break;
 +    case CTR_SUM_TAP_STATS:
@@ -15690,7 +16282,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
          if (JOY_NEW(DPAD_UP))
          {
              ChangeSummaryPokemon(taskId, -1);
-@@ -1616,7 +1978,7 @@ static void ChangeSummaryPokemon(u8 taskId, s8 delta)
+@@ -1616,7 +2064,7 @@ static void ChangeSummaryPokemon(u8 taskId, s8 delta)
                  SetSpriteInvisibility(SPRITE_ARR_ID_STATUS, TRUE);
                  ClearWindowTilemap(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS);
                  ScheduleBgCopyTilemapToVram(0);
@@ -15699,7 +16291,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
              }
              sMonSummaryScreen->curMonIndex = monId;
              gTasks[taskId].data[0] = 0;
-@@ -1657,7 +2019,7 @@ static void Task_ChangeSummaryMon(u8 taskId)
+@@ -1657,7 +2105,7 @@ static void Task_ChangeSummaryMon(u8 taskId)
          break;
      case 7:
          if (sMonSummaryScreen->summary.ailment != AILMENT_NONE)
@@ -15708,7 +16300,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
          DrawPokerusCuredSymbol(&sMonSummaryScreen->currentMon);
          data[1] = 0;
          break;
-@@ -1683,7 +2045,7 @@ static void Task_ChangeSummaryMon(u8 taskId)
+@@ -1683,7 +2131,7 @@ static void Task_ChangeSummaryMon(u8 taskId)
          gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_MON]].data[2] = 0;
          break;
      default:
@@ -15717,7 +16309,91 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
          {
              data[0] = 0;
              gTasks[taskId].func = Task_HandleInput;
-@@ -1889,8 +2251,8 @@ static void SwitchToMoveSelection(u8 taskId)
+@@ -1782,6 +2230,56 @@ static void ChangePage(u8 taskId, s8 delta)
+     HidePageSpecificSprites();
+ }
+ 
++#ifdef PLATFORM_3DS
++// A tab of the bottom screen's view: its page in one slide, the pages
++// between not turned (ChangePage turns one). The layers keep what a turn of
++// one page leaves: the page on show on top at 0x10000, under it the page
++// before it (or nothing at 0, over INFO's BG3). Going left, the layer under
++// takes the target before the top slides off it; going right, the one left
++// under is set to the target's page before it at the end (PssScrollRightEnd).
++static void CtrSummary_ChangePageTo(u8 taskId, s8 target)
++{
++    s16 *data = gTasks[taskId].data;
++    s8 from = sMonSummaryScreen->currPageIndex;
++
++    if (sMonSummaryScreen->summary.isEgg || target == from
++     || target < sMonSummaryScreen->minPageIndex || target > sMonSummaryScreen->maxPageIndex)
++        return;
++    if (target == from + 1 || target == from - 1)
++    {
++        ChangePage(taskId, target - from);
++        return;
++    }
++    PlaySE(SE_SELECT);
++    ClearPageWindowTilemaps(from);
++    sMonSummaryScreen->currPageIndex = target;
++    data[0] = 0;
++    if (target > from)
++    {
++        sCtrPageJumped = TRUE;
++        SetTaskFuncWithFollowupFunc(taskId, PssScrollRight, gTasks[taskId].func);
++    }
++    else
++    {
++        u8 lower = sMonSummaryScreen->bgDisplayOrder == 0 ? 1 : 2;
++
++        if (target > 0)
++        {
++            SetBgTilemapBuffer(lower, sMonSummaryScreen->bgTilemapBuffers[target][0]);
++            ChangeBgX(lower, 0x10000, BG_COORD_SET);
++        }
++        else
++        {
++            ChangeBgX(lower, 0, BG_COORD_SET);
++        }
++        ScheduleBgCopyTilemapToVram(lower);
++        SetTaskFuncWithFollowupFunc(taskId, PssScrollLeft, gTasks[taskId].func);
++    }
++    CreateTextPrinterTask(target);
++    HidePageSpecificSprites();
++}
++#endif
++
+ static void PssScrollRight(u8 taskId) // Scroll right
+ {
+     s16 *data = gTasks[taskId].data;
+@@ -1816,6 +2314,26 @@ static void PssScrollRightEnd(u8 taskId) // display right
+ {
+     s16 *data = gTasks[taskId].data;
+     sMonSummaryScreen->bgDisplayOrder ^= 1;
++#ifdef PLATFORM_3DS
++    if (sCtrPageJumped)
++    {
++        // Jumped over pages: the layer under the new page shows the one
++        // before it, as a turn of one page leaves it, for the next turn left.
++        u8 lower = sMonSummaryScreen->bgDisplayOrder == 0 ? 1 : 2;
++
++        sCtrPageJumped = FALSE;
++        if (sMonSummaryScreen->currPageIndex > 1)
++        {
++            SetBgTilemapBuffer(lower, sMonSummaryScreen->bgTilemapBuffers[sMonSummaryScreen->currPageIndex - 1][0]);
++            ChangeBgX(lower, 0x10000, BG_COORD_SET);
++        }
++        else
++        {
++            ChangeBgX(lower, 0, BG_COORD_SET);
++        }
++        ScheduleBgCopyTilemapToVram(lower);
++    }
++#endif
+     data[1] = 0;
+     data[0] = 0;
+     DrawPagination();
+@@ -1889,8 +2407,8 @@ static void SwitchToMoveSelection(u8 taskId)
      ClearWindowTilemap(PSS_LABEL_WINDOW_PORTRAIT_SPECIES);
      if (!gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_STATUS]].invisible)
          ClearWindowTilemap(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS);
@@ -15728,7 +16404,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
      if (!sMonSummaryScreen->lockMovesFlag)
      {
          ClearWindowTilemap(PSS_LABEL_WINDOW_PROMPT_INFO);
-@@ -1914,6 +2276,17 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
+@@ -1914,6 +2432,17 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
  
      if (MenuHelpers_ShouldWaitForLinkRecv() != TRUE)
      {
@@ -15746,7 +16422,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
          if (JOY_NEW(DPAD_UP))
          {
              data[0] = 4;
-@@ -1924,7 +2297,7 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
+@@ -1924,7 +2453,7 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
              data[0] = 4;
              ChangeSelectedMove(data, 1, &sMonSummaryScreen->firstMoveIndex);
          }
@@ -15755,7 +16431,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
          {
              if (sMonSummaryScreen->lockMovesFlag == TRUE
               || (sMonSummaryScreen->newMove == MOVE_NONE && sMonSummaryScreen->firstMoveIndex == MAX_MON_MOVES))
-@@ -1942,11 +2315,13 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
+@@ -1942,11 +2471,13 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
                  PlaySE(SE_FAILURE);
              }
          }
@@ -15770,7 +16446,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
      }
  }
  
-@@ -1996,8 +2371,8 @@ static void ChangeSelectedMove(s16 *taskData, s8 direction, u8 *moveIndexPtr)
+@@ -1996,8 +2527,8 @@ static void ChangeSelectedMove(s16 *taskData, s8 direction, u8 *moveIndexPtr)
          if (!gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_STATUS]].invisible)
              ClearWindowTilemap(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS);
          ScheduleBgCopyTilemapToVram(0);
@@ -15781,7 +16457,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
      }
      if (*moveIndexPtr != MAX_MON_MOVES
          && newMoveIndex == MAX_MON_MOVES
-@@ -2006,8 +2381,8 @@ static void ChangeSelectedMove(s16 *taskData, s8 direction, u8 *moveIndexPtr)
+@@ -2006,8 +2537,8 @@ static void ChangeSelectedMove(s16 *taskData, s8 direction, u8 *moveIndexPtr)
          ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_POWER_ACC);
          ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_APPEAL_JAM);
          ScheduleBgCopyTilemapToVram(0);
@@ -15792,7 +16468,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
      }
  
      *moveIndexPtr = newMoveIndex;
-@@ -2031,8 +2406,8 @@ static void CloseMoveSelectMode(u8 taskId)
+@@ -2031,8 +2562,8 @@ static void CloseMoveSelectMode(u8 taskId)
      {
          ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_POWER_ACC);
          ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_APPEAL_JAM);
@@ -15803,7 +16479,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
      }
      ScheduleBgCopyTilemapToVram(0);
      ScheduleBgCopyTilemapToVram(1);
-@@ -2054,6 +2429,17 @@ static void Task_HandleInput_MovePositionSwitch(u8 taskId)
+@@ -2054,6 +2585,17 @@ static void Task_HandleInput_MovePositionSwitch(u8 taskId)
  
      if (MenuHelpers_ShouldWaitForLinkRecv() != TRUE)
      {
@@ -15821,7 +16497,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
          if (JOY_NEW(DPAD_UP))
          {
              data[0] = 3;
-@@ -2064,17 +2450,19 @@ static void Task_HandleInput_MovePositionSwitch(u8 taskId)
+@@ -2064,17 +2606,19 @@ static void Task_HandleInput_MovePositionSwitch(u8 taskId)
              data[0] = 3;
              ChangeSelectedMove(&data[0], 1, &sMonSummaryScreen->secondMoveIndex);
          }
@@ -15843,7 +16519,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
      }
  }
  
-@@ -2197,6 +2585,17 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
+@@ -2197,6 +2741,17 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
      {
          if (gPaletteFade.active != TRUE)
          {
@@ -15861,7 +16537,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
              if (JOY_NEW(DPAD_UP))
              {
                  data[0] = 4;
-@@ -2215,7 +2614,7 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
+@@ -2215,7 +2770,7 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
              {
                  ChangePage(taskId, 1);
              }
@@ -15870,7 +16546,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
              {
                  if (CanReplaceMove() == TRUE)
                  {
-@@ -2231,7 +2630,7 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
+@@ -2231,7 +2786,7 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
                      ShowCantForgetHMsWindow(taskId);
                  }
              }
@@ -15879,7 +16555,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
              {
                  StopPokemonAnimations();
                  PlaySE(SE_SELECT);
-@@ -2239,6 +2638,8 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
+@@ -2239,6 +2794,8 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
                  gSpecialVar_0x8005 = MAX_MON_MOVES;
                  BeginCloseSummaryScreen(taskId);
              }
@@ -15888,7 +16564,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
          }
      }
  }
-@@ -2258,8 +2659,8 @@ static void ShowCantForgetHMsWindow(u8 taskId)
+@@ -2258,8 +2815,8 @@ static void ShowCantForgetHMsWindow(u8 taskId)
      ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_POWER_ACC);
      ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_APPEAL_JAM);
      ScheduleBgCopyTilemapToVram(0);
@@ -15899,7 +16575,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
      PrintHMMovesCantBeForgotten();
      gTasks[taskId].func = Task_HandleInputCantForgetHMsMoves;
  }
-@@ -2269,7 +2670,7 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
+@@ -2269,7 +2826,7 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
  {
      s16 *data = gTasks[taskId].data;
      u16 move;
@@ -15908,7 +16584,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
      {
          if (JOY_NEW(DPAD_UP))
          {
-@@ -2297,8 +2698,8 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
+@@ -2297,8 +2854,8 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
                  move = sMonSummaryScreen->summary.moves[sMonSummaryScreen->firstMoveIndex];
                  gTasks[taskId].func = Task_HandleReplaceMoveInput;
                  ChangePage(taskId, -1);
@@ -15919,7 +16595,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
              }
          }
          else if (JOY_NEW(DPAD_RIGHT) || GetLRKeysPressed() == MENU_R_PRESSED)
-@@ -2311,11 +2712,11 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
+@@ -2311,11 +2868,11 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
                  move = sMonSummaryScreen->summary.moves[sMonSummaryScreen->firstMoveIndex];
                  gTasks[taskId].func = Task_HandleReplaceMoveInput;
                  ChangePage(taskId, 1);
@@ -15934,7 +16610,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
          {
              ClearWindowTilemap(PSS_LABEL_WINDOW_PORTRAIT_SPECIES);
              if (!gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_STATUS]].invisible)
-@@ -2323,8 +2724,8 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
+@@ -2323,8 +2880,8 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
              move = sMonSummaryScreen->summary.moves[sMonSummaryScreen->firstMoveIndex];
              PrintMoveDetails(move);
              ScheduleBgCopyTilemapToVram(0);
@@ -15945,7 +16621,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
              gTasks[taskId].func = Task_HandleReplaceMoveInput;
          }
      }
-@@ -2402,69 +2803,75 @@ static void DrawPagination(void) // Updates the pagination dots at the top of th
+@@ -2402,69 +2959,75 @@ static void DrawPagination(void) // Updates the pagination dots at the top of th
      Free(tilemap);
  }
  
@@ -15962,15 +16638,15 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
 +    // Read from the loaded tilemap, not from the INCBIN's stub.
 +    gfx = Port_ResolveAssetPointerSized(gfx, unkStruct->field_6 * 2 * unkStruct->field_7);
 +    if (gfx == NULL)
-     {
--        if (!isOpeningToTheLeft)
++    {
 +        Free(alloced);
 +        return;
 +    }
 +#endif
 +    CpuFill16(unkStruct->field_4, alloced, unkStruct->field_6 * 2 * unkStruct->field_7);
 +    if (unkStruct->field_6 != c)
-+    {
+     {
+-        if (!isOpeningToTheLeft)
 +        if (!d)
          {
 -            for (i = 0; i < slidingWindow->height; i++)
@@ -16054,7 +16730,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
          {
              if (sMonSummaryScreen->currPageIndex == PSS_PAGE_BATTLE_MOVES)
                  PutWindowTilemap(PSS_LABEL_WINDOW_MOVES_POWER_ACC);
-@@ -2482,46 +2889,46 @@ static void Task_SlidePowerAccWindow(u8 taskId)
+@@ -2482,46 +3045,46 @@ static void Task_SlidePowerAccWindow(u8 taskId)
      ScheduleBgCopyTilemapToVram(2);
  }
  
@@ -16121,7 +16797,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
          }
          else
          {
-@@ -2538,37 +2945,37 @@ static void Task_SlideAppealJamWindow(u8 taskId)
+@@ -2538,37 +3101,37 @@ static void Task_SlideAppealJamWindow(u8 taskId)
      ScheduleBgCopyTilemapToVram(2);
  }
  
@@ -16178,7 +16854,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
          {
              CreateSetStatusSprite();
              PutWindowTilemap(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS);
-@@ -2578,33 +2985,36 @@ static void Task_SlideStatusWindow(u8 taskId)
+@@ -2578,33 +3141,36 @@ static void Task_SlideStatusWindow(u8 taskId)
      }
  }
  
@@ -16225,7 +16901,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
          }
      }
  }
-@@ -3167,6 +3577,9 @@ static void BufferMonTrainerMemo(void)
+@@ -3167,6 +3733,9 @@ static void BufferMonTrainerMemo(void)
  
  static void PrintMonTrainerMemo(void)
  {
@@ -16235,7 +16911,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
      PrintTextOnWindow(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_MEMO), gStringVar4, 0, 1, 0, 0);
  }
  
-@@ -3271,6 +3684,9 @@ static void PrintEggState(void)
+@@ -3271,6 +3840,9 @@ static void PrintEggState(void)
      else
          text = gText_EggWillTakeALongTime;
  
@@ -16245,7 +16921,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
      PrintTextOnWindow(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_ABILITY), text, 0, 1, 0, 0);
  }
  
-@@ -3295,6 +3711,9 @@ static void PrintEggMemo(void)
+@@ -3295,6 +3867,9 @@ static void PrintEggMemo(void)
          text = gText_OddEggFoundByCouple;
      }
  
@@ -16256,15 +16932,91 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..a24e08b23868bb66883fb82cac04cf8d
  }
  
 diff --git a/src/pokenav.c b/src/pokenav.c
-index 03f48ee3669c3411f124ebeaf5fa936809cccf6c..c93bc0d002a8f736cf1a4b718c7a11285fa7ebde 100644
+index 03f48ee3669c3411f124ebeaf5fa936809cccf6c..5322a2b8b6de112767a09bfb5349302873665bc2 100644
 --- a/src/pokenav.c
 +++ b/src/pokenav.c
-@@ -588,3 +588,24 @@ bool32 CanViewRibbonsMenu(void)
+@@ -48,6 +48,15 @@ static void Task_RunLoopedTask_LinkMode(u8);
+ static void Task_RunLoopedTask(u8);
+ static void Task_Pokenav(u8);
+ static void CB2_InitPokenavForTutorial(void);
++#ifdef PLATFORM_3DS
++// The bottom screen's dock may have chosen another screen to open instead.
++#define CTR_LEAVE_TO(cb) CtrBottom_LeaveTo(cb)
++MainCallback CtrBottom_LeaveTo(MainCallback field);
++bool32 CtrPokenav_WaitForLeaveFade(void);
++static bool8 sCtrLeave;
++#else
++#define CTR_LEAVE_TO(cb) (cb)
++#endif
+ 
+ const struct PokenavCallbacks PokenavMenuCallbacks[15] =
+ {
+@@ -322,6 +331,9 @@ void CB2_InitPokeNav(void)
+     else
+     {
+         InitPokenavResources(gPokenavResources);
++#ifdef PLATFORM_3DS
++        sCtrLeave = FALSE;
++#endif
+         ResetTasks();
+         SetVBlankCallback(NULL);
+         CreateTask(Task_Pokenav, 0);
+@@ -454,6 +466,20 @@ static void Task_Pokenav(u8 taskId)
+             break;
+         tState = 3;
+     case 3:
++#ifdef PLATFORM_3DS
++        // The bottom screen's dock chose another screen: the PokéNav goes
++        // off from the menu on show, not back through the menus before it.
++        if (sCtrLeave)
++        {
++            sCtrLeave = FALSE;
++            if (gPokenavResources->mode == POKENAV_MODE_NORMAL)
++            {
++                ShutdownPokenav();
++                tState = 6;
++                break;
++            }
++        }
++#endif
+         menuId = GetCurrentMenuCB();
+         if (menuId == POKENAV_MENU_FUNC_EXIT)
+         {
+@@ -495,9 +521,20 @@ static void Task_Pokenav(u8 taskId)
+             if (calledFromScript)
+                 SetMainCallback2(CB2_ReturnToFieldContinueScriptPlayMapMusic);
+             else
+-                SetMainCallback2(CB2_ReturnToFieldWithOpenMenu);
++                SetMainCallback2(CTR_LEAVE_TO(CB2_ReturnToFieldWithOpenMenu));
++        }
++        break;
++#ifdef PLATFORM_3DS
++    case 6:
++        if (!CtrPokenav_WaitForLeaveFade())
++        {
++            PokenavMenuCallbacks[gPokenavResources->currentMenuIndex].free2();
++            PokenavMenuCallbacks[gPokenavResources->currentMenuIndex].free1();
++            FreePokenavResources();
++            SetMainCallback2(CTR_LEAVE_TO(CB2_ReturnToFieldWithOpenMenu));
+         }
+         break;
++#endif
+     }
+ }
+ 
+@@ -588,3 +625,31 @@ bool32 CanViewRibbonsMenu(void)
  {
      return gPokenavResources->hasAnyRibbons;
  }
 +
 +#ifdef PLATFORM_3DS
++// The dock's other screens: the PokéNav closes for them (Task_Pokenav).
++void CtrPokenav_Leave(void)
++{
++    if (gPokenavResources != NULL)
++        sCtrLeave = TRUE;
++}
++
 +// The 3DS bottom screen shows the PokéNav while it runs.
 +bool8 CtrPokenav_IsOpen(void)
 +{
@@ -16303,7 +17055,7 @@ index 1ebf6edbe9a286b0e05944ca7b51567e14d830d9..cde8c2132997e5e5256833ac0b4152db
 +}
 +#endif
 diff --git a/src/pokenav_list.c b/src/pokenav_list.c
-index 9d1c561d1fd644602dbe0f73bfb2aff23ce700ef..595bd33bd6ab9d65d69904a06917e219f32229da 100644
+index 9d1c561d1fd644602dbe0f73bfb2aff23ce700ef..1bd186bb7c13f14649774b7263a78e92e2645acc 100644
 --- a/src/pokenav_list.c
 +++ b/src/pokenav_list.c
 @@ -1009,3 +1009,54 @@ static bool32 CopyPokenavListMenuTemplate(struct PokenavListSub *dest, const str
@@ -16347,7 +17099,7 @@ index 9d1c561d1fd644602dbe0f73bfb2aff23ce700ef..595bd33bd6ab9d65d69904a06917e219
 +}
 +
 +// Puts the selection on an item on show, for the D-pad press that follows to
-+// move it on to the one tapped (CtrPokenavMenu_SetCursor).
++// move it on to the one tapped (NavNext, 3ds_bottom_ui.c).
 +void CtrPokenavList_SetSelected(u16 selected)
 +{
 +    struct PokenavList *list = GetSubstructPtr(POKENAV_SUBSTRUCT_LIST);
@@ -16362,7 +17114,7 @@ index 9d1c561d1fd644602dbe0f73bfb2aff23ce700ef..595bd33bd6ab9d65d69904a06917e219
 +}
 +#endif
 diff --git a/src/pokenav_main_menu.c b/src/pokenav_main_menu.c
-index 761f572d6bdac651fd2f0cdbe087846e230b9166..0bb20f85ed9c9a4f04d04f4ca7d0997dd1e84dc2 100644
+index 761f572d6bdac651fd2f0cdbe087846e230b9166..fee0101b0cb3e5194f4dab59e8ede0824657b818 100644
 --- a/src/pokenav_main_menu.c
 +++ b/src/pokenav_main_menu.c
 @@ -1,5 +1,8 @@
@@ -16374,7 +17126,30 @@ index 761f572d6bdac651fd2f0cdbe087846e230b9166..0bb20f85ed9c9a4f04d04f4ca7d0997d
  #include "constants/songs.h"
  #include "sound.h"
  #include "constants/rgb.h"
-@@ -443,6 +446,17 @@ static u32 LoopedTask_SlideMenuHeaderDown(s32 state)
+@@ -317,6 +320,22 @@ void ShutdownPokenav(void)
+     BeginNormalPaletteFade(PALETTES_ALL, -1, 0, 16, RGB_BLACK);
+ }
+ 
++#ifdef PLATFORM_3DS
++// WaitForPokenavShutdownFade for a PokéNav closed from any of its menus
++// (pokenav.c, the bottom screen's dock): the menu on show has freed its own,
++// as switching menus does, so the main menu's gfx may be gone already.
++bool32 CtrPokenav_WaitForLeaveFade(void)
++{
++    if (!gPaletteFade.active)
++    {
++        CleanupPokenavMainMenuResources();
++        FreeAllWindowBuffers();
++        return FALSE;
++    }
++    return TRUE;
++}
++#endif
++
+ bool32 WaitForPokenavShutdownFade(void)
+ {
+     if (!gPaletteFade.active)
+@@ -443,6 +462,17 @@ static u32 LoopedTask_SlideMenuHeaderDown(s32 state)
  
  void CopyPaletteIntoBufferUnfaded(const u16 *palette, u32 bufferOffset, u32 size)
  {
@@ -16392,7 +17167,7 @@ index 761f572d6bdac651fd2f0cdbe087846e230b9166..0bb20f85ed9c9a4f04d04f4ca7d0997d
      CpuCopy16(palette, &gPlttBufferUnfaded[bufferOffset], size);
  }
  
-@@ -473,6 +487,10 @@ void PokenavFillPalette(u32 palIndex, u16 fillValue)
+@@ -473,6 +503,10 @@ void PokenavFillPalette(u32 palIndex, u16 fillValue)
  
  void PokenavCopyPalette(const u16 *src, const u16 *dest, int size, int a3, int a4, u16 *palette)
  {
@@ -16403,7 +17178,7 @@ index 761f572d6bdac651fd2f0cdbe087846e230b9166..0bb20f85ed9c9a4f04d04f4ca7d0997d
      if (a4 == 0)
      {
          CpuCopy16(src, palette, size * 2);
-@@ -683,7 +701,7 @@ static void LoadLeftHeaderGfxForMenu(u32 menuGfxId)
+@@ -683,7 +717,7 @@ static void LoadLeftHeaderGfxForMenu(u32 menuGfxId)
      menu = GetSubstructPtr(POKENAV_SUBSTRUCT_MAIN_MENU);
      tag = sMenuLeftHeaderSpriteSheets[menuGfxId].tag;
      size = GetDecompressedDataSize(sMenuLeftHeaderSpriteSheets[menuGfxId].data);
@@ -16412,7 +17187,7 @@ index 761f572d6bdac651fd2f0cdbe087846e230b9166..0bb20f85ed9c9a4f04d04f4ca7d0997d
      LZ77UnCompWram(sMenuLeftHeaderSpriteSheets[menuGfxId].data, gDecompressionBuffer);
      RequestDma3Copy(gDecompressionBuffer, (void *)OBJ_VRAM0 + (GetSpriteTileStartByTag(2) * 32), size, 1);
      menu->leftHeaderSprites[1]->oam.tileNum = GetSpriteTileStartByTag(2) + sMenuLeftHeaderSpriteSheets[menuGfxId].size;
-@@ -703,7 +721,7 @@ static void LoadLeftHeaderGfxForSubMenu(u32 menuGfxId)
+@@ -703,7 +737,7 @@ static void LoadLeftHeaderGfxForSubMenu(u32 menuGfxId)
  
      tag = sPokenavSubMenuLeftHeaderSpriteSheets[menuGfxId].tag;
      size = GetDecompressedDataSize(sPokenavSubMenuLeftHeaderSpriteSheets[menuGfxId].data);
@@ -16589,7 +17364,7 @@ index dde725d8bd465518929d48249a409f4907287b8b..7e3831345174feee76426c334f5d7e19
 diff --git a/src/pokenav_match_call_list.c b/src/pokenav_match_call_list.c
 old mode 100755
 new mode 100644
-index 8f8fc6b4c25a09937ba494f32632106b6d8ffac2..11370b17bacc9fdaad2932d2dd49283e26402197
+index 8f8fc6b4c25a09937ba494f32632106b6d8ffac2..49db13e555f15b6aefd102a23802160d8fe0831b
 --- a/src/pokenav_match_call_list.c
 +++ b/src/pokenav_match_call_list.c
 @@ -306,7 +306,7 @@ struct PokenavMatchCallEntry *GetMatchCallList(void)
@@ -16637,7 +17412,7 @@ index 8f8fc6b4c25a09937ba494f32632106b6d8ffac2..11370b17bacc9fdaad2932d2dd49283e
 +    return 0xFF;
 +}
 +
-+// Puts the options' cursor on an option (CtrPokenavMenu_SetCursor).
++// Puts the options' cursor on an option (NavNext, 3ds_bottom_ui.c).
 +void CtrPokenavMatchCall_SetOption(u16 cursor)
 +{
 +    struct Pokenav_MatchCallMenu *state = GetSubstructPtr(POKENAV_SUBSTRUCT_MATCH_CALL_MAIN);
@@ -16647,10 +17422,108 @@ index 8f8fc6b4c25a09937ba494f32632106b6d8ffac2..11370b17bacc9fdaad2932d2dd49283e
 +}
 +#endif
 diff --git a/src/pokenav_menu_handler.c b/src/pokenav_menu_handler.c
-index d67f61c1ea46c9b36e5080da106156db51e3ff86..09fe4097c92df021e082bdadc93a891953ff7946 100644
+index d67f61c1ea46c9b36e5080da106156db51e3ff86..16ffc9e64df08f18de092d4a26d4d38461e159a1 100644
 --- a/src/pokenav_menu_handler.c
 +++ b/src/pokenav_menu_handler.c
-@@ -511,3 +511,27 @@ u16 GetHelpBarTextId(void)
+@@ -31,18 +31,48 @@ static u32 HandleMainMenuInput(struct Pokenav_Menu *);
+ static u32 (*GetMainMenuInputHandler(void))(struct Pokenav_Menu *);
+ static void SetMenuInputHandler(struct Pokenav_Menu *);
+ 
++#ifdef PLATFORM_3DS
++// No HOENN MAP in the main menu: the bottom screen's MAP is that map, zoom
++// and all (3ds_bottom_ui.c), so every main menu option is one place higher.
++#define MAIN_MENU_POS(item) ((item) - 1)
++#define MAIN_MENU_MAP_ITEMS 0
++#else
++#define MAIN_MENU_POS(item) (item)
++#define MAIN_MENU_MAP_ITEMS 1
++#endif
++
+ // Number of entries - 1 for that menu type
+ static const u8 sLastCursorPositions[] =
+ {
+-    [POKENAV_MENU_TYPE_DEFAULT]           = 2,
+-    [POKENAV_MENU_TYPE_UNLOCK_MC]         = 3,
+-    [POKENAV_MENU_TYPE_UNLOCK_MC_RIBBONS] = 4,
++    [POKENAV_MENU_TYPE_DEFAULT]           = 1 + MAIN_MENU_MAP_ITEMS,
++    [POKENAV_MENU_TYPE_UNLOCK_MC]         = 2 + MAIN_MENU_MAP_ITEMS,
++    [POKENAV_MENU_TYPE_UNLOCK_MC_RIBBONS] = 3 + MAIN_MENU_MAP_ITEMS,
+     [POKENAV_MENU_TYPE_CONDITION]         = 2,
+     [POKENAV_MENU_TYPE_CONDITION_SEARCH]  = 5
+ };
+ 
+ static const u8 sMenuItems[][MAX_POKENAV_MENUITEMS] =
+ {
++#ifdef PLATFORM_3DS
++    [POKENAV_MENU_TYPE_DEFAULT] =
++    {
++        POKENAV_MENUITEM_CONDITION,
++        [1 ... MAX_POKENAV_MENUITEMS - 1] = POKENAV_MENUITEM_SWITCH_OFF
++    },
++    [POKENAV_MENU_TYPE_UNLOCK_MC] =
++    {
++        POKENAV_MENUITEM_CONDITION,
++        POKENAV_MENUITEM_MATCH_CALL,
++        [2 ... MAX_POKENAV_MENUITEMS - 1] = POKENAV_MENUITEM_SWITCH_OFF
++    },
++    [POKENAV_MENU_TYPE_UNLOCK_MC_RIBBONS] =
++    {
++        POKENAV_MENUITEM_CONDITION,
++        POKENAV_MENUITEM_MATCH_CALL,
++        POKENAV_MENUITEM_RIBBONS,
++        [3 ... MAX_POKENAV_MENUITEMS - 1] = POKENAV_MENUITEM_SWITCH_OFF
++    },
++#else
+     [POKENAV_MENU_TYPE_DEFAULT] =
+     {
+         POKENAV_MENUITEM_MAP,
+@@ -64,6 +94,7 @@ static const u8 sMenuItems[][MAX_POKENAV_MENUITEMS] =
+         POKENAV_MENUITEM_RIBBONS,
+         [4 ... MAX_POKENAV_MENUITEMS - 1] = POKENAV_MENUITEM_SWITCH_OFF
+     },
++#endif
+     [POKENAV_MENU_TYPE_CONDITION] =
+     {
+         POKENAV_MENUITEM_CONDITION_PARTY,
+@@ -104,8 +135,8 @@ bool32 PokenavCallback_Init_MainMenuCursorOnMap(void)
+         return FALSE;
+ 
+     menu->menuType = GetPokenavMainMenuType();
+-    menu->cursorPos = POKENAV_MENUITEM_MAP;
+-    menu->currMenuItem = POKENAV_MENUITEM_MAP;
++    menu->cursorPos = 0;
++    menu->currMenuItem = sMenuItems[menu->menuType][0];
+     menu->helpBarIndex = HELPBAR_NONE;
+     SetMenuInputHandler(menu);
+     return TRUE;
+@@ -118,7 +149,7 @@ bool32 PokenavCallback_Init_MainMenuCursorOnMatchCall(void)
+         return FALSE;
+ 
+     menu->menuType = GetPokenavMainMenuType();
+-    menu->cursorPos = POKENAV_MENUITEM_MATCH_CALL;
++    menu->cursorPos = MAIN_MENU_POS(POKENAV_MENUITEM_MATCH_CALL);
+     menu->currMenuItem = POKENAV_MENUITEM_MATCH_CALL;
+     menu->helpBarIndex = HELPBAR_NONE;
+     SetMenuInputHandler(menu);
+@@ -132,7 +163,7 @@ bool32 PokenavCallback_Init_MainMenuCursorOnRibbons(void)
+         return FALSE;
+ 
+     menu->menuType = GetPokenavMainMenuType();
+-    menu->cursorPos = POKENAV_MENUITEM_RIBBONS;
++    menu->cursorPos = MAIN_MENU_POS(POKENAV_MENUITEM_RIBBONS);
+     menu->currMenuItem = POKENAV_MENUITEM_RIBBONS;
+     SetMenuInputHandler(menu);
+     return TRUE;
+@@ -448,7 +479,7 @@ static u32 GetMenuId(struct Pokenav_Menu *menu)
+ static void ReturnToMainMenu(struct Pokenav_Menu *menu)
+ {
+     menu->menuType = GetPokenavMainMenuType();
+-    menu->cursorPos = 1;
++    menu->cursorPos = MAIN_MENU_POS(POKENAV_MENUITEM_CONDITION);
+     menu->currMenuItem = sMenuItems[menu->menuType][menu->cursorPos];
+     menu->callback = HandleMainMenuInput;
+ }
+@@ -511,3 +542,32 @@ u16 GetHelpBarTextId(void)
      struct Pokenav_Menu *menu = GetSubstructPtr(POKENAV_SUBSTRUCT_MAIN_MENU_HANDLER);
      return menu->helpBarIndex;
  }
@@ -16668,18 +17541,23 @@ index d67f61c1ea46c9b36e5080da106156db51e3ff86..09fe4097c92df021e082bdadc93a8919
 +    return sLastCursorPositions[menu->menuType] + 1;
 +}
 +
-+// Puts the cursor on an option without moving the options: the D-pad press
-+// that follows moves it on to the one tapped, as the game does, in one step.
-+void CtrPokenavMenu_SetCursor(int cursor)
++// Puts the cursor straight on the option tapped, drawn there at once
++// (CtrPokenavMenuGfx_SnapCursor): the A that follows opens it.
++void CtrPokenavMenuGfx_SnapCursor(void);
++
++void CtrPokenavMenu_Select(int cursor)
 +{
 +    struct Pokenav_Menu *menu = GetSubstructPtr(POKENAV_SUBSTRUCT_MAIN_MENU_HANDLER);
 +
-+    if (menu != NULL && cursor >= 0 && cursor <= sLastCursorPositions[menu->menuType])
-+        menu->cursorPos = cursor;
++    if (menu == NULL || cursor < 0 || cursor > sLastCursorPositions[menu->menuType] || cursor == menu->cursorPos)
++        return;
++    menu->cursorPos = cursor;
++    menu->currMenuItem = sMenuItems[menu->menuType][cursor];
++    CtrPokenavMenuGfx_SnapCursor();
 +}
 +#endif
 diff --git a/src/pokenav_menu_handler_gfx.c b/src/pokenav_menu_handler_gfx.c
-index a4cdf48980c6e14a2da1c0cfbc00aa999bc10e18..8c5660ff5e326186ab0eba09afa2a0ce7e3cf45e 100644
+index a4cdf48980c6e14a2da1c0cfbc00aa999bc10e18..d289f0d3a1bb4287b683cfaf2d651c588f9d117f 100644
 --- a/src/pokenav_menu_handler_gfx.c
 +++ b/src/pokenav_menu_handler_gfx.c
 @@ -8,6 +8,9 @@
@@ -16705,7 +17583,37 @@ index a4cdf48980c6e14a2da1c0cfbc00aa999bc10e18..8c5660ff5e326186ab0eba09afa2a0ce
  static const u32 sPokenavBgDotsTiles[] = INCBIN_U32("graphics/pokenav/bg_dots.4bpp.lz");
  static const u32 sPokenavBgDotsTilemap[] = INCBIN_U32("graphics/pokenav/bg_dots.bin.lz");
  static const u16 sPokenavDeviceBgPal[] = INCBIN_U16("graphics/pokenav/device_outline.gbapal");
-@@ -794,10 +803,27 @@ static u32 LoopedTask_OpenPokenavFeature(s32 state)
+@@ -201,7 +210,9 @@ struct
+         .yStart = 42,
+         .deltaY = 20,
+         .gfx = {
++#ifndef PLATFORM_3DS
+             sOptionsLabelGfx_RegionMap,
++#endif
+             sOptionsLabelGfx_Condition,
+             sOptionsLabelGfx_SwitchOff
+         }
+@@ -211,7 +222,9 @@ struct
+         .yStart = 42,
+         .deltaY = 20,
+         .gfx = {
++#ifndef PLATFORM_3DS
+             sOptionsLabelGfx_RegionMap,
++#endif
+             sOptionsLabelGfx_Condition,
+             sOptionsLabelGfx_MatchCall,
+             sOptionsLabelGfx_SwitchOff
+@@ -222,7 +235,9 @@ struct
+         .yStart = 42,
+         .deltaY = 20,
+         .gfx = {
++#ifndef PLATFORM_3DS
+             sOptionsLabelGfx_RegionMap,
++#endif
+             sOptionsLabelGfx_Condition,
+             sOptionsLabelGfx_MatchCall,
+             sOptionsLabelGfx_Ribbons,
+@@ -794,10 +809,27 @@ static u32 LoopedTask_OpenPokenavFeature(s32 state)
  static void LoadPokenavOptionPalettes(void)
  {
      s32 i;
@@ -16733,7 +17641,7 @@ index a4cdf48980c6e14a2da1c0cfbc00aa999bc10e18..8c5660ff5e326186ab0eba09afa2a0ce
  }
  
  static void FreeAndDestroyMainMenuSprites(void)
-@@ -1266,20 +1292,20 @@ static void Task_MoveBgDots(u8 taskId)
+@@ -1266,20 +1298,20 @@ static void Task_MoveBgDots(u8 taskId)
  static void CreateBgDotPurplePalTask(void)
  {
      u8 taskId = CreateTask(Task_UpdateBgDotsPalette, 3);
@@ -16759,7 +17667,7 @@ index a4cdf48980c6e14a2da1c0cfbc00aa999bc10e18..8c5660ff5e326186ab0eba09afa2a0ce
  }
  
  static bool32 IsTaskActive_UpdateBgDotsPalette(void)
-@@ -1315,14 +1341,7 @@ static void SetupPokenavMenuScanlineEffects(void)
+@@ -1315,14 +1347,7 @@ static void SetupPokenavMenuScanlineEffects(void)
      SetGpuRegBits(REG_OFFSET_DISPCNT, DISPCNT_WIN0_ON);
      SetGpuRegBits(REG_OFFSET_WININ, WININ_WIN0_ALL);
      SetGpuRegBits(REG_OFFSET_WINOUT, WINOUT_WIN01_BG_ALL | WINOUT_WIN01_OBJ);
@@ -16774,12 +17682,49 @@ index a4cdf48980c6e14a2da1c0cfbc00aa999bc10e18..8c5660ff5e326186ab0eba09afa2a0ce
      ScanlineEffect_Stop();
      SetMenuOptionGlow();
      ScanlineEffect_SetParams(sPokenavMainMenuScanlineEffectParams);
-@@ -1378,3 +1397,15 @@ void ResetBldCnt_(void)
+@@ -1378,3 +1403,52 @@ void ResetBldCnt_(void)
  {
      ResetBldCnt();
  }
 +
 +#ifdef PLATFORM_3DS
++// An option chosen by touch (CtrPokenavMenu_Select): the cursor is on it at
++// once - that option out and glowing, the one before back in place, its
++// description shown - with no slide on the way, ready for A to open it.
++void CtrPokenavMenuGfx_SnapCursor(void)
++{
++    s32 i, j, newPos;
++    s32 cursor = GetPokenavCursorPos();
++    struct Pokenav_MenuGfx *gfx = GetSubstructPtr(POKENAV_SUBSTRUCT_MENU_GFX);
++
++    if (gfx == NULL)
++        return;
++    for (i = 0, newPos = 0; i < MAX_POKENAV_MENUITEMS; i++)
++    {
++        if (gfx->iconVisible[i])
++        {
++            if (newPos == cursor)
++            {
++                newPos = i;
++                break;
++            }
++            newPos++;
++        }
++    }
++    if (i == MAX_POKENAV_MENUITEMS)
++        return;
++    for (j = 0; j < NUM_OPTION_SUBSPRITES; j++)
++    {
++        gfx->iconSprites[gfx->cursorPos][j]->x = OPTION_DEFAULT_X;
++        gfx->iconSprites[gfx->cursorPos][j]->callback = SpriteCallbackDummy;
++        gfx->iconSprites[newPos][j]->x = OPTION_SELECTED_X;
++        gfx->iconSprites[newPos][j]->callback = SpriteCallbackDummy;
++    }
++    gfx->cursorPos = newPos;
++    SetMenuOptionGlow();
++    PrintCurrentOptionDescription();
++}
++
 +// Where the options of the menu on show are: option i is centred on line
 +// yStart + deltaY * i, as the glow behind the chosen one is (SetMenuOptionGlow).
 +void CtrPokenavMenu_Rows(int *yStart, int *deltaY)
@@ -16793,7 +17738,7 @@ index a4cdf48980c6e14a2da1c0cfbc00aa999bc10e18..8c5660ff5e326186ab0eba09afa2a0ce
 diff --git a/src/pokenav_region_map.c b/src/pokenav_region_map.c
 old mode 100755
 new mode 100644
-index 8475bbacb8ca74074f802049007cda103343e513..f81ff42966390ec5b1dc9e9bbe726578e96fa5ec
+index 8475bbacb8ca74074f802049007cda103343e513..caf7dbba742344d15667903d91dea72a748bcf5d
 --- a/src/pokenav_region_map.c
 +++ b/src/pokenav_region_map.c
 @@ -41,7 +41,7 @@ struct Pokenav_RegionMapGfx
@@ -16834,6 +17779,30 @@ index 8475bbacb8ca74074f802049007cda103343e513..f81ff42966390ec5b1dc9e9bbe726578
  {
      int i = 0;
      while (1)
+@@ -740,3 +740,23 @@ static void SetCityZoomTextInvisibility(bool32 invisible)
+     for (i = 0; i < (int)ARRAY_COUNT(state->cityZoomTextSprites); i++)
+         state->cityZoomTextSprites[i]->invisible = invisible;
+ }
++
++#ifdef PORT_BRIDGE
++// DrawCityMap's picture, for the bottom screen's map.
++const u32 *CtrPokenav_CityMap(u16 mapSecId, u8 posWithinMapSec)
++{
++    int i;
++
++    for (i = 0; i < NUM_CITY_MAPS; i++)
++    {
++        if (sPokenavCityMaps[i].mapSecId == mapSecId && sPokenavCityMaps[i].index == posWithinMapSec)
++            return sPokenavCityMaps[i].tilemap;
++    }
++    return NULL;
++}
++
++const u32 *CtrPokenav_CityZoomTiles(void)
++{
++    return sRegionMapCityZoomTiles_Gfx;
++}
++#endif
 diff --git a/src/pokenav_ribbons_summary.c b/src/pokenav_ribbons_summary.c
 index c799daf57bbf54738ee761676271ed9a7955c709..4b368f5c175ff8ec3b80bd677051e704007db1f8 100644
 --- a/src/pokenav_ribbons_summary.c
@@ -17040,7 +18009,7 @@ index d97d4631353cc1974d16279deef161099395755f..937e869f05c6fe234667f3a0df104c5f
      {
          sprite->y2 += 2;
 diff --git a/src/region_map.c b/src/region_map.c
-index a418b7fe4fbb2026185a1e527de8f711cf05671b..b87539d7eae59edbb4d09badaa2de46e39944146 100644
+index a418b7fe4fbb2026185a1e527de8f711cf05671b..1c0de4956423251720e34d364b138f5406f57a7c 100644
 --- a/src/region_map.c
 +++ b/src/region_map.c
 @@ -63,7 +63,7 @@ enum {
@@ -17295,7 +18264,7 @@ index a418b7fe4fbb2026185a1e527de8f711cf05671b..b87539d7eae59edbb4d09badaa2de46e
  }
  
  #undef sIconMapSec
-@@ -2025,3 +2030,19 @@ static void CB_ExitFlyMap(void)
+@@ -2025,3 +2030,94 @@ static void CB_ExitFlyMap(void)
          break;
      }
  }
@@ -17313,6 +18282,81 @@ index a418b7fe4fbb2026185a1e527de8f711cf05671b..b87539d7eae59edbb4d09badaa2de46e
 +    *moving = sRegionMap->inputCallback != ProcessRegionMapInput_Full
 +           && sRegionMap->inputCallback != ProcessRegionMapInput_Zoomed;
 +    return TRUE;
++}
++#endif
++
++#ifdef PORT_BRIDGE
++// GetMapsecType: a city or town (one to fly to, visited), a route, ...
++u8 CtrRegionMap_MapSecType(u16 mapSecId)
++{
++    return GetMapsecType(mapSecId);
++}
++
++static bool8 CtrMapSecInRow(u16 y, u16 mapSecId)
++{
++    u16 x;
++
++    if (y-- == 0)
++        return FALSE;
++    for (x = MAPCURSOR_X_MIN; x <= MAPCURSOR_X_MAX; x++)
++    {
++        if (GetMapSecIdAt(x, y) == mapSecId)
++            return TRUE;
++    }
++    return FALSE;
++}
++
++// GetPositionOfCursorWithinMapSec, for a cell: how many of the section's
++// cells come before it, row by row.
++u8 CtrRegionMap_PosWithinMapSec(u16 x, u16 y, u16 mapSecId)
++{
++    u8 pos = 0;
++
++    if (mapSecId == MAPSEC_NONE)
++        return 0;
++    while (1)
++    {
++        if (x <= MAPCURSOR_X_MIN)
++        {
++            if (!CtrMapSecInRow(y, mapSecId))
++                break;
++            y--;
++            x = MAPCURSOR_X_MAX + 1;
++        }
++        else
++        {
++            x--;
++            if (GetMapSecIdAt(x, y) == mapSecId)
++                pos++;
++        }
++    }
++    return pos;
++}
++
++// CB_ExitFlyMap's, for a destination chosen.
++void CtrRegionMap_SetFlyDestination(u16 mapSecId, u8 posWithinMapSec)
++{
++    switch (mapSecId)
++    {
++    case MAPSEC_SOUTHERN_ISLAND:
++        SetWarpDestinationToHealLocation(HEAL_LOCATION_SOUTHERN_ISLAND_EXTERIOR);
++        break;
++    case MAPSEC_BATTLE_FRONTIER:
++        SetWarpDestinationToHealLocation(HEAL_LOCATION_BATTLE_FRONTIER_OUTSIDE_EAST);
++        break;
++    case MAPSEC_LITTLEROOT_TOWN:
++        SetWarpDestinationToHealLocation(gSaveBlock2Ptr->playerGender == MALE ? HEAL_LOCATION_LITTLEROOT_TOWN_BRENDANS_HOUSE : HEAL_LOCATION_LITTLEROOT_TOWN_MAYS_HOUSE);
++        break;
++    case MAPSEC_EVER_GRANDE_CITY:
++        SetWarpDestinationToHealLocation(FlagGet(FLAG_LANDMARK_POKEMON_LEAGUE) && posWithinMapSec == 0 ? HEAL_LOCATION_EVER_GRANDE_CITY_POKEMON_LEAGUE : HEAL_LOCATION_EVER_GRANDE_CITY);
++        break;
++    default:
++        if (sMapHealLocations[mapSecId][2] != HEAL_LOCATION_NONE)
++            SetWarpDestinationToHealLocation(sMapHealLocations[mapSecId][2]);
++        else
++            SetWarpDestinationToMapWarp(sMapHealLocations[mapSecId][0], sMapHealLocations[mapSecId][1], WARP_ID_NONE);
++        break;
++    }
 +}
 +#endif
 diff --git a/src/reshow_battle_screen.c b/src/reshow_battle_screen.c
@@ -19035,7 +20079,7 @@ index 171678cddbf9ef41a725fc8b4c7f4cdc3be1fa18..9d8c85d5cd8c3b47465ee3e6498be9cd
      ClearPokemonCrySongs();
  }
 diff --git a/src/sprite.c b/src/sprite.c
-index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..7c27531250b7320c32438ae3a073d9366aa2ef6c 100644
+index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..c5a508abae7fd0644ab1884c651415307ba2e7dc 100644
 --- a/src/sprite.c
 +++ b/src/sprite.c
 @@ -2,6 +2,17 @@
@@ -19128,7 +20172,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..7c27531250b7320c32438ae3a073d936
 +}
 +#endif
 +
-+#if defined(PLATFORM_3DS) && CTR_VOXEL_ENABLED
++#if defined(PLATFORM_3DS)
 +/* OAM is sorted by subpriority, so weather cannot be identified by a fixed
 + * index. Tag the entries as the original sprite sorter writes them. */
 +static bool8 IsVoxelWeatherSprite(const struct Sprite *sprite)
@@ -19194,7 +20238,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..7c27531250b7320c32438ae3a073d936
 +    CtrVideo_ClearFogOam();
 +    CtrVideo_ClearExtPaletteOam();
 +#endif
-+#if defined(PLATFORM_3DS) && CTR_VOXEL_ENABLED
++#if defined(PLATFORM_3DS)
 +    CtrVideo_ClearVoxelWeatherOam();
 +#endif
      while (i < MAX_SPRITES)
@@ -19233,7 +20277,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..7c27531250b7320c32438ae3a073d936
 +            if (sSpriteExtPalettes[sSpriteOrder[i]])
 +                CtrVideo_MarkExtPaletteOam(first, oamIndex, sSpriteExtPalettes[sSpriteOrder[i]] - 1);
 +#endif
-+#if defined(PLATFORM_3DS) && CTR_VOXEL_ENABLED
++#if defined(PLATFORM_3DS)
 +            if (IsVoxelWeatherSprite(sprite))
 +                CtrVideo_MarkVoxelWeatherOam(first, oamIndex);
 +#else
@@ -19478,7 +20522,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..7c27531250b7320c32438ae3a073d936
  {
      sprite->subspriteTables = subspriteTables;
 diff --git a/src/start_menu.c b/src/start_menu.c
-index 13a46c51c68a76bda09d20b1131ebbadc29601b0..3b7a8202cde4aa67627787f207177222e6da0694 100644
+index 13a46c51c68a76bda09d20b1131ebbadc29601b0..5f8c4213aaa86db1ae0f15dadb80dcc594c5894c 100644
 --- a/src/start_menu.c
 +++ b/src/start_menu.c
 @@ -551,8 +551,23 @@ static bool8 FieldCB_ReturnToFieldStartMenu(void)
@@ -19516,7 +20560,7 @@ index 13a46c51c68a76bda09d20b1131ebbadc29601b0..3b7a8202cde4aa67627787f207177222
      if (!IsOverworldLinkActive())
      {
          FreezeObjectEvents();
-@@ -1437,3 +1456,145 @@ void AppendToList(u8 *list, u8 *pos, u8 newEntry)
+@@ -1437,3 +1456,180 @@ void AppendToList(u8 *list, u8 *pos, u8 newEntry)
      list[*pos] = newEntry;
      (*pos)++;
  }
@@ -19660,6 +20704,41 @@ index 13a46c51c68a76bda09d20b1131ebbadc29601b0..3b7a8202cde4aa67627787f207177222
 +bool8 CtrStartMenu_Saving(void)
 +{
 +    return FuncIsActiveTask(Task_CtrStartMenuAction) && gMenuCallback == CtrSaveCallback;
++}
++
++static void CB2_CtrOpenPokedex(void)
++{
++    IncrementGameStat(GAME_STAT_CHECKED_POKEDEX);
++    SetMainCallback2(CB2_OpenPokedex);
++}
++
++static void CB2_CtrOpenTrainerCard(void)
++{
++    ShowPlayerTrainerCard(CB2_ReturnToFieldWithOpenMenu);
++}
++
++// What an entry opens straight from another of the game's screens, the one
++// the bottom screen's dock left for it (CtrBottom_LeaveTo): the entry's own
++// screen, with the field left as that one left it (cleaned up, the player
++// frozen) until this one goes back to it. NULL for an entry that can't open.
++MainCallback CtrStartMenu_DirectCallback(u8 action)
++{
++    if (!CtrStartMenu_IsReplaced())
++        return NULL;
++    switch (action)
++    {
++    case MENU_ACTION_POKEDEX:
++        return GetNationalPokedexCount(FLAG_GET_SEEN) != 0 ? CB2_CtrOpenPokedex : NULL;
++    case MENU_ACTION_POKEMON:
++        return CB2_PartyMenuFromStartMenu;
++    case MENU_ACTION_BAG:
++        return CB2_BagMenuFromStartMenu;
++    case MENU_ACTION_POKENAV:
++        return CB2_InitPokeNav;
++    case MENU_ACTION_PLAYER:
++        return CB2_CtrOpenTrainerCard;
++    }
++    return NULL;
 +}
 +#endif
 diff --git a/src/starter_choose.c b/src/starter_choose.c
@@ -20156,7 +21235,7 @@ index b188cbbcba75744b034677173b363e930f201c79..fd819337fefe3e05eef277cf585eab73
  
      return count;
 diff --git a/src/text.c b/src/text.c
-index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3ad3e61e2 100644
+index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b13602d22cac 100644
 --- a/src/text.c
 +++ b/src/text.c
 @@ -12,6 +12,9 @@
@@ -20189,7 +21268,52 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
      sTempTextPrinter.callback = callback;
      sTempTextPrinter.minLetterSpacing = 0;
      sTempTextPrinter.japanese = 0;
-@@ -509,6 +518,7 @@ void GenerateFontHalfRowLookupTable(u8 fgColor, u8 bgColor, u8 shadowColor)
+@@ -349,6 +358,44 @@ bool16 IsTextPrinterActive(u8 id)
+     return sTextPrinters[id].active;
+ }
+ 
++#ifdef PLATFORM_3DS
++// For the 3DS bottom screen, which shows a message a page at a time: the page
++// (counted by \p) the printer of windowId shows of str; -1 when it is not
++// printing str.
++s16 CtrText_PrinterPage(u8 windowId, const u8 *str)
++{
++    const struct TextPrinter *printer;
++    const u8 *p;
++    s16 page = 0;
++
++    if (windowId >= WINDOWS_MAX || str == NULL || !sTextPrinters[windowId].active)
++        return -1;
++    printer = &sTextPrinters[windowId];
++    str = ResolveTextString(str);
++    if (printer->printerTemplate.currentChar < str || printer->printerTemplate.currentChar - str > 0x400)
++        return -1;
++    for (p = str; p < printer->printerTemplate.currentChar; p++)
++    {
++        if (*p == EOS)
++            return -1;
++        if (*p == EXT_CTRL_CODE_BEGIN)
++        {
++            if (p[1] == EOS)
++                return -1;
++            p += GetExtCtrlCodeLength(p[1]);
++        }
++        else if (*p == CHAR_PROMPT_CLEAR)
++        {
++            page++;
++        }
++    }
++    // Waiting at a \p, the page before it is still on show.
++    if (printer->state == RENDER_STATE_CLEAR && page > 0)
++        page--;
++    return page;
++}
++#endif
++
+ static u32 RenderFont(struct TextPrinter *textPrinter)
+ {
+     u32 ret;
+@@ -509,6 +556,7 @@ void GenerateFontHalfRowLookupTable(u8 fgColor, u8 bgColor, u8 shadowColor)
      *(current++) = (bg12) | temp;
      *(current++) = (fg12) | temp;
      *(current++) = (shadow12) | temp;
@@ -20197,7 +21321,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
  }
  
  void SaveTextColors(u8 *fgColor, u8 *bgColor, u8 *shadowColor)
-@@ -523,11 +533,28 @@ void RestoreTextColors(u8 *fgColor, u8 *bgColor, u8 *shadowColor)
+@@ -523,11 +571,28 @@ void RestoreTextColors(u8 *fgColor, u8 *bgColor, u8 *shadowColor)
      GenerateFontHalfRowLookupTable(*fgColor, *bgColor, *shadowColor);
  }
  
@@ -20227,7 +21351,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
  
      temp = *(src++);
      *(dest)++ = ((sFontHalfRowLookupTable[sFontHalfRowOffsets[temp & 0xFF]]) << 16) | (sFontHalfRowLookupTable[sFontHalfRowOffsets[temp >> 8]]);
-@@ -862,6 +889,20 @@ bool8 TextPrinterWaitAutoMode(struct TextPrinter *textPrinter)
+@@ -862,6 +927,20 @@ bool8 TextPrinterWaitAutoMode(struct TextPrinter *textPrinter)
      }
  }
  
@@ -20248,7 +21372,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
  bool16 TextPrinterWaitWithDownArrow(struct TextPrinter *textPrinter)
  {
      bool8 result = FALSE;
-@@ -872,7 +913,10 @@ bool16 TextPrinterWaitWithDownArrow(struct TextPrinter *textPrinter)
+@@ -872,7 +951,10 @@ bool16 TextPrinterWaitWithDownArrow(struct TextPrinter *textPrinter)
      else
      {
          TextPrinterDrawDownArrow(textPrinter);
@@ -20260,7 +21384,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
          {
              result = TRUE;
              PlaySE(SE_SELECT);
-@@ -890,7 +934,10 @@ bool16 TextPrinterWait(struct TextPrinter *textPrinter)
+@@ -890,7 +972,10 @@ bool16 TextPrinterWait(struct TextPrinter *textPrinter)
      }
      else
      {
@@ -20272,7 +21396,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
          {
              result = TRUE;
              PlaySE(SE_SELECT);
-@@ -941,14 +988,17 @@ static u16 RenderText(struct TextPrinter *textPrinter)
+@@ -941,14 +1026,17 @@ static u16 RenderText(struct TextPrinter *textPrinter)
      switch (textPrinter->state)
      {
      case RENDER_STATE_HANDLE_CHAR:
@@ -20292,7 +21416,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
                  subStruct->hasPrintBeenSpedUp = TRUE;
                  textPrinter->delayCounter = 0;
              }
-@@ -1239,7 +1289,11 @@ static u32 UNUSED GetStringWidthFixedWidthFont(const u8 *str, u8 fontId, u8 lett
+@@ -1239,7 +1327,11 @@ static u32 UNUSED GetStringWidthFixedWidthFont(const u8 *str, u8 fontId, u8 lett
  
      width = 0;
      line = 0;
@@ -20304,7 +21428,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
      strPos = 0;
  
      do
-@@ -1352,6 +1406,10 @@ s32 GetStringWidth(u8 fontId, const u8 *str, s16 letterSpacing)
+@@ -1352,6 +1444,10 @@ s32 GetStringWidth(u8 fontId, const u8 *str, s16 letterSpacing)
      lineWidth = 0;
      bufferPointer = 0;
  
@@ -20315,7 +21439,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
      while (*str != EOS)
      {
          switch (*str)
-@@ -1379,6 +1437,9 @@ s32 GetStringWidth(u8 fontId, const u8 *str, s16 letterSpacing)
+@@ -1379,6 +1475,9 @@ s32 GetStringWidth(u8 fontId, const u8 *str, s16 letterSpacing)
          case CHAR_DYNAMIC:
              if (bufferPointer == NULL)
                  bufferPointer = DynamicPlaceholderTextUtil_GetPlaceholderPtr(*++str);
@@ -20325,7 +21449,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
              while (*bufferPointer != EOS)
              {
                  glyphWidth = func(*bufferPointer++, isJapanese);
-@@ -1515,7 +1576,11 @@ u8 RenderTextHandleBold(u8 *pixels, u8 fontId, u8 *str)
+@@ -1515,7 +1614,11 @@ u8 RenderTextHandleBold(u8 *pixels, u8 fontId, u8 *str)
      shadowColor = TEXT_COLOR_LIGHT_GRAY;
  
      GenerateFontHalfRowLookupTable(TEXT_COLOR_WHITE, TEXT_COLOR_TRANSPARENT, TEXT_COLOR_LIGHT_GRAY);
@@ -20337,7 +21461,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
      strPos = 0;
  
      do
-@@ -1610,7 +1675,7 @@ u8 DrawKeypadIcon(u8 windowId, u8 keypadIconId, u16 x, u16 y)
+@@ -1610,7 +1713,7 @@ u8 DrawKeypadIcon(u8 windowId, u8 keypadIconId, u16 x, u16 y)
  {
      BlitBitmapRectToWindow(
          windowId,
@@ -20346,7 +21470,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
          0,
          0,
          0x80,
-@@ -1686,7 +1751,12 @@ static void DecompressGlyph_Small(u16 glyphId, bool32 isJapanese)
+@@ -1686,7 +1789,12 @@ static void DecompressGlyph_Small(u16 glyphId, bool32 isJapanese)
  
      if (isJapanese == 1)
      {
@@ -20360,7 +21484,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
          DecompressGlyphTile(glyphs, gCurGlyph.gfxBufferTop);
          DecompressGlyphTile(glyphs + 0x80, gCurGlyph.gfxBufferBottom);
          gCurGlyph.width = 8;
-@@ -1694,7 +1764,12 @@ static void DecompressGlyph_Small(u16 glyphId, bool32 isJapanese)
+@@ -1694,7 +1802,12 @@ static void DecompressGlyph_Small(u16 glyphId, bool32 isJapanese)
      }
      else
      {
@@ -20374,7 +21498,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
          gCurGlyph.width = gFontSmallLatinGlyphWidths[glyphId];
  
          if (gCurGlyph.width <= 8)
-@@ -1728,7 +1803,12 @@ static void DecompressGlyph_Narrow(u16 glyphId, bool32 isJapanese)
+@@ -1728,7 +1841,12 @@ static void DecompressGlyph_Narrow(u16 glyphId, bool32 isJapanese)
  
      if (isJapanese == TRUE)
      {
@@ -20388,7 +21512,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
          DecompressGlyphTile(glyphs, gCurGlyph.gfxBufferTop);
          DecompressGlyphTile(glyphs + 0x80, gCurGlyph.gfxBufferBottom);
          gCurGlyph.width = 8;
-@@ -1736,7 +1816,12 @@ static void DecompressGlyph_Narrow(u16 glyphId, bool32 isJapanese)
+@@ -1736,7 +1854,12 @@ static void DecompressGlyph_Narrow(u16 glyphId, bool32 isJapanese)
      }
      else
      {
@@ -20402,7 +21526,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
          gCurGlyph.width = gFontNarrowLatinGlyphWidths[glyphId];
  
          if (gCurGlyph.width <= 8)
-@@ -1770,7 +1855,12 @@ static void DecompressGlyph_SmallNarrow(u16 glyphId, bool32 isJapanese)
+@@ -1770,7 +1893,12 @@ static void DecompressGlyph_SmallNarrow(u16 glyphId, bool32 isJapanese)
  
      if (isJapanese == TRUE)
      {
@@ -20416,7 +21540,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
          DecompressGlyphTile(glyphs, gCurGlyph.gfxBufferTop);
          DecompressGlyphTile(glyphs + 0x80, gCurGlyph.gfxBufferBottom);
          gCurGlyph.width = 8;
-@@ -1778,7 +1868,12 @@ static void DecompressGlyph_SmallNarrow(u16 glyphId, bool32 isJapanese)
+@@ -1778,7 +1906,12 @@ static void DecompressGlyph_SmallNarrow(u16 glyphId, bool32 isJapanese)
      }
      else
      {
@@ -20430,7 +21554,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
          gCurGlyph.width = gFontSmallNarrowLatinGlyphWidths[glyphId];
  
          if (gCurGlyph.width <= 8)
-@@ -1812,7 +1907,12 @@ static void DecompressGlyph_Short(u16 glyphId, bool32 isJapanese)
+@@ -1812,7 +1945,12 @@ static void DecompressGlyph_Short(u16 glyphId, bool32 isJapanese)
  
      if (isJapanese == TRUE)
      {
@@ -20444,7 +21568,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
          DecompressGlyphTile(glyphs, gCurGlyph.gfxBufferTop);
          DecompressGlyphTile(glyphs + 0x8, gCurGlyph.gfxBufferTop + 8);
          DecompressGlyphTile(glyphs + 0x80, gCurGlyph.gfxBufferBottom);    // gCurGlyph + 0x20
-@@ -1822,7 +1922,12 @@ static void DecompressGlyph_Short(u16 glyphId, bool32 isJapanese)
+@@ -1822,7 +1960,12 @@ static void DecompressGlyph_Short(u16 glyphId, bool32 isJapanese)
      }
      else
      {
@@ -20458,7 +21582,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
          gCurGlyph.width = gFontShortLatinGlyphWidths[glyphId];
  
          if (gCurGlyph.width <= 8)
-@@ -1856,7 +1961,12 @@ static void DecompressGlyph_Normal(u16 glyphId, bool32 isJapanese)
+@@ -1856,7 +1999,12 @@ static void DecompressGlyph_Normal(u16 glyphId, bool32 isJapanese)
  
      if (isJapanese == TRUE)
      {
@@ -20472,7 +21596,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
          DecompressGlyphTile(glyphs, gCurGlyph.gfxBufferTop);
          DecompressGlyphTile(glyphs + 0x80, gCurGlyph.gfxBufferBottom);
          gCurGlyph.width = 8;
-@@ -1864,7 +1974,12 @@ static void DecompressGlyph_Normal(u16 glyphId, bool32 isJapanese)
+@@ -1864,7 +2012,12 @@ static void DecompressGlyph_Normal(u16 glyphId, bool32 isJapanese)
      }
      else
      {
@@ -20486,7 +21610,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..b91830b6e7c97368c31f447b3d0adcb3
          gCurGlyph.width = gFontNormalLatinGlyphWidths[glyphId];
  
          if (gCurGlyph.width <= 8)
-@@ -1896,7 +2011,12 @@ static void DecompressGlyph_Bold(u16 glyphId)
+@@ -1896,7 +2049,12 @@ static void DecompressGlyph_Bold(u16 glyphId)
  {
      const u16 *glyphs;
  
@@ -20910,7 +22034,7 @@ index e9c2984087302e2858d7617fce6d0408d3427513..57c1bd6ff0d3d17e4537480d96d2120b
 diff --git a/src/trainer_card.c b/src/trainer_card.c
 old mode 100755
 new mode 100644
-index 78a4bb56fe5101e676e5d1192483f08e6f5ce25e..49204856d475fd3a9c40983d7a83255911894368
+index 78a4bb56fe5101e676e5d1192483f08e6f5ce25e..b90186c1b4b593ff48cc43fbe8ce8c92585dd373
 --- a/src/trainer_card.c
 +++ b/src/trainer_card.c
 @@ -77,7 +77,7 @@ struct TrainerCardData
@@ -20922,7 +22046,26 @@ index 78a4bb56fe5101e676e5d1192483f08e6f5ce25e..49204856d475fd3a9c40983d7a832559
      struct TrainerCard trainerCard;
      u16 frontTilemap[600];
      u16 backTilemap[600];
-@@ -363,6 +363,9 @@ static void CloseTrainerCard(u8 taskId)
+@@ -101,6 +101,13 @@ static void HblankCb_TrainerCard(void);
+ static void BlinkTimeColon(void);
+ static void CB2_TrainerCard(void);
+ static void CloseTrainerCard(u8 task);
++#ifdef PLATFORM_3DS
++// The bottom screen's dock may have chosen another screen to open instead.
++#define CTR_LEAVE_TO(cb) CtrBottom_LeaveTo(cb)
++MainCallback CtrBottom_LeaveTo(MainCallback field);
++#else
++#define CTR_LEAVE_TO(cb) (cb)
++#endif
+ static bool8 PrintAllOnCardFront(void);
+ static void DrawTrainerCardWindow(u8);
+ static void CreateTrainerCardTrainerPic(void);
+@@ -359,10 +366,13 @@ static void CB2_TrainerCard(void)
+ 
+ static void CloseTrainerCard(u8 taskId)
+ {
+-    SetMainCallback2(sData->callback2);
++    SetMainCallback2(CTR_LEAVE_TO(sData->callback2));
      FreeAllWindowBuffers();
      FREE_AND_SET_NULL(sData);
      DestroyTask(taskId);
@@ -20932,7 +22075,7 @@ index 78a4bb56fe5101e676e5d1192483f08e6f5ce25e..49204856d475fd3a9c40983d7a832559
  }
  
  // States for Task_TrainerCard. Skips the initial states, which are done once in order
-@@ -858,7 +861,7 @@ static void InitGpuRegs(void)
+@@ -858,7 +868,7 @@ static void InitGpuRegs(void)
      SetGpuReg(REG_OFFSET_WININ, WININ_WIN0_BG_ALL | WININ_WIN0_OBJ | WININ_WIN0_CLR);
      SetGpuReg(REG_OFFSET_WINOUT, WINOUT_WIN01_BG1 | WINOUT_WIN01_BG2 | WINOUT_WIN01_BG3 | WINOUT_WIN01_OBJ);
      SetGpuReg(REG_OFFSET_WIN0V, DISPLAY_HEIGHT);
@@ -20941,7 +22084,7 @@ index 78a4bb56fe5101e676e5d1192483f08e6f5ce25e..49204856d475fd3a9c40983d7a832559
      if (gReceivedRemoteLinkPlayers)
          EnableInterrupts(INTR_FLAG_VBLANK | INTR_FLAG_HBLANK | INTR_FLAG_VCOUNT | INTR_FLAG_TIMER3 | INTR_FLAG_SERIAL);
      else
-@@ -1900,3 +1903,26 @@ static void CreateTrainerCardTrainerPic(void)
+@@ -1900,3 +1910,26 @@ static void CreateTrainerCardTrainerPic(void)
                      WIN_TRAINER_PIC);
      }
  }

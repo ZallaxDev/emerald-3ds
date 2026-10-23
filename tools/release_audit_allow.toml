@@ -37,6 +37,8 @@ paths = [
 "3ds_port/assets/artwork/bottom/sun.png" = "bottom screen header sun icon (clock, day) (3ds_port/scripts/gen_bottom_art.py), original pixel art by the Emerald 3DS author"
 "3ds_port/assets/artwork/bottom/moon.png" = "bottom screen header moon icon (clock, night) (3ds_port/scripts/gen_bottom_art.py), original pixel art by the Emerald 3DS author"
 "3ds_port/assets/artwork/bottom/star.png" = "bottom screen trainer card star (3ds_port/scripts/gen_bottom_art.py), original pixel art by the Emerald 3DS author"
+"3ds_port/assets/artwork/bottom/zoom_in.png" = "bottom screen map zoom in button icon (3ds_port/scripts/gen_bottom_art.py), original pixel art by the Emerald 3DS author"
+"3ds_port/assets/artwork/bottom/zoom_out.png" = "bottom screen map zoom out button icon (3ds_port/scripts/gen_bottom_art.py), original pixel art by the Emerald 3DS author"
 "3ds_port/assets/artwork/bottom/nuzlocke.png" = "bottom screen Nuzlocke tracker tombstone (3ds_port/scripts/gen_bottom_art.py), original pixel art by the Emerald 3DS author"
 "3ds_port/assets/artwork/bottom/tiny_x.png" = "bottom screen cross on a fallen Pokémon (3ds_port/scripts/gen_bottom_art.py), original pixel art by the Emerald 3DS author"
 

@@ -62,19 +62,12 @@ LIBS := -lcitro2d -lcitro3d $(LIBS)
 OBJECTS := $(patsubst src/%.c,build/%.o,$(SOURCES))
 GAMEFLAGS := -DPORTABLE -DPLATFORM_3DS -D__3DS__ -DMODERN=1 -DUBFIX -D__INTELLISENSE__
 GAMEFLAGS += -iquote include -iquote ../include -iquote ../include/constants -iquote ..
-# VOXEL=0 compiles the voxel overworld out entirely.
-VOXEL ?= 1
-CPPFLAGS += -DCTR_VOXEL_ENABLED=$(VOXEL)
-GAMEFLAGS += -DCTR_VOXEL_ENABLED=$(VOXEL)
 # Baked clock-driven lighting and contact shadows, targeting Old 3DS.
 VOXEL_LIGHTING ?= 1
 ifneq ($(VOXEL_LIGHTING),0)
 ifneq ($(VOXEL_LIGHTING),1)
 $(error VOXEL_LIGHTING must be 0 or 1)
 endif
-endif
-ifeq ($(VOXEL),0)
-override VOXEL_LIGHTING := 0
 endif
 CPPFLAGS += -DCTR_VOXEL_LIGHTING=$(VOXEL_LIGHTING)
 GAMEFLAGS += -DCTR_VOXEL_LIGHTING=$(VOXEL_LIGHTING)
@@ -127,6 +120,29 @@ CPPFLAGS += -DCTR_DATA_BACKEND=$(DATA_BACKEND)
 GAMECFLAGS := $(filter-out -Werror,$(CFLAGS)) -fsigned-char -fno-strict-aliasing
 GAMECFLAGS += -Wno-error=incompatible-pointer-types -Wno-error=int-conversion -Wno-error=implicit-function-declaration
 # Optional per-machine settings (e.g. SAMPLE_OVERLAY_DIR), never committed.
+#
+# Debug-only defines with no option of their own: off in every normal build.
+# Turn one on in local.mk, CPPFLAGS for the port's native files and GAMEFLAGS
+# for the game and bridge ones (each line says which), e.g.
+#   CPPFLAGS += -DCTR_AUDIO_DUMP
+# CPPFLAGS:
+#   CTR_AUDIO_DUMP          3ds_audio.c: the mixer's output, 600-2400 frames, to sdmc:/3ds/emerald3ds/audio.raw.
+#   CTR_STEREO_ZERO         3ds_video.c: the battle's 3D depths all 0 (the stereo path, no displacement).
+#   CTR_DUMP_OBJWIN         3ds_video.c, with FRAME_DUMP=1: frames with the OBJ window up to frames.raw.
+#   CTR_DUMP_BATTLE         3ds_video.c, with FRAME_DUMP=1: battle frames to frames.raw;
+#                           CTR_DUMP_FROM=n with CTR_DUMP_STEP=m picks from which battle frame, every m.
+#   CTR_GPU_EARLY=0         3ds_video.c: the GPU is not started early within a frame (on by default).
+#   CTR_VRAM_TRUST=0        3ds_video.c: the field compares all of VRAM, not trusting announced writes.
+#   CTR_VOXEL_TRACE=1       voxel/ctr_voxel.c: logs the first 48 chunk builds.
+# GAMEFLAGS:
+#   CTR_BOTTOM_CACHE_AUDIT  3ds_bottom_ui.c: a kept bottom screen is drawn anyway, a difference logged.
+#   CTR_SPRITE_ID_AUDIT     3ds_sprite_ids.c: logs a sprite that keeps its id with another template.
+#   CTR_TEST_BATTLE=frame   3ds_game_full.c: a wild Zigzagoon battle once the field is up at that frame.
+#   CTR_MEASURE_AID         3ds_game_full.c: runs the warps and battles listed in measure.txt.
+#   CTR_TEST_EXT_PALETTE    3ds_game_full.c: Azahar check of the ext palettes with a party icon.
+#   PORT_HEAP_CHECK         ../src/malloc.c: CheckHeap walks the heap again.
+# TEST_FLAGS (3ds_cycle_test.c only, touch it to rebuild):
+#   CTR_BATTLE_TEST=SPECIES_x, CTR_BATTLE_TEST_LEVEL=n, CTR_BATTLE_TEST_TRAINER=TRAINER_x: a battle on demand.
 -include local.mk
 include full.mk
 OBJECTS += $(FULL_OBJECTS)
@@ -317,8 +333,21 @@ verify-logo-ptbr:
 
 .PHONY: verify-rng-seeding
 verify: verify-rng-seeding
+.PHONY: verify-battle-speed
+verify: verify-battle-speed
+verify-battle-speed: build/battle_speed_test$(EXESUFFIX)
+	./build/battle_speed_test$(EXESUFFIX)
+
+build/battle_speed_test$(EXESUFFIX): tests/battle_speed_test.c src/3ds_settings.c include/3ds_platform.h
+	@mkdir -p $(@D)
+	$(HOSTCC) -std=gnu99 -O2 -Wall -Wextra -Werror -Itests/settings_host -Iinclude $< -pthread -o $@
 verify-rng-seeding:
 	"$(PYTHON)" tests/rng_seeding_test.py --cc "$(HOSTCC)"
+
+.PHONY: verify-bottom-taps
+verify: verify-bottom-taps
+verify-bottom-taps:
+	"$(PYTHON)" tests/bottom_taps_test.py --cc "$(HOSTCC)"
 .PHONY: verify-field-view
 verify-field-view: build/field_view_test$(EXESUFFIX)
 	./build/field_view_test$(EXESUFFIX)

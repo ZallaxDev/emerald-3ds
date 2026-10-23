@@ -1,5 +1,6 @@
 """Exercise native capture tasks, the layout bridge and software-rasterized rendering."""
 import argparse
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -495,8 +496,7 @@ int main(void) {
         path = folder / "pokedex_capture.c"
         binary = folder / "pokedex_capture"
         path.write_text(source, encoding="utf-8")
-        flags = ["-fsanitize=address,undefined", "-fno-sanitize-recover=all",
-                 "-fno-omit-frame-pointer"] if args.sanitize else []
+        flags = sanitizers(args.cc, folder) if args.sanitize else []
         subprocess.run([args.cc, "-std=c99", "-O1", "-Wall", "-Wextra", "-Werror", *flags,
                         str(path), "-o", str(binary)], check=True)
         subprocess.run([str(binary)], check=True)
@@ -508,6 +508,22 @@ int main(void) {
         subprocess.run([args.cc, "-std=c99", "-O1", "-Wall", "-Wextra", "-Werror", *flags,
                         str(rendering), "-o", str(renderer)], check=True)
         subprocess.run([str(renderer)], check=True)
+
+
+def sanitizers(cc, folder):
+    """The address and undefined-behaviour checks, when the host compiler can
+    link them (MinGW's gcc has neither): said, not dropped silently."""
+    flags = ["-fsanitize=address,undefined", "-fno-sanitize-recover=all", "-fno-omit-frame-pointer"]
+    probe = folder / "sanitizer_probe.c"
+    probe.write_text("int main(void) { return 0; }\n", encoding="utf-8")
+    result = subprocess.run([cc, *flags, str(probe), "-o", str(folder / "sanitizer_probe")],
+                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if result.returncode == 0:
+        return flags
+    if os.name != "nt":
+        raise SystemExit("%s cannot link -fsanitize=address,undefined" % cc)
+    print("SKIP Pokedex capture sanitizers: %s cannot link -fsanitize=address,undefined" % cc, flush=True)
+    return []
 
 
 if __name__ == "__main__":

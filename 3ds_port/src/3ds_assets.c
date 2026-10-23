@@ -550,6 +550,9 @@ static const char *const sWarmFirst[] = {
      * the water and flower animations every map shows) and the map name
      * pop-up were read in the frame, a dozen of them, in the first minute. */
     "data/tilesets/primary/", "generated/assets/build_root_src_map_name_popup__",
+    /* The follower's ball, as it first comes out there: its two files were
+     * 38 ms of that frame. */
+    "graphics/balls/",
     "graphics/battle_anims/", "graphics/battle_interface/", "graphics/battle_environment/",
     "graphics/battle_transitions/", "graphics/fonts/", "graphics/text_window/", "graphics/interface/",
     "graphics/birch_speech/", "graphics/misc/",
@@ -760,11 +763,6 @@ void CtrAssets_StartWarmup(void)
         sWarmRunning = false;
         CtrLog_Write(CTR_LOG_ERROR, "assets: no warm-up worker; payloads load on demand");
     }
-}
-
-void CtrAssets_SetBudget(u32 bytes)
-{
-    sBudget = bytes;
 }
 
 const struct CtrAssetStats *CtrAssets_GetStats(void)

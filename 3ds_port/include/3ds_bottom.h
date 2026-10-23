@@ -34,6 +34,9 @@ void CtrBottom_Frame(void);
 /* The game's soft reset: forget the game it was in (back to the title's
  * screen, no menu session, plan or focus) and let the top screen go. */
 void CtrBottom_SoftReset(void);
+/* Back from HOME or sleep (the APT hook): a touch held across it is let go
+ * and the screen drawn again, on the next Frame. */
+void CtrBottom_OnResume(void);
 /* Keys the bottom screen presses on the player's behalf this frame. */
 uint16_t CtrBottom_InjectedKeys(void);
 /* The player's keys as the game should see them: none while the button

@@ -32,7 +32,7 @@ against the randomizer's live mapping.
 
 Verification uses production functions extracted into SDK-free mock harnesses:
 `make -C 3ds_port verify-bottom-map verify-clock-store HOSTCC=cc PYTHON=python3`.
-The map harness also runs with `VOXEL=0`. It checks timed/method tables, aggregation,
+The map harness checks timed/method tables, aggregation,
 seen-name masking, mapped-species masking, page/input transitions, hit targets,
 Repel read-only snapshots, clock dismissal and partial/full redraw equivalence.
 The clock harness checks save binding, corruption, backups, serial/status

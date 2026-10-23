@@ -90,7 +90,8 @@ bool CtrNuz_DecodeSized(const uint8_t *record, size_t bytes, CtrNuzState *state,
  * The tracker of the running game. A record is written after each successful
  * game save when this game owns it (it came from this save's record, or a new
  * game began) or holds anything: a record of another save is never replaced
- * by an empty tracker that merely failed to match it.
+ * by an empty tracker that merely failed to match it. With the tracker
+ * switched off, an empty unedited tracker is not written at all.
  */
 typedef enum
 {
@@ -116,7 +117,7 @@ void CtrNuzSession_NewGame(CtrNuzSession *session);
 /* After the store loaded session->state for the save (reset unless matched). */
 void CtrNuzSession_Loaded(CtrNuzSession *session, CtrNuzLink link);
 void CtrNuzSession_Edited(CtrNuzSession *session);
-bool CtrNuzSession_ShouldWrite(const CtrNuzSession *session);
+bool CtrNuzSession_ShouldWrite(const CtrNuzSession *session, bool enabled);
 void CtrNuzSession_Written(CtrNuzSession *session, bool ok);
 CtrNuzLabel CtrNuzSession_Label(const CtrNuzSession *session);
 

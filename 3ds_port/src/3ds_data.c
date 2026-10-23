@@ -260,9 +260,16 @@ fail:
     return false;
 }
 
+static LightLock sAheadLock;
+static bool sAheadReady;
+
 bool CtrData_Init(void)
 {
     int choice = CTR_DATA_BACKEND;
+
+    /* Here, before any worker can ask for a file. */
+    LightLock_Init(&sAheadLock);
+    sAheadReady = true;
 
     ReadEngineAbi();
     mkdir("sdmc:/3ds", 0777);
@@ -315,21 +322,8 @@ bool CtrData_Init(void)
     return true;
 }
 
-void CtrData_Shutdown(void)
-{
-    if (sPak != NULL)
-        fclose(sPak);
-    sPak = NULL;
-    free(sEntries);
-    sEntries = NULL;
-    sEntryCount = 0;
-    sBackend = CTR_DATA_NONE;
-}
-
-CtrDataBackend CtrData_GetBackend(void) { return sBackend; }
 const char *CtrData_ErrorTitle(void) { return sErrorTitle; }
 const char *CtrData_ErrorDetail(void) { return sErrorDetail; }
-uint32_t CtrData_EngineAbi(void) { return sEngineAbi; }
 
 const char *CtrData_BackendName(void)
 {
@@ -480,7 +474,7 @@ bool CtrData_Exists(const char *path)
     return CtrData_Size(path, NULL);
 }
 
-void *CtrData_Load(const char *path, uint32_t *outSize)
+static void *LoadNow(const char *path, uint32_t *outSize)
 {
     uint32_t size;
     uint8_t *buffer;
@@ -511,4 +505,193 @@ void *CtrData_Load(const char *path, uint32_t *outSize)
     if (outSize != NULL)
         *outSize = size;
     return buffer;
+}
+
+/*
+ * Files read ahead (CtrData_Prefetch) on a worker of their own: in a frame,
+ * one read of the SD card is 10-30 ms on an Old 3DS, and a visible wild
+ * Pokemon appearing every two seconds on its HGSS sprite (follower_mon.c)
+ * dropped a frame each time. CtrData_Load hands back a copy of one read
+ * ahead, waits for the one the worker is reading, or reads it on the spot as
+ * before: the same bytes either way, only the moment of the read changes.
+ * Small: a few map tables' worth of sprites, the least recently asked for
+ * going first. sAheadLock guards the slots; no file is read under it.
+ */
+#define AHEAD_SLOTS 16
+#define AHEAD_BYTES (128u * 1024u)
+
+enum { AHEAD_FREE, AHEAD_QUEUED, AHEAD_READING, AHEAD_READY, AHEAD_MISSING };
+
+typedef struct
+{
+    char path[48];
+    uint8_t state;
+    uint8_t *data;
+    uint32_t size, used;
+} AheadSlot;
+
+static AheadSlot sAhead[AHEAD_SLOTS];
+static bool sAheadWorker;
+static uint32_t sAheadClock, sAheadBytes;
+
+static AheadSlot *AheadFind(const char *path)
+{
+    for (unsigned i = 0; i < AHEAD_SLOTS; ++i)
+        if (sAhead[i].state != AHEAD_FREE && strcmp(sAhead[i].path, path) == 0)
+            return &sAhead[i];
+    return NULL;
+}
+
+static void AheadDrop(AheadSlot *slot)
+{
+    sAheadBytes -= slot->size;
+    free(slot->data);
+    slot->data = NULL;
+    slot->size = 0;
+    slot->state = AHEAD_FREE;
+}
+
+/* A free slot, else the least recently asked for of those not being read. */
+static AheadSlot *AheadVictim(const AheadSlot *keep)
+{
+    AheadSlot *victim = NULL;
+
+    for (unsigned i = 0; i < AHEAD_SLOTS; ++i)
+    {
+        AheadSlot *slot = &sAhead[i];
+
+        if (slot == keep || slot->state == AHEAD_QUEUED || slot->state == AHEAD_READING)
+            continue;
+        if (slot->state == AHEAD_FREE)
+            return slot;
+        if (victim == NULL || (int32_t)(slot->used - victim->used) < 0)
+            victim = slot;
+    }
+    return victim;
+}
+
+/* What was read into its slot, the oldest others let go past the budget. */
+static void AheadPublish(AheadSlot *slot, uint8_t *data, uint32_t size)
+{
+    slot->data = data;
+    slot->size = data != NULL ? size : 0;
+    slot->state = data != NULL ? AHEAD_READY : AHEAD_MISSING;
+    sAheadBytes += slot->size;
+    while (sAheadBytes > AHEAD_BYTES)
+    {
+        AheadSlot *victim = AheadVictim(slot);
+
+        if (victim == NULL || victim->state == AHEAD_FREE)
+            break;
+        AheadDrop(victim);
+    }
+}
+
+static void AheadWorker(void *arg)
+{
+    (void)arg;
+    for (;;)
+    {
+        AheadSlot *slot = NULL;
+        char path[sizeof(sAhead[0].path)];
+        uint8_t *data;
+        uint32_t size = 0;
+
+        LightLock_Lock(&sAheadLock);
+        for (unsigned i = 0; i < AHEAD_SLOTS && slot == NULL; ++i)
+            if (sAhead[i].state == AHEAD_QUEUED)
+                slot = &sAhead[i];
+        if (slot == NULL)
+        {
+            sAheadWorker = false;
+            LightLock_Unlock(&sAheadLock);
+            return;
+        }
+        slot->state = AHEAD_READING;
+        memcpy(path, slot->path, sizeof(path));
+        LightLock_Unlock(&sAheadLock);
+
+        data = LoadNow(path, &size);
+
+        LightLock_Lock(&sAheadLock);
+        AheadPublish(slot, data, size);
+        LightLock_Unlock(&sAheadLock);
+    }
+}
+
+void CtrData_Prefetch(const char *path)
+{
+    AheadSlot *slot;
+    bool start = false;
+
+    if (!sAheadReady || sBackend == CTR_DATA_NONE || !PathValid(path) || strlen(path) >= sizeof(sAhead[0].path))
+        return;
+    LightLock_Lock(&sAheadLock);
+    slot = AheadFind(path);
+    if (slot == NULL && (slot = AheadVictim(NULL)) != NULL)
+    {
+        if (slot->state != AHEAD_FREE)
+            AheadDrop(slot);
+        strcpy(slot->path, path);
+        slot->state = AHEAD_QUEUED;
+        start = !sAheadWorker;
+        sAheadWorker = true;
+    }
+    if (slot != NULL)
+        slot->used = ++sAheadClock;
+    LightLock_Unlock(&sAheadLock);
+    /* One step below the game, on its core: the reads are the FS service's
+     * waits, and come while the game waits for the screen. */
+    if (start && !CtrPlatform_StartThread(AheadWorker, NULL, 16 * 1024, -2))
+    {
+        LightLock_Lock(&sAheadLock);
+        for (unsigned i = 0; i < AHEAD_SLOTS; ++i)
+            if (sAhead[i].state == AHEAD_QUEUED)
+                sAhead[i].state = AHEAD_FREE;
+        sAheadWorker = false;
+        LightLock_Unlock(&sAheadLock);
+    }
+}
+
+void *CtrData_Load(const char *path, uint32_t *outSize)
+{
+    AheadSlot *slot;
+    uint8_t *copy = NULL;
+    uint32_t size = 0;
+
+    if (!sAheadReady || path == NULL)
+        return LoadNow(path, outSize);
+    LightLock_Lock(&sAheadLock);
+    slot = AheadFind(path);
+    if (slot != NULL && slot->state == AHEAD_QUEUED)
+    {
+        /* Not begun: read here, and kept for the next one. */
+        uint8_t *data;
+
+        slot->state = AHEAD_READING;
+        LightLock_Unlock(&sAheadLock);
+        data = LoadNow(path, &size);
+        LightLock_Lock(&sAheadLock);
+        AheadPublish(slot, data, size);
+    }
+    while (slot != NULL && slot->state == AHEAD_READING)
+    {
+        /* The worker's: no sooner read again. */
+        LightLock_Unlock(&sAheadLock);
+        svcSleepThread(200 * 1000);
+        LightLock_Lock(&sAheadLock);
+    }
+    if (slot != NULL && slot->state == AHEAD_READY && (copy = malloc((size_t)slot->size + 1)) != NULL)
+    {
+        size = slot->size;
+        memcpy(copy, slot->data, size);
+        copy[size] = 0;
+        slot->used = ++sAheadClock;
+    }
+    LightLock_Unlock(&sAheadLock);
+    if (copy == NULL)
+        return LoadNow(path, outSize);
+    if (outSize != NULL)
+        *outSize = size;
+    return copy;
 }

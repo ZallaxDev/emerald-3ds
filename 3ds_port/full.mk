@@ -119,7 +119,6 @@ BACKEND_OBJS := $(patsubst src/%.c,build/bridge/%.o,$(BACKEND_SRCS))
 # port: the map, camera, atlas and geometry modules are game translation units
 # (they read gMapHeader and resolve RomFS payloads, and never see libctru),
 # while ctr_voxel.c is native and owns the Citro3D objects.
-ifeq ($(VOXEL),1)
 VOXEL_GAME_SRCS := src/voxel/voxel_world.c src/voxel/voxel_camera.c \
 	src/voxel/voxel_atlas.c src/voxel/voxel_mesh_builder.c src/voxel/voxel_entities.c \
 	src/voxel/voxel_regions.c src/voxel/voxel_tree.c src/voxel/voxel_sign.c \
@@ -136,7 +135,6 @@ ROMFS_SHADER_OUTS += romfs/voxel/trees.rgba5551
 ROMFS_SHADER_OUTS += romfs/voxel/signposts.bin
 ROMFS_SHADER_OUTS += romfs/voxel/buildings.bin
 ROMFS_SHADER_OUTS += romfs/voxel/relief.bin
-endif
 # New art around the intro's leaves scene (scripts/gen_intro_margins.py).
 ROMFS_SHADER_OUTS += romfs/stage/leaves.bin
 # The bottom screen's battle menus: the port's own art (scripts/gen_battle_art.py).
@@ -461,7 +459,6 @@ $(VOXEL_GFX_OUTPUTS) &: $(VOXEL_GFX_SOURCES)
 romfs/voxel/regions.bin romfs/voxel/signposts.bin romfs/voxel/buildings.bin romfs/voxel/relief.bin romfs/stage/leaves.bin: $(VOXEL_GFX_OUTPUTS)
 endif
 
-ifeq ($(VOXEL),1)
 # What every cell of every layout IS (the console reads its signposts).
 # Solved on the host because it needs the map's warps, its neighbours and a
 # look at every metatile's own pixels, and none of that fits in a frame.
@@ -641,7 +638,6 @@ build/voxel_relief_test.exe: tests/voxel_relief_test.c src/voxel/voxel_relief.c 
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude -Isrc/voxel $(HOST_VOXEL_DEFS) \
 		-DVOXEL_RELIEF_PATH='"romfs/voxel/relief.bin"' \
 		tests/voxel_relief_test.c src/voxel/voxel_relief.c -lm -o $@
-endif
 
 .PHONY: verify-settings
 verify: verify-settings

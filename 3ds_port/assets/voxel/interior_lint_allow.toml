@@ -92,3 +92,99 @@ stripes = "a desk a single row deep: its only rows to dress its sides with are i
 
 [allow.day_care_pc]
 stripes = "the Centers' computer, drawn alike: its only columns to dress its sides with are its casing's edge, the screen's white over grey down it"
+
+[allow.harbor_rail_n]
+foreign = "its ends show the bars and the floor or water between them as its front does (through): the dock seen through a railing, not a fin"
+
+[allow.harbor_rail_s]
+stripes = "its sides are its bars, grey between the floor and the water: a railing's make, not a barcode"
+copied = "its sides are the back railing's bars, upright lines as its own front's: the same railing"
+
+[allow.harbor_rail_w]
+stripes = "its sides are its bars, grey between the floor and the water: a railing's make, not a barcode"
+copied = "its sides are the back railing's bars, upright lines as its own front's: the same railing"
+foreign = "a railing running down the dock is drawn as its top line alone: its long sides carry the back railing's bars (HARBOR_BARS), as Rustboro's railings' flanks carry the row's"
+
+[allow.harbor_rail_v]
+stripes = "its sides are its bars, grey between the floor and the water: a railing's make, not a barcode"
+copied = "its sides are the back railing's bars, upright lines as its own front's: the same railing"
+foreign = "a railing running down the dock is drawn as its top line alone: its long sides carry the back railing's bars (HARBOR_BARS), as Rustboro's railings' flanks carry the row's"
+
+[allow.shipyard_1f_model_ship]
+floating = "it stands on the desk, which runs back to the wall under it; the grey strip of the desk's top under its keel is outside both outlines, so no piece owns the row below its foot"
+
+[allow.shipyard_2f_rail_n]
+foreign = "its ends show the bars and the workshop below between them as its front does (through): the balcony seen through a railing, not a fin"
+
+[allow.shipyard_2f_rail_s]
+foreign = "its ends show the bars and the workshop below between them as its front does (through): the balcony seen through a railing, not a fin"
+
+[allow.shipyard_2f_rail_e]
+copied = "its sides are the back railing's bars, upright lines as its own front's: the same railing"
+foreign = "a railing running down the balcony is drawn as its top line alone: its long sides carry the back railing's bars (HARBOR_BARS), as the Harbor's and Rustboro's railings' flanks do"
+
+[allow.shipyard_2f_rail_w]
+copied = "its sides are the back railing's bars, upright lines as its own front's: the same railing"
+foreign = "a railing running down the balcony is drawn as its top line alone: its long sides carry the back railing's bars (HARBOR_BARS), as the Harbor's and Rustboro's railings' flanks do"
+
+[allow.cable_car_room_machine]
+under = "the machine is drawn in the station floor's own metal greys (8b94a4, acb4bd): its foot is the machine's, inside its outline"
+
+[allow.cable_car_room_rail_near_w]
+under = "a railing in the station floor's own metal greys (8b94a4, dedede): its base rail is the railing's, inside its outline, not the floor"
+
+[allow.cable_car_room_rail_near_e]
+under = "a railing in the station floor's own metal greys (8b94a4, dedede): its base rail is the railing's, inside its outline, not the floor"
+
+[allow.cable_car_room_rail_far_w]
+under = "a railing in the station floor's own metal greys (8b94a4, dedede): its base rail is the railing's, inside its outline, not the floor"
+
+[allow.cable_car_room_rail_far_e]
+under = "a railing in the station floor's own metal greys (8b94a4, dedede): its base rail is the railing's, inside its outline, not the floor"
+foreign = "its ends show the bars and the track between them as its front does (through): a railing seen through, not a fin"
+
+[allow.cable_car_room_rail_gap_w]
+under = "a railing in the station floor's own metal greys (8b94a4, dedede): its base rail is the railing's, inside its outline, not the floor"
+copied = "its sides are the Harbor's bars, a line across them as its own front's: the same railing"
+foreign = "a railing running down the boarding gap is drawn as its top line alone: its long sides carry the Harbor's bars (HARBOR_BARS), as the Harbor's railings' flanks do"
+
+[allow.cable_car_room_rail_gap_e]
+under = "a railing in the station floor's own metal greys (8b94a4, dedede): its base rail is the railing's, inside its outline, not the floor"
+copied = "its sides are the Harbor's bars, a line across them as its own front's: the same railing"
+foreign = "a railing running down the boarding gap is drawn as its top line alone: its long sides carry the Harbor's bars (HARBOR_BARS), as the Harbor's railings' flanks do"
+
+[allow.bike_shop_shelf]
+under = "its bottom shelf is drawn in the floor's own greys (acbdac, 83948b): the shelf's, inside its outline"
+
+[allow.sootopolis_gym_1f_walls_4_0]
+under = "the crystal fountain's basin has a white rim, as the ice is white: inside the basin's outline (the dark line under it), the fountain's"
+
+[allow.sootopolis_gym_1f_walls_11_0]
+under = "the crystal fountain's basin has a white rim, as the ice is white: inside the basin's outline (the dark line under it), the fountain's"
+
+[allow.sootopolis_gym_b1f_walls_2_4]
+backdrop = "the ice cave's rock: its foot runs on past its blocked cells into the walkable ones below it, over the snow there, in the same blues (no piece takes those)"
+
+[allow.sootopolis_gym_b1f_walls_4_10]
+backdrop = "the ice cave's rock: its foot runs on past its blocked cells into the walkable ones below it, over the snow there, in the same blues (no piece takes those)"
+
+[allow.sootopolis_gym_b1f_walls_6_15]
+backdrop = "the ice cave's rock: its foot runs on past its blocked cells into the walkable ones below it, over the snow there, in the same blues (no piece takes those)"
+
+[allow.sootopolis_gym_b1f_walls_9_10]
+backdrop = "the ice cave's rock: its foot runs on past its blocked cells into the walkable ones below it, over the snow there, in the same blues (no piece takes those)"
+
+[allow.frontier_pyramid_lobby_pillar_w]
+under = "the column is drawn in the floor's own stone colours, its bands and its base inside its outline: it is the column, not the floor under it"
+
+[allow.frontier_pyramid_lobby_pillar_e]
+under = "the column is drawn in the floor's own stone colours, its bands and its base inside its outline: it is the column, not the floor under it"
+
+[allow.frontier_factory_lobby_bin_15]
+under = "its body is drawn in the floor's own grey, inside its rim: it is the bin, not the floor under it"
+
+[allow.frontier_factory_lobby_bin_17]
+under = "its body is drawn in the floor's own grey, inside its rim: it is the bin, not the floor under it"
+
+[allow.trick_house_puzzle8_jar_3_21]
+backdrop = "its mouth is drawn in the tatami's colours, inside its outline: it is the jar, not the room round it"

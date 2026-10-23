@@ -157,13 +157,8 @@ const CtrFieldView *CtrFieldView_Current(void)
     /* The voxel option rather than whether this map is drawn in 3D: the
      * objects are spawned while a map loads, before its world exists. A map
      * the voxel world does not draw is shown in 2D within the larger view. */
-#if CTR_VOXEL_ENABLED
     bool voxel = CtrSettings_Voxel();
     int pitch = CtrSettings_VoxelPitch(), zoom = CtrSettings_VoxelZoom();
-#else
-    bool voxel = false;
-    int pitch = 0, zoom = 0;
-#endif
     int key = voxel ? 1 + ((pitch & 0xFF) << 1) + ((zoom & 0x3FF) << 9) : 0;
     int shiftX = voxel ? sVoxelShiftX : sFlatShiftX, shiftY = voxel ? sVoxelShiftY : sFlatShiftY;
 

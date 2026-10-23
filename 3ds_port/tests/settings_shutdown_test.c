@@ -52,8 +52,38 @@ static void *SlowCard(void *unused) {
     pthread_mutex_lock(&diskMutex); releaseDisk = true;
     pthread_cond_signal(&diskCond); pthread_mutex_unlock(&diskMutex); return NULL;
 }
+/* Every extra key at its longest round-trips through the saved text; one past
+ * the table is refused, logged once. No card I/O: Text and ApplyLine only. */
+static void ExtraCapacity(void) {
+    static char text[sizeof(sSaveText)];
+    char key[32], line[64];
+    CtrSettings_Defaults();
+    for (int i = 0; i < EXTRA_KEYS; ++i) {
+        snprintf(line, sizeof(line), "extra_key_padded_to_%03d=%d", i, i == 0 ? -2147483647 - 1 : -1000000 - i);
+        CtrSettings_ApplyLine(line);
+    }
+    errors = 0;
+    CtrSettings_ApplyLine("one_key_past_the_table=7");
+    CtrSettings_ApplyLine("two_keys_past_the_table=7");
+    assert(errors == 1 && CtrSettings_GetInt("one_key_past_the_table", -5) == -5);
+    int used = CtrSettings_Text(text, sizeof(text));
+    assert(used > 0 && used < (int)sizeof(text));
+    CtrSettings_Defaults();
+    for (char *at = text, *end; *at != '\0'; at = end + 1) {
+        end = strchr(at, '\n'); assert(end != NULL && end - at < (int)sizeof(line));
+        memcpy(line, at, end - at); line[end - at] = '\0';
+        CtrSettings_ApplyLine(line);
+    }
+    for (int i = 0; i < EXTRA_KEYS; ++i) {
+        snprintf(key, sizeof(key), "extra_key_padded_to_%03d", i);
+        assert(strlen(key) == 23 && CtrSettings_GetInt(key, 1) == (i == 0 ? -2147483647 - 1 : -1000000 - i));
+    }
+    CtrSettings_Defaults();
+    errors = 0;
+}
 int main(int argc, char **argv) {
     fault = argc > 1 ? argv[1][0] - '0' : 0;
+    ExtraCapacity();
     CtrSettings_SetVoxel(true);
     pthread_mutex_lock(&diskMutex);
     while (!entered) pthread_cond_wait(&diskCond, &diskMutex);
@@ -80,6 +110,6 @@ int main(int argc, char **argv) {
         assert(renames == (fault == 2 ? 0u : 2u));
     }
     CtrSettings_Shutdown(); /* idempotent, no freed-thread access */
-    puts("PASS settings: stalled write, latest snapshot drained, close and open errors, repeated shutdown");
+    puts("PASS settings: extra keys round trip at capacity, stalled write, latest snapshot drained, close and open errors, repeated shutdown");
     return 0;
 }

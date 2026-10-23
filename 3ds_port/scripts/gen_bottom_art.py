@@ -173,6 +173,28 @@ TINY_X = [
     "........",
 ]
 
+# The map's zoom button (from public PR #108's MAP zoom): a magnifying glass
+# with a plus to zoom in, a minus to zoom back out, in the first palette.
+ZOOM_IN = [
+    "................",
+    "...kkkkk........",
+    "..kwwwwwk.......",
+    ".kwwwkwwwk......",
+    ".kwwwkwwwk......",
+    ".kwkkkkkwk......",
+    ".kwwwkwwwk......",
+    ".kwwwkwwwk......",
+    "..kwwwwwkk......",
+    "...kkkkknkk.....",
+    "........knkk....",
+    ".........knkk...",
+    "..........knkk..",
+    "...........kkk..",
+    "................",
+    "................",
+]
+ZOOM_OUT = [r.replace("kwwwkwwwk", "kwwwwwwwk") for r in ZOOM_IN]
+
 SPRITES = [
     # (file, C name, tiles wide, tiles high, palette)
     ("shoe_off.png", "sArtShoeOff", 3, 3, 1),
@@ -186,6 +208,8 @@ SPRITES = [
     ("moon.png", "sArtMoon", 2, 2, 2),
     ("star.png", "sArtStar", 2, 2, 2),
     ("nuzlocke.png", "sArtNuzlocke", 3, 3, 2),
+    ("zoom_in.png", "sArtZoomIn", 2, 2, 1),
+    ("zoom_out.png", "sArtZoomOut", 2, 2, 1),
 ]
 
 
@@ -219,6 +243,8 @@ def init_pngs(force):
     save(ascii_image(["".join(r) for r in on]), "shoe_on.png")
     save(ascii_image(BADGE_Y), "badge_y.png")
     save(ascii_image(TINY_X), "tiny_x.png")
+    save(ascii_image(ZOOM_IN), "zoom_in.png")
+    save(ascii_image(ZOOM_OUT), "zoom_out.png")
     save(ascii_image(GRASS, PALETTE2), "grass.png")
     save(ascii_image(NUZ, PALETTE2), "nuzlocke.png")
     save(drawn_image(draw_sun), "sun.png")

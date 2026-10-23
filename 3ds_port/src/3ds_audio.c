@@ -44,7 +44,6 @@ static volatile bool sWorkerQuit;
 /* The worker on the DSP's clock (CtrAudio_SetClock, below). */
 static volatile bool sClock;
 
-bool CtrAudio_Available(void) { return sReady; }
 CtrAudioStats *CtrAudio_Stats(void) { return &sStats; }
 
 bool CtrAudio_Init(void)

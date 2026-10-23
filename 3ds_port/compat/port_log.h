@@ -14,10 +14,6 @@ extern "C" {
 extern unsigned char g_PortLogActive;
 
 void Port_Log_Printf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
-void Port_Log_Init(void);
-void Port_Log_SetEnabled(unsigned char enabled);
-unsigned char Port_Log_IsEnabled(void);
-void Port_Log_VBlankProtect(void);
 
 #define PORT_LOG(...) \
     do { if (g_PortLogActive) Port_Log_Printf(__VA_ARGS__); } while (0)

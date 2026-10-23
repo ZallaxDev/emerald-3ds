@@ -125,17 +125,19 @@ typedef struct
 const CtrVoxelStats *CtrVoxel_GetStats(void);
 
 /*
- * Why the last frame did or did not take the voxel path, as a short word for
- * the debug overlay: off, nomap, noatlas, nomesh, on.
- */
-const char *CtrVoxel_Status(void);
-
-/*
  * Gives back the VRAM of atlases the overworld is not using right now - every
  * tileset pair but the current map's. For the 2D compositor, on a frame the
  * overworld does not draw. Returns the bytes released.
  */
 unsigned long CtrVoxel_ReleaseIdleVram(void);
+
+/*
+ * As CtrVoxel_ReleaseIdleVram, for one allocation of `bytes`: the atlases of
+ * maps out of view go first, least recently used first, one at a time until
+ * VRAM has a block that large; with `inView`, the ones in view too if that
+ * was not enough. Returns the bytes released.
+ */
+unsigned long CtrVoxel_ReleaseIdleVramFor(uint32_t bytes, bool inView);
 
 /*
  * All the world's VRAM - arenas, chunks, building pages, atlases - given back

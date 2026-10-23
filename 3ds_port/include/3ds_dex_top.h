@@ -40,9 +40,12 @@ void CtrDexTopGame_Frame(void);
  */
 void CtrDexTop_Show(uint16_t national, const uint16_t *picture, unsigned frames, const char *name);
 /* The backdrop for the Pokémon just shown, row by row (RGBA5551), after
- * Begin; used once all its rows are in. */
+ * Begin; used once all its rows are in. Show keeps the last one: Begin
+ * drops it (a Pokémon of another terrain). */
 void CtrDexTop_BackdropBegin(void);
 void CtrDexTop_BackdropRow(unsigned y, const uint16_t *row);
+/* Whether every row of the backdrop kept is in. */
+bool CtrDexTop_BackdropComplete(void);
 /* The Pokédex is closed. */
 void CtrDexTop_Hide(void);
 bool CtrDexTop_Active(void);

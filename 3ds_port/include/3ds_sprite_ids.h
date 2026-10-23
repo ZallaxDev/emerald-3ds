@@ -10,8 +10,6 @@
  * one to a sprite that appeared by copying another. SDK-free.
  */
 void CtrSprites_Track(void);
-/* The identity of gSprites[index], 0 for a slot not in use. */
-uint32_t CtrSprites_Id(unsigned index);
 /* For the log, at exit. */
 void CtrSprites_Report(void);
 

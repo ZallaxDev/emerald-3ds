@@ -56,6 +56,8 @@ bool8 CtrParty_GetView(struct CtrPartyView *view);
 void CtrParty_TapSlot(s8 slot);
 const u8 *CtrParty_DescText(u8 desc);
 bool8 CtrParty_Building(void);
+/* The party menu is in the bottom screen's window: the field's, or a battle's own. */
+bool8 CtrParty_InWindow(void);
 
 /* ------------------------------------------------------------ summary */
 
@@ -82,6 +84,7 @@ enum
     CTR_SUM_TAP_MOVE,       /* a move's row: index, 4 the new move */
     CTR_SUM_TAP_BACK,       /* B */
     CTR_SUM_TAP_STATS,      /* SKILLS' stats, IVs, EVs */
+    CTR_SUM_TAP_LEAVE,      /* B, for another screen (CtrBottom_LeaveTo) */
 };
 
 struct CtrSummaryView
@@ -103,11 +106,23 @@ struct CtrSummaryView
     const u8 *abilityName, *abilityDesc;
     u8 nick[12], ot[12];
     u8 memo[CTR_VIEW_TEXT];
+    /* Last: the mon's sprite as it is now, moving with its animation (the
+     * bottom screen redraws only the picture when nothing before changed).
+     * picTiles (64x64, the GBA's 1D layout) and picPal are copies, kept
+     * after the summary closes; NULL with no sprite to read. picMatrix is
+     * the sprite's 8.8 matrix, screen to picture, with picAffine set. */
+    const u8 *picTiles;
+    const u16 *picPal;
+    u32 picSum;
+    s16 picX, picY;
+    s16 picMatrix[4];
+    u8 picAffine;           /* ST_OAM_AFFINE_OFF, _NORMAL or _DOUBLE */
+    bool8 picHFlip;
 };
 
 bool8 CtrSummary_GetView(struct CtrSummaryView *view);
-/* The summary from the field's party menu is up (the bottom screen draws it). */
-bool8 CtrSummary_FieldOpen(void);
+/* The summary from the field's or a battle's party menu is up (drawn here). */
+bool8 CtrSummary_InWindow(void);
 void CtrSummary_NativeTap(u8 kind, u8 index);
 
 /* ------------------------------------------------------------ bag */
