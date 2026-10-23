@@ -4,7 +4,7 @@ Applies after 0054-pokedex-capture-layout.patch; apply with tools/bootstrap.py.
 diff --git a/src/pokedex.c b/src/pokedex.c
 --- a/src/pokedex.c
 +++ b/src/pokedex.c
-@@ -5869,7 +5869,38 @@
+@@ -5869,7 +5869,39 @@
      return sPokedexView != NULL && (gMain.callback2 == CB2_Pokedex || gMain.callback2 == CB2_OpenPokedex);
  }
  
@@ -21,7 +21,8 @@ diff --git a/src/pokedex.c b/src/pokedex.c
 +        && (FuncIsActiveTask(Task_WaitForExitInfoScreen) || FuncIsActiveTask(Task_HandleInfoScreenInput)
 +            || FuncIsActiveTask(Task_WaitForExitSearchResultsInfoScreen)))
 +        return sPokedexListItem->dexNum;
-+    if (FuncIsActiveTask(Task_HandlePokedexInput) || FuncIsActiveTask(Task_HandleSearchResultsInput))
++    if (FuncIsActiveTask(Task_HandlePokedexInput) || FuncIsActiveTask(Task_HandleSearchResultsInput)
++     || FuncIsActiveTask(Task_HandlePokedexStartMenuInput) || FuncIsActiveTask(Task_HandleSearchResultsStartMenuInput))
 +    {
 +        const struct PokedexListItem *item;
  

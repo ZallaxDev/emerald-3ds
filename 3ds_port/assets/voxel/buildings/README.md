@@ -154,6 +154,11 @@ The rule for every room, now and in the future:
    drawing stays flat, laid over the floor as patches.
 4. The proof is the same: `room ... 0 pixel(s) differ` for every room,
    reused pieces included.
+5. A room that draws the floor below it (Stern's Shipyard 2F, its balcony
+   over the workshop) names those rectangles `pit`: nothing found again
+   stands there - the workshop's girder and submarine are 1F's, and stood at
+   2F's level they would rise out of a painting of the floor below. The pit
+   stays drawn.
 
 This way Pokemon Center 2F uses the 1F stools, May's house uses Brendan's
 fridge, sink, TVs, cabinet and chair seats (on her pink rug), the lab with the table uses the whole lab minus the

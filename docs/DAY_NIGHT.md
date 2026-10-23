@@ -386,9 +386,8 @@ measurement; hardware acceptance is the user's report above.
 - Day/night, input, video decoding, pack and settings shutdown tests: passed.
   Day/night also passed Clang AddressSanitizer/UndefinedBehaviorSanitizer.
 - Repository publication audit and `git diff --check`: passed.
-- Native syntax checks with VOXEL=0 and VOXEL_LIGHTING=0: passed after
-  exempting existing unused-variable/parameter warnings. VOXEL=0 does not
-  currently pass the original strict `-Werror` configuration unchanged.
+- Native syntax checks with VOXEL_LIGHTING=0: passed after exempting
+  existing unused-variable/parameter warnings.
 - Full `make verify`: blocked by pre-existing incompatible one-argument
   `VoxelTree_Part`/`VoxelTree_GroundMetatile` stubs in
   `3ds_port/tests/voxel_world_hash_test.c`; production declarations take two

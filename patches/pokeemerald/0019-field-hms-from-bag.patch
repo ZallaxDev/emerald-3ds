@@ -66,9 +66,9 @@ diff --git a/src/item_use.c b/src/item_use.c
 +    gPartyMenu.slotId = FieldHmUser(ItemIdToBattleMoveId(gSpecialVar_ItemId));
 +    if (gSpecialVar_ItemId == ITEM_HM02)
 +    {
-+        // cancelled, the Fly map goes back to the Bag (region_map.c)
-+        gFlyMapFromBag = TRUE;
-+        gBagMenu->newScreenCallback = CB2_OpenFlyMap;
++        // the bottom screen's map is the Fly map (3ds_bottom_ui.c)
++        CtrBottom_OpenFlyMap(gPartyMenu.slotId, TRUE);
++        gBagMenu->newScreenCallback = CB2_ReturnToField;
 +        Task_FadeAndCloseBagMenu(taskId);
 +    }
 +    else if (SetUpFieldMove_Flash())

@@ -55,7 +55,6 @@ int CtrExtras_Get(const char *key);
 void CtrExtras_Step(const CtrExtra *extra, int direction);
 /* An extra that acts on the voxel overworld alone. */
 bool CtrExtras_NeedsVoxel(const CtrExtra *extra);
-bool CtrExtras_PageUsed(unsigned page);
 /* For an action: shows that screen of a tab (3ds_bottom_ui.c). */
 void CtrExtras_ShowScreen(unsigned page, unsigned screen);
 

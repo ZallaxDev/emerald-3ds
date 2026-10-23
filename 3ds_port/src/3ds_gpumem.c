@@ -153,6 +153,8 @@ static void Removed(void *ptr)
     LightLock_Unlock(&sLock);
 }
 
+static void MapVram(void);
+
 static void Failed(size_t size, unsigned pool, uint32_t caller)
 {
     /* A request retried every frame is one finding: logged the first time,
@@ -176,6 +178,55 @@ static void Failed(size_t size, unsigned pool, uint32_t caller)
                  (unsigned long)(pool == POOL_VRAM ? vramSpaceFree() : linearSpaceFree()),
                  (unsigned long)(pool == POOL_VRAM ? CtrGpuMem_LargestVram() : 0),
                  (unsigned long)Pool(pool)->live);
+    /* Where the free VRAM lies between what is held: the first few times. */
+    if (pool == POOL_VRAM && sFailLines <= 8)
+        MapVram();
+}
+
+/* The VRAM blocks held, in address order: "start+KiB@site", and the gaps
+ * between them, "_KiB". What a "largest block" short of the free total
+ * cannot say: which allocations cut the free VRAM into pieces. */
+static void MapVram(void)
+{
+    enum { MAP_MAX = 64 };
+    Block held[MAP_MAX];
+    unsigned n = 0;
+    uint32_t base = OS_VRAM_VADDR, end = OS_VRAM_VADDR + OS_VRAM_SIZE, at = base;
+    char line[300];
+    int used = 0;
+
+    LightLock_Lock(&sLock);
+    for (unsigned i = 0; i < BLOCKS && n < MAP_MAX; ++i)
+        if (sBlocks[i].ptr != NULL && sBlocks[i].pool == POOL_VRAM)
+            held[n++] = sBlocks[i];
+    for (unsigned i = 1; i < n; ++i)
+        for (unsigned j = i; j > 0 && (uintptr_t)held[j].ptr < (uintptr_t)held[j - 1].ptr; --j)
+        {
+            Block swap = held[j];
+
+            held[j] = held[j - 1];
+            held[j - 1] = swap;
+        }
+    for (unsigned i = 0; i <= n; ++i)
+    {
+        uint32_t start = i < n ? (uint32_t)(uintptr_t)held[i].ptr : end;
+
+        if (start > at + 0x1000)
+            used += snprintf(line + used, sizeof(line) - used, " _%lu", (unsigned long)((start - at) >> 10));
+        if (i < n)
+        {
+            used += snprintf(line + used, sizeof(line) - used, " %lu+%lu@%08lx",
+                             (unsigned long)((start - base) >> 10), (unsigned long)(held[i].size >> 10),
+                             (unsigned long)sSites[held[i].site].address);
+            at = start + held[i].size;
+        }
+        if (used > (int)sizeof(line) - 40 || i == n)
+        {
+            CtrLog_Write(CTR_LOG_VIDEO, "GPUMEM vram map%s", line);
+            used = 0;
+        }
+    }
+    LightLock_Unlock(&sLock);
 }
 
 #define CALLER ((uint32_t)(uintptr_t)__builtin_return_address(0))
@@ -257,11 +308,6 @@ C3D_RenderTarget *__wrap_C3D_RenderTargetCreate(int width, int height, GPU_COLOR
     target = __real_C3D_RenderTargetCreate(width, height, colorFmt, depthFmt);
     tOuter = outer;
     return target;
-}
-
-const CtrGpuMemStats *CtrGpuMem_Stats(void)
-{
-    return &sStats;
 }
 
 /* VRAM is only allocated by the game thread, which is the one asking. */

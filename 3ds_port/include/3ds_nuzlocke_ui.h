@@ -43,4 +43,17 @@ const uint8_t *CtrNuzlockeUi_CapText(void);
 const uint8_t *CtrNuzlockeUi_TotalsText(void);
 const uint8_t *CtrNuzlockeUi_LinkText(void);
 
+/* For the bottom screen's NUZLOCKE section, which shows them as buttons. */
+/* Whether the tracker is on. */
+int CtrNuzlockeUi_Enabled(void);
+/* The current area's status (0 unused, 1 caught, 2 missed), -1 with none. */
+int CtrNuzlockeUi_AreaStatus(void);
+/* Records that status for the current area (CtrNuzlockeUi_Record). */
+void CtrNuzlockeUi_RecordAs(int status);
+/* The chosen party slot, and choosing one (an empty slot is not chosen). */
+int CtrNuzlockeUi_Slot(void);
+void CtrNuzlockeUi_SetSlot(int slot);
+/* Whether the party Pokemon in a slot is marked fallen. */
+int CtrNuzlockeUi_SlotFallen(int slot);
+
 #endif

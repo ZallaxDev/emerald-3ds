@@ -867,7 +867,7 @@ index 1d6126a..66b3ee9 100644
  
      if (gMonSpritesGfxPtr == NULL)
          CreateMonSpritesGfxManager(MON_SPR_GFX_MANAGER_A, MON_SPR_GFX_MODE_NORMAL);
-@@ -1155,9 +1204,242 @@ void ShowPokemonSummaryScreenHandleDeoxys(u8 mode, struct BoxPokemon *mons, u8 m
+@@ -1155,9 +1204,243 @@ void ShowPokemonSummaryScreenHandleDeoxys(u8 mode, struct BoxPokemon *mons, u8 m
      sMonSummaryScreen->handleDeoxys = TRUE;
  }
  
@@ -1100,7 +1100,8 @@ index 1d6126a..66b3ee9 100644
  {
      RunTasks();
 +#ifdef PLATFORM_3DS
-+    if (sShowCategory)
++    // The tasks just run may have closed the summary (FreeSummaryScreen).
++    if (sShowCategory && sMonSummaryScreen != NULL)
 +    {
 +        UpdateNicknameUnderEffectWindow();
 +        UpdateEffectTopRowsOnContestPage();
@@ -1110,7 +1111,7 @@ index 1d6126a..66b3ee9 100644
      AnimateSprites();
      BuildOamBuffer();
      DoScheduledBgTilemapCopiesToVram();
-@@ -1499,6 +1781,12 @@ static void SetDefaultTilemaps(void)
+@@ -1499,6 +1782,12 @@ static void SetDefaultTilemaps(void)
          ChangeBgX(2, 0x10000, BG_COORD_ADD);
          ClearWindowTilemap(PSS_LABEL_WINDOW_PORTRAIT_SPECIES);
          ClearWindowTilemap(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS);
@@ -1123,7 +1124,7 @@ index 1d6126a..66b3ee9 100644
      }
  
      if (sMonSummaryScreen->summary.ailment == AILMENT_NONE)
-@@ -2978,6 +3266,17 @@ static void ResetWindows(void)
+@@ -2978,6 +3267,17 @@ static void ResetWindows(void)
  {
      u8 i;
  
@@ -1141,7 +1142,7 @@ index 1d6126a..66b3ee9 100644
      InitWindows(sSummaryTemplate);
      DeactivateAllTextPrinters();
      for (i = 0; i < PSS_LABEL_WINDOW_END; i++)
-@@ -3134,8 +3433,23 @@ static void PrintPageNamesAndStats(void)
+@@ -3134,8 +3434,23 @@ static void PrintPageNamesAndStats(void)
      PrintTextOnWindow(PSS_LABEL_WINDOW_POKEMON_SKILLS_EXP, gText_ExpPoints, 6, 1, 0, 1);
      PrintTextOnWindow(PSS_LABEL_WINDOW_POKEMON_SKILLS_EXP, gText_NextLv, 6, 17, 0, 1);
      PrintTextOnWindow(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS, gText_Status, 2, 1, 0, 1);
@@ -1165,7 +1166,7 @@ index 1d6126a..66b3ee9 100644
      PrintTextOnWindow(PSS_LABEL_WINDOW_MOVES_APPEAL_JAM, gText_Appeal, 0, 1, 0, 1);
      PrintTextOnWindow(PSS_LABEL_WINDOW_MOVES_APPEAL_JAM, gText_Jam, 0, 17, 0, 1);
  }
-@@ -3884,7 +4198,12 @@ static void PrintMovePowerAndAccuracy(u16 moveIndex)
+@@ -3884,7 +4199,12 @@ static void PrintMovePowerAndAccuracy(u16 moveIndex)
      const u8 *text;
      if (moveIndex != 0)
      {
@@ -1179,7 +1180,7 @@ index 1d6126a..66b3ee9 100644
  
          if (gBattleMoves[moveIndex].power < 2)
          {
-@@ -3896,7 +4215,7 @@ static void PrintMovePowerAndAccuracy(u16 moveIndex)
+@@ -3896,7 +4216,7 @@ static void PrintMovePowerAndAccuracy(u16 moveIndex)
              text = gStringVar1;
          }
  
@@ -1188,7 +1189,7 @@ index 1d6126a..66b3ee9 100644
  
          if (gBattleMoves[moveIndex].accuracy == 0)
          {
-@@ -3908,7 +4227,7 @@ static void PrintMovePowerAndAccuracy(u16 moveIndex)
+@@ -3908,7 +4228,7 @@ static void PrintMovePowerAndAccuracy(u16 moveIndex)
              text = gStringVar1;
          }
  
@@ -1197,7 +1198,7 @@ index 1d6126a..66b3ee9 100644
      }
  }
  
-@@ -3981,6 +4300,9 @@ static void PrintContestMoveDescription(u8 moveSlot)
+@@ -3981,6 +4301,9 @@ static void PrintContestMoveDescription(u8 moveSlot)
  static void PrintMoveDetails(u16 move)
  {
      u8 windowId = AddWindowFromTemplateList(sPageMovesTemplate, PSS_DATA_WINDOW_MOVE_DESCRIPTION);

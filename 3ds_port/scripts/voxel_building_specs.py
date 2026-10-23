@@ -3501,11 +3501,16 @@ def contest_lobby():
         # drawing leaves the wall), the
         # receptionists' floor between them; 10 px tall, its
         # front the green lip and the white panels. The bow on the east arm's
-        # front corner is its own paint; the row under its front, its shadow
-        piece("counter", [(176, 25, 192, 62), (288, 25, 304, 62), (176, 44, 304, 62)], 10,
-              leave=LOBBY_FLOOR + LOBBY_CURTAIN,
-              plan=[(176, 36.2), (177.2, 35), (190.8, 35), (192, 36.2), (192, 54), (288, 54),
-                    (288, 36.2), (289.2, 35), (302.8, 35), (304, 36.2), (304, 63), (176, 63)]),
+        # front corner is its own paint; the row under its front, its shadow.
+        # In three: the lobby's script opens and closes the flaps beside the
+        # arms (cells 12,2-3 and 17,2-3, setmetatile), so they stay drawn - a
+        # piece's rectangle would lay them in its model, shut
+        piece("counter_w", [(176, 25, 192, 62)], 10, leave=LOBBY_FLOOR + LOBBY_CURTAIN,
+              plan=[(176, 36.2), (177.2, 35), (190.8, 35), (192, 36.2), (192, 63), (176, 63)]),
+        piece("counter", [(208, 44, 272, 62)], 10, leave=LOBBY_FLOOR + LOBBY_CURTAIN,
+              plan=[(208, 54), (272, 54), (272, 63), (208, 63)]),
+        piece("counter_e", [(288, 25, 304, 62)], 10, leave=LOBBY_FLOOR + LOBBY_CURTAIN,
+              plan=[(288, 36.2), (289.2, 35), (302.8, 35), (304, 36.2), (304, 63), (288, 63)]),
         piece("terminal", [(304, 8, 320, 39)], 24, back=32),
         # the back wall, its two doorways painted on its face as Lavaridge's
         # Center's door to the spring is
@@ -3954,6 +3959,1172 @@ def devon_corp_1f():
         piece("side_w", [], 28, side=side, walls=[((0, 144), (0, 80))]),
         piece("side_e", [], 28, side=side, walls=[((304, 80), (304, 144))]),
     ]
+
+
+
+# The Battle Tents (Slateport, Verdanturf, Fallarbor). The lobby, the three
+# tents': the tent's curtain falling down each side, two C-shaped counters
+# (the ticket machine painted on the west one's front) and a machine by the
+# east one, the door painted on the back wall. The corridor and the battle
+# rooms: their back walls and their doors; the battlefield, the pool and
+# the bushes of Verdanturf's are drawn on the floor (the trainers walk in on
+# a script, nowhere near the walls).
+
+TENT_FLOOR = ("b4acf6", "cdd5ff", "9c83ee")
+TENT_WALL_SIDE = (64, 0, 80, 32)
+# the west counter's inner corner, rounded down from its arm to its bar: its
+# outline row by row
+TENT_COUNTER_INNER = [(48, 78), (49, 78), (49, 80), (50, 80), (50, 81), (51, 81), (51, 82),
+                      (54, 82), (54, 83)]
+
+
+def tent_lobby():
+    side = TENT_WALL_SIDE
+    return [
+        piece("machine", [(176, 56, 192, 88)], 24, leave=TENT_FLOOR),
+        piece("counter_w", [(32, 29, 64, 48), (32, 48, 48, 96), (48, 76, 96, 96)], 6,
+              leave=TENT_FLOOR,
+              plan=[(32, 35), (64, 35), (64, 48), (48, 48)] + TENT_COUNTER_INNER
+              + [(95, 83), (95, 84), (96, 84), (96, 96), (32, 96)]),
+        piece("counter_e", [(144, 29, 176, 48), (160, 48, 176, 96), (112, 76, 160, 96)], 6,
+              leave=TENT_FLOOR,
+              plan=[(144, 35), (176, 35), (176, 96), (112, 96), (112, 84), (113, 84), (113, 83)]
+              + [(208 - x, z) for x, z in reversed(TENT_COUNTER_INNER)] + [(160, 48), (144, 48)]),
+        # the curtain down each side, from the back wall
+        piece("wall_cw", [(0, 0, 16, 80)], 32, fill=16, foot=80, side=side, leave=TENT_FLOOR,
+              walls=[((16, 80), (16, 32))]),
+        piece("wall_ce", [(192, 0, 208, 80)], 32, fill=16, foot=80, side=side, leave=TENT_FLOOR,
+              walls=[((192, 32), (192, 80))]),
+        piece("wall", [(16, 0, 192, 32)], 32, fill=16, foot=32, side=side),
+        piece("side_w", [], 32, side=side, walls=[((0, 160), (0, 80))]),
+        piece("side_e", [], 32, side=side, walls=[((208, 80), (208, 160))]),
+    ]
+
+
+def tent_room(w, h):
+    side = TENT_WALL_SIDE
+    return [
+        piece("wall", [(0, 0, w, 32)], 32, fill=16, foot=32, side=side),
+        piece("side_w", [], 32, side=side, walls=[((0, h), (0, 32))]),
+        piece("side_e", [], 32, side=side, walls=[((w, 32), (w, h))]),
+    ]
+
+
+
+# Slateport's Pokemon Fan Club: the bookcases, two wooden pillars and two
+# plants along the back wall (drawn 8 px down, the void above it), a plant
+# in each south corner, and the glass table between the sofas - the sofas
+# and armchairs stand on cells the player walks on and stay drawn.
+
+SLATEPORT_FAN_FLOOR = ("ded58b", "f6eeb4", "c5bd7b")
+SLATEPORT_FAN_RUG = ("ee836a", "cd6a6a", "ffcd94")
+SLATEPORT_FAN_WALL = ("e6d583", "f6eecd", "9c9c8b", "a49441", "d5a46a", "000000")
+SLATEPORT_FAN_SIDE = (64, 8, 80, 40)
+
+
+def slateport_fan_club():
+    side = SLATEPORT_FAN_SIDE
+    wall_floor = SLATEPORT_FAN_WALL + SLATEPORT_FAN_FLOOR
+    return [
+        piece("plant_sw", [(0, 150, 16, 176)], 26, card=True, leave=SLATEPORT_FAN_FLOOR),
+        piece("plant_se", [(208, 150, 224, 176)], 26, card=True, leave=SLATEPORT_FAN_FLOOR),
+        piece("table", [(80, 94, 144, 128)], 10, leave=SLATEPORT_FAN_RUG, solid=True),
+        piece("plant_w", [(48, 20, 64, 47)], 27, card=True, leave=wall_floor),
+        piece("plant_e", [(160, 20, 176, 47)], 27, card=True, leave=wall_floor),
+        # pilasters: the wall's own pattern 5 px forward, their tops its trim
+        # (drawn in the wall's colours: only the floor is left round them)
+        piece("pillar_w", [(32, 8, 48, 45)], 32, leave=SLATEPORT_FAN_FLOOR, back=40),
+        piece("pillar_e", [(176, 8, 192, 45)], 32, leave=SLATEPORT_FAN_FLOOR, back=40),
+        # the bookcases' sides are their green tops
+        piece("bookcase_w", [(0, 26, 32, 47)], 12, leave=wall_floor, against=40,
+              side=(6, 28, 22, 34)),
+        piece("bookcase_e", [(192, 17, 224, 46)], 18, leave=wall_floor, against=40,
+              side=(194, 19, 206, 25)),
+        piece("wall", [(0, 8, 224, 40)], 32, fill=16, foot=40, side=side),
+        piece("side_w", [], 32, side=side, walls=[((0, 176), (0, 40))]),
+        piece("side_e", [], 32, side=side, walls=[((224, 40), (224, 176))]),
+    ]
+
+
+
+# The Harbor (Slateport's and Lilycove's): the building's wall along the
+# back, the railing round the dock - the floor and the water seen between
+# its bars, the runs down the west side and the cargo yard drawn as their
+# top line, their sides the back railing's bars, as Rustboro's - and the
+# crates stacked in the yard. The water stays the sea, level with the
+# floor; the gangway, where the S.S. Tidal is boarded, and the stools are
+# drawn on the floor.
+
+HARBOR_SEE = ("8bb4ac", "a4cdbd", "9c8b94", "628b83", "739c8b", "62627b", "526ad5", "6a83d5",
+              "29418b", "39529c", "acb494", "839473", "6a7b41", "dedec5")
+HARBOR_BARS = (180, 67, 212, 74)
+HARBOR_WALL_SIDE = (64, 0, 80, 64)
+
+
+def harbor():
+    see = HARBOR_SEE
+    return [
+        # the crates inside the dark line between them (their sides would be
+        # that line), the line drawn on the floor beside them
+        piece("crate_c", [(352, 192, 383, 239)], 14, leave=see),
+        piece("crate_b", [(320, 176, 351, 207)], 14, leave=see),
+        piece("crate_a", [(289, 160, 319, 207)], 14, leave=see),
+        piece("rail_v", [(272, 176, 280, 240)], 15, through=True, leave=see, side=HARBOR_BARS),
+        piece("rail_s", [(48, 160, 112, 176), (144, 160, 288, 176), (320, 160, 384, 176)], 15,
+              through=True, leave=see),
+        piece("rail_w", [(48, 80, 56, 160)], 15, through=True, leave=see, side=HARBOR_BARS),
+        piece("rail_n", [(48, 64, 384, 80)], 15, through=True, leave=see),
+        piece("wall", [(0, 0, 384, 64)], 56, fill=16, foot=64, side=HARBOR_WALL_SIDE),
+        piece("side_w", [], 56, side=HARBOR_WALL_SIDE, walls=[((0, 240), (0, 64))]),
+        piece("side_e", [], 56, side=HARBOR_WALL_SIDE, walls=[((384, 64), (384, 240))]),
+    ]
+
+
+
+# Stern's Shipyard 1F: the office west of its partition (the stairs up
+# painted on the back wall), the workshop east of it - the board stacks in
+# its corners, the girder towers, the enclosure round the submarine.
+
+SHIPYARD_FLOOR = ("739c8b", "62627b", "628b83", "8bb4ac", "a4cdbd", "9c8b94", "acb494", "839473",
+                  "6a7b41", "dedec5")
+SHIPYARD_WALL = ("dedede", "ffffff", "8b94a4", "6a7b7b")
+SHIPYARD_WALL_SIDE = (64, 0, 80, 32)
+
+
+def shipyard_1f():
+    fl = SHIPYARD_FLOOR
+    side = SHIPYARD_WALL_SIDE
+    return [
+        # the submarine in its glass capsule, its nose out in front
+        piece("sub_nose", [(192, 136, 224, 157)], 12, leave=fl),
+        piece("capsule", [(176, 72, 240, 136)], 40, leave=fl),
+        # the robot arm and its console, before the enclosure's wall
+        piece("robot", [(144, 72, 176, 120)], 24, leave=fl),
+        piece("girder_n", [(112, 64, 128, 112)], 44, leave=fl),
+        # the enclosure's wall and the pillar at its east end
+        piece("pillar_e", [(240, 56, 256, 99)], 29, leave=fl),
+        piece("wall_enc", [(112, 60, 240, 96)], 27, fill=16, foot=96, side=side),
+        # along the back wall: the three consoles and a pilaster
+        piece("consoles", [(128, 16, 176, 40)], 17, back=32, leave=fl, side=(129, 17, 143, 21)),
+        piece("pilaster", [(192, 0, 208, 35)], 35, back=32, leave=fl),
+        # the workshop's girder towers and board stacks
+        piece("girder_w", [(160, 144, 176, 207)], 59, leave=fl),
+        piece("girder_e", [(224, 160, 240, 207)], 43, leave=fl),
+        piece("boards_sw", [(112, 176, 160, 240)], 32, leave=fl),
+        piece("boards_se", [(288, 176, 336, 225)], 32, leave=fl),
+        piece("boards_ne", [(304, 48, 336, 113)], 40, leave=fl),
+        # the office
+        piece("table", [(64, 96, 96, 128)], 6, leave=fl, solid=True),
+        # the desks with their computers, their sides their tops' lavender
+        piece("desk_n", [(0, 66, 32, 97)], 10, leave=fl, solid=True, side=(18, 78, 30, 88)),
+        piece("desk_m", [(0, 114, 32, 145)], 10, leave=fl, solid=True, side=(18, 126, 30, 136)),
+        piece("desk_s", [(0, 162, 32, 193)], 10, leave=fl, solid=True, side=(18, 174, 30, 184)),
+        # the model ship on the desk, with the grey strip of the desk's top
+        # it stands on (outside the desk's outline, which closes its front)
+        piece("model_ship", [(3, 24, 30, 38)], 10, base=8, leave=SHIPYARD_WALL[2:]),
+        # the desk the model ship is on, back to the wall under the ship
+        piece("desk_ship", [(0, 37, 32, 48)], 8, back=32),
+        # the partition between office and workshop, its door between its
+        # two runs; the south one runs on past the map's edge
+        piece("partition_n", [(96, 0, 112, 146)], 28, fill=16, foot=146, side=side, against=32,
+              walls=[((96, 32), (96, 146)), ((112, 146), (112, 32))]),
+        piece("partition_s", [(96, 169, 112, 240)], 28, fill=16, foot=268, side=side,
+              walls=[((96, 197), (96, 268)), ((112, 268), (112, 197))]),
+        piece("wall", [(0, 0, 336, 32)], 32, fill=16, foot=32, side=side),
+        piece("side_w", [], 32, side=side, walls=[((0, 240), (0, 32))]),
+        piece("side_e", [], 32, side=side, walls=[((336, 32), (336, 240))]),
+    ]
+
+
+
+# Stern's Shipyard 2F: offices round a balcony over the workshop. 1F's desks
+# with their computers, its blueprint tables, its pilasters and the Harbor's
+# railing stand in it as they are (reuse_pieces); its own are the plain
+# desks, the bin, and the railing round the balcony, the workshop seen
+# through it. Inside the railing the floor below is drawn - 1F's girder
+# and submarine among it: the room's `pit`, where nothing found again
+# stands.
+
+SHIPYARD_PIT = [(136, 96, 248, 192)]
+
+
+def shipyard_2f():
+    side = SHIPYARD_WALL_SIDE
+    fl = SHIPYARD_FLOOR
+    desk = lambda name, x, y: piece(name, [(x, y + 10, x + 32, y + 33)], 10, leave=fl,  # noqa: E731
+                                    solid=True, side=(x + 18, y + 14, x + 30, y + 24))
+    return [
+        piece("bin", [(113, 176, 127, 192)], 15, round="lathe", leave=fl),
+        desk("desk_nw", 0, 64), desk("desk_m", 32, 112), desk("desk_s", 32, 160),
+        piece("rail_s", [(128, 192, 256, 208)], 15, through=True, leave=fl),
+        piece("rail_e", [(248, 96, 256, 192)], 15, through=True, leave=fl, side=HARBOR_BARS),
+        piece("rail_w", [(128, 160, 136, 192)], 15, through=True, leave=fl, side=HARBOR_BARS),
+        piece("rail_n", [(128, 80, 256, 96)], 15, through=True, leave=fl),
+        piece("wall", [(0, 0, 272, 32)], 32, fill=16, foot=32, side=side),
+        piece("side_w", [], 32, side=side, walls=[((0, 240), (0, 32))]),
+        piece("side_e", [], 32, side=side, walls=[((272, 32), (272, 240))]),
+    ]
+
+
+
+def room_shell(w, h, foot=32, side=None, top=0):
+    """A room's shell: its back wall standing on `foot`, drawn from `top`,
+    and its side walls."""
+    side = side or (64, top, 80, foot)
+    return [
+        piece("wall", [(0, top, w, foot)], foot - top, fill=16, foot=foot, side=side),
+        piece("side_w", [], foot - top, side=side, walls=[((0, h), (0, foot))]),
+        piece("side_e", [], foot - top, side=side, walls=[((w, foot), (w, h))]),
+    ]
+
+
+
+# The Shop tileset's mint glass counters (Lavaridge's Herb Shop, the Seaside
+# Cycling Road's gates): 7 px, their arms to the wall's foot. The Herb Shop's
+# register is the Department Store's, found again (reuse_pieces).
+
+MINT_SHOP_FLOOR = ("e69c39", "f6c539", "f6e673", "cd8320", "ac5a20")
+
+
+def herb_shop():
+    return [
+        piece("counter", [(0, 44, 96, 63), (80, 28, 96, 44)], 7, leave=MINT_SHOP_FLOOR,
+              plan=[(0, 52), (80, 52), (80, 35), (96, 35), (96, 63), (0, 63)]),
+    ] + room_shell(176, 128)
+
+
+def cycling_gate():
+    return [
+        piece("counter", [(80, 28, 96, 63), (160, 28, 176, 63), (96, 44, 160, 63)], 7,
+              leave=MINT_SHOP_FLOOR,
+              plan=[(80, 35), (96, 35), (96, 51), (160, 51), (160, 35), (176, 35), (176, 63),
+                    (80, 63)]),
+    ] + room_shell(240, 96)
+
+
+def safari_rest_house():
+    return [
+        piece("table", [(49, 79, 79, 112)], 8, leave=("ded552", "bdb431", "8b8b8b"),
+              solid=True),
+    ] + room_shell(160, 144, foot=64, top=32)
+
+
+
+# The Weather Institute on Route 119: the lab's furniture stands in it as it
+# is (reuse_pieces) - desks, computers, chairs, plants; its own are its
+# partitions, white-topped walls 29 px tall: on 1F two running down from the
+# back wall, and one across the room, its doorway between two posts.
+
+INSTITUTE_SIDE = (176, 133, 192, 160)
+INSTITUTE_FLOOR = ("d5d5d5", "acacb4", "9c9ca4", "7b7b83")
+
+
+def institute_desk(name, x, y):
+    """A desk a column wide under one of the lab's computers (found again at
+    cell (x, y) // 16): the lab's desk, drawn shorter - its rails beside the
+    computer, its top back to 12 px into the computer's cell."""
+    return piece(name, [(x, y + 20, x + 16, y + 49), (x, y + 4, x + 2, y + 20),
+                        (x + 14, y + 4, x + 16, y + 20)], 8, leave=INSTITUTE_FLOOR, back=y + 12)
+
+
+def institute_1f():
+    side = INSTITUTE_SIDE
+    return [
+        piece("machine", [(4, 32, 28, 62)], 17, leave=INSTITUTE_FLOOR),
+        piece("bookcases", [(128, 16, 192, 48)], 20, leave=INSTITUTE_FLOOR, against=32),
+    ] + [institute_desk("desk_%d" % x, x, 64) for x in (176, 192, 256, 272)] + [
+        piece("partition_ww", [(48, 0, 64, 99)], 29, fill=16, foot=99, side=side, against=32,
+              walls=[((48, 32), (48, 99)), ((64, 99), (64, 32))]),
+        piece("partition_we", [(112, 0, 128, 99)], 29, fill=16, foot=99, side=side, against=32,
+              walls=[((112, 32), (112, 99)), ((128, 99), (128, 32))]),
+        piece("partition_post_w", [(48, 121, 64, 163)], 29, fill=16, foot=163, side=side,
+              walls=[((48, 134), (48, 163)), ((64, 163), (64, 134))]),
+        piece("partition_post_e", [(112, 121, 128, 163)], 29, fill=16, foot=163, side=side,
+              walls=[((112, 134), (112, 163)), ((128, 163), (128, 134))]),
+        piece("partition_s_w", [(0, 124, 48, 160)], 28, fill=16, foot=160, side=side),
+        piece("partition_s_e", [(128, 124, 320, 160)], 28, fill=16, foot=160, side=side),
+    ] + room_shell(320, 208)
+
+
+
+# 2F: the partition down its west side in two runs (the south one on past
+# the map's edge), desks under the two computers at its west end (the eight
+# in the middle stand on 1F's, found again), and the last of the bookcases
+# (the four before it are 1F's pairs, found again).
+
+def institute_2f():
+    side = INSTITUTE_SIDE
+    return [institute_desk("desk_16_%d" % y, 16, y) for y in (48, 128)] + [
+        # the last bookcase, single (the pairs before it are 1F's)
+        piece("bookcase_e", [(208, 16, 240, 48)], 20, leave=INSTITUTE_FLOOR, against=32),
+        piece("partition_n", [(64, 0, 80, 99)], 29, fill=16, foot=99, side=side, against=32,
+              walls=[((64, 32), (64, 99)), ((80, 99), (80, 32))]),
+        piece("partition_s", [(64, 112, 80, 176)], 29, fill=16, foot=205, side=side,
+              walls=[((64, 141), (64, 205)), ((80, 205), (80, 141))]),
+    ] + room_shell(320, 176)
+
+
+
+# The Safari Zone's entrance on Route 121: an L round a void. Its gate
+# counter is the Seaside Cycling Road's, its planters the Department
+# Store's, its plants the Center's, its chairs the store's rooftop's and the
+# machine the Battle Tent's (reuse_pieces); its own are the counter down its
+# east side, its two stubs either side of the clerk's floor, and its walls:
+# the back one, the sides, and one down the void's edge facing the corridor
+# (the void's south edge, a front wall the GBA never draws, stays open).
+
+def safari_entrance():
+    side = (64, 0, 80, 32)
+    return [
+        piece("counter_e", [(256, 104, 272, 191), (272, 104, 288, 127), (272, 168, 288, 191)], 7,
+              leave=MINT_SHOP_FLOOR,
+              plan=[(256, 111), (288, 111), (288, 127), (272, 127), (272, 175), (288, 175),
+                    (288, 191), (256, 191)]),
+        piece("wall", [(0, 0, 288, 32)], 32, fill=16, foot=32, side=side),
+        # the west wall stops a pixel short of the void: a wall answers for the
+        # cell its end reaches, and the void's first cell would lie on the
+        # floor as a black patch, the rest of the void open
+        piece("side_w", [], 32, side=side, walls=[((0, 95), (0, 32))]),
+        piece("side_void", [], 32, side=side, walls=[((192, 224), (192, 96))]),
+        piece("side_e", [], 32, side=side, walls=[((288, 32), (288, 224))]),
+    ]
+
+
+
+# The Cable Car Station (Route 112's and Mt. Chimney's): the back wall (its
+# pilasters the Shipyard's, found again), and over the track two railings
+# either side of the boarding gap - the far one along the track's back, the
+# near one along the platform's edge, the runs down the gap drawn as their
+# top line (the Harbor's bars on their sides) - the track seen through them;
+# the ticket machine (its bin the Shipyard's). The benches stand on cells
+# the player walks on and stay drawn.
+
+CABLE_SEE = ("d5d539", "62627b")
+
+
+def cable_car_station():
+    see = CABLE_SEE
+
+    def rail(name, shape, side=None):
+        return piece(name, shape, 15, through=True, leave=see, side=side)
+
+    return [
+        piece("machine", [(192, 112, 208, 144)], 16, leave=("d5d539",)),
+        rail("rail_gap_w", [(88, 88, 96, 120)], HARBOR_BARS),
+        rail("rail_gap_e", [(112, 88, 120, 120)], HARBOR_BARS),
+        rail("rail_near_w", [(0, 104, 88, 120)]),
+        rail("rail_near_e", [(120, 104, 208, 120)]),
+        rail("rail_far_w", [(0, 72, 96, 88)]),
+        rail("rail_far_e", [(112, 72, 208, 88)]),
+    ] + room_shell(208, 192)
+
+
+
+# Mauville's Bike Shop: the bicycles in their racks down both sides
+# (upright cards), the shelf in the corner, the counter (an L of wood, the
+# printer on its arm), the pillar down to the display stand, the two
+# stands, and the two desks against the back wall (the lab's red book found
+# again on each: they stand on the wall's foot, 8 px into the room, as the
+# Centers' computer). The wall is drawn 4 px down, the void above it.
+
+BIKE_FLOOR = ("acbdac", "83948b", "d5ded5", "cdcdcd")
+BIKE_WALL = ("eeeede", "cdcdb4", "acac8b", "947b6a", "000000")
+
+
+def bike_shop():
+    fl = BIKE_FLOOR
+    side = (60, 4, 76, 32)
+    bikes = [piece("bike_w%d" % k, [(0, y, 26, y + 16)], 16, card=True, leave=fl)
+             for k, y in enumerate((40, 56, 72, 88, 104, 120))]
+    # the east rack's: the last takes the rack's upright down to the wall's foot
+    bikes += [piece("bike_e%d" % k, [(162, y0, 192, y1)], y1 - y0, card=True, leave=fl)
+              for k, (y0, y1) in enumerate(((86, 104), (104, 120), (120, 144)))]
+    return bikes + [
+        piece("printer", [(32, 26, 48, 38)], 8, base=10, leave=BIKE_WALL),
+        piece("counter", [(32, 38, 48, 69), (48, 46, 80, 69)], 10, leave=fl,
+              plan=[(32, 48), (48, 48), (48, 56), (79, 56), (79, 57), (80, 57), (80, 69),
+                    (32, 69)]),
+        piece("box", [(80, 46, 96, 63)], 7, leave=fl),
+        piece("stand_w", [(96, 60, 128, 88)], 8, leave=fl),
+        piece("stand_e", [(160, 60, 192, 80)], 8, leave=fl),
+        piece("desk_w", [(112, 20, 144, 41)], 9, leave=fl + BIKE_WALL, solid=True, against=32),
+        piece("desk_e", [(160, 20, 192, 41)], 9, leave=fl + BIKE_WALL, solid=True, against=32),
+        # the shelf, its sides its top's grey
+        piece("shelf", [(0, 11, 32, 46)], 25, leave=fl, against=32, side=(4, 12, 28, 19)),
+        piece("partition", [(96, 4, 104, 60)], 28, fill=16, foot=88, side=side, against=32,
+              walls=[((96, 32), (96, 88)), ((104, 88), (104, 32))]),
+    ] + room_shell(192, 144, top=4, side=side)
+
+
+
+# Mauville's Game Corner: the two islands of slot machines, the two
+# roulette tables, the prize counter (a U round the clerk's floor, its arms'
+# backs slanting in, its rim behind it painted on the wall), the arcade
+# cabinets, the plants and the bins; the back wall a cell forward at its
+# east end. The benches stand on cells the player walks on and stay drawn.
+
+GAME_CORNER_FLOOR = ("d55231", "f65252", "a44a41", "ac625a")
+GAME_CORNER_WALL = ("31839c", "62accd", "bdcde6", "eee6f6", "cdcdc5", "7b7b8b", "ffffff")
+
+
+def mauville_game_corner():
+    fl = GAME_CORNER_FLOOR
+    side = (200, 0, 216, 32)
+    plants = [piece("plant_%d" % k, [(x, 20, x + 16, 47)], 27, card=True,
+                    leave=fl + GAME_CORNER_WALL) for k, x in enumerate((80, 96, 112))]
+    return plants + [
+        piece("bin_w", [(33, 30, 47, 48)], 17, round="lathe", leave=fl + GAME_CORNER_WALL),
+        piece("bin_e", [(337, 65, 351, 80)], 15, round="lathe", leave=fl),
+        piece("arcade", [(0, 18, 32, 48)], 14, leave=fl + GAME_CORNER_WALL, against=32,
+              side=(2, 19, 14, 26)),
+        # the islands' sides are their side rails' light grey
+        piece("slots_w", [(32, 80, 64, 160)], 10, leave=fl, solid=True,
+              side=(35, 93, 36, 100)),
+        piece("slots_e", [(112, 80, 144, 160)], 10, leave=fl, solid=True,
+              side=(115, 93, 116, 100)),
+        piece("roulette_w", [(224, 96, 256, 141)], 7, leave=fl, solid=True),
+        piece("roulette_e", [(288, 96, 320, 141)], 7, leave=fl, solid=True),
+        # the arms 15 px wide, their backs stepping in a pixel a row, the front
+        # corners cut on the slant (their lighter blue faces)
+        piece("counter", [(144, 27, 150, 28), (144, 28, 151, 29), (144, 29, 152, 30),
+                          (250, 27, 256, 28), (249, 28, 256, 29), (248, 29, 256, 30),
+                          (144, 30, 159, 73), (241, 30, 256, 73), (159, 45, 241, 73)], 13,
+              leave=fl,
+              plan=[(144, 40), (150, 40), (150, 41), (151, 41), (151, 42), (152, 42), (152, 43),
+                    (159, 43), (159, 58), (241, 58), (241, 43), (248, 43), (248, 42), (249, 42),
+                    (249, 41), (250, 41), (250, 40), (256, 40), (256, 65), (249, 72), (151, 72),
+                    (144, 65)]),
+        piece("wall_e", [(288, 0, 352, 48)], 30, fill=16, foot=48, side=side,
+              walls=[((288, 32), (288, 48))]),
+        piece("wall", [(0, 0, 288, 32)], 32, fill=16, foot=32, side=side),
+        piece("side_w", [], 32, side=side, walls=[((0, 176), (0, 32))]),
+        piece("side_e", [], 32, side=side, walls=[((352, 48), (352, 176))]),
+    ]
+
+
+
+# Mossdeep's Game Corner and Sootopolis's Mystery Events House. Much of
+# their furniture already stands through reuse_pieces (House1's and House2's
+# plants, chairs and television, the chest and case from Mr. Briney's house,
+# the Battle Tent's machine); their own are below.
+
+MOSSDEEP_GC_FLOOR = ("eecda4", "d5b473", "bda462", "7b839c")
+EVENTS_FLOOR = ("8b8b8b", "b4b4a4", "73738b")
+
+
+def mossdeep_game_corner_1f():
+    """The counter, a U from the back wall on short legs (its arms' planks
+    run back to the wall, the bar's across), in two round the yellow gate in
+    its middle,
+    the four posts against the wall either side of the doorway, and the two
+    glass tables; the chairs round them stand on cells the player walks on
+    and stay drawn."""
+    fl = MOSSDEEP_GC_FLOOR
+    posts = [piece("post_%d" % x, [(x, 15, x + 6, 34)], 16, leave=fl, against=31)
+             for x in (57, 73, 98, 114)]
+    tables = [piece("table_%s" % k, [(x, 93, x + 32, 128)], 8, leave=fl, solid=True)
+              for k, x in (("w", 32), ("e", 112))]
+    return posts + tables + [
+        # in two, round its gate (5,2-3), which the cable club's scripts open
+        # for link play (EventScript_OpenMossdeepGameCornerBarrier): it stays
+        # drawn, so it opens - a piece's rectangle would lay it in its model
+        piece("counter_w", [(32, 21, 48, 45), (32, 45, 80, 62)], 6, leave=fl, against=31,
+              plan=[(32, 31), (48, 31), (48, 51), (80, 51), (80, 62), (32, 62)]),
+        piece("counter_e", [(128, 21, 144, 45), (96, 45, 144, 62)], 6, leave=fl, against=31,
+              plan=[(96, 51), (128, 51), (128, 31), (144, 31), (144, 62), (96, 62)]),
+    ] + room_shell(192, 160, foot=31)
+
+
+def mystery_events_house_1f():
+    return [
+        piece("table", [(114, 64, 142, 91)], 4, leave=EVENTS_FLOOR, solid=True),
+    ] + room_shell(176, 128)
+
+
+
+# The Pokémon League. The Elite Four's four rooms share one plan: a back
+# wall with the door to the next room, ten spotlights along its foot, a
+# pillar standing out from each side wall, and a front wall across the
+# entry corridor. data/scripts/elite_four.inc opens the door and switches
+# the spotlights off after the battle, and closes the entry door behind the
+# player (setmetatile): a model keeps the drawing it was built from, so
+# the spotlights and the entry door stay drawn - the back wall stands on row
+# 2's top edge, the spotlights lying at its foot, and the front wall runs in
+# two stretches, its top over the corridor drawn. The door is painted on the
+# back wall (see below).
+
+E4_WALL_SIDE = (32, 16, 48, 32)
+
+
+def elite_four_room(floor):
+    """`floor`: the room's own floor colours (the pillars' tops are the
+    border's, so only the main floor is left round them)."""
+    side = E4_WALL_SIDE
+    return [
+        piece("pillar_w", [(0, 68, 26, 147)], 69, leave=floor),
+        piece("pillar_e", [(182, 68, 208, 147)], 69, leave=floor),
+        # the door painted on the back wall, as the rooms' doors are: a
+        # doorway cut through it shows, from the console's camera, the wall's
+        # own drawing lying on the floor behind it; so the door stays shut
+        # when elite_four.inc opens it. The front wall in two stretches, its
+        # top over the corridor drawn, and the side walls from the spotlights'
+        # row on: a piece's rectangle lays every cell in it in its model, and
+        # the spotlights and the entry door stay drawn to change. Named as
+        # walls, the room's own (own_shell)
+        piece("wall", [(0, 0, 208, 32)], 32, fill=16, foot=32, side=side),
+        piece("wall_front_w", [(0, 172, 80, 224)], 32, fill=16, foot=224),
+        piece("wall_front_e", [(128, 172, 208, 224)], 32, fill=16, foot=224),
+        piece("side_w", [], 32, side=side, walls=[((0, 204), (0, 48))]),
+        piece("side_e", [], 32, side=side, walls=[((208, 48), (208, 204))]),
+    ]
+
+
+# Pokémon League 1F: the Center's, wider. The healing machine, the PC, the
+# telephone, the balls on the counter's arms, the stools, tables, plants and
+# escalator are the Center's, found again (reuse_pieces); its own are its
+# two counters (their arms' back outline painted on the wall's foot) and its
+# walls: the Center's 45-degree corners and side walls, the back wall
+# between them, the gate to the Elite Four painted on it.
+
+LEAGUE_WALL_SIDE = (112, 0, 128, 32)
+LEAGUE_1F_OPEN = [[(0, 174), (18, 192), (0, 192)], [(304, 174), (286, 192), (304, 192)]]
+LEAGUE_COUNTER_LEAVE = ("cdc58b", "eedea4", "de7b31", "f6b473", "bd5220")
+
+
+def league_1f():
+    side = LEAGUE_WALL_SIDE
+    return [
+        # each a bar from the map's edge and an arm back to the wall, its inner
+        # front corner cut on the slant
+        piece("counter_w", [(0, 45, 95, 63), (80, 25, 95, 45)], 7, leave=LEAGUE_COUNTER_LEAVE,
+              plan=[(0, 52), (80, 52), (80, 32), (95, 32), (95, 61), (93, 63), (0, 63)]),
+        piece("counter_e", [(225, 45, 304, 63), (225, 25, 240, 45)], 7,
+              leave=LEAGUE_COUNTER_LEAVE,
+              plan=[(225, 32), (240, 32), (240, 52), (304, 52), (304, 63), (227, 63),
+                    (225, 61)]),
+        facet("corner_w", (0, 15, 47), (16, -1, 31), 32, walls=[((0, 174), (0, 47))],
+              side=side, cells=[(0, 10)]),
+        facet("corner_e", (288, -1, 31), (304, 15, 47), 32, walls=[((304, 47), (304, 174))],
+              side=side, cells=[(18, 10)]),
+        piece("wall_e", [(160, 0, 288, 32)], 32, fill=16, side=side),
+        piece("wall", [(16, 0, 160, 32)], 32, fill=16, side=side),
+    ]
+
+
+# The halls between the Elite Four's rooms: the back wall (its doorway
+# painted on it), a landing, and the stairs down between two rails over the
+# dark. The floor has one level: the landing's edge and the dark below it
+# stay drawn, as the Shipyard's well; the rails stand along the stairs, 16
+# px from the landing's edge to the map's.
+
+LEAGUE_HALL_SIDE = (16, 16, 32, 48)
+
+
+def league_hall(h, rail=80):
+    """`rail`: the row the hall's own rails start at. Hall 4's first 13 rows
+    are the short halls': their rails are found again there, and its own run
+    on from them, their tops back to where those end."""
+    side = LEAGUE_HALL_SIDE
+    back = None if rail == 80 else rail
+    return [
+        piece("rail_w", [(51, rail, 64, h)], 16, back=back),
+        piece("rail_e", [(112, rail, 125, h)], 16, back=back),
+        piece("wall", [(0, 0, 176, 48)], 48, fill=16, foot=48, side=side),
+        piece("side_w", [], 48, side=side, walls=[((0, h), (0, 48))]),
+        piece("side_e", [], 48, side=side, walls=[((176, 48), (176, h))]),
+    ]
+
+
+# The Hall of Fame: the back wall with its screens, its middle a cell
+# forward round the great screen, and the record machine before it; the
+# dais under the machine and the trim along the wall's foot are steps the
+# floor's one level can't take, and stay drawn. The side walls are edge on
+# to the GBA's camera (a pale line of their top drawn beside the floor).
+
+HOF_FLOOR = ("524ab4", "524a62", "31394a")
+HOF_WALL_SIDE = (54, 0, 60, 29)
+
+
+def hall_of_fame():
+    side = HOF_WALL_SIDE
+    return [
+        piece("machine", [(98, 56, 142, 88)], 29, leave=HOF_FLOOR),
+        piece("wall_c", [(88, 0, 152, 51)], 51, fill=16, foot=51, side=side),
+        piece("wall_w", [(16, 0, 88, 29)], 29, fill=16, foot=29, side=side),
+        piece("wall_e", [(152, 0, 224, 29)], 29, fill=16, foot=29, side=side),
+        # the corners' cells beside the wall's ends with them
+        piece("side_w", [], 29, side=side, walls=[((16, 256), (16, 29))],
+              cells=[(1, 2)] + [(0, y) for y in range(2, 16)]),
+        piece("side_e", [], 29, side=side, walls=[((224, 29), (224, 256))],
+              cells=[(13, 2)] + [(14, y) for y in range(2, 16)]),
+    ]
+
+
+
+# Mauville's gym: the corridor's two walls running down from the back wall
+# into the wall blocks they turn into, the block further down the east side,
+# and the back wall. The beams' puzzle stays drawn: MauvilleGymPressSwitch and
+# MauvilleGymSetDefaultBarriers switch its beams, its switches and some of
+# its coils' tiles (setmetatile), and every coil is left drawn so that they
+# look alike. So do the leader's dais, a step the floor can't take, and the
+# entrance hall's rims round the dark, drawn as their tops alone.
+
+MAUVILLE_GYM_SIDE = (0, 120, 16, 142)
+
+
+def mauville_gym():
+    side = MAUVILLE_GYM_SIDE
+    return [
+        # each corridor wall and the block it turns into cut between columns:
+        # a piece's rectangle takes the beams' cells within it
+        piece("wall_w", [(40, 0, 48, 144)], 24, side=side),
+        piece("block_w", [(0, 112, 40, 144)], 24, side=side),
+        piece("wall_e", [(112, 0, 120, 128)], 24, side=side),
+        piece("block_e", [(120, 96, 160, 128)], 24, side=side),
+        piece("block_se", [(112, 200, 160, 240)], 24, side=side),
+        piece("wall", [(48, 0, 112, 31)], 31, fill=16, foot=31, side=side),
+        # in two, round the switch at (0, 15): a wall's rectangle would lay
+        # the switch in its model, and MauvilleGymPressSwitch presses it
+        piece("side_w", [], 24, side=side, walls=[((0, 239), (0, 144))]),
+        piece("side_w2", [], 24, side=side, walls=[((0, 272), (0, 256))]),
+        piece("side_e", [], 24, side=side, walls=[((160, 128), (160, 200))]),
+        piece("side_e2", [], 24, side=side, walls=[((160, 240), (160, 272))]),
+        piece("side_sw", [], 24, side=side, walls=[((32, 336), (32, 272))]),
+        piece("side_se", [], 24, side=side, walls=[((128, 272), (128, 336))]),
+    ]
+
+
+
+# Mossdeep's gym: islands in the dark, joined by the warp pads. Each
+# island's walls stand from their cells, 24 px tall - their 8-px tops, the
+# long strips of the walls running back between them and their panelled
+# faces - a piece to each rectangle of them (run_rects), and the coloured
+# boxes on the floor and the
+# leader's sofa stand. The arrows and switches stay drawn: the gym's scripts
+# turn them (setmetatile), and they lie on the floor anyway.
+
+MOSSDEEP_GYM_FLOOR = ("9c9cac", "bdb4c5", "ded5de", "000000")
+
+
+def cells_rects(cells):
+    """16-px cells (x, y) as rectangles in pixels."""
+    return [(x * 16, y * 16, x * 16 + 16, y * 16 + 16) for (x, y) in cells]
+
+
+def cell_runs(*runs):
+    """Cells from (x, y0, y1) runs, y1 inclusive."""
+    return [(x, y) for (x, y0, y1) in runs for y in range(y0, y1 + 1)]
+
+
+def run_rects(runs):
+    """(x, y0, y1) runs of cells, y1 inclusive, as rectangles of pixels:
+    neighbouring columns with the same run in one. Every cell inside a
+    piece's rectangle that no piece takes is laid with the piece (the floor
+    cells between two walls, a bridge, a floor arrow, stood up with it), so a
+    wall of several runs stands as one piece per rectangle; cut only between
+    columns or at a gap of floor, no drawn run is split."""
+    rows = {}
+    for (x, y0, y1) in runs:
+        rows.setdefault((y0, y1), []).append(x)
+    out = []
+    for (y0, y1), xs in sorted(rows.items()):
+        xs.sort()
+        start = prev = xs[0]
+        for x in xs[1:] + [None]:
+            if x is None or x != prev + 1:
+                out.append((start * 16, y0 * 16, (prev + 1) * 16, (y1 + 1) * 16))
+                start = x
+            if x is not None:
+                prev = x
+    return sorted(out)
+
+
+def runs_of(cells):
+    """Cells as (x, y0, y1) runs down each column, y1 inclusive."""
+    out = []
+    for x in sorted({cx for (cx, _) in cells}):
+        ys = sorted(cy for (cx, cy) in cells if cx == x)
+        start = prev = ys[0]
+        for y in ys[1:] + [None]:
+            if y is None or y != prev + 1:
+                out.append((x, start, prev))
+                start = y
+            if y is not None:
+                prev = y
+    return out
+
+
+def rect_pieces(prefix, runs, height, side=None, **kw):
+    """A piece for each of run_rects(runs), named by its corner. A run a
+    single cell tall stands 4 px lower than its cell, or it would be all
+    front and no top; `side`, if given, is a function of the rectangle."""
+    return [piece("%s_%d_%d" % (prefix, x0 // 16, y0 // 16), [(x0, y0, x1, y1)],
+                  min(height, y1 - y0 - 4), side=side and side(x0, y0, x1, y1), **kw)
+            for (x0, y0, x1, y1) in run_rects(runs)]
+
+
+def mossdeep_gym():
+    fl = MOSSDEEP_GYM_FLOOR
+    islands = {
+        "nw": cell_runs((4, 2, 3), (5, 1, 3), (6, 2, 2), (7, 1, 3), (8, 2, 3), (9, 2, 7),
+                        (10, 1, 7), (11, 1, 2), (12, 1, 4)),
+        "ne": cell_runs((21, 4, 5), (22, 4, 6), (23, 5, 6), (24, 5, 6), (25, 5, 6)),
+        "w": cell_runs((1, 18, 20), (2, 18, 19), (3, 18, 19), (4, 18, 19), (5, 18, 19),
+                       (6, 16, 19), (7, 16, 17), (8, 16, 17), (9, 16, 17)),
+        "sw": cell_runs((1, 27, 28), (2, 26, 28), (3, 26, 27), (4, 26, 28), (5, 27, 28),
+                        (6, 27, 30), (7, 28, 29), (8, 28, 31), (9, 30, 31)),
+        "s": cell_runs((11, 31, 32), (12, 30, 32), (13, 30, 31)),
+        "se": cell_runs((15, 32, 33), (16, 32, 33), (17, 32, 33), (18, 32, 33), (19, 32, 33),
+                        (20, 31, 33), (21, 30, 32), (22, 29, 31), (23, 29, 30)),
+        "e": cell_runs((20, 20, 23), (21, 20, 21), (22, 18, 21), (23, 19, 19), (24, 18, 21),
+                       (25, 20, 21)),
+    }
+    pieces = []
+    for k, cells in islands.items():
+        pieces += rect_pieces("walls_" + k, runs_of(cells), 24, leave=fl)
+    boxes = [piece("box_%d_%d" % c, cells_rects([c]), 8, leave=fl, solid=True)
+             for c in ((5, 7), (8, 7), (8, 8), (3, 21), (7, 19), (9, 19))]
+    sofa = piece("sofa", cells_rects([(22, 7), (23, 7), (24, 7), (25, 7), (22, 8), (25, 8)]),
+                 12, leave=fl)
+    return pieces + boxes + [sofa]
+
+
+
+# Fortree's gym: a wood of round trees on a grass floor, the rotating gates
+# between them (sprites, src/rotating_gate.c: no tile of the floor changes).
+# The trees stand as hedges 16 px tall, each column's run of them its top
+# and the last tree's trunk its front, a piece to each rectangle of them
+# (run_rects). The three rails across the east side stand 4 px; the leader's dais
+# is a step the floor can't take and stays drawn; the small trees along the
+# back wall are painted on it.
+
+FORTREE_GYM_FLOOR = ("b4bd5a", "dede8b", "f6f6bd")
+FORTREE_GYM_TREES = [
+    [(0, 2, 23), (1, 2, 5), (1, 11, 23)],
+    [(2, 9, 16), (2, 22, 23), (3, 3, 7), (3, 9, 16), (3, 18, 18), (3, 23, 23)],
+    [(4, 6, 7), (4, 9, 13), (5, 10, 15), (5, 19, 21)],
+    [(6, 2, 3), (6, 5, 6), (6, 11, 15), (6, 17, 17), (6, 19, 21), (7, 2, 3), (7, 5, 6),
+     (7, 11, 11), (7, 19, 20)],
+    [(8, 2, 3), (8, 5, 8), (8, 11, 11), (8, 13, 13), (8, 17, 20), (8, 23, 23), (9, 2, 3),
+     (9, 5, 7), (9, 15, 20), (9, 23, 23)],
+    [(10, 2, 2), (10, 5, 8), (10, 11, 21), (10, 23, 23), (11, 2, 2), (11, 5, 20), (11, 23, 23)],
+    [(12, 2, 2), (12, 5, 20), (12, 23, 23)],
+    [(18, 4, 23), (19, 2, 23)],
+]
+
+# each piece of trees' sides: a plain patch of its own mid or light green
+FORTREE_GYM_TREE_SIDES = {
+    (0, 2): (5, 45, 11, 49), (1, 2): (21, 45, 27, 49), (1, 11): (21, 181, 27, 185),
+    (2, 9): (37, 149, 43, 153), (2, 22): (37, 357, 43, 361), (3, 3): (49, 116, 53, 120),
+    (3, 18): (50, 290, 54, 293), (3, 23): (49, 372, 53, 376), (4, 6): (69, 101, 75, 105),
+    (4, 9): (69, 149, 75, 153), (5, 10): (85, 165, 91, 169), (5, 19): (101, 325, 107, 329),
+    (6, 2): (101, 37, 107, 41), (6, 5): (97, 84, 101, 88), (6, 11): (101, 176, 107, 180),
+    (6, 17): (98, 274, 102, 277), (7, 11): (113, 180, 117, 184), (7, 19): (113, 324, 117, 328),
+    (8, 5): (133, 101, 139, 105), (8, 13): (130, 210, 134, 213), (8, 17): (129, 324, 133, 328),
+    (8, 23): (133, 373, 139, 377), (9, 5): (149, 101, 155, 105), (9, 15): (145, 324, 149, 328),
+    (10, 2): (161, 36, 165, 40), (10, 5): (165, 101, 171, 105), (10, 11): (165, 181, 171, 185),
+    (11, 5): (181, 101, 187, 105), (18, 4): (293, 77, 299, 81), (19, 2): (309, 61, 315, 65),
+}
+
+
+def fortree_gym():
+    fl = FORTREE_GYM_FLOOR
+    # the trees' shadow on the grass (blue-grey) is the floor's
+    trees = rect_pieces("trees", [r for runs in FORTREE_GYM_TREES for r in runs], 16,
+                        leave=fl + ("7b839c",), solid=True,
+                        side=lambda x0, y0, x1, y1: FORTREE_GYM_TREE_SIDES[(x0 // 16, y0 // 16)])
+    rails = [piece("rail_%d" % y, [(208, y * 16, 288, y * 16 + 16)], 4, leave=fl, solid=True)
+             for y in (6, 12, 17)]
+    return trees + rails + [
+        piece("wall", [(0, 0, 320, 32)], 32, fill=16, foot=32, side=(32, 0, 48, 32)),
+    ]
+
+
+
+# Sootopolis's gym. 1F: three tiers of ice, each ringed by its wall - their
+# light tops and lilac faces, the crystal fountains at the back with the
+# back wall - a piece to each rectangle of them (run_rects), and the
+# rocks on the ice. The ice cracks under the player
+# (SetSootopolisGymCrackedIceMetatiles) and the script lays the stairs in the
+# walls' gaps (setmetatile): both lie on the floor, and stay drawn, as do the
+# two holes in it. B1F: the ice cave's rock walls, the same way. The floor's
+# white is the walls' tops' too: only its blues are left round them.
+
+SOOTOPOLIS_GYM_ICE = ("5abdd5", "83cdde", "acdee6", "d5eeee")
+SOOTOPOLIS_GYM_1F_WALLS = [
+    [(0, 0, 25), (1, 0, 11), (1, 18, 20), (2, 0, 11), (2, 18, 20)],
+    [(3, 0, 1), (3, 4, 5), (3, 10, 15), (3, 18, 25), (4, 0, 2), (4, 4, 5), (4, 10, 15),
+     (4, 18, 25), (5, 0, 2), (5, 4, 5), (5, 10, 11), (5, 15, 21)],
+    [(6, 0, 1), (6, 4, 5), (6, 10, 11), (6, 15, 21), (7, 0, 1), (7, 4, 5), (7, 10, 11),
+     (7, 15, 16), (7, 20, 21), (8, 0, 1)],
+    [(9, 0, 1), (9, 4, 5), (9, 10, 11), (9, 15, 16), (9, 20, 21), (10, 0, 1), (10, 4, 5),
+     (10, 10, 11), (10, 15, 21), (11, 0, 2), (11, 4, 5), (11, 10, 11), (11, 15, 21)],
+    [(12, 0, 2), (12, 4, 5), (12, 10, 15), (12, 18, 25), (13, 0, 1), (13, 4, 5), (13, 10, 15),
+     (13, 18, 25), (14, 0, 11), (14, 18, 20)],
+    [(15, 0, 11), (15, 18, 20), (16, 2, 3), (16, 9, 11), (16, 14, 15), (16, 18, 20)],
+]
+SOOTOPOLIS_GYM_ROCKS = [(4, 8), (6, 13), (7, 8), (9, 7), (9, 19), (10, 13), (11, 9), (12, 7)]
+SOOTOPOLIS_GYM_B1F_WALLS = [
+    [(0, 4, 11), (0, 14, 16), (0, 18, 20), (1, 4, 11), (1, 14, 16), (1, 18, 20), (2, 4, 5),
+     (2, 10, 16), (2, 18, 20)],
+    [(3, 4, 5), (3, 10, 16), (3, 18, 25), (4, 4, 5), (4, 10, 11), (4, 15, 25), (5, 4, 5),
+     (5, 10, 11), (5, 15, 16), (5, 19, 21)],
+    [(6, 4, 5), (6, 10, 11), (6, 15, 21), (7, 4, 5), (7, 10, 11), (7, 15, 16), (7, 20, 21),
+     (8, 4, 5)],
+    [(9, 4, 5), (9, 10, 11), (9, 15, 16), (9, 20, 21), (10, 4, 5), (10, 10, 11), (10, 15, 21),
+     (11, 4, 5), (11, 10, 11), (11, 15, 16), (11, 19, 20)],
+    [(12, 4, 5), (12, 10, 11), (12, 15, 25), (13, 4, 5), (13, 10, 16), (13, 18, 25),
+     (14, 4, 5), (14, 10, 16), (14, 18, 20)],
+    [(15, 4, 11), (15, 14, 16), (15, 18, 20), (16, 4, 11), (16, 14, 16), (16, 18, 20)],
+]
+
+
+def sootopolis_gym_1f():
+    ice = SOOTOPOLIS_GYM_ICE
+    walls = rect_pieces("walls", [r for runs in SOOTOPOLIS_GYM_1F_WALLS for r in runs], 16,
+                        leave=ice)
+    rocks = [piece("rock_%d_%d" % c, cells_rects([c]), 10, leave=ice)
+             for c in SOOTOPOLIS_GYM_ROCKS]
+    return walls + rocks
+
+
+def sootopolis_gym_b1f():
+    # the cave's snow, and the dark round its rock
+    return rect_pieces("walls", [r for runs in SOOTOPOLIS_GYM_B1F_WALLS for r in runs], 16,
+                       leave=("acdee6", "d5eeee", "ffffff", "000000"))
+
+
+
+# The Battle Frontier. Scott's house and the lounges: their back walls and
+# side walls; their plants are the Center's and the lounges' television
+# House2's, found again (reuse_pieces). Their front corners, black in the
+# drawing, are floor in the round.
+
+
+# The Battle Frontier's lobbies: (layout, width, height, the back wall's
+# foot, floor). Their doors are painted on the back wall, as the rooms'
+# doors are: the receptionist walks the player into them.
+FRONTIER_LOBBIES = {
+    "arena": ("LAYOUT_BATTLE_FRONTIER_BATTLE_ARENA_LOBBY", 256, 208, 48, 0x202),
+    "dome": ("LAYOUT_BATTLE_FRONTIER_BATTLE_DOME_LOBBY", 368, 272, 80, 0x340),
+    "factory": ("LAYOUT_BATTLE_FRONTIER_BATTLE_FACTORY_LOBBY", 304, 192, 80, 0x201),
+    "palace": ("LAYOUT_BATTLE_FRONTIER_BATTLE_PALACE_LOBBY", 400, 192, 80, 0x201),
+    "pike": ("LAYOUT_BATTLE_FRONTIER_BATTLE_PIKE_LOBBY", 176, 208, 64, 0x2c2),
+    "pyramid": ("LAYOUT_BATTLE_FRONTIER_BATTLE_PYRAMID_LOBBY", 240, 288, 80, 0x20b),
+    "tower": ("LAYOUT_BATTLE_FRONTIER_BATTLE_TOWER_LOBBY", 400, 160, 32, 0x200),
+}
+
+
+def frontier_lobby(name):
+    _, w, h, foot, _ = FRONTIER_LOBBIES[name]
+    return FRONTIER_LOBBY_PIECES.get(name, list)() + room_shell(
+        w, h, foot, side=FRONTIER_LOBBY_SIDES.get(name))
+
+
+# the Battle Tower's: five counters along the back, a glass terminal on
+# four of them; a low yellow divider runs from the wall to each terminal,
+# and to the fifth counter's east end, as tall as the counters.
+def frontier_tower_lobby():
+    pieces = []
+    for c in (4, 8, 12, 16):
+        x = c * 16
+        pieces += [piece("divider_%d" % c, [(x, 22, x + 16, 68)], 10),
+                   piece("terminal_%d" % c, [(x, 68, x + 16, 96)], 18),
+                   piece("counter_%d_e" % c, [(x + 16, 76, x + 32, 96)], 10)]
+        if c > 4:
+            pieces.append(piece("counter_%d_w" % c, [(x - 16, 76, x, 96)], 10))
+    return pieces + [piece("divider_20", [(320, 22, 336, 96)], 10),
+                     piece("counter_20_w", [(304, 76, 320, 96)], 10)]
+
+
+# the Battle Dome's: an L of counter each side, its arm running back, and
+# a counter between it and the middle, 6 px tall; on each a terminal, or
+# the results monitor, and red ropes on posts between them
+DOME_FLOOR = ("8bcdac", "9ceecd", "7bac8b")
+# the west arm's top, the row its outline starts on in each column from
+# x 32 (slanting down to the west, its corners rounded)
+DOME_ARM_TOP = [134, 132, 130, 128, 126, 124, 122, 120, 114, 113] + [112] * 12 + [113, 114]
+
+
+def dome_counter_arm():
+    """The west counter's plan: the arm's back stepped column by column
+    along its drawn outline (a slanted edge is a face the GBA's camera
+    would see beside the top), then the bar to the terminal."""
+    plan = [(32, 176)]
+    for i, top in enumerate(DOME_ARM_TOP):
+        for pt in ((32 + i, top + 6), (33 + i, top + 6)):
+            if len(plan) > 1 and plan[-1][1] == pt[1] == plan[-2][1]:
+                plan[-1] = pt     # along a run of the same row
+            elif pt != plan[-1]:
+                plan.append(pt)
+    return plan + [(56, 166), (64, 166), (64, 176)]
+
+
+def frontier_dome_lobby():
+    def ropes(name, x0, y0, y1):
+        return piece(name, [(x0, y0, x0 + 32, y1)], y1 - y0, card=True, leave=DOME_FLOOR)
+    return [
+        piece("terminal_w", [(64, 148, 80, 176)], 22),
+        piece("terminal_red", [(112, 148, 128, 176)], 22),
+        piece("monitor", [(232, 144, 264, 176)], 24),
+        piece("terminal_e", [(288, 148, 304, 176)], 22),
+        piece("counter_w", [(32, 112, 64, 176)], 6, leave=DOME_FLOOR, plan=dome_counter_arm()),
+        piece("counter_e", [(304, 112, 336, 176)], 6, leave=DOME_FLOOR,
+              plan=[(368 - x, z) for x, z in reversed(dome_counter_arm())]),
+        piece("counter_mid_w1", [(96, 148, 112, 176)], 6, leave=DOME_FLOOR),
+        piece("counter_mid_w2", [(128, 148, 144, 176)], 6, leave=DOME_FLOOR),
+        piece("counter_mid_e1", [(224, 148, 232, 176)], 6, leave=DOME_FLOOR),
+        piece("counter_mid_e2", [(264, 148, 272, 176)], 6, leave=DOME_FLOOR),
+        ropes("ropes_w", 0, 158, 176),
+        ropes("ropes_mw1", 144, 126, 144),
+        ropes("ropes_mw2", 144, 158, 176),
+        ropes("ropes_me1", 192, 126, 144),
+        ropes("ropes_me2", 192, 158, 176),
+        ropes("ropes_e", 336, 158, 176),
+    ]
+
+
+# the Battle Factory's: as the Tower's, a divider 10 px tall from the wall
+# to a terminal or to a counter's end, the counters round them; and two
+# bins by the door. Its back wall stands to row 5, its base band and the
+# doorways into the back painted on it.
+def frontier_factory_lobby():
+    return [
+        piece("divider_2", [(32, 72, 48, 100)], 10),
+        piece("terminal_2", [(32, 100, 48, 128)], 18),
+        piece("counter_3", [(48, 108, 64, 128)], 10),
+        piece("counter_5", [(80, 108, 112, 128)], 10),
+        piece("divider_7", [(112, 72, 128, 128)], 10),
+        piece("divider_11", [(176, 72, 192, 128)], 10),
+        piece("counter_12", [(192, 108, 224, 128)], 10),
+        piece("counter_15", [(240, 108, 256, 128)], 10),
+        piece("divider_16", [(256, 72, 272, 100)], 10),
+        piece("terminal_16", [(256, 100, 272, 128)], 18),
+        piece("bin_15", [(240, 166, 256, 192)], 16),
+        piece("bin_17", [(272, 166, 288, 192)], 16),
+    ]
+
+
+# the Battle Palace's: two low white tables each side of the receptionist,
+# on gold legs, and a glass terminal on a post in front of them
+PALACE_FLOOR = ("a46283", "bd8ba4", "944162")
+
+
+def frontier_palace_lobby():
+    out = []
+    for side, dx in (("w", 0), ("e", 224)):
+        out += [
+            piece("terminal_" + side, [(32 + dx, 108, 48 + dx, 136)], 28, card=True,
+                  leave=PALACE_FLOOR),
+            piece("table_%s1" % side, [(32 + dx, 80, 56 + dx, 118)], 6, leave=PALACE_FLOOR),
+            piece("table_%s2" % side, [(56 + dx, 96, 80 + dx, 118)], 6, leave=PALACE_FLOOR),
+            piece("table_%s3" % side, [(96 + dx, 96, 120 + dx, 118)], 6, leave=PALACE_FLOOR),
+            piece("table_%s4" % side, [(120 + dx, 80, 144 + dx, 118)], 6, leave=PALACE_FLOOR),
+        ]
+    return out
+
+
+# the Battle Pike's: fourteen copper pillars, a gold ball on each, 21 px
+# tall on their cells - those at the side walls too - and a glass terminal
+# on a post before the curtain
+PIKE_CURTAIN = ("c50000", "ff0000", "7b3100", "523131", "ff9462")
+PIKE_FLOOR = ("7b6a31", "a48b31", "cdac31")
+
+
+def frontier_pike_lobby():
+    cells = [(3, 4), (7, 4), (4, 5), (6, 5), (1, 7), (9, 7), (0, 8), (3, 8), (7, 8), (10, 8),
+             (1, 10), (9, 10), (3, 12), (7, 12)]
+    return [piece("terminal", [(128, 44, 144, 72)], 28, card=True,
+                  leave=PIKE_CURTAIN + PIKE_FLOOR)] + [
+        piece("pillar_%d_%d" % (x, y), [(x * 16, y * 16 - 15, x * 16 + 16, y * 16 + 16)], 21)
+        for (x, y) in cells]
+
+
+# the Battle Arena's: its tatami, the staff's floor, raised by no more
+# than its edge, stays drawn; the results television in its cabinet, the
+# plants on stands, the terminal and the shelf down the east side stand
+def frontier_arena_lobby():
+    return [
+        piece("terminal", [(80, 128, 96, 160)], 24),
+        piece("television", [(0, 92, 48, 128)], 28),
+        piece("plant_12", [(192, 96, 208, 128)], 24),
+        piece("plant_14", [(224, 96, 240, 128)], 24),
+        piece("plant_sw", [(0, 160, 16, 192)], 24),
+        piece("shelf_e", [(240, 96, 256, 208)], 16),
+    ]
+
+
+# the Battle Pyramid's: the columns either side and the braziers stand
+# before the back wall, its statues, the models of the pyramid and the
+# square into it painted on it (it stands to row 5); its glass terminal is
+# the Pike's, found again. The terrace and its stairs, rows 8 to 12, are a
+# level below the room's floor the console's floor does not have: they
+# stay drawn
+def frontier_pyramid_lobby():
+    return [
+        piece("pillar_w", [(32, 0, 48, 104)], 80),
+        piece("pillar_e", [(192, 0, 208, 104)], 80),
+        piece("brazier_w", [(64, 72, 80, 96)], 20),
+        piece("brazier_e", [(160, 72, 176, 96)], 20),
+    ]
+
+
+FRONTIER_LOBBY_PIECES = {
+    "arena": frontier_arena_lobby,
+    "dome": frontier_dome_lobby,
+    "factory": frontier_factory_lobby,
+    "palace": frontier_palace_lobby,
+    "pike": frontier_pike_lobby,
+    "pyramid": frontier_pyramid_lobby,
+    "tower": frontier_tower_lobby,
+}
+# the stretch of each back wall that dresses its side walls: one with
+# nothing standing before it, as tall as the wall
+FRONTIER_LOBBY_SIDES = {
+    "factory": (96, 0, 112, 80),
+    "palace": (128, 0, 144, 80),
+    "tower": (112, 0, 128, 32),
+}
+
+
+# The Battle Frontier's battle rooms and corridors: their walls, the doors
+# painted on them (the Tower corridor's two, which open by script, stay shut
+# as the Elite Four's back door does: a gap in a wall shows the floor behind
+# it, where the map draws the door lying flat). The trainers stand on the
+# battlefields and stages, which stay drawn.
+
+def pike_pillar(x, y):
+    """A Battle Pike pillar on cell (x, y): its cap from 15 px above the
+    cell, 21 px tall, as the lobby's."""
+    return piece("pillar_%d_%d" % (x, y), [(x * 16, y * 16 - 15, x * 16 + 16, y * 16 + 16)], 21)
+
+
+def tower_battle_room():
+    # the four lamps in its corners, 16 px tall
+    return [piece("lamp_%d_%d" % (x, y), [(x * 16, y * 16 - 8, x * 16 + 16, y * 16 + 16)], 16)
+            for (x, y) in ((0, 2), (9, 2), (0, 8), (9, 8))] + room_shell(160, 144, 32)
+
+
+def dome_pre_battle_room():
+    # the black down its west side is beyond the room
+    side = (64, 0, 80, 32)
+    return [
+        piece("wall", [(32, 0, 144, 32)], 32, fill=16, foot=32, side=side),
+        piece("side_w", [], 32, side=side, walls=[((32, 128), (32, 32))]),
+        piece("side_e", [], 32, side=side, walls=[((144, 32), (144, 128))]),
+    ]
+
+
+def dome_battle_room():
+    # a wall's top is filled from its own top rows: 8 of them, the banner
+    # being 16 px tall. In two halves: in one, 320 px wide and a cell tall,
+    # its faces read a row past its drawing, and the page has no room for it
+    side = (64, 48, 80, 64)
+    return [
+        piece("wall_w", [(0, 48, 160, 64)], 16, fill=8, foot=64, side=side),
+        piece("wall_e", [(160, 48, 320, 64)], 16, fill=8, foot=64, side=side),
+        piece("side_w", [], 16, side=side, walls=[((0, 160), (0, 64))]),
+        piece("side_e", [], 16, side=side, walls=[((320, 64), (320, 160))]),
+    ]
+
+
+def pike_three_path_room():
+    # its pillars, silver, stand here; the other Pike rooms' are these,
+    # found again (a pillar defined in two rooms would be found in each)
+    return [pike_pillar(x, y) for (x, y) in ((0, 4), (4, 4), (8, 4), (12, 4), (3, 10), (8, 10))]
+
+
+def pike_wild_mons_room():
+    # the gold pillars in rows across the room; its silver ones are the
+    # three-path room's, found again
+    cells = cell_runs((0, 6, 6), (1, 6, 6), (2, 6, 6), (6, 6, 6), (7, 6, 6), (8, 6, 6))
+    cells += [(x, 8) for x in range(0, 8)] + [(x, 10) for x in range(1, 9)]
+    cells += [(x, 12) for x in range(0, 7)] + [(8, 12), (0, 14)] + [(x, 14) for x in range(2, 9)]
+    cells += [(x, 16) for x in range(0, 7)] + [(8, 16), (0, 18), (1, 18), (7, 18), (8, 18)]
+    return [pike_pillar(x, y) for (x, y) in cells]
+
+
+def arena_corridor():
+    """The Battle Arena's corridor runs round a block: its face to the south,
+    shoji 64 px tall, its sides along the corridors; the black over it, and
+    between the two stretches of the back wall, is beyond the room."""
+    side = (64, 0, 80, 48)
+    shoji = (112, 128, 128, 192)
+    return [
+        piece("wall_w", [(0, 0, 96, 48)], 48, fill=16, foot=48, side=side),
+        piece("wall_e", [(192, 0, 288, 48)], 48, fill=16, foot=48, side=side),
+        piece("block", [(48, 128, 240, 192)], 64, fill=16, foot=192, side=shoji),
+        piece("block_sides", [], 64, side=shoji,
+              walls=[((96, 48), (96, 80)), ((48, 80), (48, 192)), ((192, 80), (192, 48)),
+                     ((240, 192), (240, 80))]),
+        piece("side_w", [], 48, side=side, walls=[((0, 224), (0, 48))]),
+        piece("side_e", [], 48, side=side, walls=[((288, 48), (288, 224))]),
+    ]
+
+
+# (name, layout, ground, pieces[, more of the room's keys])
+FRONTIER_ROOMS = [
+    ("frontier_tower_corridor", "LAYOUT_BATTLE_FRONTIER_BATTLE_TOWER_CORRIDOR", 0x229,
+     lambda: room_shell(272, 80, 32)),
+    ("frontier_tower_multi_corridor", "LAYOUT_BATTLE_FRONTIER_BATTLE_TOWER_MULTI_CORRIDOR", 0x229,
+     lambda: room_shell(272, 80, 32)),
+    ("frontier_tower_battle_room", "LAYOUT_BATTLE_FRONTIER_BATTLE_TOWER_BATTLE_ROOM", 0x23a,
+     tower_battle_room),
+    # the Tower's elevator, Trainer Hill's too
+    ("battle_elevator", "LAYOUT_BATTLE_ELEVATOR", 0x265, lambda: room_shell(80, 112, 48)),
+    ("frontier_tower_multi_partner_room", "LAYOUT_BATTLE_FRONTIER_BATTLE_TOWER_MULTI_PARTNER_ROOM",
+     0x200, lambda: room_shell(336, 240, 32)),
+    ("frontier_dome_corridor", "LAYOUT_BATTLE_FRONTIER_BATTLE_DOME_CORRIDOR", 0x341,
+     lambda: room_shell(768, 112, 64)),
+    ("frontier_dome_pre_battle_room", "LAYOUT_BATTLE_FRONTIER_BATTLE_DOME_PRE_BATTLE_ROOM", 0x346,
+     dome_pre_battle_room),
+    # the banner along the foot of the stands, 16 px; the stands stay drawn,
+    # the audience standing in them (as a wall they would hide it)
+    ("frontier_dome_battle_room", "LAYOUT_BATTLE_FRONTIER_BATTLE_DOME_BATTLE_ROOM", 0x309,
+     dome_battle_room),
+    ("frontier_palace_corridor", "LAYOUT_BATTLE_FRONTIER_BATTLE_PALACE_CORRIDOR", 0x201,
+     lambda: room_shell(272, 224, 64)),
+    ("frontier_palace_battle_room", "LAYOUT_BATTLE_FRONTIER_BATTLE_PALACE_BATTLE_ROOM", 0x206,
+     lambda: room_shell(240, 160, 48)),
+    # the pipes, the shutters, the doorways and the desks in the alcoves,
+    # all above row 6, painted on its wall
+    ("frontier_factory_pre_battle_room", "LAYOUT_BATTLE_FRONTIER_BATTLE_FACTORY_PRE_BATTLE_ROOM",
+     0x202, lambda: room_shell(272, 224, 96)),
+    ("frontier_factory_battle_room", "LAYOUT_BATTLE_FRONTIER_BATTLE_FACTORY_BATTLE_ROOM", 0x2f1,
+     lambda: room_shell(208, 192, 64)),
+    # the Pike's: their pillars copper (the lobby's), silver (the three-path
+    # room's) and gold (the wild Pokemon's room's); the normal room's
+    # curtain, which opens by script, is painted on its wall
+    # the corridor's two silver pillars by the curtain are its own (the
+    # curtain behind them is not the three-path room's)
+    ("frontier_pike_corridor", "LAYOUT_BATTLE_FRONTIER_BATTLE_PIKE_CORRIDOR", 0x2c1,
+     lambda: [pike_pillar(3, 4), pike_pillar(9, 4)] + room_shell(224, 128, 64)),
+    ("frontier_pike_three_path_room", "LAYOUT_BATTLE_FRONTIER_BATTLE_PIKE_THREE_PATH_ROOM", 0x2c1,
+     lambda: pike_three_path_room() + room_shell(208, 176, 64)),
+    ("frontier_pike_room_normal", "LAYOUT_BATTLE_FRONTIER_BATTLE_PIKE_ROOM_NORMAL", 0x2c1,
+     lambda: room_shell(144, 128, 64)),
+    # its gold pillars, at the room's edges, are drawn a pixel narrower than
+    # the wild room's: its own, and named as its edge's (own_shell) - found
+    # again in the wild room, they would take its pillars' pixels
+    ("frontier_pike_room_final", "LAYOUT_BATTLE_FRONTIER_BATTLE_PIKE_ROOM_FINAL", 0x340,
+     lambda: [dict(pike_pillar(x, y), name="edge_pillar_%d_%d" % (x, y))
+              for (x, y) in ((0, 4), (4, 4), (0, 7), (4, 7))] + room_shell(80, 128, 64),
+     {"shade": [0x341]}),
+    # (its floor's shaded cells run on beside the pillars at the ends of
+    # their rows: floor, not theirs)
+    ("frontier_pike_room_wild_mons", "LAYOUT_BATTLE_FRONTIER_BATTLE_PIKE_ROOM_WILD_MONS", 0x2c1,
+     lambda: pike_wild_mons_room() + room_shell(144, 320, 64), {"shade": [0x2da, 0x2d9]}),
+    ("frontier_arena_corridor", "LAYOUT_BATTLE_FRONTIER_BATTLE_ARENA_CORRIDOR", 0x201,
+     arena_corridor),
+    ("frontier_arena_battle_room", "LAYOUT_BATTLE_FRONTIER_BATTLE_ARENA_BATTLE_ROOM", 0x202,
+     lambda: room_shell(256, 176, 48)),
+]
+
+
+def front_corners(w, h):
+    """A room's two bottom corner cells the GBA leaves black, as `open`."""
+    return [[(0, h - 16), (16, h - 16), (16, h), (0, h)],
+            [(w - 16, h - 16), (w, h - 16), (w, h), (w - 16, h)]]
 
 
 SPECS = [
@@ -5648,6 +6819,253 @@ SPECS = [
         "interior": {"layout": "LAYOUT_RUSTBORO_CITY_DEVON_CORP_1F", "ground": [0x380],
                      "pieces": own_shell(devon_corp_1f())},
     },
+    {
+        # the Battle Tents' lobby (Slateport, Verdanturf, Fallarbor)
+        "name": "tent_lobby",
+        "interior": {"layout": "LAYOUT_BATTLE_TENT_LOBBY", "ground": [0x210],
+                     "pieces": own_shell(tent_lobby())},
+    },
+    {
+        "name": "tent_corridor",
+        "interior": {"layout": "LAYOUT_BATTLE_TENT_CORRIDOR", "ground": [0x23b],
+                     "pieces": own_shell(tent_room(80, 128))},
+    },
+    {
+        # Slateport's and Fallarbor's battle room
+        "name": "tent_battle_room",
+        "interior": {"layout": "LAYOUT_BATTLE_TENT_BATTLE_ROOM", "ground": [0x210],
+                     "pieces": own_shell(tent_room(160, 144))},
+    },
+    {
+        "name": "verdanturf_tent_battle_room",
+        "interior": {"layout": "LAYOUT_VERDANTURF_TOWN_BATTLE_TENT_BATTLE_ROOM", "ground": [0x1],
+                     "pieces": own_shell(tent_room(208, 144))},
+    },
+    {
+        # Slateport's Pokemon Fan Club
+        "name": "slateport_fan_club",
+        "interior": {"layout": "LAYOUT_SLATEPORT_CITY_POKEMON_FAN_CLUB", "ground": [0x201],
+                     "pieces": own_shell(slateport_fan_club())},
+    },
+    {
+        # the Harbor, Slateport's and Lilycove's
+        "name": "harbor",
+        "interior": {"layout": "LAYOUT_HARBOR", "ground": [0x202],
+                     "pieces": own_shell(harbor())},
+    },
+    {
+        # Stern's Shipyard, Slateport, 1F
+        "name": "shipyard_1f",
+        "interior": {"layout": "LAYOUT_SLATEPORT_CITY_STERNS_SHIPYARD_1F", "ground": [0x229],
+                     "pieces": own_shell(shipyard_1f())},
+    },
+    {
+        "name": "shipyard_2f",
+        "interior": {"layout": "LAYOUT_SLATEPORT_CITY_STERNS_SHIPYARD_2F", "ground": [0x202],
+                     "pieces": own_shell(shipyard_2f()), "pit": SHIPYARD_PIT},
+    },
+    {
+        "name": "herb_shop",
+        "interior": {"layout": "LAYOUT_LAVARIDGE_TOWN_HERB_SHOP", "ground": [0x268],
+                     "pieces": own_shell(herb_shop())},
+    },
+    {
+        # the Seaside Cycling Road's entrances, south and north
+        "name": "cycling_gate_room",
+        "interior": {"layout": "LAYOUT_ROUTE110_SEASIDE_CYCLING_ROAD_ENTRANCE", "ground": [0x268],
+                     "pieces": own_shell(cycling_gate())},
+    },
+    {
+        "name": "safari_rest_house",
+        "interior": {"layout": "LAYOUT_SAFARI_ZONE_REST_HOUSE", "ground": [0x223],
+                     "pieces": own_shell(safari_rest_house())},
+    },
+    {
+        "name": "institute_1f",
+        "interior": {"layout": "LAYOUT_ROUTE119_WEATHER_INSTITUTE_1F", "ground": [0x252],
+                     "pieces": own_shell(institute_1f())},
+    },
+    {
+        "name": "institute_2f",
+        "interior": {"layout": "LAYOUT_ROUTE119_WEATHER_INSTITUTE_2F", "ground": [0x252],
+                     "pieces": own_shell(institute_2f())},
+    },
+    {
+        "name": "safari_entrance",
+        "interior": {"layout": "LAYOUT_ROUTE121_SAFARI_ZONE_ENTRANCE", "ground": [0x268],
+                     "pieces": own_shell(safari_entrance())},
+    },
+    {
+        # the Cable Car Station, Route 112's and Mt. Chimney's
+        "name": "cable_car_room",
+        "interior": {"layout": "LAYOUT_CABLE_CAR_STATION", "ground": [0x2f0],
+                     "pieces": own_shell(cable_car_station())},
+    },
+    {
+        "name": "bike_shop",
+        "interior": {"layout": "LAYOUT_MAUVILLE_CITY_BIKE_SHOP", "ground": [0x23f],
+                     "pieces": own_shell(bike_shop())},
+    },
+    {
+        "name": "game_corner_room",
+        "interior": {"layout": "LAYOUT_MAUVILLE_CITY_GAME_CORNER", "ground": [0x202],
+                     "pieces": own_shell(mauville_game_corner())},
+    },
+    {
+        "name": "mossdeep_game_corner_1f",
+        "interior": {"layout": "LAYOUT_MOSSDEEP_CITY_GAME_CORNER_1F", "ground": [0x20a],
+                     "pieces": own_shell(mossdeep_game_corner_1f())},
+    },
+    {
+        "name": "mossdeep_game_corner_b1f",
+        "interior": {"layout": "LAYOUT_MOSSDEEP_CITY_GAME_CORNER_B1F", "ground": [0x223],
+                     "pieces": own_shell(room_shell(192, 144, foot=31))},
+    },
+    {
+        "name": "mystery_events_house_1f",
+        "interior": {"layout": "LAYOUT_SOOTOPOLIS_CITY_MYSTERY_EVENTS_HOUSE_1F",
+                     "ground": [0x235], "pieces": own_shell(mystery_events_house_1f())},
+    },
+    {
+        # while a Frontier trainer is visiting, the map's script opens the
+        # stairs down (setmaplayoutindex): the plants stand either side of
+        # them, not in front. Its back wall is drawn round the open stairs,
+        # so it is its own; the rest is 1F's, found again
+        "name": "mystery_events_house_1f_open",
+        "interior": {"layout": "LAYOUT_SOOTOPOLIS_CITY_MYSTERY_EVENTS_HOUSE_1F_STAIRS_UNBLOCKED",
+                     "ground": [0x235], "pieces": own_shell(room_shell(176, 128))},
+    },
+    {
+        "name": "mystery_events_house_b1f",
+        "interior": {"layout": "LAYOUT_SOOTOPOLIS_CITY_MYSTERY_EVENTS_HOUSE_B1F",
+                     "ground": [0x235], "pieces": own_shell(room_shell(192, 144, foot=31))},
+    },
+    {
+        "name": "sidneys_room",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_SIDNEYS_ROOM", "ground": [0x22c],
+                     "pieces": own_shell(elite_four_room(("c59462", "cda473")))},
+    },
+    {
+        "name": "phoebes_room",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_PHOEBES_ROOM", "ground": [0x25c],
+                     "pieces": own_shell(elite_four_room(("a47bac", "b48bbd")))},
+    },
+    {
+        "name": "glacias_room",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_GLACIAS_ROOM", "ground": [0x28c],
+                     "pieces": own_shell(elite_four_room(("bdc5ff", "cdd5ff")))},
+    },
+    {
+        "name": "drakes_room",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_DRAKES_ROOM", "ground": [0x2bc],
+                     "pieces": own_shell(elite_four_room(("e67341", "ff7341")))},
+    },
+    {
+        "name": "league_1f",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_POKEMON_LEAGUE_1F", "ground": [0x240],
+                     "pieces": own_shell(league_1f()), "open": LEAGUE_1F_OPEN},
+    },
+    {
+        # the four halls between the Elite Four's rooms
+        "name": "league_hall",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_SHORT_HALL", "ground": [0x2d1],
+                     "pieces": own_shell(league_hall(208))},
+    },
+    {
+        "name": "league_hall4",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_HALL4", "ground": [0x2d1],
+                     "pieces": own_shell(league_hall(544, rail=208))},
+    },
+    {
+        "name": "hall_of_fame",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_HALL_OF_FAME", "ground": [0x2f6],
+                     "pieces": own_shell(hall_of_fame())},
+    },
+    {
+        "name": "mauville_gym",
+        "interior": {"layout": "LAYOUT_MAUVILLE_CITY_GYM", "ground": [0x20a],
+                     "pieces": own_shell(mauville_gym())},
+    },
+    {
+        "name": "mossdeep_gym",
+        "interior": {"layout": "LAYOUT_MOSSDEEP_CITY_GYM", "ground": [0x20a],
+                     "pieces": own_shell(mossdeep_gym())},
+    },
+    {
+        "name": "fortree_gym",
+        "interior": {"layout": "LAYOUT_FORTREE_CITY_GYM", "ground": [0x202],
+                     "pieces": own_shell(fortree_gym())},
+    },
+    {
+        "name": "sootopolis_gym_1f",
+        "interior": {"layout": "LAYOUT_SOOTOPOLIS_CITY_GYM_1F", "ground": [0x20d],
+                     "pieces": own_shell(sootopolis_gym_1f())},
+    },
+    {
+        "name": "sootopolis_gym_b1f",
+        "interior": {"layout": "LAYOUT_SOOTOPOLIS_CITY_GYM_B1F", "ground": [0x211],
+                     "pieces": own_shell(sootopolis_gym_b1f())},
+    },
+    {
+        "name": "scotts_house",
+        "interior": {"layout": "LAYOUT_BATTLE_FRONTIER_SCOTTS_HOUSE", "ground": [0x3c9],
+                     "pieces": own_shell(room_shell(96, 128)),
+                     "open": front_corners(96, 128)},
+    },
+    {
+        # the lounges: two and seven of them
+        "name": "frontier_lounge1",
+        "interior": {"layout": "LAYOUT_BATTLE_FRONTIER_LOUNGE1", "ground": [0x3c8],
+                     "pieces": own_shell(room_shell(208, 128)),
+                     "open": front_corners(208, 128)},
+    },
+    {
+        "name": "frontier_lounge2",
+        "interior": {"layout": "LAYOUT_BATTLE_FRONTIER_LOUNGE2", "ground": [0x3c8],
+                     "pieces": own_shell(room_shell(144, 160)),
+                     "open": front_corners(144, 160)},
+    },
+    {
+        # the Battle Frontier's lobbies
+        "name": "frontier_arena_lobby",
+        "interior": {"layout": FRONTIER_LOBBIES["arena"][0], "ground": [FRONTIER_LOBBIES["arena"][4]],
+                     "pieces": own_shell(frontier_lobby("arena"))},
+    },
+    {
+        "name": "frontier_dome_lobby",
+        "interior": {"layout": FRONTIER_LOBBIES["dome"][0], "ground": [FRONTIER_LOBBIES["dome"][4]],
+                     "pieces": own_shell(frontier_lobby("dome"))},
+    },
+    {
+        "name": "frontier_factory_lobby",
+        "interior": {"layout": FRONTIER_LOBBIES["factory"][0], "ground": [FRONTIER_LOBBIES["factory"][4]],
+                     "pieces": own_shell(frontier_lobby("factory"))},
+    },
+    {
+        "name": "frontier_palace_lobby",
+        "interior": {"layout": FRONTIER_LOBBIES["palace"][0], "ground": [FRONTIER_LOBBIES["palace"][4]],
+                     "pieces": own_shell(frontier_lobby("palace"))},
+    },
+    {
+        "name": "frontier_pike_lobby",
+        "interior": {"layout": FRONTIER_LOBBIES["pike"][0], "ground": [FRONTIER_LOBBIES["pike"][4]],
+                     "pieces": own_shell(frontier_lobby("pike"))},
+    },
+    {
+        "name": "frontier_pyramid_lobby",
+        "interior": {"layout": FRONTIER_LOBBIES["pyramid"][0], "ground": [FRONTIER_LOBBIES["pyramid"][4]],
+                     "pieces": own_shell(frontier_lobby("pyramid"))},
+    },
+    {
+        "name": "frontier_tower_lobby",
+        "interior": {"layout": FRONTIER_LOBBIES["tower"][0], "ground": [FRONTIER_LOBBIES["tower"][4]],
+                     "pieces": own_shell(frontier_lobby("tower"))},
+    },
+    {
+        "name": "treasure_house",
+        "interior": {"layout": "LAYOUT_ROUTE124_DIVING_TREASURE_HUNTERS_HOUSE", "ground": [0x223],
+                     "pieces": own_shell(room_shell(160, 144))},
+    },
 ] + [
     {
         # the coloured stages: the same room, its stairs and emblem in the
@@ -5659,3 +7077,439 @@ SPECS = [
     }
     for kind in ("beauty", "cool", "cute", "smart", "tough")
 ]
+
+
+# The Trick House's puzzle rooms (Route 110): the back wall, its scroll's
+# cell (13,1) left out of it - solving a puzzle lays the stairs down there
+# (setmetatile), so it stays drawn, under a lintel - and the maze's
+# partitions, a piece to each rectangle of their cells. Each map below is
+# the room from row 2 down: '#' a partition's cell, 'o' a cell the room's
+# script changes (a barrier, a button, a door, an arrow), which stays drawn
+# and stands in no piece's rectangle, nor in a side wall's.
+TRICK_SIDE = (16, 0, 32, 32)
+TRICK_PUZZLES = {
+    # cream partitions on wooden fronts, 12 px
+    1: (12, """
+############...
+..#...#.#..#...
+...........#...
+..#...#.#..#...
+.############.#
+....#......#...
+.#.............
+.#..#..##..#...
+###.##....#####
+..#..#..#..#...
+.....#..#......
+..#..#..#..#...
+..############.
+....#.#....#...
+...##..........
+....#......#...
+#############.#
+....#....#.....
+...............
+...............
+"""),
+    # gold strips, 6 px
+    2: (6, """
+.........#.....
+...####..#.....
+o..#.....#.####
+####.###...#..o
+.....o.#####...
+.#...#.........
+.#..#########..
+.#..#.......#..
+.#..#.###...#..
+.##.#.#o#.####.
+..#.#.#.#.#o.#o
+#o#.#...#.#..#.
+..#######.#..##
+.......o..#..##
+.#.#########...
+.#....#..#.##..
+.#....#..#.....
+.#.#.....#..##.
+...#######.....
+...............
+"""),
+    # cream partitions on wooden fronts round the barriers, 12 px
+    3: (12, """
+#..#..#.o#..#..
+#oo#..#..#..#oo
+#oo#..o..o..#oo
+......o..o..o..
+#oo#oo#..#oo#..
+#ooooo#..#ooo..
+...o.....#..o..
+#oo####oo#..#oo
+#oo####oo#..#oo
+...o...........
+#oo#oo#..#oo#..
+#ooooo#..#oo#..
+#..oo.......#..
+####oo####..#oo
+###ooo###o..#oo
+...o..#..o.....
+#..#oo#..#oo#..
+#..#oo#..#oo#..
+...............
+...............
+"""),
+    # gold strips, 6 px
+    4: (6, """
+....##.....#...
+.....#....##...
+..##.##.#.#....
+...#....#.#..##
+...#....#.##.#.
+###.....#......
+.....#..#......
+.....#...######
+.....#.........
+..########.....
+..#....#....###
+.##..#...#..#.#
+.#...#####.##..
+.#...#......#..
+.###.....#.....
+.#...#.........
+.##############
+...............
+...............
+...............
+"""),
+    # gold strips, 6 px
+    6: (6, """
+##...#......#..
+#....#..#...#..
+#.......#.#.##.
+.....#..#.#.#..
+...###......#..
+...#.....#..#.#
+.....###.#..#..
+......#....##..
+#.#.#.#...#....
+###.#.#...#....
+....#..##.##...
+....##..#..#...
+###..#..#.###.#
+#....#......#.#
+#.#..#..#......
+..#..##........
+.........##.#..
+............#..
+....##....###..
+....#....##....
+"""),
+    # gold strips, 6 px
+    7: (6, """
+#..#..#.......#
+#..#..#.....###
+#..#o.##o####.#
+#..#.##o#...#.#
+#.....o.###.#.#
+###..#......#.#
+....#######.#.#
+.####.......#.#
+.#...o.###..#.#
+.#.#####.##.o.#
+##.#..#o..#.###
+...#..##.##.o.#
+...#######....#
+............#.#
+###########.o.#
+#.....##..#.#o#
+###..###..#...#
+..####......#.#
+....##.#..#.#.#
+.......#..#####
+"""),
+}
+
+
+def trick_house_puzzle(n):
+    height, text = TRICK_PUZZLES[n]
+    rows = text.split()
+    cells = [(x, y + 2) for y, row in enumerate(rows) for x, c in enumerate(row) if c == "#"]
+    return rect_pieces("partition", runs_of(cells), height) + trick_house_shell(
+        {(x, y + 2) for y, row in enumerate(rows) for x, c in enumerate(row) if c == "o"})
+
+
+# the eighth's jars on its ice, one to each cell, to a pixel short of its
+# foot (the floor's own line there, grey as the jars are, runs under them):
+# the floor round them the ice's and the tatami's (not their dark outline,
+# the jars' too)
+TRICK_JAR_FLOOR = ("c59439", "d5a44a", "e6c562", "ffe67b", "fff6bd", "6a8b31", "83ac4a", "a4cd6a",
+                   "c5ffac")
+TRICK_JARS = """
+...#..........#
+..###.#########
+....#.#........
+.#.............
+.......#......#
+.........#.....
+.............#.
+...##..#####.#.
+#.#######.#..#.
+.#....##.......
+....#.....#....
+....#.....#....
+....#.....#....
+....#.....#....
+.#........#....
+..........#....
+..........#....
+..###.#...#....
+..###.#...#....
+..##..#........
+"""
+
+
+def trick_house_puzzle8():
+    return [piece("jar_%d_%d" % (x, y + 2), [(x * 16 + 2, y * 16 + 33, x * 16 + 14, y * 16 + 47)], 9,
+                  round="lathe", leave=TRICK_JAR_FLOOR)
+            for y, row in enumerate(TRICK_JARS.split()) for x, c in enumerate(row)
+            if c == "#"] + trick_house_shell()
+
+
+def trick_house_corridor():
+    """The corridor (240 x 384) runs as an L through the dark: its three
+    walls, each facing the stretch of it below, stand; the dark round it is
+    beyond the room."""
+    side = (64, 0, 80, 32)
+    return [
+        piece("wall", [(48, 0, 240, 32)], 32, fill=16, foot=32, side=side),
+        piece("wall_mid", [(0, 96, 48, 128)], 32, fill=16, foot=128, side=side),
+        piece("wall_low", [(48, 320, 96, 352)], 32, fill=16, foot=352, side=side),
+    ]
+
+
+def trick_house_shell(drawn=frozenset()):
+    """A puzzle room's walls (240 x 352): the back wall round its scroll's
+    cell, a lintel over it, and the side walls in stretches round the cells
+    the room's script changes along them (a stretch ends a pixel short of
+    the next cell, or its rectangle would take it)."""
+    side = TRICK_SIDE
+    out = [
+        piece("wall_w", [(0, 0, 208, 32)], 32, fill=16, foot=32, side=side),
+        piece("wall_e", [(224, 0, 240, 32)], 32, fill=16, foot=32, side=side),
+        piece("wall_lintel", [(208, 0, 224, 16)], 32, fill=16, foot=32, side=side),
+    ]
+    for name, x, col in (("side_w", 0, 0), ("side_e", 240, 14)):
+        rows = [y for y in range(2, 22) if (col, y) not in drawn]
+        for (_, y0, y1) in runs_of([(col, y) for y in rows]):
+            a, b = (x, y0 * 16), (x, (y1 + 1) * 16 - (1 if y1 < 21 else 0))
+            out.append(piece("%s_%d" % (name, y0), [], 32, side=side,
+                             walls=[(b, a) if col == 0 else (a, b)]))
+    return out
+
+
+# the Battle Frontier's battle rooms and corridors
+SPECS += [{"name": room[0], "interior": dict({"layout": room[1], "ground": [room[2]],
+                                              "pieces": own_shell(room[3]())},
+                                             **(room[4] if len(room) > 4 else {}))}
+          for room in FRONTIER_ROOMS]
+
+
+# the Trick House's puzzle rooms; the fifth's dark is beyond the room, round
+# the paths drawn in it: its walls alone
+SPECS += [{"name": "trick_house_puzzle%d" % n,
+           "interior": {"layout": "LAYOUT_ROUTE110_TRICK_HOUSE_PUZZLE%d" % n, "ground": [0x208],
+                        "pieces": own_shell(trick_house_puzzle(n) if n in TRICK_PUZZLES
+                                            else trick_house_shell())}}
+          for n in (1, 2, 3, 4, 5, 6, 7)] + [
+    {"name": "trick_house_puzzle8",
+     "interior": {"layout": "LAYOUT_ROUTE110_TRICK_HOUSE_PUZZLE8", "ground": [0x26b],
+                  "pieces": own_shell(trick_house_puzzle8())}},
+    {"name": "trick_house_corridor",
+     "interior": {"layout": "LAYOUT_ROUTE110_TRICK_HOUSE_CORRIDOR", "ground": [0x229],
+                  "pieces": own_shell(trick_house_corridor())}},
+]
+
+
+# The link rooms (the Colosseums, the Trade Center, the Record Corner, the
+# Union Room): a back wall, and side walls on the inner edge of the rims
+# down their sides, the rims behind them; the rim across the front, with
+# its doorway, is the front wall the GBA's camera looks over, and stays
+# drawn. And the truck the game starts in.
+
+def link_room(w, h, foot, x0, x1, z1, top=0):
+    """A link room: its back wall (x0 to x1, standing on `foot`) and its
+    side walls along x0 and x1 from it to z1, the front rim's edge."""
+    side = (x0 + 16, top, x0 + 32, foot)
+    return [
+        piece("wall", [(x0 - 16 if x0 else 0, top, x1 + 16 if x1 < w else w, foot)], foot - top,
+              fill=16, foot=foot, side=side),
+        piece("side_w", [], foot - top, side=side, walls=[((x0, z1), (x0, foot))]),
+        piece("side_e", [], foot - top, side=side, walls=[((x1, foot), (x1, z1))]),
+    ]
+
+
+def record_corner():
+    # the record mixer: its table and the four seats at its corners
+    return [
+        piece("seat_nw", [(112, 53, 128, 79)], 14),
+        piece("seat_sw", [(112, 85, 128, 111)], 14),
+        piece("seat_ne", [(192, 53, 208, 79)], 14),
+        piece("seat_se", [(192, 85, 208, 111)], 14),
+        piece("table", [(128, 67, 192, 112)], 12),
+    ] + link_room(320, 160, 32, 64, 256, 144)
+
+
+def inside_of_truck():
+    # the boxes stacked round it, along its back (hanging half a cell over
+    # the floor in front of it), its west side and its front, and the vent
+    # over its door; the door (4,1-3), which opens when the game starts,
+    # stays drawn, in no piece's rectangle
+    return [
+        piece("boxes_w", [(0, 0, 16, 80)], 24),
+        piece("boxes_n", [(16, 0, 64, 24)], 16),
+        piece("vent", [(64, 0, 80, 16)], 12),
+        piece("boxes_s", [(16, 48, 48, 80)], 24),
+        piece("boxes_se", [(48, 64, 80, 80)], 12),
+    ]
+
+
+LINK_ROOMS = [
+    ("battle_colosseum_2p", "LAYOUT_BATTLE_COLOSSEUM_2P", 0x255,
+     lambda: link_room(224, 144, 48, 16, 208, 128)),
+    ("battle_colosseum_4p", "LAYOUT_BATTLE_COLOSSEUM_4P", 0x255,
+     lambda: link_room(224, 144, 48, 16, 208, 128)),
+    # the trading machine between its two chairs, which stay drawn
+    ("trade_center", "LAYOUT_TRADE_CENTER", 0x208,
+     lambda: [piece("machine", [(82, 68, 110, 104)], 16)] + link_room(192, 144, 48, 16, 176, 128)),
+    ("record_corner", "LAYOUT_RECORD_CORNER", 0x2c4, record_corner),
+    ("union_room", "LAYOUT_UNION_ROOM", 0x213, lambda: link_room(240, 192, 32, 0, 240, 176)),
+    ("inside_of_truck", "LAYOUT_INSIDE_OF_TRUCK", 0x20a, inside_of_truck),
+]
+SPECS += [{"name": n, "interior": {"layout": lid, "ground": [g], "pieces": own_shell(f())}}
+          for (n, lid, g, f) in LINK_ROOMS]
+
+
+# The S.S. Tidal: the corridor round its block of cabins, the cargo on its
+# lower deck and the cabins; and Trainer Hill's entrance.
+
+def ss_tidal_corridor():
+    side = (64, 0, 80, 32)
+    return [
+        # the cabins' block: its roof white, its face to the south their
+        # doors, 26 px
+        piece("block", [(48, 57, 240, 159)], 26, solid=True, side=(48, 132, 64, 158)),
+        piece("wall", [(16, 0, 288, 32)], 32, fill=16, foot=32, side=side),
+        # the corridor runs on east, past the room's edge; the dark down its
+        # west side is beyond it
+        piece("side_w", [], 32, side=side, walls=[((16, 192), (16, 32))]),
+    ]
+
+
+def kw_pieces(prefix, cells, height, extra):
+    """rect_pieces(prefix, runs_of(cells), height) with each piece's own
+    keywords besides: `extra` {name: {keyword: value}}."""
+    return [piece(name, [(x0, y0, x1, y1)], min(height, y1 - y0 - 4), **extra.get(name, {}))
+            for (x0, y0, x1, y1) in run_rects(runs_of(cells))
+            for name in ["%s_%d_%d" % (prefix, x0 // 16, y0 // 16)]]
+
+
+def crate_stacks(cells):
+    """The lower deck's cargo, a piece to each rectangle of its cells: the
+    crates' tops drawn a cell above them, their fronts 16 px. The stacks
+    against the back wall have their sides dressed with their front's grey
+    (projected, they would be their dark outline)."""
+    return [piece("crates_%d_%d" % (x0 // 16, y0 // 16), [(x0, y0 - 16, x1, y1)], 16,
+                  **({"solid": True, "side": (x0 + 4, y1 - 14, x0 + 10, y1 - 8)} if y0 == 32 else {}))
+            for (x0, y0, x1, y1) in run_rects(runs_of(cells))]
+
+
+SS_TIDAL_CARGO = cell_runs((2, 2, 3), (3, 2, 3), (6, 2, 3), (7, 2, 3), (10, 2, 3), (11, 2, 3),
+                           (12, 2, 3), (1, 6, 7), (2, 6, 7), (3, 6, 7), (4, 6, 7), (5, 6, 7),
+                           (6, 6, 7), (8, 6, 7), (9, 6, 7), (11, 6, 7), (12, 6, 7), (13, 6, 7),
+                           (1, 11, 12), (2, 11, 12), (3, 11, 12), (4, 11, 12), (5, 11, 12),
+                           (6, 11, 12), (8, 11, 11), (9, 11, 11), (11, 11, 11), (12, 11, 11),
+                           (15, 10, 12), (16, 10, 12))
+
+# the cabins, four above (entered through their back walls) and four below
+# (entered from the front), the dark between them beyond the rooms: each
+# its back wall, its side walls and its furniture - the beds, the tables and
+# chairs - a piece to each rectangle of their cells, 12 px
+SS_TIDAL_CABIN_X = (1, 10, 19, 28)
+# the beds whose sides would be their dark outline, projected: dressed with a
+# plain patch of their blanket instead; and a bin on the carpet, the carpet
+# round it left
+SS_TIDAL_BLANKET = {"n0_1_2": (29, 41), "n0_6_2": (102, 41), "n1_10_2": (173, 41),
+                    "n1_15_2": (246, 41), "n2_19_2": (317, 41), "n3_33_2": (534, 41),
+                    "s0_1_11": (29, 185), "s0_6_11": (102, 185), "s2_24_11": (390, 185)}
+SS_TIDAL_FURNITURE_KW = dict(
+    {"furniture_" + k: {"solid": True, "side": (x, y, x + 6, y + 6)}
+     for k, (x, y) in SS_TIDAL_BLANKET.items()},
+    furniture_n1_10_5={"leave": ("de7b52", "bd5a41", "bd7341", "dea462")})
+SS_TIDAL_FURNITURE = {
+    "n0": "1,2 2,2 6,2 7,2 1,3 2,3 6,3 7,3 5,6 6,6 5,7 6,7 7,7",
+    "s0": "1,11 2,11 6,11 7,11 1,12 2,12 6,12 7,12",
+    "n1": "10,2 11,2 15,2 16,2 10,3 11,3 15,3 16,3 10,5 13,5 14,5 13,6 14,6",
+    "s1": "15,11 16,11 11,12 12,12 15,12 16,12 11,13 12,13 16,13",
+    "n2": "19,2 20,2 19,3 20,3 22,5 23,5 22,6 23,6 23,7",
+    "s2": "19,11 20,11 24,11 25,11 19,12 20,12 24,12 25,12",
+    "n3": "28,2 29,2 33,2 34,2 28,3 29,3 33,3 34,3 28,4 33,6 34,6 33,7 34,7",
+    "s3": "28,11 29,11 28,12 29,12 31,12 32,12 33,12 34,12 28,13 31,13 32,13 33,13 34,13",
+}
+
+
+def ss_tidal_rooms():
+    out = []
+    for i, cx in enumerate(SS_TIDAL_CABIN_X):
+        x0, x1 = cx * 16, (cx + 7) * 16
+        for row, top, foot, end in (("n", 0, 32, 128), ("s", 144, 176, 272)):
+            name = "%s%d" % (row, i)
+            cells = [tuple(int(v) for v in c.split(",")) for c in SS_TIDAL_FURNITURE[name].split()]
+            side = (x0, top, x0 + 16, foot)
+            out += kw_pieces("furniture_" + name, cells, 12, SS_TIDAL_FURNITURE_KW)
+            out += [
+                piece("wall_" + name, [(x0, top, x1, foot)], 32, fill=16, foot=foot, side=side),
+                piece("side_%s_w" % name, [], 32, side=side, walls=[((x0, end), (x0, foot))]),
+                piece("side_%s_e" % name, [], 32, side=side, walls=[((x1, foot), (x1, end))]),
+            ]
+    return out
+
+
+# Trainer Hill's entrance: a passage up to the elevator between the arms of
+# two counters, which run along the lobby's short back wall, a back counter
+# and a front one, the receptionists between them; the dark either side of
+# the passage is beyond the room. The front counter's flap (17,10), which
+# its script opens, stays drawn
+TRAINER_HILL_COUNTERS = (
+    cell_runs((7, 4, 4), (8, 4, 10), (10, 4, 9), (11, 4, 4))
+    + [(x, 8) for x in range(0, 19) if x not in (8, 9, 10, 11)] + [(11, 8), (11, 9), (11, 10)]
+    + [(x, 9) for x in (0, 1, 2, 3, 6, 7, 15)]
+    + [(x, 10) for x in (0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 16, 18)])
+
+
+def trainer_hill_entrance():
+    shaft = (128, 0, 144, 32)
+    lobby = (48, 112, 64, 128)
+    # the west arm's sides dressed with its own teal (projected, its dark
+    # outline)
+    return kw_pieces("counter", TRAINER_HILL_COUNTERS, 12,
+                     {"counter_8_4": {"solid": True, "side": (128, 64, 134, 70)}}) + rect_pieces(
+        "benches", runs_of(cell_runs((1, 15, 15), (2, 15, 15), (3, 15, 15), (15, 15, 15),
+                                     (16, 15, 15), (17, 15, 15))), 12) + [
+        piece("wall", [(112, 0, 192, 32)], 32, fill=16, foot=32, side=shaft),
+        piece("side_shaft_w", [], 32, side=shaft, walls=[((112, 112), (112, 32))]),
+        piece("side_shaft_e", [], 32, side=shaft, walls=[((192, 32), (192, 112))]),
+        piece("wall_w", [(0, 112, 112, 128)], 16, fill=8, foot=128, side=lobby),
+        piece("wall_e", [(192, 112, 304, 128)], 16, fill=8, foot=128, side=lobby),
+        piece("side_w", [], 16, side=lobby, walls=[((0, 272), (0, 128))]),
+        piece("side_e", [], 16, side=lobby, walls=[((304, 128), (304, 272))]),
+    ]
+
+
+SPECS += [{"name": n, "interior": {"layout": lid, "ground": [g], "pieces": own_shell(f())}}
+          for (n, lid, g, f) in (
+              ("ss_tidal_corridor", "LAYOUT_SS_TIDAL_CORRIDOR", 0x2ba, ss_tidal_corridor),
+              ("ss_tidal_lower_deck", "LAYOUT_SS_TIDAL_LOWER_DECK", 0x20d,
+               lambda: crate_stacks(SS_TIDAL_CARGO) + room_shell(272, 208, 32)),
+              ("ss_tidal_rooms", "LAYOUT_SS_TIDAL_ROOMS", 0x238, ss_tidal_rooms),
+              # (named apart from Route 111's building of the same name)
+              ("trainer_hill_entrance_room", "LAYOUT_TRAINER_HILL_ENTRANCE", 0x331,
+               trainer_hill_entrance))]

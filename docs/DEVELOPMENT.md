@@ -37,7 +37,7 @@ make pak                         # build/emerald3ds.pak from this build's data
 make devdata                     # build/devdata/ for the loose backend
 ```
 
-Options: `VOXEL=0`, `VOXEL_LIGHTING=0`, `SHOW_FPS=0`, `EMBED_DATA=0`,
+Options: `VOXEL_LIGHTING=0`, `SHOW_FPS=0`, `EMBED_DATA=0`,
 `DATA_BACKEND=1|2|3` (force romfs, loose or pak), `SAMPLE_OVERLAY_DIR=...`
 (replacement sample .bin files, for private experiments), `VOXEL_STEREO=1|0`
 (what OPTIONS' 3D WORLD on AUTO does: the voxel world per eye with the 3D

@@ -24,6 +24,7 @@
 #include "scanline_effect.h"
 #include "item_menu.h"
 #include "party_menu.h"
+#include "battle_main.h"
 #include "fldeff_misc.h"
 #include "field_effect.h"
 #include "constants/field_effects.h"
@@ -204,6 +205,10 @@ void CtrGame_SoftReset(void)
     CtrAudio_UnlockSound();
     ++sResets;
     CtrPlatform_ReportMemory("at soft reset");
+    /* Out of the battle scene: the game's variables are back to boot (the
+     * save block pointers NULL until the intro sets them), and the key read
+     * below must not take the battle speed's keys, which read the save. */
+    CtrPlatform_SetBattleScene(false);
     WaitForResetKeysUp();
     longjmp(sAgbMainEntry, 1);
 }
@@ -388,20 +393,33 @@ void CtrCentredTrade_SetVBlankCallback(IntrCallback callback)
                                                                            : CTR_CENTRED_TRADE);
 }
 
-/* The bag from the field goes left of the column, from anywhere else over the
- * whole bottom screen. */
+bool8 CtrBag_InWindow(void);
+
+/* The bag from the field, its party menu or a battle goes in the game
+ * screen's window (or is drawn natively, 3ds_bottom_game.inc), from anywhere
+ * else over the whole bottom screen. */
 void CtrCentredBag_SetVBlankCallback(IntrCallback callback)
 {
-    SetCentredCallback(callback, gBagPosition.location == ITEMMENULOCATION_FIELD ? CTR_CENTRED_BAG
-                                                                                  : CTR_CENTRED_BAG_WHOLE);
+    SetCentredCallback(callback, CtrBag_InWindow() ? CTR_CENTRED_BAG : CTR_CENTRED_BAG_WHOLE);
 }
 
-/* The party menu from the field goes left of the column, from a battle, a
- * contest or a facility over the whole bottom screen. */
+bool8 CtrParty_InWindow(void);
+
+/* The party menu from the field or a battle's own goes in the game screen's
+ * window (or is drawn natively), from a contest or a facility over the whole
+ * bottom screen. */
 void CtrCentredParty_SetVBlankCallback(IntrCallback callback)
 {
-    SetCentredCallback(callback, !gMain.inBattle && gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD
-                                     ? CTR_CENTRED_PARTY : CTR_CENTRED_PARTY_WHOLE);
+    SetCentredCallback(callback, CtrParty_InWindow() ? CTR_CENTRED_PARTY : CTR_CENTRED_PARTY_WHOLE);
+}
+
+/* trainer_card.c: the field's card in the bottom screen's window, a link
+ * partner's centred on the top screen. */
+bool8 CtrTrainerCard_FieldOpen(void);
+
+void CtrCentredCard_SetVBlankCallback(IntrCallback callback)
+{
+    SetCentredCallback(callback, CtrTrainerCard_FieldOpen() ? CTR_CENTRED_CARD : CTR_CENTRED_PLAIN);
 }
 
 IntrCallback CtrPokedex_VBlankCallback(void);
@@ -645,10 +663,6 @@ void CtrGame_VBlank(void)
     ++sFrames;
 }
 
-uint32_t CtrGame_Frames(void) { return sFrames; }
-uint32_t CtrGame_APresses(void) { return 0; }
-uint32_t CtrGame_Checks(void) { return 0; }
-
 /* A field effect that stores into VRAM itself, past the copies that announce
  * their writes (field_effect.c: the field move's streaks, Rayquaza's
  * spotlight): the compositor compares VRAM in full meanwhile. */
@@ -733,11 +747,6 @@ void Port_ReseedForNewGame(void)
 {
     if (!CtrScenario_Active())
         SeedRng(Port_RngSeed(0));
-}
-
-/* AgbMain never returns, so a reset request restarts the process state here. */
-void CtrGame_Frame(void)
-{
 }
 
 void CtrGame_Init(void)
@@ -1279,6 +1288,9 @@ void CtrGame_WaitFrame(void)
     if (sFrames < 4)
         CtrLog_Write(CTR_LOG_GAME, "frame %lu: game reached VBlank wait", (unsigned long)sFrames);
     Port_ProfScene((const void *)gMain.callback2);
+    /* The battle scene itself, not the bag, party or summary it opens: it has
+     * its own speed and keys (3ds_platform.c). */
+    CtrPlatform_SetBattleScene(gMain.inBattle && gMain.callback2 == BattleMainCB2);
     /* Before the frame is drawn: the copies made this frame get theirs. */
     CtrSprites_Track();
     CtrCycle_Frame();
@@ -1298,7 +1310,6 @@ void CtrGame_WaitFrame(void)
         CtrPlatform_Shutdown();
         exit(0);
     }
-    CtrPlatform_Diagnostic(sFrames, 0, 0);
     if (CtrScenario_Active())
         ScenarioCheckpoints();
 #ifdef CTR_TEST_SWOOP
@@ -1378,6 +1389,9 @@ void CtrGame_WaitFrame(void)
     {
         const struct CtrAssetStats *stats = CtrAssets_GetStats();
 
+        /* Every ten seconds, the heap's room too: what the caches may still take. */
+        if (sFrames >= nextReport)
+            CtrPlatform_ReportMemory("now");
         lastCallback = gMain.callback2;
         nextReport = sFrames + 600;
         CtrLog_Write(CTR_LOG_VIDEO, "DISPCNT=%04x BG0=%04x BG1=%04x BG2=%04x BG3=%04x",

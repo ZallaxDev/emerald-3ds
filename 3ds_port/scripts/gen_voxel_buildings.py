@@ -796,13 +796,20 @@ def register_piece(piece_spec, layout, art, hidden=(), loose=False, own=None):
                     "loose": loose and len(pixels) >= LOOSE_PIXELS})
 
 
-def place_reused(layout, ground):
+def place_reused(layout, ground, pit=()):
     """Stand the known furniture in `layout`; returns the pixels it draws and
     the cells it covers. `ground` None: a room nobody modelled, whose every
-    other pixel the placements lay flat as ground patches."""
+    other pixel the placements lay flat as ground patches. `pit`: the room's
+    rectangles (x0, y0, x1, y1) that draw the floor below it (a balcony's
+    well): what the room below has there is not stood at this floor's level,
+    it stays drawn."""
     pixels, cells = set(), set()
     painted = {cell & 0x3FF for cell in layout.blocks}
     for p, x, y, pts, exact in reuse_pieces(layout):
+        if any(x0 <= u < x1 and y0 <= v < y1 for (u, v) in pts for (x0, y0, x1, y1) in pit):
+            print("  reuse: %s not stood in %s at %d,%d: in its pit, the floor below"
+                  % (p["spec"]["name"], layout.id, x, y))
+            continue
         if exact:
             # every cell of it drawn as in its own room: the floor under it is
             # its own room's, and it stands on that wherever this room paints
@@ -1795,7 +1802,7 @@ def interior_specs(spec):
     owner = [[None] * W for _ in range(H)]
     # the furniture an earlier room has modelled, standing here as it is:
     # its pixels are no piece's of this room's
-    reused, reused_cells = place_reused(layout, room["ground"][0])
+    reused, reused_cells = place_reused(layout, room["ground"][0], room.get("pit", ()))
     for (x, y) in reused:
         owner[y][x] = -1
     # each pixel's colour as `leave` names it

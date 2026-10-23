@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include "global.h"
 #include "3ds_platform.h"
 #include "3ds_audio.h"
 #include "3ds_emu_regs.h"
@@ -48,6 +49,34 @@ u16 Platform_GetKeyInput(void)
      * Y button says. */
     if (input->physicalHeld & CTR_KEY_Y)
         held |= SELECT_BUTTON;
+    /* In the battle scene L slows and R speeds the battle up, and the game
+     * sees neither. With the game's L=A button mode L stays A, and R alone
+     * goes round the speeds, 4x back to 1x. Not while START and SELECT are
+     * down: L+R+START+SELECT is the soft reset. Once per frame, whatever the
+     * number of reads. */
+    if (CtrPlatform_BattleSpeedKeys()
+        && (held & (START_BUTTON | SELECT_BUTTON)) != (START_BUTTON | SELECT_BUTTON))
+    {
+        static uint64_t sSteppedAt = ~0ull;
+        /* NULL from a soft reset until the intro sets it. */
+        bool lIsA = gSaveBlock2Ptr != NULL && gSaveBlock2Ptr->optionsButtonMode == OPTIONS_BUTTON_MODE_L_EQUALS_A;
+        uint64_t frame = CtrPlatform_FrameCount();
+
+        if (frame != sSteppedAt)
+        {
+            if (input->physicalDown & CTR_KEY_R)
+            {
+                sSteppedAt = frame;
+                CtrPlatform_StepBattleSpeed(1, lIsA);
+            }
+            else if (!lIsA && (input->physicalDown & CTR_KEY_L))
+            {
+                sSteppedAt = frame;
+                CtrPlatform_StepBattleSpeed(-1, false);
+            }
+        }
+        held &= lIsA ? ~R_BUTTON : ~(L_BUTTON | R_BUTTON);
+    }
     /* The bottom screen's column takes the buttons while X has its focus;
      * its touch controls press buttons through here. */
     held = CtrBottom_FilterKeys(held) | CtrBottom_InjectedKeys();

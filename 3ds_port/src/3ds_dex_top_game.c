@@ -42,6 +42,9 @@ bool8 CtrPokedex_ListScrolling(void);
 static bool8 sOpen;
 static u16 sShown;
 static u8 sHold;
+/* The terrain whose backdrop the native side holds whole, or -1: only nine,
+ * so a new Pokémon on the same one sends nothing again. */
+static s16 sBackdropTerrain = -1;
 
 /* LZ77 data of a game symbol (an asset stub, resolved from the game data)
  * into a buffer of `capacity` bytes; the size comes from the stream's own
@@ -176,8 +179,12 @@ static void Backdrop(u16 species)
     static u16 map[2 * 32 * 32];
     static u16 pal[3 * 16];
     static u16 row[CTR_DEX_TOP_BACKDROP_W];
-    const struct Terrain *t = &sTerrains[TerrainOf(species)];
+    u8 terrain = TerrainOf(species);
+    const struct Terrain *t = &sTerrains[terrain];
 
+    if (terrain == sBackdropTerrain && CtrDexTop_BackdropComplete())
+        return;
+    sBackdropTerrain = -1;
     CtrDexTop_BackdropBegin();
     if (Unlz(t->tiles, tiles, sizeof(tiles)) == 0 || Unlz(t->tilemap, map, sizeof(map)) == 0
         || Unlz(t->palette, pal, sizeof(pal)) < sizeof(pal))
@@ -196,6 +203,7 @@ static void Backdrop(u16 species)
         }
         CtrDexTop_BackdropRow(y, row);
     }
+    sBackdropTerrain = terrain;
 }
 
 static void Show(u16 national)
@@ -224,6 +232,7 @@ void CtrDexTopGame_Frame(void)
         if (sOpen) CtrDexTop_Hide();
         sOpen = FALSE;
         sShown = sHold = 0;
+        sBackdropTerrain = -1;
         return;
     }
     national = CtrPokedex_InfoDexNum();

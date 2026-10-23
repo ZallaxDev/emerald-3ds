@@ -119,7 +119,6 @@ BACKEND_OBJS := $(patsubst src/%.c,build/bridge/%.o,$(BACKEND_SRCS))
 # port: the map, camera, atlas and geometry modules are game translation units
 # (they read gMapHeader and resolve RomFS payloads, and never see libctru),
 # while ctr_voxel.c is native and owns the Citro3D objects.
-ifeq ($(VOXEL),1)
 VOXEL_GAME_SRCS := src/voxel/voxel_world.c src/voxel/voxel_camera.c \
 	src/voxel/voxel_atlas.c src/voxel/voxel_mesh_builder.c src/voxel/voxel_entities.c \
 	src/voxel/voxel_regions.c src/voxel/voxel_tree.c src/voxel/voxel_sign.c \
@@ -136,11 +135,12 @@ ROMFS_SHADER_OUTS += romfs/voxel/trees.rgba5551
 ROMFS_SHADER_OUTS += romfs/voxel/signposts.bin
 ROMFS_SHADER_OUTS += romfs/voxel/buildings.bin
 ROMFS_SHADER_OUTS += romfs/voxel/relief.bin
-endif
 # New art around the intro's leaves scene (scripts/gen_intro_margins.py).
 ROMFS_SHADER_OUTS += romfs/stage/leaves.bin
 # The bottom screen's battle menus: the port's own art (scripts/gen_battle_art.py).
 ROMFS_SHADER_OUTS += romfs/bottom/battle.bin
+# The bottom screen's menu backdrop: the port's own art (scripts/gen_menu_art.py).
+ROMFS_SHADER_OUTS += romfs/bottom/menu.bin
 # The battle's info boxes and text box: the port's own art (scripts/gen_battle_hud.py).
 ROMFS_SHADER_OUTS += romfs/battle/hud.bin
 
@@ -236,6 +236,11 @@ build/root/src/trade.o: compat/ctr_gba_centred.h $(ROOT)/include/gba/defines.h
 build/root/src/party_menu.o: FULLCFLAGS += -DCTR_GBA_STAGE -DCTR_CENTRED_PARTY \
 	-include $(abspath compat/ctr_gba_centred.h)
 build/root/src/party_menu.o: compat/ctr_gba_centred.h $(ROOT)/include/gba/defines.h
+# The trainer card, laid out for the GBA screen: with the classic menus the
+# field's is in the bottom screen's window, a link partner's centred on top.
+build/root/src/trainer_card.o: FULLCFLAGS += -DCTR_GBA_STAGE -DCTR_CENTRED_CARD \
+	-include $(abspath compat/ctr_gba_centred.h)
+build/root/src/trainer_card.o: compat/ctr_gba_centred.h $(ROOT)/include/gba/defines.h
 # The Pokédex as the game draws it, left of the column: its list, search,
 # entries, area, cry and size screens. pokedex.c installs their VBlank
 # callbacks.
@@ -454,7 +459,6 @@ $(VOXEL_GFX_OUTPUTS) &: $(VOXEL_GFX_SOURCES)
 romfs/voxel/regions.bin romfs/voxel/signposts.bin romfs/voxel/buildings.bin romfs/voxel/relief.bin romfs/stage/leaves.bin: $(VOXEL_GFX_OUTPUTS)
 endif
 
-ifeq ($(VOXEL),1)
 # What every cell of every layout IS (the console reads its signposts).
 # Solved on the host because it needs the map's warps, its neighbours and a
 # look at every metatile's own pixels, and none of that fits in a frame.
@@ -510,6 +514,10 @@ romfs/voxel/relief.bin: scripts/gen_voxel_relief.py scripts/voxel_cells.py scrip
 romfs/bottom/battle.bin: scripts/gen_battle_art.py
 	@mkdir -p $(@D)
 	"$(PYTHON)" scripts/gen_battle_art.py --output $@
+
+romfs/bottom/menu.bin: scripts/gen_menu_art.py scripts/gen_battle_art.py
+	@mkdir -p $(@D)
+	"$(PYTHON)" scripts/gen_menu_art.py --output $@
 
 romfs/battle/hud.bin: scripts/gen_battle_hud.py
 	@mkdir -p $(@D)
@@ -630,7 +638,6 @@ build/voxel_relief_test.exe: tests/voxel_relief_test.c src/voxel/voxel_relief.c 
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude -Isrc/voxel $(HOST_VOXEL_DEFS) \
 		-DVOXEL_RELIEF_PATH='"romfs/voxel/relief.bin"' \
 		tests/voxel_relief_test.c src/voxel/voxel_relief.c -lm -o $@
-endif
 
 .PHONY: verify-settings
 verify: verify-settings

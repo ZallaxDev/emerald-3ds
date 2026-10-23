@@ -53,11 +53,6 @@ void CtrSprites_Track(void)
     }
 }
 
-uint32_t CtrSprites_Id(unsigned index)
-{
-    return index < MAX_SPRITES && gSprites[index].inUse ? gCtrSpriteId[index] : 0;
-}
-
 void CtrSprites_Report(void)
 {
 #ifdef CTR_SPRITE_ID_AUDIT
