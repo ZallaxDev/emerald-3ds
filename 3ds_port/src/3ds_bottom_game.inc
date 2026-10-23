@@ -1398,7 +1398,11 @@ static void DrawDexInfo(const ViewState *s)
             DrawTypeIcon(gSpeciesInfo[v->species].types[1], x + 44, oy + 76);
     }
     oy = Plate(AREA_X, y + 100, AREA_W, AREA_Y + AREA_H - y - 100, sLight, PLATE_STATE_NORMAL);
-    if (v->description)
+    /* The game's entries have four lines: three fit in the normal font,
+     * four in the small one, closer together. */
+    if (v->description && TextLines(v->description, 0, 0, AREA_W - 20, 13, 4, &sNormal, STYLE_INK, FALSE) > 3)
+        TextLines(v->description, AREA_X + 10, oy + 1, AREA_W - 20, 10, 4, &sSmall, STYLE_INK, TRUE);
+    else if (v->description)
         TextLines(v->description, AREA_X + 10, oy + 2, AREA_W - 20, 13, 3, &sNormal, STYLE_INK, TRUE);
 }
 
