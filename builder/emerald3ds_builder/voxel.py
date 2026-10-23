@@ -9,10 +9,9 @@ The steps, their order, the copy of the scripts into the tree and the output
 checks are shared. Only the way one step is run differs:
 
 * `run_step_subprocess` runs each script in its own process (desktop and the
-  frozen Windows builder): no state can carry over between scripts. No
-  script reads another's output, so their processes run side by side, as
-  many at once as there are processors: the build takes as long as the
-  slowest (the relief), not the sum;
+  frozen Windows builder): no state can carry over between scripts. Independent
+  steps run side by side. Relief waits for buildings, whose model placements it
+  reads when deriving the terrain under each model;
 * `run_step_inprocess` runs each script in this interpreter (the web builder:
   Pyodide has no processes). It gives every script a fresh copy of its sibling
   modules, its own argv, working directory and import path, and puts them all
@@ -43,9 +42,9 @@ from .errors import BuilderError
 STEPS = [
     ("gen_voxel_regions.py", [], "3ds_port/romfs/voxel/regions.bin"),
     ("gen_voxel_sign_masks.py", [], "3ds_port/romfs/voxel/signposts.bin"),
-    ("gen_voxel_relief.py", ["--output", "3ds_port/romfs/voxel/relief.bin"], "3ds_port/romfs/voxel/relief.bin"),
     ("gen_voxel_buildings.py", ["--output", "3ds_port/romfs/voxel/buildings.bin"],
      "3ds_port/romfs/voxel/buildings.bin"),
+    ("gen_voxel_relief.py", ["--output", "3ds_port/romfs/voxel/relief.bin"], "3ds_port/romfs/voxel/relief.bin"),
     # not voxel data, but made the same way: the intro's leaves scene, widened
     ("gen_intro_margins.py", ["--output", "3ds_port/romfs/stage/leaves.bin"], "3ds_port/romfs/stage/leaves.bin"),
 ]
@@ -152,7 +151,20 @@ def run_generators(tree: Path, voxelgen: Path, expected: list[dict], progress=No
             progress(0.0, ", ".join(LABELS.get(s[0], s[0]) for s in steps))
         workers = max(1, min(len(steps), os.cpu_count() or 1))
         with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
-            running = {pool.submit(timed, i): i for i in range(len(steps))}
+            futures = {}
+            running = {}
+
+            def after_buildings(i, prerequisite):
+                if prerequisite is not None:
+                    prerequisite.result()
+                return timed(i)
+
+            for i, (script, _, _) in enumerate(steps):
+                prerequisite = (futures.get("gen_voxel_buildings.py")
+                                if script == "gen_voxel_relief.py" else None)
+                future = pool.submit(after_buildings, i, prerequisite)
+                futures[script] = future
+                running[future] = i
             failed: dict[int, BaseException] = {}
             for future in concurrent.futures.as_completed(running):
                 i = running[future]

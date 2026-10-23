@@ -506,8 +506,8 @@ romfs/voxel/buildings.bin: scripts/gen_voxel_buildings.py scripts/voxel_building
 verify-voxel-buildings:
 	"$(PYTHON)" scripts/gen_voxel_buildings.py --verify
 
-# Terrain relief read off the drawing: gen_voxel_relief.py explains it.
-romfs/voxel/relief.bin: scripts/gen_voxel_relief.py scripts/voxel_cells.py scripts/voxel_props.py \
+# Terrain relief reads building placements when modelling the ground below them.
+romfs/voxel/relief.bin: romfs/voxel/buildings.bin scripts/gen_voxel_relief.py scripts/voxel_cells.py scripts/voxel_props.py \
 		scripts/voxel_art.py scripts/voxel_building.py scripts/dump_region_art.py \
 		scripts/voxel_relief_fixes.py scripts/voxel_terraces.py assets/voxel/relief_fixes.json \
 		$(ROOT)/data/layouts/layouts.json
