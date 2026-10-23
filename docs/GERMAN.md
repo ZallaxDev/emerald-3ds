@@ -93,7 +93,7 @@ Noch nicht fertig, und deshalb offen ausgewiesen:
 - die Symboltabelle (`tools/locales/german-symbols.s.gz`) ist aus BPED selbst
   rekonstruiert, nicht aus einem GBA-Build dieses Baums: Strukturen über ihre Form,
   unveränderte Objekte über ihren Inhalt, Texte über die Adressinvarianz des Manifests.
-  Sie ist **nicht vollständig** (15 083 von 48 858 Namen mit belegter Adresse). Die
+  Sie ist **nicht vollständig** (15 087 von 48 858 Namen mit belegter Adresse). Die
   Rezeptprüfung verwendet weiterhin die unveränderten Grenzen für Literale; alle
   rekonstruierten Dateien und Generator-Eingaben werden byte-genau verglichen.
 

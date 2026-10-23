@@ -62,6 +62,18 @@ class GermanFinalManifestTests(unittest.TestCase):
                 self.assertEqual(addresses[name], 0x08000000 + offset)
                 self.assertEqual(sizes[name], size)
 
+    def test_easy_chat_reference_symbols_agree_with_retail_staging(self):
+        import re
+        symbols = gzip.decompress(
+            (ROOT / "tools/locales/german-symbols.s.gz").read_bytes()).decode()
+        addresses = {n: int(v) for n, v in re.findall(r"^\.equ (\S+), (\d+)$", symbols, re.M)}
+        sizes = {n: int(v) for n, v in re.findall(r"^\.size (\S+), (\d+)$", symbols, re.M)}
+        self.assertEqual(len(self.manifest["id_lists"]), 4)
+        for name, (offset, size) in self.manifest["id_lists"].items():
+            with self.subTest(symbol=name):
+                self.assertEqual(addresses[name], 0x08000000 + offset)
+                self.assertEqual(sizes[name], size)
+
     def test_healthbox_uses_complete_retail_tiles_not_a_hand_edited_letter(self):
         entries = [entry for entry in self.manifest["graphics"]
                    if entry[0] == "graphics/battle_interface/hpbar.4bpp"]
