@@ -62,6 +62,21 @@
   EDICIÓN (`tools/logo_ptbr.py` previews it, `make verify-logo-ptbr` checks
   that the port draws it).
 
+- Japanese (experimental): the game in Japanese from your own Pocket Monsters
+  Emerald (Japan) ROM. The web and Windows builders accept it and pick the
+  language from the ROM; every release carries the Japanese variant too
+  (`Emerald3DS-ja.3dsx` for Quick Update). The texts, graphics, fonts,
+  credits and the maps that differ come from your ROM; text is drawn in the
+  game's Japanese glyphs, the naming screen has the Japanese keyboard and
+  5-character names, battles draw names, levels and HP as the Japanese game
+  does, the touch screen has Japanese labels and the Pokédex shows metres
+  and kilograms. See docs/JAPANESE.md for what is still in English.
+
+- Locale manifests can be regenerated: `tools/locale_research/` holds the
+  matcher that finds the English game's objects in another language's ROM
+  and the generator of the Japanese manifest, and `rebase_manifest.py` moves
+  a manifest onto a changed tree without the ROM.
+
 ## 0.4.0 — 2026-10-16
 
 - The project is now called Emerald 3DS, by Zallax: new name on the HOME

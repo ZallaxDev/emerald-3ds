@@ -1,0 +1,122 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: The Japanese game's Trainer Hill challenge
+Applies after 0005-port-hooks.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/trainer_hill.c b/src/trainer_hill.c
+--- a/src/trainer_hill.c
++++ b/src/trainer_hill.c
+@@ -204,18 +204,52 @@
+ static const u8 sRecordWinColors[] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_DARK_GRAY, TEXT_COLOR_LIGHT_GRAY};
+ 
+ #ifdef PORT_BRIDGE
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_JAPANESE
++// The Japanese game's only challenge, in every mode.
+ static const struct TrainerHillFloor *const sFloorData[NUM_TRAINER_HILL_MODES] =
+ {
++    [HILL_MODE_NORMAL]  = sFloors_JPDefault,
++    [HILL_MODE_VARIETY] = sFloors_JPDefault,
++    [HILL_MODE_UNIQUE]  = sFloors_JPDefault,
++    [HILL_MODE_EXPERT]  = sFloors_JPDefault,
++};
++#else
++static const struct TrainerHillFloor *const sFloorData[NUM_TRAINER_HILL_MODES] =
++{
+     [HILL_MODE_NORMAL]  = sFloors_Normal,
+     [HILL_MODE_VARIETY] = sFloors_Variety,
+     [HILL_MODE_UNIQUE]  = sFloors_Unique,
+     [HILL_MODE_EXPERT]  = sFloors_Expert,
+ };
++#endif
+ 
+ #if GAME_LANGUAGE == LANGUAGE_ENGLISH || GAME_LANGUAGE == LANGUAGE_JAPANESE // the others: tools/localize_*.py put in the ROM's own floors, mazes included
+ // A floor's maze is an INCBIN in a field of its struct, which the port's asset
+ // table cannot map (it maps whole arrays): the field stayed zeros, a floor of
+ // one metatile with no walls. The same files again as arrays of their own.
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_JAPANESE
++static const u8 sFloorMetatiles_JP0[] = INCBIN_U8("graphics/trainer_hill/maps_jp/floor_0/metatiles.bin");
++static const u16 sFloorCollision_JP0[] = INCBIN_U16("graphics/trainer_hill/maps_jp/floor_0/collision.bin");
++static const u8 sFloorMetatiles_JP1[] = INCBIN_U8("graphics/trainer_hill/maps_jp/floor_1/metatiles.bin");
++static const u16 sFloorCollision_JP1[] = INCBIN_U16("graphics/trainer_hill/maps_jp/floor_1/collision.bin");
++
++// Floors 2 and 3 are never reached (the challenge has two floors).
++static const u8 *const sFloorMetatilesData[NUM_TRAINER_HILL_MODES][NUM_TRAINER_HILL_FLOORS] =
++{
++    [HILL_MODE_NORMAL] = {sFloorMetatiles_JP0, sFloorMetatiles_JP1, sFloorMetatiles_JP0, sFloorMetatiles_JP1},
++    [HILL_MODE_VARIETY] = {sFloorMetatiles_JP0, sFloorMetatiles_JP1, sFloorMetatiles_JP0, sFloorMetatiles_JP1},
++    [HILL_MODE_UNIQUE] = {sFloorMetatiles_JP0, sFloorMetatiles_JP1, sFloorMetatiles_JP0, sFloorMetatiles_JP1},
++    [HILL_MODE_EXPERT] = {sFloorMetatiles_JP0, sFloorMetatiles_JP1, sFloorMetatiles_JP0, sFloorMetatiles_JP1},
++};
++
++static const u16 *const sFloorCollisionData[NUM_TRAINER_HILL_MODES][NUM_TRAINER_HILL_FLOORS] =
++{
++    [HILL_MODE_NORMAL] = {sFloorCollision_JP0, sFloorCollision_JP1, sFloorCollision_JP0, sFloorCollision_JP1},
++    [HILL_MODE_VARIETY] = {sFloorCollision_JP0, sFloorCollision_JP1, sFloorCollision_JP0, sFloorCollision_JP1},
++    [HILL_MODE_UNIQUE] = {sFloorCollision_JP0, sFloorCollision_JP1, sFloorCollision_JP0, sFloorCollision_JP1},
++    [HILL_MODE_EXPERT] = {sFloorCollision_JP0, sFloorCollision_JP1, sFloorCollision_JP0, sFloorCollision_JP1},
++};
++#else
+ static const u8 sFloorMetatiles_Normal0[] = INCBIN_U8("graphics/trainer_hill/maps_normal/floor_0/metatiles.bin");
+ static const u16 sFloorCollision_Normal0[] = INCBIN_U16("graphics/trainer_hill/maps_normal/floor_0/collision.bin");
+ static const u8 sFloorMetatiles_Normal1[] = INCBIN_U8("graphics/trainer_hill/maps_normal/floor_1/metatiles.bin");
+@@ -264,17 +298,28 @@
+     [HILL_MODE_UNIQUE] = {sFloorCollision_Unique0, sFloorCollision_Unique1, sFloorCollision_Unique2, sFloorCollision_Unique3},
+     [HILL_MODE_EXPERT] = {sFloorCollision_Expert0, sFloorCollision_Expert1, sFloorCollision_Expert2, sFloorCollision_Expert3},
+ };
++#endif // the Japanese game
+ #endif
+ 
+ #endif
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_JAPANESE
+ static const struct TrainerHillChallenge *const sChallengeData[NUM_TRAINER_HILL_MODES] =
+ {
++    [HILL_MODE_NORMAL]  = &sChallenge_JPDefault,
++    [HILL_MODE_VARIETY] = &sChallenge_JPDefault,
++    [HILL_MODE_UNIQUE]  = &sChallenge_JPDefault,
++    [HILL_MODE_EXPERT]  = &sChallenge_JPDefault,
++};
++#else
++static const struct TrainerHillChallenge *const sChallengeData[NUM_TRAINER_HILL_MODES] =
++{
+     [HILL_MODE_NORMAL]  = &sChallenge_Normal,
+     [HILL_MODE_VARIETY] = &sChallenge_Variety,
+     [HILL_MODE_UNIQUE]  = &sChallenge_Unique,
+     [HILL_MODE_EXPERT]  = &sChallenge_Expert,
+ };
++#endif
+ 
+ // Unused.
+ static const u8 *const sFloorStrings[] =
+diff --git a/src/data/battle_frontier/trainer_hill.h b/src/data/battle_frontier/trainer_hill.h
+--- a/src/data/battle_frontier/trainer_hill.h
++++ b/src/data/battle_frontier/trainer_hill.h
+@@ -17,7 +17,14 @@
+ };
+ 
+ // Unused
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_JAPANESE
++// The Japanese game's ROM has only this challenge, two floors, and plays it in
++// every mode (trainer_hill.c). The challenge is copied four floors at a time:
++// the other two are zeros.
++static const struct TrainerHillFloor sFloors_JPDefault[NUM_TRAINER_HILL_FLOORS] = {
++#else
+ static const struct TrainerHillFloor sFloors_JPDefault[] = {
++#endif
+     [0] = {
+         .trainerNum1 = 0,
+         .trainerNum2 = 0,
+@@ -352,6 +359,7 @@
+     },
+ };
+ 
++#if !(defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_JAPANESE) // not in the Japanese game
+ static const struct TrainerHillChallenge sChallenge_Normal =
+ {
+     .numTrainers = NUM_TRAINER_HILL_TRAINERS,
+@@ -4815,6 +4823,7 @@
+             }
+         },
+ };
++#endif
+ 
+ #undef COORDS_XY
+ #undef TRAINER_DIRS

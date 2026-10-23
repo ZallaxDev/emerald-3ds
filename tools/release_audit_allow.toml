@@ -7,10 +7,11 @@ paths = [
     "tools/locales/spanish-symbols.s.gz",
     "tools/locales/french-symbols.s.gz",
     "tools/locales/italian-symbols.s.gz",
+    "tools/locales/japanese-symbols.s.gz",
     "Emerald3DS-v*-Windows/Emerald3DS-Builder.exe",
     "Emerald3DS-v*-Windows/emerald3ds-builder-cli.exe",
     "Emerald3DS-v*-Windows/payload/Emerald3DS.3dsx",
-    # the other languages' executables (payload/es/ for the Spanish ROM)
+    # the other languages' executables (payload/es/, fr/, it/ and ja/)
     "Emerald3DS-v*-Windows/payload/*/Emerald3DS.3dsx",
     # the same executables inside Emerald3DS-WebPayload.zip
     "payload/Emerald3DS.3dsx",

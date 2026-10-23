@@ -1,0 +1,50 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: The Japanese bard is silent
+Applies after 0005-port-hooks.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/bard_music.c b/src/bard_music.c
+--- a/src/bard_music.c
++++ b/src/bard_music.c
+@@ -9,6 +9,16 @@
+ // Invalid sound, indicates the end of the sounds for the word.
+ #define NULL_BARD_SOUND { .songId = PHONEME_ID_NONE }
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_JAPANESE
++// The Japanese game's bard sings with another engine: its ROM has neither
++// these English sounds per word nor their phonemes (0046). Every word is
++// silent (GetWordSoundTemplates).
++#define SILENT_BARD
++#include "constants/moves.h"
++#include "constants/species.h"
++const u16 gNumBardWords_Species = NUM_SPECIES;
++const u16 gNumBardWords_Moves = MOVES_COUNT;
++#else
+ #include "data/bard_music/pokemon.h"
+ #include "data/bard_music/moves.h"
+ #include "data/bard_music/trainer.h"
+@@ -54,6 +64,7 @@
+     [EC_GROUP_TRENDY_SAYING]    = sBardSoundTemplates_TrendySaying,
+     [EC_GROUP_POKEMON_NATIONAL] = NULL, // Handled by sBardSoundTemplates_Pokemon
+ };
++#endif
+ 
+ // The pitch tables below will be indexed using the number of BardSoundTemplates per word, so a table is selected
+ // that has at least MAX_BARD_SOUNDS_PER_WORD pitch values. Curiously they select pitch tables whose size is +1
+@@ -191,6 +202,10 @@
+ 
+ const struct BardSoundTemplate *GetWordSoundTemplates(u16 easyChatWord)
+ {
++#ifdef SILENT_BARD
++    (void)easyChatWord;
++    return sEmptyPhonemeTemplate;
++#else
+     u32 category;
+     u32 subword;
+     const struct BardSoundTemplate (*ptr)[MAX_BARD_SOUNDS_PER_WORD];
+@@ -216,6 +231,7 @@
+     }
+     ptr += subword;
+     return *ptr;
++#endif
+ }
+ 
+ // Assumes that 'soundTemplates' has already been loaded with the BardSoundTemplates for the easy chat word to calculate sounds for.

@@ -1,0 +1,95 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: The Japanese title screen's palettes and banner
+Applies after 0005-port-hooks.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/title_screen.c b/src/title_screen.c
+--- a/src/title_screen.c
++++ b/src/title_screen.c
+@@ -44,10 +44,27 @@
+ #define TITLE_CENTER_X_OFFSET ((TITLE_SCREEN_WIDTH - DISPLAY_WIDTH) / 2)
+ 
+ #define VERSION_BANNER_RIGHT_TILEOFFSET 64
+-#define VERSION_BANNER_LEFT_X (98 + TITLE_CENTER_X_OFFSET)
+-#define VERSION_BANNER_RIGHT_X (162 + TITLE_CENTER_X_OFFSET)
+-#define VERSION_BANNER_Y 2
+-#define VERSION_BANNER_Y_GOAL 66
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_JAPANESE
++// BPEJ title setup (from the commercial ROM's Task_TitleScreenPhase1): the
++// エメラルド banner is created at x=162/210, y=-16 and settles at y=48; BG2X
++// stays 0. English's 98/162 and BG2X=-29 park that shorter logo under the
++// banner so its opaque outline eats the katakana. Nine BG palettes (Rayquaza
++// also in slot 14); the 8bpp banner uses the same ones on OBJ.
++#define JAPANESE_TITLE_SCREEN
++#define VERSION_BANNER_LEFT_X (162 + TITLE_CENTER_X_OFFSET)
++#define VERSION_BANNER_RIGHT_X (210 + TITLE_CENTER_X_OFFSET)
++#define VERSION_BANNER_Y (-16)
++#define VERSION_BANNER_Y_GOAL 48
++#define TITLE_BG_PALETTES 9
++#define TITLE_RAYQUAZA_PALETTE 5
++#define TITLE_LOGO_BG2X 0
++#else
++#define VERSION_BANNER_LEFT_X (98 + TITLE_CENTER_X_OFFSET)
++#define VERSION_BANNER_RIGHT_X (162 + TITLE_CENTER_X_OFFSET)
++#define VERSION_BANNER_Y 2
++#define VERSION_BANNER_Y_GOAL 66
++#define TITLE_LOGO_BG2X (-29 * 256)
++#endif
+ #define START_BANNER_X (128 + TITLE_CENTER_X_OFFSET)
+ 
+ #define CLEAR_SAVE_BUTTON_COMBO (B_BUTTON | SELECT_BUTTON | DPAD_UP)
+@@ -155,10 +172,19 @@
+     .objMode = ST_OAM_OBJ_NORMAL,
+     .mosaic = FALSE,
+     .bpp = ST_OAM_8BPP,
++#ifdef JAPANESE_TITLE_SCREEN
++    // BPEJ: right half is a 32x32 square (left stays 64x32). Drawing it as
++    // 64x32 re-walks the sheet with the wrong stride and glitches ルド.
++    .shape = SPRITE_SHAPE(32x32),
++    .x = 0,
++    .matrixNum = 0,
++    .size = SPRITE_SIZE(32x32),
++#else
+     .shape = SPRITE_SHAPE(64x32),
+     .x = 0,
+     .matrixNum = 0,
+     .size = SPRITE_SIZE(64x32),
++#endif
+     .tileNum = 0,
+     .priority = 0,
+     .paletteNum = 0,
+@@ -649,7 +674,12 @@
+         // bg2
+         LZ77UnCompVram(gTitleScreenPokemonLogoGfx, (void *)(BG_CHAR_ADDR(0)));
+         LZ77UnCompVram(gTitleScreenPokemonLogoTilemap, (void *)(BG_SCREEN_ADDR(9)));
++#ifdef JAPANESE_TITLE_SCREEN
++        LoadPalette(gTitleScreenBgPalettes, BG_PLTT_ID(0), TITLE_BG_PALETTES * PLTT_SIZE_4BPP);
++        LoadPalette(&gTitleScreenBgPalettes[TITLE_RAYQUAZA_PALETTE * 16], BG_PLTT_ID(14), PLTT_SIZE_4BPP);
++#else
+         LoadPalette(gTitleScreenBgPalettes, BG_PLTT_ID(0), 15 * PLTT_SIZE_4BPP);
++#endif
+         // bg3
+         LZ77UnCompVram(sTitleScreenRayquazaGfx, (void *)(BG_CHAR_ADDR(2)));
+         LZ77UnCompVram(sTitleScreenRayquazaTilemap, (void *)(BG_SCREEN_ADDR(26)));
+@@ -667,7 +697,11 @@
+         LoadCompressedSpriteSheet(&sSpriteSheet_EmeraldVersion[0]);
+         LoadCompressedSpriteSheet(&sSpriteSheet_PressStart[0]);
+         LoadCompressedSpriteSheet(&sPokemonLogoShineSpriteSheet[0]);
++#ifdef JAPANESE_TITLE_SCREEN
++        LoadPalette(gTitleScreenBgPalettes, OBJ_PLTT_ID(0), TITLE_BG_PALETTES * PLTT_SIZE_4BPP);
++#else
+         LoadPalette(gTitleScreenEmeraldVersionPal, OBJ_PLTT_ID(0), PLTT_SIZE_4BPP);
++#endif
+         LoadSpritePalette(&sSpritePalette_PressStart[0]);
+         gMain.state = 2;
+         break;
+@@ -691,9 +725,9 @@
+         gMain.state = 4;
+         break;
+     case 4:
+         PanFadeAndZoomScreen(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 0x100, 0);
+-        SetGpuReg(REG_OFFSET_BG2X_L, -29 * 256);
+-        SetGpuReg(REG_OFFSET_BG2X_H, -1);
++        SetGpuReg(REG_OFFSET_BG2X_L, TITLE_LOGO_BG2X);
++        SetGpuReg(REG_OFFSET_BG2X_H, TITLE_LOGO_BG2X < 0 ? -1 : 0);
+         SetGpuReg(REG_OFFSET_BG2Y_L, -32 * 256);
+         SetGpuReg(REG_OFFSET_BG2Y_H, -1);
+ #if defined(PORT_BRIDGE) && !defined(CTR_GBA_STAGE)

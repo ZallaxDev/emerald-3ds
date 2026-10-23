@@ -47,7 +47,7 @@ LICENSES = [("LICENSE-PORT.md", "LICENSE-PORT.md"), ("NOTICE.md", "NOTICE.md"),
 FIXED_TIME = (2020, 1, 1, 0, 0, 0)
 VARIANT_FILES = ("Emerald3DS.3dsx", "Emerald3DS.smdh", "emerald3ds.recipe")
 ROM_REGIONS = {"BPEE": ("USA, Europe", "en"), "BPES": ("Spain", "es"), "BPEF": ("France", "fr"),
-               "BPEI": ("Italy", "it")}
+               "BPEI": ("Italy", "it"), "BPEJ": ("Japan", "ja")}
 
 
 def sha256(data: bytes) -> str:
@@ -94,7 +94,7 @@ def make_manifest(files: dict[str, bytes], version: str, tag: str, cia_forwarder
         if synthetic:
             return {"sha1": sha1, "name": "Synthetic test ROM (not a game)", "code": "TEST",
                     "region": "", "language": ""}
-        # The ROM a recipe is made from (BPES for the Spanish variant).
+        # The ROM a recipe is made from (BPES, BPEF, BPEI or BPEJ for the other languages).
         code = next((c for c, sha in ROM_PROFILES.items() if sha == sha1), "BPEE")
         region, language = ROM_REGIONS.get(code, ("", ""))
         return {"sha1": sha1, "name": KNOWN_CODES[code], "code": code, "region": region, "language": language}

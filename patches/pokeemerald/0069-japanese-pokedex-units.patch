@@ -1,0 +1,24 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: Japanese Pokedex metric units
+Applies after 0063-portuguese-pokedex-metric-units.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/pokedex.c b/src/pokedex.c
+--- a/src/pokedex.c
++++ b/src/pokedex.c
+@@ -4282,7 +4282,7 @@ static void PrintMonInfo(u32 num, u32 value, u32 owned, u32 newEntry)
+ 
+ static void PrintMonHeight(u16 height, u8 left, u8 top)
+ {
+-#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || CTR_LANG_PT_BR)
++#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || CTR_LANG_PT_BR || GAME_LANGUAGE == LANGUAGE_JAPANESE)
+     u8 buffer[16];
+     u8 *end = ConvertIntToDecimalStringN(buffer, height / 10, STR_CONV_MODE_LEFT_ALIGN, 4);
+ 
+@@ -4331,7 +4331,7 @@ static void PrintMonHeight(u16 height, u8 left, u8 top)
+ 
+ static void PrintMonWeight(u16 weight, u8 left, u8 top)
+ {
+-#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || CTR_LANG_PT_BR)
++#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || CTR_LANG_PT_BR || GAME_LANGUAGE == LANGUAGE_JAPANESE)
+     u8 buffer[16];
+     u8 *end = ConvertIntToDecimalStringN(buffer, weight / 10, STR_CONV_MODE_LEFT_ALIGN, 4);
+ 

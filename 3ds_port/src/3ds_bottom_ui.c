@@ -1199,10 +1199,28 @@ typedef struct
     const u16 *glyphs;
     const u8 *widths;
     u8 height, lineHeight;
+    bool8 japanese;
 } Font;
 
 /* The game's two fonts, and their narrow cuts for long translations. */
 static Font sSmall, sNormal, sSmallNarrow, sNarrow;
+
+/* The 2bpp bits of one 8-pixel half of a glyph row. A Latin glyph is four
+ * tiles (top-left, top-right, bottom-left, bottom-right); a Japanese one is a
+ * single 8-pixel column of a sheet of 16 glyphs a row, its lower tile 0x80
+ * further on (text.c's DecompressGlyph_*). */
+static inline u16 GlyphBits(const Font *font, u16 glyph, int row, int half)
+{
+    if (font->japanese)
+        return half ? 0 : font->glyphs[0x100 * (glyph >> 4) + 8 * (glyph & 0xF) + (row >= 8 ? 0x80 : 0) + (row & 7)];
+    return font->glyphs[glyph * 0x20 + (row >= 8 ? 0x10 : 0) + half * 8 + (row & 7)];
+}
+
+/* Japanese glyphs are all 8 pixels wide, as the game draws them. */
+static inline int GlyphWidth(const Font *font, u16 glyph)
+{
+    return font->japanese ? 8 : font->widths[glyph];
+}
 
 static const u16 *ResolveFontBase(const u16 *glyphs)
 {
@@ -1216,6 +1234,20 @@ static const u16 *ResolveFontBase(const u16 *glyphs)
 /* The glyph payloads live in the asset cache; resolve them per redraw. */
 static void ResolveFonts(void)
 {
+#if GAME_LANGUAGE == LANGUAGE_JAPANESE
+    /* The Japanese game's strings are in the Japanese glyph set. */
+    sSmall.glyphs = ResolveFontBase(gFontSmallJapaneseGlyphs);
+    sSmall.height = 12;
+    sSmall.lineHeight = 13;
+    sSmall.japanese = TRUE;
+    sNormal.glyphs = ResolveFontBase(gFontNormalJapaneseGlyphs);
+    sNormal.height = 16;
+    sNormal.lineHeight = 16;
+    sNormal.japanese = TRUE;
+    /* No narrow fonts there: its glyphs are all 8 pixels wide. */
+    sSmallNarrow = sSmall;
+    sNarrow = sNormal;
+#else
     sSmall.glyphs = ResolveFontBase(gFontSmallLatinGlyphs);
     sSmall.widths = gFontSmallLatinGlyphWidths;
     sSmall.height = 13;
@@ -1232,6 +1264,7 @@ static void ResolveFonts(void)
     sNarrow.widths = gFontNarrowLatinGlyphWidths;
     sNarrow.height = 16;
     sNarrow.lineHeight = 16;
+#endif
 }
 
 /* Walks a game string: returns the next glyph, 0xFFFE for a line break or
@@ -1286,29 +1319,28 @@ static int StrWidth(const Font *font, const u8 *str)
             width = 0;
             continue;
         }
-        width += font->widths[g];
+        width += GlyphWidth(font, g);
     }
     return width > best ? width : best;
 }
 
 static int DrawGlyph(const Font *font, u16 glyph, int x, int y, u16 fg, u16 shadow)
 {
-    const u16 *base = font->glyphs + glyph * 0x20;
-    int width = font->widths[glyph];
+    int width = GlyphWidth(font, glyph);
     int sx = x + sOX;
     bool8 inside = sx >= sClipX0 && y >= sClipY0 && sx + width <= sClipX1 && y + font->height <= sClipY1;
     u16 *origin = sDst + (inside ? sx * H + (H - 1 - y) : 0);
 
     /* Wholly outside the clip: nothing to write. */
     if (sx >= sClipX1 || y >= sClipY1 || sx + width <= sClipX0 || y + font->height <= sClipY0)
-        return font->widths[glyph];
+        return GlyphWidth(font, glyph);
     if (width > 16)
         width = 16;
     for (int row = 0; row < font->height; ++row)
     {
         for (int half = 0; half < 2 && half * 8 < width; ++half)
         {
-            u16 bits = base[(row >= 8 ? 0x10 : 0) + half * 8 + (row & 7)];
+            u16 bits = GlyphBits(font, glyph, row, half);
 
             if (!bits)
                 continue;
@@ -1327,7 +1359,7 @@ static int DrawGlyph(const Font *font, u16 glyph, int x, int y, u16 fg, u16 shad
             }
         }
     }
-    return font->widths[glyph];
+    return GlyphWidth(font, glyph);
 }
 
 /* Draws a game string; returns the x where it ended. */
@@ -1358,7 +1390,7 @@ static void DrawStrRight(const Font *font, const u8 *str, int right, int y, u16 
 /* Whether a glyph paints (glyph or shadow) the pixel at column px of row. */
 static bool8 GlyphInk(const Font *font, u16 glyph, int px, int row)
 {
-    u16 bits = font->glyphs[glyph * 0x20 + (row >= 8 ? 0x10 : 0) + (px / 8) * 8 + (row & 7)];
+    u16 bits = GlyphBits(font, glyph, row, px / 8);
     u8 byte = (px & 7) < 4 ? bits >> 8 : bits & 0xFF;
     u8 v = (byte >> (6 - 2 * (px & 3))) & 3;
 
@@ -1375,7 +1407,7 @@ static void InkColumns(const Font *font, const u8 *str, int *x0, int *x1)
     *x1 = 0;
     for (u16 g; (g = NextGlyph(&str)) != 0xFFFF && g != 0xFFFE;)
     {
-        int width = font->widths[g] > 16 ? 16 : font->widths[g];
+        int width = GlyphWidth(font, g) > 16 ? 16 : GlyphWidth(font, g);
 
         for (int px = 0; px < width; ++px)
             for (int row = 0; row < font->height; ++row)
@@ -1385,7 +1417,7 @@ static void InkColumns(const Font *font, const u8 *str, int *x0, int *x1)
                     if (x + px + 1 > *x1) *x1 = x + px + 1;
                     break;
                 }
-        x += font->widths[g];
+        x += GlyphWidth(font, g);
     }
 }
 
@@ -1396,7 +1428,7 @@ static void CapRows(const Font *font, int *top, int *bottom)
     *top = font->height;
     *bottom = 0;
     for (int row = 0; row < font->height; ++row)
-        for (int px = 0; px < font->widths[CHAR_H]; ++px)
+        for (int px = 0; px < GlyphWidth(font, CHAR_H); ++px)
             if (GlyphInk(font, CHAR_H, px, row))
             {
                 if (row < *top) *top = row;
@@ -1405,7 +1437,8 @@ static void CapRows(const Font *font, int *top, int *bottom)
             }
 }
 
-/* Latin labels for the few words the game has no standalone string for. */
+/* Labels for the few words the game has no standalone string for: Latin, and
+ * kana for the Japanese game (3ds_locale_text.h). */
 static const u8 *Ascii(const char *text)
 {
     static u8 ring[8][40];
@@ -1703,13 +1736,12 @@ static void StepSmoothJob(void)
                 sJob.glyphX = x;
                 return;
             }
-            const u16 *base = font->glyphs + g * 0x20;
-            int width = font->widths[g] > 16 ? 16 : font->widths[g];
+            int width = GlyphWidth(font, g) > 16 ? 16 : GlyphWidth(font, g);
 
             for (int row = 0; row < font->height; ++row)
                 for (int px = 0; px < width; ++px)
                 {
-                    u16 bits = base[(row >= 8 ? 0x10 : 0) + (px / 8) * 8 + (row & 7)];
+                    u16 bits = GlyphBits(font, g, row, px / 8);
                     u8 byte = (px & 7) < 4 ? bits >> 8 : bits & 0xFF;
 
                     if (((byte >> (6 - 2 * (px & 3))) & 3) != 1)
@@ -1717,7 +1749,7 @@ static void StepSmoothJob(void)
                     for (int dy = 0; dy < k; ++dy)
                         memset(glyph + ((SMOOTH_PAD + row) * k + dy) * w4 + (x + px) * k, 255, k);
                 }
-            x += font->widths[g];
+            x += GlyphWidth(font, g);
         }
         /* The outline: blurred and hardened, and never thinner than a dilation. */
         memcpy(ring, glyph, (size_t)w4 * h4);
@@ -1904,13 +1936,12 @@ static void DrawFlatStr(const Font *font, const u8 *str, int x, int y, int k, Rg
 
         for (u16 g; (g = NextGlyph(&s)) != 0xFFFF && g != 0xFFFE;)
         {
-            const u16 *base = font->glyphs + g * 0x20;
-            int width = font->widths[g] > 16 ? 16 : font->widths[g];
+            int width = GlyphWidth(font, g) > 16 ? 16 : GlyphWidth(font, g);
 
             for (int row = 0; row < font->height; ++row)
                 for (int px = 0; px < width; ++px)
                 {
-                    u16 bits = base[(row >= 8 ? 0x10 : 0) + (px / 8) * 8 + (row & 7)];
+                    u16 bits = GlyphBits(font, g, row, px / 8);
                     u8 byte = (px & 7) < 4 ? bits >> 8 : bits & 0xFF;
                     int x0 = x + ((gx + px) * k >> 2), y0 = y + (row * k >> 2);
                     int x1 = x + ((gx + px + 1) * k >> 2), y1 = y + ((row + 1) * k >> 2);
@@ -1922,7 +1953,7 @@ static void DrawFlatStr(const Font *font, const u8 *str, int x, int y, int k, Rg
                     else
                         FillRect(x0, y0, x1 - x0, y1 - y0, colours[1]);
                 }
-            gx += font->widths[g];
+            gx += GlyphWidth(font, g);
         }
     }
 }
@@ -4279,11 +4310,11 @@ static void MoveBody(const ViewState *s, int i)
     PpColours(s->moves4.currentPp[i], s->moves4.maxPp[i], &fg, &sh);
     DrawStrRight(&sNormal, text, x + MOVE_W - 12, oy + 32, fg, sh);
     {
-        int tx = DrawStr(&sSmall, Ascii(CTR_TEXT("POW ", "POT. ", "PUISS. ", "POT. ", "POD. ")), x + 12, oy + 56, TXT_DARK, TXT_LIGHT);
+        int tx = DrawStr(&sSmall, Ascii(CTR_TEXT("POW ", "POT. ", "PUISS. ", "POT. ", "POD. ", "いりょく ")), x + 12, oy + 56, TXT_DARK, TXT_LIGHT);
 
         DrawStr(&sSmall, data->power > 1 ? Number(data->power, 3, STR_CONV_MODE_LEFT_ALIGN) : Ascii("---"), tx,
                 oy + 56, TXT_DARK, TXT_LIGHT);
-        StringCopy(text, Ascii(CTR_TEXT("ACC ", "PREC. ", "PRÉC. ", "PREC. ", "PREC. ")));
+        StringCopy(text, Ascii(CTR_TEXT("ACC ", "PREC. ", "PRÉC. ", "PREC. ", "PREC. ", "めいちゅう ")));
         StringAppend(text, data->accuracy ? Number(data->accuracy, 3, STR_CONV_MODE_LEFT_ALIGN) : Ascii("---"));
         DrawStrRight(&sSmall, text, x + MOVE_W - 12, oy + 56, TXT_DARK, TXT_LIGHT);
     }

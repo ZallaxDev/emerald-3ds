@@ -8,7 +8,7 @@ diff --git a/src/trainer_hill.c b/src/trainer_hill.c
      [HILL_MODE_EXPERT]  = sFloors_Expert,
  };
  
-+#if GAME_LANGUAGE == LANGUAGE_ENGLISH // Spanish: tools/localize_spanish.py puts in the ROM's own floors, mazes included
++#if GAME_LANGUAGE == LANGUAGE_ENGLISH || GAME_LANGUAGE == LANGUAGE_JAPANESE // the others: tools/localize_*.py put in the ROM's own floors, mazes included
 +// A floor's maze is an INCBIN in a field of its struct, which the port's asset
 +// table cannot map (it maps whole arrays): the field stayed zeros, a floor of
 +// one metatile with no walls. The same files again as arrays of their own.
@@ -69,7 +69,7 @@ diff --git a/src/trainer_hill.c b/src/trainer_hill.c
          // Copy each named object instead of relying on their linker order.
          CpuCopy32(sChallengeData[gSaveBlock1Ptr->trainerHill.mode], &sHillData->challenge, sizeof(sHillData->challenge));
          CpuCopy32(sFloorData[gSaveBlock1Ptr->trainerHill.mode], sHillData->floors, sizeof(sHillData->floors));
-+#if GAME_LANGUAGE == LANGUAGE_ENGLISH
++#if GAME_LANGUAGE == LANGUAGE_ENGLISH || GAME_LANGUAGE == LANGUAGE_JAPANESE
 +        {
 +            u32 mode = gSaveBlock1Ptr->trainerHill.mode, i;
 +

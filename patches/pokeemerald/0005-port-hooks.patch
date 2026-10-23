@@ -7859,7 +7859,7 @@ index 09bc25c90b99e98c0097771871daa4384159047c..b718e627d59b5c42e4e2b7575f0095cc
 +
 +    if (item >= ITEM_HM01 && item <= ITEM_HM08)
 +    {
-+        const char *mark = CTR_TEXT("HM", "MO", "CS", "MN", "MO");
++        const char *mark = CTR_TEXT("HM", "MO", "CS", "MN", "MO", "HM");
 +
 +        dest[0] = CHAR_A + (mark[0] - 'A');
 +        dest[1] = CHAR_A + (mark[1] - 'A');

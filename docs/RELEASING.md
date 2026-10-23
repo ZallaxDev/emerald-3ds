@@ -10,6 +10,7 @@ contains a ROM, a data pack or anything extracted from the game.
 | `Emerald3DS-es.3dsx` | the same for the Spanish variant (installed as `Emerald3DS.3dsx`) |
 | `Emerald3DS-fr.3dsx` | the same for the French variant (installed as `Emerald3DS.3dsx`) |
 | `Emerald3DS-it.3dsx` | the same for the Italian variant (installed as `Emerald3DS.3dsx`) |
+| `Emerald3DS-ja.3dsx` | the same for the Japanese variant (installed as `Emerald3DS.3dsx`) |
 | `Emerald3DS-Forwarder.cia` | optional HOME Menu shortcut that starts the installed 3DSX (Luma3DS) |
 | `Emerald3DS-WebPayload.zip` | the web builder (website): payload, builder package, licences, `web-manifest.json` |
 | `web-manifest.json` | the same manifest on its own, read by the website without downloading the payload |
@@ -51,6 +52,7 @@ version.
    | `Emerald3DS.smdh` | listed with the 3DSX |
    | `Emerald3DS-es.3dsx` | Quick Update of the Spanish variant (offered after the local pack check) |
    | `Emerald3DS-fr.3dsx` | Quick Update of the French variant (offered after the local pack check) |
+   | `Emerald3DS-ja.3dsx` | Quick Update of the Japanese variant (offered after the local pack check) |
    | `Emerald3DS-Forwarder.cia` | the HOME Menu forwarder (download and FBI QR code) |
    | `Emerald3DS-vX.Y.Z-Windows.zip` | the Windows builder (not linked by the site) |
    | `SHA256SUMS.txt` | checksums of everything above |
@@ -117,7 +119,8 @@ always attach `web-manifest.json`. Consequences:
 - The direct download is the English `Emerald3DS.3dsx`. Players of another
   language check their own `emerald3ds.pak`: its header names the ROM it was
   built from, the site compares it with that language's `dataAbi` and offers
-  its executable (`Emerald3DS-es.3dsx` or `Emerald3DS-fr.3dsx`, saved as
+  its executable (`Emerald3DS-es.3dsx`, `Emerald3DS-fr.3dsx`, `Emerald3DS-it.3dsx`
+  or `Emerald3DS-ja.3dsx`, saved as
   `Emerald3DS.3dsx`).
 
 ## Languages
@@ -126,30 +129,32 @@ One release covers every language: there is never a release per language.
 The 3DS executable cannot be shared (the game data it links against differs
 in size between languages, so each has its own data ABI), but everything else
 is: `payload/` holds the English executable and recipe plus the voxel
-generators, and `payload/es/` (resp. `payload/fr/`, `payload/it/`) the Spanish (resp.
-French, Italian)
+generators, and `payload/es/` (resp. `payload/fr/`, `payload/it/`,
+`payload/ja/`) the Spanish (resp. French, Italian, Japanese)
 executable and recipe. The builders
 (Windows and web) pick the variant whose recipe was made from the player's ROM;
 `web-manifest.json` describes the English one at its top level and the others
 in `variants` (a site that predates it ignores them and stays English-only).
 
 `build_release.py --spanish-rom <clean BPES ROM> --french-rom <clean BPEF ROM>
---italian-rom <clean BPEI ROM>`
+--italian-rom <clean BPEI ROM> --japanese-rom <clean BPEJ ROM>`
 adds the localized variants: each copies this tree's sources (every file Git
-does not ignore) to `build/release-es` (resp. `build/release-fr`), localizes
-them with `tools/localize_spanish.py` (docs/SPANISH.md) or
-`tools/localize_french.py` (docs/FRENCH.md) or `tools/localize_italian.py`
-(docs/ITALIAN.md), builds the engine there and writes
-its recipe with the symbol names of `build/spanish-reference.s` (resp.
-`build/french-reference.s`). Without either option the release is English-only,
-as before.
+does not ignore) to `build/release-es` (resp. `build/release-fr`,
+`build/release-it`, `build/release-ja`), localizes them with
+`tools/localize_spanish.py` (docs/SPANISH.md), `tools/localize_french.py`
+(docs/FRENCH.md), `tools/localize_italian.py` (docs/ITALIAN.md) or
+`tools/localize_japanese.py` (docs/JAPANESE.md), builds the engine there and
+writes its recipe with the symbol names of `build/spanish-reference.s` (resp.
+`build/french-reference.s`, `build/italian-reference.s`,
+`build/japanese-reference.s`). Without these options the release is
+English-only, as before.
 
 ## Prerequisites (maintainer machine)
 
 - A tree from `tools/bootstrap.py --make` (or the maintainer's workspace).
 - The supported ROM, and, for each localized variant, that language's clean
-  ROM (BPES, BPEF). The recipe generator also needs the ELF of the original
-  game built from the same
+  ROM (BPES, BPEF, BPEI, BPEJ). The recipe generator also needs the ELF of the
+  original game built from the same
   pinned upstream (`make` in the upstream tree's root produces
   `pokeemerald.elf`): its symbol table says
   where each table lives in the ROM. A localized variant uses its own reference
@@ -168,6 +173,7 @@ python tools/build_release.py --version 0.1.0 --rom baserom.gba \
     --gba-elf build/upstream/pokeemerald.elf \
     --spanish-rom esmeralda.gba \
     --french-rom emeraude.gba \
+    --japanese-rom emerald-ja.gba \
     --make "make -j8 PYTHON=python"
 ```
 

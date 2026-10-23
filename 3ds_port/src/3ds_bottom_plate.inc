@@ -1365,7 +1365,6 @@ static int StyledPass(const Font *font, const u8 *str, int x, int y, u16 colour,
 
     for (u16 g; (g = NextGlyph(&str)) != 0xFFFF;)
     {
-        const u16 *base;
         int width;
 
         if (g == 0xFFFE)
@@ -1375,13 +1374,12 @@ static int StyledPass(const Font *font, const u8 *str, int x, int y, u16 colour,
             lineOut = y + font->height + 1 <= sClipY0 || y - 1 >= sClipY1;
             continue;
         }
-        width = font->widths[g] > 16 ? 16 : font->widths[g];
+        width = GlyphWidth(font, g) > 16 ? 16 : GlyphWidth(font, g);
         if (lineOut || x + sOX + width + 1 <= sClipX0 || x + sOX - 1 >= sClipX1)
         {
-            x += font->widths[g];
+            x += GlyphWidth(font, g);
             continue;
         }
-        base = font->glyphs + g * 0x20;
         {
             /* Each row's ink (or shadow) pixels as a mask, pixel px at bit
              * 16 - px; the outline is the ink's spread a pixel each way. */
@@ -1391,8 +1389,8 @@ static int StyledPass(const Font *font, const u8 *str, int x, int y, u16 colour,
 
             for (int row = 0; row < rows; ++row)
             {
-                const u16 *w = base + (row >= 8 ? 0x10 : 0) + (row & 7);
-                u32 m = (PassBits(w[0], pass) << 8 | PassBits(w[8], pass)) & keep;
+                u32 m = (PassBits(GlyphBits(font, g, row, 0), pass) << 8
+                         | PassBits(GlyphBits(font, g, row, 1), pass)) & keep;
 
                 mask[row + 1] = m << 1;
             }
@@ -1415,7 +1413,7 @@ static int StyledPass(const Font *font, const u8 *str, int x, int y, u16 colour,
                     for (u32 m = mask[r]; m; m &= m - 1)
                         Put(x + 16 - __builtin_ctz(m), y + r - 1, pass == 1 ? colour : shadow);
         }
-        x += font->widths[g];
+        x += GlyphWidth(font, g);
     }
     return x;
 }

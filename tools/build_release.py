@@ -9,15 +9,16 @@ Steps (each can be skipped when its output is already there):
 1. `make release` in 3ds_port: dist/Emerald3DS.3dsx and .smdh, engine files only;
 2. the recipe (tools/gen_recipe.py) from the build's staging and the ROM;
 3. the payload: executable, recipe and the voxel generator scripts; with
-   --spanish-rom / --french-rom / --italian-rom also payload/es/ (resp. payload/fr/, payload/it/), that
+   --spanish-rom / --french-rom / --italian-rom / --japanese-rom also payload/es/
+   (resp. payload/fr/, payload/it/, payload/ja/), that
    language's executable and its recipe,
    built from a copy of this tree localized from that ROM (build/release-es);
 4. the standalone builder (PyInstaller, one folder, no UPX);
 5. dist/Emerald3DS-v<version>-Windows.zip with the builder, the payload,
    README.txt and LICENSES/;
 6. the standalone dist/Emerald3DS.3dsx and dist/Emerald3DS.smdh (quick update
-   of the executable when the data ABI did not change; dist/Emerald3DS-es.3dsx
-   for the Spanish variant), and the HOME Menu
+   of the executable when the data ABI did not change; dist/Emerald3DS-es.3dsx,
+   -fr, -it and -ja for the other languages), and the HOME Menu
    forwarder dist/Emerald3DS-Forwarder.cia (3ds_port/forwarder, needs makerom
    and bannertool; --skip-cia leaves it out);
 7. dist/Emerald3DS-WebPayload.zip and dist/web-manifest.json for the web
@@ -147,6 +148,8 @@ def main() -> None:
                     help="clean French (BPEF) ROM: also build the French variant (payload/fr/)")
     ap.add_argument("--italian-rom", type=Path, default=None,
                     help="clean Italian (BPEI) ROM: also build the Italian variant (payload/it/)")
+    ap.add_argument("--japanese-rom", type=Path, default=None,
+                    help="clean Japanese (BPEJ) ROM: also build the Japanese variant (payload/ja/)")
     ap.add_argument("--nm", default=os.environ.get("NM", "arm-none-eabi-nm"))
     ap.add_argument("--make", default=None, help="command that runs make in 3ds_port (default: make)")
     ap.add_argument("--skip-make", action="store_true")
@@ -212,6 +215,9 @@ def main() -> None:
     if args.italian_rom:
         locales.append({"code": "it", "stem": "italian", "rom": args.italian_rom,
                         "script": "localize_italian.py"})
+    if args.japanese_rom:
+        locales.append({"code": "ja", "stem": "japanese", "rom": args.japanese_rom,
+                        "script": "localize_japanese.py"})
     for locale in locales:
         build_localized_variant(args, tag, payload / locale["code"], locale)
 

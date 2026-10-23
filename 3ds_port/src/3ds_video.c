@@ -9995,11 +9995,52 @@ static unsigned DepthPlanes(void)
         static unsigned sticky, stickyKey;
         unsigned key = (display & 0x1f07) | (Reg(8) & 3) << 16 | (Reg(10) & 3) << 18
                      | (Reg(12) & 3) << 20 | (Reg(14) & 3) << 22 | (unsigned)sStage << 24;
+        unsigned used;
 
         if (key != stickyKey) sticky = 0;
         stickyKey = key;
         sticky |= UsedSlots();
-        return BandsFromSlots(sticky, merge);
+        used = sticky;
+        /*
+         * Title screen: the version banner (OBJ priority 0) sits on top of the
+         * Pokémon logo (BG2 priority 1). On the GBA those are one flat composite
+         * — transparent banner texels show the katakana. Stereo depth planes
+         * would put the banner on a nearer surface, so its outline reads as an
+         * opaque plate (worst on Japanese, where エメラルド rests higher on the
+         * logo). Keep those two slots in one plane; clouds and Rayquaza keep
+         * their own depths behind.
+         */
+        if (sStage && CtrTitleScreen_RayquazaBg() >= 0 && sBandCount >= 2)
+        {
+            unsigned logo = (SLOT_OBJ(0) | SLOT_BG(1)) & used;
+            unsigned rest = used & ~logo;
+            unsigned count = 0;
+
+            if (logo)
+                sBandSlots[count++] = logo;
+            if (rest && count < sBandCount)
+            {
+                /* Prefer a middle plane for the clouds (BG priority 2). */
+                unsigned clouds = SLOT_BG(2) & rest;
+
+                if (clouds && count + 1 < sBandCount)
+                {
+                    sBandSlots[count++] = clouds;
+                    rest &= ~clouds;
+                }
+                if (rest)
+                    sBandSlots[count++] = rest | (SLOTS_ALL & ~used);
+                else if (count)
+                    sBandSlots[count - 1] |= SLOTS_ALL & ~used;
+            }
+            else if (count)
+                sBandSlots[count - 1] |= SLOTS_ALL & ~used;
+            else
+                sBandSlots[count++] = SLOTS_ALL;
+            sBandSlots[0] |= (sBandSlots[0] & -sBandSlots[0]) - 1;
+            return count;
+        }
+        return BandsFromSlots(used, merge);
     }
 }
 

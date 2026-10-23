@@ -88,7 +88,7 @@ interface on the bottom screen replaces the START menu. Enable the optional
 | :--- | :--- |
 | **Native 3DS homebrew** | Runs directly on the console's ARM11 using libctru, Citro2D and Citro3D, without an emulator. |
 | **Two screens, one adventure** | The game on top, with a dedicated touch interface below in place of the START menu. |
-| **Four languages** | English, Spanish, French and Italian, each built from your own cartridge of that language: texts, graphics and credits come from your ROM. |
+| **Five languages** | English, Spanish, French, Italian and Japanese (experimental), each built from your own cartridge of that language: texts, graphics and credits come from your ROM. |
 | **Optional voxel overworld** | Modelled buildings, trees, signposts and terrain relief, with adjustable camera angle and zoom, and real stereoscopic 3D on a New 3DS. |
 | **HD battle interface** | Info boxes and text box drawn at the top screen's full resolution; optional 3D battles over the voxel world. |
 | **Follower Pokémon** | Optional: your lead Pokémon walks behind you with its HeartGold/SoulSilver overworld sprite and answers when you talk to it. |
@@ -165,8 +165,9 @@ unmodified dumps are accepted:
 | Spanish | Pokémon Edición Esmeralda (Spain) | BPES |
 | French | Pokémon Version Émeraude (France) | BPEF |
 | Italian | Pokémon Versione Smeraldo (Italy) | BPEI |
+| Japanese (experimental) | Pocket Monsters Emerald (Japan) | BPEJ |
 
-Other languages (German, Japanese) and ROM hacks are not supported.
+Other languages (German) and ROM hacks are not supported.
 
 ### Updating or having trouble?
 
@@ -225,13 +226,16 @@ python tools/bootstrap.py --make --spanish-rom esmeralda.gba  # Spanish build
 python tools/bootstrap.py --make --french-rom emeraude.gba    # French build
 python tools/bootstrap.py --make --italian-rom smeraldo.gba   # Italian build
 python tools/bootstrap.py --make --port-lang pt_br             # Brazilian Portuguese build
+python tools/bootstrap.py --make --japanese-rom emerald-ja.gba # Japanese build
 ```
 
-The Spanish, French and Italian builds take their texts and graphics from your own
-clean Spanish (BPES), French (BPEF) or Italian (BPEI) ROM; see
+The Spanish, French, Italian and Japanese builds take their texts and graphics
+from your own clean Spanish (BPES), French (BPEF), Italian (BPEI) or Japanese
+(BPEJ) ROM; see
 [Pokémon Esmeralda en español](docs/SPANISH.md),
-[Pokémon Émeraude en français](docs/FRENCH.md) and
-[Pokémon Smeraldo in italiano](docs/ITALIAN.md).
+[Pokémon Émeraude en français](docs/FRENCH.md),
+[Pokémon Smeraldo in italiano](docs/ITALIAN.md) and
+[ポケットモンスター エメラルド（日本語版）](docs/JAPANESE.md).
 
 Start with the [development guide](docs/DEVELOPMENT.md) for requirements,
 the development loop, loose data, data packs and host tests.
@@ -248,6 +252,7 @@ the development loop, loose data, data packs and host tests.
 | [French build](docs/FRENCH.md) | Playing in French with your own Pokémon Émeraude (France) ROM. |
 | [Italian build](docs/ITALIAN.md) | Playing in Italian with your own Pokémon Versione Smeraldo (Italy) ROM. |
 | [Portuguese build](docs/PORTUGUESE.md) | The whole game in Brazilian Portuguese, from your own English ROM ([leia em português](README.pt-BR.md)). |
+| [Japanese build](docs/JAPANESE.md) | Playing in Japanese with your own Pocket Monsters Emerald (Japan) ROM (experimental). |
 | [Architecture](docs/ARCHITECTURE.md) | How the engine and the 3DS backend fit together. |
 | [Asset pipeline](docs/ASSET_PIPELINE.md) | How game data is prepared for the port. |
 | [Releasing](docs/RELEASING.md) | Building and packaging a release. |

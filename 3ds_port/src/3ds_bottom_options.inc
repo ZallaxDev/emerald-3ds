@@ -43,24 +43,24 @@ typedef struct
 #define GROUP(name, rows) {name, rows, ARRAY_COUNT(rows)}
 
 static const OptRowDef sRowsUi[] = {
-    GAME_ROW(OPT_TEXT_SPEED, CTR_TEXT("TEXT SPEED", "VELOC. TEXTO", "VIT. TEXTE", "VEL. TESTO", "VELOC. TEXTO")),
-    GAME_ROW(OPT_FRAME, CTR_TEXT("FRAME", "MARCO", "CADRE", "CORNICE", "MOLDURA")),
-    GAME_ROW(OPT_BUTTON_MODE, CTR_TEXT("BUTTON MODE", "MODO BOTONES", "MODE TOUCHES", "MODO TASTI", "MODO BOTÕES")),
-    GAME_ROW(OPT_SOUND, CTR_TEXT("SOUND", "SONIDO", "SON", "AUDIO", "SOM")),
+    GAME_ROW(OPT_TEXT_SPEED, CTR_TEXT("TEXT SPEED", "VELOC. TEXTO", "VIT. TEXTE", "VEL. TESTO", "VELOC. TEXTO", "はなしの はやさ")),
+    GAME_ROW(OPT_FRAME, CTR_TEXT("FRAME", "MARCO", "CADRE", "CORNICE", "MOLDURA", "ウインドウ")),
+    GAME_ROW(OPT_BUTTON_MODE, CTR_TEXT("BUTTON MODE", "MODO BOTONES", "MODE TOUCHES", "MODO TASTI", "MODO BOTÕES", "ボタンモード")),
+    GAME_ROW(OPT_SOUND, CTR_TEXT("SOUND", "SONIDO", "SON", "AUDIO", "SOM", "サウンド")),
     EXTRA_ROW("classic_menus"),
 };
 static const OptRowDef sRowsSystem[] = {
     EXTRA_ROW("speed"),
     EXTRA_ROW("audio_clock"),
-    GAME_ROW(OPT_FPS, CTR_TEXT("SHOW FPS", "MOSTRAR FPS", "AFFICH. FPS", "MOSTRA FPS", "MOSTRAR FPS")),
+    GAME_ROW(OPT_FPS, CTR_TEXT("SHOW FPS", "MOSTRAR FPS", "AFFICH. FPS", "MOSTRA FPS", "MOSTRAR FPS", "FPS ひょうじ")),
 };
 static const OptRowDef sRows3d[] = {
     GAME_ROW(OPT_VOXEL, "VOXEL 3D"),
     EXTRA_ROW("voxel_stereo"),
     EXTRA_ROW("voxel_depth"),
-    GAME_ROW(OPT_VOXEL_PITCH, CTR_TEXT("3D ANGLE", "ÁNGULO 3D", "ANGLE 3D", "ANGOLO 3D", "ÂNGULO 3D")),
-    GAME_ROW(OPT_VOXEL_ZOOM, CTR_TEXT("3D ZOOM", "ZOOM 3D", "ZOOM 3D", "ZOOM 3D", "ZOOM 3D")),
-    GAME_ROW(OPT_VOXEL_BLUR, CTR_TEXT("3D BLUR", "DESENFOQUE 3D", "FLOU 3D", "SFOC. 3D", "DESFOQUE 3D")),
+    GAME_ROW(OPT_VOXEL_PITCH, CTR_TEXT("3D ANGLE", "ÁNGULO 3D", "ANGLE 3D", "ANGOLO 3D", "ÂNGULO 3D", "3D アングル")),
+    GAME_ROW(OPT_VOXEL_ZOOM, CTR_TEXT("3D ZOOM", "ZOOM 3D", "ZOOM 3D", "ZOOM 3D", "ZOOM 3D", "3D ズーム")),
+    GAME_ROW(OPT_VOXEL_BLUR, CTR_TEXT("3D BLUR", "DESENFOQUE 3D", "FLOU 3D", "SFOC. 3D", "DESFOQUE 3D", "3D ぼかし")),
 };
 static const OptRowDef sRowsField[] = {
     EXTRA_ROW("visible_wild"),
@@ -82,9 +82,9 @@ static const OptRowDef sRowsClock[] = {
     EXTRA_ROW("clock_sync"),
 };
 static const OptRowDef sRowsScene[] = {
-    GAME_ROW(OPT_BATTLE_SCENE, CTR_TEXT("BATTLE SCENE", "ANIMACIÓN", "ANIM. COMBAT", "ANIMAZIONE", "ANIMAÇÃO")),
-    GAME_ROW(OPT_BATTLE_STYLE, CTR_TEXT("BATTLE STYLE", "ESTILO", "STYLE", "STILE", "ESTILO")),
-    GAME_ROW(OPT_VOXEL_BATTLE, CTR_TEXT("3D BATTLE", "COMBATE 3D", "COMBAT 3D", "BATTAGLIA 3D", "BATALHA 3D")),
+    GAME_ROW(OPT_BATTLE_SCENE, CTR_TEXT("BATTLE SCENE", "ANIMACIÓN", "ANIM. COMBAT", "ANIMAZIONE", "ANIMAÇÃO", "せんとうアニメ")),
+    GAME_ROW(OPT_BATTLE_STYLE, CTR_TEXT("BATTLE STYLE", "ESTILO", "STYLE", "STILE", "ESTILO", "しあいの ルール")),
+    GAME_ROW(OPT_VOXEL_BATTLE, CTR_TEXT("3D BATTLE", "COMBATE 3D", "COMBAT 3D", "BATTAGLIA 3D", "BATALHA 3D", "3D バトル")),
 };
 static const OptRowDef sRowsRules[] = {
     EXTRA_ROW("move_split"),
@@ -98,7 +98,7 @@ static const OptRowDef sRowsExp[] = {
 };
 static const OptRowDef sRowsNuzlocke[] = {
     EXTRA_ROW(CTR_NUZLOCKE_KEY),
-    {ROW_INFO, 0, NULL, CTR_TEXT("MENU IN THE BAR", "MENÚ EN LA BARRA", "MENU : LA BARRE", "MENU NELLA BARRA", "MENU NA BARRA")},
+    {ROW_INFO, 0, NULL, CTR_TEXT("MENU IN THE BAR", "MENÚ EN LA BARRA", "MENU : LA BARRE", "MENU NELLA BARRA", "MENU NA BARRA", "バーに メニュー")},
 };
 static const OptRowDef sRowsRandom[] = {
     EXTRA_ROW("rand_wild"),
@@ -130,38 +130,38 @@ static const OptRowDef sRowsItems[] = {
 };
 
 static const OptGroupDef sGroupsGeneral[] = {
-    GROUP(CTR_TEXT("INTERFACE", "INTERFAZ", "INTERFACE", "INTERFACCIA", "INTERFACE"), sRowsUi),
-    GROUP(CTR_TEXT("SYSTEM", "SISTEMA", "SYSTÈME", "SISTEMA", "SISTEMA"), sRowsSystem),
+    GROUP(CTR_TEXT("INTERFACE", "INTERFAZ", "INTERFACE", "INTERFACCIA", "INTERFACE", "がめん"), sRowsUi),
+    GROUP(CTR_TEXT("SYSTEM", "SISTEMA", "SYSTÈME", "SISTEMA", "SISTEMA", "システム"), sRowsSystem),
 };
 static const OptGroupDef sGroupsWorld[] = {
     GROUP("3D", sRows3d),
-    GROUP(CTR_TEXT("FIELD", "CAMPO", "TERRAIN", "CAMPO", "CAMPO"), sRowsField),
-    GROUP(CTR_TEXT("HELPERS", "AYUDAS", "AIDES", "AIUTI", "AJUDAS"), sRowsHelpers),
-    GROUP(CTR_TEXT("CLOCK", "RELOJ", "HORLOGE", "OROLOGIO", "RELÓGIO"), sRowsClock),
+    GROUP(CTR_TEXT("FIELD", "CAMPO", "TERRAIN", "CAMPO", "CAMPO", "フィールド"), sRowsField),
+    GROUP(CTR_TEXT("HELPERS", "AYUDAS", "AIDES", "AIUTI", "AJUDAS", "べんり"), sRowsHelpers),
+    GROUP(CTR_TEXT("CLOCK", "RELOJ", "HORLOGE", "OROLOGIO", "RELÓGIO", "とけい"), sRowsClock),
 };
 static const OptGroupDef sGroupsBattle[] = {
-    GROUP(CTR_TEXT("SCENE", "ESCENA", "SCÈNE", "SCENA", "CENA"), sRowsScene),
-    GROUP(CTR_TEXT("RULES", "REGLAS", "RÈGLES", "REGOLE", "REGRAS"), sRowsRules),
-    GROUP(CTR_TEXT("EXP", "EXP", "EXP.", "ESP.", "EXP"), sRowsExp),
+    GROUP(CTR_TEXT("SCENE", "ESCENA", "SCÈNE", "SCENA", "CENA", "えんしゅつ"), sRowsScene),
+    GROUP(CTR_TEXT("RULES", "REGLAS", "RÈGLES", "REGOLE", "REGRAS", "ルール"), sRowsRules),
+    GROUP(CTR_TEXT("EXP", "EXP", "EXP.", "ESP.", "EXP", "けいけんち"), sRowsExp),
 };
 static const OptGroupDef sGroupsModes[] = {
     GROUP("NUZLOCKE", sRowsNuzlocke),
-    GROUP(CTR_TEXT("RANDOMIZER", "ALEATORIO", "ALÉATOIRE", "CASUALE", "ALEATÓRIO"), sRowsRandom),
+    GROUP(CTR_TEXT("RANDOMIZER", "ALEATORIO", "ALÉATOIRE", "CASUALE", "ALEATÓRIO", "ランダム"), sRowsRandom),
 };
 static const OptGroupDef sGroupsCheats[] = {
-    GROUP(CTR_TEXT("CATCHING", "CAPTURA", "CAPTURE", "CATTURA", "CAPTURA"), sRowsCatch),
-    GROUP(CTR_TEXT("PERKS", "VENTAJAS", "BONUS", "VANTAGGI", "VANTAGENS"), sRowsPerks),
+    GROUP(CTR_TEXT("CATCHING", "CAPTURA", "CAPTURE", "CATTURA", "CAPTURA", "ほかく"), sRowsCatch),
+    GROUP(CTR_TEXT("PERKS", "VENTAJAS", "BONUS", "VANTAGGI", "VANTAGENS", "とくてん"), sRowsPerks),
     GROUP("POKéDEX", sRowsDex),
-    GROUP(CTR_TEXT("ITEMS", "OBJETOS", "OBJETS", "OGGETTI", "ITENS"), sRowsItems),
+    GROUP(CTR_TEXT("ITEMS", "OBJETOS", "OBJETS", "OGGETTI", "ITENS", "どうぐ"), sRowsItems),
 };
 
 enum { CAT_GENERAL, CAT_WORLD, CAT_BATTLE, CAT_MODES, CAT_CHEATS, CAT_COUNT };
 static const OptCatDef sCats[CAT_COUNT] = {
-    {CTR_TEXT("GENERAL", "GENERAL", "GÉNÉRAL", "GENERALE", "GERAL"), sGroupsGeneral, ARRAY_COUNT(sGroupsGeneral)},
-    {CTR_TEXT("WORLD", "MUNDO", "MONDE", "MONDO", "MUNDO"), sGroupsWorld, ARRAY_COUNT(sGroupsWorld)},
-    {CTR_TEXT("BATTLE", "COMBATE", "COMBAT", "LOTTA", "BATALHA"), sGroupsBattle, ARRAY_COUNT(sGroupsBattle)},
-    {CTR_TEXT("MODES", "PARTIDA", "PARTIE", "PARTITA", "PARTIDA"), sGroupsModes, ARRAY_COUNT(sGroupsModes)},
-    {CTR_TEXT("CHEATS", "TRUCOS", "ASTUCES", "TRUCCHI", "TRAPAÇAS"), sGroupsCheats, ARRAY_COUNT(sGroupsCheats)},
+    {CTR_TEXT("GENERAL", "GENERAL", "GÉNÉRAL", "GENERALE", "GERAL", "ぜんぱん"), sGroupsGeneral, ARRAY_COUNT(sGroupsGeneral)},
+    {CTR_TEXT("WORLD", "MUNDO", "MONDE", "MONDO", "MUNDO", "せかい"), sGroupsWorld, ARRAY_COUNT(sGroupsWorld)},
+    {CTR_TEXT("BATTLE", "COMBATE", "COMBAT", "LOTTA", "BATALHA", "バトル"), sGroupsBattle, ARRAY_COUNT(sGroupsBattle)},
+    {CTR_TEXT("MODES", "PARTIDA", "PARTIE", "PARTITA", "PARTIDA", "モード"), sGroupsModes, ARRAY_COUNT(sGroupsModes)},
+    {CTR_TEXT("CHEATS", "TRUCOS", "ASTUCES", "TRUCCHI", "TRAPAÇAS", "チート"), sGroupsCheats, ARRAY_COUNT(sGroupsCheats)},
 };
 
 #define OPT_GROUPS_MAX 4
@@ -332,12 +332,12 @@ static const u8 *OptionValue(int row, u8 value)
 static const u8 *ActionLabel2(const OptRow *r)
 {
     static const struct { const char *key, *label; } labels[] = {
-        {"clock_sync", CTR_TEXT("SYNC", "SINCR.", "SYNCHRO", "SINCR.", "SINCR.")},
-        {"rand_new_seed", CTR_TEXT("NEW", "NUEVA", "NOUVELLE", "NUOVO", "NOVA")},
-        {"dex_hoenn", CTR_TEXT("SET", "ACTIVAR", "ACTIVER", "ATTIVA", "ATIVAR")},
-        {"dex_national_on", CTR_TEXT("SET", "ACTIVAR", "ACTIVER", "ATTIVA", "ATIVAR")},
-        {"dex_national", CTR_TEXT("SET", "ACTIVAR", "ACTIVER", "ATTIVA", "ATIVAR")},
-        {"give_now", CTR_TEXT("GIVE", "DAR", "DONNER", "DAI", "DAR")},
+        {"clock_sync", CTR_TEXT("SYNC", "SINCR.", "SYNCHRO", "SINCR.", "SINCR.", "あわせる")},
+        {"rand_new_seed", CTR_TEXT("NEW", "NUEVA", "NOUVELLE", "NUOVO", "NOVA", "あたらしく")},
+        {"dex_hoenn", CTR_TEXT("SET", "ACTIVAR", "ACTIVER", "ATTIVA", "ATIVAR", "せってい")},
+        {"dex_national_on", CTR_TEXT("SET", "ACTIVAR", "ACTIVER", "ATTIVA", "ATIVAR", "せってい")},
+        {"dex_national", CTR_TEXT("SET", "ACTIVAR", "ACTIVER", "ATTIVA", "ATIVAR", "せってい")},
+        {"give_now", CTR_TEXT("GIVE", "DAR", "DONNER", "DAI", "DAR", "もらう")},
     };
 
     if (r->extra->text)

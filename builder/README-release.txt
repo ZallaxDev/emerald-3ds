@@ -5,18 +5,21 @@ A native Nintendo 3DS port of Pokémon Emerald that uses both screens.
 
 This download does NOT contain the game. You need your own dump of your own
 Pokémon Emerald (USA, Europe), Pokémon Esmeralda (Spain), Pokémon Émeraude
-(France) or Pokémon Smeraldo (Italy) cartridge; the game is built in that
-ROM's language. The builder reads that ROM on this computer and generates the
-game's data pack from it. The ROM is not uploaded, copied or modified. An
-Internet connection is only used to download the optional follower sprites.
+(France), Pokémon Smeraldo (Italy) or Pocket Monsters Emerald (Japan)
+cartridge; the game is built in that ROM's language. The builder reads that
+ROM on this computer and generates the game's data pack from it. The ROM is
+not uploaded, copied or modified. An Internet connection is only used to
+download the optional follower sprites.
 
 What you need
 -------------
 - A Nintendo 3DS / 2DS family console with custom firmware (Luma3DS) and the
   Homebrew Launcher.
 - A clean ROM of Pokémon Emerald (USA, Europe),
-  SHA-1 f3ae088181bf583e55daf962a92bb46f4f1d07b7, or of Pokémon Esmeralda
-  (Spain), SHA-1 fe1558a3dcb0360ab558969e09b690888b846dd9.
+  SHA-1 f3ae088181bf583e55daf962a92bb46f4f1d07b7, of Pokémon Esmeralda
+  (Spain), SHA-1 fe1558a3dcb0360ab558969e09b690888b846dd9, or of Pocket
+  Monsters Emerald (Japan), SHA-1 d7cf8f156ba9c455d164e1ea780a6bf1945465c2
+  (the Japanese game is experimental).
 - The console's SD card in this computer (or any folder, to copy by hand).
 
 Install
