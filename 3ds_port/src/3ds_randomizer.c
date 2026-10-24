@@ -30,9 +30,9 @@ _Static_assert(NATIONAL_DEX_COUNT == CTR_RANDOMIZER_NATIONAL_COUNT, "national de
 
 static const char *const sKindKeys[CTR_RANDOMIZE_KINDS] = {"rand_wild", "rand_starters", "rand_trainers"};
 
-const char *const gCtrRandomizerOpenText[1] = {CTR_TEXT("TAP TO OPEN", "TOCA PARA ABRIR", "OUVRIR", "APRI", "TOQUE P/ ABRIR")};
-const char *const gCtrRandomizerBackText[1] = {CTR_TEXT("BACK TO CHEATS", "VOLVER A TRUCOS", "RETOUR", "INDIETRO", "VOLTAR")};
-const char *const gCtrRandomizerNewSeedText[1] = {CTR_TEXT("TAP FOR NEW", "TOCA PARA NUEVA", "NOUVELLE", "NUOVO", "TOQUE P/ NOVA")};
+const char *const gCtrRandomizerOpenText[1] = {CTR_TEXT("TAP TO OPEN", "TOCA PARA ABRIR", "OUVRIR", "APRI", "TOQUE P/ ABRIR", "ÖFFNEN")};
+const char *const gCtrRandomizerBackText[1] = {CTR_TEXT("BACK TO CHEATS", "VOLVER A TRUCOS", "RETOUR", "INDIETRO", "VOLTAR", "ZURÜCK")};
+const char *const gCtrRandomizerNewSeedText[1] = {CTR_TEXT("TAP FOR NEW", "TOCA PARA NUEVA", "NOUVELLE", "NUOVO", "TOQUE P/ NOVA", "NEU: TIPPEN")};
 
 static CtrRandomizerTable sTable;
 static bool sTableBuilt;

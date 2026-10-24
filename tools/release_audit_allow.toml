@@ -7,6 +7,7 @@ paths = [
     "tools/locales/spanish-symbols.s.gz",
     "tools/locales/french-symbols.s.gz",
     "tools/locales/italian-symbols.s.gz",
+    "tools/locales/german-symbols.s.gz",
     "Emerald3DS-v*-Windows/Emerald3DS-Builder.exe",
     "Emerald3DS-v*-Windows/emerald3ds-builder-cli.exe",
     "Emerald3DS-v*-Windows/payload/Emerald3DS.3dsx",

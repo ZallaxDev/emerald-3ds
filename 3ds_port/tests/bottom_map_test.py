@@ -86,7 +86,7 @@ typedef bool bool8;
 #define MAX_MON_MOVES 4
 #define ITEM_NONE 0
 #define MAPSEC_NONE 213
-#define CTR_TEXT(english, spanish, french, italian, portuguese) spanish
+#define CTR_TEXT(english, spanish, french, italian, portuguese, german) spanish
 #define SPECIES_NONE 0
 #define FLAG_GET_SEEN 0
 #define VAR_REPEL_STEP_COUNT 0x4021

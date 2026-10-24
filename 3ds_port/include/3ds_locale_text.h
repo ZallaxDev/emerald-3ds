@@ -66,8 +66,13 @@ static inline uint8_t CtrLocale_Glyph(uint32_t c)
     case 0xf2: return 0x22;
     case 0xd1: return 0x14;
     case 0xd2: return 0x0D;
-    case 0xfc: return 0xF6;
+    case 0xc4: return 0xF1;
+    case 0xd6: return 0xF2;
     case 0xdc: return 0xF3;
+    case 0xe4: return 0xF4;
+    case 0xf6: return 0xF5;
+    case 0xfc: return 0xF6;
+    case 0xdf: return 0x15;
     case 0xa1: return 0x52;
     case 0xbf: return 0x51;
     /* Ã Õ ã õ: the codes the Portuguese build gives them (patch 0057) and

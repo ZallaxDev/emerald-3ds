@@ -202,12 +202,12 @@ static const u8 *SectionName(int screen)
 {
     switch (screen)
     {
-    case SCR_MAP: return Ascii(CTR_TEXT("MAP", "MAPA", "CARTE", "MAPPA", "MAPA"));
+    case SCR_MAP: return Ascii(CTR_TEXT("MAP", "MAPA", "CARTE", "MAPPA", "MAPA", "KARTE"));
     case SCR_POKEDEX: return gText_MenuPokedex;
     case SCR_POKEMON: return gText_MenuPokemon;
     case SCR_BAG: return gText_MenuBag;
     case SCR_POKENAV: return gText_MenuPokenav;
-    case SCR_CARD: return Ascii(CTR_TEXT("TRAINER CARD", "FICHA ENTREN.", "CARTE DRESSEUR", "SCHEDA ALLEN.", "CARTÃO TREIN."));
+    case SCR_CARD: return Ascii(CTR_TEXT("TRAINER CARD", "FICHA ENTREN.", "CARTE DRESSEUR", "SCHEDA ALLEN.", "CARTÃO TREIN.", "TRAINERPASS"));
     case SCR_SAVE: return gText_MenuSave;
     case SCR_OPTION: return gText_MenuOption;
     case SCR_NUZLOCKE: return Ascii("NUZLOCKE");

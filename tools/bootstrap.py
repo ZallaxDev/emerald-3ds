@@ -8,6 +8,7 @@
     python tools/bootstrap.py --make --french-rom emeraude.gba     # French (BPEF) build
     python tools/bootstrap.py --make --italian-rom smeraldo.gba    # Italian (BPEI) build
     python tools/bootstrap.py --make --port-lang pt_br   # Brazilian Portuguese over the English game
+    python tools/bootstrap.py --make --german-rom smaragd.gba      # German (BPED) build
 
 1. Reads upstream.lock and fetches exactly that commit of pret/pokeemerald into
    build/upstream (a shallow fetch of one commit).
@@ -19,9 +20,9 @@
    includes (`make generated`) and the 3DSX (`make -C 3ds_port`). Run it from
    a shell where devkitPro, a host compiler and Python are available (on
    Windows, devkitPro's MSYS2 shell with MinGW64 on PATH).
-5. With --spanish-rom / --french-rom / --italian-rom: after the generated
+5. With --spanish-rom / --french-rom / --italian-rom / --german-rom: after the generated
    includes, tools/localize_spanish.py (docs/SPANISH.md), tools/localize_french.py
-   or tools/localize_italian.py stages the texts and graphics of that language
+   tools/localize_italian.py or tools/localize_german.py stages the texts and graphics of that language
    from the player's clean ROM.
    Switching language back and forth resets the tree.
 6. With --port-lang pt_br: the port's own interface (bottom screen labels,
@@ -88,12 +89,13 @@ def main() -> int:
     ap.add_argument("--italian-rom", type=Path, help="stage the Italian data from a clean BPEI ROM")
     ap.add_argument("--port-lang", choices=["en", "pt_br"], default="en",
                     help="language of the port's own interface (PORT_LANG=)")
+    ap.add_argument("--german-rom", type=Path, help="stage the German data from a clean BPED ROM")
     ap.add_argument("--make", action="store_true", help="build the tools and the 3DSX afterwards")
     ap.add_argument("-j", "--jobs", type=int, default=4)
     ap.add_argument("--python", default=sys.executable, help="Python the build calls (PYTHON=)")
     args = ap.parse_args()
-    if args.port_lang == "pt_br" and (args.spanish_rom or args.french_rom or args.italian_rom):
-        ap.error("--port-lang pt_br goes over the English game, not the Spanish, French or Italian one")
+    if args.port_lang == "pt_br" and (args.spanish_rom or args.french_rom or args.italian_rom or args.german_rom):
+        ap.error("--port-lang pt_br goes over the English game, not the Spanish, French, Italian or German one")
 
     lock = tomllib.loads((ROOT / "upstream.lock").read_text(encoding="utf-8"))
     repo, commit = lock["pokeemerald"]["repository"], lock["pokeemerald"]["commit"]
@@ -107,6 +109,8 @@ def main() -> int:
         locale = ("french", args.french_rom, "localize_french.py", "french.json.gz")
     elif args.italian_rom:
         locale = ("italian", args.italian_rom, "localize_italian.py", "italian.json.gz")
+    elif args.german_rom:
+        locale = ("german", args.german_rom, "localize_german.py", "german.json.gz")
     portuguese = args.port_lang == "pt_br"
     patches = sorted((ROOT / "patches" / "pokeemerald").glob("*.patch"))
     marker = tree / ".emerald3ds-patches"
@@ -132,7 +136,7 @@ def main() -> int:
             import gzip
             import json
             manifest_name = {"BPEF": "french.json.gz", "BPES": "spanish.json.gz",
-                             "BPEI": "italian.json.gz"}.get(previous_name.split()[0]
+                             "BPEI": "italian.json.gz", "BPED": "german.json.gz"}.get(previous_name.split()[0]
                                                            if previous_name else "", "spanish.json.gz")
             manifest = json.loads(gzip.decompress((ROOT / "tools/locales" / manifest_name).read_bytes()))
             for relative, _, _ in manifest["graphics"]:

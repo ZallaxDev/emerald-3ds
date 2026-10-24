@@ -1,0 +1,2056 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: German layout, units, keyboard and grammar
+Applies after 0079-rng-seeding.patch; apply with tools/bootstrap.py.
+
+The German variant (BPED) as the retail German ROM lays it out: wider windows
+for the longer labels (battle, bag, berry tag, PokéNav lists, Battle Frontier),
+metric Pokédex units with a decimal comma, a nine-column naming keyboard with
+umlauts, the contest title in one piece, the German "ENDE" tilemap and credits
+timing, trainer classes named by gender, and phrases built around a name
+("{STR_VAR_1}s ...") instead of appended to it. The layout values follow the
+pokeemerald-german decomp; strings only the German ROM has are empty here and
+filled in from the player's ROM by tools/localize_german.py. The port's own
+messages get German wording, as the French and Italian ones do.
+
+--- a/data/scripts/cable_club.inc
++++ b/data/scripts/cable_club.inc
+@@ -1022,6 +1022,19 @@ CableClub_Text_LocalOtherBuild:
+ CableClub_Text_LocalFailed:
+ 	.string "Impossibile avviare la connessione\n"
+ 	.string "wireless. È attiva?$"
++#elif GAME_LANGUAGE == LANGUAGE_GERMAN
++CableClub_Text_LocalLooking:
++	.string "Suche nach Spielern in der Nähe…$"
++
++CableClub_Text_LocalOtherBuild:
++	.string "Der Spieler in der Nähe hat eine\n"
++	.string "andere Version des Spiels.\p"
++	.string "Beide Konsolen brauchen dieselbe\n"
++	.string "Version, um zusammen zu spielen.$"
++
++CableClub_Text_LocalFailed:
++	.string "Die Drahtlosverbindung konnte\n"
++	.string "nicht starten. Ist sie aktiv?$"
+ #else
+ CableClub_Text_LocalLooking:
+ 	.string "Looking for other players nearby…$"
+--- a/include/battle_tower.h
++++ b/include/battle_tower.h
+@@ -85,4 +85,8 @@ u8 FacilityClassToGraphicsId(u8 facilityClass);
+ bool32 ValidateBattleTowerRecord(u8 recordId); // unused
+ void TrySetLinkBattleTowerEnemyPartyLevel(void);
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++bool8 IsFrontierTrainerFemale(u16 trainerId);
++#endif
++
+ #endif //GUARD_BATTLE_TOWER_H
+--- a/include/international_string_util.h
++++ b/include/international_string_util.h
+@@ -20,5 +20,9 @@ void ConvertInternationalPlayerNameStripChar(u8 *str, u8 removeChar);
+ void ConvertInternationalContestantName(u8 *str);
+ int GetNicknameLanguage(u8 *str);
+ void FillWindowTilesByRow(int windowId, int columnStart, int rowStart, int numFillTiles, int numRows);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++u8 *StringAppendWithPlaceholder(u8 *dest, const u8 *src, u8 *placeholderStr);
++const u8 *GetTrainerClassNameGenderSpecific(s32 trainerClassId, u32 trainerGender, const u8 *trainerName);
++#endif
+ 
+ #endif // GUARD_INTERNATIONAL_STRING_UTIL_H
+--- a/src/battle_bg.c
++++ b/src/battle_bg.c
+@@ -166,7 +166,11 @@ static const struct WindowTemplate sStandardBattleWindowTemplates[] =
+         .bg = 0,
+         .tilemapLeft = 2,
+         .tilemapTop = 15,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .width = 27,
++#else
+         .width = 26,
++#endif
+         .height = 4,
+         .paletteNum = 0,
+         .baseBlock = 0x0090,
+@@ -272,9 +276,17 @@ static const struct WindowTemplate sStandardBattleWindowTemplates[] =
+     },
+     [B_WIN_YESNO] = {
+         .bg = 0,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .tilemapLeft = 25,
++#else
+         .tilemapLeft = 26,
++#endif
+         .tilemapTop = 9,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .width = 4,
++#else
+         .width = 3,
++#endif
+         .height = 4,
+         .paletteNum = 5,
+         .baseBlock = 0x0100,
+@@ -387,7 +399,11 @@ static const struct WindowTemplate sBattleArenaWindowTemplates[] =
+         .bg = 0,
+         .tilemapLeft = 2,
+         .tilemapTop = 15,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .width = 27,
++#else
+         .width = 26,
++#endif
+         .height = 4,
+         .paletteNum = 0,
+         .baseBlock = 0x0090,
+@@ -493,9 +509,17 @@ static const struct WindowTemplate sBattleArenaWindowTemplates[] =
+     },
+     [B_WIN_YESNO] = {
+         .bg = 0,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .tilemapLeft = 25,
++#else
+         .tilemapLeft = 26,
++#endif
+         .tilemapTop = 9,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .width = 4,
++#else
+         .width = 3,
++#endif
+         .height = 4,
+         .paletteNum = 5,
+         .baseBlock = 0x0100,
+@@ -585,7 +609,11 @@ static const struct WindowTemplate sBattleArenaWindowTemplates[] =
+         .bg = 0,
+         .tilemapLeft = 2,
+         .tilemapTop = 15,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .width = 27,
++#else
+         .width = 26,
++#endif
+         .height = 4,
+         .paletteNum = 7,
+         .baseBlock = 0x0090,
+--- a/src/battle_dome.c
++++ b/src/battle_dome.c
+@@ -4315,8 +4315,15 @@ static u8 Task_GetInfoCardInput(u8 taskId)
+ 
+ static void DisplayTrainerInfoOnCard(u8 flags, u8 trainerTourneyId)
+ {
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    const u8 *trClassName;
++#endif
+     struct TextPrinterTemplate textPrinter;
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    int i, j, k, trGender;
++#else
+     int i, j, k;
++#endif
+     int trainerId = 0;
+     u8 nature = 0;
+     int arrId = 0;
+@@ -4399,14 +4406,32 @@ static void DisplayTrainerInfoOnCard(u8 flags, u8 trainerTourneyId)
+     // Get class and trainer name
+     i = 0;
+     if (trainerId == TRAINER_PLAYER)
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        j = gFacilityClassToTrainerClass[FACILITY_CLASS_BRENDAN], trGender = gSaveBlock2Ptr->playerGender;
++#else
+         j = gFacilityClassToTrainerClass[FACILITY_CLASS_BRENDAN];
++#endif
+     else if (trainerId == TRAINER_FRONTIER_BRAIN)
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        j = GetDomeBrainTrainerClass(), trGender = -1;
++#else
+         j = GetDomeBrainTrainerClass();
++#endif
+     else
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        j = GetFrontierOpponentClass(trainerId), trGender = IsFrontierTrainerFemale(trainerId);
++#else
+         j = GetFrontierOpponentClass(trainerId);
++#endif
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    trClassName = GetTrainerClassNameGenderSpecific(j, trGender, NULL);
++    for (; *trClassName != EOS; trClassName++, i++)
++        gStringVar1[i] = *trClassName;
++#else
+     for (;gTrainerClassNames[j][i] != EOS; i++)
+         gStringVar1[i] = gTrainerClassNames[j][i];
++#endif
+     gStringVar1[i] = CHAR_SPACE;
+     gStringVar1[i + 1] = EOS;
+ 
+--- a/src/battle_message.c
++++ b/src/battle_message.c
+@@ -1,4 +1,5 @@
+ #include "global.h"
++#include "malloc.h"
+ #include "battle.h"
+ #include "battle_anim.h"
+ #include "battle_controllers.h"
+@@ -63,6 +64,9 @@ static const u8 sText_PkmnTeamGainedEXP[] = _("Le reste de votre équipe\ngagne
+ // Italian wording of the port's own message: the retail Italian ROM has no
+ // equivalent line (the French one is authored the same way).
+ static const u8 sText_PkmnTeamGainedEXP[] = _("Il resto della squadra\nriceve punti ESP.!\p");
++#elif defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++// German wording of the port's own message (the retail ROM has none).
++static const u8 sText_PkmnTeamGainedEXP[] = _("Der Rest deines Teams erhält\nE.-Punkte!\p");
+ #else
+ static const u8 sText_PkmnTeamGainedEXP[] = _("The rest of your team gained\nEXP. Points!\p");
+ #endif
+@@ -1345,7 +1349,7 @@ static const u8 sText_ApostropheS[] = _("'s");
+ 
+ // For displaying names of invalid moves.
+ // This is large enough that the text for TYPE_ELECTRIC will exceed TEXT_BUFF_ARRAY_COUNT.
+-#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || CTR_LANG_PT_BR)
++#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || GAME_LANGUAGE == LANGUAGE_GERMAN || CTR_LANG_PT_BR)
+ static const u8 sATypeMove_Table[NUMBER_OF_MON_TYPES][22] =
+ #else
+ static const u8 sATypeMove_Table[NUMBER_OF_MON_TYPES][17] =
+@@ -1984,6 +1988,10 @@ void BufferStringBattle(u16 stringID)
+ {
+     s32 i;
+     const u8 *stringPtr = NULL;
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    u32 size;
++    u8 *txtBuff;
++#endif
+ 
+     gBattleMsgDataPtr = (struct BattleMsgData *)(&gBattleBufferA[gActiveBattler][4]);
+     gLastUsedItem = gBattleMsgDataPtr->lastItem;
+@@ -2276,7 +2284,15 @@ void BufferStringBattle(u16 stringID)
+         break;
+     }
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    size = StringLength(stringPtr) + 1;
++    txtBuff = Alloc(size);
++    memcpy(txtBuff, stringPtr, size);
++    BattleStringExpandPlaceholdersToDisplayedString(txtBuff);
++    Free(txtBuff);
++#else
+     BattleStringExpandPlaceholdersToDisplayedString(stringPtr);
++#endif
+ }
+ 
+ u32 BattleStringExpandPlaceholdersToDisplayedString(const u8 *src)
+@@ -2599,6 +2615,32 @@ u32 BattleStringExpandPlaceholders(const u8 *src, u8 *dst)
+                 toCpy = gAbilityNames[sBattlerAbilities[gEffectBattler]];
+                 break;
+             case B_TXT_TRAINER1_CLASS: // trainer class name
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++            {
++                s32 gender = -1, trClass;
++                const u8 *trName = NULL;
++                if (gBattleTypeFlags & BATTLE_TYPE_SECRET_BASE)
++                    trClass = GetSecretBaseTrainerClass();
++                else if (gTrainerBattleOpponent_A == TRAINER_UNION_ROOM)
++                    trClass = GetUnionRoomTrainerClass();
++                else if (gTrainerBattleOpponent_A == TRAINER_FRONTIER_BRAIN)
++                    trClass = GetFrontierBrainTrainerClass();
++                else if (gBattleTypeFlags & BATTLE_TYPE_FRONTIER)
++                    trClass = GetFrontierOpponentClass(gTrainerBattleOpponent_A), gender = IsFrontierTrainerFemale(gTrainerBattleOpponent_A);
++                else if (gBattleTypeFlags & BATTLE_TYPE_TRAINER_HILL)
++                    trClass = GetTrainerHillOpponentClass(gTrainerBattleOpponent_A);
++                else if (gBattleTypeFlags & BATTLE_TYPE_EREADER_TRAINER)
++                    trClass = GetEreaderTrainerClassId();
++                else
++                {
++                    trClass = gTrainers[gTrainerBattleOpponent_A].trainerClass;
++                    gender = gTrainers[gTrainerBattleOpponent_A].encounterMusic_gender & 0x7F;
++                    trName = gTrainers[gTrainerBattleOpponent_A].trainerName;
++                }
++                toCpy = GetTrainerClassNameGenderSpecific(trClass, gender, trName);
++                break;
++            }
++#else
+                 if (gBattleTypeFlags & BATTLE_TYPE_SECRET_BASE)
+                     toCpy = gTrainerClassNames[GetSecretBaseTrainerClass()];
+                 else if (gTrainerBattleOpponent_A == TRAINER_UNION_ROOM)
+@@ -2614,6 +2656,7 @@ u32 BattleStringExpandPlaceholders(const u8 *src, u8 *dst)
+                 else
+                     toCpy = gTrainerClassNames[gTrainers[gTrainerBattleOpponent_A].trainerClass];
+                 break;
++#endif
+             case B_TXT_TRAINER1_NAME: // trainer1 name
+                 if (gBattleTypeFlags & BATTLE_TYPE_SECRET_BASE)
+                 {
+@@ -2747,6 +2790,24 @@ u32 BattleStringExpandPlaceholders(const u8 *src, u8 *dst)
+                     toCpy = sText_FoePkmnPrefix4;
+                 break;
+             case B_TXT_TRAINER2_CLASS:
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++            {
++                s32 gender = -1, trClass;
++                const u8 *trName = NULL;
++                if (gBattleTypeFlags & BATTLE_TYPE_FRONTIER)
++                    trClass = GetFrontierOpponentClass(gTrainerBattleOpponent_B), gender = IsFrontierTrainerFemale(gTrainerBattleOpponent_B);
++                else if (gBattleTypeFlags & BATTLE_TYPE_TRAINER_HILL)
++                    trClass = GetTrainerHillOpponentClass(gTrainerBattleOpponent_B);
++                else
++                {
++                    trClass = gTrainers[gTrainerBattleOpponent_B].trainerClass;
++                    gender = gTrainers[gTrainerBattleOpponent_B].encounterMusic_gender & 0x7F;
++                    trName = gTrainers[gTrainerBattleOpponent_B].trainerName;
++                }
++                toCpy = GetTrainerClassNameGenderSpecific(trClass, gender, trName);
++                break;
++            }
++#else
+                 if (gBattleTypeFlags & BATTLE_TYPE_FRONTIER)
+                     toCpy = gTrainerClassNames[GetFrontierOpponentClass(gTrainerBattleOpponent_B)];
+                 else if (gBattleTypeFlags & BATTLE_TYPE_TRAINER_HILL)
+@@ -2754,6 +2815,7 @@ u32 BattleStringExpandPlaceholders(const u8 *src, u8 *dst)
+                 else
+                     toCpy = gTrainerClassNames[gTrainers[gTrainerBattleOpponent_B].trainerClass];
+                 break;
++#endif
+             case B_TXT_TRAINER2_NAME:
+                 if (gBattleTypeFlags & BATTLE_TYPE_FRONTIER)
+                 {
+@@ -2799,8 +2861,17 @@ u32 BattleStringExpandPlaceholders(const u8 *src, u8 *dst)
+                 }
+                 break;
+             case B_TXT_PARTNER_CLASS:
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++            {
++                s32 trClass = GetFrontierOpponentClass(gPartnerTrainerId);
++                s32 gender = IsFrontierTrainerFemale(gPartnerTrainerId);
++                toCpy = GetTrainerClassNameGenderSpecific(trClass, gender, NULL);
++                break;
++            }
++#else
+                 toCpy = gTrainerClassNames[GetFrontierOpponentClass(gPartnerTrainerId)];
+                 break;
++#endif
+             case B_TXT_PARTNER_NAME:
+                 GetFrontierTrainerName(text, gPartnerTrainerId);
+                 toCpy = text;
+@@ -2890,20 +2961,32 @@ static void ExpandBattleTextBuffPlaceholders(const u8 *src, u8 *dst)
+             if (GetBattlerSide(src[srcID + 1]) == B_SIDE_PLAYER)
+             {
+                 GetMonData(&gPlayerParty[src[srcID + 2]], MON_DATA_NICKNAME, nickname);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++                StringGet_Nickname(nickname);
++                StringAppend(dst, nickname);
++#endif
+             }
+             else
+             {
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++                GetMonData(&gEnemyParty[src[srcID + 2]], MON_DATA_NICKNAME, dst);
++                StringGet_Nickname(dst);
++#endif
+                 if (gBattleTypeFlags & BATTLE_TYPE_TRAINER)
+                     StringAppend(dst, sText_FoePkmnPrefix);
+                 else
+                     StringAppend(dst, sText_WildPkmnPrefix);
+ 
++#if !(defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN)
+                 GetMonData(&gEnemyParty[src[srcID + 2]], MON_DATA_NICKNAME, nickname);
++#endif
+             }
++#if !(defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN)
+             StringGet_Nickname(nickname);
+             StringAppend(dst, nickname);
+             if (GetBattlerSide(src[srcID + 1]) != B_SIDE_PLAYER)
+                 StringAppend(dst, (gBattleTypeFlags & BATTLE_TYPE_TRAINER) ? sText_FoePkmnSuffix : sText_WildPkmnSuffix);
++#endif
+             srcID += 3;
+             break;
+         case B_BUFF_STAT: // stats
+@@ -2932,10 +3015,21 @@ static void ExpandBattleTextBuffPlaceholders(const u8 *src, u8 *dst)
+             break;
+         case B_BUFF_ITEM: // item name
+             hword = T1_READ_16(&src[srcID + 1]);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++            if (hword == STRINGID_STATSHARPLY || hword == STRINGID_STATHARSHLY)
++                srcID += 3;
++#endif
+             if (gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED_LINK))
+             {
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++                GetMonData(&gEnemyParty[src[srcID + 2]], MON_DATA_NICKNAME, dst);
++                StringGet_Nickname(dst);
++#endif
+                 if (hword == ITEM_ENIGMA_BERRY)
+                 {
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++                    CopyItemName(hword, dst);
++#else
+                     if (gLinkPlayers[gBattleScripting.multiplayerId].id == gPotentialItemEffectBattler)
+                     {
+                         StringCopy(dst, gEnigmaBerries[gPotentialItemEffectBattler].name);
+@@ -2945,6 +3039,7 @@ static void ExpandBattleTextBuffPlaceholders(const u8 *src, u8 *dst)
+                     {
+                         StringAppend(dst, sText_EnigmaBerry);
+                     }
++#endif
+                 }
+                 else
+                 {
+--- a/src/battle_script_commands.c
++++ b/src/battle_script_commands.c
+@@ -10317,7 +10317,19 @@ void BattleCreateYesNoCursorAt(u8 cursorPosition)
+     src[0] = 1;
+     src[1] = 2;
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    CopyToBgTilemapBufferRect_ChangePalette(
++        0,
++        src,
++        0x18,
++        9 + (2 * cursorPosition),
++        1,
++        2,
++        0x11
++    );
++#else
+     CopyToBgTilemapBufferRect_ChangePalette(0, src, 0x19, 9 + (2 * cursorPosition), 1, 2, 0x11);
++#endif
+     CopyBgTilemapBufferToVram(0);
+ }
+ 
+@@ -10327,7 +10339,19 @@ void BattleDestroyYesNoCursorAt(u8 cursorPosition)
+     src[0] = 0x1016;
+     src[1] = 0x1016;
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    CopyToBgTilemapBufferRect_ChangePalette(
++        0,
++        src,
++        0x18,
++        9 + (2 * cursorPosition),
++        1,
++        2,
++        0x11
++    );
++#else
+     CopyToBgTilemapBufferRect_ChangePalette(0, src, 0x19, 9 + (2 * cursorPosition), 1, 2, 0x11);
++#endif
+     CopyBgTilemapBufferToVram(0);
+ }
+ 
+--- a/src/battle_tower.c
++++ b/src/battle_tower.c
+@@ -56,6 +56,9 @@ static void SetTowerBattleWon(void);
+ static void AwardBattleTowerRibbons(void);
+ static void SaveTowerChallenge(void);
+ static void GetOpponentIntroSpeech(void);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++static void GetOpponentIntroSpeechGerman(void);
++#endif
+ static void BattleTowerNop1(void);
+ static void BattleTowerNop2(void);
+ static void LoadMultiPartnerCandidatesData(void);
+@@ -1572,7 +1575,11 @@ void GetFrontierTrainerName(u8 *dst, u16 trainerId)
+     dst[i] = EOS;
+ }
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++bool8 IsFrontierTrainerFemale(u16 trainerId)
++#else
+ static bool8 IsFrontierTrainerFemale(u16 trainerId)
++#endif
+ {
+     u32 i;
+     u8 facilityClass;
+@@ -1932,6 +1939,44 @@ void FrontierSpeechToString(const u16 *words)
+         gStringVar4[i] = CHAR_PROMPT_SCROLL;
+     }
+ }
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++void FrontierGermanSpeechToString(const u16 *words)
++{
++    ConvertEasyChatWordsToString(gStringVar4, words, 3, 2);
++    if (GetStringWidth(FONT_NORMAL, gStringVar4, -1) > 204u)
++    {
++        s32 i = 0;
++
++        ConvertEasyChatWordsToString(gStringVar4, words, 2, 3);
++        while (gStringVar4[i++] != CHAR_NEWLINE)
++            ;
++        while (gStringVar4[i] != CHAR_NEWLINE)
++            i++;
++
++        gStringVar4[i] = CHAR_PROMPT_SCROLL;
++    }
++}
++
++static void GetOpponentIntroSpeechGerman(void)
++{
++    u16 trainerId;
++    SetFacilityPtrsGetLevel();
++
++    if (gSpecialVar_0x8005)
++        trainerId = gTrainerBattleOpponent_B;
++    else
++        trainerId = gTrainerBattleOpponent_A;
++
++    if (trainerId == TRAINER_EREADER)
++        FrontierGermanSpeechToString(gSaveBlock2Ptr->frontier.ereaderTrainer.greeting);
++    else if (trainerId < FRONTIER_TRAINERS_COUNT)
++        FrontierGermanSpeechToString(gFacilityTrainers[trainerId].speechBefore);
++    else if (trainerId < TRAINER_RECORD_MIXING_APPRENTICE)
++        FrontierGermanSpeechToString(gSaveBlock2Ptr->frontier.towerRecords[trainerId - TRAINER_RECORD_MIXING_FRIEND].greeting);
++    else
++        BufferApprenticeChallengeText(trainerId - TRAINER_RECORD_MIXING_APPRENTICE);
++}
++#endif
+ 
+ static void GetOpponentIntroSpeech(void)
+ {
+@@ -2678,6 +2723,9 @@ static void SetTowerInterviewData(void)
+ 
+     GetFrontierTrainerName(text, gTrainerBattleOpponent_A);
+     StripExtCtrlCodes(text);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    text[7] = EOS;
++#endif
+     StringCopy(gSaveBlock2Ptr->frontier.towerInterview.opponentName, text);
+     GetBattleTowerTrainerLanguage(&gSaveBlock2Ptr->frontier.towerInterview.opponentLanguage, gTrainerBattleOpponent_A);
+     gSaveBlock2Ptr->frontier.towerInterview.opponentSpecies = GetMonData(&gEnemyParty[gBattlerPartyIndexes[1]], MON_DATA_SPECIES, NULL);
+--- a/src/berry_blender.c
++++ b/src/berry_blender.c
+@@ -916,6 +916,16 @@ static const u8 sBlackPokeblockFlavorFlags[] = {
+     (1 << FLAVOR_SOUR)   | (1 << FLAVOR_SWEET)  | (1 << FLAVOR_SPICY),
+ };
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++static const u8 sUnused[] = {
++    0xfe, 0x02, 0x02, 0xce, 0xd0, 0x37, 0x44, 0x07, 0x1f, 0x0c, 0x10,
++    0x00, 0xff, 0xfe, 0x91, 0x72, 0xce, 0xd0, 0x37, 0x44, 0x07, 0x1f,
++    0x0c, 0x10, 0x00, 0xff, 0x06, 0x27, 0x02, 0xff, 0x00, 0x0c, 0x48,
++    0x02, 0xff, 0x00, 0x01, 0x1f, 0x02, 0xff, 0x00, 0x16, 0x37, 0x02,
++    0xff, 0x00, 0x0d, 0x50, 0x4b, 0x02, 0xff, 0x06, 0x06, 0x06, 0x06,
++    0x05, 0x03, 0x03, 0x03, 0x02, 0x02
++};
++#else
+ static const u8 sJPText_GoodTvReady[] = _("\nいいTVができました "); // Unused
+ static const u8 sJPText_BadTvReady[] = _("\nダメTVができました "); // Unused
+ static const u8 sJPText_Flavors[][5] = {_("からい"), _("しぶい"), _("あまい"), _("にがい"), _("すっぱい")}; // Unused
+@@ -936,6 +946,7 @@ static const struct WindowTemplate sBlenderRecordWindowTemplate =
+     .paletteNum = 15,
+     .baseBlock = 8
+ };
++#endif
+ 
+ static void UpdateHitPitch(void)
+ {
+@@ -2850,12 +2861,20 @@ static void CB2_CheckPlayAgainLink(void)
+     case 1:
+         sBerryBlender->gameEndState = 3;
+         StringCopy(gStringVar4, gLinkPlayers[sBerryBlender->canceledPlayerId].name);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        StringAppendWithPlaceholder(gStringVar4, sText_ApostropheSPokeblockCaseIsFull, gStringVar4);
++#else
+         StringAppend(gStringVar4, sText_ApostropheSPokeblockCaseIsFull);
++#endif
+         break;
+     case 2:
+         sBerryBlender->gameEndState++;
+         StringCopy(gStringVar4, gLinkPlayers[sBerryBlender->canceledPlayerId].name);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        StringAppendWithPlaceholder(gStringVar4, sText_HasNoBerriesToPut, gStringVar4);
++#else
+         StringAppend(gStringVar4, sText_HasNoBerriesToPut);
++#endif
+         break;
+     case 3:
+         if (PrintMessage(&sBerryBlender->textState, gStringVar4, GetPlayerTextSpeedDelay()))
+@@ -3526,7 +3545,11 @@ static bool8 PrintBlendingResults(void)
+ 
+                 StringCopy(sBerryBlender->stringVar, sBerryBlender->blendedBerries[place].name);
+                 ConvertInternationalString(sBerryBlender->stringVar, gLinkPlayers[place].language);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++                StringAppendWithPlaceholder(sBerryBlender->stringVar, sText_SpaceBerry, sBerryBlender->stringVar);
++#else
+                 StringAppend(sBerryBlender->stringVar, sText_SpaceBerry);
++#endif
+                 Blender_AddTextPrinter(WIN_RESULTS, sBerryBlender->stringVar, 0x54, yPos, TEXT_SKIP_DRAW, 3);
+             }
+ 
+@@ -3603,6 +3626,9 @@ static bool8 PrintBlendingResults(void)
+ 
+     return FALSE;
+ }
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++static const u8 sUnused2[] = {0x03, 0x03, 0x03, 0x03, 0x02};
++#endif
+ 
+ static void PrintMadePokeblockString(struct Pokeblock *pokeblock, u8 *dst)
+ {
+@@ -3611,7 +3637,11 @@ static void PrintMadePokeblockString(struct Pokeblock *pokeblock, u8 *dst)
+ 
+     dst[0] = EOS;
+     StringCopy(dst, gPokeblockNames[pokeblock->color]);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    StringAppendWithPlaceholder(dst, sText_WasMade, dst);
++#else
+     StringAppend(dst, sText_WasMade);
++#endif
+     StringAppend(dst, sText_NewLine);
+ 
+     flavorLvl = GetHighestPokeblocksFlavorLevel(pokeblock);
+@@ -3771,10 +3801,25 @@ void ShowBerryBlenderRecordWindow(void)
+ {
+     s32 i;
+     s32 xPos, yPos;
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    struct WindowTemplate winTemplate =
++    {
++        .bg = 0,
++        .tilemapLeft = 6,
++        .tilemapTop = 4,
++        .width = 18,
++        .height = 11,
++        .paletteNum = 15,
++        .baseBlock = 8
++    };
++#else
+     struct WindowTemplate winTemplate;
++#endif
+     u8 text[32];
+ 
++#if !(defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN)
+     winTemplate = sBlenderRecordWindowTemplate;
++#endif
+     gRecordsWindowId = AddWindow(&winTemplate);
+     DrawStdWindowFrame(gRecordsWindowId, FALSE);
+     FillWindowPixelBuffer(gRecordsWindowId, PIXEL_FILL(1));
+@@ -3791,7 +3836,12 @@ void ShowBerryBlenderRecordWindow(void)
+         record = gSaveBlock1Ptr->berryBlenderRecords[i];
+ 
+         txtPtr = ConvertIntToDecimalStringN(text, record / 100, STR_CONV_MODE_RIGHT_ALIGN, 3);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        *txtPtr++ = CHAR_COMMA;
++        *txtPtr = EOS;
++#else
+         txtPtr = StringAppend(txtPtr, sText_Dot);
++#endif
+         txtPtr = ConvertIntToDecimalStringN(txtPtr, record % 100, STR_CONV_MODE_LEADING_ZEROS, 2);
+         txtPtr = StringAppend(txtPtr, sText_RPM);
+ 
+--- a/src/berry_tag_screen.c
++++ b/src/berry_tag_screen.c
+@@ -105,6 +105,13 @@ static const u8 sTextColors[2][3] =
+ #else
+ #define BERRY_TAG_SPANISH 0
+ #endif
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++// German: a wider name window (the name is the item's, BEERE included),
++// metric sizes and a description indented as in the German ROM.
++#define BERRY_TAG_GERMAN 1
++#else
++#define BERRY_TAG_GERMAN 0
++#endif
+ 
+ static const struct WindowTemplate sWindowTemplates[] =
+ {
+@@ -112,10 +119,10 @@ static const struct WindowTemplate sWindowTemplates[] =
+         .bg = 1,
+         .tilemapLeft = 11,
+         .tilemapTop = 4,
+-        .width = 8,
++        .width = BERRY_TAG_GERMAN ? 13 : 8,
+         .height = 2,
+         .paletteNum = 15,
+-        .baseBlock = BERRY_TAG_SPANISH ? 72 : 69,
++        .baseBlock = (BERRY_TAG_SPANISH || BERRY_TAG_GERMAN) ? 72 : 69,
+     },
+     [WIN_SIZE_FIRM] = {
+         .bg = 1,
+@@ -124,16 +131,16 @@ static const struct WindowTemplate sWindowTemplates[] =
+         .width = 18,
+         .height = 4,
+         .paletteNum = 15,
+-        .baseBlock = BERRY_TAG_SPANISH ? 88 : 85,
++        .baseBlock = BERRY_TAG_GERMAN ? 98 : BERRY_TAG_SPANISH ? 88 : 85,
+     },
+     [WIN_DESC] = {
+         .bg = 1,
+-        .tilemapLeft = BERRY_TAG_SPANISH ? 3 : 4,
++        .tilemapLeft = (BERRY_TAG_SPANISH || BERRY_TAG_GERMAN) ? 3 : 4,
+         .tilemapTop = 14,
+-        .width = BERRY_TAG_SPANISH ? 27 : 25,
++        .width = (BERRY_TAG_SPANISH || BERRY_TAG_GERMAN) ? 27 : 25,
+         .height = 4,
+         .paletteNum = 15,
+-        .baseBlock = BERRY_TAG_SPANISH ? 160 : 157,
++        .baseBlock = BERRY_TAG_GERMAN ? 170 : BERRY_TAG_SPANISH ? 160 : 157,
+     },
+     [WIN_BERRY_TAG] = {
+         .bg = 0,
+@@ -142,7 +149,7 @@ static const struct WindowTemplate sWindowTemplates[] =
+         .width = 8,
+         .height = 2,
+         .paletteNum = 15,
+-        .baseBlock = BERRY_TAG_SPANISH ? 268 : 257,
++        .baseBlock = BERRY_TAG_GERMAN ? 278 : BERRY_TAG_SPANISH ? 268 : 257,
+     },
+     DUMMY_WIN_TEMPLATE
+ };
+@@ -410,7 +417,11 @@ static void PrintBerryNumberAndName(void)
+ {
+     const struct Berry *berry = GetBerryInfo(sBerryTag->berryId);
+     ConvertIntToDecimalStringN(gStringVar1, sBerryTag->berryId, STR_CONV_MODE_LEADING_ZEROS, 2);
++#if BERRY_TAG_GERMAN
++    StringCopy(gStringVar2, GetItemName(sBerryTag->berryId + FIRST_BERRY_INDEX - 1));
++#else
+     StringCopy(gStringVar2, berry->name);
++#endif
+     StringExpandPlaceholders(gStringVar4, gText_NumberVar1Var2);
+     PrintTextInBerryTagScreen(WIN_BERRY_NAME, gStringVar4, 0, 1, 0, 0);
+ }
+@@ -421,6 +432,10 @@ static void PrintBerrySize(void)
+     AddTextPrinterParameterized(WIN_SIZE_FIRM, FONT_NORMAL, gText_SizeSlash, 0, 1, TEXT_SKIP_DRAW, NULL);
+     if (berry->size != 0)
+     {
++#if BERRY_TAG_GERMAN
++        ConvertIntToDecimalStringN(gStringVar1, berry->size / 10, STR_CONV_MODE_LEFT_ALIGN, 2);
++        ConvertIntToDecimalStringN(gStringVar2, berry->size % 10, STR_CONV_MODE_LEFT_ALIGN, 2);
++#else
+         u32 inches, fraction;
+ 
+         inches = 1000 * berry->size / 254;
+@@ -431,6 +446,7 @@ static void PrintBerrySize(void)
+ 
+         ConvertIntToDecimalStringN(gStringVar1, inches, STR_CONV_MODE_LEFT_ALIGN, 2);
+         ConvertIntToDecimalStringN(gStringVar2, fraction, STR_CONV_MODE_LEFT_ALIGN, 2);
++#endif
+         StringExpandPlaceholders(gStringVar4, gText_Var1DotVar2);
+         AddTextPrinterParameterized(WIN_SIZE_FIRM, FONT_NORMAL, gStringVar4, 0x28, 1, 0, NULL);
+     }
+@@ -453,13 +469,13 @@ static void PrintBerryFirmness(void)
+ static void PrintBerryDescription1(void)
+ {
+     const struct Berry *berry = GetBerryInfo(sBerryTag->berryId);
+-    AddTextPrinterParameterized(WIN_DESC, FONT_NORMAL, berry->description1, 0, 1, 0, NULL);
++    AddTextPrinterParameterized(WIN_DESC, FONT_NORMAL, berry->description1, BERRY_TAG_GERMAN ? 5 : 0, 1, 0, NULL);
+ }
+ 
+ static void PrintBerryDescription2(void)
+ {
+     const struct Berry *berry = GetBerryInfo(sBerryTag->berryId);
+-    AddTextPrinterParameterized(WIN_DESC, FONT_NORMAL, berry->description2, 0, 0x11, 0, NULL);
++    AddTextPrinterParameterized(WIN_DESC, FONT_NORMAL, berry->description2, BERRY_TAG_GERMAN ? 5 : 0, 0x11, 0, NULL);
+ }
+ 
+ static void CreateBerrySprite(void)
+--- a/src/cable_club.c
++++ b/src/cable_club.c
+@@ -1234,7 +1234,11 @@ void Task_WaitForLinkPlayerConnection(u8 taskId)
+     struct Task *task = &gTasks[taskId];
+ 
+     task->tTimer++;
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    if (task->tTimer > 480)
++#else
+     if (task->tTimer > 300)
++#endif
+     {
+         CloseLink();
+         SetMainCallback2(CB2_LinkError);
+--- a/src/contest_util.c
++++ b/src/contest_util.c
+@@ -1427,6 +1427,36 @@ static void HideLinkResultsTextBox(void)
+ #define CONTEST_TITLE_SPANISH 0
+ #endif
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++// German: the rank title is one 12-tile piece, the category follows at a
++// fixed column and the separate "contest" piece is not drawn.
++static void LoadContestResultsTitleBarTilemaps(void)
++{
++    static const u32 *const sCategoryTilemaps[] = {
++        [CONTEST_CATEGORY_COOL] = gContestResultsTitle_Cool_Tilemap,
++        [CONTEST_CATEGORY_BEAUTY] = gContestResultsTitle_Beauty_Tilemap,
++        [CONTEST_CATEGORY_CUTE] = gContestResultsTitle_Cute_Tilemap,
++        [CONTEST_CATEGORY_SMART] = gContestResultsTitle_Smart_Tilemap,
++        [CONTEST_CATEGORY_TOUGH] = gContestResultsTitle_Tough_Tilemap,
++    };
++    const u32 *rank;
++    u8 palette = gSpecialVar_ContestCategory < CONTEST_CATEGORIES_COUNT ? gSpecialVar_ContestCategory : CONTEST_CATEGORY_TOUGH;
++
++    if (gLinkContestFlags & LINK_CONTEST_FLAG_IS_LINK)
++        rank = gContestResultsTitle_Link_Tilemap;
++    else if (gSpecialVar_ContestRank == CONTEST_RANK_NORMAL)
++        rank = gContestResultsTitle_Normal_Tilemap;
++    else if (gSpecialVar_ContestRank == CONTEST_RANK_SUPER)
++        rank = gContestResultsTitle_Super_Tilemap;
++    else if (gSpecialVar_ContestRank == CONTEST_RANK_HYPER)
++        rank = gContestResultsTitle_Hyper_Tilemap;
++    else
++        rank = gContestResultsTitle_Master_Tilemap;
++    CopyToBgTilemapBufferRect(2, rank, 5, 1, 12, 2);
++    CopyToBgTilemapBufferRect(2, sCategoryTilemaps[palette], 17, 1, 7, 2);
++    CopyToBgTilemapBufferRect_ChangePalette(2, sContestResults->tilemapBuffers[2], 0, 0, 32, 4, palette);
++}
++#else
+ static void LoadContestResultsTitleBarTilemaps(void)
+ {
+     u8 palette;
+@@ -1490,6 +1520,7 @@ static void LoadContestResultsTitleBarTilemaps(void)
+     CopyToBgTilemapBufferRect(2, gContestResultsTitle_Tilemap, CONTEST_TITLE_SPANISH ? 15 : x, y, CONTEST_TITLE_SPANISH ? 5 : 6, 2);
+     CopyToBgTilemapBufferRect_ChangePalette(2, sContestResults->tilemapBuffers[2], 0, 0, 32, 4, palette);
+ }
++#endif
+ 
+ // Represented on results board as stars
+ static u8 GetNumPreliminaryPoints(u8 monIndex, bool8 capPoints)
+--- a/src/credits.c
++++ b/src/credits.c
+@@ -124,6 +124,8 @@ static const u32 sSpanishTheEnd_Tilemap[] = INCBIN_U32("graphics/credits/spanish
+ static const u32 sFrenchTheEnd_Tilemap[] = INCBIN_U32("graphics/credits/french_the_end.bin.lz");
+ #elif defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_ITALIAN
+ static const u32 sItalianTheEnd_Tilemap[] = INCBIN_U32("graphics/credits/italian_the_end.bin.lz");
++#elif defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++static const u32 sGermanTheEnd_Tilemap[] = INCBIN_U32("graphics/credits/german_the_end.bin.lz");
+ #endif
+ 
+ static const u8 sTheEnd_LetterMap_T[] =
+@@ -792,7 +794,11 @@ static void Task_UpdatePage(u8 taskId)
+     case 3:
+         if (!gPaletteFade.active)
+         {
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++            gTasks[taskId].tDelay = 121;
++#else
+             gTasks[taskId].tDelay = 115;
++#endif
+             gTasks[taskId].tState++;
+         }
+         return;
+@@ -926,7 +932,11 @@ static void Task_ShowMons(u8 taskId)
+         if (sCreditsData->currShownMon < sCreditsData->numMonToShow - 1)
+         {
+             sCreditsData->currShownMon++;
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++            gSprites[spriteId].data[3] = 52;
++#else
+             gSprites[spriteId].data[3] = 50;
++#endif
+         }
+         else
+         {
+@@ -940,7 +950,11 @@ static void Task_ShowMons(u8 taskId)
+         else
+             sCreditsData->nextImgPos++;
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        gTasks[taskId].tDelay = 52;
++#else
+         gTasks[taskId].tDelay = 50;
++#endif
+         gTasks[taskId].tState++;
+         break;
+     case 3:
+@@ -1086,7 +1100,11 @@ static void Task_CycleSceneryPalette(u8 taskId)
+         if (gTasks[taskId].tTimer != TIMER_STOP)
+         {
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++            if (gTasks[taskId].tTimer == 620)
++#else
+             if (gTasks[taskId].tTimer == 584)
++#endif
+             {
+                 gTasks[gTasks[gTasks[taskId].tMainTaskId].tTaskId_BikeScene].tState = 10;
+                 gTasks[taskId].tTimer = TIMER_STOP;
+@@ -1304,7 +1322,11 @@ static void LoadTheEndScreen(u16 tileOffsetLoad, u16 tileOffsetWrite, u16 palOff
+     baseTile = (palOffset / 16) << 12;
+ 
+     for (i = 0; i < 32 * 32; i++)
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        ((u16 *) (VRAM + tileOffsetWrite))[i] = baseTile;
++#else
+         ((u16 *) (VRAM + tileOffsetWrite))[i] = baseTile + 1;
++#endif
+ }
+ 
+ static u16 GetLetterMapTile(u8 baseTiles)
+@@ -1342,6 +1364,8 @@ static void DrawTheEnd(u16 offset, u16 palette)
+     LZ77UnCompVram(sFrenchTheEnd_Tilemap, (void *)(VRAM + offset));
+ #elif defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_ITALIAN
+     LZ77UnCompVram(sItalianTheEnd_Tilemap, (void *)(VRAM + offset));
++#elif defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    LZ77UnCompVram(sGermanTheEnd_Tilemap, (void *)(VRAM + offset));
+ #else
+     u16 pos;
+     u16 baseTile = (palette / 16) << 12;
+--- a/src/dodrio_berry_picking.c
++++ b/src/dodrio_berry_picking.c
+@@ -4777,7 +4777,19 @@ static void ShowResults(void)
+         strWidth = GetStringWidth(FONT_NORMAL, gText_BerryPickingResults, -1);
+         x = (224 - strWidth) / 2;
+         AddTextPrinterParameterized(sGfx->windowIds[0], FONT_NORMAL, gText_BerryPickingResults, x, 1, TEXT_SKIP_DRAW, NULL);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        AddTextPrinterParameterized(
++            sGfx->windowIds[1],
++            FONT_SMALL,
++            gText_10P30P50P50P,
++             68,
++            17,
++            TEXT_SKIP_DRAW,
++            NULL
++        );
++#else
+         AddTextPrinterParameterized(sGfx->windowIds[1], FONT_NORMAL, gText_10P30P50P50P, 68, 17, TEXT_SKIP_DRAW, NULL);
++#endif
+         for (i = 0; i < numPlayers; i++)
+         {
+             u8 colorsId = COLORID_GRAY;
+--- a/src/easy_chat.c
++++ b/src/easy_chat.c
+@@ -828,9 +828,17 @@ static const struct BgTemplate sEasyChatBgTemplates[] = {
+ static const struct WindowTemplate sEasyChatWindowTemplates[] = {
+     [WIN_TITLE] = {
+         .bg = 1,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .tilemapLeft = 0,
++#else
+         .tilemapLeft = 6,
++#endif
+         .tilemapTop = 0,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .width = 30,
++#else
+         .width = 18,
++#endif
+         .height = 2,
+         .paletteNum = 10,
+         .baseBlock = 0x10,
+@@ -1199,8 +1207,13 @@ static const struct SpriteTemplate sSpriteTemplate_ScrollIndicator =
+ 
+ static const u8 sFooterOptionXOffsets[NUM_FOOTER_TYPES][4] = {
+     [FOOTER_NORMAL] = {16, 111, 196,   0},
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    [FOOTER_QUIZ]   = {16,  80, 144, 184},
++    [FOOTER_ANSWER] = {16,  74, 132, 166},
++#else
+     [FOOTER_QUIZ]   = {16,  78, 130, 160},
+     [FOOTER_ANSWER] = {16,  80, 134, 170},
++#endif
+ };
+ 
+ static const u8 *const sFooterTextOptions[NUM_FOOTER_TYPES][4] = {
+@@ -3945,7 +3958,15 @@ static void PrintTitle(void)
+     if (!titleText)
+         return;
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    xOffset = GetStringCenterAlignXOffset(
++        FONT_NORMAL,
++        titleText,
++        240
++    );
++#else
+     xOffset = GetStringCenterAlignXOffset(FONT_NORMAL, titleText, 144);
++#endif
+     FillWindowPixelBuffer(WIN_TITLE, PIXEL_FILL(0));
+     PrintEasyChatTextWithColors(WIN_TITLE, FONT_NORMAL, titleText, xOffset, 1, TEXT_SKIP_DRAW, TEXT_COLOR_TRANSPARENT, TEXT_COLOR_DARK_GRAY, TEXT_COLOR_LIGHT_GRAY);
+     PutWindowTilemap(WIN_TITLE);
+@@ -4043,7 +4064,11 @@ static void AddPhraseWindow(void)
+     template.width = sPhraseFrameDimensions[frameId].width;
+     template.height = sPhraseFrameDimensions[frameId].height;
+     template.paletteNum = 11;
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    template.baseBlock = 0x84;
++#else
+     template.baseBlock = 0x6C;
++#endif
+     sScreenControl->windowId = AddWindow(&template);
+     PutWindowTilemap(sScreenControl->windowId);
+ }
+@@ -5092,7 +5117,11 @@ static void AddMainScreenButtonWindow(void)
+     template.width = 28;
+     template.height = 2;
+     template.paletteNum = 11;
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    template.baseBlock = 0x4C;
++#else
+     template.baseBlock = 0x34;
++#endif
+     windowId = AddWindow(&template);
+     FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
+     for (i = 0; i < (int)ARRAY_COUNT(sFooterTextOptions[0]); i++)
+@@ -5268,7 +5297,11 @@ u8 *ConvertEasyChatWordsToString(u8 *dest, const u16 *src, u16 columns, u16 rows
+     return dest;
+ }
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++u8 *UnusedConvertEasyChatWordsToString(u8 *dest, const u16 *src, u16 columns, u16 rows)
++#else
+ static u8 UNUSED *UnusedConvertEasyChatWordsToString(u8 *dest, const u16 *src, u16 columns, u16 rows)
++#endif
+ {
+     u16 i, j, k;
+     u16 numColumns;
+--- a/src/field_specials.c
++++ b/src/field_specials.c
+@@ -2212,6 +2212,14 @@ void BufferBattleTowerElevatorFloors(void)
+     u8 i;
+     u16 battleMode = VarGet(VAR_FRONTIER_BATTLE_MODE);
+     u8 lvlMode = gSaveBlock2Ptr->frontier.lvlMode;
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    if (battleMode == FRONTIER_MODE_LINK_MULTIS)
++    {
++        gSpecialVar_0x8005 = 4;
++        gSpecialVar_0x8006 = 5;
++        return;
++    }
++#endif
+ 
+     if (battleMode == FRONTIER_MODE_MULTIS && !FlagGet(FLAG_CHOSEN_MULTI_BATTLE_NPC_PARTNER))
+     {
+--- a/src/follower_mon.c
++++ b/src/follower_mon.c
+@@ -1074,6 +1074,8 @@ static const char *LanguageCode(void)
+     return "fr";
+ #elif GAME_LANGUAGE == LANGUAGE_ITALIAN
+     return "it";
++#elif GAME_LANGUAGE == LANGUAGE_GERMAN
++    return "de";
+ #else
+     return "en";
+ #endif
+--- a/src/frontier_util.c
++++ b/src/frontier_util.c
+@@ -1060,10 +1060,17 @@ static void ShowTowerResultsWindow(u8 battleMode)
+     AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_Lv502, 16, 49, TEXT_SKIP_DRAW, NULL);
+     AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_OpenLv, 16, 97, TEXT_SKIP_DRAW, NULL);
+     PrintHyphens(10);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    TowerPrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_50, 72, 125, 49);
++    TowerPrintRecordStreak(battleMode, FRONTIER_LVL_50, 72, 125, 65);
++    TowerPrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_OPEN, 72, 125, 97);
++    TowerPrintRecordStreak(battleMode, FRONTIER_LVL_OPEN, 72, 125, 113);
++#else
+     TowerPrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_50, 72, 132, 49);
+     TowerPrintRecordStreak(battleMode, FRONTIER_LVL_50, 72, 132, 65);
+     TowerPrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_OPEN, 72, 132, 97);
+     TowerPrintRecordStreak(battleMode, FRONTIER_LVL_OPEN, 72, 132, 113);
++#endif
+     PutWindowTilemap(gRecordsWindowId);
+     CopyWindowToVram(gRecordsWindowId, COPYWIN_FULL);
+ }
+@@ -1127,12 +1134,21 @@ static void ShowDomeResultsWindow(u8 battleMode)
+     AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_Lv502, 8, 33, TEXT_SKIP_DRAW, NULL);
+     AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_OpenLv, 8, 97, TEXT_SKIP_DRAW, NULL);
+     PrintHyphens(10);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    DomePrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_50, 64, 120, 33);
++    PrintTwoStrings(gText_Record, gText_ClearStreak, gSaveBlock2Ptr->frontier.domeRecordWinStreaks[battleMode][FRONTIER_LVL_50], 64, 120, 49);
++    PrintTwoStrings(gText_Total, gText_Championships, gSaveBlock2Ptr->frontier.domeTotalChampionships[battleMode][FRONTIER_LVL_50], 64, 110, 65);
++    DomePrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_OPEN, 64, 120, 97);
++    PrintTwoStrings(gText_Record, gText_ClearStreak, gSaveBlock2Ptr->frontier.domeRecordWinStreaks[battleMode][FRONTIER_LVL_OPEN], 64, 120, 113);
++    PrintTwoStrings(gText_Total, gText_Championships, gSaveBlock2Ptr->frontier.domeTotalChampionships[battleMode][FRONTIER_LVL_OPEN], 64, 110, 129);
++#else
+     DomePrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_50, 64, 121, 33);
+     PrintTwoStrings(gText_Record, gText_ClearStreak, gSaveBlock2Ptr->frontier.domeRecordWinStreaks[battleMode][FRONTIER_LVL_50], 64, 121, 49);
+     PrintTwoStrings(gText_Total, gText_Championships, gSaveBlock2Ptr->frontier.domeTotalChampionships[battleMode][FRONTIER_LVL_50], 64, 112, 65);
+     DomePrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_OPEN, 64, 121, 97);
+     PrintTwoStrings(gText_Record, gText_ClearStreak, gSaveBlock2Ptr->frontier.domeRecordWinStreaks[battleMode][FRONTIER_LVL_OPEN], 64, 121, 113);
+     PrintTwoStrings(gText_Total, gText_Championships, gSaveBlock2Ptr->frontier.domeTotalChampionships[battleMode][FRONTIER_LVL_OPEN], 64, 112, 129);
++#endif
+     PutWindowTilemap(gRecordsWindowId);
+     CopyWindowToVram(gRecordsWindowId, COPYWIN_FULL);
+ }
+@@ -1203,10 +1219,17 @@ static void ShowPalaceResultsWindow(u8 battleMode)
+     AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_Lv502, 16, 49, TEXT_SKIP_DRAW, NULL);
+     AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_OpenLv, 16, 97, TEXT_SKIP_DRAW, NULL);
+     PrintHyphens(10);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    PalacePrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_50, 72, 125, 49);
++    PalacePrintRecordStreak(battleMode, FRONTIER_LVL_50, 72, 125, 65);
++    PalacePrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_OPEN, 72, 125, 97);
++    PalacePrintRecordStreak(battleMode, FRONTIER_LVL_OPEN, 72, 125, 113);
++#else
+     PalacePrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_50, 72, 131, 49);
+     PalacePrintRecordStreak(battleMode, FRONTIER_LVL_50, 72, 131, 65);
+     PalacePrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_OPEN, 72, 131, 97);
+     PalacePrintRecordStreak(battleMode, FRONTIER_LVL_OPEN, 72, 131, 113);
++#endif
+     PutWindowTilemap(gRecordsWindowId);
+     CopyWindowToVram(gRecordsWindowId, COPYWIN_FULL);
+ }
+@@ -1255,12 +1278,21 @@ static void ShowPikeResultsWindow(void)
+     AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_Lv502, 8, 33, TEXT_SKIP_DRAW, NULL);
+     AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_OpenLv, 8, 97, TEXT_SKIP_DRAW, NULL);
+     PrintHyphens(10);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    PikePrintPrevOrCurrentStreak(FRONTIER_LVL_50, 64, 116, 33);
++    PikePrintCleared(gText_Record, gText_RoomsCleared, gSaveBlock2Ptr->frontier.pikeRecordStreaks[FRONTIER_LVL_50], 64, 116, 49);
++    PikePrintCleared(gText_Total, gText_TimesCleared, gSaveBlock2Ptr->frontier.pikeTotalStreaks[FRONTIER_LVL_50], 64, 107, 65);
++    PikePrintPrevOrCurrentStreak(FRONTIER_LVL_OPEN, 64, 116, 97);
++    PikePrintCleared(gText_Record, gText_RoomsCleared, gSaveBlock2Ptr->frontier.pikeRecordStreaks[FRONTIER_LVL_OPEN], 64, 116, 113);
++    PikePrintCleared(gText_Total, gText_TimesCleared, gSaveBlock2Ptr->frontier.pikeTotalStreaks[FRONTIER_LVL_OPEN], 64, 107, 129);
++#else
+     PikePrintPrevOrCurrentStreak(FRONTIER_LVL_50, 64, 114, 33);
+     PikePrintCleared(gText_Record, gText_RoomsCleared, gSaveBlock2Ptr->frontier.pikeRecordStreaks[FRONTIER_LVL_50], 64, 114, 49);
+     PikePrintCleared(gText_Total, gText_TimesCleared, gSaveBlock2Ptr->frontier.pikeTotalStreaks[FRONTIER_LVL_50], 64, 114, 65);
+     PikePrintPrevOrCurrentStreak(FRONTIER_LVL_OPEN, 64, 114, 97);
+     PikePrintCleared(gText_Record, gText_RoomsCleared, gSaveBlock2Ptr->frontier.pikeRecordStreaks[FRONTIER_LVL_OPEN], 64, 114, 113);
+     PikePrintCleared(gText_Total, gText_TimesCleared, gSaveBlock2Ptr->frontier.pikeTotalStreaks[FRONTIER_LVL_OPEN], 64, 114, 129);
++#endif
+     PutWindowTilemap(gRecordsWindowId);
+     CopyWindowToVram(gRecordsWindowId, COPYWIN_FULL);
+ }
+@@ -1408,10 +1440,17 @@ static void ShowFactoryResultsWindow(u8 battleMode)
+     AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_RentalSwap, 152, 33, TEXT_SKIP_DRAW, NULL);
+     AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_OpenLv, 8, 97, TEXT_SKIP_DRAW, NULL);
+     PrintHyphens(10);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    FactoryPrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_50, 8, 56, 152, 49);
++    FactoryPrintRecordStreak(battleMode, FRONTIER_LVL_50, 8, 56, 152, 65);
++    FactoryPrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_OPEN, 8, 56, 152, 113);
++    FactoryPrintRecordStreak(battleMode, FRONTIER_LVL_OPEN, 8, 56, 152, 129);
++#else
+     FactoryPrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_50, 8, 64, 158, 49);
+     FactoryPrintRecordStreak(battleMode, FRONTIER_LVL_50, 8, 64, 158, 65);
+     FactoryPrintPrevOrCurrentStreak(battleMode, FRONTIER_LVL_OPEN, 8, 64, 158, 113);
+     FactoryPrintRecordStreak(battleMode, FRONTIER_LVL_OPEN, 8, 64, 158, 129);
++#endif
+     PutWindowTilemap(gRecordsWindowId);
+     CopyWindowToVram(gRecordsWindowId, COPYWIN_FULL);
+ }
+@@ -1465,13 +1504,25 @@ static void ShowPyramidResultsWindow(void)
+     FillWindowPixelBuffer(gRecordsWindowId, PIXEL_FILL(1));
+     StringExpandPlaceholders(gStringVar4, gText_BattleQuestResults);
+     PrintAligned(gStringVar4, 2);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_Lv502, 16, 49, TEXT_SKIP_DRAW, NULL);
++    AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_OpenLv, 16, 97, TEXT_SKIP_DRAW, NULL);
++#else
+     AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_Lv502, 8, 49, TEXT_SKIP_DRAW, NULL);
+     AddTextPrinterParameterized(gRecordsWindowId, FONT_NORMAL, gText_OpenLv, 8, 97, TEXT_SKIP_DRAW, NULL);
++#endif
+     PrintHyphens(10);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    PyramidPrintPrevOrCurrentStreak(FRONTIER_LVL_50, 72, 131, 49);
++    PyramidPrintRecordStreak(FRONTIER_LVL_50, 72, 131, 65);
++    PyramidPrintPrevOrCurrentStreak(FRONTIER_LVL_OPEN, 72, 131, 97);
++    PyramidPrintRecordStreak(FRONTIER_LVL_OPEN, 72, 131, 113);
++#else
+     PyramidPrintPrevOrCurrentStreak(FRONTIER_LVL_50, 64, 111, 49);
+     PyramidPrintRecordStreak(FRONTIER_LVL_50, 64, 111, 65);
+     PyramidPrintPrevOrCurrentStreak(FRONTIER_LVL_OPEN, 64, 111, 97);
+     PyramidPrintRecordStreak(FRONTIER_LVL_OPEN, 64, 111, 113);
++#endif
+     PutWindowTilemap(gRecordsWindowId);
+     CopyWindowToVram(gRecordsWindowId, COPYWIN_FULL);
+ }
+@@ -2474,7 +2525,11 @@ void CopyFrontierBrainTrainerName(u8 *dst)
+     else
+         facility = VarGet(VAR_FRONTIER_FACILITY);
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    for (i = 0; i < PLAYER_NAME_LENGTH + 4; i++)
++#else
+     for (i = 0; i < PLAYER_NAME_LENGTH; i++)
++#endif
+         dst[i] = gTrainers[sFrontierBrainTrainerIds[facility]].trainerName[i];
+ 
+     dst[i] = EOS;
+--- a/src/international_string_util.c
++++ b/src/international_string_util.c
+@@ -1,4 +1,6 @@
+ #include "global.h"
++#include "data.h"
++#include "constants/trainers.h"
+ #include "international_string_util.h"
+ #include "list_menu.h"
+ #include "pokedex.h"
+@@ -92,7 +94,9 @@ void CopyMonCategoryText(int dexNum, u8 *dest)
+ {
+     u8 *str = StringCopy(dest, sText_CategoryPrefix);
+     str = StringCopy(str, gPokedexEntries[dexNum].categoryName);
++#if !(defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN)
+     StringCopy(str, sText_CategorySuffix);
++#endif
+ }
+ 
+ u8 *GetStringClearToWidth(u8 *dest, int fontId, const u8 *str, int totalStringWidth)
+@@ -236,3 +240,58 @@ void FillWindowTilesByRow(int windowId, int columnStart, int rowStart, int numFi
+         }
+     }
+ }
++
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++// The German ROM builds some phrases around a name instead of appending to
++// it ("{STR_VAR_1}s Basis"), and names some trainer classes by gender.
++u8 *StringAppendWithPlaceholder(u8 *dest, const u8 *src, u8 *placeholderStr)
++{
++    u8 text[32], c;
++
++    StringCopyN(text, placeholderStr, 31);
++    text[31] = EOS;
++    placeholderStr = text;
++    while ((c = *src++) != EOS)
++    {
++        if (c == PLACEHOLDER_BEGIN)
++        {
++            src++;
++            dest = StringCopy(dest, placeholderStr);
++        }
++        else
++        {
++            *dest = c;
++            dest++;
++        }
++    }
++    *dest = EOS;
++    return dest;
++}
++
++// Filled in from the player's German ROM by tools/localize_german.py.
++static const u8 gText_SchoolKid[] = _("");
++static const u8 gText_PkmnTrainer[] = _("");
++static const u8 gText_Leader[] = _("");
++static const u8 gText_BenSvenja[] = _("");
++
++const u8 *GetTrainerClassNameGenderSpecific(s32 trainerClassId, u32 trainerGender, const u8 *trainerName)
++{
++    switch (trainerClassId)
++    {
++    case TRAINER_CLASS_SCHOOL_KID:
++        if (trainerGender != 0)
++            return gText_SchoolKid;
++        return gTrainerClassNames[trainerClassId];
++    case TRAINER_CLASS_RIVAL:
++    case TRAINER_CLASS_RS_PROTAG:
++        if (trainerGender != 0)
++            return gText_PkmnTrainer;
++        break;
++    case TRAINER_CLASS_LEADER:
++        if (trainerName != NULL && StringCompare(trainerName, gText_BenSvenja) == 0)
++            return gText_Leader;
++        break;
++    }
++    return gTrainerClassNames[trainerClassId];
++}
++#endif
+--- a/src/item.c
++++ b/src/item.c
+@@ -118,11 +118,16 @@ void GetBerryCountString(u8 *dst, const u8 *berryName, u32 quantity)
+     // Italian berry names already start with BACCA: one word, no space.
+     txtPtr = StringCopy(dst, berryString);
+     StringCopy(txtPtr, berryName);
++#else
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    txtPtr = StringCopy(dst, berryName);
++    StringCopy(txtPtr, berryString);
+ #else
+     txtPtr = StringCopy(dst, berryName);
+     *txtPtr = CHAR_SPACE;
+     StringCopy(txtPtr + 1, berryString);
+ #endif
++#endif
+ }
+ 
+ bool8 IsBagPocketNonEmpty(u8 pocket)
+--- a/src/item_menu.c
++++ b/src/item_menu.c
+@@ -298,6 +298,11 @@ static const struct ListMenuTemplate sItemListMenu =
+     .cursorKind = CURSOR_BLACK_ARROW
+ };
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++// The German bag confirms with the short label; filled in by tools/localize_german.py.
++static const u8 gMenuText_Confirm2[] = _("");
++#endif
++
+ static const struct MenuAction sItemMenuActions[] = {
+     [ACTION_USE]               = {gMenuText_Use,      {ItemMenu_UseOutOfBattle}},
+     [ACTION_TOSS]              = {gMenuText_Toss,     {ItemMenu_Toss}},
+@@ -309,7 +314,11 @@ static const struct MenuAction sItemMenuActions[] = {
+     [ACTION_WALK]              = {gMenuText_Walk,     {ItemMenu_UseOutOfBattle}},
+     [ACTION_DESELECT]          = {gMenuText_Deselect, {ItemMenu_Register}},
+     [ACTION_CHECK_TAG]         = {gMenuText_CheckTag, {ItemMenu_CheckTag}},
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    [ACTION_CONFIRM]           = {gMenuText_Confirm2, {Task_FadeAndCloseBagMenu}},
++#else
+     [ACTION_CONFIRM]           = {gMenuText_Confirm,  {Task_FadeAndCloseBagMenu}},
++#endif
+     [ACTION_SHOW]              = {gMenuText_Show,     {ItemMenu_Show}},
+     [ACTION_GIVE_FAVOR_LADY]   = {gMenuText_Give2,    {ItemMenu_GiveFavorLady}},
+     [ACTION_CONFIRM_QUIZ_LADY] = {gMenuText_Confirm,  {ItemMenu_ConfirmQuizLady}},
+--- a/src/item_use.c
++++ b/src/item_use.c
+@@ -847,6 +847,8 @@ static const u8 sText_UseFieldHmNow[] = _("¿Usar {STR_VAR_1} ahora?");
+ static const u8 sText_UseFieldHmNow[] = _("Utiliser {STR_VAR_1} maintenant?");
+ #elif GAME_LANGUAGE == LANGUAGE_ITALIAN
+ static const u8 sText_UseFieldHmNow[] = _("Usare {STR_VAR_1} ora?");
++#elif GAME_LANGUAGE == LANGUAGE_GERMAN
++static const u8 sText_UseFieldHmNow[] = _("{STR_VAR_1} jetzt einsetzen?");
+ #else
+ static const u8 sText_UseFieldHmNow[] = _("Use {STR_VAR_1} now?");
+ #endif
+@@ -974,6 +976,8 @@ const u8 gText_UseAnotherRepel[] = _("¿Usar otro {STR_VAR_1}?");
+ const u8 gText_UseAnotherRepel[] = _("Utiliser un autre {STR_VAR_1}?");
+ #elif defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_ITALIAN
+ const u8 gText_UseAnotherRepel[] = _("Usare un altro {STR_VAR_1}?");
++#elif defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++const u8 gText_UseAnotherRepel[] = _("Noch einen {STR_VAR_1} benutzen?");
+ #else
+ const u8 gText_UseAnotherRepel[] = _("Use another {STR_VAR_1}?");
+ #endif
+--- a/src/lilycove_lady.c
++++ b/src/lilycove_lady.c
+@@ -396,7 +396,14 @@ static u8 BufferQuizAuthorName(void)
+     sQuizLadyPtr = &gSaveBlock1Ptr->lilycoveLady.quiz;
+     if (sQuizLadyPtr->playerName[0] == EOS)
+     {
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        StringCopy(
++            gStringVar1,
++            gText_QuizLady_Lady
++        );
++#else
+         StringCopy_PlayerName(gStringVar1, gText_QuizLady_Lady);
++#endif
+         authorNameId = QUIZ_AUTHOR_NAME_LADY;
+     }
+     else
+--- a/src/menu_specialized.c
++++ b/src/menu_specialized.c
+@@ -49,7 +49,11 @@ static const struct WindowTemplate sWindowTemplates_MailboxMenu[MAILBOXWIN_COUNT
+         .bg = 0,
+         .tilemapLeft = 1,
+         .tilemapTop = 1,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .width = 24,
++#else
+         .width = 8,
++#endif
+         .height = 2,
+         .paletteNum = 15,
+         .baseBlock = 0x8
+@@ -61,7 +65,11 @@ static const struct WindowTemplate sWindowTemplates_MailboxMenu[MAILBOXWIN_COUNT
+         .width = 8,
+         .height = 18,
+         .paletteNum = 15,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .baseBlock = 0x38
++#else
+         .baseBlock = 0x18
++#endif
+     },
+     [MAILBOXWIN_OPTIONS] = {
+         .bg = 0,
+@@ -70,7 +78,11 @@ static const struct WindowTemplate sWindowTemplates_MailboxMenu[MAILBOXWIN_COUNT
+         .width = 11,
+         .height = 8,
+         .paletteNum = 15,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .baseBlock = 0x38
++#else
+         .baseBlock = 0x18
++#endif
+     }
+ };
+ 
+@@ -222,6 +234,15 @@ u8 MailboxMenu_AddWindow(u8 windowIdx)
+             template.width = GetMaxWidthInMenuTable(&gMailboxMailOptions[0], 4);
+             sMailboxWindowIds[windowIdx] = AddWindow(&template);
+         }
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        else if (windowIdx == MAILBOXWIN_TITLE)
++        {
++            struct WindowTemplate template = sWindowTemplates_MailboxMenu[windowIdx];
++            s32 width = GetStringWidth(FONT_NORMAL, gText_Mailbox, 0) + 9;
++            template.width = (width / 8) + 2;
++            sMailboxWindowIds[windowIdx] = AddWindow(&template);
++        }
++#endif
+         else // MAILBOXWIN_TITLE or MAILBOXWIN_LIST
+         {
+             sMailboxWindowIds[windowIdx] = AddWindow(&sWindowTemplates_MailboxMenu[windowIdx]);
+--- a/src/naming_screen.c
++++ b/src/naming_screen.c
+@@ -44,7 +44,7 @@ enum {
+ };
+ 
+ #define KBROW_COUNT 4
+-#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_FRENCH
++#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_GERMAN)
+ #define KBCOL_COUNT 9
+ #else
+ #define KBCOL_COUNT 8
+@@ -1721,10 +1721,19 @@ static void DrawNormalTextEntryBox(void)
+ 
+ static void DrawMonTextEntryBox(void)
+ {
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    u8 buffer[48];
++#else
+     u8 buffer[32];
++#endif
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    StringCopy(gStringVar1, gSpeciesNames[sNamingScreen->monSpecies]);
++    StringExpandPlaceholders(buffer, sNamingScreen->template->title);
++#else
+     StringCopy(buffer, gSpeciesNames[sNamingScreen->monSpecies]);
+     StringAppendN(buffer, sNamingScreen->template->title, 15);
++#endif
+     FillWindowPixelBuffer(sNamingScreen->windows[WIN_TEXT_ENTRY_BOX], PIXEL_FILL(1));
+     AddTextPrinterParameterized(sNamingScreen->windows[WIN_TEXT_ENTRY_BOX], FONT_NORMAL, buffer, 8, 1, 0, 0);
+     PutWindowTilemap(sNamingScreen->windows[WIN_TEXT_ENTRY_BOX]);
+--- a/src/option_menu.c
++++ b/src/option_menu.c
+@@ -557,6 +557,9 @@ static void FrameType_DrawChoices(u8 selection)
+     u8 text[16];
+     u8 n = selection + 1;
+     u16 i;
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    u32 width;
++#endif
+ 
+     for (i = 0; gText_FrameTypeNumber[i] != EOS && i <= 5; i++)
+         text[i] = gText_FrameTypeNumber[i];
+@@ -579,8 +582,14 @@ static void FrameType_DrawChoices(u8 selection)
+ 
+     text[i] = EOS;
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    width = GetStringWidth(FONT_NORMAL, gText_FrameType, 0);
++    DrawOptionMenuChoice(gText_FrameType, CHOICES_LEFT, YPOS_FRAMETYPE, 0);
++    DrawOptionMenuChoice(text, CHOICES_LEFT + width + 3, YPOS_FRAMETYPE, 1);
++#else
+     DrawOptionMenuChoice(gText_FrameType, CHOICES_LEFT, YPOS_FRAMETYPE, 0);
+     DrawOptionMenuChoice(text, CHOICES_LEFT + 24, YPOS_FRAMETYPE, 1);
++#endif
+ }
+ 
+ static u8 ButtonMode_ProcessInput(u8 selection)
+--- a/src/player_pc.c
++++ b/src/player_pc.c
+@@ -719,7 +719,11 @@ static void Mailbox_DrawMailboxMenu(u8 taskId)
+ {
+     u8 windowId = MailboxMenu_AddWindow(MAILBOXWIN_TITLE);
+     MailboxMenu_AddWindow(MAILBOXWIN_LIST);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    AddTextPrinterParameterized(windowId, FONT_NORMAL, gText_Mailbox, GetStringCenterAlignXOffset(FONT_NORMAL, gText_Mailbox, gWindows[windowId].window.width * 8), 1, 0, NULL);
++#else
+     AddTextPrinterParameterized(windowId, FONT_NORMAL, gText_Mailbox, GetStringCenterAlignXOffset(FONT_NORMAL, gText_Mailbox, 0x40), 1, 0, NULL);
++#endif
+     ScheduleBgCopyTilemapToVram(0);
+     gTasks[taskId].tListTaskId = MailboxMenu_CreateList(&gPlayerPCItemPageInfo);
+     MailboxMenu_AddScrollArrows(&gPlayerPCItemPageInfo);
+--- a/src/pokedex.c
++++ b/src/pokedex.c
+@@ -279,7 +279,7 @@ static void Task_HandleCaughtMonPageInput(u8);
+ static void Task_ExitCaughtMonPage(u8);
+ static void SpriteCB_SlideCaughtMonToCenter(struct Sprite *sprite);
+ static void PrintMonInfo(u32 num, u32, u32 owned, u32 newEntry);
+-#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN)
++#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || GAME_LANGUAGE == LANGUAGE_GERMAN)
+ #define NATIVE_DEX_MEASUREMENT_X 0x90
+ #else
+ #define NATIVE_DEX_MEASUREMENT_X 0x81
+@@ -3088,12 +3088,20 @@ static void CreateInterfaceSprites(u8 page)
+             digitNum = (sPokedexView->ownCount % 100) % 10;
+             StartSpriteAnim(&gSprites[spriteId], digitNum);
+         }
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        spriteId = CreateSprite(&sDexListStartMenuCursorSpriteTemplate, 144, 96, 1);
++#else
+         spriteId = CreateSprite(&sDexListStartMenuCursorSpriteTemplate, 136, 96, 1);
++#endif
+         gSprites[spriteId].invisible = TRUE;
+     }
+     else // PAGE_SEARCH_RESULTS
+     {
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        spriteId = CreateSprite(&sDexListStartMenuCursorSpriteTemplate, 144, 80, 1);
++#else
+         spriteId = CreateSprite(&sDexListStartMenuCursorSpriteTemplate, 136, 80, 1);
++#endif
+         gSprites[spriteId].invisible = TRUE;
+     }
+ }
+@@ -4318,11 +4326,11 @@ static void PrintMonInfo(u32 num, u32 value, u32 owned, u32 newEntry)
+ 
+ static void PrintMonHeight(u16 height, u8 left, u8 top)
+ {
+-#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || CTR_LANG_PT_BR)
++#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || GAME_LANGUAGE == LANGUAGE_GERMAN || CTR_LANG_PT_BR)
+     u8 buffer[16];
+     u8 *end = ConvertIntToDecimalStringN(buffer, height / 10, STR_CONV_MODE_LEFT_ALIGN, 4);
+ 
+-#if GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || CTR_LANG_PT_BR
++#if GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || GAME_LANGUAGE == LANGUAGE_GERMAN || CTR_LANG_PT_BR
+     *end++ = CHAR_COMMA;
+ #else
+     *end++ = CHAR_PERIOD;
+@@ -4367,11 +4375,11 @@ static void PrintMonHeight(u16 height, u8 left, u8 top)
+ 
+ static void PrintMonWeight(u16 weight, u8 left, u8 top)
+ {
+-#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || CTR_LANG_PT_BR)
++#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || GAME_LANGUAGE == LANGUAGE_GERMAN || CTR_LANG_PT_BR)
+     u8 buffer[16];
+     u8 *end = ConvertIntToDecimalStringN(buffer, weight / 10, STR_CONV_MODE_LEFT_ALIGN, 4);
+ 
+-#if GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || CTR_LANG_PT_BR
++#if GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || GAME_LANGUAGE == LANGUAGE_GERMAN || CTR_LANG_PT_BR
+     *end++ = CHAR_COMMA;
+ #else
+     *end++ = CHAR_PERIOD;
+--- a/src/pokemon.c
++++ b/src/pokemon.c
+@@ -1,4 +1,5 @@
+ #include "global.h"
++#include "international_string_util.h"
+ #ifdef PLATFORM_3DS
+ #include "3ds_extras.h" // optional settings (OPTIONS pages)
+ #endif
+@@ -7065,7 +7066,11 @@ const u8 *GetTrainerClassNameFromId(u16 trainerId)
+ {
+     if (trainerId >= TRAINERS_COUNT)
+         trainerId = TRAINER_NONE;
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    return GetTrainerClassNameGenderSpecific(gTrainers[trainerId].trainerClass, gTrainers[trainerId].encounterMusic_gender, gTrainers[trainerId].trainerName);
++#else
+     return gTrainerClassNames[gTrainers[trainerId].trainerClass];
++#endif
+ }
+ 
+ const u8 *GetTrainerNameFromId(u16 trainerId)
+--- a/src/pokemon_summary_screen.c
++++ b/src/pokemon_summary_screen.c
+@@ -663,10 +663,18 @@ static const struct WindowTemplate sPageInfoTemplate[] =
+         .bg = 0,
+         .tilemapLeft = 11,
+         .tilemapTop = 14,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .width = 19,
++#else
+         .width = 18,
++#endif
+         .height = 6,
+         .paletteNum = 6,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .baseBlock = 561,
++#else
+         .baseBlock = 557,
++#endif
+     },
+ };
+ static const struct WindowTemplate sPageSkillsTemplate[] =
+@@ -796,6 +804,9 @@ static const u8 sStatsLeftColumnLayoutIvEv[] = _("{DYNAMIC 0}\n{DYNAMIC 2}\n{DYN
+ #if GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN
+ static const u8 sText_SkillsIVs[] = _("IV  (0-31)");
+ static const u8 sText_SkillsEVs[] = _("EV  (0-255)");
++#elif GAME_LANGUAGE == LANGUAGE_GERMAN
++static const u8 sText_SkillsIVs[] = _("IS  (0-31)");
++static const u8 sText_SkillsEVs[] = _("FP  (0-255)");
+ #else
+ static const u8 sText_SkillsIVs[] = _("IVs  (0-31)");
+ static const u8 sText_SkillsEVs[] = _("EVs  (0-255)");
+@@ -1227,6 +1238,9 @@ static const u8 sText_Category[] = _("CATÉG.");
+ #elif defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_ITALIAN
+ // Shortened the same way: CATEGORIA is wider than the label column.
+ static const u8 sText_Category[] = _("CATEG.");
++#elif defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++// Shortened the same way: KATEGORIE is wider than the label column.
++static const u8 sText_Category[] = _("KATEG.");
+ #else
+ static const u8 sText_Category[] = _("CATEGORY");
+ #endif
+@@ -4561,7 +4575,11 @@ static void PrintNewMoveDetailsOrCancelText(void)
+ static void AddAndFillMoveNamesWindow(void)
+ {
+     u8 windowId = AddWindowFromTemplateList(sPageMovesTemplate, PSS_DATA_WINDOW_MOVE_NAMES);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    FillWindowPixelRect(windowId, PIXEL_FILL(0), 0, 65, 72, 15);
++#else
+     FillWindowPixelRect(windowId, PIXEL_FILL(0), 0, 66, 72, 16);
++#endif
+     CopyWindowToVram(windowId, COPYWIN_GFX);
+ }
+ 
+--- a/src/pokenav_conditions_search_results.c
++++ b/src/pokenav_conditions_search_results.c
+@@ -442,7 +442,11 @@ static u32 LoopedTask_OpenConditionSearchResults(s32 state)
+         SetBgTilemapBuffer(1, gfx->buff);
+         CopyToBgTilemapBuffer(1, sConditionSearchResultTilemap, 0, 0);
+         CopyBgTilemapBufferToVram(1);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        CopyPaletteIntoBufferUnfaded(sConditionSearchResultFramePal, BG_PLTT_ID(1), 0x20);
++#else
+         CopyPaletteIntoBufferUnfaded(sConditionSearchResultFramePal, BG_PLTT_ID(1), sizeof(sConditionSearchResultFramePal));
++#endif
+         CopyBgTilemapBufferToVram(1);
+         return LT_INC_AND_PAUSE;
+     case 1:
+@@ -687,8 +691,13 @@ static void CreateSearchResultsList(void)
+     template.count = GetSearchResultsMonListCount();
+     template.itemSize = sizeof(struct PokenavListItem);
+     template.startIndex = GetSearchResultsCurrentListIndex();
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    template.item_X = 12;
++    template.windowWidth = 18;
++#else
+     template.item_X = 13;
+     template.windowWidth = 17;
++#endif
+     template.listTop = 1;
+     template.maxShowed = 8;
+     template.fillValue = 2;
+--- a/src/pokenav_list.c
++++ b/src/pokenav_list.c
+@@ -224,7 +224,19 @@ static u32 LoopedTask_PrintListItems(s32 state)
+         if (listSub->iconDrawFunc != NULL)
+             listSub->iconDrawFunc(listSub->listWindow.windowId, listSub->printIndex, row);
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        AddTextPrinterParameterized(
++            listSub->listWindow.windowId,
++            listSub->listWindow.fontId,
++            listSub->itemTextBuffer,
++            10,
++            (row << 4) + 1,
++            TEXT_SKIP_DRAW,
++            NULL
++        );
++#else
+         AddTextPrinterParameterized(listSub->listWindow.windowId, listSub->listWindow.fontId, listSub->itemTextBuffer, 8, (row << 4) + 1, TEXT_SKIP_DRAW, NULL);
++#endif
+         if (++listSub->listWindow.numPrinted >= listSub->listWindow.numToPrint)
+         {
+             // Finished printing items. If icons were being drawn, draw the
+@@ -714,7 +726,19 @@ static void PrintCheckPageTrainerName(struct PokenavListWindowState *state, stru
+     list->bufferItemFunc(state->listPtr + state->listItemSize * state->windowTopIndex, list->itemTextBuffer);
+     list->iconDrawFunc(list->listWindow.windowId, state->windowTopIndex, list->listWindow.unkA);
+     FillWindowPixelRect(list->listWindow.windowId, PIXEL_FILL(4), 0, list->listWindow.unkA * 16, list->listWindow.width * 8, 16);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    AddTextPrinterParameterized3(
++        list->listWindow.windowId,
++        list->listWindow.fontId,
++        10,
++        (list->listWindow.unkA * 16) + 1,
++        colors,
++        TEXT_SKIP_DRAW,
++        list->itemTextBuffer
++    );
++#else
+     AddTextPrinterParameterized3(list->listWindow.windowId, list->listWindow.fontId, 8, (list->listWindow.unkA * 16) + 1, colors, TEXT_SKIP_DRAW, list->itemTextBuffer);
++#endif
+     SetListMarginTile(&list->listWindow, TRUE);
+     CopyWindowRectToVram(list->listWindow.windowId, COPYWIN_FULL, 0, list->listWindow.unkA * 2, list->listWindow.width, 2);
+ }
+@@ -724,7 +748,19 @@ static void PrintMatchCallListTrainerName(struct PokenavListWindowState *state,
+ {
+     list->bufferItemFunc(state->listPtr + state->listItemSize * state->windowTopIndex, list->itemTextBuffer);
+     FillWindowPixelRect(list->listWindow.windowId, PIXEL_FILL(1), 0, list->listWindow.unkA * 16, list->listWindow.width * 8, 16);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    AddTextPrinterParameterized(
++        list->listWindow.windowId,
++        list->listWindow.fontId,
++        list->itemTextBuffer,
++        10,
++        list->listWindow.unkA * 16 + 1,
++        TEXT_SKIP_DRAW,
++        NULL
++    );
++#else
+     AddTextPrinterParameterized(list->listWindow.windowId, list->listWindow.fontId, list->itemTextBuffer, 8, list->listWindow.unkA * 16 + 1, TEXT_SKIP_DRAW, NULL);
++#endif
+     SetListMarginTile(&list->listWindow, FALSE);
+     CopyWindowToVram(list->listWindow.windowId, COPYWIN_FULL);
+ }
+@@ -740,7 +776,19 @@ static void PrintMatchCallFieldNames(struct PokenavListSub *list, u32 fieldId)
+     u32 top = (list->listWindow.unkA + 1 + (fieldId * 2)) & 0xF;
+ 
+     FillWindowPixelRect(list->listWindow.windowId, PIXEL_FILL(1), 0, top << 4, list->listWindow.width, 16);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    AddTextPrinterParameterized3(
++        list->listWindow.windowId,
++        FONT_NARROW,
++        4,
++        (top << 4) + 1,
++        colors,
++        TEXT_SKIP_DRAW,
++        fieldNames[fieldId]
++    );
++#else
+     AddTextPrinterParameterized3(list->listWindow.windowId, FONT_NARROW, 2, (top << 4) + 1, colors, TEXT_SKIP_DRAW, fieldNames[fieldId]);
++#endif
+     CopyWindowRectToVram(list->listWindow.windowId, COPYWIN_GFX, 0, top << 1, list->listWindow.width, 2);
+ }
+ 
+@@ -760,7 +808,19 @@ static void PrintMatchCallFlavorText(struct PokenavListWindowState *windowState,
+     if (str != NULL)
+     {
+         FillWindowTilesByRow(list->listWindow.windowId, 1, r6 * 2, list->listWindow.width - 1, 2);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        AddTextPrinterParameterized(
++            list->listWindow.windowId,
++            FONT_NARROW,
++            str,
++            4,
++            (r6 << 4) + 1,
++            TEXT_SKIP_DRAW,
++            NULL
++        );
++#else
+         AddTextPrinterParameterized(list->listWindow.windowId, FONT_NARROW, str, 2, (r6 << 4) + 1, TEXT_SKIP_DRAW, NULL);
++#endif
+         CopyWindowRectToVram(list->listWindow.windowId, COPYWIN_GFX, 0, r6 * 2, list->listWindow.width, 2);
+     }
+ }
+@@ -849,7 +909,16 @@ static void CreateListArrowSprites(struct PokenavListWindowState *windowState, s
+     u32 spriteId;
+     s16 x;
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    spriteId = CreateSprite(
++        &sSpriteTemplate_RightArrow,
++        list->listWindow.x * 8 + 5,
++        (list->listWindow.y + 1) * 8,
++        7
++    );
++#else
+     spriteId = CreateSprite(&sSpriteTemplate_RightArrow, list->listWindow.x * 8 + 3, (list->listWindow.y + 1) * 8, 7);
++#endif
+     list->rightArrow = &gSprites[spriteId];
+ 
+     x = list->listWindow.x * 8 + (list->listWindow.width - 1) * 4;
+--- a/src/pokenav_match_call_data.c
++++ b/src/pokenav_match_call_data.c
+@@ -1,4 +1,5 @@
+ #include "global.h"
++#include "international_string_util.h"
+ #include "battle_setup.h"
+ #include "data.h"
+ #include "event_data.h"
+@@ -1092,7 +1093,11 @@ static void MatchCall_GetNameAndDesc_Birch(match_call_t matchCall, const u8 **de
+ static void MatchCall_GetNameAndDescByRematchIdx(u32 idx, const u8 **desc, const u8 **name)
+ {
+     const struct Trainer *trainer = gTrainers + GetTrainerIdxByRematchIdx(idx);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    *desc = GetTrainerClassNameGenderSpecific(trainer->trainerClass, trainer->encounterMusic_gender, trainer->trainerName);
++#else
+     *desc = gTrainerClassNames[trainer->trainerClass];
++#endif
+     *name = trainer->trainerName;
+ }
+ 
+--- a/src/pokenav_match_call_gfx.c
++++ b/src/pokenav_match_call_gfx.c
+@@ -879,8 +879,13 @@ static void CreateMatchCallList(void)
+     template.count = GetNumberRegistered();
+     template.itemSize = sizeof(struct PokenavListItem);
+     template.startIndex = 0;
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    template.item_X = 12;
++    template.windowWidth = 17;
++#else
+     template.item_X = 13;
+     template.windowWidth = 16;
++#endif
+     template.listTop = 1;
+     template.maxShowed = 8;
+     template.fillValue = 3;
+--- a/src/pokenav_match_call_list.c
++++ b/src/pokenav_match_call_list.c
+@@ -405,7 +405,12 @@ void BufferMatchCallNameAndDesc(struct PokenavMatchCallEntry *matchCallEntry, u8
+         int index = GetTrainerIdxByRematchIdx(matchCallEntry->headerId);
+         const struct Trainer *trainer = &gTrainers[index];
+         int class = trainer->trainerClass;
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        int gender = trainer->encounterMusic_gender;
++        className = GetTrainerClassNameGenderSpecific(class, gender, trainer->trainerName);
++#else
+         className = gTrainerClassNames[class];
++#endif
+         trainerName = trainer->trainerName;
+     }
+     else
+@@ -416,11 +421,29 @@ void BufferMatchCallNameAndDesc(struct PokenavMatchCallEntry *matchCallEntry, u8
+     if (className && trainerName)
+     {
+         u8 *str2 = GetStringClearToWidth(str, FONT_NARROW, className, 69);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        GetStringClearToWidth(
++            str2,
++            FONT_NARROW,
++            trainerName,
++            57
++        );
++#else
+         GetStringClearToWidth(str2, FONT_NARROW, trainerName, 51);
++#endif
+     }
+     else
+     {
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        GetStringClearToWidth(
++            str,
++            FONT_NARROW,
++            NULL,
++            126
++        );
++#else
+         GetStringClearToWidth(str, FONT_NARROW, NULL, 120);
++#endif
+     }
+ }
+ 
+--- a/src/pokenav_region_map.c
++++ b/src/pokenav_region_map.c
+@@ -138,7 +138,11 @@ static const struct WindowTemplate sMapSecInfoWindowTemplate =
+     .bg = 1,
+     .tilemapLeft = 17,
+     .tilemapTop = 4,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    .width = 13,
++#else
+     .width = 12,
++#endif
+     .height = 13,
+     .paletteNum = 1,
+     .baseBlock = 0x4C
+@@ -537,7 +541,17 @@ static void UpdateMapSecInfoWindow(struct Pokenav_RegionMapGfx *state)
+     {
+     case MAPSECTYPE_CITY_CANFLY:
+         FillWindowPixelBuffer(state->infoWindowId, PIXEL_FILL(1));
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        PutWindowRectTilemap(
++            state->infoWindowId,
++            0,
++            0,
++            13,
++            2
++        );
++#else
+         PutWindowRectTilemap(state->infoWindowId, 0, 0, 12, 2);
++#endif
+         AddTextPrinterParameterized(state->infoWindowId, FONT_NARROW, regionMap->mapSecName, 0, 1, TEXT_SKIP_DRAW, NULL);
+         DrawCityMap(state, regionMap->mapSecId, regionMap->posWithinMapSec);
+         CopyWindowToVram(state->infoWindowId, COPYWIN_FULL);
+@@ -545,9 +559,31 @@ static void UpdateMapSecInfoWindow(struct Pokenav_RegionMapGfx *state)
+         break;
+     case MAPSECTYPE_CITY_CANTFLY:
+         FillWindowPixelBuffer(state->infoWindowId, PIXEL_FILL(1));
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        PutWindowRectTilemap(
++            state->infoWindowId,
++            0,
++            0,
++            13,
++            2
++        );
++#else
+         PutWindowRectTilemap(state->infoWindowId, 0, 0, 12, 2);
++#endif
+         AddTextPrinterParameterized(state->infoWindowId, FONT_NARROW, regionMap->mapSecName, 0, 1, TEXT_SKIP_DRAW, NULL);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        FillBgTilemapBufferRect(
++            1,
++            0x1041,
++            17,
++            6,
++            13,
++            11,
++            17
++        );
++#else
+         FillBgTilemapBufferRect(1, 0x1041, 17, 6, 12, 11, 17);
++#endif
+         CopyWindowToVram(state->infoWindowId, COPYWIN_FULL);
+         SetCityZoomTextInvisibility(TRUE);
+         break;
+@@ -560,8 +596,21 @@ static void UpdateMapSecInfoWindow(struct Pokenav_RegionMapGfx *state)
+         CopyWindowToVram(state->infoWindowId, COPYWIN_FULL);
+         SetCityZoomTextInvisibility(TRUE);
+         break;
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    case MAPSECTYPE_NONE:
++        FillBgTilemapBufferRect(
++            1,
++            0x1041,
++            17,
++            4,
++            13,
++            13,
++            17
++        );
++#else
+     case MAPSECTYPE_NONE:
+         FillBgTilemapBufferRect(1, 0x1041, 17, 4, 12, 13, 17);
++#endif
+         CopyBgTilemapBufferToVram(1);
+         SetCityZoomTextInvisibility(TRUE);
+         break;
+@@ -643,7 +692,18 @@ static void DrawCityMap(struct Pokenav_RegionMapGfx *state, int mapSecId, int po
+     if (i == NUM_CITY_MAPS)
+         return;
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    FillBgTilemapBufferRect_Palette0(
++        1,
++        0x1041,
++        17,
++        6,
++        13,
++        11
++    );
++#else
+     FillBgTilemapBufferRect_Palette0(1, 0x1041, 17, 6, 12, 11);
++#endif
+     CopyToBgTilemapBufferRect(1, state->cityZoomPics[i], 18, 6, 10, 10);
+ }
+ 
+@@ -656,7 +716,16 @@ static void PrintLandmarkNames(struct Pokenav_RegionMapGfx *state, int mapSecId,
+         if (!landmarkName)
+             break;
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        StringCopyPadded(
++            gStringVar1,
++            landmarkName,
++            CHAR_SPACE,
++            13
++        );
++#else
+         StringCopyPadded(gStringVar1, landmarkName, CHAR_SPACE, 12);
++#endif
+         AddTextPrinterParameterized(state->infoWindowId, FONT_NARROW, gStringVar1, 0, i * 16 + 17, TEXT_SKIP_DRAW, NULL);
+         i++;
+     }
+--- a/src/pokenav_ribbons_list.c
++++ b/src/pokenav_ribbons_list.c
+@@ -430,7 +430,11 @@ static u32 LoopedTask_OpenRibbonsMonList(s32 state)
+         DecompressAndCopyTileDataToVram(1, sMonRibbonListFrameTiles, 0, 0, 0);
+         SetBgTilemapBuffer(1, menu->buff);
+         CopyToBgTilemapBuffer(1, sMonRibbonListFrameTilemap, 0, 0);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        CopyPaletteIntoBufferUnfaded(sMonRibbonListFramePal, BG_PLTT_ID(1), 0x20);
++#else
+         CopyPaletteIntoBufferUnfaded(sMonRibbonListFramePal, BG_PLTT_ID(1), sizeof(sMonRibbonListFramePal));
++#endif
+         CopyBgTilemapBufferToVram(1);
+         return LT_INC_AND_PAUSE;
+     case 1:
+@@ -683,8 +687,13 @@ static void CreateRibbonMonsList(void)
+     template.count = GetRibbonsMonListCount();
+     template.itemSize = sizeof(struct PokenavListItem);
+     template.startIndex = GetRibbonListMenuCurrIndex();
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    template.item_X = 12;
++    template.windowWidth = 18;
++#else
+     template.item_X = 13;
+     template.windowWidth = 17;
++#endif
+     template.listTop = 1;
+     template.maxShowed = 8;
+     template.fillValue = 2;
+--- a/src/roulette.c
++++ b/src/roulette.c
+@@ -456,12 +456,24 @@ static const struct WindowTemplate sWindowTemplates[] =
+ {
+     {
+         .bg = 0,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .tilemapLeft = 2,
++#else
+         .tilemapLeft = 3,
++#endif
+         .tilemapTop = 15,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .width = 26,
++#else
+         .width = 24,
++#endif
+         .height = 4,
+         .paletteNum = 15,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .baseBlock = 0xBD
++#else
+         .baseBlock = 0xC5
++#endif
+     },
+     #ifdef UBFIX
+     DUMMY_WIN_TEMPLATE,
+--- a/src/secret_base.c
++++ b/src/secret_base.c
+@@ -182,9 +182,17 @@ static const struct WindowTemplate sRegistryWindowTemplates[] =
+ {
+     {
+         .bg = 0,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .tilemapLeft = 17,
++#else
+         .tilemapLeft = 18,
++#endif
+         .tilemapTop = 1,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .width = 12,
++#else
+         .width = 11,
++#endif
+         .height = 18,
+         .paletteNum = 15,
+         .baseBlock = 0x01,
+@@ -196,7 +204,11 @@ static const struct WindowTemplate sRegistryWindowTemplates[] =
+         .width = 28,
+         .height = 4,
+         .paletteNum = 15,
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++        .baseBlock = 0xd9,
++#else
+         .baseBlock = 0xc7,
++#endif
+     }
+ };
+ 
+@@ -737,7 +749,11 @@ static u8 *GetSecretBaseName(u8 *dest, u8 secretBaseIdx)
+ {
+     *StringCopyN(dest, gSaveBlock1Ptr->secretBases[secretBaseIdx].trainerName, GetNameLength(gSaveBlock1Ptr->secretBases[secretBaseIdx].trainerName)) = EOS;
+     ConvertInternationalString(dest, gSaveBlock1Ptr->secretBases[secretBaseIdx].language);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    return StringAppendWithPlaceholder(dest, gText_ApostropheSBase, dest);
++#else
+     return StringAppend(dest, gText_ApostropheSBase);
++#endif
+ }
+ 
+ u8 *GetSecretBaseMapName(u8 *dest)
+--- a/src/trainer_card.c
++++ b/src/trainer_card.c
+@@ -1527,6 +1527,8 @@ static void DrawStarsAndBadgesOnCard(void)
+ 
+ static void DrawCardBackStats(void)
+ {
++    // The German card back has no space for these marks next to its longer labels.
++#if !(defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN)
+     if (sData->cardType == CARD_TYPE_FRLG)
+     {
+         if (sData->hasTrades)
+@@ -1565,6 +1567,7 @@ static void DrawCardBackStats(void)
+             FillBgTilemapBufferRect(3, 156, 27, 16, 1, 1, 0);
+         }
+     }
++#endif
+     CopyBgTilemapBufferToVram(3);
+ }
+ 
+--- a/src/union_room.c
++++ b/src/union_room.c
+@@ -3671,7 +3671,11 @@ static u8 CreateTradeBoardWindow(const struct WindowTemplate *template)
+     u8 windowId = AddWindow(template);
+     DrawStdWindowFrame(windowId, FALSE);
+     FillWindowPixelBuffer(windowId, PIXEL_FILL(15));
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    PrintUnionRoomText(windowId, FONT_SMALL, sText_NameWantedOfferLv, 8, 1, UR_COLOR_TRADE_BOARD_OTHER);
++#else
+     PrintUnionRoomText(windowId, FONT_NORMAL, sText_NameWantedOfferLv, 8, 1, UR_COLOR_TRADE_BOARD_OTHER);
++#endif
+     CopyWindowToVram(windowId, COPYWIN_GFX);
+     PutWindowTilemap(windowId);
+     return windowId;

@@ -271,18 +271,20 @@ def c_label(source: str, start: int) -> str | None:
     return None
 
 
-FOREIGN = re.compile(r"GAME_LANGUAGE\s*==\s*LANGUAGE_(SPANISH|FRENCH|ITALIAN)")
+FOREIGN = re.compile(r"GAME_LANGUAGE\s*==\s*LANGUAGE_(SPANISH|FRENCH|ITALIAN|GERMAN)")
 
 
 def foreign_spans(source: str) -> list[tuple[int, int]]:
     """The parts of a C source that only another language's build compiles:
-    the branch of an #if on GAME_LANGUAGE == LANGUAGE_SPANISH, _FRENCH or _ITALIAN
-    (unless it names CTR_LANG_PT_BR too), up to its #else, #elif or #endif.
+    the branch of an #if on GAME_LANGUAGE == LANGUAGE_SPANISH, _FRENCH, _ITALIAN
+    or _GERMAN (unless it names CTR_LANG_PT_BR too or negates the test), up to
+    its #else, #elif or #endif.
     The English text is the one in the other branch."""
     spans, stack, pos = [], [], 0
     for line in source.splitlines(keepends=True):
         word = line.strip().split(None, 1)[0] if line.strip().startswith("#") else ""
-        foreign = word in ("#if", "#elif") and FOREIGN.search(line) is not None and "CTR_LANG_PT_BR" not in line
+        foreign = (word in ("#if", "#elif") and FOREIGN.search(line) is not None
+                   and "CTR_LANG_PT_BR" not in line and "!" not in line)
         if word in ("#if", "#ifdef", "#ifndef"):
             stack.append(pos + len(line) if foreign else None)
         elif word in ("#else", "#elif", "#endif") and stack:
