@@ -1,0 +1,10 @@
+German naming-screen storage has nine columns like French.
+Apply after 0081; re-pin the locale manifests when updating this patch.
+
+--- a/src/naming_screen.c
++++ b/src/naming_screen.c
+@@ -46,3 +46,3 @@
+ #define KBROW_COUNT 4
+-#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_FRENCH
++#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_GERMAN)
+ #define KBCOL_COUNT 9

@@ -47,7 +47,7 @@ LICENSES = [("LICENSE-PORT.md", "LICENSE-PORT.md"), ("NOTICE.md", "NOTICE.md"),
 FIXED_TIME = (2020, 1, 1, 0, 0, 0)
 VARIANT_FILES = ("Emerald3DS.3dsx", "Emerald3DS.smdh", "emerald3ds.recipe")
 ROM_REGIONS = {"BPEE": ("USA, Europe", "en"), "BPES": ("Spain", "es"), "BPEF": ("France", "fr"),
-               "BPEI": ("Italy", "it")}
+               "BPEI": ("Italy", "it"), "BPED": ("Germany", "de")}
 
 
 def sha256(data: bytes) -> str:

@@ -34,7 +34,7 @@ def already_localized(tree):
     if not marker.is_file():
         return False
     return marker.read_text(encoding="utf-8").strip() in {
-        "BPES experimental", "BPEF experimental", "BPEI experimental",
+        "BPES experimental", "BPEF experimental", "BPEI experimental", "BPED experimental",
     }
 
 
@@ -44,7 +44,7 @@ class LocaleTreeSelectionTests(unittest.TestCase):
             tree = Path(temporary)
             marker = tree / ".emerald3ds-locale"
             self.assertFalse(already_localized(tree))
-            for value in ("BPES experimental", "BPEF experimental", "BPEI experimental"):
+            for value in ("BPES experimental", "BPEF experimental", "BPEI experimental", "BPED experimental"):
                 with self.subTest(marker=value):
                     marker.write_text(value + "\n")
                     self.assertTrue(already_localized(tree))
@@ -63,7 +63,7 @@ class RandomizerLocaleTests(unittest.TestCase):
                 "English bootstrap tree before localization")
 
     def test_full_patched_source_hashes_and_edit_bounds(self):
-        for language in ("spanish", "french", "italian"):
+        for language in ("spanish", "french", "italian", "german"):
             manifest = self.manifest(language)
             for relative, file in manifest["files"].items():
                 with self.subTest(language=language, file=relative):

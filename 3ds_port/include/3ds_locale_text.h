@@ -76,6 +76,13 @@ static inline uint8_t CtrLocale_Glyph(uint32_t c)
     case 0xd5: return 0x30;
     case 0xe3: return 0x31;
     case 0xf5: return 0x32;
+    /* German needs the umlauts and the sharp s; the codes are the international
+     * charset's (charmap.txt), shared by the European releases. */
+    case 0xc4: return 0xF1;
+    case 0xd6: return 0xF2;
+    case 0xdf: return 0x15;
+    case 0xe4: return 0xF4;
+    case 0xf6: return 0xF5;
     default: return 0xAC;
     }
 }

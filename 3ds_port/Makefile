@@ -294,6 +294,11 @@ pak: romfs/engine/abi.bin
 devdata: romfs/engine/abi.bin
 	"$(PYTHON)" $(SCRIPTS)/staging.py devdata --romfs romfs --out build/devdata
 
+verify: verify-relief-rounding
+.PHONY: verify-relief-rounding
+verify-relief-rounding:
+	$(PYTHON) tests/voxel_relief_rounding_test.py
+
 verify: all verify-input
 	"$(PYTHON)" scripts/verify_build.py --devkitarm "$(DEVKITARM)" --stage 9 --video 1 --full 1
 
@@ -414,6 +419,11 @@ verify: verify-randomizer-locales
 .PHONY: verify-randomizer-locales
 verify-randomizer-locales:
 	$(PYTHON) tests/randomizer_locale_test.py --tree $(ROOT)
+
+verify: verify-locale-columns
+.PHONY: verify-locale-columns
+verify-locale-columns:
+	$(PYTHON) tests/locale_column_test.py
 
 build/randomizer_test$(EXESUFFIX): tests/randomizer_test.c src/3ds_randomizer_core.c include/3ds_randomizer.h
 	@mkdir -p build

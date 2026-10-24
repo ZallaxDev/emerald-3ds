@@ -14,18 +14,20 @@
  * Portuguese over the English game when built with PORT_LANG=pt_br
  * (CTR_LANG_PT_BR); the game's own texts stay those of its ROM. */
 #if CTR_LANG_PT_BR
-#define CTR_TEXT(english, spanish, french, italian, portuguese) (portuguese)
+#define CTR_TEXT(english, spanish, french, italian, german, portuguese) (portuguese)
 #elif GAME_LANGUAGE == LANGUAGE_SPANISH
-#define CTR_TEXT(english, spanish, french, italian, portuguese) (spanish)
+#define CTR_TEXT(english, spanish, french, italian, german, portuguese) (spanish)
 #elif GAME_LANGUAGE == LANGUAGE_FRENCH
-#define CTR_TEXT(english, spanish, french, italian, portuguese) (french)
+#define CTR_TEXT(english, spanish, french, italian, german, portuguese) (french)
 #elif GAME_LANGUAGE == LANGUAGE_ITALIAN
-#define CTR_TEXT(english, spanish, french, italian, portuguese) (italian)
+#define CTR_TEXT(english, spanish, french, italian, german, portuguese) (italian)
+#elif GAME_LANGUAGE == LANGUAGE_GERMAN
+#define CTR_TEXT(english, spanish, french, italian, german, portuguese) (german)
 #else
-#define CTR_TEXT(english, spanish, french, italian, portuguese) (english)
+#define CTR_TEXT(english, spanish, french, italian, german, portuguese) (english)
 #endif
 
 /* A text only English and Portuguese have. */
-#define CTR_TEXT_PT(english, portuguese) CTR_TEXT(english, english, english, english, portuguese)
+#define CTR_TEXT_PT(english, portuguese) CTR_TEXT(english, english, english, english, english, portuguese)
 
 #endif

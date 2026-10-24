@@ -482,15 +482,14 @@ static const u8 *EncName(const EncRow *row)
 static void DrawEncounters(const ViewState *s)
 {
     static const char *const methods[ENC_METHODS] = {
-        CTR_TEXT("GRASS", "HIERBA", "HERBES", "ERBA", "GRAMA"), CTR_TEXT("SURFING", "SURF", "SURF", "SURF", "SURF"),
-        CTR_TEXT("ROCK SMASH", "GOLPE ROCA", "ÉCLATE-ROC", "SPACCAROCCIA", "QUEBRA-ROCHA"),
-        CTR_TEXT("OLD ROD", "CAÑA VIEJA", "CANNE", "AMO VECCHIO", "VARA VELHA"),
-        CTR_TEXT("GOOD ROD", "CAÑA BUENA", "SUPER CANNE", "AMO BUONO", "VARA BOA"),
-        CTR_TEXT("SUPER ROD", "SUPERCAÑA", "MÉGA CANNE", "SUPERAMO", "SUPER VARA"),
+        CTR_TEXT("GRASS", "HIERBA", "HERBES", "ERBA", "AN LAND", "GRAMA"), CTR_TEXT("SURFING", "SURF", "SURF", "SURF", "SURFER", "SURF"),
+        CTR_TEXT("ROCK SMASH", "GOLPE ROCA", "ÉCLATE-ROC", "SPACCAROCCIA", "ZERTRÜMMERER", "QUEBRA-ROCHA"),
+        CTR_TEXT("OLD ROD", "CAÑA VIEJA", "CANNE", "AMO VECCHIO", "ANGEL", "VARA VELHA"),
+        CTR_TEXT("GOOD ROD", "CAÑA BUENA", "SUPER CANNE", "AMO BUONO", "PROFIANGEL", "VARA BOA"),
+        CTR_TEXT("SUPER ROD", "SUPERCAÑA", "MÉGA CANNE", "SUPERAMO", "SUPERANGEL", "SUPER VARA"),
     };
-    static const char *const none = CTR_TEXT("NO ENCOUNTER TABLE", "SIN TABLA DE ENCUENTROS", "AUCUNE TABLE ICI",
-                                             "NESSUNA TABELLA", "SEM TABELA DE ENCONTROS");
-    static const char *const level = CTR_TEXT("LV", "NV", "N", "LV", "NV");
+    static const char *const none = CTR_TEXT("NO ENCOUNTER TABLE", "SIN TABLA DE ENCUENTROS", "AUCUNE TABLE ICI", "NESSUNA TABELLA", "KEINE BEGEGNUNGSTABELLE", "SEM TABELA DE ENCONTROS");
+    static const char *const level = CTR_TEXT("LV", "NV", "N", "LV", "LV", "NV");
     char text[24];
     int oy, saved[4];
 
@@ -544,10 +543,8 @@ static void DrawEncounters(const ViewState *s)
 
 static void DrawClockNotice(const ViewState *s)
 {
-    static const char *const first = CTR_TEXT("SAVED CLOCK NOT RESTORED", "RELOJ GUARDADO NO RESTAURADO",
-                                              "HORLOGE SAUVÉE NON RESTAURÉE", "OROLOGIO NON RIPRISTINATO", "RELÓGIO SALVO NÃO RESTAURADO");
-    static const char *const second = CTR_TEXT("USING 3DS CLOCK - TAP TO HIDE", "USANDO RELOJ 3DS - TOCA AQUÍ",
-                                               "HORLOGE 3DS UTILISÉE - TOUCHER", "OROLOGIO 3DS IN USO - TOCCA", "USANDO RELÓGIO 3DS - TOQUE AQUI");
+    static const char *const first = CTR_TEXT("SAVED CLOCK NOT RESTORED", "RELOJ GUARDADO NO RESTAURADO", "HORLOGE SAUVÉE NON RESTAURÉE", "OROLOGIO NON RIPRISTINATO", "GESPEICHERTE UHR NICHT GELADEN", "RELÓGIO SALVO NÃO RESTAURADO");
+    static const char *const second = CTR_TEXT("USING 3DS CLOCK - TAP TO HIDE", "USANDO RELOJ 3DS - TOCA AQUÍ", "HORLOGE 3DS UTILISÉE - TOUCHER", "OROLOGIO 3DS IN USO - TOCCA", "3DS-UHR AKTIV - TIPPEN: AUSBLENDEN", "USANDO RELÓGIO 3DS - TOQUE AQUI");
     int oy = Plate(NOTICE_X, NOTICE_Y, NOTICE_W, NOTICE_H, sEmerald,
                    s->pressed == HIT_CLOCK_NOTICE ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
 
@@ -669,15 +666,15 @@ static void DrawTrainerCard(const ViewState *s)
 
     if (!s->cardBack)
     {
-        CardRow(row++, oy, Ascii(CTR_TEXT("NAME", "NOMBRE", "NOM", "NOME", "NOME")), s->name);
-        CardRow(row++, oy, Ascii(CTR_TEXT("ID No.", "Nº ID", "No. ID", "N. ID", "Nº ID")),
+        CardRow(row++, oy, Ascii(CTR_TEXT("NAME", "NOMBRE", "NOM", "NOME", "NAME", "NOME")), s->name);
+        CardRow(row++, oy, Ascii(CTR_TEXT("ID No.", "Nº ID", "No. ID", "N. ID", "ID-Nr.", "Nº ID")),
                 Number(s->id, 5, STR_CONV_MODE_LEADING_ZEROS));
         text[0] = CHAR_CURRENCY;
         StringCopy(text + 1, Number(s->money, 6, STR_CONV_MODE_LEFT_ALIGN));
-        CardRow(row++, oy, Ascii(CTR_TEXT("MONEY", "DINERO", "ARGENT", "SOLDI", "DINHEIRO")), text);
+        CardRow(row++, oy, Ascii(CTR_TEXT("MONEY", "DINERO", "ARGENT", "SOLDI", "GELD", "DINHEIRO")), text);
         if (s->hasDex)
             CardRow(row++, oy, gText_MenuPokedex, Number(s->dex, 3, STR_CONV_MODE_LEFT_ALIGN));
-        CardRow(row++, oy, Ascii(CTR_TEXT("TIME", "TIEMPO", "DURÉE", "TEMPO", "TEMPO")), HoursMinutes(s->hours, s->minutes));
+        CardRow(row++, oy, Ascii(CTR_TEXT("TIME", "TIEMPO", "DURÉE", "TEMPO", "ZEIT", "TEMPO")), HoursMinutes(s->hours, s->minutes));
     }
     else
     {
@@ -720,7 +717,7 @@ static void DrawTrainerCard(const ViewState *s)
     }
     oy = Plate(AREA_X + AREA_W - CARD_FLIP_W, CARD_BADGES_Y, CARD_FLIP_W, CARD_BADGES_H, s->pressed == HIT_OK ? sEmerald : sSlate,
                s->pressed == HIT_OK ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
-    TextIn(Ascii(CTR_TEXT("FLIP", "GIRAR", "TOURNER", "GIRA", "VIRAR")), AREA_X + AREA_W - CARD_FLIP_W, oy, CARD_FLIP_W,
+    TextIn(Ascii(CTR_TEXT("FLIP", "GIRAR", "TOURNER", "GIRA", "WENDEN", "VIRAR")), AREA_X + AREA_W - CARD_FLIP_W, oy, CARD_FLIP_W,
            CARD_BADGES_H, &sNormal, 'c', STYLE_WHITE, 6);
     AddHit(AREA_X + AREA_W - CARD_FLIP_W, CARD_BADGES_Y, CARD_FLIP_W, CARD_BADGES_H, HIT_OK);
 }
@@ -786,15 +783,15 @@ static void DrawSave(const ViewState *s)
         GetMapName(text, s->mapsec, 0);
     else
         StringCopy(text, Ascii("--"));
-    SaveRow(0, x, w, oy, Ascii(CTR_TEXT("AREA", "ZONA", "ZONE", "ZONA", "ÁREA")), text);
-    SaveRow(1, x, w, oy, Ascii(CTR_TEXT("PLAYER", "JUGADOR", "JOUEUR", "GIOCATORE", "JOGADOR")), s->name);
+    SaveRow(0, x, w, oy, Ascii(CTR_TEXT("AREA", "ZONA", "ZONE", "ZONA", "GEBIET", "ÁREA")), text);
+    SaveRow(1, x, w, oy, Ascii(CTR_TEXT("PLAYER", "JUGADOR", "JOUEUR", "GIOCATORE", "SPIELER", "JOGADOR")), s->name);
     for (int i = 0; i < NUM_BADGES; ++i)
         badges += (s->badges >> i) & 1;
-    SaveRow(2, x, w, oy, Ascii(CTR_TEXT("BADGES", "MEDALLAS", "BADGES", "MEDAGLIE", "INSÍGNIAS")),
+    SaveRow(2, x, w, oy, Ascii(CTR_TEXT("BADGES", "MEDALLAS", "BADGES", "MEDAGLIE", "ORDEN", "INSÍGNIAS")),
             Number(badges, 1, STR_CONV_MODE_LEFT_ALIGN));
     if (s->hasDex)
         SaveRow(3, x, w, oy, gText_MenuPokedex, Number(s->dex, 3, STR_CONV_MODE_LEFT_ALIGN));
-    SaveRow(s->hasDex ? 4 : 3, x, w, oy, Ascii(CTR_TEXT("TIME", "TIEMPO", "DURÉE", "TEMPO", "TEMPO")),
+    SaveRow(s->hasDex ? 4 : 3, x, w, oy, Ascii(CTR_TEXT("TIME", "TIEMPO", "DURÉE", "TEMPO", "ZEIT", "TEMPO")),
             HoursMinutes(s->hours, s->minutes));
 
     oy = Plate(AREA_X, SAVE_PARTY_Y, AREA_W, SAVE_PARTY_H, sLight, PLATE_STATE_NORMAL);
@@ -867,9 +864,9 @@ enum { HIT_NUZ_STATUS = HIT_ROW, HIT_NUZ_SLOT = HIT_ROW + 4, HIT_NUZ_FALLEN = HI
 static void DrawNuzlocke(const ViewState *s)
 {
     static const char *const status[3] = {
-        CTR_TEXT("CAUGHT", "CAPTURADO", "CAPTURÉ", "CATTURATO", "CAPTURADO"),
-        CTR_TEXT("MISSED", "PERDIDO", "RATÉ", "PERSO", "PERDIDO"),
-        CTR_TEXT("UNUSED", "LIBRE", "LIBRE", "LIBERO", "LIVRE"),
+        CTR_TEXT("CAUGHT", "CAPTURADO", "CAPTURÉ", "CATTURATO", "GEFANGEN", "CAPTURADO"),
+        CTR_TEXT("MISSED", "PERDIDO", "RATÉ", "PERSO", "VERPASST", "PERDIDO"),
+        CTR_TEXT("UNUSED", "LIBRE", "LIBRE", "LIBERO", "UNGENUTZT", "LIVRE"),
     };
     /* The buttons' order against CtrNuzStatus (0 unused, 1 caught, 2 missed). */
     static const u8 statusOf[3] = {1, 2, 0};
@@ -921,8 +918,8 @@ static void DrawNuzlocke(const ViewState *s)
         bool8 pressed = s->pressed == id;
 
         oy = Plate(bx, y, half, 30, pressed ? sEmerald : sLight, pressed ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
-        TextIn(Ascii(col ? CTR_TEXT("MARK FAINTED", "MARCAR DEBILIT.", "MARQUER K.O.", "SEGNA K.O.", "MARCAR DESMAIO")
-                         : CTR_TEXT("FALLEN MARK", "MARCA CAÍDO", "MARQUE TOMBÉ", "SEGNO CADUTO", "MARCA CAÍDO")),
+        TextIn(Ascii(col ? CTR_TEXT("MARK FAINTED", "MARCAR DEBILIT.", "MARQUER K.O.", "SEGNA K.O.", "K.O. MARKIEREN", "MARCAR DESMAIO")
+                         : CTR_TEXT("FALLEN MARK", "MARCA CAÍDO", "MARQUE TOMBÉ", "SEGNO CADUTO", "GEFALLEN-STATUS", "MARCA CAÍDO")),
                bx, oy + 1, half, 14, &sSmall, 'c', pressed ? STYLE_WHITE : STYLE_INK, 4);
         TextIn(col ? s->nuzFainted : s->nuzFallenText, bx, oy + 14, half, 14, &sSmall, 'c',
                pressed ? STYLE_WHITE : STYLE_GREEN, 4);
@@ -930,10 +927,10 @@ static void DrawNuzlocke(const ViewState *s)
     }
     y += 33;
     oy = Plate(x, y, w, AREA_Y + AREA_H - y, sCreamPlate, PLATE_STATE_NORMAL);
-    TextIn(Ascii(CTR_TEXT("NEXT LEVEL CAP", "NIVEL MÁXIMO", "NIVEAU MAX", "LIVELLO MAX", "NÍVEL MÁXIMO")), x, oy + 1, w / 2, 14,
+    TextIn(Ascii(CTR_TEXT("NEXT LEVEL CAP", "NIVEL MÁXIMO", "NIVEAU MAX", "LIVELLO MAX", "NÄCHSTES LV-LIMIT", "NÍVEL MÁXIMO")), x, oy + 1, w / 2, 14,
            &sSmall, 'l', STYLE_GRAY, 8);
     TextIn(s->nuzCap, x + w / 2, oy + 1, w / 2, 14, &sSmall, 'r', STYLE_INK, 8);
-    TextIn(Ascii(CTR_TEXT("CAUGHT/MISS/FALLEN", "CAPT./PERD./CAÍDOS", "PRIS/RATÉS/TOMBÉS", "PRESI/PERSI/CADUTI", "CAPT./PERD./CAÍDOS")),
+    TextIn(Ascii(CTR_TEXT("CAUGHT/MISS/FALLEN", "CAPT./PERD./CAÍDOS", "PRIS/RATÉS/TOMBÉS", "PRESI/PERSI/CADUTI", "GEF./VERP./GEFALL.", "CAPT./PERD./CAÍDOS")),
            x, oy + 14, w * 2 / 3, 14, &sSmall, 'l', STYLE_GRAY, 8);
     TextIn(s->nuzTotals, x + w * 2 / 3, oy + 14, w / 3, 14, &sSmall, 'r', STYLE_INK, 8);
 }

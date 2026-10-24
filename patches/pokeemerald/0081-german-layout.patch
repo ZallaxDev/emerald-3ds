@@ -1,0 +1,65 @@
+German-only layout additions on top of the current Emerald 3DS patch set.
+Preserves the Portuguese branches and the other cartridge languages.
+Applies after 0080-german-ending-tilemap.patch with tools/bootstrap.py.
+
+--- a/src/item.c
++++ b/src/item.c
+@@ -120,2 +120,7 @@
+     StringCopy(txtPtr, berryName);
++#elif defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++    // German berry names are the fruit alone and BEERE/BEEREN is a suffix:
++    // one word, no space (AMRENA + BEERE).
++    txtPtr = StringCopy(dst, berryName);
++    StringCopy(txtPtr, berryString);
+ #else
+--- a/src/strings.c
++++ b/src/strings.c
+@@ -1833,2 +1833,5 @@
+ const u8 gText_Berries[] = _("BAYAS");
++#elif defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++// German berry names take BEERE/BEEREN as a suffix.
++const u8 gText_Berries[] = _("BEEREN");
+ #elif CTR_LANG_PT_BR
+--- a/src/battle_message.c
++++ b/src/battle_message.c
+@@ -65,2 +65,7 @@
+ static const u8 sText_PkmnTeamGainedEXP[] = _("Il resto della squadra\nriceve punti ESP.!\p");
++#elif defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_GERMAN
++// German wording of the port's own message, on the same terms as the French
++// and Italian ones: the retail German ROM has no equivalent line. EP is the
++// game's own abbreviation (see the EXP. SHARE item name in the German ROM).
++static const u8 sText_PkmnTeamGainedEXP[] = _("Der Rest des Teams erhält\nEP. Punkte!\p");
+ #else
+--- a/src/pokedex.c
++++ b/src/pokedex.c
+@@ -281,3 +281,3 @@
+ static void PrintMonInfo(u32 num, u32, u32 owned, u32 newEntry);
+-#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN)
++#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || GAME_LANGUAGE == LANGUAGE_GERMAN)
+ #define NATIVE_DEX_MEASUREMENT_X 0x90
+@@ -4320,3 +4320,3 @@
+ {
+-#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || CTR_LANG_PT_BR)
++#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || GAME_LANGUAGE == LANGUAGE_GERMAN || CTR_LANG_PT_BR)
+     u8 buffer[16];
+@@ -4325,2 +4325,2 @@
+-#if GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || CTR_LANG_PT_BR
++#if GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || GAME_LANGUAGE == LANGUAGE_GERMAN || CTR_LANG_PT_BR
+     *end++ = CHAR_COMMA;
+@@ -4369,3 +4369,3 @@
+ {
+-#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || CTR_LANG_PT_BR)
++#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || GAME_LANGUAGE == LANGUAGE_GERMAN || CTR_LANG_PT_BR)
+     u8 buffer[16];
+@@ -4374,2 +4374,2 @@
+-#if GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || CTR_LANG_PT_BR
++#if GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || GAME_LANGUAGE == LANGUAGE_GERMAN || CTR_LANG_PT_BR
+     *end++ = CHAR_COMMA;
+--- a/src/item_menu.c
++++ b/src/item_menu.c
+@@ -3093,3 +3093,3 @@
+-        const char *mark = CTR_TEXT("HM", "MO", "CS", "MN", "MO");
++        const char *mark = CTR_TEXT("HM", "MO", "CS", "MN", "VM", "MO");
+-
++
+         dest[0] = CHAR_A + (mark[0] - 'A');

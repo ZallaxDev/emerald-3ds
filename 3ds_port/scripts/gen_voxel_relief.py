@@ -965,7 +965,13 @@ def _gauss_seidel(n, pairs, fixed, iterations=4000):
         for r in range(n):
             if r in fixed or not adj[r]:
                 continue
-            v = sum(w * (h[o] + d) for (o, d, w) in adj[r]) / sum(w for (_, _, w) in adj[r])
+            # Keep the release's left-to-right rounding: Python 3.12+ sum()
+            # compensates float additions, which can change seam selection.
+            total = weight = 0
+            for o, d, w in adj[r]:
+                total += w * (h[o] + d)
+                weight += w
+            v = total / weight
             delta = max(delta, abs(v - h[r]))
             h[r] = v
         if delta < 0.001:

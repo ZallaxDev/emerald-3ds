@@ -147,6 +147,8 @@ def main() -> None:
                     help="clean French (BPEF) ROM: also build the French variant (payload/fr/)")
     ap.add_argument("--italian-rom", type=Path, default=None,
                     help="clean Italian (BPEI) ROM: also build the Italian variant (payload/it/)")
+    ap.add_argument("--german-rom", type=Path, default=None,
+                    help="clean German (BPED) ROM: also build the German variant (payload/de/)")
     ap.add_argument("--nm", default=os.environ.get("NM", "arm-none-eabi-nm"))
     ap.add_argument("--make", default=None, help="command that runs make in 3ds_port (default: make)")
     ap.add_argument("--skip-make", action="store_true")
@@ -212,6 +214,9 @@ def main() -> None:
     if args.italian_rom:
         locales.append({"code": "it", "stem": "italian", "rom": args.italian_rom,
                         "script": "localize_italian.py"})
+    if args.german_rom:
+        locales.append({"code": "de", "stem": "german", "rom": args.german_rom,
+                        "script": "localize_german.py"})
     for locale in locales:
         build_localized_variant(args, tag, payload / locale["code"], locale)
 
