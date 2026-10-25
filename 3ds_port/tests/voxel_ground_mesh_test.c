@@ -58,6 +58,7 @@ VoxelVisualShape VoxelWorld_ClassifyTile(int x,int y)
     return x-sMap.originX==6 && y-sMap.originY==2 ? VOXEL_SHAPE_WATER : VOXEL_SHAPE_FLAT;
 }
 int VoxelWorld_BorderMetatile(int x,int y) { (void)x; (void)y; return -1; }
+bool VoxelAtlas_IsVoid(const VoxelMapInstance *inst, int metatile) { (void)inst; (void)metatile; return false; }
 bool VoxelWorld_BorderIsWater(int x, int y) { (void)x; (void)y; return false; }
 void VoxelWorld_GetPlayerWorldCoords(float *x,float *z) { *x=7+sMap.originX; *z=7+sMap.originY; }
 void VoxelAtlas_SlotUV(unsigned slot,float *u,float *v,float *ue,float *ve)
