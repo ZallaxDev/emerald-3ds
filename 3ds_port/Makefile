@@ -359,6 +359,12 @@ build/field_view_test$(EXESUFFIX): tests/field_view_test.c src/3ds_field_view.c 
 .PHONY: verify-encounters
 verify-encounters: build/encounters_test.exe
 	./build/encounters_test.exe
+
+# The tree's own maps and behaviours: needs the complete tree, so CI's
+# host-tests (which runs verify-encounters on the repo alone) leaves it out.
+verify: verify-underwater-encounters
+.PHONY: verify-underwater-encounters
+verify-underwater-encounters:
 	"$(PYTHON)" -B tests/underwater_encounters_test.py --tree $(ROOT)
 
 build/encounters_test.exe: tests/encounters_test.c src/3ds_encounters.c include/3ds_encounters.h
