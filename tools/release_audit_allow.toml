@@ -12,6 +12,10 @@ paths = [
     "Emerald3DS-v*-Windows/payload/Emerald3DS.3dsx",
     # the other languages' executables (payload/es/ for the Spanish ROM)
     "Emerald3DS-v*-Windows/payload/*/Emerald3DS.3dsx",
+    "Emerald3DS-v*-macOS/Emerald3DS-Builder",
+    "Emerald3DS-v*-macOS/emerald3ds-builder-cli",
+    "Emerald3DS-v*-macOS/payload/Emerald3DS.3dsx",
+    "Emerald3DS-v*-macOS/payload/*/Emerald3DS.3dsx",
     # the same executables inside Emerald3DS-WebPayload.zip
     "payload/Emerald3DS.3dsx",
     "payload/*/Emerald3DS.3dsx",
@@ -59,4 +63,7 @@ globs = []
 # The builder's PyInstaller runtime: Python, Tcl/Tk, Pillow and their DLLs,
 # shipped unmodified under their own licenses. Checked for ROMs, data packs
 # and secrets, not for size or incidental byte runs.
-globs = ["Emerald3DS-v*-Windows/_internal/*"]
+globs = [
+    "Emerald3DS-v*-Windows/_internal/*",
+    "Emerald3DS-v*-macOS/_internal/*",
+]
