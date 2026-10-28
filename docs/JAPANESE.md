@@ -156,6 +156,6 @@ SD に置き換える（`asset_index` はエンジン側で 3DSX に入る。pak
 
 ## クレジット
 
-スペイン語版の仕組み（Jesus Oliva 氏、
-[pull request #6](https://github.com/ZallaxDev/pokeemerald-3Ds-dualscreen/pull/6)）を
+スペイン語版の仕組み（luksgrin 氏、
+[pull request #59](https://github.com/ZallaxDev/emerald-3ds/pull/59)）を
 もとにしています。
