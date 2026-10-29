@@ -4360,9 +4360,12 @@ def day_care():
         piece("plant_s", [(0, 114, 16, 143)], 28, leave=DAY_CARE_FLOOR, card=True),
         piece("table", [(160, 82, 192, 111)], 5, leave=DAY_CARE_GRASS, solid=True,
               side=(164, 84, 188, 100)),
-        piece("fence", [(96, 128, 192, 144)], 15, through=True,
+        # the post at its west end stands on its row, taller than the
+        # pickets (its whole drawing, rows 112-143): on its own row above, it
+        # stood a cell behind the fence, apart from it
+        piece("fence", [(105, 128, 192, 144)], 15, through=True,
               leave=DAY_CARE_FLOOR + DAY_CARE_GRASS),
-        piece("gatepost", [(96, 112, 105, 128)], 15, leave=DAY_CARE_FLOOR),
+        piece("gatepost", [(96, 112, 105, 144)], 28, leave=DAY_CARE_FLOOR + DAY_CARE_GRASS),
         piece("pc", [(160, 8, 176, 40)], 24, leave=DAY_CARE_WALL, back=32),
         # the crates' rims are the wall's wood: only its paint is left
         piece("crate_w", [(80, 23, 96, 48)], 7, leave=DAY_CARE_PAINT, against=32),
@@ -4518,9 +4521,12 @@ def slateport_fan_club():
     side = SLATEPORT_FAN_SIDE
     wall_floor = SLATEPORT_FAN_WALL + SLATEPORT_FAN_FLOOR
     return [
-        piece("plant_sw", [(0, 150, 16, 176)], 26, card=True, leave=SLATEPORT_FAN_FLOOR),
-        piece("plant_se", [(208, 150, 224, 176)], 26, card=True, leave=SLATEPORT_FAN_FLOOR),
-        piece("table", [(80, 94, 144, 128)], 10, leave=SLATEPORT_FAN_RUG, solid=True),
+        # their leaves from row 147: from 150 their tips lay on the floor
+        piece("plant_sw", [(0, 147, 16, 176)], 29, card=True, leave=SLATEPORT_FAN_FLOOR),
+        piece("plant_se", [(208, 147, 224, 176)], 29, card=True, leave=SLATEPORT_FAN_FLOOR),
+        # the glass table as drawn, rows 98-130, its legs too: from row 94 it
+        # took the sofa's foot behind it and stood over the sofa
+        piece("table", [(80, 98, 144, 131)], 12, leave=SLATEPORT_FAN_RUG, solid=True),
         piece("plant_w", [(48, 20, 64, 47)], 27, card=True, leave=wall_floor),
         piece("plant_e", [(160, 20, 176, 47)], 27, card=True, leave=wall_floor),
         # pilasters: the wall's own pattern 5 px forward, their tops its trim
@@ -4946,13 +4952,48 @@ def mystery_events_house_1f():
 # back wall (see below).
 
 E4_WALL_SIDE = (32, 16, 48, 32)
+# The entry door (5-7, 12-13), which elite_four.inc closes behind the player
+# (EntryDoor_ClosedTop over ClosedBottom). Open, the front wall's top runs on
+# over the doorway: a lintel, the band's last 8 rows its front, lifted to the
+# wall's top; shut, the door is a stretch of the wall, read off the room
+# drawn so (each room's `_closed`).
+E4_DOOR_TOP, E4_DOOR_BOTTOM = 0x206, 0x20E
+E4_DOOR_DRAW = dict([((x, 12), E4_DOOR_TOP) for x in (5, 6, 7)] +
+                    [((x, 13), E4_DOOR_BOTTOM) for x in (5, 6, 7)])
 
 
-def elite_four_room(floor):
+# The back wall stands to row 2's foot, where the side walls start: the
+# spotlights along it (row 2) and the door's lower half painted on its face.
+# They change together when the member is beaten (elite_four.inc,
+# SetAdvanceToNextRoomMetatiles: the lights off, the door open), so the wall
+# stands in each state (`when`, its first spotlight), the other read off the
+# room drawn so (each room's `_advance`) - stood on row 2's top edge, the
+# lights and the door's foot had lain on the floor before it.
+E4_LAMP_ON, E4_LAMP_OFF = 0x20D, 0x2DE          # Right spotlight, at (0, 2)
+E4_ADVANCE_DRAW = dict([((x, 2), 0x2DE) for x in (0, 2, 4, 9, 11)] +
+                       [((x, 2), 0x2DD) for x in (1, 3, 8, 10, 12)] +
+                       [((6, 1), 0x344), ((6, 2), 0x345)])
+
+
+def e4_back_wall(lamp):
+    return piece("wall", [(0, 0, 208, 48)], 32, fill=16, foot=48, side=E4_WALL_SIDE, solid=True,
+                 when=(0, 2, lamp))
+
+
+def e4_entrance_door():
+    return piece("wall_front_door", [(80, 172, 128, 224)], 32, fill=16, foot=224, side=E4_WALL_SIDE,
+                 solid=True, when=(6, 12, E4_DOOR_TOP))
+
+
+def elite_four_room(floor, door_open):
     """`floor`: the room's own floor colours (the pillars' tops are the
-    border's, so only the main floor is left round them)."""
+    border's, so only the main floor is left round them); `door_open`: the
+    metatile of the open entry doorway (the room's floor), while which the
+    lintel stands."""
     side = E4_WALL_SIDE
     return [
+        piece("wall_front_lintel", [(80, 172, 128, 192)], 8, base=24, side=side, solid=True,
+              when=(6, 12, door_open)),
         piece("pillar_w", [(0, 68, 26, 147)], 69, leave=floor),
         piece("pillar_e", [(182, 68, 208, 147)], 69, leave=floor),
         # the door painted on the back wall, as the rooms' doors are: a
@@ -4963,7 +5004,7 @@ def elite_four_room(floor):
         # row on: a piece's rectangle lays every cell in it in its model, and
         # the spotlights and the entry door stay drawn to change. Named as
         # walls, the room's own (own_shell)
-        piece("wall", [(0, 0, 208, 32)], 32, fill=16, foot=32, side=side, solid=True),
+        e4_back_wall(E4_LAMP_ON),
         piece("wall_front_w", [(0, 172, 80, 224)], 32, fill=16, foot=224, side=side, solid=True),
         piece("wall_front_e", [(128, 172, 208, 224)], 32, fill=16, foot=224, side=side, solid=True),
         piece("side_w", [], 32, side=side, walls=[((0, 204), (0, 48))]),
@@ -8075,22 +8116,70 @@ SPECS = [
     {
         "name": "sidneys_room",
         "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_SIDNEYS_ROOM", "ground": [0x22c],
-                     "pieces": own_shell(elite_four_room(("c59462", "cda473")))},
+                     "pieces": own_shell(elite_four_room(("c59462", "cda473"), 0x22c))},
+    },
+    {
+        # the entry door shut behind the player (E4_DOOR_DRAW)
+        "name": "sidneys_room_closed",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_SIDNEYS_ROOM", "ground": [0x22c],
+                     "draw": E4_DOOR_DRAW, "pieces": own_shell([e4_entrance_door()])},
+    },
+    {
+        # the member beaten: the lights off, the door on open (E4_ADVANCE_DRAW)
+        "name": "sidneys_room_advance",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_SIDNEYS_ROOM", "ground": [0x22c],
+                     "draw": E4_ADVANCE_DRAW, "pieces": own_shell([e4_back_wall(E4_LAMP_OFF)])},
     },
     {
         "name": "phoebes_room",
         "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_PHOEBES_ROOM", "ground": [0x25c],
-                     "pieces": own_shell(elite_four_room(("a47bac", "b48bbd")))},
+                     "pieces": own_shell(elite_four_room(("a47bac", "b48bbd"), 0x25c))},
+    },
+    {
+        # the entry door shut behind the player (E4_DOOR_DRAW)
+        "name": "phoebes_room_closed",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_PHOEBES_ROOM", "ground": [0x25c],
+                     "draw": E4_DOOR_DRAW, "pieces": own_shell([e4_entrance_door()])},
+    },
+    {
+        # the member beaten: the lights off, the door on open (E4_ADVANCE_DRAW)
+        "name": "phoebes_room_advance",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_PHOEBES_ROOM", "ground": [0x25c],
+                     "draw": E4_ADVANCE_DRAW, "pieces": own_shell([e4_back_wall(E4_LAMP_OFF)])},
     },
     {
         "name": "glacias_room",
         "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_GLACIAS_ROOM", "ground": [0x28c],
-                     "pieces": own_shell(elite_four_room(("bdc5ff", "cdd5ff")))},
+                     "pieces": own_shell(elite_four_room(("bdc5ff", "cdd5ff"), 0x28c))},
+    },
+    {
+        # the entry door shut behind the player (E4_DOOR_DRAW)
+        "name": "glacias_room_closed",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_GLACIAS_ROOM", "ground": [0x28c],
+                     "draw": E4_DOOR_DRAW, "pieces": own_shell([e4_entrance_door()])},
+    },
+    {
+        # the member beaten: the lights off, the door on open (E4_ADVANCE_DRAW)
+        "name": "glacias_room_advance",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_GLACIAS_ROOM", "ground": [0x28c],
+                     "draw": E4_ADVANCE_DRAW, "pieces": own_shell([e4_back_wall(E4_LAMP_OFF)])},
     },
     {
         "name": "drakes_room",
         "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_DRAKES_ROOM", "ground": [0x2bc],
-                     "pieces": own_shell(elite_four_room(("e67341", "ff7341")))},
+                     "pieces": own_shell(elite_four_room(("e67341", "ff7341"), 0x2bc))},
+    },
+    {
+        # the entry door shut behind the player (E4_DOOR_DRAW)
+        "name": "drakes_room_closed",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_DRAKES_ROOM", "ground": [0x2bc],
+                     "draw": E4_DOOR_DRAW, "pieces": own_shell([e4_entrance_door()])},
+    },
+    {
+        # the member beaten: the lights off, the door on open (E4_ADVANCE_DRAW)
+        "name": "drakes_room_advance",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_DRAKES_ROOM", "ground": [0x2bc],
+                     "draw": E4_ADVANCE_DRAW, "pieces": own_shell([e4_back_wall(E4_LAMP_OFF)])},
     },
     {
         "name": "league_1f",
@@ -8389,12 +8478,35 @@ o..#.....#.####
 }
 
 
+# the puzzle rooms' tatami, its lines and its shade, round the partitions
+TRICK_FLOOR = ("c5ffac", "a4cd6a", "83ac4a", "8b8b8b", "6a8b31")
+# the rooms whose partitions' tops, drawn `height` rows north of their
+# cells, are their own (TRICK_PUZZLES: the cream ones)
+TRICK_TOPS_ABOVE = (1, 3)
+
+
 def trick_house_puzzle(n):
     height, text = TRICK_PUZZLES[n]
     rows = text.split()
     cells = [(x, y + 2) for y, row in enumerate(rows) for x, c in enumerate(row) if c == "#"]
-    return rect_pieces("partition", runs_of(cells), height) + trick_house_shell(
+    shell = trick_house_shell(
         {(x, y + 2) for y, row in enumerate(rows) for x, c in enumerate(row) if c == "o"})
+    if n not in TRICK_TOPS_ABOVE:
+        return rect_pieces("partition", runs_of(cells), height) + shell
+    # A partition stands on its cells, its top `height` rows above them as the
+    # GBA draws it: its rectangle starts that much higher, the tatami there
+    # left (`leave`), where the cell above it is floor - from its cells' edge,
+    # that much of its top lay flat on the floor north of it. Under another
+    # partition its top is that one's front.
+    own = set(cells)
+    out = []
+    for (x0, y0, x1, y1) in run_rects(runs_of(cells)):
+        above = all((x // 16, y0 // 16 - 1) not in own for x in range(x0, x1, 16))
+        top = y0 - height if above else y0
+        out.append(piece("partition_%d_%d" % (x0 // 16, y0 // 16), [(x0, top, x1, y1)],
+                         height if above else min(height, y1 - y0 - 4),
+                         leave=TRICK_FLOOR if above else ()))
+    return out + shell
 
 
 # the eighth's jars on its ice, one to each cell, to a pixel short of its
@@ -8441,8 +8553,10 @@ def trick_house_corridor():
     side = (64, 0, 80, 32)
     return [
         piece("wall", [(48, 0, 240, 32)], 32, fill=16, foot=32, side=side),
-        piece("wall_mid", [(0, 96, 48, 128)], 32, fill=16, foot=128, side=side),
-        piece("wall_low", [(48, 320, 96, 352)], 32, fill=16, foot=352, side=side),
+        # the lower two run back to the dark behind them (`back`): a slab a
+        # cell deep, they left floor laid behind them under the dark
+        piece("wall_mid", [(0, 96, 48, 128)], 32, fill=16, foot=128, side=side, back=96, solid=True),
+        piece("wall_low", [(48, 320, 96, 352)], 32, fill=16, foot=352, side=side, back=320, solid=True),
     ]
 
 
@@ -8532,7 +8646,9 @@ def record_corner():
         piece("seat_sw", [(112, 85, 128, 111)], 14),
         piece("seat_ne", [(192, 53, 208, 79)], 14),
         piece("seat_se", [(192, 85, 208, 111)], 14),
-        piece("table", [(128, 67, 192, 112)], 12),
+        # round the receptionist, who stands in its middle (10,5): her cell
+        # left to the map, or the table's box hid all but her head
+        piece("table", [(128, 67, 192, 112)], 12, skip=[(10, 5)]),
     ] + link_room(320, 160, 32, 64, 256, 144)
 
 
