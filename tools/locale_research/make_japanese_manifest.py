@@ -16,7 +16,7 @@ written: no text, graphics or other bytes of either ROM.
 sources tell which layouts the port changed); --tree is a bootstrapped tree
 after `make generated`. Needs pyelftools (tools/requirements-research.txt).
 """
-import bisect, glob, gzip, hashlib, json, pickle, re, struct, sys
+import bisect, glob, gzip, hashlib, json, os, pickle, re, struct, sys
 from collections import Counter, defaultdict
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -391,6 +391,7 @@ def main():
     ap.add_argument('--tree', required=True, help='bootstrapped tree after make generated')
     ap.add_argument('--out-dir', default=locale_sources.REPO + 'tools/locales')
     ap.add_argument('--report', help='list of the edits left in English')
+    ap.add_argument('--nm', default=os.environ.get('NM', 'arm-none-eabi-nm'))
     args = ap.parse_args()
     locale_sources.TREE = str(Path(args.tree).resolve()) + '/'
     elf = args.elf
@@ -504,6 +505,10 @@ def main():
         'graphics': graphics,
         'credits': {'table': CREDITS_TABLE, 'pages': CREDITS_PAGES},
     }
+    # the graphics and sound tracks BPEJ has in another version (japanese_extras.py)
+    import japanese_extras
+    japanese_extras.extras(args.nm, args.elf, args.english_rom, args.japanese_rom, args.tree, result,
+                           out / 'japanese-symbols.s.gz')
     (out / 'japanese.json.gz').write_bytes(
         gzip.compress(json.dumps(result, separators=(',', ':')).encode(), 9, mtime=0))
     print('wrote', out / 'japanese.json.gz', 'and', out / 'japanese-symbols.s.gz')

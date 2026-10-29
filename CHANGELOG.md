@@ -123,14 +123,25 @@ improved.
   #101, #102, #103 and #104). The builder names the other regional Gen 3
   games when one is loaded by mistake, by @abrahammordev (pull request #95).
 
-- Wide screen and GBA screens: the slot machine and the OPTION screen are
-  shown centred as GBA screens, the cave transition covers the whole screen,
-  the roulette is centred, with its wheel drawn once and the felt and casino
-  wall behind it, Fly's bird and its rider fly round the player, and move
-  backgrounds that are one picture are magnified to the screen.
+- Game Corner: the slot machine and the roulette are shown centred as GBA
+  screens instead of in the screen's top left corner, each with a backdrop
+  of its own filling the wide screen - the slot machine the casino's wall
+  with coins and a gold frame of bulbs round the machine, the roulette a
+  green felt with Poké Balls and a gold cord - and the roulette's wheel is
+  drawn once instead of in rotated copies round the margins.
 
-- Fixes: an HP bar at 1 HP shows a sliver, as on the GBA; a diving player is
-  in the water for the visible wild Pokémon; a 2D map next to one with
+- Wide screen and GBA screens: the OPTION screen is shown centred as a GBA
+  screen, the cave entrance and exit tunnel covers the whole screen, Fly's
+  bird and its rider fly round the player, and move backgrounds that are one
+  picture (Psychic, Thunder, Ice, Solar Beam...) are magnified to the
+  screen; the others no longer stop in bands at the top and bottom.
+
+- Fixes: an HP bar at 1 HP shows a sliver, as on the GBA; with visible wild
+  Pokémon on MANY, nothing could be met while diving (they asked for a
+  surfing player); a map two crossings behind the player, still on screen,
+  no longer drops out of the voxel world and shows black; in 3D battles the sandstorm no
+  longer turns the Pokémon into sand-filled silhouettes on the console and
+  Surf's wave no longer draws a pale band over the other Pokémon; a 2D map next to one with
   another tileset draws its neighbour with that tileset; with PHYS/SPEC
   SPLIT on, closing the summary no longer read freed memory; taps on a list
   menu's odd entries count again.
@@ -328,7 +339,13 @@ improved.
   game's Japanese glyphs, the naming screen has the Japanese keyboard and
   5-character names, battles draw names, levels and HP as the Japanese game
   does, the touch screen has Japanese labels and the Pokédex shows metres
-  and kilograms. See docs/JAPANESE.md for what is still in English. The
+  and kilograms. The scripts' and TV shows' texts the matcher has found no
+  Japanese for yet (about a hundred) show the port's own "(みほんやく)" (not
+  yet translated) instead of the English game's text, which the release
+  does not carry; the sound effects BPEJ has in another version (the
+  EXP gain, Sandstorm and eight more) and the slot machine's menu come from
+  your ROM (`tools/locale_research/japanese_extras.py`). See docs/JAPANESE.md
+  for what is still to do. The
   touch screen no longer crashes the Japanese game half a second after a
   save loads (wrapped text measured with the Japanese fonts' fixed width),
   by @luksgrin (pull request #200). Also by @luksgrin (pull request #201):

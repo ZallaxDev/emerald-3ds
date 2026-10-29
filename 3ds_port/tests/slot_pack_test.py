@@ -1,6 +1,7 @@
 """The 3D battle's sprite slots on the host: SlotsPack and its skyline,
 taken from src/3ds_video.c. Every packed slot inside its region and apart
-from every other; the cases the battle over the voxel world met fit."""
+from every other; the cases the battle over the voxel world met fit, and
+in the 2D battle the slots' own surface alone first."""
 import argparse
 import re
 from pathlib import Path
@@ -40,6 +41,10 @@ def main():
 #define SCENE_ZOOM ''' + zoom + r'''
 typedef struct { unsigned short width, height; } C3D_Tex;
 typedef struct C3D_RenderTarget C3D_RenderTarget;
+/* Only compared: the scene's render target, and the slots' own. */
+static char sTargets[2];
+static C3D_RenderTarget *const sScene = (C3D_RenderTarget *)&sTargets[0];
+#define SLOT_TARGET ((C3D_RenderTarget *)&sTargets[1])
 ''' + block(video, 'typedef struct\n{\n    C3D_RenderTarget *target;', '} SlotRegion;') + r'''
 static SlotRegion sRegions[2];
 static unsigned sRegionCount;
@@ -49,7 +54,7 @@ static unsigned sSlotCount;
 static uint8_t sPlaceOrder[128];
 ''' + block(video, 'typedef struct\n{\n    int16_t x, w, y;\n} SlotRun;', 'static unsigned sRunCount[2];') \
         + function(video, 'static bool SlotRunFind(') + function(video, 'static void SlotRunCover(') \
-        + function(video, 'static bool SlotsPack(') + r'''
+        + function(video, 'static bool SlotsPackIn(') + function(video, 'static bool SlotsPack(') + r'''
 static int sFails, sCases;
 
 static void Fail(const char *what, const char *why)
@@ -92,7 +97,7 @@ static void Valid(const char *what)
     }
 }
 
-static C3D_Tex sScene = {1024, 256}, sSlotTex = {512, 256};
+static C3D_Tex sSceneTex = {1024, 256}, sSlotTex = {512, 256};
 
 static bool Pack(const char *what, int column, bool second, const int (*boxes)[2], unsigned count, bool fits)
 {
@@ -100,8 +105,8 @@ static bool Pack(const char *what, int column, bool second, const int (*boxes)[2
 
     ++sCases;
     sRegionCount = 0;
-    if (second) sRegions[sRegionCount++] = (SlotRegion){NULL, &sSlotTex, 0, 512};
-    sRegions[sRegionCount++] = (SlotRegion){NULL, &sScene, column, 1024};
+    if (second) sRegions[sRegionCount++] = (SlotRegion){SLOT_TARGET, &sSlotTex, 0, 512};
+    sRegions[sRegionCount++] = (SlotRegion){sScene, &sSceneTex, column, 1024};
     sSlotCount = count;
     for (unsigned i = 0; i < count; ++i)
     {
@@ -116,6 +121,13 @@ static bool Pack(const char *what, int column, bool second, const int (*boxes)[2
     return packed;
 }
 
+/* The 2D battle's slots on their own surface, none in the scene's columns. */
+static void OwnSurface(const char *what)
+{
+    for (unsigned i = 0; i < sSlotCount; ++i)
+        if (sSlots[i].region != 0) Fail(what, "a slot in the scene surface, its own had room");
+}
+
 int main(void)
 {
     /* The second battle's opening (hw_campo2d, frame 11257): 652 columns as
@@ -126,6 +138,9 @@ int main(void)
                                      {128, 32}};
     static const int tall[][2] = {{128, 128}};
     static const int wide[][2] = {{200, 40}, {200, 40}};
+    /* Surf over the voxel world: two Pokemon and two info boxes 128 wide, in
+     * the slots' own 512 columns only with the boxes stacked (widest first). */
+    static const int surf[][2] = {{64, 56}, {64, 56}, {128, 40}, {128, 40}};
 
     Pack("opening beside the world", 408, false, opening, 3, true);
     Pack("opening, whole surface", 0, false, opening, 3, true);
@@ -133,6 +148,10 @@ int main(void)
     Pack("single battle beside the scenery", 408 + 584, false, single, 4, false);
     Pack("double battle, whole surface", 0, false, doubles, 8, true);
     Pack("double battle, 2D, both surfaces", 600, true, doubles, 8, true);
+    if (Pack("Surf, 2D, its own surface first", 600, true, surf, 4, true))
+        OwnSurface("Surf, 2D, its own surface first");
+    if (Pack("Surf, 2D, no room in the scene", 1024, true, surf, 4, true))
+        OwnSurface("Surf, 2D, no room in the scene");
     Pack("taller than the surface", 0, false, tall, 1, false);
     Pack("wider than the room", 1024 - 300, false, wide, 2, false);
     /* The most slots there can be, each a run of its own: the skyline's
@@ -163,8 +182,8 @@ int main(void)
         sprintf(what, "random set %d", round);
         ++sCases;
         sRegionCount = 0;
-        if (round & 1) sRegions[sRegionCount++] = (SlotRegion){NULL, &sSlotTex, 0, 512};
-        sRegions[sRegionCount++] = (SlotRegion){NULL, &sScene, rand() % 800, 1024};
+        if (round & 1) sRegions[sRegionCount++] = (SlotRegion){SLOT_TARGET, &sSlotTex, 0, 512};
+        sRegions[sRegionCount++] = (SlotRegion){sScene, &sSceneTex, rand() % 800, 1024};
         sSlotCount = count;
         for (unsigned i = 0; i < count; ++i)
         {
@@ -176,7 +195,7 @@ int main(void)
     }
     if (sFails)
         return 1;
-    printf("PASS slot pack: %d cases (inside, apart, the voxel battle's openings)\n", sCases);
+    printf("PASS slot pack: %d cases (inside, apart, the voxel battle's openings, the 2D battle's own surface)\n", sCases);
     return 0;
 }
 '''
