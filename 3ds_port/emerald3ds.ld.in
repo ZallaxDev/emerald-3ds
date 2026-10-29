@@ -183,6 +183,11 @@ SECTIONS
 	{
 		/* The game's own variables: see .data. */
 		__ctr_game_bss = .;
+		/* Juan's defeat text is longer than gDisplayedStringBattle[300] (more so
+		   in French and German). On the GBA it ran into an unused array; here it
+		   hit live variables and crashed after the battle, so leave room behind it. */
+		*build/root/src/battle_main.o(.bss.gDisplayedStringBattle)
+		. += 1024;
 		EXCLUDE_FILE(*build/root/src/platform/*) *build/root/src/*(.bss .bss.* COMMON)
 		*build/root/data/*(.bss .bss.* COMMON)
 		. = ALIGN(4);

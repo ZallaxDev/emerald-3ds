@@ -1,0 +1,17 @@
+# CIDADE DE LILYCOVE: a LOJA DE DEPARTAMENTOS, 2º andar.
+
+[LilycoveCity_DepartmentStore_3F_Text_ItemsBestForTougheningPokemon] 75ec6e71ba
+Pra fortalecer POKéMON rápido, itens\n
+são o melhor.\p
+PROTEÍNA aumenta o ATAQUE,\n
+e CÁLCIO aumenta o AT. ESP.$
+
+[LilycoveCity_DepartmentStore_3F_Text_WantMoreEndurance] 1f8381b694
+Quero que os meus POKéMON aguentem\n
+mais.\p
+Não sei se aumento a DEFESA com\n
+FERRO ou a DEF. ESP. com ZINCO.$
+
+[LilycoveCity_DepartmentStore_3F_Text_GaveCarbosToSpeedUpMon] 5540082cf4
+Dei CARBONO pro meu POKéMON, e a\n
+VELOC. dele aumentou.$

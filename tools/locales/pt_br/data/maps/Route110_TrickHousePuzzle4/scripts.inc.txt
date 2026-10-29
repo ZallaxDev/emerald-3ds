@@ -1,0 +1,42 @@
+# CASA DOS TRUQUES, sala 4.
+
+[Route110_TrickHousePuzzle4_Text_WroteSecretCodeLockOpened] 45421a543a
+{PLAYER} escreveu a senha secreta\n
+na porta.\p
+“O MESTRE DOS TRUQUES é demais.”\n
+… … … … … … … …\p
+A fechadura abriu com um clique!$
+
+[Route110_TrickHousePuzzle4_Text_CoraIntro] 13fada56de
+Dá muito trabalho pensar nisso.\n
+Eu só queria batalhar!$
+
+[Route110_TrickHousePuzzle4_Text_CoraDefeat] 26947196e0
+Mesmo perdendo, o que eu mais gosto\n
+ainda é batalhar!$
+
+[Route110_TrickHousePuzzle4_Text_CoraPostBattle] 47ca5e865b
+Não concorda? A gente vai a qualquer\n
+lugar se tiver TREINADORES lá.$
+
+[Route110_TrickHousePuzzle4_Text_YujiIntro] 8f729a7b81
+Heh! Pedras assim eu tiro do caminho\n
+com um dedo!$
+
+[Route110_TrickHousePuzzle4_Text_YujiDefeat] 61b9dc97d5
+Consigo empurrar pedras, mas não\n
+consigo resolver o enigma…$
+
+[Route110_TrickHousePuzzle4_Text_YujiPostBattle] 4e2ceb1eb4
+Não basta ser forte…\n
+Tem que usar a cabeça. Ser esperto!$
+
+[Route110_TrickHousePuzzle4_Text_PaulaIntro] 5a7a7f2799
+A CASA DOS TRUQUES está cada vez\n
+mais complicada, né?$
+
+[Route110_TrickHousePuzzle4_Text_PaulaDefeat] 97471b6bb4
+Aaak!$
+
+[Route110_TrickHousePuzzle4_Text_PaulaPostBattle] 348e79e45f
+Alguém já chegou ao fim?$

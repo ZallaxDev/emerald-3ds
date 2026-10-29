@@ -1,0 +1,69 @@
+# CASA DO WALLY em PETALBURG: os pais do WALLY.
+
+[PetalburgCity_WallysHouse_Text_ThanksForPlayingWithWally] e2abb87c41
+Você é…\n
+Ah, você deve ser {PLAYER}{KUN}, né?\p
+Obrigado por brincar com o WALLY\n
+agora há pouco.\p
+Ele é frágil e doente desde\n
+que era bebê.\p
+Mandamos ele ficar uns tempos com\n
+parentes na CIDADE DE VERDANTURF.\p
+O ar lá é muito mais limpo\n
+do que aqui.\p
+Como? Cadê o WALLY?\n
+Ele já foi, o nosso WALLY.\p
+Onde será que ele já\n
+chegou a essa altura?$
+
+[PetalburgCity_WallysHouse_Text_WonderHowWallyIsDoing] 5b37094533
+Como será que está o nosso WALLY?$
+
+[PetalburgCity_WallysHouse_Text_PleaseExcuseUs] 7e8c5957ee
+{PLAYER}{KUN}! Desculpe a gente por\n
+trazer você aqui desse jeito.\p
+Mas o nosso WALLY ficou bem saudável\n
+desde que foi pra VERDANTURF.\p
+E devemos tudo isso a você!\p
+Quando o WALLY saiu da cidade, você\n
+ajudou ele a pegar um POKéMON, né?\p
+Acho que isso deixou o WALLY muito\n
+feliz.\p
+Na verdade, não só o WALLY.\n
+Me deixou feliz também, como pai.\p
+Feliz por ele ter ganhado uma amizade\n
+tão boa quanto a sua.\p
+Não é suborno nem nada, mas eu queria\n
+muito que você ficasse com isto.$
+
+[PetalburgCity_WallysHouse_Text_SurfGoAllSortsOfPlaces] d5e45ef0dc
+Se o seu POKéMON souber SURFAR, você\n
+vai poder ir a tudo quanto é lugar.$
+
+[PetalburgCity_WallysHouse_Text_WallyIsComingHomeSoon] 236e9929c9
+O WALLY volta pra casa logo, logo.\n
+Estou ansioso por isso.$
+
+[PetalburgCity_WallysHouse_Text_YouMetWallyInEverGrandeCity] 046358c377
+Hã? Você encontrou o WALLY na\n
+CIDADE DE EVER GRANDE?\p
+Ah, {PLAYER}{KUN}, deixa de bobagem.\p
+Ele pode ter ficado saudável, mas não\n
+consegue ir pra um lugar tão longe\l
+assim sozinho.$
+
+[PetalburgCity_WallysHouse_Text_WallyWasReallyHappy] 1f3a721d99
+O WALLY ficou muito feliz quando contou\n
+pra gente que pegou um POKéMON.\p
+Fazia tempo que eu não via ele\n
+sorrir daquele jeito.$
+
+[PetalburgCity_WallysHouse_Text_WallyLeftWithoutTelling] 0dd1a13d07
+Quero que isso fique em segredo\n
+do meu marido…\p
+Mas o nosso WALLY saiu da CIDADE DE\n
+VERDANTURF sem avisar ninguém.\p
+Sabe, o WALLY é frágil, mas ele\n
+é surpreendentemente teimoso.\p
+Tenho certeza de que um dia ele\n
+volta são e salvo!$

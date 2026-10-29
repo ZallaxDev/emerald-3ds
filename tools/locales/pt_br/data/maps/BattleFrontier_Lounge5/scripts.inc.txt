@@ -1,0 +1,154 @@
+# FRONTEIRA DE BATALHA: a menina que entende a natureza dos POKéMON.
+
+[BattleFrontier_Lounge5_Text_NatureGirlGreeting] a0c9540309
+Ehehe!\n
+Eu sei o que os POKéMON pensam!\p
+Por favor!\n
+Posso ver os seus POKéMON?$
+
+[BattleFrontier_Lounge5_Text_NatureGirlNoneShown] 927ca53a59
+Buu!\n
+Mão de vaca!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlHardy] 94ac501e20
+Humhum…\p
+Este diz que gosta de batalhar!\n
+Batalha mesmo com muito dodói!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlLonely] a8bb5cff4e
+Humhum…\p
+Este diz que gosta de ser sapeca!\n
+Mas, se tiver dodói demais,\l
+ele revida!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlBrave] d8f899ab85
+Humhum…\p
+Este diz que gosta de batalhar!\n
+Mas, se tiver dodói demais,\l
+ele se preocupa consigo!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlAdamant] 94ac501e20
+Humhum…\p
+Este diz que gosta de batalhar!\n
+Batalha mesmo com muito dodói!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlNaughty] d051111e74
+Humhum…\p
+Este diz que se cuida!\n
+Mas, se tiver dodói demais,\l
+ele revida!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlBold] b2051a2951
+Humhum…\p
+Este diz que gosta de ser sapeca!\n
+Mas, se tiver dodói demais,\l
+ele se preocupa consigo!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlDocileNaiveQuietQuirky] 94ac501e20
+Humhum…\p
+Este diz que gosta de batalhar!\n
+Batalha mesmo com muito dodói!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlRelaxed] a8bb5cff4e
+Humhum…\p
+Este diz que gosta de ser sapeca!\n
+Mas, se tiver dodói demais,\l
+ele revida!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlImpish] d8f899ab85
+Humhum…\p
+Este diz que gosta de batalhar!\n
+Mas, se tiver dodói demais,\l
+ele se preocupa consigo!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlLax] e311f7489a
+Humhum…\p
+Este diz que gosta de ser sapeca!\n
+É sapeca mesmo com muito dodói!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlTimid] f39ff67060
+Humhum…\p
+Este diz que gosta de batalhar!\n
+Mas, se tiver dodói demais,\l
+ele fica sapeca!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlHasty] 94ac501e20
+Humhum…\p
+Este diz que gosta de batalhar!\n
+Batalha mesmo com muito dodói!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlSerious] e311f7489a
+Humhum…\p
+Este diz que gosta de ser sapeca!\n
+É sapeca mesmo com muito dodói!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlJolly] b2051a2951
+Humhum…\p
+Este diz que gosta de ser sapeca!\n
+Mas, se tiver dodói demais,\l
+ele se preocupa consigo!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlModest] 2981417b03
+Humhum…\p
+Este diz que se cuida!\n
+Se preocupa consigo, tendo muito\l
+ou pouco dodói!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlMild] 7503f0ee09
+Humhum…\p
+Este diz que se cuida!\n
+Mas, se tiver dodói demais,\l
+ele fica sapeca!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlBashful] 564ad1f142
+Humhum…\p
+Este diz que se cuida!\n
+Se preocupa consigo mesmo com\l
+muito dodói!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlRash] e311f7489a
+Humhum…\p
+Este diz que gosta de ser sapeca!\n
+É sapeca mesmo com muito dodói!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlCalm] 564ad1f142
+Humhum…\p
+Este diz que se cuida!\n
+Se preocupa consigo mesmo com\l
+muito dodói!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlGentle] d051111e74
+Humhum…\p
+Este diz que se cuida!\n
+Mas, se tiver dodói demais,\l
+ele revida!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlSassy] f39ff67060
+Humhum…\p
+Este diz que gosta de batalhar!\n
+Mas, se tiver dodói demais,\l
+ele fica sapeca!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlCareful] 7503f0ee09
+Humhum…\p
+Este diz que se cuida!\n
+Mas, se tiver dodói demais,\l
+ele fica sapeca!$
+
+[BattleFrontier_Lounge5_Text_NatureGirlEgg] 1b1df65cb2
+Que bobagem! O OVO está dormindo!\n
+Não dá pra falar com ele!$
+
+[BattleFrontier_Lounge5_Text_LadyClaimsSheUnderstandsPokemon] f3b934f729
+Que graça!\n
+Aquela mocinha diz que entende\l
+os POKéMON!$
+
+[BattleFrontier_Lounge5_Text_GirlSayingSomethingProfound] 7eec78d283
+Tenho a impressão de que a menininha\n
+está dizendo algo profundo.$
+
+[BattleFrontier_Lounge5_Text_GirlPlaysAtRedHouseALot] ac390a33a8
+Eu sei uma coisa!\p
+Aquela menininha brinca muito na\n
+casa vermelha!$

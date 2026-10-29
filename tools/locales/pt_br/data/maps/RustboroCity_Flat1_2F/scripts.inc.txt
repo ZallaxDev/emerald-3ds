@@ -1,0 +1,98 @@
+# Prédio 1 de RUSTBORO, 1º andar: a família PEPPER e a bebê WALDA.
+
+[RustboroCity_Flat1_2F_Text_ComingUpWithMealsIsHard] 10b64619f1
+Ai, todo dia é tão difícil…\p
+O que é difícil?\n
+Precisa perguntar?\p
+É descobrir o que fazer pra comer\n
+todo santo dia.\p
+Não é nada fácil pensar no\n
+cardápio todo dia.$
+
+[RustboroCity_Flat1_2F_Text_HelloDoYouKnowFunnyPhrase] ffe9146d64
+Ah, olá!\n
+Esta é a casa da família PEPPER.\p
+Tenho uma pergunta pra você.\n
+Você já cuidou de bebê?\p
+É que eu sou pai de primeira viagem,\n
+então criar uma criança é novidade.\p
+E tenho um problema. A minha filha,\n
+a WALDA, não ri muito.\p
+Acho que ela riria se eu dissesse\n
+alguma coisa engraçada.\p
+Você conhece alguma palavra ou\n
+frase engraçada pra me ensinar?$
+
+[RustboroCity_Flat1_2F_Text_BeenSayingXDoYouKnowBetterPhrase] 0bac973296
+Ultimamente eu digo “{STR_VAR_1}”\n
+pra fazer ela rir.\p
+Você conhece alguma palavra ou\n
+frase melhor que funcione?$
+
+[RustboroCity_Flat1_2F_Text_WonderfulLetsHearSuggestion] a1534eaffb
+Ah, que maravilha.\n
+Então, vamos ouvir a sua sugestão.$
+
+[RustboroCity_Flat1_2F_Text_OhIsThatRight] 63c858b10e
+Ah, é mesmo?\p
+Bom, se pensar numa boa sugestão,\n
+sou todo ouvidos.$
+
+[RustboroCity_Flat1_2F_Text_LetsGiveItATry2] c91cb6ed75
+Ah, entendi.\n
+Bom, vamos experimentar, então?$
+
+[RustboroCity_Flat1_2F_Text_OhShesLaughing] 46049a4389
+{STR_VAR_1}.\n
+{STR_VAR_1}.\p
+Ah, isso! Ela está rindo!\n
+Estou tão feliz quanto ela!$
+
+[RustboroCity_Flat1_2F_Text_LetsGiveItATry] c91cb6ed75
+Ah, entendi.\n
+Bom, vamos experimentar, então?$
+
+[RustboroCity_Flat1_2F_Text_ShesNotSmilingAtAll] 5e67462a65
+{STR_VAR_1}.\n
+{STR_VAR_1}.\p
+Hmmm… Ela nem sorriu.\n
+Vai ver a WALDA é uma criança séria…$
+
+[RustboroCity_Flat1_2F_Text_ThinkOfMyOwnPhrase] 2793d1301b
+Ah, você não sabe nenhuma palavra boa.\n
+Melhor eu pensar sozinho, então.\p
+Hmm…\n
+Que tal “{STR_VAR_1}”?\l
+Vamos ver se funciona.$
+
+[RustboroCity_Flat1_2F_Text_ShesNotSmilingAtAll2] 5e67462a65
+{STR_VAR_1}.\n
+{STR_VAR_1}.\p
+Hmmm… Ela nem sorriu.\n
+Vai ver a WALDA é uma criança séria…$
+
+[RustboroCity_Flat1_2F_Text_OhYouDontKnowAny] 0b53dc193e
+Ah, você não sabe nenhuma palavra boa.\n
+Vou tentar fazer ela rir com\l
+a frase que eu usava antes.\p
+Enfim, se tiver uma boa sugestão,\n
+não deixe de me contar, tá?$
+
+[RustboroCity_Flat1_2F_Text_ThankYouIllGiveYouWallpaper] bdc1d8f08b
+Obrigado!\p
+Graças a você, a minha querida WALDA\n
+riu pra mim!\p
+Na verdade, posso não parecer grande\n
+coisa, mas sou um dos melhores\l
+pesquisadores da CORPORAÇÃO DEVON.\p
+Então, que tal eu retribuir?\p
+Já sei, vou pôr papéis de parede novos\n
+nas CAIXAS do Sistema de\l
+Armazenamento de POKéMON do PC.\p
+No menu de papel de parede,\n
+escolha “AMIGOS”.\p
+Assim você vai ter acesso aos\n
+papéis de parede novos.$
+
+[RustboroCity_Flat1_2F_Text_ItsAPokemonPlushDoll] 7852f995f9
+É um BONECO de pelúcia de POKéMON!$

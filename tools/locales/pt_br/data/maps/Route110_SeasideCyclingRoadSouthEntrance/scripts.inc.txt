@@ -1,0 +1,12 @@
+# ESTRADA DE BICICLETA DA COSTA, entrada sul.
+
+[Route110_SeasideCyclingRoadSouthEntrance_Text_GoAllOutOnCyclingRoad] aceafcf868
+Na ESTRADA DE BICICLETA, dá pra ir\n
+a toda, o mais rápido que quiser.\p
+É ótimo ir rápido assim, mas tente\n
+não bater em ninguém!$
+
+[Route110_SeasideCyclingRoadSouthEntrance_Text_TooDangerousToWalk] e0cb5427fa
+Desculpe, não dá pra ir a pé pela\n
+ESTRADA DE BICICLETA. É perigoso.\p
+Volte com uma BICICLETA.$

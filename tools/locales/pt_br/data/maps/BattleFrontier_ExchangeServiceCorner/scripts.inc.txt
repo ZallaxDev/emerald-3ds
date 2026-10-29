@@ -1,0 +1,292 @@
+# FRONTEIRA DE BATALHA: a CENTRAL DE TROCAS de Pontos de Batalha. Decorações com o nome no formato BONECO X, PÔSTER X, ALMOFADA X (a confirmar com os nomes das decorações em strings.c).
+
+[BattleFrontier_ExchangeServiceCorner_Text_WelcomePleaseChoosePrize] fd2ed4686c
+Olá, esta é a CENTRAL DE TROCAS.\p
+Trocamos os Pontos de Batalha que\n
+você juntou por prêmios lindos.\p
+Escolha um prêmio desta lista.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_PleaseChoosePrize] 2be2f0798f
+Escolha um prêmio desta lista.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmKissPoster] f8f954967f
+Você escolheu o PÔSTER BEIJO.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmKissCushion] 6585fd5e75
+Você escolheu a ALMOFADA BEIJO.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmSmoochumDoll] bdf9707ca8
+Você escolheu o BONECO SMOOCHUM.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmTogepiDoll] c833cd413b
+Você escolheu o BONECO TOGEPI.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmMeowthDoll] 089f3c0ffa
+Você escolheu o BONECO MEOWTH.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmClefairyDoll] bd8d9c6685
+Você escolheu o BONECO CLEFAIRY.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmDittoDoll] 1ed00c6d14
+Você escolheu o BONECO DITTO.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmCyndaquilDoll] aa788599e4
+Você escolheu o BONECO CYNDAQUIL.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmChikoritaDoll] 0e55848eb6
+Você escolheu o BONECO CHIKORITA.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmTotodileDoll] 3997e6286a
+Você escolheu o BONECO TOTODILE.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmLaprasDoll] 5ecd2a79c3
+Você escolheu o BONECO LAPRAS.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmSnorlaxDoll] abde4de695
+Você escolheu o BONECO SNORLAX.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmVenusaurDoll] 7d7d966750
+Você escolheu o BONECO VENUSAUR.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmCharizardDoll] a5ae982963
+Você escolheu o BONECO CHARIZARD.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmBlastoiseDoll] 71a16a3f57
+Você escolheu o BONECO BLASTOISE.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmProtein] bffd9f66b7
+Você escolheu a PROTEÍNA.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmCalcium] 3b51ad5d6f
+Você escolheu o CÁLCIO.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmIron] bc5bf60fef
+Você escolheu o FERRO.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmZinc] b4e1e15de8
+Você escolheu o ZINCO.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmCarbos] 5b6f97a89f
+Você escolheu o CARBONO.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmHPUp] 8c4ce91ed4
+Você escolheu o PS UP.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmBrightpowder] 8f4f6b9726
+Você escolheu o PÓ BRILHANTE.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmWhiteHerb] 265b38306e
+Você escolheu a ERVA BRANCA.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmQuickClaw] fba2c22d64
+Você escolheu a GARRA RÁPIDA.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmMentalHerb] bd6fdaa507
+Você escolheu a ERVA MENTAL.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmChoiceBand] 2d46adb317
+Você escolheu a FAIXA ESCOLHA.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmKingsRock] 774a54410f
+Você escolheu a PEDRA DO REI.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmFocusBand] d6b03d1396
+Você escolheu a FAIXA FOCAL.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmScopeLens] 2615f6fffb
+Você escolheu a LENTE ALCANCE.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ConfirmLeftovers] 09b89b6bb4
+Você escolheu as SOBRAS.\n
+Está certo?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_WellSendItToPC] 0952776d30
+Obrigado!\n
+Vamos mandar pro seu PC de casa.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_HereIsYourPrize] 11e667c7f9
+Aqui está o seu prêmio!$
+
+[BattleFrontier_ExchangeServiceCorner_Text_DontHaveEnoughPoints] 1318e8b108
+Sinto muito…\n
+Você não tem Pontos de Batalha\l
+suficientes…$
+
+[BattleFrontier_ExchangeServiceCorner_Text_PCIsFull] c73686be94
+Sinto muito…\n
+Parece que o seu PC está cheio…$
+
+[BattleFrontier_ExchangeServiceCorner_Text_DontHaveSpaceToHoldIt] 67b0862ebc
+Sinto muito…\n
+Você não tem espaço pra guardar…$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ThankYouVisitWithPoints] 815af601b5
+Muito obrigado.\p
+Volte quando tiver juntado\n
+Pontos de Batalha.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_WishIHadAllDolls] b6df9e6d76
+Ai, que lindos!\n
+Queria ter todos!\l
+Almofadas fofas!\l
+BONECOS de pelúcia grandes!\l
+BONECOS de pelúcia pequenos!\l
+Queria ter todos!$
+
+[BattleFrontier_ExchangeServiceCorner_Text_GetYouAnythingYouWant] 62f0c9a52d
+Deixa com a mamãe!\p
+Seja o que for que você quiser,\n
+eu consigo, meu amor!$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ItemsWillGetMonTougher] e225b84b00
+Se eu conseguir os itens daqui,\n
+os meus POKéMON vão ficar mais fortes.\p
+Pode apostar!\n
+Sem dúvida nenhuma!$
+
+[BattleFrontier_ExchangeServiceCorner_Text_GoGetYourOwnDoll] 53b9e26cd7
+Hã?\n
+Tá olhando o quê?\p
+Não gosto que fique encarando o meu\n
+boneco de pelúcia assim.\p
+Se quer um, vá buscar o seu!\n
+Não é, SMOOCHUM?$
+
+[BattleFrontier_ExchangeServiceCorner_Text_MoreBattlePointsForRecord] 5b811962fe
+Sabia?\p
+Se você aumentar o seu recorde em\n
+qualquer instalação de BATALHA, eles\l
+começam a dar cada vez mais Pontos\l
+de Batalha.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_KissPosterDesc] a7cfe7f75b
+Um pôster grande com estampa\n
+de SMOOCHUM.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_KissCushionDesc] 7ac0653d89
+Uma almofada de SMOOCHUM.\n
+Ponha num tapete ou numa mesa.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_SmoochumDollDesc] b408cf2e9d
+Um BONECO SMOOCHUM.\n
+Ponha num tapete ou numa mesa.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_TogepiDollDesc] f126e0162a
+Um BONECO TOGEPI.\n
+Ponha num tapete ou numa mesa.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_MeowthDollDesc] ff65010015
+Um BONECO MEOWTH.\n
+Ponha num tapete ou numa mesa.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ClefairyDollDesc] 131f0ad562
+Um BONECO CLEFAIRY.\n
+Ponha num tapete ou numa mesa.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_DittoDollDesc] 19bd1e4631
+Um BONECO DITTO.\n
+Ponha num tapete ou numa mesa.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_CyndaquilDollDesc] e073456ea3
+Um BONECO CYNDAQUIL.\n
+Ponha num tapete ou numa mesa.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ChikoritaDollDesc] 224ceb1276
+Um BONECO CHIKORITA.\n
+Ponha num tapete ou numa mesa.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_TotodileDollDesc] 171d471bc4
+Um BONECO TOTODILE.\n
+Ponha num tapete ou numa mesa.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_LargeDollDesc] 1f03baf585
+Um BONECO grande.\n
+Ponha num tapete ou numa mesa.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ProteinDesc] daa95cec69
+Aumenta o ATAQUE de um\n
+POKéMON.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_CalciumDesc] e63fae7df5
+Aumenta o AT. ESP. de um\n
+POKéMON.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_IronDesc] 7c899cdf61
+Aumenta a DEFESA de um\n
+POKéMON.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ZincDesc] d120f9b538
+Aumenta a DEF. ESP. de um\n
+POKéMON.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_CarbosDesc] 1c83d105e3
+Aumenta a VELOC. de um\n
+POKéMON.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_HPUpDesc] fb9568860b
+Aumenta os PS de um POKéMON.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_LeftoversDesc] eaa92f6525
+Item pra segurar que recupera\n
+PS aos poucos na batalha.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_WhiteHerbDesc] 8edc394c11
+Item pra segurar que restaura\n
+atributos reduzidos.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_QuickClawDesc] e651ccadf6
+Item pra segurar que às vezes\n
+permite atacar primeiro.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_MentalHerbDesc] 36c596906f
+Item pra segurar que livra o\n
+POKéMON da paixão.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_BrightpowderDesc] abeef23878
+Item pra segurar que ofusca e\n
+reduz a precisão do oponente.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ChoiceBandDesc] 3a23f1942c
+Aumenta o poder de um golpe, mas\n
+só permite usar esse golpe.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_KingsRockDesc] f144117337
+Item pra segurar que pode fazer\n
+o oponente hesitar ao ser atingido.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_FocusBandDesc] 404662ee70
+Item pra segurar que às vezes\n
+evita o desmaio.$
+
+[BattleFrontier_ExchangeServiceCorner_Text_ScopeLensDesc] 1392290569
+Item pra segurar que aumenta a\n
+chance de golpe crítico.$

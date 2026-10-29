@@ -1,0 +1,7 @@
+# Fim do clima anormal (KYOGRE e GROUDON soltos).
+
+[gText_AbnormalWeatherEnded_Rain] 0d0b75e4dc
+Parece que o temporal\nparou…$
+
+[gText_AbnormalWeatherEnded_Sun] c9dbf7c95b
+Parece que o sol forte\ndiminuiu…$

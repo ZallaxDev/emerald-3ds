@@ -1,0 +1,139 @@
+# CIDADE DE SOOTOPOLIS: o GINÁSIO do JUAN.
+
+[SootopolisCity_Gym_1F_Text_GymGuideAdvice] 7351bc75d7
+E aí! Como vai, {PLAYER},\n
+futura estrela da LIGA?\p
+O JUAN, LÍDER do GINÁSIO de\n
+SOOTOPOLIS, é mestre do tipo ÁGUA.\p
+E, pra chegar até o JUAN, um chão\n
+de gelo vai atrapalhar o caminho…\p
+Escute, desculpe, mas é só esse o\n
+conselho que tenho pra você.\p
+Daqui em diante, é com você!$
+
+[SootopolisCity_Gym_1F_Text_GymGuidePostVictory] 02f5a50596
+Uau! Você venceu até o JUAN, que\n
+diziam ser o melhor de HOENN!\p
+Certo! Confira o seu CARTÃO DE\n
+TREINADOR.\p
+Se tiver todas as INSÍGNIAS, já\n
+pode encarar a LIGA POKéMON!$
+
+[SootopolisCity_Gym_1F_Text_JuanIntro] 116b1921ff
+Deixe-me perguntar.\n
+Você sabia?\l
+Ah, não devo fazer mistério.\p
+Fui eu que ensinei ao WALLACE tudo\n
+o que há pra saber sobre POKéMON.\p
+Um dia, deixei o cargo de LÍDER\n
+do GINÁSIO.\p
+No meu lugar, confiei o GINÁSIO\n
+ao WALLACE.\p
+Porém, surgiu um motivo forte para\n
+o meu retorno.\p
+Ah, mas chega de conversa.\n
+Vamos começar a batalha?\p
+Por favor, seja testemunha da\n
+nossa arte.\p
+Uma grande ilusão de água esculpida\n
+pelos POKéMON e por mim!$
+
+[SootopolisCity_Gym_1F_Text_JuanDefeat] f7d380aac1
+Ahahaha, excelente!\n
+Muito bem, a vitória é sua.\p
+Em você, sinto o brilho de um\n
+talento que vai superar tudo.\p
+Porém, comparado a mim ou mesmo\n
+ao WALLACE, falta elegância.\p
+Talvez eu devesse te emprestar\n
+a minha roupa?\p
+… … … … … …\n
+… … … … … …\p
+Hahaha, é só brincadeira!\p
+Em vez das minhas roupas, vou te\n
+recompensar com isto, a INSÍGNIA\l
+DA CHUVA!$
+
+[SootopolisCity_Gym_1F_Text_ReceivedRainBadge] e7899f97ad
+{PLAYER} recebeu a INSÍGNIA DA CHUVA\n
+do JUAN.$
+
+[SootopolisCity_Gym_1F_Text_ExplainRainBadgeTakeThis] 12bc451a46
+Com a INSÍGNIA DA CHUVA, todos os\n
+seus POKéMON vão obedecer a todos\l
+os seus comandos.\p
+A INSÍGNIA DA CHUVA também permite\n
+usar o golpe de MO CACHOEIRA pra\l
+subir paredes de água.\p
+E, pra nunca esquecer a batalha\n
+que tivemos, leve isto…$
+
+[SootopolisCity_Gym_1F_Text_ExplainWaterPulse] d57310255d
+A MÁQUINA TÉCNICA que te entreguei\n
+contém PULSO D'ÁGUA.\p
+Às vezes, ele confunde o alvo com\n
+ondas ultrassônicas.\p
+… … … … … …$
+
+[SootopolisCity_Gym_1F_Text_RegisteredJuan] ebc38d42c0
+O LÍDER JUAN foi registrado\n
+no POKéNAV.$
+
+[SootopolisCity_Gym_1F_Text_JuanPostBattle] 9d59793c68
+Os TREINADORES que reuniram todas as\n
+INSÍGNIAS de HOENN devem seguir pro\l
+destino final.\p
+A LIGA POKéMON.\p
+Viaje até o extremo leste de HOENN,\n
+até a ilha EVER GRANDE.\p
+Lá, você vai encontrar a LIGA\n
+POKéMON.$
+
+[SootopolisCity_Gym_1F_Text_GoGetFortreeBadge] 8ebb6cac12
+Só falta uma INSÍGNIA de HOENN.\p
+Se quiser desafiar a LIGA POKéMON,\n
+precisa da última INSÍGNIA, do\l
+GINÁSIO de FORTREE.$
+
+[SootopolisCity_Gym_1F_Text_GymStatue] 063ffe51d3
+GINÁSIO POKéMON DE SOOTOPOLIS$
+
+[SootopolisCity_Gym_1F_Text_GymStatueCertified] 4957d2d4a6
+GINÁSIO POKéMON DE SOOTOPOLIS\p
+TREINADORES APROVADOS POR JUAN:\n
+{PLAYER}$
+
+[SootopolisCity_Gym_1F_Text_JuanPreRematch] 1bbfabe2e1
+JUAN: Ah, este GINÁSIO tinha voltado\n
+à serenidade de sempre…\p
+Mas o nosso jovem tufão voltou pra\n
+nos testar de novo!\p
+Pois bem, com certeza!\p
+Vou adorar dançar com você quantas\n
+vezes quiser!$
+
+[SootopolisCity_Gym_1F_Text_JuanRematchDefeat] 5fe3e92424
+Ahahaha, a vitória é sua!\n
+Você me venceu de novo!$
+
+[SootopolisCity_Gym_1F_Text_JuanPostRematch] 78e76b21c6
+JUAN: Se eu te pedisse pra ser meu\n
+aprendiz, você recusaria, decerto.\p
+Queria te dar o meu casaco de\n
+presente.\p
+Mas, de novo, você recusaria.\n
+Imagino que sim.\p
+E isso é sinal certo\n
+de nobreza!$
+
+[SootopolisCity_Gym_1F_Text_JuanRematchNeedTwoMons] 17138caa29
+JUAN: Ah, este GINÁSIO tinha voltado\n
+à serenidade de sempre…\p
+Mas o nosso jovem tufão voltou pra\n
+nos testar de novo!\p
+Pois bem, com certeza!\n
+Vou adorar dançar com você…\p
+Ah, não, não, não.\n
+Você só tem um POKéMON.\p
+Por favor, volte com dois POKéMON,\n
+talvez mais.$

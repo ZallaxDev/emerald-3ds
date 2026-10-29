@@ -534,8 +534,13 @@ void VoxelSign_Emit(VoxelBuilder *b, float wx, float wz, float baseY,
 #if CTR_VOXEL_LIGHTING
     float constant = b->lightingConstant;
 
+    /* (where it stands in the world: on its cell's relief and its map's
+     * base, as the builder places it - at the bare height a sign on a
+     * raised map was sampled inside the rock and drawn in shadow) */
     if (b->lighting && constant < 0.0f)
-        b->lightingConstant = VoxelLighting_Sample(wx + 0.5f, baseY + 0.5f, wz + 0.5f);
+        b->lightingConstant = VoxelLighting_Sample(
+            wx + 0.5f, baseY + 0.5f + b->lift + b->base,
+            VoxelBuilder_StretchZ(b, wz + 0.5f + b->shift));
     EmitSign(b, wx, wz, baseY, m, depthPixels, shade);
     b->lightingConstant = constant;
 #else

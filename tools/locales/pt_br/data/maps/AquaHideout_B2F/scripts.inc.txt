@@ -1,0 +1,72 @@
+# ESCONDERIJO AQUA: subsolo 2, com o MATT.
+
+[AquaHideout_B2F_Text_MattIntro] c589354aa7
+Hehehe…\p
+Já chegou aqui, é?\n
+Subestimamos você!\p
+Mas acabou!\p
+Sou bem superior aos CAPANGAS que\n
+você viu até agora.\p
+Não estou enrolando pra ganhar tempo.\n
+Vou te esmagar!$
+
+[AquaHideout_B2F_Text_MattDefeat] f548e394c2
+Hehehe…\n
+Então eu também perdi…$
+
+[AquaHideout_B2F_Text_OurBossGotThroughHisPreparations] 252a84acd9
+Hehehe!\p
+Enquanto eu brincava com você, o\n
+nosso CHEFE terminou os preparativos!$
+
+[AquaHideout_B2F_Text_MattPostBattle] 5cf6611fcd
+Hehehe!\p
+O nosso CHEFE já partiu pra uma\n
+caverna no fundo do mar!\p
+Se for atrás dele, é melhor procurar\n
+no mar imenso depois de LILYCOVE.\p
+Mas será que vai achar?\n
+Hehehe!$
+
+[AquaHideout_B2F_Text_Grunt4Intro] 5bf2e88e00
+Wahahah, cansei de esperar!\n
+Você também me deve uma batalha!$
+
+[AquaHideout_B2F_Text_Grunt4Defeat] 2f7f3d8c6b
+Cansado de esperar…\n
+E derrotado, tonto…$
+
+[AquaHideout_B2F_Text_Grunt4PostBattle] b07616b2dc
+CHEFE…\n
+Isso já basta?$
+
+[AquaHideout_B2F_Text_Grunt6Intro] 8a93f1a911
+Os painéis de teletransporte, o\n
+orgulho do ESCONDERIJO!\p
+Você não faz ideia de onde está,\n
+não é?\p
+Deixar o inimigo confuso e cansado,\n
+e aí atacar! Esse é o plano!$
+
+[AquaHideout_B2F_Text_Grunt6Defeat] 8208f73286
+Qual é a sua?\n
+Você nem se cansou!$
+
+[AquaHideout_B2F_Text_Grunt6PostBattle] f0a31ca93b
+Falando nisso… Não lembro onde\n
+guardei a BOLA MESTRA.\p
+Se eu não vigiar ela, o CHEFE vai\n
+me dar uma bronca…$
+
+[AquaHideout_B2F_Text_Grunt8Intro] c4e255ac27
+Quando entrei na EQUIPE AQUA, a\n
+primeira coisa que tive que aprender\l
+foi como os painéis se ligavam.$
+
+[AquaHideout_B2F_Text_Grunt8Defeat] 8f9007584d
+Estava ocupado demais pensando\n
+nos painéis…$
+
+[AquaHideout_B2F_Text_Grunt8PostBattle] e19f3852d5
+Vou ter que aprender a batalhar\n
+melhor…$

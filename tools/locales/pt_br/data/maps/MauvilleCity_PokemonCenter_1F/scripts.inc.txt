@@ -1,0 +1,20 @@
+# CENTRO POKéMON de MAUVILLE.
+
+[MauvilleCity_PokemonCenter_1F_Text_ManOverThereSaysWeirdThings] 7dd4f1b419
+Aquele homem ali fala umas coisas\n
+esquisitas!\p
+Ele é engraçado de um jeito estranho.\n
+Duvido que eu esqueça dele!$
+
+[MauvilleCity_PokemonCenter_1F_Text_MyDataUpdatedFromRecordCorner] 1012c98663
+Quando entrei no CANTO DOS RECORDES,\n
+as modas de DEWFORD foram\l
+atualizadas.\p
+Agora esses dados estão iguais aos\n
+do meu amigo!$
+
+[MauvilleCity_PokemonCenter_1F_Text_RecordCornerSoundsFun] f472d26ae4
+Abriram um CANTO DOS RECORDES no andar\n
+de cima do CENTRO POKéMON.\p
+Não sei bem o que é, mas parece\n
+divertido. Vou dar uma olhada!$

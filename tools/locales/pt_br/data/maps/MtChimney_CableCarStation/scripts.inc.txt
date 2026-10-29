@@ -1,0 +1,11 @@
+# MONTE CHIMNEY: a estação do TELEFÉRICO.
+
+[MtChimney_CableCarStation_Text_CableCarReadyGetOn] 8949a171ed
+O TELEFÉRICO está pronto pra descer.\n
+Gostaria de embarcar?$
+
+[MtChimney_CableCarStation_Text_StepThisWay] fb68724fa9
+Por aqui, por favor.$
+
+[MtChimney_CableCarStation_Text_RideAnotherTime] af2b1bed7b
+Volte outra hora, por favor.$

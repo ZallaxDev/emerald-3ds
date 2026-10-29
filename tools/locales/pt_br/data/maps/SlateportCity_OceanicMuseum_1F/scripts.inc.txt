@@ -1,0 +1,157 @@
+# MUSEU OCEÂNICO, térreo: a recepção, a EQUIPE AQUA na fila e as exposições.
+
+[SlateportCity_OceanicMuseum_1F_Text_WouldYouLikeToEnter] fe6ec00150
+Boas-vindas ao MUSEU OCEÂNICO.\p
+A entrada custa ¥50.\n
+Quer entrar?$
+
+[SlateportCity_OceanicMuseum_1F_Text_PleaseEnjoyYourself] d4d7decbf3
+Aproveite a visita.$
+
+[SlateportCity_OceanicMuseum_1F_Text_NotEnoughMoney] c6ea970748
+Hã? Desculpe, mas parece que você não\n
+tem dinheiro suficiente.$
+
+[SlateportCity_OceanicMuseum_1F_Text_CatchUpWithYourGroup] 62690cb8e0
+Hã? Você é daquele grupo que\n
+entrou agora há pouco?\p
+Só falta você.\n
+É melhor ir alcançar o pessoal!$
+
+[SlateportCity_OceanicMuseum_1F_Text_AquaExistForGoodOfAll] d5206f6dd9
+Nós, da EQUIPE AQUA, existimos pelo\n
+bem de todos!$
+
+[SlateportCity_OceanicMuseum_1F_Text_OurBossIsntHere] 8f87bdc1b1
+Mandaram a gente se reunir aqui,\n
+e a gente veio, mas…\p
+O nosso CHEFE, a peça principal,\n
+não está aqui.$
+
+[SlateportCity_OceanicMuseum_1F_Text_WouldStuffHereMakeMeRich] 273da7519e
+Se eu roubasse as coisas daqui,\n
+ficaria rico?$
+
+[SlateportCity_OceanicMuseum_1F_Text_CanLearnForNefariousDeeds] 3c40102c5d
+O que eu aprender aqui, posso usar\n
+nas minhas maldades…$
+
+[SlateportCity_OceanicMuseum_1F_Text_RustboroBungled] d748908fb1
+Se os nossos capangas não tivessem\n
+feito besteira em RUSTBORO, a gente\l
+nem estaria aqui!$
+
+[SlateportCity_OceanicMuseum_1F_Text_DidntHaveMoney] c0656f1cdd
+Eu não tinha ¥50, então demorei\n
+pra passar pela recepcionista.$
+
+[SlateportCity_OceanicMuseum_1F_Text_LearnAboutSeaForBattling] 6a857fe1a7
+Quero aprender sobre o mar e usar\n
+isso nas batalhas.$
+
+[SlateportCity_OceanicMuseum_1F_Text_SternIsRoleModel] 7597dfe64f
+Eu fico toda boba quando\n
+vejo o mar!\p
+Pra mim, o CAP. STERN é o maior\n
+exemplo de todos!$
+
+[SlateportCity_OceanicMuseum_1F_Text_MustBePokemonWeDontKnow] adc8649d5f
+O mar é imenso e sem fim, e\n
+infinitamente profundo…\p
+Deve haver muitos POKéMON que\n
+a gente nem conhece.$
+
+[SlateportCity_OceanicMuseum_1F_Text_WantSeaPokemon] bf4334afa6
+Quero um POKéMON do mar.\p
+Acho que deve ser fresquinho e\n
+gostoso de abraçar.$
+
+[SlateportCity_OceanicMuseum_1F_Text_RememberMeTakeThis] 835c70397c
+Aaaaai!\n
+O que você está fazendo aqui?\p
+Eu? Sou o membro da EQUIPE AQUA que\n
+você derrotou, lembra?\l
+Lá no TÚNEL RUSTURF?\p
+Tome, pega isto!\n
+Você tem que me perdoar!$
+
+[SlateportCity_OceanicMuseum_1F_Text_HopeINeverSeeYouAgain] 951abfd15e
+Essa MT combina mais com você\n
+do que comigo.\p
+Espero nunca mais te ver!\n
+Uahahaha!$
+
+[SlateportCity_OceanicMuseum_1F_Text_YouHaveToTakeThis] 2bc2005512
+Ah, qual é!\n
+Você tem que pegar isto e me deixar ir!$
+
+[SlateportCity_OceanicMuseum_1F_Text_WhirlpoolExperiment] c16d8c699b
+Um líquido azul gira dentro de\n
+um recipiente de vidro.\p
+“Experimento para criar um\n
+REDEMOINHO artificial com o vento.”$
+
+[SlateportCity_OceanicMuseum_1F_Text_WaterfallExperiment] 841683f1b9
+Uma bola vermelha sobe e desce\n
+dentro de um recipiente de vidro.\p
+“Experimento que simula uma CACHOEIRA\n
+com a flutuação da bola.”$
+
+[SlateportCity_OceanicMuseum_1F_Text_OceanSoilDisplay] 50da3be706
+É uma amostra de solo do fundo\n
+do mar.\p
+“Ao longo de muitos anos, os restos\n
+de seres vivos se depositam no fundo\l
+do mar, formando camadas.\p
+“Analisando essas camadas, o passado\n
+remoto é revelado.”$
+
+[SlateportCity_OceanicMuseum_1F_Text_BeachSandDisplay] 6c18922ade
+É uma amostra de areia da praia.\p
+“As pedras das montanhas são levadas\n
+pelos rios, onde se lascam e se\l
+desgastam.\p
+“Elas viram grãos e acabam como\n
+areia nas praias.”$
+
+[SlateportCity_OceanicMuseum_1F_Text_OceanicMinifact1] 15fdc6e4a4
+“CURIOSIDADE OCEÂNICA 1\n
+Por que a água do mar é azul?\p
+“A luz é formada por muitas cores.\p
+“Quando a luz atravessa a água, a\n
+maioria das cores se perde.\p
+“Mas a luz azul mantém a cor,\n
+e o mar parece azul.”$
+
+[SlateportCity_OceanicMuseum_1F_Text_OceanicMinifact2] acedcf0aef
+“CURIOSIDADE OCEÂNICA 2\n
+Por que o mar é salgado?\p
+“A água do mar tem sal dissolvido,\n
+em forma de íons de sódio e cloro.\p
+“Esses íons saem das rochas e\n
+são levados ao mar pela chuva.\p
+“A concentração de sal dissolvido\n
+deixa o mar salgado.”$
+
+[SlateportCity_OceanicMuseum_1F_Text_OceanicMinifact3] 74e6804d39
+“CURIOSIDADE OCEÂNICA 3\n
+Qual é maior? O mar ou a terra?\p
+“O mar cobre cerca de 70% do\n
+planeta, e o resto é terra.\p
+“Então o mar tem mais que o dobro\n
+do tamanho da terra.”$
+
+[SlateportCity_OceanicMuseum_1F_Text_FossilDisplay] 4274af853b
+É um fóssil com ondulações.\p
+“O solo do fundo do mar é varrido\n
+pela maré.\p
+“A água em movimento marca o solo\n
+com pequenas cristas e vales.\p
+“Se esse solo vira fóssil, chama-se\n
+marca de ondulação.”$
+
+[SlateportCity_OceanicMuseum_1F_Text_DepthMeasuringMachine] aa0f90c46b
+Uma máquina estranha gira dentro\n
+de uma cúpula de vidro.\p
+Talvez seja pra medir a profundidade\n
+de alguma coisa…$

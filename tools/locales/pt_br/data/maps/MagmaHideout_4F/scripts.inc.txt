@@ -1,0 +1,100 @@
+# ESCONDERIJO MAGMA: 4º andar, TABITHA, MAXIE e GROUDON.
+
+[MagmaHideout_4F_Text_Grunt11Intro] b8a4466d02
+Eu também quero ver o GROUDON, mas\n
+nem o rabo dele me deixam ver…\p
+Isso me deixa muito frustrado.\p
+Ah, não!\n
+Falei do GROUDON!$
+
+[MagmaHideout_4F_Text_Grunt11Defeat] fb6675822f
+Acho que não dá pra vencer sem\n
+ter a cabeça fria…$
+
+[MagmaHideout_4F_Text_Grunt11PostBattle] fbb4802d12
+Será que o GROUDON tem rabo?$
+
+[MagmaHideout_4F_Text_Grunt12Intro] 98f2d858c7
+Fuhahaha!\n
+Logo! Muito em breve!\l
+O nosso grande objetivo vai se cumprir!$
+
+[MagmaHideout_4F_Text_Grunt12Defeat] 959c1dba8d
+Grrr…\n
+Cheguei tão longe pra isto?$
+
+[MagmaHideout_4F_Text_Grunt12PostBattle] 43abd17bf3
+Senhor MAXIE!\n
+Um intruso está indo até aí!$
+
+[MagmaHideout_4F_Text_Grunt13Intro] e02f847612
+Ainda não acabou!\n
+Não vai passar por mim tão fácil!$
+
+[MagmaHideout_4F_Text_Grunt13Defeat] 88d0bcd9c2
+Fui tão fácil de derrubar assim?$
+
+[MagmaHideout_4F_Text_Grunt13PostBattle] 40630e2105
+V-vamos, mais uma batalha…$
+
+[MagmaHideout_4F_Text_TabithaIntro] e1cc745938
+Hehehe!\n
+Já que chegou até aqui, eu conto!\p
+Isso mesmo!\n
+Lá na frente, o GROUDON dorme!\p
+O MAXIE foi até o GROUDON agora\n
+mesmo!\p
+Ele vai despertar já, já!\n
+Hehe! Hehehe!$
+
+[MagmaHideout_4F_Text_TabithaDefeat] 34b3aeebfa
+Derrubado de novo…\n
+Hehe…$
+
+[MagmaHideout_4F_Text_TabithaPostBattle] 802b474869
+…E, enquanto você perdia tempo\n
+comigo, o MAXIE já deve ter\l
+despertado o GROUDON…$
+
+[MagmaHideout_4F_Text_MaxieAwakenGroudon] 1442ef84ad
+MAXIE: GROUDON…\p
+Nada conseguia te despertar do seu\n
+sono banhado em magma…\p
+Este ORBE AZUL é o que você buscava.\n
+Não é?\p
+Eu te trouxe o ORBE AZUL.\n
+Que o brilho dele te desperte!\p
+E me mostre…\n
+Me mostre todo o seu poder!$
+
+[MagmaHideout_4F_Text_MaxieGroudonWhatsWrong] f98ceb9f91
+MAXIE: GROUDON!\n
+O que houve?\p
+O ORBE AZUL não era a chave?\p
+GROUDON!\n
+Aonde você foi…$
+
+[MagmaHideout_4F_Text_MaxieOhItWasYou] 877b3d7b51
+MAXIE: Ah, então foi você?\p
+Vi você bisbilhotando por aí sem\n
+ser convidado…\p
+Agora entendi!\n
+Você deve ter feito alguma trapaça!$
+
+[MagmaHideout_4F_Text_MaxieDefeat] 290d81e99f
+Como você lida tão bem com\n
+POKéMON?$
+
+[MagmaHideout_4F_Text_MaxieImGoingAfterGroudon] 00e0081f9e
+MAXIE: Deve haver um motivo para o\n
+GROUDON ter fugido…\p
+É isso que você quer dizer,\n
+não é?\p
+… … … … … …\n
+… … … … … …\p
+Hunf…\n
+Acha que eu não sabia?\p
+Sem o GROUDON, não preciso mais\n
+deste vulcão maldito.\p
+Vou atrás do GROUDON. É aqui que\n
+nos separamos!$

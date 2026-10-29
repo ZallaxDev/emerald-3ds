@@ -1,0 +1,635 @@
+# A SALA UNIÃO e os grupos sem fio (src/data/union_room.h). As mensagens e
+# as falas vão na caixa de diálogo (208 px); os menus, em janelas de 16
+# tiles; "faltam N jogadores" e "MODO N JOGAD.", numa janela de 7 tiles.
+# Os nomes das atividades entram nas mensagens ({STR_VAR_1}). Ficam de fora
+# os textos vazios, os símbolos e o japonês sem uso.
+
+[sText_PleaseStartOver] 559cba3c00 width=208
+Comece de novo do início.
+
+[sText_WirelessSearchCanceled] 1a9c31040d width=208
+A busca pelo SISTEMA DE\nCOMUNICAÇÃO SEM FIO foi cancelada.
+
+[sText_AwaitingCommunucation2] 259d8d1b83 width=208
+Aguardando a comunicação\nde outro jogador.
+
+[sText_AwaitingCommunication] b44778613d width=208
+{STR_VAR_1}! Aguardando a\ncomunicação de outro jogador.
+
+[sText_AwaitingLinkPressStart] ca7e2852f2 width=208
+{STR_VAR_1}! Aguardando conexão!\nAperte START quando todos estiverem.
+
+[sText_1PlayerNeeded] 7642fca4f7 width=56
+Falta 1\njogador.
+
+[sText_2PlayersNeeded] 089e2ca1af width=56
+Faltam 2\njogadores.
+
+[sText_3PlayersNeeded] d2cd6350dc width=56
+Faltam 3\njogadores.
+
+[sText_4PlayersNeeded] 4cc1257315 width=56
+Faltam 4\njogadores.
+
+[sText_2PlayerMode] 62700e58b5 width=56
+MODO\n2 JOGAD.
+
+[sText_3PlayerMode] 7b6246bd22 width=56
+MODO\n3 JOGAD.
+
+[sText_4PlayerMode] 55ee3551d9 width=56
+MODO\n4 JOGAD.
+
+[sText_5PlayerMode] 6d10cbd254 width=56
+MODO\n5 JOGAD.
+
+[sText_BButtonCancel] d4f1312856 width=60
+{B_BUTTON}VOLTAR
+
+[sText_PlayerContactedYouForXAccept] a35bfcb506 width=208
+{STR_VAR_2} chamou você pra\n{STR_VAR_1}. Aceitar?
+
+[sText_PlayerContactedYouShareX] 3fc6efd2cb width=208
+{STR_VAR_2} chamou você.\nVai compartilhar {STR_VAR_1}?
+
+[sText_PlayerContactedYouAddToMembers] 0d54044737 width=208
+{STR_VAR_2} chamou você.\nAdicionar aos membros?
+
+[sText_AreTheseMembersOK] e329a2522c width=208
+{STR_VAR_1}!\nEsses membros estão OK?
+
+[sText_CancelModeWithTheseMembers] 628b511cf0 width=208
+Cancelar {STR_VAR_1}\ncom esses membros?
+
+[sText_AnOKWasSentToPlayer] 3863b8452d width=208
+Um “OK” foi enviado\npra {STR_VAR_1}.
+
+[sText_OtherTrainerUnavailableNow] bc32765fc1 width=208
+O outro TREINADOR não parece\nestar disponível agora…\p
+
+[sText_CantTransmitTrainerTooFar] 3a295669a5 width=208
+Não dá pra transmitir pra um\nTREINADOR que está muito longe.\p
+
+[sText_TrainersNotReadyYet] 7a2dc24cf8 width=208
+Os outros TREINADORES ainda\nnão estão prontos.\p
+
+[sText_ModeWithTheseMembersWillBeCanceled] 2ea32a2288 width=208
+{STR_VAR_1} com esses membros\nvai ser cancelado.{PAUSE 60}
+
+[sText_MemberNoLongerAvailable] ffd917cf81 width=208
+Um dos membros não está mais\ndisponível.\p
+
+[sText_TrainerAppearsUnavailable] 07532f338b width=208
+O outro TREINADOR parece\nindisponível…\p
+
+[sText_PlayerSentBackOK] 7f32eec8b6 width=208
+{STR_VAR_1} mandou um “OK”!
+
+[sText_PlayerOKdRegistration] 7dd833db6a width=208
+{STR_VAR_1} aceitou você\ncomo membro.
+
+[sText_PlayerRepliedNo] 246702f697 width=208
+{STR_VAR_1} respondeu: “Não…”\p
+
+[sText_AwaitingOtherMembers] c8ccd95772 width=208
+{STR_VAR_1}!\nAguardando os outros membros!
+
+[sText_QuitBeingMember] 917fbe7504 width=208
+Deixar de ser membro?
+
+[sText_StoppedBeingMember] be8a0d4f52 width=208
+Você deixou de ser membro.\p
+
+[sText_WirelessLinkEstablished] c9681d3604 width=208
+A conexão do SISTEMA DE\nCOMUNICAÇÃO SEM FIO foi feita.
+
+[sText_WirelessLinkDropped] 1ba7abe64d width=208
+A conexão do SISTEMA DE\nCOMUNICAÇÃO SEM FIO caiu…
+
+[sText_LinkWithFriendDropped] 04e7ded709 width=208
+A conexão com o seu amigo\ncaiu…
+
+[sText_PlayerRepliedNo2] b8f839213f width=208
+{STR_VAR_1} respondeu: “Não…”
+
+[sText_DoYouWantXMode] dffd6046f3 width=208
+Quer o modo\n{STR_VAR_2}?
+
+[sText_DoYouWantXMode2] dffd6046f3 width=208
+Quer o modo\n{STR_VAR_2}?
+
+[sText_CommunicatingPleaseWait] de736696c6 width=208
+Comunicando…\nAguarde.
+
+[sText_AwaitingPlayersResponseAboutTrade] f3f28cee2d width=208
+Aguardando a resposta de {STR_VAR_1}\nsobre a troca…
+
+[sText_Communicating] d8f2ad4c6a width=208
+Comunicando{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.\n{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.
+
+[sText_CommunicatingWithPlayer] c5c2d659fb width=208
+Comunicando com {STR_VAR_1}{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.\n{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.
+
+[sText_PleaseWaitAWhile] eac7b78db4 width=208
+Espere um pouco{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.\n{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.{PAUSE 15}.
+
+[sText_HiDoSomethingMale] 73733ba176 width=208
+E aí! Quer fazer alguma\ncoisa?
+
+[sText_HiDoSomethingFemale] 900998cee5 width=208
+Oi!\nQuer fazer alguma coisa?
+
+[sText_HiDoSomethingAgainMale] 7abc2fddb8 width=208
+{STR_VAR_1}: E aí, de novo por aqui!\nO que vai ser desta vez?
+
+[sText_HiDoSomethingAgainFemale] 7301c81e99 width=208
+{STR_VAR_1}: Ah! Oi, {PLAYER}!\nQuer fazer alguma coisa?
+
+[sText_DoSomethingMale] e0d49d0a1b width=208
+Quer fazer alguma coisa?
+
+[sText_DoSomethingFemale] ac761a6f8f width=208
+Quer fazer alguma coisa?
+
+[sText_DoSomethingAgainMale] afdbfc1287 width=208
+{STR_VAR_1}: O que quer fazer\nagora?
+
+[sText_DoSomethingAgainFemale] 77ee81e89c width=208
+{STR_VAR_1}: Quer fazer mais\nalguma coisa?
+
+[sText_SomebodyHasContactedYou] 4275f18094 width=208
+Alguém chamou você.{PAUSE 60}
+
+[sText_PlayerHasContactedYou] 07dc5db416 width=208
+{STR_VAR_1} chamou você.{PAUSE 60}
+
+[sText_AwaitingResponseFromTrainer] 36e10ff646 width=208
+Aguardando a resposta do\noutro TREINADOR…
+
+[sText_AwaitingResponseFromPlayer] 280edd3b1c width=208
+Aguardando a resposta de\n{STR_VAR_1}…
+
+[sText_ShowTrainerCard] 35ad520632 width=208
+O outro TREINADOR mostrou o\nCARTÃO DE TREINADOR dele.\pQuer mostrar o seu\nCARTÃO DE TREINADOR?
+
+[sText_BattleChallenge] cf052caf21 width=208
+O outro TREINADOR desafiou você\npra uma batalha.\pVai aceitar o desafio?
+
+[sText_ChatInvitation] 66d4f7e431 width=208
+O outro TREINADOR chamou você\npro bate-papo.\pVai aceitar o convite?
+
+[sText_OfferToTradeMon] 19fd344980 width=208
+Tem uma oferta de troca pelo seu\n{DYNAMIC 1} Nv. {DYNAMIC 0} registrado,\pem troca de um\n{DYNAMIC 3} Nv. {DYNAMIC 2}.\pVai aceitar essa oferta de\ntroca?
+
+[sText_OfferToTradeEgg] a87dde3018 width=208
+Tem uma oferta de troca pelo seu\nOVO registrado.\lVai aceitar essa oferta de troca?
+
+[sText_ChatDropped] 6fb95aed1f width=208
+O bate-papo caiu.\p
+
+[sText_OfferDeclined1] 974aea77c3 width=208
+Você recusou a oferta.\p
+
+[sText_OfferDeclined2] 974aea77c3 width=208
+Você recusou a oferta.\p
+
+[sText_ChatEnded] 77f904acc4 width=208
+O bate-papo acabou.\p
+
+[sText_JoinChatMale] 9e41be7bbf width=208
+Opa, e aí! A gente tá num bate-papo\nagora. Quer entrar?
+
+[sText_PlayerJoinChatMale] ecdbbb9eb3 width=208
+{STR_VAR_1}: E aí, {PLAYER}!\nA gente tá num bate-papo agora.\lQuer entrar?
+
+[sText_JoinChatFemale] 7258fa181c width=208
+Ah, oi! A gente tá num bate-papo.\nQuer entrar também?
+
+[sText_PlayerJoinChatFemale] 8e81264faa width=208
+{STR_VAR_1}: Ah, oi, {PLAYER}!\nA gente tá num bate-papo.\lQuer entrar também?
+
+[sText_TrainerAppearsBusy] 30cb9e66c7 width=208
+……\nO TREINADOR parece ocupado…\p
+
+[sText_WaitForBattleMale] 1ed2efcaec width=208
+Uma batalha, é?\nBeleza, só me dá um tempinho.
+
+[sText_WaitForChatMale] 9d0b4d61a5 width=208
+Quer bater papo, é?\nClaro, só espera um pouco.
+
+[sText_ShowTrainerCardMale] e901cfa35e width=208
+Claro! Pra me apresentar, aqui\nestá o meu CARTÃO DE TREINADOR.
+
+[sText_WaitForBattleFemale] 963fd2297c width=208
+Uma batalha? Claro, mas preciso\nde um tempo pra me preparar.
+
+[sText_WaitForChatFemale] 94fe4e9d56 width=208
+Quer conversar?\nTá bom, mas espera um pouquinho.
+
+[sText_ShowTrainerCardFemale] c729458a66 width=208
+Pra me apresentar, vou mostrar\no meu CARTÃO DE TREINADOR.
+
+[sText_WaitForChatMale2] 9d0b4d61a5 width=208
+Quer bater papo, é?\nClaro, só espera um pouco.
+
+[sText_DoneWaitingBattleMale] d88c89a70f width=208
+Valeu por esperar!\nBora começar a batalha!{PAUSE 60}
+
+[sText_DoneWaitingChatMale] 150845d579 width=208
+Beleza!\nBora conversar!{PAUSE 60}
+
+[sText_DoneWaitingBattleFemale] 9b3b2e7fcd width=208
+Desculpa a demora!\nVamos começar!{PAUSE 60}
+
+[sText_DoneWaitingChatFemale] ec78193440 width=208
+Desculpa a demora!\nVamos conversar.{PAUSE 60}
+
+[sText_TradeWillBeStarted] f804be94cb width=208
+A troca vai começar.{PAUSE 60}
+
+[sText_BattleWillBeStarted] f730ccc32d width=208
+A batalha vai começar.{PAUSE 60}
+
+[sText_EnteringChat] 7533cdc1da width=208
+Entrando no bate-papo…{PAUSE 60}
+
+[sText_BattleDeclinedMale] 606842f1f3 width=208
+Foi mal! Os meus POKéMON não\nestão muito bem agora.\lA gente luta outra hora.\p
+
+[sText_BattleDeclinedFemale] 2340fd0bee width=208
+Sinto muito, mas os meus POKéMON\nnão estão se sentindo bem…\pVamos lutar outra hora.\p
+
+[sText_ShowTrainerCardDeclinedMale] 669d211005 width=208
+Hã? O meu CARTÃO DE TREINADOR…\nCadê ele?\lFoi mal! Mostro outra hora!\p
+
+[sText_ShowTrainerCardDeclinedFemale] f4d9e5385b width=208
+Ué? Onde foi que eu pus o meu\nCARTÃO DE TREINADOR?…\lDesculpa! Mostro depois!\p
+
+[sText_IfYouWantToDoSomethingMale] c19e441003 width=208
+Se quiser fazer alguma coisa\ncomigo, é só chamar!\p
+
+[sText_IfYouWantToDoSomethingFemale] 18fd594eb6 width=208
+Se quiser fazer alguma coisa\ncomigo, não fique com vergonha.\p
+
+[sText_TrainerBattleBusy] 32377eaad0 width=208
+Opa! Foi mal, mas tenho que\nfazer outra coisa.\lFica pra outra hora, tá?\p
+
+[sText_NeedTwoMonsOfLevel30OrLower1] 6d632134f8 width=208
+Pra lutar, você precisa de\ndois POKéMON abaixo do\lNv. 30.\p
+
+[sText_NeedTwoMonsOfLevel30OrLower2] 5c59843ec2 width=208
+Pra uma batalha, você precisa de\ndois POKéMON abaixo do Nv. 30.\p
+
+[sText_DeclineChatMale] 28f7f96730 width=208
+Ah, tudo bem.\nVem falar comigo quando quiser, tá?\p
+
+[stext_DeclineChatFemale] db695e04f2 width=208
+Ah…\nPode vir quando quiser.\p
+
+[sText_ChatDeclinedMale] 29e6bc87be width=208
+Ah, foi mal!\nAgora não dá mesmo.\lA gente conversa outra hora.\p
+
+[sText_ChatDeclinedFemale] 312b988cfa width=208
+Ah, desculpa.\nTenho muita coisa pra fazer agora.\lVamos conversar outra hora.\p
+
+[sText_YoureToughMale] a4af4bf7a6 width=208
+Uau!\nDá pra ver que você é forte!\p
+
+[sText_UsedGoodMoveMale] 840bf5d389 width=208
+Você usou esse golpe?\nÉ uma boa estratégia!\p
+
+[sText_BattleSurpriseMale] b517c06e3f width=208
+Mandou bem!\nIsso foi uma surpresa!\p
+
+[sText_SwitchedMonsMale] 1e872b21db width=208
+Ué! Como você usou esse\nPOKéMON numa hora dessas?\p
+
+[sText_YoureToughFemale] 4c291fc79c width=208
+Esse POKéMON…\nFoi muito bem treinado!\p
+
+[sText_UsedGoodMoveFemale] 599d7651e0 width=208
+É isso aí!\nEsse é o golpe certo agora!\p
+
+[sText_BattleSurpriseFemale] 9b46bc3f83 width=208
+Que demais!\nDá pra lutar desse jeito?\p
+
+[sText_SwitchedMonsFemale] 0f223caa42 width=208
+Você troca de POKéMON\nna hora certinha!\p
+
+[sText_LearnedSomethingMale] 4626624af8 width=208
+Ah, entendi!\nIsso é bem educativo!\p
+
+[sText_ThatsFunnyMale] cf7ed893de width=208
+Para de falar coisa engraçada!\nJá tô com dor de tanto rir!\p
+
+[sText_RandomChatMale1] fd4100435d width=208
+Hã?\nAconteceu uma coisa dessas?\p
+
+[sText_RandomChatMale2] 1d24cce1f9 width=208
+Hum hum… O quê?\nEntão é isso que você tá dizendo?\p
+
+[sText_LearnedSomethingFemale] 6f99e821eb width=208
+É mesmo?\nEu não sabia disso.\p
+
+[sText_ThatsFunnyFemale] 21c91e7b73 width=208
+Ahaha!\nQue história é essa?\p
+
+[sText_RandomChatFemale1] 45b00b898e width=208
+Isso, é isso mesmo!\nFoi o que eu quis dizer.\p
+
+[sText_RandomChatFemale2] 2aff3aad30 width=208
+Em outras palavras…\nIsso! É isso aí!\p
+
+[sText_ShowedTrainerCardMale1] 3760e99d83 width=208
+Tô mostrando o meu CARTÃO DE\nTREINADOR pra me apresentar.\p
+
+[sText_ShowedTrainerCardMale2] d57f07b17c width=208
+Espero te conhecer melhor!\p
+
+[sText_ShowedTrainerCardFemale1] c332abe3db width=208
+A gente tá mostrando os CARTÕES\nDE TREINADOR pra se conhecer.\p
+
+[sText_ShowedTrainerCardFemale2] df18ac1449 width=208
+Prazer em te conhecer.\nApareça sempre!\p
+
+[sText_MaleTraded1] 59f9e7807b width=208
+Eba!\nEu queria muito esse POKéMON!\p
+
+[sText_MaleTraded2] 400954e171 width=208
+Finalmente, numa troca, consegui\no POKéMON que eu queria há tempos.\p
+
+[sText_FemaleTraded1] b02867710c width=208
+Tô trocando POKéMON agora.\p
+
+[sText_FemaleTraded2] c20a91d326 width=208
+Finalmente consegui numa troca\no POKéMON que eu queria!\p
+
+[sText_XCheckedTradingBoard] 7ff29cc20f width=208
+{STR_VAR_1} olhou o\nQUADRO DE TROCAS.\p
+
+[sText_RegisterMonAtTradingBoard] afc440ecfe width=208
+Este é o QUADRO DE TROCAS.\pAqui você registra um POKéMON\ne oferece ele pra troca.\pQuer registrar um dos seus\nPOKéMON?
+
+[sText_TradingBoardInfo] bfe5c888cd width=208
+O QUADRO DE TROCAS serve pra\noferecer um POKéMON pra troca.\pÉ só registrar um POKéMON\npra troca.\pOutro TREINADOR pode oferecer\num POKéMON da equipe em troca.\pEsperamos que você registre POKéMON\ne troque com muitos, muitos\loutros TREINADORES.\pQuer registrar um dos seus\nPOKéMON?
+
+[sText_ThankYouForRegistering] cced5f3ad5 width=208
+O seu POKéMON foi registrado pra\ntroca no QUADRO DE TROCAS.\pObrigado por usar o serviço!\p
+
+[sText_NobodyHasRegistered] 8857d47946 width=208
+Ninguém registrou POKéMON pra\ntroca no QUADRO DE TROCAS.\p\n
+
+[sText_ChooseRequestedMonType] 9618cdee2a width=208
+Escolha o tipo de POKéMON\nque você quer na troca.\n
+
+[sText_WhichMonWillYouOffer] 61f2115bc4 width=208
+Qual POKéMON da sua equipe\nvocê vai oferecer na troca?\p
+
+[sText_RegistrationCanceled] 9d4877f255 width=208
+O registro foi cancelado.\p
+
+[sText_RegistrationCompleted] d2fc587d7f width=208
+O registro foi concluído.\p
+
+[sText_TradeCanceled] 0de2c1692c width=208
+A troca foi cancelada.\p
+
+[sText_CancelRegistrationOfMon] 5c9266bed8 width=208
+Cancelar o registro do seu\n{STR_VAR_1} Nv. {STR_VAR_2}?
+
+[sText_CancelRegistrationOfEgg] 7685359f6d width=208
+Cancelar o registro do seu\nOVO?
+
+[sText_RegistrationCanceled2] 351b82d92c width=208
+O registro foi cancelado.\p
+
+[sText_TradeTrainersWillBeListed] 226fab8033 width=208
+Os TREINADORES que querem trocar\nvão aparecer na lista.
+
+[sText_ChooseTrainerToTradeWith2] c904a7aaa7 width=208
+Escolha o TREINADOR com quem\nvocê quer trocar POKéMON.
+
+[sText_AskTrainerToMakeTrade] a66e081ab0 width=208
+Pedir uma troca a\n{STR_VAR_1}?
+
+[sText_AwaitingResponseFromTrainer2] 36e10ff646 width=208
+Aguardando a resposta do\noutro TREINADOR…
+
+[sText_NotRegisteredAMonForTrade] 556b78d44d width=208
+Você não registrou nenhum POKéMON\npra troca.\p
+
+[sText_DontHaveTypeTrainerWants] dc0cc56938 width=208
+Você não tem um POKéMON do tipo\n{STR_VAR_2} que {STR_VAR_1} quer.\p
+
+[sText_DontHaveEggTrainerWants] 51d38d282a width=208
+Você não tem o OVO que\n{STR_VAR_1} quer.\p
+
+[sText_PlayerCantTradeForYourMon] 4ed8fb2e5d width=208
+{STR_VAR_1} não pode trocar pelo\nseu POKéMON agora.\p
+
+[sText_CantTradeForPartnersMon] 57503e45ab width=208
+Você não pode trocar pelo POKéMON\nde {STR_VAR_1} agora.\p
+
+[sText_TradeOfferRejected] 977028a875 width=208
+A sua oferta de troca foi recusada.\p
+
+[sText_EggTrade] 42099daa74 width=60
+TROCA OVO
+
+[sText_ChooseJoinCancel] 4a7a3ab714 width=200
+{DPAD_UPDOWN}ESCOLHER  {A_BUTTON}ENTRAR  {B_BUTTON}VOLTAR
+
+[sText_ChooseTrainer] 9d5386d0f0 width=208
+Escolha um TREINADOR.
+
+[sText_ChooseTrainerSingleBattle] 0f343b6541 width=208
+Escolha um TREINADOR pra uma\nBATALHA INDIVIDUAL.
+
+[sText_ChooseTrainerDoubleBattle] f61037096d width=208
+Escolha um TREINADOR pra uma\nBATALHA DUPLA.
+
+[sText_ChooseLeaderMultiBattle] 401ad6cefb width=208
+Escolha o LÍDER\nde uma BATALHA MÚLTIPLA.
+
+[sText_ChooseTrainerToTradeWith] 4ec768d45a width=208
+Escolha o TREINADOR pra\ntrocar.
+
+[sText_ChooseTrainerToShareWonderCards] 25091804e4 width=208
+Escolha o TREINADOR que está\ncompartilhando CARTÕES MARAVILHA.
+
+[sText_ChooseTrainerToShareWonderNews] 9750cb8e81 width=208
+Escolha o TREINADOR que está\ncompartilhando NOTÍCIAS MARAVILHA.
+
+[sText_ChooseLeaderPokemonJump] a7609011ce width=208
+Pule com POKéMON pequenos!\nEscolha o LÍDER.
+
+[sText_ChooseLeaderBerryCrush] b171ba28b3 width=208
+TRITURA FRUTAS!\nEscolha o LÍDER.
+
+[sText_ChooseLeaderBerryPicking] 1beb668a39 width=208
+COLHEITA DO DODRIO!\nEscolha o LÍDER.
+
+[sText_ChooseLeaderBerryBlender] cafd763534 width=208
+LIQUIDIFICADOR!\nEscolha o LÍDER.
+
+[sText_ChooseLeaderRecordCorner] e7b2039211 width=208
+CANTO DOS RECORDES!\nEscolha o LÍDER.
+
+[sText_ChooseLeaderCoolContest] 95b66beede width=208
+CONCURSO DE ESTILO!\nEscolha o LÍDER.
+
+[sText_ChooseLeaderBeautyContest] 84b44fc9c0 width=208
+CONCURSO DE BELEZA!\nEscolha o LÍDER.
+
+[sText_ChooseLeaderCuteContest] d7df81bd61 width=208
+CONCURSO DE FOFURA!\nEscolha o LÍDER.
+
+[sText_ChooseLeaderSmartContest] beedf53999 width=208
+CONCURSO DE ESPERTEZA!\nEscolha o LÍDER.
+
+[sText_ChooseLeaderToughContest] 44f2854df9 width=208
+CONCURSO DE FORÇA!\nEscolha o LÍDER.
+
+[sText_ChooseLeaderBattleTowerLv50] 4f49d48d58 width=208
+TORRE DE BATALHA NÍVEL 50!\nEscolha o LÍDER.
+
+[sText_ChooseLeaderBattleTowerOpenLv] bd088b8e4a width=208
+TORRE DE BATALHA NÍVEL LIVRE!\nEscolha o LÍDER.
+
+[sText_SearchingForWirelessSystemWait] 56bd7896e6 width=208
+Procurando um SISTEMA DE\nCOMUNICAÇÃO SEM FIO. Aguarde...
+
+[sText_MustHaveTwoMonsForDoubleBattle] 3fde1ad4e5 width=208
+Pra uma BATALHA DUPLA, você precisa\nde pelo menos dois POKéMON.\p
+
+[sText_AwaitingPlayersResponse] 90438becc7 width=208
+Aguardando a resposta\nde {STR_VAR_1}…
+
+[sText_PlayerHasBeenAskedToRegisterYouPleaseWait] d28190f915 width=208
+{STR_VAR_1} recebeu o pedido pra\nincluir você como membro. Aguarde.
+
+[sText_AwaitingResponseFromWirelessSystem] 25c2dd0f72 width=208
+Aguardando a resposta do\nSISTEMA DE COMUNICAÇÃO SEM FIO.
+
+[sText_PleaseWaitForOtherTrainersToGather] ea0121212e width=208
+Espere os outros TREINADORES se\nreunirem e ficarem prontos.
+
+[sText_NoCardsSharedRightNow] e45bf523c0 width=208
+Parece que nenhum CARTÃO está\nsendo compartilhado agora.
+
+[sText_NoNewsSharedRightNow] 2352de30b7 width=208
+Parece que nenhuma NOTÍCIA está\nsendo compartilhada agora.
+
+[sText_Battle] ce9e1aaf32 width=120
+BATALHA
+
+[sText_Chat2] 26bc51b8c2 width=120
+BATE-PAPO
+
+[sText_Greetings] e2c3787421 width=120
+CUMPRIMENTO
+
+[sText_Exit] bb1b38004d width=120
+SAIR
+
+[sText_Exit2] bb1b38004d width=120
+SAIR
+
+[sText_Info] 9c9cf99982 width=120
+INFO
+
+[sText_NameWantedOfferLv] 1ea7b9335e
+NOME{CLEAR_TO 60}QUER{CLEAR_TO 110}OFERECE{CLEAR_TO 198}NV.
+
+[sText_SingleBattle] a851771634 width=130
+BATALHA INDIVIDUAL
+
+[sText_DoubleBattle] 6e4774eec6 width=130
+BATALHA DUPLA
+
+[sText_MultiBattle] acbae79ba5 width=130
+BATALHA MÚLTIPLA
+
+[sText_PokemonTrades] 1e484846cd width=130
+TROCA DE POKéMON
+
+[sText_Chat] 26bc51b8c2 width=130
+BATE-PAPO
+
+[sText_Cards] 2cb47ee37c width=130
+CARTÕES
+
+[sText_WonderCards] c53334ee7f width=130
+CARTÕES MARAVILHA
+
+[sText_WonderNews] 7eb690423f width=130
+NOTÍCIAS MARAVILHA
+
+[sText_PokemonJump] 7f695a7d9a width=130
+PULO POKéMON
+
+[sText_BerryCrush] 8d9e34e09d width=130
+TRITURA FRUTAS
+
+[sText_BerryPicking] 1b0ce337ee width=130
+COLHEITA DO DODRIO
+
+[sText_Search] a62a7a3d23 width=130
+BUSCA
+
+[sText_BerryBlender] bdb3141f31 width=130
+LIQUIDIFICADOR
+
+[sText_RecordCorner] 64afe93a82 width=130
+CANTO DOS RECORDES
+
+[sText_CoolContest] 2d6517f7f7 width=130
+CONCURSO DE ESTILO
+
+[sText_BeautyContest] 5549cf9c36 width=130
+CONCURSO DE BELEZA
+
+[sText_CuteContest] ab70631f27 width=130
+CONCURSO DE FOFURA
+
+[sText_SmartContest] 4fa538371e width=130
+CONC. DE ESPERTEZA
+
+[sText_ToughContest] 2a94fc5982 width=130
+CONCURSO DE FORÇA
+
+[sText_BattleTowerLv50] a2c9149884 width=130
+TORRE DE BATALHA NV. 50
+
+[sText_BattleTowerOpenLv] 0f434fb2a3 width=130
+TORRE DE BATALHA LIVRE
+
+[sText_ItsNormalCard] 4e2fddc2a0 width=160
+É um CARTÃO NORMAL.
+
+[sText_ItsBronzeCard] f19ee22895 width=160
+É um CARTÃO DE BRONZE!
+
+[sText_ItsCopperCard] 481c416e7f width=160
+É um CARTÃO DE COBRE!
+
+[sText_ItsSilverCard] cd08d5602b width=160
+É um CARTÃO DE PRATA!
+
+[sText_ItsGoldCard] 6c6e1e6217 width=160
+É um CARTÃO DE OURO!
+
+[sText_TrainerCardInfoPage1] 1b2e5bc6b6 width=208
+Este é o CARTÃO DE TREINADOR\nde {DYNAMIC 0} {DYNAMIC 1}…\l{DYNAMIC 2}\pPOKéDEX: {DYNAMIC 3}\nTEMPO:    {DYNAMIC 4}:{DYNAMIC 5}\p
+
+[sText_TrainerCardInfoPage2] 5a58f43b11 width=208
+BATALHAS: V: {DYNAMIC 0}  D: {DYNAMIC 2}\nTROCAS: {DYNAMIC 3}\p“{DYNAMIC 4} {DYNAMIC 5}\n{DYNAMIC 6} {DYNAMIC 7}”\p
+
+[sText_GladToMeetYouMale] 11b99baead width=208
+{DYNAMIC 1}: Foi bom te conhecer!{PAUSE 60}
+
+[sText_GladToMeetYouFemale] a03eb13a7c width=208
+{DYNAMIC 1}: Prazer em te conhecer!{PAUSE 60}
+
+[sText_FinishedCheckingPlayersTrainerCard] d45caa9cab width=208
+Terminou de ver o CARTÃO DE\nTREINADOR de {DYNAMIC 1}.{PAUSE 60}

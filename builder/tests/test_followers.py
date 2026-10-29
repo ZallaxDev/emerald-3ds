@@ -235,7 +235,7 @@ class PinnedListTests(unittest.TestCase):
         self.assertTrue({"%03d" % d for d in range(1, 387)} <= keys)
         self.assertEqual(len([k for k in keys if k.endswith("_f")]), 6)
         self.assertEqual(len([k for k in keys if k.startswith("201_")]), 27)
-        self.assertEqual(sorted(e["language"] for e in followers.text_files(sources)), ["en", "es", "fr", "it"])
+        self.assertEqual(sorted(e["language"] for e in followers.text_files(sources)), ["de", "en", "es", "fr", "it"])
         for e in sources["files"]:
             self.assertEqual(len(e["sha256"]), 64)
             self.assertIn(e["source"], sources["sources"])

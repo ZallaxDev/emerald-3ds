@@ -56,6 +56,7 @@ enum
 typedef struct
 {
     int x, y, w, h;
+    int ink;                 /* its columns up to the last with any alpha */
     const uint32_t *pixels;  /* RGBA8 0xRRGGBBAA, straight alpha */
 } Art;
 
@@ -174,15 +175,18 @@ static void LoadArt(void)
             {
                 /* Bytes R, G, B, A: one aligned word each, 0xRRGGBBAA. */
                 uint32_t *words = malloc((size_t)w * h * 4);
+                int ink = 0;
 
                 if (!words)
                     break;
-                for (int k = 0; k < w * h; ++k)
+                for (int k = 0, col = 0; k < w * h; ++k, col = col + 1 < w ? col + 1 : 0)
                 {
                     const uint8_t *c = p + k * 4;
                     words[k] = ((uint32_t)c[0] << 24) | ((uint32_t)c[1] << 16) | ((uint32_t)c[2] << 8) | c[3];
+                    if (c[3] && col >= ink)
+                        ink = col + 1;
                 }
-                sArt[id] = (Art){x, y, w, h, words};
+                sArt[id] = (Art){x, y, w, h, ink, words};
             }
             p += (size_t)w * h * 4;
         }
@@ -369,21 +373,46 @@ static void BlitOverNothing(uint32_t *pic, const Art *art)
 }
 
 /*
- * A bar's fill `width` pixels long: its art is the full fill, a capsule;
- * the left end and the right end are kept, the middle shortened.
+ * How much of a bar's fill `ink` columns long shows `pixels` of the GBA's
+ * `scale`: its width, of which the first `*left` columns are the art's left
+ * end and the rest its right end. Rounded up, so that only a full bar is
+ * the whole of it, and any pixel at all at least FILL_MIN_WIDTH: the GBA's
+ * one pixel for HP 1 (CalcBarFilledPixels) is 1.4 here, and a column or two
+ * of the capsule's ends is only its antialiased edge. Measured on the image's
+ * width, whose last two columns are clear, HP 1 was one of those: no bar.
  */
-static void BlitFill(uint32_t *pic, const Art *art, int x, int y, int width)
-{
-    int cap = art->h / 2, left, right;
+#define FILL_MIN_WIDTH 3
 
-    if (!art->pixels || width <= 0)
+static int FillWidth(int ink, int cap, int pixels, int scale, int *left)
+{
+    int width = (ink * pixels + scale - 1) / scale;
+
+    if (pixels > 0 && width < FILL_MIN_WIDTH)
+        width = FILL_MIN_WIDTH;
+    if (width > ink)
+        width = ink;
+    if (width < 0)
+        width = 0;
+    *left = width < 2 * cap ? width / 2 : width - cap;
+    return width;
+}
+
+/*
+ * A bar's fill of `pixels` of the GBA's `scale`: its art is the full fill, a
+ * capsule; the left end and the right end are kept, the middle shortened,
+ * all measured on its ink (FillWidth).
+ */
+static void BlitFill(uint32_t *pic, const Art *art, int x, int y, int pixels, int scale)
+{
+    int cap = art->h / 2, left, width;
+
+    if (!art->pixels)
         return;
-    if (width > art->w)
-        width = art->w;
-    left = width < 2 * cap ? width / 2 : width - cap;
-    right = width - left;
+    width = FillWidth(art->ink, cap, pixels, scale, &left);
+    if (width <= 0)
+        return;
     BlitPart(pic, art, x + art->x, y + art->y, 0, left);
-    BlitPart(pic, art, x + art->x + left, y + art->y, art->w - right, art->w);
+    BlitPart(pic, art, x + art->x + left, y + art->y, art->ink - (width - left), art->ink);
 }
 
 /* A traced label, coloured by a gradient from top to bottom. */
@@ -585,18 +614,41 @@ static void MakeLabels(const uint16_t *boxTileVram)
 /* Text: the game's normal font, 1:1                                        */
 /* ------------------------------------------------------------------------ */
 
+/* The Japanese game's strings are in its Japanese glyph set: glyphs all 8
+ * pixels wide, a sheet of 16 a row (text.c's DecompressGlyph_Normal). */
+#if GAME_LANGUAGE == LANGUAGE_JAPANESE
+#define HUD_GLYPHS gFontNormalJapaneseGlyphs
+#else
+#define HUD_GLYPHS gFontNormalLatinGlyphs
+#endif
+
 static const u16 *FontGlyphs(void)
 {
-    const void *resolved = Port_ResolveFontPointer(gFontNormalLatinGlyphs);
+    const void *resolved = Port_ResolveFontPointer(HUD_GLYPHS);
 
-    if (resolved == (const void *)gFontNormalLatinGlyphs)
-        resolved = Port_ResolveAssetPointer(gFontNormalLatinGlyphs);
+    if (resolved == (const void *)HUD_GLYPHS)
+        resolved = Port_ResolveAssetPointer(HUD_GLYPHS);
     return resolved;
 }
 
 static int GlyphWidth(unsigned glyph)
 {
+#if GAME_LANGUAGE == LANGUAGE_JAPANESE
+    (void)glyph;
+    return 8;
+#else
     return gFontNormalLatinGlyphWidths[glyph];
+#endif
+}
+
+/* The 2bpp bits of one 8-pixel half of a glyph's row. */
+static u16 GlyphRow(const u16 *glyphs, unsigned glyph, int row, int half)
+{
+#if GAME_LANGUAGE == LANGUAGE_JAPANESE
+    return half ? 0 : glyphs[0x100 * (glyph >> 4) + 8 * (glyph & 0xF) + (row >= 8 ? 0x80 : 0) + (row & 7)];
+#else
+    return glyphs[glyph * 0x20 + (row >= 8 ? 0x10 : 0) + half * 8 + (row & 7)];
+#endif
 }
 
 /* A game string's next glyph, past its control codes; -1 at its end. */
@@ -648,13 +700,12 @@ static int TextWidth(const uint8_t *str)
 
 static int DrawGlyph(uint32_t *pic, const u16 *glyphs, unsigned glyph, int x, int y, uint32_t fg, uint32_t shadow)
 {
-    const u16 *base = glyphs + glyph * 0x20;
     int width = GlyphWidth(glyph);
 
     for (int row = 0; row < 16; ++row)
         for (int half = 0; half < 2 && half * 8 < width; ++half)
         {
-            u16 bits = base[(row >= 8 ? 0x10 : 0) + half * 8 + (row & 7)];
+            u16 bits = GlyphRow(glyphs, glyph, row, half);
 
             if (!bits)
                 continue;
@@ -806,7 +857,7 @@ static void Compose(int index, int top, int bottom)
             const Art *fill = &sArt[ART_HP_FILL + (slot->hpColour > 2 ? 0 : slot->hpColour)];
 
             Blit(pic, &sArt[ART_HP_TRACK], barX, barY);
-            BlitFill(pic, fill, barX, barY, (fill->w * slot->hpPixels + 24) / 48);
+            BlitFill(pic, fill, barX, barY, slot->hpPixels, 48);
             /* The "HP" label, but where a status pill takes its place. */
             if (slot->status == CTR_HUD_STATUS_NONE || slot->kind == CTR_HUD_SINGLE_PLAYER)
                 /* Centred in the bar's dark left end: GBA x 0-15, y 0-6 of the bar. */
@@ -828,7 +879,7 @@ static void Compose(int index, int top, int bottom)
         const Art *fill = &sArt[ART_EXP_FILL];
 
         BlitLabel(pic, &sExpLabel, Px(16), Px(34), 0xFFF478FF, 0xE6B400FF);
-        BlitFill(pic, fill, 0, 0, (fill->w * slot->expPixels + 32) / 64);
+        BlitFill(pic, fill, 0, 0, slot->expPixels, 64);
     }
 
     /* The texts: the GBA's glyph tops are on its line 7, the font's on its line 3. */

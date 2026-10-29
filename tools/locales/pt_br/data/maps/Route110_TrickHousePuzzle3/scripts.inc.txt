@@ -1,0 +1,43 @@
+# CASA DOS TRUQUES, sala 3.
+
+[Route110_TrickHousePuzzle3_Text_WroteSecretCodeLockOpened] ba8ed0c5f1
+{PLAYER} escreveu a senha secreta\n
+na porta.\p
+“O MESTRE DOS TRUQUES é cobiçado.”\n
+… … … … … … … …\p
+A fechadura abriu com um clique!$
+
+[Route110_TrickHousePuzzle3_Text_JustinIntro] fb67f24854
+Eu sempre volto pro mesmo lugar!$
+
+[Route110_TrickHousePuzzle3_Text_JustinDefeat] cffcea2e8e
+Já estou com problemas, e ainda\n
+você me vence? Não é justo!$
+
+[Route110_TrickHousePuzzle3_Text_JustinPostBattle] 07180ec8fc
+Isto aqui é cheio de portas!\n
+É pequeno e escuro demais! Socorro!$
+
+[Route110_TrickHousePuzzle3_Text_MarthaIntro] 27609c1400
+Não sei o que está acontecendo aqui.\n
+Estou ficando triste…$
+
+[Route110_TrickHousePuzzle3_Text_MarthaDefeat] dd6504bae2
+Você… Você é horrível!$
+
+[Route110_TrickHousePuzzle3_Text_MarthaPostBattle] d5f83a0c15
+Eu sei que sou fraca!\n
+E não tenho senso de direção!$
+
+[Route110_TrickHousePuzzle3_Text_AlanIntro] 2cb23e2aa5
+Não entendo. Quem ia querer uma\n
+casa tão bizarra?$
+
+[Route110_TrickHousePuzzle3_Text_AlanDefeat] b7242d908b
+Não entendo.\n
+Como eu perdi?$
+
+[Route110_TrickHousePuzzle3_Text_AlanPostBattle] c0ab57e333
+Não entendo.\n
+Quantas armadilhas tem nesta casa?\p
+Talvez seja você quem vai descobrir.$

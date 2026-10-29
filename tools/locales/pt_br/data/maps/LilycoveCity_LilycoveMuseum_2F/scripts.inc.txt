@@ -1,0 +1,112 @@
+# CIDADE DE LILYCOVE: o MUSEU DE LILYCOVE, sala de exposição.
+
+[LilycoveCity_LilycoveMuseum_2F_Text_ThisIsExhibitHall] a20a08df79
+Esta é a nossa sala de exposição\n
+especial.$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_ExplainExhibitHall] a750021bd4
+Como você pode ver, não há nenhum\n
+quadro em exposição.\p
+Aqui, não quero expor obras da\n
+chamada arte clássica.\p
+Essas obras clássicas você vê no\n
+nosso térreo.\p
+Quero expor obras bem diferentes\n
+dos clássicos.\p
+Afinal, arte não se limita a obras\n
+antigas e famosas!\p
+Esta sala, quero enchê-la de…\p
+Obras modernas e vibrantes de\n
+POKéMON que parecem prontos pra\l
+saltar à vida, gloriosos!$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_PleaseObtainPaintingsForExhibit] 634f530582
+Perdão. Não quis monopolizar a\n
+conversa.\p
+Bem, como você é jovem, mas com\n
+certeza já viajou muito…\p
+Deve encontrar POKéMON cheios de\n
+vida e obras que os retratam.\p
+Se achar um quadro assim, poderia\n
+pedir ao artista permissão para\l
+expô-lo aqui?$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_WishToFillExhibit] 2fb32d5cbf
+Quero encher esta sala com quadros\n
+modernos e vibrantes de POKéMON.$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_ThanksAddedNewPainting] 131eaf28e6
+Graças a você, temos um quadro\n
+novo na coleção!\p
+Ouvi dizer que ele retrata o seu\n
+POKéMON. Simplesmente magnífico!\p
+Muito, muito obrigado!$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_ItsYouPlayer] 5895b54e86
+Ah! É você!\n
+{PLAYER}!$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_PaintingsAttractedMoreGuests] 2b628f424d
+Não é maravilhoso?\n
+Esta coleção de quadros!\p
+Cada um deles impecável!\n
+Nenhum melhor que o outro!\p
+Estes quadros trouxeram mais\n
+visitantes ao nosso MUSEU DE ARTE.\p
+Sinceramente, obrigado, {PLAYER}.\n
+É um sonho realizado!$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_TokenOfGratitude] e429821ac0
+É só um sinal da minha gratidão.$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_KeepThisForYou] 5b68096bcb
+Vou guardar isto pra você até nos\n
+vermos de novo.$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_HonorToHaveYouVisit] 20d2cdecd8
+Ah, que bom te ver, {PLAYER}!\p
+É uma honra receber a sua visita\n
+no meio das suas viagens.\p
+Por favor, relaxe e aproveite\n
+a visita.$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_ItsPinkPictureFrame] 9896299836
+É uma moldura com enfeites cor\n
+de rosa.$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_ItsYellowPictureFrame] 52b77ed883
+É uma moldura com enfeites\n
+amarelos.$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_ItsBluePictureFrame] 6de7ab367a
+É uma moldura com enfeites\n
+azuis.$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_ItsRedPictureFrame] 95cb4eaffd
+É uma moldura com enfeites\n
+vermelhos.$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_ItsGreenPictureFrame] e1e4d4c0aa
+É uma moldura com enfeites\n
+verdes.$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_ItsPaintingOfPokemon] f3cb74c2a7
+É um quadro de POKéMON.$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_NewPaintingsSurprisedMe] ea5283b0c5
+Fiquei um tempo fora, então os\n
+quadros novos aqui me surpreenderam.\p
+Queria que alguém pintasse os meus\n
+POKéMON bonitos assim.$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_NewPaintingsRatherAmusing] c83435fb30
+Bem… Então é aqui que mostram os\n
+quadros de POKéMON do momento.\p
+Entendo, estes quadros novos são\n
+mesmo bem divertidos.$
+
+[LilycoveCity_LilycoveMuseum_2F_Text_ThesePaintingsOfYourPokemon] eb5939afcd
+Uau, é mesmo?\n
+Estes quadros são dos seus POKéMON.\p
+Não é a maior alegria pra um\n
+TREINADOR?$

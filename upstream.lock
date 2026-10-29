@@ -8,3 +8,27 @@ sha1 = "f3ae088181bf583e55daf962a92bb46f4f1d07b7"
 
 [pack]
 schema = 1
+
+# The Python a release's voxel data is made and precompiled with
+# (tools/build_release.py, tools/voxel_precompile.py refuse any other): the
+# generators' output depends on the interpreter (set order, float sums), and
+# the players' builders only replay it. 3.13 is the web builder's (Pyodide
+# 0.28), whose generators give the same bytes.
+[python]
+version = "3.13"
+# what tools/release_env builds its image with (pillow: the one the voxel
+# data was proven with; any 11.x/12.x gave the same bytes)
+image = "python:3.13.17-slim-bookworm"
+pillow = "12.3.0"
+
+# The release environment (tools/docker_release.py): devkitARM and libctru,
+# citro2d, citro3d as one image, by digest.
+[devkitarm]
+image = "devkitpro/devkitarm@sha256:116afba8df8453961de2936ffab20dd441edf4d682856c1ec8b0e53d7ed0bbf5"
+
+# The original game's ELF (its symbols are the recipe's map of the ROM): the
+# pinned pokeemerald, unpatched, built with this agbcc; it must rebuild the
+# supported ROM byte for byte.
+[agbcc]
+repository = "https://github.com/pret/agbcc.git"
+commit = "da598c1d918402c42c0c0d7128ba14567f3175e9"

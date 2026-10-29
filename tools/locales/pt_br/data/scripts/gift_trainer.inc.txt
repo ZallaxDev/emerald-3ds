@@ -1,0 +1,7 @@
+# PRESENTE MISTERIOSO: o TREINADOR visitante de SOOTOPOLIS.
+
+[sText_MysteryGiftVisitingTrainerInstructions] b66cb7c362
+Obrigado por usar o sistema de\nPRESENTE MISTERIOSO.\pCom este CARTÃO MARAVILHA, você\npode responder a uma pesquisa\lnum POKéMON MART.\pUse as pesquisas pra convidar\nTREINADORES pra SOOTOPOLIS.\p“Vou te passar uma senha\nsecreta pra pesquisa:\p“GIVE ME\nAWESOME TRAINER”\pEscreva isso numa pesquisa e\nmande pro SISTEMA DE\lCOMUNICAÇÃO SEM FIO.$
+
+[sText_MysteryGiftVisitingTrainerArrived] 5f0dfe8af5
+Obrigado por usar o sistema de\nPRESENTE MISTERIOSO.\pUm TREINADOR chegou em\nSOOTOPOLIS procurando você.\pTomara que você curta\nbatalhar com o visitante.\pDá pra convidar outros\nTREINADORES com outras senhas.\pTente descobrir outras senhas\nque funcionem.$

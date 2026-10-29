@@ -1,0 +1,204 @@
+# CIDADE DE LILYCOVE: o SALÃO DE CONCURSOS.
+
+[LilycoveCity_ContestHall_Text_TodayWonSmartnessContest] e7262533e1
+Este POKéMON já ganhou o CONCURSO\n
+DE BELEZA aqui.\p
+E adivinha? Hoje ele ganhou um\n
+CONCURSO DE ESPERTEZA!\p
+O meu talento me assusta até…$
+
+[LilycoveCity_ContestHall_Text_EnteredBunchOfContests] 63611a942d
+Já entrei em um monte de CONCURSOS,\n
+então estou pegando o jeito.\p
+Num CONCURSO DE ESTILO, golpes\n
+estilosos fazem sucesso.\p
+Mas golpes espertos e fofos não\n
+fazem sucesso, por exemplo.$
+
+[LilycoveCity_ContestHall_Text_ManWhoWonEarlierHadPokeblocks] cf46d4280b
+Aquele moço que ganhou agora há pouco\n
+tinha um monte de {POKEBLOCK}S diferentes.\p
+Será que dá pra ganhar com tantos\n
+desses?$
+
+[LilycoveCity_ContestHall_Text_IsntThisPlaceHumongous] d18bb0128f
+Nossa, que lugar gigante!\p
+A tensão no ar… Não é como um\n
+salão de CONCURSO do interior.$
+
+[LilycoveCity_ContestHall_Text_GiveItBestSmartAppeal] f57a959fb7
+APRESENTADOR: Certo, POKéMON ESPERTOS\n
+e TREINADORES, prontos?!\p
+Deem o seu melhor!\n
+Vamos às apresentações!$
+
+[LilycoveCity_ContestHall_Text_AreYouEnjoyingThisContest] 1b49129332
+JUIZ: Está gostando deste CONCURSO?\p
+Volte com três amigos, e todos\n
+vocês podem entrar num CONCURSO!$
+
+[LilycoveCity_ContestHall_Text_EnteredWrongContest] 98a6c287c6
+Aiaiaiai…\n
+Entrei no CONCURSO errado.\p
+Inscrevi este POKéMON durão no\n
+CONCURSO DE ESPERTEZA…\p
+Vamos, impressione com um ESMAGA\n
+PEDRA de cara esperta.$
+
+[LilycoveCity_ContestHall_Text_RaisedMonToBeSmart] efd10e1d2b
+Passei muitos anos, e toda a minha\n
+sabedoria, treinando este POKéMON\l
+pra ser esperto.\p
+Ele não vai perder fácil pro POKéMON\n
+de um novato qualquer.\p
+Querida, está vendo isto?$
+
+[LilycoveCity_ContestHall_Text_IfMonPullsSmartMoveNext] e9d951e4c2
+Agora!\p
+Se o meu POKéMON fizer um golpe esperto\n
+agora, a plateia vai ao delírio!$
+
+[LilycoveCity_ContestHall_Text_DontAppreciateCuteLeechLife] fc1f69a2a6
+Ai, não!\p
+O SUGA-VIDAS do meu querido ZUBAT é\n
+tão fofo que usei sem parar!\p
+Mas esse povo malvado não dá o\n
+menor valor!$
+
+[LilycoveCity_ContestHall_Text_YoureBeautifulGrandpa] 32793cb3fe
+Kiaaah! Você está lindo, vovô!$
+
+[LilycoveCity_ContestHall_Text_AllSeemToUseDifferentMoves] 2be93ba85c
+Mesmo quando TREINADORES inscrevem o\n
+mesmo tipo de POKéMON, cada um usa\l
+golpes diferentes nas apresentações.\p
+É igual ao jeito que cada pessoa\n
+tem um estilo de batalhar.$
+
+[LilycoveCity_ContestHall_Text_PokemonSmarterThanTrainers] a8188733b4
+Acho que os POKéMON parecem mais\n
+espertos que os TREINADORES. E muito.$
+
+[LilycoveCity_ContestHall_Text_StillLoveSmartnessContests] 7f10640992
+No fim das contas, eu ainda amo o\n
+CONCURSO DE ESPERTEZA.\p
+Aquele verde intelectual…\n
+É tão… Tão… Estiloso.$
+
+[LilycoveCity_ContestHall_Text_AreYouEnteringBeautyContest] 921d5ff194
+APRESENTADOR: Também vai entrar no\n
+CONCURSO DE BELEZA? Boa sorte!$
+
+[LilycoveCity_ContestHall_Text_EveryPokemonPristineBeauty] 4f713e2768
+JUIZ: Ah, todo POKéMON aqui é um\n
+modelo de beleza imaculada!\p
+Até quase esqueci de dar as notas!$
+
+[LilycoveCity_ContestHall_Text_EyesWillBeGluedToMyBeauty] 28df84d2e7
+Um POKéMON tão lindo…\n
+Não existe outro igual.\p
+Todos os olhos vão grudar na\n
+minha beleza.$
+
+[LilycoveCity_ContestHall_Text_OverdidGrooming] 7cd3e6ce78
+Buááá!\p
+Escovei e arrumei o meu POKéMON com\n
+cuidado pra este CONCURSO…\p
+Mas exagerei…\n
+O pelo dele ficou todo arrepiado…\p
+O que eu faço?$
+
+[LilycoveCity_ContestHall_Text_JudgeWontSeeAuroraBeam] 466c4ecc62
+Este RAIO AURORA é tão ofuscante\n
+que o JUIZ nem vai conseguir ver.\p
+Hã, pera aí…\n
+Então não vai adiantar nada!$
+
+[LilycoveCity_ContestHall_Text_PokemonLooksLikeYoungerMe] c73beb8f03
+Este POKéMON bonito é igualzinho\n
+a mim quando eu era mais nova.\p
+Quando eu disse isso, o meu marido\n
+cuspiu o café que estava bebendo.\p
+Eu disse alguma coisa engraçada?$
+
+[LilycoveCity_ContestHall_Text_WinBeautyContestMakesMeHappy] 6b801595b8
+Sabe, ganhar um CONCURSO DE BELEZA\n
+me deixa feliz. Mais feliz que o\l
+normal, pelo menos.$
+
+[LilycoveCity_ContestHall_Text_GanderAtAllThosePrettyPokemon] 1c0e76643d
+Wahahahah!\p
+Dá só uma olhada em todos esses\n
+POKéMON bonitos!\l
+Eu adoro esse brilho todo!$
+
+[LilycoveCity_ContestHall_Text_CantWinOnBeautyAlone] ca5d792fc6
+Nem sempre dá pra ganhar só com\n
+beleza.\p
+Tem que cuidar do POKéMON pra ele\n
+ficar bonito e brilhante como o meu.$
+
+[LilycoveCity_ContestHall_Text_InTheMiddleOfContest] 02a8d8b3ab
+APRESENTADOR: Opa! Olá!\n
+Estamos no meio de um CONCURSO!\p
+Faça a inscrição no balcão e\n
+venha, tá bom?$
+
+[LilycoveCity_ContestHall_Text_SuchCharmingCuteAppeals] 30e59f5264
+JUIZ: Ah, que apresentações\n
+encantadoras e fofas!\p
+Minha nossa! Que apresentação de\n
+ESPORTE ÁGUA mais adorável!$
+
+[LilycoveCity_ContestHall_Text_MyAzurillWasDistracted] 7399dc74ae
+Ah, não… O meu AZURILL querido se\n
+distraiu com outro POKéMON.$
+
+[LilycoveCity_ContestHall_Text_NeverWonBattleButContest] 3cab8f70e4
+O meu POKéMON nunca ganhou uma\n
+batalha, mas num CONCURSO é outra\l
+história!$
+
+[LilycoveCity_ContestHall_Text_PetalDanceIsMarvel] fe71a67cfd
+A DANÇA PÉTALA do meu POKéMON é uma\n
+maravilha de elegância.\p
+Não vou deixar ninguém atrapalhar\n
+a apresentação dele.$
+
+[LilycoveCity_ContestHall_Text_MyMonAppealSoMuchCuter] bc997a7a4a
+Os POKéMON de todo mundo são\n
+muito fofos.\p
+Mas, se o meu POKéMON fizesse uma\n
+apresentação fofa…\p
+Tenho certeza de que seria muito\n
+mais fofo que os outros.$
+
+[LilycoveCity_ContestHall_Text_MyChildIsInContest] 1295b1d9be
+O meu filho está neste CONCURSO.$
+
+[LilycoveCity_ContestHall_Text_ComeOnDear] 0c891cb227
+Vai, filho. Manda ver!\n
+O seu POKéMON é o melhor!$
+
+[LilycoveCity_ContestHall_Text_ThatGirlThereIsCutest] 5584f40ed0
+Acho aquela menina ali a mais fofa\n
+de todas.\p
+Como? Eles julgam os POKéMON pela\n
+aparência?$
+
+[LilycoveCity_ContestHall_Text_WantCuteMonOfMyOwn] 8b6b0026ab
+Ah, vendo esses POKéMON fofos, deu\n
+vontade de ter os meus!\p
+Vou pegar alguns!$
+
+[LilycoveCity_ContestHall_Text_BeautyContestStage] 5dd33627f9
+PALCO DO CONCURSO DE BELEZA\n
+ENCANTE-SE COM POKéMON LINDOS!$
+
+[LilycoveCity_ContestHall_Text_CuteContestStage] 96a8f41671
+PALCO DO CONCURSO DE FOFURA\n
+DERRETA-SE COM POKéMON FOFOS!$
+
+[LilycoveCity_ContestHall_Text_SmartContestStage] afc75c56e1
+PALCO DO CONCURSO DE ESPERTEZA\n
+IMPRESSIONE-SE COM POKéMON ESPERTOS!$

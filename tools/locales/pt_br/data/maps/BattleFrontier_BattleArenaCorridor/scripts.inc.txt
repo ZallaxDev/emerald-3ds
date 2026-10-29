@@ -1,0 +1,5 @@
+# FRONTEIRA DE BATALHA: o corredor da ARENA.
+
+[BattleFrontier_BattleArenaCorridor_Text_PleaseStepIn] 14ba057e5b
+As suas batalhas serão na próxima\n
+sala. Entre, por favor!$

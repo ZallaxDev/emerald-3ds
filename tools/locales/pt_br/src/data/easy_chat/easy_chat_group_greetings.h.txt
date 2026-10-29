@@ -1,0 +1,129 @@
+# As palavras da FALA FÁCIL, grupo greetings (src/data/easy_chat/easy_chat_group_greetings.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_Thanks] ffa4516bff width=72
+OBRIGADO
+
+[gEasyChatWord_Yes] 8fff039853 width=72
+SIM
+
+[gEasyChatWord_HereGoes] d83d276396 width=72
+LÁ VAI
+
+[gEasyChatWord_HereICome] a93324ae72 width=72
+AÍ VOU EU
+
+[gEasyChatWord_HereItIs] 2108f0b67e width=72
+AQUI ESTÁ
+
+[gEasyChatWord_Yeah] aef62a01cc width=72
+É
+
+[gEasyChatWord_Welcome] 0139615b45 width=72
+BEM-VINDO
+
+[gEasyChatWord_Oi] 11d8efc984 width=72
+OI
+
+[gEasyChatWord_HowDo] b3921f3933 width=72
+COMO VAI
+
+[gEasyChatWord_Congrats] 815e48fbb5 width=72
+PARABÉNS
+
+[gEasyChatWord_GiveMe] 7d32d0972e width=72
+ME DÁ
+
+[gEasyChatWord_Sorry] 08b4b7de83 width=72
+DESCULPA
+
+[gEasyChatWord_Apologize] 3fcc3b0779 width=72
+DESCULPAR
+
+[gEasyChatWord_Forgive] 6383ff7bc0 width=72
+PERDOAR
+
+[gEasyChatWord_HeyThere] 89b470e374 width=72
+EI, VOCÊ
+
+[gEasyChatWord_Hello] c65f99f8c5 width=72
+OLÁ
+
+[gEasyChatWord_GoodBye] 24cdc930cf width=72
+ADEUS
+
+[gEasyChatWord_ThankYou] 04209ee721 width=72
+VALEU
+
+[gEasyChatWord_IveArrived] 0b189fc5eb width=72
+CHEGUEI
+
+[gEasyChatWord_Pardon] 3fcfe01d26 width=72
+PERDÃO
+
+[gEasyChatWord_Excuse] ca56e7cb00 width=72
+LICENÇA
+
+[gEasyChatWord_SeeYa] c23aca1285 width=72
+ATÉ MAIS
+
+[gEasyChatWord_ExcuseMe] 8047baa862 width=72
+COM LICENÇA
+
+[gEasyChatWord_WellThen] b061f4649b width=72
+BEM, ENTÃO
+
+[gEasyChatWord_GoAhead] c07dacf64b width=72
+PODE IR
+
+[gEasyChatWord_Appreciate] 1118f07f93 width=72
+AGRADECER
+
+[gEasyChatWord_HeyQues] 46261e4523 width=72
+EI?
+
+[gEasyChatWord_WhatsUpQues] 83b79c2225 width=72
+E AÍ?
+
+[gEasyChatWord_HuhQues] 012c8efd07 width=72
+HÃ?
+
+[gEasyChatWord_No] a0509b7780 width=72
+NÃO
+
+[gEasyChatWord_Hi] 253420c115 width=72
+OIÊ
+
+[gEasyChatWord_YeahYeah] cca20c4607 width=72
+TÁ, TÁ
+
+[gEasyChatWord_ByeBye] c46b7d7e0f width=72
+TCHAU
+
+[gEasyChatWord_MeetYou] 71e1412641 width=72
+PRAZER
+
+[gEasyChatWord_Hey] a880c390a6 width=72
+EI
+
+[gEasyChatWord_Smell] 341e57c0ac width=72
+CHEIRAR
+
+[gEasyChatWord_Listening] 2b013e9128 width=72
+OUVINDO
+
+[gEasyChatWord_HooHah] f6a7564d0a width=72
+UH-HÁ
+
+[gEasyChatWord_Yahoo] 5aba460ca2 width=72
+IUPI
+
+[gEasyChatWord_Yo] 5cd0bd9220 width=72
+FALA AÍ
+
+[gEasyChatWord_ComeOver] f5cab6b098 width=72
+VEM CÁ
+
+[gEasyChatWord_CountOn] e901963cd3 width=72
+CONTO COM

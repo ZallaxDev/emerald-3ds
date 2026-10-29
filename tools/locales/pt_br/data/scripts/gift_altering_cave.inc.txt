@@ -1,0 +1,4 @@
+# PRESENTE MISTERIOSO: o boato da CAVERNA MUTANTE.
+
+[sText_MysteryGiftAlteringCave] 05b31a5f69
+Obrigado por usar o sistema de\nPRESENTE MISTERIOSO.\pAnda rolando um boato de que\nPOKéMON raros foram vistos.\pDizem que eles apareceram na\nCAVERNA MUTANTE, na ROTA 103.\pTalvez valha a pena ir lá\ninvestigar esse boato.$

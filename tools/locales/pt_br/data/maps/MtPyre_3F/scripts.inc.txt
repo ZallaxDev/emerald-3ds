@@ -1,0 +1,66 @@
+# MONTE PYRE: 3º andar.
+
+[MtPyre_3F_Text_WilliamIntro] d52485608b
+A atmosfera da montanha elevou o\n
+meu poder psíquico!\p
+Uma simples criança como você…\n
+Sonha em vencer?$
+
+[MtPyre_3F_Text_WilliamDefeat] 9811984b2b
+Afundo na autopiedade…$
+
+[MtPyre_3F_Text_WilliamPostBattle] 4853f3e3bc
+O meu poder psíquico com certeza\n
+cresceu várias vezes, mas…$
+
+[MtPyre_3F_Text_KaylaIntro] c13f0978ae
+Ahahahaha!\p
+Isto não é lugar pra criança, muito\n
+menos pra você!$
+
+[MtPyre_3F_Text_KaylaDefeat] 1a9f1333e9
+Perdi de lavada…$
+
+[MtPyre_3F_Text_KaylaPostBattle] 7c177d7025
+Quer dizer que o meu treino ainda\n
+não basta…\p
+Tenho que continuar subindo até\n
+o topo…\p
+Vamos lá, eu!$
+
+[MtPyre_3F_Text_GabrielleIntro] c11ba74c73
+Por que você veio aqui?$
+
+[MtPyre_3F_Text_GabrielleDefeat] 43360fd20d
+Que incrível!\n
+Você é um TREINADOR muito especial.$
+
+[MtPyre_3F_Text_GabriellePostBattle] e514bfe9f4
+Os POKéMON que já não são deste mundo.\n
+Os POKéMON que estão com você agora.\p
+E os POKéMON que você vai conhecer\n
+no futuro…\p
+Todos merecem o mesmo carinho.\n
+Por favor, lembre-se disso.$
+
+[MtPyre_3F_Text_GabrielleRegister] 3539b2818d
+Quero ver os seus POKéMON quando\n
+crescerem mais um pouco…\p
+Por favor, preciso ver o seu POKéNAV.$
+
+[MtPyre_3F_Text_GabrielleRematchIntro] 0bb9f262c5
+Ah, é você…\p
+Veio me mostrar os seus POKéMON\n
+mais crescidos?$
+
+[MtPyre_3F_Text_GabrielleRematchDefeat] 43f765f658
+Que incrível!\n
+Você é uma pessoa especial.$
+
+[MtPyre_3F_Text_GabriellePostRematch] 3d11744b95
+Os POKéMON que já não são deste mundo.\n
+Os POKéMON que estão com você agora.\p
+E os POKéMON que você vai conhecer\n
+no futuro…\p
+Todos merecem o mesmo carinho.\n
+Vejo que você se lembrou disso.$

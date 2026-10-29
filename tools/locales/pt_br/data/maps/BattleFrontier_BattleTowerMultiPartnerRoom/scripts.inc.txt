@@ -1,0 +1,1532 @@
+# FRONTEIRA DE BATALHA: o SALÃO DE BATALHA da TORRE, onde se escolhe o parceiro. Cada TREINADOR fala em partes (apresentação, 1º POKéMON, 2º POKéMON e pedido, aceite, recusa); {STR_VAR_2} é a espécie e {STR_VAR_1} o golpe, salvo nos aprendizes.
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PleaseFindPartner] 02188a8b6f
+Escolha um parceiro entre os\n
+TREINADORES reunidos aqui.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_QuitLookingForPartner] 54afa4dfda
+{PLAYER}, você não achou um parceiro\n
+pra formar dupla.\p
+Quer parar de procurar e voltar\n
+ao balcão de recepção?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PleaseFindPartner2] b28cf91430
+Então escolha um parceiro entre\n
+os TREINADORES reunidos aqui.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_ThankYouForChoosingPartner] dd88e437ac
+Obrigado por escolher um parceiro.\p
+Agora vou te levar à SALA DE\n
+BATALHA MÚLTIPLA.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_UnusedApprentice1Intro] 637912b7ac
+Sou aprendiz nº {STR_VAR_2} de {STR_VAR_1}.\n
+Pode me chamar de {STR_VAR_3}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_UnusedApprentice1Mon1] 5502e5e729
+Por conselho de {STR_VAR_1}, trouxe\n
+um {STR_VAR_3} com {STR_VAR_2} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_UnusedApprentice1Mon2Ask] a31ec81d82
+um {STR_VAR_2} com {STR_VAR_1}.\p
+Por favor, quero formar dupla com você.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_UnusedApprentice1Accept] b133c539d9
+Obrigado!\n
+Vou fazer a inscrição agora.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_UnusedApprentice1Reject] 93625e2f4e
+Eu queria muito formar dupla\n
+com você, {PLAYER}…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_UnusedApprentice2Intro] 4ee846cd98
+Sou o aprendiz nº {STR_VAR_2} de {STR_VAR_1}.\n
+O meu nome é {STR_VAR_3}.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_UnusedApprentice2Mon1] 7572182367
+Ouvi {STR_VAR_1} e escolhi\n
+um {STR_VAR_3} com {STR_VAR_2} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_UnusedApprentice2Mon2Ask] 4087810611
+um {STR_VAR_2} com {STR_VAR_1}.\p
+Por favor, vamos formar dupla!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_UnusedApprentice2Accept] b0077078c9
+Muito obrigado!\n
+Termino a inscrição rapidinho!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_UnusedApprentice2Reject] f413b9c15a
+{PLAYER}, eu esperava fazer dupla\n
+com você…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice1Intro] 668ec2f335
+Hã, o meu nome é {STR_VAR_3}, e sou\n
+o aprendiz nº {STR_VAR_2} de {STR_VAR_1}.\p
+Snif…\p
+Desculpa!\n
+O nervoso está me fazendo chorar…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice1Mon1] c8fcc959c2
+Ouvi {STR_VAR_3}, então tenho\n
+um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice1Mon2Ask] 22a238291b
+um {STR_VAR_2} com {STR_VAR_1}.\p
+Snif…\n
+Por favor, por favor, faz dupla comigo!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice1Accept] a7d1d02c3a
+Sério? Você topa?\n
+Demais! Irado! Uhuuu!\p
+Ah… Desculpa…\n
+Estou tão feliz que estou chorando…\p
+Vou fazer a inscrição agora.\n
+Por favor, não vá embora!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice1Reject] 5e83cc2dd1
+Ah, m-mas…\n
+Snif… Buááááá!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice2Intro] 3ff2113e5a
+Oi! Sou {STR_VAR_3}!\n
+Aprendiz nº {STR_VAR_2} de {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice2Mon1] 9e1910250d
+{STR_VAR_3} indicou a minha turma.\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice2Mon2Ask] e2b5864cf7
+um {STR_VAR_2} com {STR_VAR_1},\n
+é o que eu tenho! Legal, né?\p
+Então vem!\n
+Vamos formar dupla!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice2Accept] b03be3b71d
+Oba! Ótimo!\n
+Vou fazer a inscrição, tá?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice2Reject] c52646bef8
+Ah, por quê?\n
+Eu queria fazer dupla, {PLAYER}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice3Intro] 48ce81595e
+Sou {STR_VAR_3}, o aprendiz nº {STR_VAR_2}\n
+do famoso {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice3Mon1] b708efff8b
+Pedi conselho a {STR_VAR_3}.\n
+Um {STR_VAR_2} que usa {STR_VAR_1}$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice3Mon2Ask] ddbc4aca35
+e um {STR_VAR_2} com {STR_VAR_1},\n
+é a minha dupla.\p
+Por favor, quer formar dupla\n
+comigo?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice3Accept] 950c286454
+Obrigado!\n
+Vou fazer a inscrição agora!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice3Reject] 372373ddc3
+{PLAYER}, eu esperava formar dupla\n
+com você…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice4Intro] ed4bbe6b13
+Hã… Fico muito feliz que você tenha\n
+parado pra falar comigo.\p
+Sou {STR_VAR_3}.\n
+Aprendiz nº {STR_VAR_2} de {STR_VAR_1}…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice4Mon1] 9de3424b42
+{STR_VAR_3} me deu conselhos.\n
+Sou muito grato por isso.\p
+Tenho uma equipe com um {STR_VAR_2}\n
+com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice4Mon2Ask] 4e4c36d05b
+um {STR_VAR_2} com {STR_VAR_1}.\n
+Sei que é pedir demais…\p
+Acho que você não vai querer, mas\n
+posso ser o seu parceiro?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice4Accept] 92a2a59104
+Sério? Não acredito!\n
+Não acredito que vai me aceitar!\l
+E-eu não vou te decepcionar!\p
+Hã… Se estiver mesmo tudo bem, vou\n
+fazer a inscrição agora mesmo!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice4Reject] 0e4cbde5f9
+Ah…\n
+Eu sabia que não era bom o bastante…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice5Intro] 6d21628601
+Oi, sou {STR_VAR_3}.\n
+Aprendiz nº {STR_VAR_2} de {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice5Mon1] 92d4e970e0
+{STR_VAR_3} me disse que seria bom\n
+montar esta equipe:\l
+um {STR_VAR_2} que usa {STR_VAR_1}$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice5Mon2Ask] f13e4a438f
+e um {STR_VAR_2} que sabe usar\n
+{STR_VAR_1}.\p
+Nada mal, né?\n
+Quer que eu faça dupla com você?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice5Accept] 8cefa51d16
+Certo, vai ser um prazer!\n
+Espero que você não estrague tudo!\l
+Vou fazer a inscrição agora.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice5Reject] 46aedbdfec
+Hã? Por que me recusou?\n
+Você não sabe julgar ninguém!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice6Intro] e35132b837
+Sou {STR_VAR_3} e sou TRIATLETA.\n
+Vivo ocupado todo dia: corro,\l
+treino e faço rap.\p
+E também sou o aprendiz\n
+nº {STR_VAR_2} de {STR_VAR_1}.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice6Mon1] 7cd30538c9
+Foi isto que {STR_VAR_3} recomendou.\n
+Um {STR_VAR_2} que usa {STR_VAR_1}$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice6Mon2Ask] 65c67c8136
+e um {STR_VAR_2} que usa\n
+{STR_VAR_1}.\p
+Dei duro pra treinar eles, mesmo\n
+com a correria.\p
+Vamos formar dupla e\n
+mandar ver!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice6Accept] c56081e6b8
+Valeu, é assim que se fala!\n
+Espera aí que vou me inscrever, tá?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice6Reject] bd4bcf6588
+Tirei tempo da minha agenda lotada\n
+pra vir aqui! Me dá um tempo!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice7Intro] 2f3b65b02c
+Oi!\n
+Tudo certo?\p
+Sou {STR_VAR_3}, o aprendiz\n
+nº {STR_VAR_2} de {STR_VAR_1}. Prazer!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice7Mon1] fe770f74d9
+Escuta, escuta! Olha os POKéMON\n
+que {STR_VAR_3} recomendou.\l
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice7Mon2Ask] c9bc1a33c9
+um {STR_VAR_2} com {STR_VAR_1}.\n
+Claro que treinei eles muito bem!\p
+Então, vamos fazer dupla?\n
+Vai ser uma ótima combinação!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice7Accept] 217f0b879e
+Oba, acho que vai ser divertido!\n
+Vou fazer a inscrição!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice7Reject] b3894f53f5
+Ah, que maldade!\n
+Eu vim recomendado, viu?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice8Intro] 8459ee2177
+Permita que eu me apresente.\n
+Sou {STR_VAR_3}.\p
+Sou o aprendiz nº {STR_VAR_2}\n
+de {STR_VAR_1}.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice8Mon1] c918ff14e7
+Busquei os sábios conselhos de\n
+{STR_VAR_3} e treinei a minha equipe:\l
+um {STR_VAR_2} com {STR_VAR_1}$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice8Mon2Ask] c2131b99c6
+e um {STR_VAR_2} com {STR_VAR_1}.\p
+Por favor, aceite formar dupla comigo!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice8Accept] 967bdbd31b
+Ah… Que alegria!\n
+Prometo dar o meu melhor!\p
+Claro que eu faço a inscrição!\n
+Aguarde, por favor!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice8Reject] 97825182e7
+Eu esperava me juntar a você,\n
+{PLAYER}…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice9Intro] 9040d3e728
+Ai! Você falou comigo!\n
+E-eu estou nas nuvens!\p
+Sou {STR_VAR_3}! Sou o aprendiz\n
+nº {STR_VAR_2} de {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice9Mon1] eab45d5a7e
+Por conselho de {STR_VAR_3}, treinei\n
+um {STR_VAR_2} que usa {STR_VAR_1}$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice9Mon2Ask] 18e9e10dc5
+e um {STR_VAR_2} que usa\n
+{STR_VAR_1}.\p
+Por favor, realiza o meu desejo?\n
+Quero ser o seu parceiro de dupla!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice9Accept] 27fb4b5013
+Ai! E-eu estou tonto de alegria!\n
+Muito obrigado!\l
+Vou fazer a nossa inscrição já!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice9Reject] 482213fba5
+Buááá! Você não tem dó?\n
+Mas isso te deixa mais legal…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice10Intro] 26e4f69b27
+Iiiha! Sou o aprendiz\n
+nº {STR_VAR_2} de {STR_VAR_1}!\p
+{STR_VAR_3} é o meu nome, olá, olá!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice10Mon1] 0cacaeb1f5
+O meu mestre {STR_VAR_3} indicou\n
+um {STR_VAR_2} ás em {STR_VAR_1}$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice10Mon2Ask] 340842217d
+e um {STR_VAR_2} ás em\n
+{STR_VAR_1}.\p
+Coisa boa, né?\n
+Vai fazer dupla comigo, não vai?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice10Accept] 85618284ef
+Certo, excelente!\n
+Vou fazer a inscrição rapidinho!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice10Reject] 708ac9573d
+Guaaah!\n
+Você é calculista, {PLAYER}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice11Intro] c543341edb
+Ei! Problema sério! Hoje é o último\n
+dia da TORRE DE BATALHA!\p
+… … … … … …\n
+Brincadeira!\p
+Me chamam de {STR_VAR_3}, e eu também!\n
+Sou o aprendiz nº 1.000 de {STR_VAR_1}!\l
+Na verdade, sou o nº {STR_VAR_2}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice11Mon1] 8a28d6a87e
+{STR_VAR_3} me deu uns conselhos.\n
+{STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice11Mon2Ask] f7ab20d306
+{STR_VAR_2} com {STR_VAR_1}.\n
+Tenho dez de cada!\l
+Na verdade, só um de cada!\p
+E aí?\n
+Quer tentar batalhas em dupla comigo?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice11Accept] d45046c7e8
+Oba!\n
+Vou te dar um POKéMON de presente!\p
+Brincadeira! Mas vou mesmo fazer\n
+a inscrição, tá?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice11Reject] ef29da0443
+Ah, que frieza! Vou ter que destruir\n
+a TORRE DE BATALHA por isso!\p
+Claro que não!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice12Intro] 37c6880e85
+Ei, tô no rock e tô no rolê!\n
+Os POKéMON eu domino, é!\p
+Sou {STR_VAR_3}, o MARINHEIRO rapper.\n
+Não me confunda com qualquer chorão!\p
+Aprendiz nº {STR_VAR_2} de {STR_VAR_1}.\n
+Não me dispense, não, irmão!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice12Mon1] 591bb805f5
+Com o conselho de {STR_VAR_3} na mão,\n
+montei a minha equipe campeã!\l
+Um {STR_VAR_2} que usa {STR_VAR_1}$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice12Mon2Ask] 23009610ab
+e um {STR_VAR_2} que usa\n
+{STR_VAR_1}!\p
+O nosso encontro vamos celebrar,\n
+com uma vitória em dupla pra comemorar!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice12Accept] 9b52b8d067
+Ei, ei, curti o seu estilo!\n
+Vou fazer a inscrição, tranquilo!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice12Reject] 96ec2655f9
+Ah, ei, {PLAYER}, que frieza!\n
+Se me permite a franqueza!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice13Intro] 90a02ccf4f
+Iupi-iahu!\n
+Ah, não corre! Era só brincadeira!\p
+E aí! Sou {STR_VAR_3}!\n
+Aprendiz nº {STR_VAR_2} de {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice13Mon1] a09836c1fd
+{STR_VAR_3} me orientou.\n
+Então um {STR_VAR_2} com {STR_VAR_1}$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice13Mon2Ask] 5b74a54cb0
+e um {STR_VAR_2} que usa\n
+{STR_VAR_1} eu escolhi, sim.\p
+Então, o que me diz?\n
+Vamos, faz o meu dia feliz!\p
+Por favor, eu imploro!\n
+Me deixa entrar, senão eu choro!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice13Accept] c5df3c95a9
+Iêêê! A sorte está comigo!\n
+Que alegria, amigo!\p
+Antes de a batalha começar,\n
+vou correndo me inscrever lá!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice13Reject] 05bfaafa4d
+Vai me recusar?\n
+{PLAYER}, assim vou chorar!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice14Intro] 93b6ac8f9b
+Cof!\p
+Ah, desculpa, estou resfriado.\n
+Mas os meus POKéMON estão bem.\p
+O meu nome é {STR_VAR_3}, aprendiz\n
+nº {STR_VAR_2} de {STR_VAR_1}. Cof!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice14Mon1] 4a70ef59d8
+Ouvi bem {STR_VAR_3}\n
+e montei a minha equipe com\l
+um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice14Mon2Ask] 6515d0de48
+um {STR_VAR_2} com {STR_VAR_1}.\p
+Treinei eles todo dia, até com\n
+vento e chuva.\p
+Acho que foi por isso que\n
+peguei este resfriado.\p
+É isso aí.\n
+Quer ser o meu parceiro de dupla?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice14Accept] 433d0add0d
+Valeu, fico grato!\n
+Cof, cof!\l
+Espera aí que vou me inscrever.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice14Reject] 80d6b373f9
+Ah, não quer?\n
+{PLAYER}, a gente seria uma\l
+boa dupla.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice15Intro] c3c870f5d8
+Ah, olá!\n
+Que nervoso.\p
+Sou {STR_VAR_3}.\n
+Sou o aprendiz nº {STR_VAR_2} de {STR_VAR_1}.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice15Mon1] 4692d01693
+{STR_VAR_3} aprovou esta equipe:\n
+um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice15Mon2Ask] d6cbef9a6b
+um {STR_VAR_2} com {STR_VAR_1}.\p
+Estou meio sem graça, mas você\n
+me deixa formar dupla com você?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice15Accept] 9b9908243e
+Ah, puxa, obrigado!\n
+Estou com vergonha, mas vou dar o\l
+meu melhor!\p
+Vou fazer a inscrição.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice15Reject] 3905383bf9
+Ah, por favor, não diga não!\n
+Já estou sem graça o bastante…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice16Intro] a9fd887244
+Sou {STR_VAR_3}, e não é mentira.\n
+Sou o aprendiz nº {STR_VAR_2} de {STR_VAR_1}.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice16Mon1] 3f3ca1f2b6
+{STR_VAR_3} recomendou a minha equipe.\p
+Como o conselho parecia sincero,\n
+decidi trazer comigo\l
+o meu {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice16Mon2Ask] 171260e0fc
+o meu {STR_VAR_2} com {STR_VAR_1}.\p
+Se possível, gostaria que me\n
+aceitasse como parceiro de dupla.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice16Accept] 8087e0c19f
+Vai mesmo me aceitar?\n
+Seria terrível se não aceitasse.\p
+Mas, como aceitou, está tudo bem.\n
+Vou inscrever nós dois.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_Apprentice16Reject] 82014f61c0
+Hum? Por que recusaria?\n
+Isso é alguma piada?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_LassIntro] 15cd54d5e2
+Sou {STR_VAR_1}, e sou GAROTA!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_LassMon1] 82d8ca4823
+O que eu tenho é um {STR_VAR_2}\n
+que usa {STR_VAR_1} e um$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_LassMon2Ask] 08bcb5e391
+{STR_VAR_2} que usa {STR_VAR_1}.\n
+É o que eu tenho comigo.\p
+Você vai ser a minha dupla?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_LassAccept] 5d4c8ae006
+Obrigada!\n
+Vou fazer a inscrição!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_LassReject] eee7b239e3
+Não quer ser a minha dupla?\n
+Depois vai se arrepender!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_YoungsterIntro] 7bbb2ee4b4
+Olá!\p
+Sou o JOVEM {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_YoungsterMon1] 3bbfd8df78
+Quer saber o que eu tenho?\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_YoungsterMon2Ask] 8242d428f0
+um {STR_VAR_2} com {STR_VAR_1}!\p
+Você vai ser a minha dupla,\n
+não vai?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_YoungsterAccept] a77d78aac1
+Oba!\n
+Vou fazer a inscrição, tá?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_YoungsterReject] a8a0b5affd
+Ah! Se fizesse dupla com os meus\n
+POKéMON, a gente seria imbatível!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_HikerIntro] 1d08275951
+Iahu!\n
+Sou o ALPINISTA {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_HikerMon1] 5ba958e81a
+Sabe o que eu trouxe?\n
+O meu {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_HikerMon2Ask] bbb0caf347
+o meu {STR_VAR_2} com {STR_VAR_1}!\p
+Parece bom, né?\n
+Quer formar dupla?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_HikerAccept] bdd93da784
+Iahu!\n
+Então vou fazer a inscrição.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_HikerReject] 14ce2df0ff
+Eu queria ter batalhado com você\n
+do meu lado.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BeautyIntro] 674e5a0c68
+Olá!\n
+Sou {STR_VAR_1}, e sou BELDADE!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BeautyMon1] 2be84aa4f2
+Sabe o que eu ando treinando?\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BeautyMon2Ask] 4cb19d0559
+um {STR_VAR_2} com {STR_VAR_1}!\p
+O que acha?\n
+Quer formar dupla comigo?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BeautyAccept] 16023993a4
+Maravilha!\n
+Vou fazer a inscrição agora!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BeautyReject] b4235f031e
+Que decepção!\p
+Juntos, a gente seria\n
+imbatível!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_FishermanIntro] 014b4fa7e9
+E aí!\p
+Sabe quem eu sou?\n
+Sou {STR_VAR_1}, o PESCADOR!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_FishermanMon1] c1d848b68a
+Trouxe uma equipe com um\n
+{STR_VAR_2} que usa {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_FishermanMon2Ask] 906c5df891
+um {STR_VAR_2} que usa {STR_VAR_1}.\p
+E aí, que tal?\n
+Vai batalhar do meu lado?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_FishermanAccept] 93676435dd
+Boa, boa!\n
+Deixa comigo!\p
+Vou fazer a nossa inscrição agora.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_FishermanReject] ed0559ff79
+E a gente combinava tão bem…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_LadyIntro] 4418104c8f
+É um prazer conhecer você.\n
+Sou {STR_VAR_1}, uma DAMA.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_LadyMon1] b43b80ee0d
+Estou acompanhada de uma equipe com\n
+um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_LadyMon2Ask] c6ca2e0343
+um {STR_VAR_2} com {STR_VAR_1}.\p
+Espero ter a sua aprovação.\n
+Pois desejo a sua parceria.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_LadyAccept] c55bf6f770
+Agradeço sinceramente.\n
+Cuidarei da inscrição.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_LadyReject] 9c813301d7
+Tenho certeza de que vai se\n
+arrepender de não me ter como parceira.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CyclingTriathleteFIntro] fe8a1f8b72
+Sou a TRIATLETA {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CyclingTriathleteFMon1] c6482d3e8e
+O que eu tenho…\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CyclingTriathleteFMon2Ask] 18b7389bf7
+um {STR_VAR_2} com {STR_VAR_1}!\n
+É a minha dupla!\p
+Por favor?\n
+Vai formar dupla comigo?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CyclingTriathleteFAccept] 3fbab825fa
+Puxa, valeu!\n
+Vou me inscrever no balcão.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CyclingTriathleteFReject] a6f48c880d
+Nós dois juntos seríamos fortes,\n
+com certeza!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BugCatcherIntro] ba96da5b51
+Oi!\n
+Sou o CAÇA-INSETOS {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BugCatcherMon1] 663cd36443
+Olha o que eu tenho!\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BugCatcherMon2Ask] 3388c69f08
+um {STR_VAR_2} com {STR_VAR_1}!\p
+Então, escuta!\n
+Quer formar dupla?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BugCatcherAccept] 3e70033a0e
+Beleza!\p
+Vou fazer a inscrição lá no\n
+balcão.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BugCatcherReject] 0adf2f8891
+Ah, os meus POKéMON são demais.\n
+Espero que não se arrependa!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SchoolKidMIntro] e0bb2d859e
+Bom dia!\n
+Sou o ESTUDANTE {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SchoolKidMMon1] 83b3d38911
+Os que eu ando treinando são um\n
+{STR_VAR_2} que usa {STR_VAR_1}$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SchoolKidMMon2Ask] f7949d7a19
+e um {STR_VAR_2} que usa\n
+{STR_VAR_1}.\p
+Nada mal, não acha?\n
+Gostaria de formar dupla?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SchoolKidMAccept] bbf807e569
+Muito obrigado!\n
+Vou terminar a inscrição.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SchoolKidMReject] 103a2acfe9
+Que pena…\p
+Eu queria aprender com você como\n
+seu parceiro…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RichBoyIntro] 61602a8be7
+E aí! Vou te dizer quem eu sou!\n
+Sou o RIQUINHO {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RichBoyMon1] 7f150773b5
+Adivinha o que eu tenho!\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RichBoyMon2Ask] f094fa5014
+um {STR_VAR_2} com {STR_VAR_1}!\p
+Te ofereço a chance de formar\n
+dupla comigo.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RichBoyAccept] 595c73aa61
+Boa escolha!\p
+Vou terminar a inscrição\n
+rapidinho!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RichBoyReject] a56bdfa313
+Recusar logo a mim?\n
+Vai se arrepender, com certeza!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BlackBeltIntro] e2316389b7
+Hiá!\n
+Sou o FAIXA-PRETA {STR_VAR_1}.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BlackBeltMon1] 2e2352f855
+Como companheiros, tenho\n
+um {STR_VAR_2} que usa {STR_VAR_1}$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BlackBeltMon2Ask] 8ea044e04a
+e um {STR_VAR_2} que usa\n
+{STR_VAR_1}.\p
+Por favor, atenda ao meu pedido!\n
+Deixe-me ser o seu parceiro!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BlackBeltAccept] 48e61139a9
+Hiá!\n
+Vou me inscrever imediatamente!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BlackBeltReject] b0d6c51c4e
+Entendo… Espero ter uma chance\n
+da próxima vez…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_TuberFIntro] 5dadc31232
+Oi! Sou {STR_VAR_1}!\n
+Sou NADADORA MIRIM!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_TuberFMon1] 2441d82586
+Vou contar o que eu tenho.\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_TuberFMon2Ask] 704ff06e11
+um {STR_VAR_2} com {STR_VAR_1}!\n
+Posso fazer dupla com você?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_TuberFAccept] 5501979f9a
+Obrigada!\n
+Vou fazer a nossa inscrição!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_TuberFReject] ec36d76563
+Se a gente fosse parceiro, seria\n
+tão forte!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_HexManiacIntro] b9e28df5ee
+Saudações…\n
+Sou a BRUXA {STR_VAR_1}…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_HexManiacMon1] 855726c787
+Trago comigo um {STR_VAR_2} que usa\n
+{STR_VAR_1}, junto com um$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_HexManiacMon2Ask] 9e643ef917
+{STR_VAR_2} que usa {STR_VAR_1}…\p
+Eu suplico…\n
+Junte-se a mim numa dupla…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_HexManiacAccept] e79ecded6b
+Eu agradeço…\n
+Vou nos inscrever…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_HexManiacReject] b13fe37528
+Eu tanto queria me juntar a você…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnBreederMIntro] 32f7775c34
+Como vai? Sou {STR_VAR_1}, e sou\n
+CRIADOR POKéMON!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnBreederMMon1] 290f2bbb9c
+Estou criando uns dois bons!\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnBreederMMon2Ask] 9d723cd92f
+um {STR_VAR_2} com {STR_VAR_1}!\p
+E aí?\n
+Afim de formar dupla comigo?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnBreederMAccept] e064b72c04
+Muito obrigado!\p
+Vou cuidar da inscrição, então\n
+espera aqui!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnBreederMReject] 5c727d6707
+Eu estava ansioso pra ser seu\n
+parceiro…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RunningTriathleteFIntro] 18fa67e24b
+Olá!\n
+Sou a TRIATLETA {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RunningTriathleteFMon1] bc2f65652a
+Quer saber com quem eu corro?\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RunningTriathleteFMon2Ask] 238c931a5a
+um {STR_VAR_2} com {STR_VAR_1}!\p
+E aí?\n
+Quer formar dupla comigo?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RunningTriathleteFAccept] 24aa9f2df1
+Boa!\p
+Vou ser rápida e terminar a\n
+inscrição!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RunningTriathleteFReject] b14d0e0e27
+Nós dois seríamos os melhores.\n
+Que pena…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RunningTriathleteMIntro] 61c9ce7125
+E aí! O meu nome é {STR_VAR_1}!\n
+Sou TRIATLETA!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RunningTriathleteMMon1] 6dad8502f2
+Corro com a minha equipe resistente:\n
+um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RunningTriathleteMMon2Ask] 28d05feb92
+um {STR_VAR_2} com {STR_VAR_1}!\p
+Nada mal, né?\n
+A gente devia formar dupla!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RunningTriathleteMAccept] 2638d5e679
+Beleza!\n
+Vou me inscrever num piscar de olhos!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RunningTriathleteMReject] 1c2f575b8b
+Eu queria muito batalhar como seu\n
+parceiro de dupla…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BattleGirlIntro] a9d1798a84
+Sou a LUTADORA {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BattleGirlMon1] 75f5d3a27d
+Ando fortalecendo um\n
+{STR_VAR_2} que usa {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BattleGirlMon2Ask] 3fc621b4b6
+um {STR_VAR_2} que usa {STR_VAR_1}!\p
+Gostou da combinação?\n
+Que tal a gente se juntar?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BattleGirlAccept] 5a84ab1f69
+Ora, valeu!\p
+Vou fazer a inscrição\n
+agora mesmo!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BattleGirlReject] 6752f96bbd
+Com você, achei que a gente seria\n
+a dupla definitiva…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CyclingTriathleteMIntro] fe8a1f8b72
+Sou o TRIATLETA {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CyclingTriathleteMMon1] 1b41185d33
+Ando pedalando com um {STR_VAR_2}\n
+que sabe usar {STR_VAR_1}$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CyclingTriathleteMMon2Ask] 25e62bbabe
+e um {STR_VAR_2} com {STR_VAR_1}!\p
+A gente podia formar dupla.\n
+Não seria ótimo?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CyclingTriathleteMAccept] cf7b1d0906
+Obrigado!\p
+Vou fazer a nossa inscrição, e é\n
+agora mesmo!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CyclingTriathleteMReject] 16cc776c03
+Ah, que pena. A gente seria a dupla\n
+mais forte da área!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_TuberMIntro] 0bf4b10fba
+Eu?\n
+Sou o NADADOR MIRIM {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_TuberMMon1] 338d614249
+O que eu tenho comigo?\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_TuberMMon2Ask] ed0c241c3e
+um {STR_VAR_2} com {STR_VAR_1}!\p
+Ei?\n
+Vai fazer dupla comigo, né?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_TuberMAccept] 52d65b98f0
+Tá!\p
+Vou fazer a inscrição!\n
+Vamos arrasar juntos!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_TuberMReject] bbf6528921
+Os meus POKéMON são fortes mesmo…\n
+Que pena que não quer fazer dupla.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_GuitaristIntro] a8e1964331
+Iê-ê!\n
+Me chame de GUITARRISTA {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_GuitaristMon1] 72053e8109
+Olha a minha banda!\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_GuitaristMon2Ask] 515ba288a7
+um {STR_VAR_2} com {STR_VAR_1}!\p
+Iê-ê! Bem doido, né?\n
+Vamos fazer um dueto em dupla!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_GuitaristAccept] abe578ad0f
+Iê-ê! Isso aí!\n
+Vou fazer a inscrição agora!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_GuitaristReject] 672273e77a
+Os meus POKéMON são puro rock!\n
+Vai se arrepender, viu!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_GentlemanIntro] 61cc85a993
+Muito prazer.\n
+Sou {STR_VAR_1}, um CAVALHEIRO.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_GentlemanMon1] 64971d59d3
+Estou acompanhado do meu fiel\n
+{STR_VAR_2} que usa {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_GentlemanMon2Ask] 30d612b6fc
+um {STR_VAR_2} que usa {STR_VAR_1}.\p
+Posso pedir que se junte a mim\n
+numa parceria de dupla?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_GentlemanAccept] 64a8028b1b
+Ah, agradeço a confiança.\n
+Vou cuidar da inscrição.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_GentlemanReject] 559624419d
+É uma pena…\p
+Aguardarei a próxima oportunidade…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PokefanMIntro] 8cbf5c03de
+Olá, sou {STR_VAR_1},\n
+e sou POKéFÃ.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PokefanMMon1] 20c5d4a9a6
+Estou agora com um {STR_VAR_2}\n
+que sabe o golpe {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PokefanMMon2Ask] 05820f3fd8
+um {STR_VAR_2} com {STR_VAR_1}.\p
+Gostou do que viu?\n
+Por que não faz dupla comigo?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PokefanMAccept] a3b5e2174f
+Obrigado!\n
+Eu cuido da inscrição!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PokefanMReject] 395ec8dfd8
+Os meus POKéMON são de primeira…\n
+Pena que você não sabe valorizar.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_ExpertMIntro] 0decf8e2ea
+Hum! Sou {STR_VAR_1},\n
+e ESPECIALISTA eu sou!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_ExpertMMon1] 553d7736c4
+Os POKéMON que fortaleci são\n
+um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_ExpertMMon2Ask] f7f9ba8768
+um {STR_VAR_2} com {STR_VAR_1}!\p
+O que me diz de uma dupla comigo?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_ExpertMAccept] 24efb118ea
+Hum!\n
+Vou nos inscrever já!\l
+Vamos dar o nosso melhor!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_ExpertMReject] 27ffb2e774
+Espero que a sua escolha esteja\n
+mesmo certa…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_ExpertFIntro] a5399be2c1
+Olá, olá.\n
+Sou {STR_VAR_1}, e sou ESPECIALISTA.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_ExpertFMon1] bdd9fecf66
+Treinei bem os meus POKéMON.\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_ExpertFMon2Ask] 060107f7e7
+um {STR_VAR_2} com {STR_VAR_1}:\n
+é o que eu tenho.\p
+Não gostaria de fazer dupla comigo?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_ExpertFAccept] 587faa65d5
+Muito bem, muito bem.\n
+Vou cuidar da inscrição já.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_ExpertFReject] b02e24b9b6
+Quem sabe a gente forma dupla da\n
+próxima vez.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_DragonTamerIntro] ad5c1d6af8
+Sou o DOMADOR DE DRAGÕES\n
+{STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_DragonTamerMon1] c73ec10c1e
+A equipe que ando fortalecendo é\n
+um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_DragonTamerMon2Ask] d90ae353a0
+um {STR_VAR_2} com {STR_VAR_1}!\p
+E aí?\n
+Quer ser o meu parceiro?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_DragonTamerAccept] 0b852b5fa1
+Certo, vou dar o meu melhor!\n
+Vou fazer a inscrição agora, tá?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_DragonTamerReject] ffda351ce1
+Você não vai achar muitos parceiros\n
+mais fortes que eu!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BirdKeeperIntro] dda611666b
+Sou o CRIADOR DE PÁSSAROS\n
+{STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BirdKeeperMon1] 36d77c20bc
+Que POKéMON eu tenho?\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BirdKeeperMon2Ask] fc810afaf6
+um {STR_VAR_2} com {STR_VAR_1}.\p
+Não acha que seríamos uma boa\n
+dupla?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BirdKeeperAccept] f85e97fc49
+Ótimo, valeu!\n
+Eu cuido da inscrição!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BirdKeeperReject] 7e786770cd
+Eu e os meus POKéMON somos fortes.\n
+Que decepção.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_NinjaBoyIntro] 57ac268117
+Sou o NINJA MIRIM {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_NinjaBoyMon1] 7210b2f492
+A minha equipe POKéMON tem um\n
+{STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_NinjaBoyMon2Ask] 8d2ff009ee
+um {STR_VAR_2} com {STR_VAR_1}!\p
+Vamos formar dupla!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_NinjaBoyAccept] 5ffa063994
+Oba!\n
+Deixa eu ir me inscrever!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_NinjaBoyReject] 71db4a6d73
+Vai se arrepender de não ter os meus\n
+POKéMON fortes do seu lado!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_ParasolLadyIntro] c5ebe281d1
+Olá!\n
+Sou a DAMA DA SOMBRINHA {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_ParasolLadyMon1] cc3790612c
+Me acompanham o meu {STR_VAR_2}\n
+que usa {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_ParasolLadyMon2Ask] 796fab5c9a
+um {STR_VAR_2} que usa\n
+{STR_VAR_1}.\p
+Não são lindos?\n
+Quer se juntar a nós numa dupla?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_ParasolLadyAccept] dc89188ffe
+Muito obrigada!\p
+Vou me inscrever no balcão.\n
+Vamos não decepcionar uma à outra!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_ParasolLadyReject] c689fe4520
+Os meus POKéMON são fortíssimos.\n
+Que decepção…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BugManiacIntro] da98a45b9a
+Olá. Sou {STR_VAR_1},\n
+MANÍACO POR INSETOS!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BugManiacMon1] e045d4ecbd
+Achei os meus POKéMON, sim.\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BugManiacMon2Ask] 14007e2d3f
+um {STR_VAR_2} com {STR_VAR_1}:\n
+foi o que eu achei.\p
+Posso te convencer a formar\n
+uma dupla?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BugManiacAccept] 1d37a19bdc
+Certo!\n
+Entendido!\p
+Não vou demorar com a inscrição!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_BugManiacReject] 95e72847ba
+Com os POKéMON que eu achei, a gente\n
+não teria perdido…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SailorIntro] 9305d52519
+Ahoy!\n
+Sou o MARINHEIRO {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SailorMon1] 21e4ac4c7b
+Deixa eu mostrar o meu orgulho!\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SailorMon2Ask] 353ac89490
+um {STR_VAR_2} com {STR_VAR_1}!\p
+Claro que você não vai me recusar.\n
+Vamos fazer dupla, né?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SailorAccept] 4c9ae04c88
+Não esperava menos!\n
+Vou fazer a inscrição agora.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SailorReject] 05c40e2fe0
+A gente ia passar por cima de todo\n
+mundo! Que pena!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CollectorIntro] 00e8f8971f
+Oi, sou {STR_VAR_1}.\n
+Sou COLECIONADOR.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CollectorMon1] b8758d91f0
+As joias da minha coleção são o\n
+meu {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CollectorMon2Ask] f6c6037616
+um {STR_VAR_2} com {STR_VAR_1}!\p
+Demais, né?\n
+A gente devia formar uma dupla.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CollectorAccept] e920b8dc94
+Isso aí!\p
+Bom, não vamos perder tempo.\n
+Vou inscrever nós dois.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CollectorReject] 1a2847c1ac
+Bom, isso me chateia.\n
+Você não dá valor aos meus POKéMON.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnRangerMIntro] ceb4fd30d2
+E aí, sou {STR_VAR_1}.\n
+Sou GUARDA POKéMON.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnRangerMMon1] 925ffa9e73
+Me fazem companhia um\n
+{STR_VAR_2} que usa {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnRangerMMon2Ask] 60a371c306
+um {STR_VAR_2} com {STR_VAR_1}!\p
+Não acha que seríamos uma dupla\n
+impressionante?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnRangerMAccept] 528c07ff0c
+Que demais!\n
+Vou cuidar da inscrição agora.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnRangerMReject] 751078505a
+Da próxima vez, escolha os meus\n
+POKéMON, tá?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnRangerFIntro] 99a04d237d
+O meu nome é {STR_VAR_1}.\n
+Sou GUARDA POKéMON!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnRangerFMon1] 3e36637b14
+Vou falar da minha equipe. Tenho\n
+um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnRangerFMon2Ask] e5f2c4a6e0
+um {STR_VAR_2} com {STR_VAR_1}!\p
+Que tal formar dupla com a\n
+minha turminha?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnRangerFAccept] b254727049
+Vamos dar o nosso melhor!\n
+Vou fazer a inscrição rapidinho!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnRangerFReject] 6bbe9c11bd
+Espero que escolha os meus POKéMON\n
+da próxima vez.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_AromaLadyIntro] 33e3508cab
+Prazer em conhecer. Sou {STR_VAR_1}.\n
+Me considero uma DAMA DOS AROMAS.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_AromaLadyMon1] 1e98dbf8d5
+Viajo com um {STR_VAR_2}\n
+que usa {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_AromaLadyMon2Ask] e210cdfe90
+um {STR_VAR_2} que usa\n
+{STR_VAR_1}.\p
+Espero que te agradem.\n
+Gostaria de ser o meu parceiro?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_AromaLadyAccept] ea6a96bff6
+É uma honra ser aceita.\n
+Vou me inscrever agora mesmo.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_AromaLadyReject] 1d9f8c2e52
+Seria maravilhoso formar dupla da\n
+próxima vez que nos encontrarmos.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RuinManiacIntro] 6bafe49767
+Quer saber quem eu sou? Sou\n
+{STR_VAR_1}, o MANÍACO POR RUÍNAS!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RuinManiacMon1] 3501003b59
+Os POKéMON que tenho comigo são\n
+um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RuinManiacMon2Ask] b523efe969
+um {STR_VAR_2} com {STR_VAR_1}!\p
+Intrigante, né?\n
+Que tal formarmos dupla?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RuinManiacAccept] 362eb0dd8d
+Decisão sensata!\n
+Vou cuidar da papelada da inscrição.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_RuinManiacReject] 2bfcb8642a
+Hmm…\n
+Acho que os meus POKéMON são fortes…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CoolTrainerMIntro] b1ef36e745
+Sou o TREINADOR ÁS {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CoolTrainerMMon1] bd021a7b1a
+Os POKéMON que tenho agora são um\n
+{STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CoolTrainerMMon2Ask] f40a26c7d7
+um {STR_VAR_2} com {STR_VAR_1}.\n
+Legal, né?\p
+Não seria bem legal a gente\n
+formar dupla?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CoolTrainerMAccept] 4b0d3778bf
+Legal!\n
+Vou me inscrever num piscar de olhos!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CoolTrainerMReject] 14e3988666
+Achei que a gente seria a melhor\n
+dupla de todos os tempos.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CoolTrainerFIntro] b1ef36e745
+Sou a TREINADORA ÁS {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CoolTrainerFMon1] 9ddc75660a
+A equipe que ando treinando tem um\n
+{STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CoolTrainerFMon2Ask] b58d2e153d
+um {STR_VAR_2} com {STR_VAR_1}.\p
+Parece bom?\n
+Que tal a gente formar dupla?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CoolTrainerFAccept] 82e467849b
+Tudo certo!\n
+Melhor eu fazer a inscrição.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CoolTrainerFReject] 30944a6088
+Eu estava pensando que seríamos\n
+uma dupla e tanto…$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PokemaniacIntro] 2b56ff67f8
+E aí!\n
+Sou {STR_VAR_1}, o POKéMANÍACO!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PokemaniacMon1] 54929855fe
+O que um cara como eu tem?\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PokemaniacMon2Ask] 52b24dc62a
+um {STR_VAR_2} com {STR_VAR_1},\n
+isso aí!\p
+Vamos nessa!\n
+Vamos arrasar em dupla!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PokemaniacAccept] 7eef7b9ac6
+Boa escolha!\n
+Vou inscrever nós dois!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PokemaniacReject] fbbd836300
+Os meus POKéMON são brutais!\n
+Se se arrepender, a culpa não é minha!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_KindlerIntro] c147074163
+E aí!\n
+Sou o FOGUISTA {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_KindlerMon1] d71d2598bd
+Sabe o que o meu treino cozinhou?\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_KindlerMon2Ask] 4454cd33ca
+um {STR_VAR_2} com {STR_VAR_1}!\p
+Então, o que me diz?\n
+Quer formar dupla?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_KindlerAccept] 8897d0587d
+Beleza!\n
+Vou cuidar da inscrição.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_KindlerReject] 05c25bcac4
+Promete que faz dupla comigo da\n
+próxima vez que a gente se esbarrar.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CamperIntro] a10a7e0897
+Sou {STR_VAR_1}, e sou CAMPISTA!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CamperMon1] cf831ebe12
+Ando treinando um {STR_VAR_2} que\n
+usa {STR_VAR_1} e um$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CamperMon2Ask] 7158940c4c
+{STR_VAR_2} que usa {STR_VAR_1}.\p
+Acha que seria divertido fazer dupla?\n
+Aposto que sim!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CamperAccept] 36941e81ac
+Isso!\n
+Lá vou eu me inscrever!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_CamperReject] 6d642c18d0
+Da próxima vez, tá?\n
+Quero estar na sua equipe.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PicnickerIntro] eb00638f08
+Olá! Sou {STR_VAR_1},\n
+a PIQUENIQUEIRA!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PicnickerMon1] 46c1340c23
+Os POKéMON que ando levando são\n
+um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PicnickerMon2Ask] 6612047a4e
+um {STR_VAR_2} com {STR_VAR_1}.\p
+Tem interesse em formar dupla\n
+comigo?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PicnickerAccept] 895240bc44
+Ora, obrigada!\n
+Vou fazer a inscrição agora.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PicnickerReject] 7a405a40ff
+Seria bom fazer dupla com você\n
+outra hora.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PsychicMIntro] 06cf3b382b
+Sou o MÉDIUM {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PsychicMMon1] 8c9cd42324
+A dupla que ando treinando é\n
+um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PsychicMMon2Ask] a6ae004b35
+um {STR_VAR_2} com {STR_VAR_1}.\p
+Gostaria de formar dupla\n
+comigo?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PsychicMAccept] af3d8022a2
+Claro!\n
+Eu cuido da inscrição!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PsychicMReject] feb2e76b54
+Se nos virmos de novo, aí sim quero\n
+fazer dupla com você.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PsychicFIntro] b454fa11bf
+Sou {STR_VAR_1}.\n
+Sou MÉDIUM.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PsychicFMon1] 37b014d369
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PsychicFMon2Ask] 245d7418e6
+um {STR_VAR_2} com {STR_VAR_1}:\n
+são os meus discípulos.\p
+A ideia de formar uma dupla não\n
+te intriga?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PsychicFAccept] dd77e97162
+Obrigada.\n
+Vou cuidar da inscrição.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PsychicFReject] 0706564bb3
+Espero que haja outra chance de\n
+forjar uma aliança.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SchoolKidFIntro] 16748205dc
+Sou a ESTUDANTE {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SchoolKidFMon1] b74a2d5c31
+Um {STR_VAR_2} que usa {STR_VAR_1}$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SchoolKidFMon2Ask] 7e5e40170d
+e um {STR_VAR_2} que usa\n
+{STR_VAR_1} são a minha dupla.\p
+Posso, por favor, ser a sua\n
+parceira numa dupla?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SchoolKidFAccept] b6a5c4b53b
+Uh, obrigada!\n
+Vou me inscrever no balcão já!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SchoolKidFReject] 2d422c13b2
+Por favor?\n
+Posso me juntar a você da próxima vez?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnBreederFIntro] 57d4ab3c86
+Oi! O nome é {STR_VAR_1}!\n
+Sou CRIADORA POKéMON!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnBreederFMon1] b1f18f8c3a
+Os POKéMON que criei são um\n
+{STR_VAR_2} que usa {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnBreederFMon2Ask] e47ac7048f
+um {STR_VAR_2} que usa {STR_VAR_1}.\p
+Parece interessante?\n
+Então que tal formarmos dupla?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnBreederFAccept] a11c5d2514
+Tudo bem!\n
+Deixa a inscrição comigo!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PkmnBreederFReject] 135a912fa8
+Da próxima vez você tem que fazer\n
+dupla comigo, tá?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PokefanFIntro] 4c17006d68
+Sou {STR_VAR_1}, e tenho orgulho\n
+de dizer que sou POKéFÃ.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PokefanFMon1] 12182213a0
+Os POKéMON queridos que criei são\n
+um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PokefanFMon2Ask] ea0f174667
+um {STR_VAR_2} com {STR_VAR_1}.\p
+Não são os mais fofos?\n
+A gente devia formar uma dupla!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PokefanFAccept] 0c79832316
+Obrigada, meu bem!\n
+Vou lá me inscrever!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_PokefanFReject] 4975b32d00
+Os meus POKéMON queridos são os\n
+melhores, saiba disso. Que chato!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmerFIntro] 0246b809fc
+Oi, sou a NADADORA {STR_VAR_1}.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmerFMon1] b74a2d5c31
+Um {STR_VAR_2} que usa {STR_VAR_1}$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmerFMon2Ask] 118e11ed38
+e um {STR_VAR_2} que usa\n
+{STR_VAR_1} são os que eu treinei.\p
+Você e eu, vamos formar dupla.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmerFAccept] a8b123ef70
+Legal!\n
+Vou inscrever a gente.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmerFReject] 2462635fc1
+Se nos virmos de novo, você me\n
+deve uma dupla!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmingTriathleteMIntro] d171f214a5
+Qual é a boa?\n
+Sou {STR_VAR_1}, e sou TRIATLETA.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmingTriathleteMMon1] 987e029031
+Tenho uns POKéMON decentes.\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmingTriathleteMMon2Ask] 026eac9eda
+um {STR_VAR_2} com {STR_VAR_1}!\p
+Seria legal formar uma dupla,\n
+então que tal?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmingTriathleteMAccept] 049dabf750
+Isso aí!\n
+Espera enquanto me inscrevo, tá?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmingTriathleteMReject] bd0aff0c53
+Espero que me deixe fazer dupla da\n
+próxima vez, combinado?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmingTriathleteFIntro] 7e45c6902c
+Sou a TRIATLETA {STR_VAR_1}!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmingTriathleteFMon1] 37b014d369
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmingTriathleteFMon2Ask] f1d74c633f
+outro {STR_VAR_2} que sabe usar\n
+{STR_VAR_1}. É a minha dupla.\p
+O que acha?\n
+Seríamos uma boa equipe, eu diria.$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmingTriathleteFAccept] 3c41911445
+Gostei da resposta!\n
+Vou terminar a inscrição rapidinho!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmingTriathleteFReject] 7ecb85cecb
+Vai me dar outra chance de formar\n
+uma parceria, não vai?$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmerMIntro] ff6b680a39
+Oi! Olá!\n
+Sou {STR_VAR_1}, e sou NADADOR!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmerMMon1] 5b11fa0210
+Olha o que eu ando treinando!\n
+Um {STR_VAR_2} com {STR_VAR_1} e$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmerMMon2Ask] 2cf3b975eb
+um {STR_VAR_2} com {STR_VAR_1}!\p
+Massa, né?\n
+Massa também seria formar dupla!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmerMAccept] cd462f494f
+Muito obrigado!\n
+Vou resolver essa inscrição!$
+
+[BattleFrontier_BattleTowerMultiPartnerRoom_Text_SwimmerMReject] 01e5a03a43
+Se nos virmos de novo, você tem que\n
+fazer dupla comigo. Combinado?$

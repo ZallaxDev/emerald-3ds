@@ -16,6 +16,7 @@ In OPTION → ENHANCEMENTS:
 | CLOCK SPEED | 1X, 6X, 12X, 24X, 60X, 120X | 1X |
 | WILD POKEMON | ORIGINAL, TIMED | ORIGINAL |
 | SHOW CLOCK | OFF, ON | OFF |
+| SYNC CLOCK | action (shows SAVE TO KEEP) | — |
 
 The port persists `day_night=0|1` and `clock_speed=0..5` in its existing
 SD settings file, along with `timed_encounters=0|1` and `show_clock=0|1`.
@@ -38,6 +39,28 @@ offset and advances normally instead of jumping back to the system hour.
 Changing lighting, encounters or clock visibility does not discard that offset.
 During sleep or while the app is closed, time advances at 1X, not the selected
 accelerated rate. The original daily events continue to use the real RTC.
+
+### SYNC CLOCK
+
+Once acceleration has been used, the shifted phase is otherwise kept
+indefinitely. SYNC CLOCK (Spanish SINCR. RELOJ, French SYNCHRO HORLOGE,
+Italian SINCR. OROLOGIO; second ENHANCEMENTS screen) discards that phase.
+It reads Emerald's effective local clock, then credits the time since the last
+update at the speed in use. It clears the shift and sets CLOCK SPEED to 1X.
+Lighting, the sun, the clock display and timed encounters follow the local
+clock immediately, including across midnight or when it is earlier than the
+accelerated time. Pending bonus berry minutes and fractions are kept and still
+reach the trees. Time spent suspended is not credited at the old rate.
+The RTC, the game's local-time offset, the daily-event calendar and
+`lastBerryTreeUpdate` are not changed. The success sound means the clock was
+synced; the failure sound means the local time could not be read, and nothing
+changed.
+
+The action does not write `emerald3ds.clock` immediately. Like other game
+progress, the synced state is stored with the next successful in-game save
+(the cell reads SAVE TO KEEP). Before that save, reloading or soft-resetting
+restores the saved shifted phase. The CLOCK SPEED setting becomes 1X immediately; the settings service
+persists that setting separately from the in-game save.
 
 ## Berry growth and persistence
 
@@ -307,6 +330,11 @@ measurement; hardware acceptance is the user's report above.
 - `make -C 3ds_port verify-daynight`: rate validation, midnight rollover,
   smooth phase boundaries, elapsed-time/frame-count independence, invalid
   settings, outdoor exclusions, sleep/resume and RTC failure fallback.
+  SYNC CLOCK: last-interval credit at the old rate, kept berry bonus, unchanged
+  state and settings on an unreadable RTC, midnight and backwards local time
+  afterwards, unshifted snapshot/restore and no credit for suspended time.
+  The same scenarios also run with the production settings setter, including
+  its old-rate clock update before the new speed is stored.
 - `make -C 3ds_port verify-night-windows`: authored glass masks, unchanged
   source art, real VXB7/VXB8 readers, streamed slices, missing-mask fallback,
   bounds checks and opaque-only generated masks, with ASan/UBSan.
@@ -358,9 +386,8 @@ measurement; hardware acceptance is the user's report above.
 - Day/night, input, video decoding, pack and settings shutdown tests: passed.
   Day/night also passed Clang AddressSanitizer/UndefinedBehaviorSanitizer.
 - Repository publication audit and `git diff --check`: passed.
-- Native syntax checks with VOXEL=0 and VOXEL_LIGHTING=0: passed after
-  exempting existing unused-variable/parameter warnings. VOXEL=0 does not
-  currently pass the original strict `-Werror` configuration unchanged.
+- Native syntax checks with VOXEL_LIGHTING=0: passed after exempting
+  existing unused-variable/parameter warnings.
 - Full `make verify`: blocked by pre-existing incompatible one-argument
   `VoxelTree_Part`/`VoxelTree_GroundMetatile` stubs in
   `3ds_port/tests/voxel_world_hash_test.c`; production declarations take two

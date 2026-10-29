@@ -1,0 +1,11 @@
+# CIDADE DE LILYCOVE: a casa dos mistérios do mar.
+
+[LilycoveCity_House4_Text_MysteriesAtBottomOfSea] a253649475
+Os maiores mistérios do planeta\n
+estão no fundo do mar.\p
+Alguém disse isso, mas sei lá…$
+
+[LilycoveCity_House4_Text_UnderwaterTrenchMossdeepSootopolis] 9db6ba8516
+Tem uma fossa submarina funda entre\n
+MOSSDEEP e SOOTOPOLIS.\p
+Pelo menos, foi o que me disseram.$

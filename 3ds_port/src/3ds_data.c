@@ -15,6 +15,7 @@
 #include "3ds_data.h"
 #include "3ds_pak.h"
 #include "3ds_platform.h"
+#include "3ds_locale.h"
 #include "../../include/constants/global.h"
 
 /* 0 = choose at runtime; 1 = RomFS, 2 = loose, 3 = pack. */
@@ -47,13 +48,29 @@ static const uint8_t sSupportedRomSha1[20] = {
 };
 #define SUPPORTED_ROM_DETAIL "Usa la ROM di Pokemon Smeraldo\n" \
                              "(Italia, BPEI) con questo client."
+#elif GAME_LANGUAGE == LANGUAGE_GERMAN
+static const uint8_t sSupportedRomSha1[20] = {
+    0x61, 0xc2, 0xeb, 0x2b, 0x38, 0x0b, 0x1a, 0x75, 0xf0, 0xc9,
+    0x4b, 0x76, 0x7a, 0x2d, 0x4c, 0x26, 0xcd, 0x7c, 0xe4, 0xe3,
+};
+#define SUPPORTED_ROM_DETAIL "Nutze das ROM von Pokemon Smaragd\n" \
+                             "(Deutschland, BPED) mit diesem Client."
+#elif GAME_LANGUAGE == LANGUAGE_JAPANESE
+static const uint8_t sSupportedRomSha1[20] = {
+    0xd7, 0xcf, 0x8f, 0x15, 0x6b, 0xa9, 0xc4, 0x55, 0xd1, 0x64,
+    0xe1, 0xea, 0x78, 0x0a, 0x6b, 0xf1, 0x94, 0x54, 0x65, 0xc2,
+};
+#define SUPPORTED_ROM_DETAIL "Use the Pocket Monsters Emerald\n" \
+                             "(Japan, BPEJ) ROM with this client."
 #else
 static const uint8_t sSupportedRomSha1[20] = {
     0xf3, 0xae, 0x08, 0x81, 0x81, 0xbf, 0x58, 0x3e, 0x55, 0xda,
     0xf9, 0x62, 0xa9, 0x2b, 0xb4, 0x6f, 0x4f, 0x1d, 0x07, 0xb7,
 };
-#define SUPPORTED_ROM_DETAIL "Only Pokemon Emerald (USA, Europe) is\n" \
-                             "supported. Run the builder with that ROM."
+#define SUPPORTED_ROM_DETAIL CTR_TEXT_PT("Only Pokemon Emerald (USA, Europe) is\n" \
+                                         "supported. Run the builder with that ROM.", \
+                                         "So a ROM de Pokemon Emerald (USA,\n" \
+                                         "Europe) e aceita. Rode o builder com ela.")
 #endif
 
 typedef struct
@@ -134,11 +151,19 @@ static bool OpenPak(void)
     sPak = fopen(CTR_DATA_PAK_PATH, "rb");
     if (sPak == NULL)
     {
-        SetError("The game data pack was not found.",
-                 "Run the builder that came with this\n"
-                 "release with your own Pokemon Emerald\n"
-                 "ROM and install the data pack to:\n\n"
-                 "  /3ds/emerald3ds/emerald3ds.pak");
+        SetError(CTR_TEXT("The game data pack was not found.", "The game data pack was not found.", "The game data pack was not found.", "The game data pack was not found.", "O pacote de dados nao foi encontrado.", "Das Datenpaket wurde nicht gefunden.", "The game data pack was not found."),
+                 CTR_TEXT_PT_DE("Run the builder that came with this\n"
+                             "release with your own Pokemon Emerald\n"
+                             "ROM and install the data pack to:\n\n"
+                             "  /3ds/emerald3ds/emerald3ds.pak",
+                             "Rode o builder que veio com esta\n"
+                             "versao com a sua ROM de Pokemon\n"
+                             "Emerald e instale o pacote em:\n\n"
+                             "  /3ds/emerald3ds/emerald3ds.pak",
+                             "Starte den Builder dieser Version\n"
+                             "mit deinem eigenen Smaragd-ROM und\n"
+                             "installiere das Datenpaket nach:\n\n"
+                             "  /3ds/emerald3ds/emerald3ds.pak"));
         return false;
     }
     setvbuf(sPak, NULL, _IOFBF, 64 * 1024);
@@ -149,29 +174,47 @@ static bool OpenPak(void)
     case CTR_PAK_OK:
         break;
     case CTR_PAK_BAD_MAGIC:
-        SetError("This is not a game data pack.",
-                 "/3ds/emerald3ds/emerald3ds.pak is not a\n"
-                 "data pack. Run the builder again.");
+        SetError(CTR_TEXT("This is not a game data pack.", "This is not a game data pack.", "This is not a game data pack.", "This is not a game data pack.", "Isto nao e um pacote de dados.", "Das ist kein Datenpaket des Spiels.", "This is not a game data pack."),
+                 CTR_TEXT_PT_DE("/3ds/emerald3ds/emerald3ds.pak is not a\n"
+                             "data pack. Run the builder again.",
+                             "/3ds/emerald3ds/emerald3ds.pak nao e um\n"
+                             "pacote de dados. Rode o builder de novo.",
+                             "/3ds/emerald3ds/emerald3ds.pak ist kein\n"
+                             "Datenpaket. Starte den Builder erneut."));
         goto fail;
     case CTR_PAK_BAD_SCHEMA:
     case CTR_PAK_BAD_ABI:
         snprintf(detail, sizeof(detail),
-                 "It was generated for a different\n"
-                 "release. Run the builder that came\n"
-                 "with this release again.\n\n"
-                 "Engine ABI: %08lX (schema %u)\n"
-                 "Pack ABI:   %08lX (schema %lu)",
+                 CTR_TEXT_PT_DE("It was generated for a different\n"
+                             "release. Run the builder that came\n"
+                             "with this release again.\n\n"
+                             "Engine ABI: %08lX (schema %u)\n"
+                             "Pack ABI:   %08lX (schema %lu)",
+                             "Ele foi gerado para outra versao.\n"
+                             "Rode de novo o builder que veio\n"
+                             "com esta versao.\n\n"
+                             "ABI do motor:  %08lX (schema %u)\n"
+                             "ABI do pacote: %08lX (schema %lu)",
+                             "Es wurde fuer eine andere Version\n"
+                             "erstellt. Starte den Builder dieser\n"
+                             "Version erneut.\n\n"
+                             "Engine-ABI: %08lX (Schema %u)\n"
+                             "Paket-ABI:  %08lX (Schema %lu)"),
                  (unsigned long)sEngineAbi, CTR_PAK_SCHEMA_VERSION,
                  (unsigned long)info.engineAbi, (unsigned long)info.schema);
-        SetError("The data pack does not match this release.", detail);
+        SetError(CTR_TEXT("The data pack does not match this release.", "The data pack does not match this release.", "The data pack does not match this release.", "The data pack does not match this release.", "O pacote de dados nao e desta versao.", "Datenpaket passt nicht zu dieser Version.", "The data pack does not match this release."), detail);
         goto fail;
     case CTR_PAK_BAD_ROM:
-        SetError("The data pack comes from another ROM.", SUPPORTED_ROM_DETAIL);
+        SetError(CTR_TEXT("The data pack comes from another ROM.", "The data pack comes from another ROM.", "The data pack comes from another ROM.", "The data pack comes from another ROM.", "O pacote de dados veio de outra ROM.", "Datenpaket stammt von einem anderen ROM.", "The data pack comes from another ROM."), SUPPORTED_ROM_DETAIL);
         goto fail;
     default:
-        SetError("The data pack is damaged.",
-                 "It does not pass the integrity check.\n"
-                 "Run the builder again.");
+        SetError(CTR_TEXT("The data pack is damaged.", "The data pack is damaged.", "The data pack is damaged.", "The data pack is damaged.", "O pacote de dados esta corrompido.", "Das Datenpaket ist beschaedigt.", "The data pack is damaged."),
+                 CTR_TEXT_PT_DE("It does not pass the integrity check.\n"
+                             "Run the builder again.",
+                             "Ele nao passa na verificacao de\n"
+                             "integridade. Rode o builder de novo.",
+                             "Die Integritaetspruefung schlug fehl.\n"
+                             "Starte den Builder erneut."));
         goto fail;
     }
     index = malloc((size_t)info.entryCount * CTR_PAK_ENTRY_BYTES);
@@ -180,14 +223,19 @@ static bool OpenPak(void)
      || fseek(sPak, (long)info.indexOffset, SEEK_SET) != 0
      || fread(index, CTR_PAK_ENTRY_BYTES, info.entryCount, sPak) != info.entryCount)
     {
-        SetError("The data pack could not be read.", "The SD card could not deliver its index.");
+        SetError(CTR_TEXT("The data pack could not be read.", "The data pack could not be read.", "The data pack could not be read.", "The data pack could not be read.", "Nao foi possivel ler o pacote de dados.", "Das Datenpaket konnte nicht gelesen werden.", "The data pack could not be read."),
+                 CTR_TEXT("The SD card could not deliver its index.", "The SD card could not deliver its index.", "The SD card could not deliver its index.", "The SD card could not deliver its index.", "O cartao SD nao entregou o seu indice.", "Die SD-Karte lieferte kein Verzeichnis.", "The SD card could not deliver its index."));
         goto fail;
     }
     if (CtrPak_ParseIndex(index, &info, sEntries) != CTR_PAK_OK)
     {
-        SetError("The data pack is damaged.",
-                 "Its index does not pass the integrity\n"
-                 "check. Run the builder again.");
+        SetError(CTR_TEXT("The data pack is damaged.", "The data pack is damaged.", "The data pack is damaged.", "The data pack is damaged.", "O pacote de dados esta corrompido.", "Das Datenpaket ist beschaedigt.", "The data pack is damaged."),
+                 CTR_TEXT_PT_DE("Its index does not pass the integrity\n"
+                             "check. Run the builder again.",
+                             "O indice nao passa na verificacao de\n"
+                             "integridade. Rode o builder de novo.",
+                             "Die Integritaetspruefung des Index\n"
+                             "schlug fehl. Starte den Builder erneut."));
         goto fail;
     }
     free(index);
@@ -206,9 +254,16 @@ fail:
     return false;
 }
 
+static LightLock sAheadLock;
+static bool sAheadReady;
+
 bool CtrData_Init(void)
 {
     int choice = CTR_DATA_BACKEND;
+
+    /* Here, before any worker can ask for a file. */
+    LightLock_Init(&sAheadLock);
+    sAheadReady = true;
 
     ReadEngineAbi();
     mkdir("sdmc:/3ds", 0777);
@@ -227,7 +282,8 @@ bool CtrData_Init(void)
     case 1:
         if (!FileExists(CTR_DATA_EMBEDDED_MARKER))
         {
-            SetError("This build has no embedded game data.", "Install a data pack or loose data files.");
+            SetError(CTR_TEXT("This build has no embedded game data.", "This build has no embedded game data.", "This build has no embedded game data.", "This build has no embedded game data.", "Esta versao nao traz dados embutidos.", "Diese Version enthaelt keine Spieldaten.", "This build has no embedded game data."),
+                     CTR_TEXT("Install a data pack or loose data files.", "Install a data pack or loose data files.", "Install a data pack or loose data files.", "Install a data pack or loose data files.", "Instale um pacote ou os dados soltos.", "Datenpaket oder lose Dateien installieren.", "Install a data pack or loose data files."));
             return false;
         }
         sBackend = CTR_DATA_ROMFS;
@@ -260,21 +316,8 @@ bool CtrData_Init(void)
     return true;
 }
 
-void CtrData_Shutdown(void)
-{
-    if (sPak != NULL)
-        fclose(sPak);
-    sPak = NULL;
-    free(sEntries);
-    sEntries = NULL;
-    sEntryCount = 0;
-    sBackend = CTR_DATA_NONE;
-}
-
-CtrDataBackend CtrData_GetBackend(void) { return sBackend; }
 const char *CtrData_ErrorTitle(void) { return sErrorTitle; }
 const char *CtrData_ErrorDetail(void) { return sErrorDetail; }
-uint32_t CtrData_EngineAbi(void) { return sEngineAbi; }
 
 const char *CtrData_BackendName(void)
 {
@@ -425,7 +468,7 @@ bool CtrData_Exists(const char *path)
     return CtrData_Size(path, NULL);
 }
 
-void *CtrData_Load(const char *path, uint32_t *outSize)
+static void *LoadNow(const char *path, uint32_t *outSize)
 {
     uint32_t size;
     uint8_t *buffer;
@@ -456,4 +499,193 @@ void *CtrData_Load(const char *path, uint32_t *outSize)
     if (outSize != NULL)
         *outSize = size;
     return buffer;
+}
+
+/*
+ * Files read ahead (CtrData_Prefetch) on a worker of their own: in a frame,
+ * one read of the SD card is 10-30 ms on an Old 3DS, and a visible wild
+ * Pokemon appearing every two seconds on its HGSS sprite (follower_mon.c)
+ * dropped a frame each time. CtrData_Load hands back a copy of one read
+ * ahead, waits for the one the worker is reading, or reads it on the spot as
+ * before: the same bytes either way, only the moment of the read changes.
+ * Small: a few map tables' worth of sprites, the least recently asked for
+ * going first. sAheadLock guards the slots; no file is read under it.
+ */
+#define AHEAD_SLOTS 16
+#define AHEAD_BYTES (128u * 1024u)
+
+enum { AHEAD_FREE, AHEAD_QUEUED, AHEAD_READING, AHEAD_READY, AHEAD_MISSING };
+
+typedef struct
+{
+    char path[48];
+    uint8_t state;
+    uint8_t *data;
+    uint32_t size, used;
+} AheadSlot;
+
+static AheadSlot sAhead[AHEAD_SLOTS];
+static bool sAheadWorker;
+static uint32_t sAheadClock, sAheadBytes;
+
+static AheadSlot *AheadFind(const char *path)
+{
+    for (unsigned i = 0; i < AHEAD_SLOTS; ++i)
+        if (sAhead[i].state != AHEAD_FREE && strcmp(sAhead[i].path, path) == 0)
+            return &sAhead[i];
+    return NULL;
+}
+
+static void AheadDrop(AheadSlot *slot)
+{
+    sAheadBytes -= slot->size;
+    free(slot->data);
+    slot->data = NULL;
+    slot->size = 0;
+    slot->state = AHEAD_FREE;
+}
+
+/* A free slot, else the least recently asked for of those not being read. */
+static AheadSlot *AheadVictim(const AheadSlot *keep)
+{
+    AheadSlot *victim = NULL;
+
+    for (unsigned i = 0; i < AHEAD_SLOTS; ++i)
+    {
+        AheadSlot *slot = &sAhead[i];
+
+        if (slot == keep || slot->state == AHEAD_QUEUED || slot->state == AHEAD_READING)
+            continue;
+        if (slot->state == AHEAD_FREE)
+            return slot;
+        if (victim == NULL || (int32_t)(slot->used - victim->used) < 0)
+            victim = slot;
+    }
+    return victim;
+}
+
+/* What was read into its slot, the oldest others let go past the budget. */
+static void AheadPublish(AheadSlot *slot, uint8_t *data, uint32_t size)
+{
+    slot->data = data;
+    slot->size = data != NULL ? size : 0;
+    slot->state = data != NULL ? AHEAD_READY : AHEAD_MISSING;
+    sAheadBytes += slot->size;
+    while (sAheadBytes > AHEAD_BYTES)
+    {
+        AheadSlot *victim = AheadVictim(slot);
+
+        if (victim == NULL || victim->state == AHEAD_FREE)
+            break;
+        AheadDrop(victim);
+    }
+}
+
+static void AheadWorker(void *arg)
+{
+    (void)arg;
+    for (;;)
+    {
+        AheadSlot *slot = NULL;
+        char path[sizeof(sAhead[0].path)];
+        uint8_t *data;
+        uint32_t size = 0;
+
+        LightLock_Lock(&sAheadLock);
+        for (unsigned i = 0; i < AHEAD_SLOTS && slot == NULL; ++i)
+            if (sAhead[i].state == AHEAD_QUEUED)
+                slot = &sAhead[i];
+        if (slot == NULL)
+        {
+            sAheadWorker = false;
+            LightLock_Unlock(&sAheadLock);
+            return;
+        }
+        slot->state = AHEAD_READING;
+        memcpy(path, slot->path, sizeof(path));
+        LightLock_Unlock(&sAheadLock);
+
+        data = LoadNow(path, &size);
+
+        LightLock_Lock(&sAheadLock);
+        AheadPublish(slot, data, size);
+        LightLock_Unlock(&sAheadLock);
+    }
+}
+
+void CtrData_Prefetch(const char *path)
+{
+    AheadSlot *slot;
+    bool start = false;
+
+    if (!sAheadReady || sBackend == CTR_DATA_NONE || !PathValid(path) || strlen(path) >= sizeof(sAhead[0].path))
+        return;
+    LightLock_Lock(&sAheadLock);
+    slot = AheadFind(path);
+    if (slot == NULL && (slot = AheadVictim(NULL)) != NULL)
+    {
+        if (slot->state != AHEAD_FREE)
+            AheadDrop(slot);
+        strcpy(slot->path, path);
+        slot->state = AHEAD_QUEUED;
+        start = !sAheadWorker;
+        sAheadWorker = true;
+    }
+    if (slot != NULL)
+        slot->used = ++sAheadClock;
+    LightLock_Unlock(&sAheadLock);
+    /* One step below the game, on its core: the reads are the FS service's
+     * waits, and come while the game waits for the screen. */
+    if (start && !CtrPlatform_StartThread(AheadWorker, NULL, 16 * 1024, -2))
+    {
+        LightLock_Lock(&sAheadLock);
+        for (unsigned i = 0; i < AHEAD_SLOTS; ++i)
+            if (sAhead[i].state == AHEAD_QUEUED)
+                sAhead[i].state = AHEAD_FREE;
+        sAheadWorker = false;
+        LightLock_Unlock(&sAheadLock);
+    }
+}
+
+void *CtrData_Load(const char *path, uint32_t *outSize)
+{
+    AheadSlot *slot;
+    uint8_t *copy = NULL;
+    uint32_t size = 0;
+
+    if (!sAheadReady || path == NULL)
+        return LoadNow(path, outSize);
+    LightLock_Lock(&sAheadLock);
+    slot = AheadFind(path);
+    if (slot != NULL && slot->state == AHEAD_QUEUED)
+    {
+        /* Not begun: read here, and kept for the next one. */
+        uint8_t *data;
+
+        slot->state = AHEAD_READING;
+        LightLock_Unlock(&sAheadLock);
+        data = LoadNow(path, &size);
+        LightLock_Lock(&sAheadLock);
+        AheadPublish(slot, data, size);
+    }
+    while (slot != NULL && slot->state == AHEAD_READING)
+    {
+        /* The worker's: no sooner read again. */
+        LightLock_Unlock(&sAheadLock);
+        svcSleepThread(200 * 1000);
+        LightLock_Lock(&sAheadLock);
+    }
+    if (slot != NULL && slot->state == AHEAD_READY && (copy = malloc((size_t)slot->size + 1)) != NULL)
+    {
+        size = slot->size;
+        memcpy(copy, slot->data, size);
+        copy[size] = 0;
+        slot->used = ++sAheadClock;
+    }
+    LightLock_Unlock(&sAheadLock);
+    if (copy == NULL)
+        return LoadNow(path, outSize);
+    if (outSize != NULL)
+        *outSize = size;
+    return copy;
 }

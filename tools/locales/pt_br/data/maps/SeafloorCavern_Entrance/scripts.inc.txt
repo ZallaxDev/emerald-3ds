@@ -1,0 +1,27 @@
+# CAMINHO SUBMARINO: a entrada.
+
+[SeafloorCavern_Entrance_Text_HearMagmaNearMossdeep] c97dd61bb6
+Ei!\n
+Lembro da sua cara!\p
+Se está aqui, é porque vai se meter\n
+com a gente de novo!\p
+Uma criança como você acha mesmo\n
+que pode com a EQUIPE AQUA?\p
+Você está uns trilhões de anos\n
+atrasado!\p
+Você combina é com a EQUIPE MAGMA!\p
+Falando na EQUIPE MAGMA, dizem que\n
+foram vistos perto de MOSSDEEP.\p
+Aquele bando de capangas não fica\n
+nada bem perto do mar!$
+
+[SeafloorCavern_Entrance_Text_HearMagmaNearMossdeepShort] d9f9a9aec8
+Uma criança como você acha mesmo\n
+que pode com a EQUIPE AQUA?\p
+Você está uns trilhões de anos\n
+atrasado!\p
+Você combina é com a EQUIPE MAGMA!\p
+Falando na EQUIPE MAGMA, dizem que\n
+foram vistos perto de MOSSDEEP.\p
+Aquele bando de capangas não fica\n
+nada bem perto do mar!$

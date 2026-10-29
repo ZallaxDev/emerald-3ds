@@ -1,0 +1,71 @@
+# FRONTEIRA DE BATALHA: a arena da FÁBRICA, com o NOLAND.
+
+[BattleFrontier_BattleFactoryBattleRoom_Text_GetAMoveOn] 97dfe1f360
+Ei, ei!\n
+Anda logo!$
+
+[BattleFrontier_BattleFactoryBattleRoom_Text_NolandImFactoryHead] af812ee87e
+Ei, o meu nome é NOLAND!\n
+Basicamente, eu comando este lugar,\l
+por isso sou o CHEFE DA FÁBRICA!\p
+Dei uma olhada nos seus dados da\n
+Troca de Batalha.\p
+Parece que você tem a ideia certa,\n
+mas ainda pensa muito quadrado!\p
+Escuta, tá? Conhecimento não é só\n
+ler livros ou trabalhar na mesa.\p
+Só fazer esse tipo de coisa…\n
+Dá na mesma que nada!\p
+Tem que viver as coisas com o\n
+coração e o corpo, entendeu?\p
+Vou te enfrentar nas mesmas\n
+condições que você.\p
+Também vou usar POKéMON de aluguel!$
+
+[BattleFrontier_BattleFactoryBattleRoom_Text_ShakeOutKnowledgeBringItOn] ad1003ea65
+Use até a última gota do seu\n
+conhecimento e manda ver!$
+
+[BattleFrontier_BattleFactoryBattleRoom_Text_NolandLetsSeeFrontierPass] f359da23e4
+NOLAND: Que esperteza!\n
+Deixa eu ver o seu PASSE DA FRONTEIRA.$
+
+[BattleFrontier_BattleFactoryBattleRoom_Text_ReceivedKnowledgeSymbol] 6b48bf422e
+O Símbolo do Saber foi gravado\n
+no PASSE DA FRONTEIRA!$
+
+[BattleFrontier_BattleFactoryBattleRoom_Text_NextTimeNoHoldsBarred] 64afc87308
+Heh…\n
+Que cabeça boa…\p
+Da próxima vez, vou com tudo.\n
+Sem dó, entendeu?\p
+Continue estudando!$
+
+[BattleFrontier_BattleFactoryBattleRoom_Text_HarderLookThanLastTime] 4f3a65808d
+NOLAND: Ei, ei! Tudo certo?\n
+Continua estudando?\p
+…Opa?\p
+Você está com um olhar mais duro\n
+que da última vez.\p
+Agora vai ser divertido!\n
+Estou ficando animado, ei!$
+
+[BattleFrontier_BattleFactoryBattleRoom_Text_AllRightBringItOn] 3847b28ca5
+Isso aí!\n
+Manda ver!$
+
+[BattleFrontier_BattleFactoryBattleRoom_Text_OutOfMyLeagueLetsSeePass] ebc1f4f80f
+NOLAND: Mas que…\n
+Você está saindo do meu alcance!\p
+Aff!\n
+Deixa eu ver esse PASSE DA FRONTEIRA!$
+
+[BattleFrontier_BattleFactoryBattleRoom_Text_KnowledgeSymbolTookGoldenShine] e687909719
+O Símbolo do Saber ganhou um\n
+brilho dourado!$
+
+[BattleFrontier_BattleFactoryBattleRoom_Text_LastTimeILoseToYou] 05299fa523
+Pff, cara!\p
+É a última vez que eu perco\n
+pra você!\p
+Temos que repetir isso, hein?$

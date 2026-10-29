@@ -1,0 +1,121 @@
+# ROTA 116: o SR. BRINEY sem a PEEKO, o escavador, o pesquisador da DEVON e as placas.
+
+[Route116_Text_ScoundrelMadeOffWithPeeko] f033ae8223
+Ai, ai, o que eu faço agora?\p
+A gente estava passeando, eu e a PEEKO,\n
+quando um bandido nos atacou…\p
+O malandro levou embora a minha\n
+querida PEEKO!\p
+Uuuuuaaaaaaah! PEEKO!$
+
+[Route116_Text_WantToDigTunnel] 06998eb329
+Nnn… Uaaargh!\p
+Eu quero cavar aquele túnel!$
+
+[Route116_Text_DiggingTunnelWhenGoonOrderedMeOut] 3ca2d88857
+Nnn… Uaaargh!\n
+O que está acontecendo?\p
+Eu estava cavando o túnel sem\n
+ferramentas e um capanga me expulsou!\p
+Esse túnel está cheio de POKéMON\n
+que não gostam de barulho alto.\l
+Eles podem fazer um tumulto.\p
+Foi por isso que paramos de usar\n
+máquinas pesadas pra cavar…\p
+Tenho medo de que o capanga faça\n
+alguma besteira e assuste os\l
+POKéMON, causando um tumulto.$
+
+[Route116_Text_GoonHightailedItOutOfTunnel] 1661f2e3a0
+Nnn… Uaaargh!\p
+Aquele capanga pateta saiu correndo\n
+do túnel! Posso voltar a cavar!$
+
+[Route116_Text_ThankYouTokenOfAppreciation] f013841e87
+Ah! É você!\p
+Você não só me ajudou no BOSQUE DE\n
+PETALBURG, como também recuperou o\l
+pacote roubado e ainda fez a gentileza\l
+de entregá-lo em SLATEPORT!\p
+O CAP. STERN avisou que o pacote\n
+chegou, também!\p
+Muito, muito obrigado!\p
+Ora, se eu fosse uma nuvem de chuva,\n
+faria chover gratidão em você e te\l
+saudaria como herói!\p
+Pra você, que treina POKéMON como\n
+ninguém, trago uma boa notícia!\p
+A nossa empresa acabou de criar\n
+um novo tipo de POKé BOLA.\p
+Como agradecimento, este é o nosso\n
+presente pra você!$
+
+[Route116_Text_NewBallAvailableAtMart] 54c6cdb731
+A nossa nova POKé BOLA vai estar à\n
+venda no POKé MART de RUSTBORO.\p
+Experimente, por favor!\n
+Obrigado e tchauzinho!$
+
+[Route116_Text_BagIsJamPacked] d8f9e4b7b6
+A sua BOLSA está lotada.\n
+Não dá pra te dar esta BOLA REPETIÇÃO.$
+
+[Route116_Text_TokenOfAppreciation] 49a76d3091
+Como agradecimento pela entrega do\n
+nosso pacote, tenho um presente:\l
+um novo tipo de POKé BOLA pra você,\l
+que treina POKéMON como ninguém!$
+
+[Route116_Text_CanYouHelpMeFindGlasses] 5022d73beb
+Deixei meus óculos caírem…\n
+Você me ajuda a achar?$
+
+[Route116_Text_MayISeeThoseGlasses] 6ec2551f1a
+Esses óculos!\n
+Posso ver um segundinho?$
+
+[Route116_Text_NotWhatImLookingForMaybeTheyArentHere] 6935054e20
+Hmm…\n
+Esses são ÓCULOS PRETOS.\l
+Não são os que eu procuro…\p
+Talvez os meus óculos não estejam\n
+por aqui…$
+
+[Route116_Text_CantFindGlassesNotHere] 9f98448a30
+Hmm…\n
+Não acho meus óculos em lugar nenhum…\l
+Talvez não estejam por aqui…$
+
+[Route116_Text_NotWhatImLookingFor] 61ab352719
+Hmm…\n
+Esses são ÓCULOS PRETOS.\l
+Não são os que eu procuro…$
+
+[Route116_Text_RouteSignRustboro] 0f97479892
+ROTA 116\n
+{LEFT_ARROW} CIDADE DE RUSTBORO$
+
+[Route116_Text_RusturfTunnelSign] 16a397d8cb
+TÚNEL RUSTURF\n
+“Ligando RUSTBORO e VERDANTURF\p
+“A obra do túnel foi\n
+cancelada.”$
+
+[Route116_Text_TunnelersRestHouse] 0f4f5ea06c
+CASA DE DESCANSO DOS ESCAVADORES$
+
+[Route116_Text_TrainerTipsBToStopEvolution] c646332757
+DICAS DE TREINADOR\p
+Se quiser impedir que um POKéMON\n
+evolua, aperte o Botão B enquanto\l
+ele estiver evoluindo.\l
+O POKéMON leva um susto e para.\p
+Isso se chama cancelar a evolução.$
+
+[Route116_Text_TrainerTipsBagHasPockets] d8e8d906ce
+DICAS DE TREINADOR\p
+A sua BOLSA tem vários BOLSOS.\p
+Os itens que você pega vão sozinhos\n
+para os BOLSOS certos.\p
+Ninguém que treina POKéMON pode\n
+ficar sem a própria BOLSA.$

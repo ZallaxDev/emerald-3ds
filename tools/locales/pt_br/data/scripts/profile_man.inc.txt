@@ -1,0 +1,37 @@
+# O homem que coleciona perfis (FALA FÁCIL).
+
+[ProfileMan_Text_CollectTrainerProfiles] 9aeb25d171
+Olá, TREINADOR!\nQue sorriso lindo, hein?\pEu tenho um hobby: colecionar os\nperfis de TREINADORES POKéMON.$
+
+[ProfileMan_Text_MayISeeYourProfile] 1e81673f57
+E aí, topa?\nPosso ver o seu perfil?$
+
+[ProfileMan_Text_EasyChatExplanation] ae0a2f66ca
+Você monta o seu perfil juntando\nquatro palavras ou frases.\pOlha, vou te mostrar um exemplo\nde perfil com quatro partes.\pDá pra trocar essas quatro partes\npor outras do jeito que quiser\lpra montar o seu perfil.\pTem um monte de partes que\nvocê pode usar.\pElas ficam em grupos, como\nPOKéMON, estilo de vida e hobbies,\lpra ficar fácil de achar.\pPrimeiro, escolha um grupo pra\nver a lista de opções.\pDepois, escolha a que quiser.\pRepita com as outras partes e\npronto: o perfil é todo seu.$
+
+[ProfileMan_Text_LetsSeeItThen] c96ad96777
+Isso! Valeu!\nEntão vamos ver.$
+
+[ProfileMan_Text_ImagineYouWouldHaveWonderfulProfile] a191eca403
+Ah, não, sério?\pAposto que alguém como você\nteria um perfil incrível…$
+
+[ProfileMan_Text_NotIntoItRightNow] e81f7e30db
+Ué? Não tá no clima agora?\pTudo bem, pode ser quando quiser!$
+
+[ProfileMan_Text_YouHaveWonderfulSmile] 3072463cb8
+Olá, TREINADOR!\nQue sorriso lindo.$
+
+[ProfileMan_Text_MayISeeYourNewProfile] cb2faea2c3
+Posso ver o seu perfil novo?$
+
+[ProfileMan_Text_EvenBetterThanLastProfile] e192fa08eb
+Isso! Valeu!\pTomara que seja ainda melhor que\no perfil que você me mostrou.$
+
+[ProfileMan_Text_LikeProfileWayItIs] 22e6713c9b
+Ah, você gosta do perfil do jeito\nque tá.\pNão te culpo: ele já é\nincrível assim.$
+
+[ProfileMan_Text_FantasticProfile] 741071bf8c
+F-fantástico!\pSeu perfil é incrível!\nDiz tudo sobre você.\pQuem ouvir esse perfil vai ficar\nencantado com você!\pValeu!$
+
+[ProfileMan_Text_YouKnowSecretSaying] 648a92161a
+Opa!\nVocê sabe a frase secreta!\pIsso quer dizer que agora você é\nparte do CLUBE DO EVENTO MISTERIOSO!$

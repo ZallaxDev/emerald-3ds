@@ -1,0 +1,127 @@
+# CASA DOS TRUQUES, sala 5: os ROBONECOS e os quizzes.
+
+[Route110_TrickHousePuzzle5_Text_WroteSecretCodeLockOpened] 4b2435edd2
+{PLAYER} escreveu a senha secreta\n
+na porta.\p
+“O MESTRE DOS TRUQUES é um gênio.”\n
+… … … … … … … …\p
+A fechadura abriu com um clique!$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll1Intro] 65a4f2e810
+TIQUE-TAQUE…\n
+ROBONECO 1 EU SOU!\p
+SE RESPONDER CERTO OS QUIZZES,\n
+ATÉ O ROBONECO 5 VOCÊ VAI.\l
+E A SENHA SECRETA VOCÊ GANHA.$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll1Quiz1] 2458207e82
+QUIZ DO ROBONECO 1.\p
+Um destes POKéMON não aparece na\n
+ROTA 110. Qual é?$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll1Quiz2] a80ce0e5b1
+QUIZ DO ROBONECO 1.\p
+Um destes POKéMON não é do tipo\n
+ÁGUA. Qual é?$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll1Quiz3] 13bb323788
+QUIZ DO ROBONECO 1.\p
+Um destes POKéMON não usa\n
+SUGA-VIDAS. Qual é?$
+
+[Route110_TrickHousePuzzle5_Text_CorrectGoThrough] 306ed40c42
+PARABÉNS. CERTO VOCÊ ESTÁ.\n
+PASSE. POR FAVOR.$
+
+[Route110_TrickHousePuzzle5_Text_DisappointmentError] 42e7312d93
+BZZZT. DECEPÇÃO.\n
+ERRO.$
+
+[Route110_TrickHousePuzzle5_Text_Wahahahaha] 645b5d0d66
+UAHAHAHAHA! UAHAHAHAHA!\n
+TIQUE-TAQUE!$
+
+[Route110_TrickHousePuzzle5_Text_WaitForNextChallenge] e528fdaa4d
+O SEU PRÓXIMO DESAFIO NÓS ESPERAMOS.$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll2Intro] 41db91a650
+TIQUE-TAQUE…\n
+ROBONECO 2 EU SOU!\p
+O QUIZ DO ROBONECO 1 FÁCIL\n
+DEMAIS ESTÁ.$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll2Quiz1] aaf29d04b7
+QUIZ DO ROBONECO 2.\p
+Qual destes POKéMON o WALLY pegou\n
+emprestado do seu pai?$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll2Quiz2] aa5d29ff20
+QUIZ DO ROBONECO 2.\p
+Qual destes POKéMON perseguia\n
+o PROF. BIRCH?$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll2Quiz3] 4dee28c132
+QUIZ DO ROBONECO 2.\p
+Qual destes POKéMON a EQUIPE AQUA\n
+usou no BOSQUE DE PETALBURG?$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll3Intro] f9b5ec15a8
+TIQUE-TAQUE…\n
+ROBONECO 3 EU SOU!\p
+SÓ DE DINHEIRO EU ENTENDO.$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll3Quiz1] 751d11d820
+QUIZ DO ROBONECO 3.\p
+O que custa mais? Três CARTAS PORTO\n
+ou um ANTIQUEIMADURA?$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll3Quiz2] 51e533c0fc
+QUIZ DO ROBONECO 3.\p
+Venda uma GRANDE BOLA e compre uma\n
+POÇÃO. Quanto dinheiro sobra?$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll3Quiz3] 7b7ba1e691
+QUIZ DO ROBONECO 3.\p
+Um REPELENTE e um REFRIGERANTE custam\n
+mais que uma SUPERPOÇÃO?$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll4Intro] 58a12f186b
+TIQUE-TAQUE…\n
+ROBONECO 4 SOU EU!\p
+O MEU QUIZ UMA OBRA DE ARTE É.$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll4Quiz1] 2e1e9bf4ee
+QUIZ DO ROBONECO 4.\p
+Na CASA DE PRAIA, havia mais homens\n
+ou mulheres?$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll4Quiz2] f445f05540
+QUIZ DO ROBONECO 4.\p
+Na CIDADE DE LAVARIDGE, havia mais\n
+idosos ou idosas?$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll4Quiz3] eec3ee3f49
+QUIZ DO ROBONECO 4.\p
+Na ESCOLA DE TREINADORES, quantas\n
+alunas havia?$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll5Intro] 8cb7e43fc8
+TIQUE-TAQUE…\n
+ROBONECO 5 EU SOU!\p
+A MAIOR E MAIS ORGULHOSA\n
+CRIAÇÃO DO MESTRE EU SOU.$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll5Quiz1] 1b4df3a4f7
+QUIZ DO ROBONECO 5.\p
+No FÃ-CLUBE POKéMON de SLATEPORT,\n
+quantos POKéMON havia?$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll5Quiz2] 0d0e99c1c1
+QUIZ DO ROBONECO 5.\p
+Na CIDADE DE FORTREE, quantas\n
+casas na árvore havia?$
+
+[Route110_TrickHousePuzzle5_Text_Mechadoll5Quiz3] a3d47ce061
+QUIZ DO ROBONECO 5.\p
+Na ESTRADA DE BICICLETA, quantos\n
+TRIATLETAS havia?$

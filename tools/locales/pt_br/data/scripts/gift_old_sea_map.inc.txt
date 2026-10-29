@@ -1,0 +1,13 @@
+# PRESENTE MISTERIOSO: o MAPA ANTIGO.
+
+[sText_MysteryGiftOldSeaMapForYou] 4a4ca5fd5c
+Obrigado por usar o sistema de\nPRESENTE MISTERIOSO.\pSó pra confirmar: você é\n{PLAYER}?\pA gente recebeu este MAPA\nANTIGO endereçado a você.$
+
+[sText_MysteryGiftOldSeaMapUseAtPort] 92253a72d5
+Parece que é pra usar no porto\nda CIDADE DE LILYCOVE.\pQue tal ir lá descobrir\ndo que se trata?$
+
+[sText_MysteryGiftOldSeaMapThankYou] d213ee074c
+Obrigado por usar o sistema de\nPRESENTE MISTERIOSO.$
+
+[sText_MysteryGiftOldSeaMapBagFull] a2d54d9296
+Ah, desculpe, {PLAYER}.\nO bolso de ITENS CHAVE tá cheio.\pGuarde alguma coisa no PC\ne volte pra buscar isto.$

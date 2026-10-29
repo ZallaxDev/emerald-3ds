@@ -1,0 +1,16 @@
+# CIDADE DE FORTREE: a casa na árvore.
+
+[FortreeCity_House5_Text_TreeHousesAreGreat] dcebd71149
+As casas nas árvores de FORTREE são\n
+demais!\p
+Acho que é a melhor cidade pra\n
+morar junto com os POKéMON.$
+
+[FortreeCity_House5_Text_AdaptedToNature] d9dc6e4ff4
+POKéMON e pessoas se adaptaram à\n
+natureza pra sobreviver.\p
+Não precisa mudar a natureza pro\n
+jeito que a gente quer viver.$
+
+[FortreeCity_House5_Text_Zigzagoon] fc4ef47010
+ZIGZAGOON: Bufuu!$

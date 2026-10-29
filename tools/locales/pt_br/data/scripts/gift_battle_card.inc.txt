@@ -1,0 +1,7 @@
+# PRESENTE MISTERIOSO: o CARTÃO DE BATALHAS.
+
+[sText_MysteryGiftBattleCountCard] cec5d57755
+Obrigado por usar o sistema de\nPRESENTE MISTERIOSO.\pO seu CARTÃO DE BATALHAS guarda\no placar das batalhas contra\lTREINADORES com o mesmo CARTÃO.\pProcure e enfrente TREINADORES\nque tenham o mesmo CARTÃO.\pDá pra ver o ranking geral\nnas NOTÍCIAS.\pExperimente!$
+
+[sText_MysteryGiftBattleCountCard_WonPrize] 167eaf1c9f
+Obrigado por usar o sistema de\nPRESENTE MISTERIOSO.\pParabéns!\pVocê ganhou um prêmio por\nvencer três batalhas!\pTomara que isso te anime a\nbatalhar ainda mais.$

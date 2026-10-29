@@ -1,0 +1,61 @@
+Pokémon Emerald 3Ds Dual Screen changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: battle text word order for Portuguese
+Applies after 0057-portuguese-tilde-letters.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/battle_message.c b/src/battle_message.c
+--- a/src/battle_message.c
++++ b/src/battle_message.c
+@@ -313,6 +313,10 @@ static const u8 sText_StatSharply[] = _("sharply ");
+ const u8 gText_StatRose[] = _("rose!");
+ static const u8 sText_StatHarshly[] = _("harshly ");
+ static const u8 sText_StatFell[] = _("fell!");
++// A sharp change's two words as one, for Portuguese, which puts the adverb
++// after the verb (the game's other languages keep its two words).
++static const u8 sText_StatSharplyRose[] = _("sharply rose!");
++static const u8 sText_StatHarshlyFell[] = _("harshly fell!");
+ static const u8 sText_AttackersStatRose[] = _("{B_ATK_NAME_WITH_PREFIX}'s {B_BUFF1}\n{B_BUFF2}");
+ const u8 gText_DefendersStatRose[] = _("{B_DEF_NAME_WITH_PREFIX}'s {B_BUFF1}\n{B_BUFF2}");
+ static const u8 sText_UsingItemTheStatOfPkmnRose[] = _("Using {B_LAST_ITEM}, the {B_BUFF1}\nof {B_SCR_ACTIVE_NAME_WITH_PREFIX} {B_BUFF2}");
+@@ -421,6 +425,9 @@ static const u8 sText_LinkTrainer1WithdrewPkmn[] = _("{B_LINK_OPPONENT1_NAME} wi
+ static const u8 sText_LinkTrainer2WithdrewPkmn[] = _("{B_LINK_SCR_TRAINER_NAME} withdrew\n{B_BUFF1}!");
+ static const u8 sText_WildPkmnPrefix[] = _("Wild ");
+ static const u8 sText_FoePkmnPrefix[] = _("Foe ");
++// After the name, for languages that put it there (empty in English).
++static const u8 sText_WildPkmnSuffix[] = _("");
++static const u8 sText_FoePkmnSuffix[] = _("");
+ static const u8 sText_EmptyString8[] = _("");
+ static const u8 sText_FoePkmnPrefix2[] = _("Foe");
+ static const u8 sText_AllyPkmnPrefix[] = _("Ally");
+@@ -2321,6 +2328,9 @@ static const u8 *TryGetStatusString(u8 *src)
+         GetMonData(&gPlayerParty[monIndex], MON_DATA_NICKNAME, text);   \
+     }                                                                   \
+     StringGet_Nickname(text);                                           \
++    if (GetBattlerSide(battler) != B_SIDE_PLAYER)                       \
++        StringAppend(text, (gBattleTypeFlags & BATTLE_TYPE_TRAINER)     \
++                           ? sText_FoePkmnSuffix : sText_WildPkmnSuffix);\
+     toCpy = text;
+ #else
+ #define HANDLE_NICKNAME_STRING_CASE(battler, monIndex)                   \
+@@ -2834,6 +2844,14 @@ static void ExpandBattleTextBuffPlaceholders(const u8 *src, u8 *dst)
+         {
+         case B_BUFF_STRING: // battle string
+             hword = T1_READ_16(&src[srcID + 1]);
++            if (CTR_LANG_PT_BR && src[srcID + 3] == B_BUFF_STRING
++             && ((hword == STRINGID_STATSHARPLY && T1_READ_16(&src[srcID + 4]) == STRINGID_STATROSE)
++              || (hword == STRINGID_STATHARSHLY && T1_READ_16(&src[srcID + 4]) == STRINGID_STATFELL)))
++            {
++                StringAppend(dst, hword == STRINGID_STATSHARPLY ? sText_StatSharplyRose : sText_StatHarshlyFell);
++                srcID += 6;
++                break;
++            }
+             StringAppend(dst, gBattleStringsTable[hword - BATTLESTRINGS_TABLE_START]);
+             srcID += 3;
+             break;
+@@ -2877,6 +2895,8 @@ static void ExpandBattleTextBuffPlaceholders(const u8 *src, u8 *dst)
+             }
+             StringGet_Nickname(nickname);
+             StringAppend(dst, nickname);
++            if (GetBattlerSide(src[srcID + 1]) != B_SIDE_PLAYER)
++                StringAppend(dst, (gBattleTypeFlags & BATTLE_TYPE_TRAINER) ? sText_FoePkmnSuffix : sText_WildPkmnSuffix);
+             srcID += 3;
+             break;
+         case B_BUFF_STAT: // stats

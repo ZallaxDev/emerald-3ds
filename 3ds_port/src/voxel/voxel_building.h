@@ -27,6 +27,25 @@ bool VoxelBuildings_Init(void);
 void VoxelBuildings_Shutdown(void);
 
 /*
+ * The current map (VoxelMapInstance.live) as the live grid draws it, not only
+ * as its layout did: on a map a script swapped another layout in, where the
+ * live grid shows more of the header layout's own models than of the
+ * swapped-in one's (the Mirage Tower painted back on Route 111 for its fall)
+ * the map's buildings are the header layout's. `drawing` gives a layout's
+ * own metatiles (VoxelWorld_LayoutDrawing); NULL (host tools) keeps the
+ * instance's own layout. WorldChanged: the live grid has changed, so the
+ * answer is worked out again when next asked.
+ */
+void VoxelBuildings_SetDrawings(const uint16_t *(*drawing)(int layoutId, int *width, int *height));
+void VoxelBuildings_WorldChanged(void);
+/* The layout whose placements, page and animated runs `inst` draws. */
+int VoxelBuildings_LayoutOf(const VoxelMapInstance *inst);
+/* 0 while the current map stands as it was entered (and for other maps),
+ * else a value of the layout it took: part of the current map's chunks'
+ * signatures, so they are built again when it changes and only then. */
+uint32_t VoxelBuildings_LiveSignature(const VoxelMapInstance *inst);
+
+/*
  * Textures are paged by map: every layout's models are drawn from one page,
  * which the renderer loads when a map on screen needs it. -1 when the layout
  * places nothing.
@@ -76,6 +95,14 @@ float VoxelBuildings_LayoutTop(const VoxelMapInstance *inst);
  */
 bool VoxelBuildings_CellAt(const VoxelMapInstance *inst, int x, int y,
                            int *groundMetatile, float *top);
+/*
+ * A cell of a model it stands over nothing of, whose drawing carries the
+ * model on its upper layer (a Sootopolis house's roof over the face of the
+ * terrace behind it: scripts/gen_voxel_buildings.py bare_quarters): the
+ * ground variant of the cell's own metatile less those quarters. The
+ * relief stays there, drawn with it.
+ */
+bool VoxelBuildings_BareVariant(const VoxelMapInstance *inst, int x, int y, int *metatile);
 
 /*
  * A bridge's deck (voxel_bridge.py): whoever stands at world (x, z) of
@@ -108,6 +135,10 @@ bool VoxelBuildings_Variant(unsigned i, unsigned *layout, unsigned *metatile, un
  */
 void VoxelBuildings_SetVariantFits(bool (*fits)(const VoxelMapInstance *inst, unsigned layout,
                                                 unsigned metatile));
+
+/* The map changed (setmetatile): what was worked out of the placements that
+ * stand only while a cell holds a metatile is worked out again. */
+void VoxelBuildings_MapChanged(void);
 
 /*
  * The face of a model a walker in world cell (x, y) of `inst` stands before:

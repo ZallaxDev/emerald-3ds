@@ -47,7 +47,7 @@ LICENSES = [("LICENSE-PORT.md", "LICENSE-PORT.md"), ("NOTICE.md", "NOTICE.md"),
 FIXED_TIME = (2020, 1, 1, 0, 0, 0)
 VARIANT_FILES = ("Emerald3DS.3dsx", "Emerald3DS.smdh", "emerald3ds.recipe")
 ROM_REGIONS = {"BPEE": ("USA, Europe", "en"), "BPES": ("Spain", "es"), "BPEF": ("France", "fr"),
-               "BPEI": ("Italy", "it")}
+               "BPEI": ("Italy", "it"), "BPED": ("Germany", "de"), "BPEJ": ("Japan", "ja")}
 
 
 def sha256(data: bytes) -> str:
@@ -90,14 +90,18 @@ def make_manifest(files: dict[str, bytes], version: str, tag: str, cia_forwarder
                   synthetic: bool = False) -> dict:
     recipe = Recipe.from_bytes(files["payload/emerald3ds.recipe"])
 
-    def rom_entry(sha1: str) -> dict:
+    def rom_entry(sha1: str, folder: str | None = None) -> dict:
+        """The ROM a recipe is made from (BPES, BPEF, BPEI, BPED or BPEJ for the
+        other languages) and the language it builds: the payload folder's
+        (payload/pt/ is the Portuguese translation, made from the English ROM),
+        else the cartridge's."""
         if synthetic:
             return {"sha1": sha1, "name": "Synthetic test ROM (not a game)", "code": "TEST",
-                    "region": "", "language": ""}
-        # The ROM a recipe is made from (BPES for the Spanish variant).
+                    "region": "", "language": folder or ""}
         code = next((c for c, sha in ROM_PROFILES.items() if sha == sha1), "BPEE")
         region, language = ROM_REGIONS.get(code, ("", ""))
-        return {"sha1": sha1, "name": KNOWN_CODES[code], "code": code, "region": region, "language": language}
+        return {"sha1": sha1, "name": KNOWN_CODES[code], "code": code, "region": region,
+                "language": folder or language}
 
     def ref(path: str, release_asset: str | None = None) -> dict:
         out = {"path": path, "sha256": sha256(files[path]), "size": len(files[path])}
@@ -134,7 +138,7 @@ def make_manifest(files: dict[str, bytes], version: str, tag: str, cia_forwarder
         sub = "payload/%s/" % lang
         variant_recipe = Recipe.from_bytes(files[sub + "emerald3ds.recipe"])
         variants.append({
-            "rom": rom_entry(variant_recipe.rom_sha1),
+            "rom": rom_entry(variant_recipe.rom_sha1, lang),
             "dataAbi": "%08x" % variant_recipe.engine_abi,
             "recipeRelease": variant_recipe.release,
             # Release asset names must be unique: Emerald3DS-es.3dsx, installed

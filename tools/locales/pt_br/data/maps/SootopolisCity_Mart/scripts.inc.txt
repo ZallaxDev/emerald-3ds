@@ -1,0 +1,22 @@
+# CIDADE DE SOOTOPOLIS: o POKé MART.
+
+[SootopolisCity_Mart_Text_PPUpIsGreat] 2bc792504c
+O PP UP é ótimo!\p
+Ele aumenta os PONTOS DE PODER, os\n
+PP, de um golpe POKéMON.$
+
+[SootopolisCity_Mart_Text_TooScaryOutside] d273c9916a
+O que…\n
+O que está acontecendo?\p
+Quero muito saber, mas dá medo\n
+demais sair.$
+
+[SootopolisCity_Mart_Text_FullRestoreItemOfDreams] 0b92e7e01f
+Conhece a RESTAURAÇÃO TOTAL?\p
+Recupera todos os PS!\n
+Cura todos os problemas de status!\p
+É mesmo o item dos sonhos!$
+
+[SootopolisCity_Mart_Text_DidSomethingAwaken] 013b940043
+Este tempo…\n
+Será que algo despertou?$

@@ -1,0 +1,10 @@
+# CIDADE DE SOOTOPOLIS: a casa do pesquisador.
+
+[SootopolisCity_House5_Text_SootopolisMtPyreConnection] 3b66fad539
+Parece que existe alguma ligação\n
+entre SOOTOPOLIS e o MONTE PYRE.\p
+Eu e uns amigos pesquisamos isso no\n
+laboratório onde eu trabalhava.$
+
+[SootopolisCity_House5_Text_BrotherUsedToStudySea] b2446600dc
+O meu irmão mais velho estudava o mar.$

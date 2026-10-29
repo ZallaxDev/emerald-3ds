@@ -1,0 +1,64 @@
+# CIDADE DE PETALBURG: a rua, o GINÁSIO, as placas e o olheiro do Scott.
+# Falas ao jogador sem flexão de gênero ("você treina POKéMON?").
+
+[PetalburgCity_Text_WhereIsWally] 12b55c9386
+Cadê o nosso WALLY?\p
+A gente tem que sair pra CIDADE DE\n
+VERDANTURF daqui a pouquinho…$
+
+[PetalburgCity_Text_AreYouRookieTrainer] a0a4a80b64
+Oi! Você por acaso…\n
+Está começando a treinar POKéMON?\p
+Sabe o que quem treina POKéMON faz\n
+quando chega numa cidade nova?\p
+Primeiro, vê que tipo de GINÁSIO\n
+tem na cidade.$
+
+[PetalburgCity_Text_ThisIsPetalburgGym] 1cc0be671a
+Viu? Este é o GINÁSIO de PETALBURG.$
+
+[PetalburgCity_Text_ThisIsGymSign] f257560d37
+Esta é a placa do GINÁSIO. Procure\n
+por ela sempre que quiser um GINÁSIO.$
+
+[PetalburgCity_Text_WaterReflection] 47023d4e94
+Meu rosto aparece refletido na água.\p
+É um sorriso cheio de esperança…\p
+Ou talvez um silêncio sombrio\n
+lutando contra o medo…\p
+O que você vê refletido no seu rosto?$
+
+[PetalburgCity_Text_FullPartyExplanation] daf409c547
+Digamos que você tem seis POKéMON.\n
+Se você pegar mais um…\p
+Ele vai direto pra uma CAIXA de\n
+armazenamento pela conexão do PC.$
+
+[PetalburgCity_Text_GymSign] 672591e83d
+GINÁSIO POKéMON DE PETALBURG\n
+LÍDER: NORMAN\l
+“Um homem em busca de poder!”$
+
+[PetalburgCity_Text_CitySign] 91bf07c03f
+CIDADE DE PETALBURG\n
+“Onde gente e natureza se encontram.”$
+
+[PetalburgCity_Text_WallyHouseSign] 0df157bc3e
+CASA DO WALLY$
+
+[PetalburgCity_Text_AreYouATrainer] 94f1b0e2a7
+Com licença!\p
+Deixa eu adivinhar, pelo seu jeito\n
+de vestir: você treina POKéMON?$
+
+[PetalburgCity_Text_WellMaybeNot] e23d36d82b
+… … … … … …\p
+Bom, talvez não.\n
+Sua roupa nem está tão suja assim.\p
+Ou você está começando agora,\n
+ou é só uma criança comum.$
+
+[PetalburgCity_Text_ImLookingForTalentedTrainers] da04193a75
+Estou rodando por aí atrás de\n
+gente talentosa que treina POKéMON.\p
+Desculpe por tomar o seu tempo.$

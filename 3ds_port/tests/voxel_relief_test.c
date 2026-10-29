@@ -20,6 +20,12 @@
  * map, its sea a level down at its west edge and on its base at its east one,
  * lifted straight up - no point of it moved south.
  *
+ * argv[5], argv[6] and argv[7] are Lilycove's, Route 124's and Route 126's.
+ * Lilycove's sea stands where Fortree does, six levels over the sea of Route
+ * 124 east of it: the seam asks for Route 124 lifted 96 pixels to meet it
+ * (VoxelRelief_SeamStep), and Lilycove 96 down to meet Route 124; Route 124
+ * and Route 126 meet as they are. A lifted map stands that much higher.
+ *
  * Then every cut cell of the file, asked for through VoxelRelief_Cut's memo
  * in an order that hits and evicts it, against the table read here. */
 #include <assert.h>
@@ -122,7 +128,7 @@ int main(int argc, char **argv)
     VoxelMapInstance inst = {0};
     const int16_t *g;
 
-    assert(argc == 5);
+    assert(argc == 8);
     inst.layoutId = atoi(argv[1]);
     assert(VoxelRelief_Init());
     g = VoxelRelief_Cell(&inst, 3, 7);
@@ -159,14 +165,15 @@ int main(int argc, char **argv)
     g = VoxelRelief_Cell(&inst, 5, 4);
     assert(g != NULL && !VoxelRelief_IsSlope(g) && g[0] == 16);
     assert(VoxelRelief_Cell(&inst, 4, 8) == NULL);
-    /* the sea that leans a level, with no depth */
+    /* the sea that leans a level, as far south as it is high in the world,
+     * as every point stands: its west edge in Route 107's row, a level down */
     inst.layoutId = atoi(argv[4]);
     assert(!VoxelRelief_IsDrawn(&inst));
     g = VoxelRelief_Cell(&inst, 0, 10);
     assert(g != NULL && g[2 * VOXEL_RELIEF_SIDE] == -16);
-    assert(VoxelRelief_Depth(&inst, 0, 10) != NULL && VoxelRelief_CellShift(&inst, 0, 10) == 0.0f);
+    assert(VoxelRelief_Depth(&inst, 0, 10) != NULL);
     for (unsigned i = 0; i < VOXEL_RELIEF_SIDE * VOXEL_RELIEF_SIDE; ++i)
-        assert(VoxelRelief_Depth(&inst, 0, 10)[i] == 0);
+        assert(VoxelRelief_Depth(&inst, 0, 10)[i] == g[i]);
     sOnly = &inst;
     {
         float last = VoxelRelief_LiftAt(0.0f, 10.5f);
@@ -177,15 +184,36 @@ int main(int argc, char **argv)
             float lift = VoxelRelief_LiftAt(x, 10.5f);
 
             assert(lift >= last && lift - last <= 1.0f / 16.0f + 0.001f);
-            assert(VoxelRelief_ShiftAt(x, 10.5f) == 0.0f);
+            assert(fabsf(VoxelRelief_ShiftAt(x, 10.5f) - lift) < 0.001f);
             last = lift;
         }
         assert(fabsf(last) < 1.0f / 16.0f + 0.001f);
     }
     sOnly = NULL;
+    /* seams: Lilycove at (0, 0), Route 124 east of it ten rows up (map.json
+     * offset -10), Route 126 south of Route 124 */
+    {
+        VoxelMapInstance lilycove = {0}, r124 = {0}, r126 = {0};
+        float base;
+
+        lilycove.layoutId = atoi(argv[5]);
+        lilycove.width = 80, lilycove.height = 40;
+        r124.layoutId = atoi(argv[6]);
+        r124.originX = 80, r124.originY = -10, r124.width = 80, r124.height = 80;
+        r126.layoutId = atoi(argv[7]);
+        r126.originX = 80, r126.originY = 70, r126.width = 80, r126.height = 80;
+        assert(VoxelRelief_SeamStep(&lilycove, &r124) == 96);
+        assert(VoxelRelief_SeamStep(&r124, &lilycove) == -96);
+        assert(VoxelRelief_SeamStep(&r124, &r126) == 0);
+        assert(VoxelRelief_SeamStep(&lilycove, &r126) == 0);  /* not touching */
+        base = VoxelRelief_Base(&r124);
+        r124.lift = VoxelRelief_SeamStep(&lilycove, &r124);
+        assert(VoxelRelief_Base(&r124) == base + 6.0f);
+    }
     CheckCuts();
     VoxelRelief_Shutdown();
     puts("PASS relief: ledge lip, a drawn terrace, a carved cave's belt and Route 108's leaning sea "
-         "from the ROMFS file, searched in row order; every cut cell through the memo");
+         "from the ROMFS file, searched in row order; Lilycove's seam with Route 124 asks a lift; "
+         "every cut cell through the memo");
     return 0;
 }

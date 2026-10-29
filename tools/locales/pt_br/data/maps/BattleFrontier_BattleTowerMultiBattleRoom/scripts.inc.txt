@@ -1,0 +1,57 @@
+# FRONTEIRA DE BATALHA: a SALA DE BATALHA MÚLTIPLA da TORRE.
+
+[BattleFrontier_BattleTowerMultiBattleRoom_Text_ReadyFor2ndOpponentSet] d2fdafe1ac
+A 2ª dupla de oponentes é a próxima.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleTowerMultiBattleRoom_Text_ReadyFor3rdOpponentSet] 8fcaa9541f
+A 3ª dupla de oponentes é a próxima.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleTowerMultiBattleRoom_Text_ReadyFor4thOpponentSet] 385b5525d1
+A 4ª dupla de oponentes é a próxima.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleTowerMultiBattleRoom_Text_ReadyFor5thOpponentSet] f718abdead
+A 5ª dupla de oponentes é a próxima.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleTowerMultiBattleRoom_Text_ReadyFor6thOpponentSet] 5c9cef2a27
+A 6ª dupla de oponentes é a próxima.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleTowerMultiBattleRoom_Text_ReadyFor7thOpponentSet] d4cd8ab130
+A 7ª dupla de oponentes é a próxima.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleTowerMultiBattleRoom_Text_2ndOpponentSetNext] a719a017ce
+A 2ª dupla de oponentes é a próxima.\n
+Dê o seu melhor!$
+
+[BattleFrontier_BattleTowerMultiBattleRoom_Text_3rdOpponentSetNext] 69d0ee12c8
+A 3ª dupla de oponentes é a próxima.\n
+Dê o seu melhor!$
+
+[BattleFrontier_BattleTowerMultiBattleRoom_Text_4thOpponentSetNext] 5a71087ca7
+A 4ª dupla de oponentes é a próxima.\n
+Dê o seu melhor!$
+
+[BattleFrontier_BattleTowerMultiBattleRoom_Text_5thOpponentSetNext] 126278a66e
+A 5ª dupla de oponentes é a próxima.\n
+Dê o seu melhor!$
+
+[BattleFrontier_BattleTowerMultiBattleRoom_Text_6thOpponentSetNext] 56ee3bec4f
+A 6ª dupla de oponentes é a próxima.\n
+Dê o seu melhor!$
+
+[BattleFrontier_BattleTowerMultiBattleRoom_Text_7thOpponentSetNext] 7d315b2527
+A 7ª dupla de oponentes é a próxima.\n
+Dê o seu melhor!$
+
+[gText_LinkStandby3] b6ca414b17
+Aguardando o link…$
+
+[gText_YourPartnerHasRetired] 4d0caab468
+O seu parceiro desistiu.\p
+O desafio da SALA DE BATALHA\n
+será cancelado.$

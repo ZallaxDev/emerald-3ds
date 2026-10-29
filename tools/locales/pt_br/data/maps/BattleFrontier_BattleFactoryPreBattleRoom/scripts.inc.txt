@@ -1,0 +1,197 @@
+# FRONTEIRA DE BATALHA: a sala de espera da FÁBRICA, com as dicas do oponente.
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_HoldMonsChooseFromSelection] 0b8dab221a
+Primeiro, vamos guardar os seus\n
+POKéMON.\p
+Depois, você escolhe entre os\n
+nossos POKéMON.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_LetUsRestoreMons] 82b2f1f6e0
+Obrigado por competir!\n
+Vamos recuperar os seus POKéMON!$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_ReadyFor2ndOpponent] 9f1f893e27
+A 2ª batalha é a próxima!\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_ReadyFor3rdOpponent] a269cbb56b
+A 3ª batalha é a próxima!\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_ReadyFor4thOpponent] 2f45c6fef8
+A 4ª batalha é a próxima!\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_ReadyFor5thOpponent] 59094d8921
+A 5ª batalha é a próxima!\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_ReadyFor6thOpponent] 9773b29575
+A 6ª batalha é a próxima!\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_ReadyFor7thOpponent] acb41b2a45
+Finalmente, a 7ª batalha é a próxima!\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_SaveAndQuitGame] 879f49737c
+Quer salvar e sair do jogo?$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_RetireFromChallenge] 08ffa05c9d
+Quer desistir do desafio da Troca\n
+de Batalha?$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_InvestigatedUpcomingOpponent] ccc9ca66da
+Fiz uma pequena investigação sobre\n
+o seu próximo oponente.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerSkilledInNormalType] 107052cce8
+Parece que o TREINADOR é bom com\n
+o tipo NORMAL.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerSkilledInFireType] 01424ebbc0
+Parece que o TREINADOR é bom com\n
+o tipo FOGO.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerSkilledInWaterType] f6fe36a1cb
+Parece que o TREINADOR é bom com\n
+o tipo ÁGUA.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerSkilledInElectricType] eac73123f5
+Parece que o TREINADOR é bom com\n
+o tipo ELÉTRICO.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerSkilledInGrassType] 145b8d02b1
+Parece que o TREINADOR é bom com\n
+o tipo PLANTA.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerSkilledInIceType] 27d841dc76
+Parece que o TREINADOR é bom com\n
+o tipo GELO.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerSkilledInFightingType] 09010dd40a
+Parece que o TREINADOR é bom com\n
+o tipo LUTADOR.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerSkilledInPoisonType] dd2a120a71
+Parece que o TREINADOR é bom com\n
+o tipo VENENO.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerSkilledInGroundType] 25dc99d73f
+Parece que o TREINADOR é bom com\n
+o tipo TERRESTRE.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerSkilledInFlyingType] 3a071e8dcc
+Parece que o TREINADOR é bom com\n
+o tipo VOADOR.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerSkilledInPsychicType] b452b127f7
+Parece que o TREINADOR é bom com\n
+o tipo PSÍQUICO.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerSkilledInBugType] 8b14778db2
+Parece que o TREINADOR é bom com\n
+o tipo INSETO.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerSkilledInRockType] 730af5ad5e
+Parece que o TREINADOR é bom com\n
+o tipo PEDRA.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerSkilledInGhostType] 58a917e0ad
+Parece que o TREINADOR é bom com\n
+o tipo FANTASMA.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerSkilledInDragonType] b51b210f21
+Parece que o TREINADOR é bom com\n
+o tipo DRAGÃO.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerSkilledInDarkType] b4caee3578
+Parece que o TREINADOR é bom com\n
+o tipo SOMBRIO.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerSkilledInSteelType] edb34291bb
+Parece que o TREINADOR é bom com\n
+o tipo AÇO.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_TrainerHasNoClearFavorite] 14287f284a
+Parece que o TREINADOR não tem um\n
+tipo favorito.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_StyleSlowAndSteady] 43d14f1366
+O estilo de batalha favorito parece\n
+ser devagar e sempre.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_StyleEndurance] ef91c22947
+O estilo de batalha favorito parece\n
+ser o de resistência.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_StyleHighRisk] d87b4d39d4
+O estilo de batalha favorito parece\n
+ser alto risco, alto retorno.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_StyleDependsOnFlow] 25d311115d
+O estilo de batalha favorito parece\n
+depender do rumo da batalha.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_StyleTotalPreparation] 5e0b1c9353
+O estilo de batalha favorito parece\n
+ser o de preparação total.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_StyleWeakenFoe] a8b4070630
+O estilo de batalha favorito parece\n
+ser enfraquecer o oponente primeiro.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_StyleFlexible] 82f6347f97
+O estilo de batalha favorito parece\n
+ser se adaptar à situação.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_StyleImpossibleToPredict] 438528b012
+O estilo de batalha favorito parece\n
+ser impossível de prever.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_StyleUnrestrained] 0bbda611f8
+O estilo de batalha favorito parece\n
+ser livre e sem amarras.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_LikeToSwapMon] 1d5f206d2c
+Antes da batalha, quer trocar um\n
+POKéMON?$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_YourSwapIsComplete] f24467d4d4
+Obrigado!\n
+A troca de POKéMON foi concluída.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_RightThisWay] 2403e00b57
+Por aqui, por favor!$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_SavingDataPleaseWait] 09cd7629b1
+Estou salvando os seus dados.\n
+Aguarde, por favor.$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_RecordLatestBattle] 3956117d4d
+Quer gravar a sua última batalha\n
+no PASSE DA FRONTEIRA?$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_WaitFewMoments] bfaeee1110
+Com licença! Com licença, por favor!\n
+Pode esperar um instante?$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_UnderstoodSirWillDo] f9eb23f4f2
+…Ahã? O quê?! …Uau!\n
+Entendido, senhor! Agora mesmo!$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_MessageFromHeadComeRightNow] abc9de2344
+Minha nossa…\n
+Desculpe a demora!\p
+Tenho um recado do chefe desta\n
+instalação, o CHEFE DA FÁBRICA.\p
+Ele disse: “Vamos nessa!\n
+Venha pra cá agora!”$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_PreparedToFaceHead] 218be85b3d
+O CHEFE DA FÁBRICA chamou você.\n
+Vai enfrentá-lo?$
+
+[BattleFrontier_BattleFactoryPreBattleRoom_Text_CantTellAnythingAboutHead] 72e39f25fb
+Sinto muito, mas não posso dizer\n
+nada sobre o CHEFE DA FÁBRICA.$

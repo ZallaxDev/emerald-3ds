@@ -1,0 +1,31 @@
+# LIGA POKéMON: a sala do DRAKE.
+
+[EverGrandeCity_DrakesRoom_Text_IntroSpeech] 035fbb22a6
+Sou o último da ELITE DOS QUATRO da\n
+LIGA POKéMON, DRAKE, o mestre DRAGÃO!\p
+No estado natural, os POKéMON são\n
+seres selvagens. São livres.\p
+Às vezes, nos atrapalham.\n
+Às vezes, nos ajudam.\p
+Pra batalhar com POKéMON como\n
+parceiros, sabe o que é preciso?\p
+Sabe do que se precisa?\p
+Se não souber, nunca vai me\n
+superar!$
+
+[EverGrandeCity_DrakesRoom_Text_Defeat] 9cf819cc1b
+Magnífico, é preciso dizer.$
+
+[EverGrandeCity_DrakesRoom_Text_PostBattleSpeech] c73ff80372
+Você merece todo o crédito por chegar\n
+tão longe como TREINADOR de POKéMON.\p
+Parece que sabe o que é preciso.\p
+Sim, o que um TREINADOR precisa é\n
+de um coração virtuoso.\p
+Os POKéMON tocam o bom coração dos\n
+TREINADORES e aprendem o certo e\l
+o errado.\p
+Tocam o bom coração dos TREINADORES\n
+e ficam fortes.\p
+Vá! Siga em frente!\n
+O CAMPEÃO está esperando!$

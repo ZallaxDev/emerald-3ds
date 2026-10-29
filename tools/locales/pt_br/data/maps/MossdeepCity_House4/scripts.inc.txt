@@ -1,0 +1,21 @@
+# CIDADE DE MOSSDEEP: a casa do menino das BASES SECRETAS.
+
+[MossdeepCity_House4_Text_BrotherLikesToFindBases] 8bd84a0aa0
+O meu irmão mais novo diz que gosta\n
+de achar as BASES SECRETAS dos outros.$
+
+[MossdeepCity_House4_Text_BrotherLikesToVisitBasesAndBattle] 652dfbd10e
+O meu irmão mais novo diz que gosta\n
+de visitar BASES SECRETAS e fazer\l
+batalhas POKéMON.$
+
+[MossdeepCity_House4_Text_YouMadeSecretBaseNearX] 1e7bc917d9
+Foi você que fez uma BASE SECRETA\n
+perto de {STR_VAR_1}?$
+
+[MossdeepCity_House4_Text_MakeSecretBase] 3b04a5df49
+Faça uma BASE SECRETA em algum\n
+lugar. Eu vou achar!$
+
+[MossdeepCity_House4_Text_Skitty] 6eb0a20ef1
+SKITTY: Miaaau?$

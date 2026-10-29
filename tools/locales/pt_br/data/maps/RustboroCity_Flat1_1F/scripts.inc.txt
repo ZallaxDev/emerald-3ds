@@ -1,0 +1,8 @@
+# Prédio 1 de RUSTBORO, térreo.
+
+[RustboroCity_Flat1_1F_Text_EveryPokemonHasAbility] ad3b1e6e5c
+Todo POKéMON tem uma habilidade\n
+especial que pode usar.$
+
+[RustboroCity_Flat1_1F_Text_PokemonStrange] 8ebcde1e82
+Os POKéMON são bichos tão estranhos.$

@@ -1,0 +1,46 @@
+# LILYCOVE: o MESTRE DO LIQUIDIFICADOR.
+
+[BerryBlender_Text_BlendWithTheBlendMaster] 70ddc21a2d
+MESTRE DO LIQUIDIFICADOR: Isso mesmo!\nO MESTRE DO LIQUIDIFICADOR sou eu!\pMisture comigo e veja a\nmaestria que eu tenho!$
+
+[BerryBlender_Text_SeeMyMasteryInAction] 2a202cc090
+MESTRE: Hummm! Então você quer\nver a minha maestria em ação?$
+
+[BerryBlender_Text_TooBusyNowIsee] 6d25d93993
+Hummm!\pEntão você tá sem tempo agora!\pMas não tema!\nFico aqui o dia todo!\lResolva o que tem que fazer e volte!$
+
+[BerryBlender_Text_BlendMasterNoBerries] 3290ea042a
+Hummm!\pVocê não tem nem uma FRUTA!\pFico aqui o dia todo!\nVolte logo com umas FRUTAS!$
+
+[BerryBlender_Text_BlendMasterKnowHowToMakePokeblocks] 0ab9e13573
+Claro!\nClaro!\pAliás…\nVocê sabe fazer {POKEBLOCK}S\lcom FRUTAS?$
+
+[BerryBlender_Text_BlendMasterExplainBerryBlending] ac3c23da76
+Hummm!\pAh, mas é muito simples!\pQuando a seta do LIQUIDIFICADOR\npassar pela sua marca, aperte A.\pÉ só isso.\pQuando vir a minha precisão no\nbotão A, você vai entender.$
+
+[BerryBlender_Text_BlendMasterLetsBerryBlender] 297e5571a6
+Ótimo!\pEntão vamos começar!\pTodos com o MESTRE DO\nLIQUIDIFICADOR: bora bater FRUTAS!$
+
+[BerryBlender_Text_BlendMasterNoPokeblockCase] 0b3e6fec83
+Hummm!\pParece que você não tem\no ESTOJO {POKEBLOCK}!\pFico aqui o dia todo!\nArranje o ESTOJO {POKEBLOCK} e volte!$
+
+[BerryBlender_Text_BlendMasterPokeblockCaseFull] bcba33ab57
+Hummm!\pSeu ESTOJO {POKEBLOCK} parece cheio!\pFico aqui o dia todo!\nUse uns {POKEBLOCK}S e volte!$
+
+[BerryBlender_Text_WhoaAwesome] 233a2d7788
+Uau!\nIncrível!$
+
+[BerryBlender_Text_WickedlyFast] 87e329237f
+Rápido demais!$
+
+[BerryBlender_Text_WhatAnExpert] e23a4a3380
+Que fera!$
+
+[BerryBlender_Text_MadeAmazingPokeblocksWithMaster] ceca0a498f
+Quando misturei com o MESTRE,\na gente fez {POKEBLOCK}S incríveis!$
+
+[BerryBlender_Text_QualitiesOfBlendMaster] 7adf0e7388
+Olhos que seguem a seta com\nintensidade de máquina…\pUma mão que aperta o botão A\ncom precisão de relógio…\pÉ isso que faz do MESTRE DO\nLIQUIDIFICADOR um grande mestre.$
+
+[BerryBlender_Text_MasterWorksOnSkillsInMountains] 68e2e84fb5
+Dizem que o MESTRE DO LIQUIDIFICADOR\ntreina lá no fundo das montanhas.\pÀs vezes ele vem pra LILYCOVE\nbater FRUTAS o dia inteiro.$

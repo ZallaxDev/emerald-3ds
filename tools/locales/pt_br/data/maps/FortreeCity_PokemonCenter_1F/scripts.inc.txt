@@ -1,0 +1,26 @@
+# CIDADE DE FORTREE: o CENTRO POKéMON.
+
+[FortreeCity_PokemonCenter_1F_Text_GoToSafariZone] 6fdbba88af
+Escuta, criança, você está\n
+completando uma POKéDEX?\p
+Hmm… Vá à ZONA DE SAFÁRI.\n
+É a minha sugestão.$
+
+[FortreeCity_PokemonCenter_1F_Text_RecordCornerIsNeat] 026e3afe82
+Já usou o CANTO DOS RECORDES?\p
+É bem legal. Mistura e combina os\n
+recordes dos TREINADORES.\p
+Não sei bem como funciona, mas é\n
+legal. É até emocionante!$
+
+[FortreeCity_PokemonCenter_1F_Text_DoYouKnowAboutPokenav] 08d6b77933
+Uau, você tem um POKéNAV!\n
+Igualzinho ao meu!\p
+Conhece o sistema de CHAMADAS\n
+do POKéNAV?\p
+Com ele, dá pra conversar com\n
+TREINADORES registrados à vontade.\p
+Também mostra que TREINADORES\n
+querem revanche com você.\p
+É muito prático! O pessoal da DEVON\n
+sabe mesmo o que faz!$

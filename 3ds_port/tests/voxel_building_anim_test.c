@@ -28,6 +28,12 @@ void VoxelBuilder_Quad(VoxelBuilder *builder, const VoxelVertex *a, const VoxelV
     (void)builder, (void)a, (void)b, (void)c, (void)d;
 }
 
+float VoxelBuilder_StretchZ(const VoxelBuilder *builder, float z)
+{
+    (void)builder;
+    return z;
+}
+
 float VoxelRelief_CellLift(const VoxelMapInstance *inst, int x, int y)
 {
     (void)inst, (void)x, (void)y;

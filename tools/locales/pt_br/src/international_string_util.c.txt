@@ -1,0 +1,8 @@
+# “POKéMON” antes da categoria (patch 0042): POKéMON SEMENTE. O prefixo
+# ocupa a largura que o sufixo “ POKéMON” tinha.
+
+[sText_CategoryPrefix] da39a3ee5e width=45
+POKéMON 
+
+[sText_CategorySuffix] d97c0c4cf0
+

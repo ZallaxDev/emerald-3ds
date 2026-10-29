@@ -1,0 +1,7 @@
+# PASSAGEM DO DESERTO: o fóssil.
+
+[DesertUnderpass_Text_FoundRootFossil] 59337a414d
+{PLAYER} achou o FÓSSIL RAIZ.$
+
+[DesertUnderpass_Text_FoundClawFossil] 6f94187540
+{PLAYER} achou o FÓSSIL GARRA.$

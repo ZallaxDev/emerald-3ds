@@ -73,7 +73,12 @@ The voxel files are not copied: the builder rebuilds the decomp-shaped inputs
 the voxel generators read (tileset art, palettes, metatiles, blockdata, and
 `layouts.json`/`map.json` read back from the ROM's own structures,
 `builder/emerald3ds_builder/vtree.py`) and runs the same generators the build
-runs (`voxel.py`).
+runs (`voxel.py`) - or, for every file the release precompiled, runs its
+program instead: `tools/voxel_precompile.py` runs those generators once per
+supported ROM when the release is made and stores in the recipe (op `V`) the
+port's own bytes of each file and, for every texel and pixel that comes from
+the game's art, the tile, row, column and palette of the player's ROM it is
+read from ([VOXEL_PRECOMPILE.md](VOXEL_PRECOMPILE.md)).
 
 Where the relief generator reads a height wrong, the correction is written as
 numbers in `3ds_port/assets/voxel/relief_fixes.json` rather than as a special

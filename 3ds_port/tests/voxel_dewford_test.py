@@ -114,17 +114,18 @@ def check_sign_fixture(tree):
 
 def check_binary(path, models, layouts, generator):
     data = path.read_bytes()
-    assert data[:4] == b"VXB8"
-    pages, count, page_models, placements, height_bytes, masks, vertices, variants, decks = (
-        struct.unpack_from("<HHHHHHIHH", data, 4))
+    assert data[:4] == b"VXB9"
+    pages, count, page_models, placements, height_bytes, masks, vertices, variants, decks, \
+        conditions, _ = struct.unpack_from("<HHHHHHIHHHH", data, 4)
     assert count == len(models)
-    records_offset = 24 + pages * 8
+    pages_offset = 28                   # VXB9: the header grew by the conditions count
+    records_offset = pages_offset + pages * 8
     page_models_offset = records_offset + count * 16
     placements_offset = page_models_offset + page_models * 8
     heights_offset = placements_offset + placements * 16
     vertex_offset = heights_offset + height_bytes + height_bytes % 2
     vertex_offset += height_bytes * 2 + masks * 32 + height_bytes + height_bytes % 2
-    vertex_offset += variants * 6 + decks * 8
+    vertex_offset += variants * 6 + decks * 8 + conditions * 6
     vertex_offset = (vertex_offset + 3) & ~3
     assert vertex_offset + vertices * 24 <= len(data)
     town_index = next(index + 1 for index, entry in enumerate(layouts)
@@ -141,7 +142,7 @@ def check_binary(path, models, layouts, generator):
         assert ground == 0x124
         assert extra_first + extra_count <= vertices
         model = models[model_index]
-        page_width, page_height, texture_offset = struct.unpack_from("<HHI", data, 24 + page * 8)
+        page_width, page_height, texture_offset = struct.unpack_from("<HHI", data, pages_offset + page * 8)
         assert page_height & 0x8000
         glow_offset = texture_offset + page_width * (page_height & 0x7FFF) * 2
         # the glass as exported: moved with the drawing's compaction
@@ -165,7 +166,7 @@ def check_binary(path, models, layouts, generator):
         assert max(elevations) - min(elevations) > 1.5
     assert found == EXPECTED, found
     for index in range(pages):
-        width, flagged_height, offset = struct.unpack_from("<HHI", data, 24 + index * 8)
+        width, flagged_height, offset = struct.unpack_from("<HHI", data, pages_offset + index * 8)
         height = flagged_height & 0x7FFF
         assert width <= 1024 and height <= 1024
         size = width * height * (3 if flagged_height & 0x8000 else 2)
@@ -238,7 +239,7 @@ def main():
             buildings.ortho_check(model, str(args.preview / (model.name + "_ortho.png")),
                                  exact=model.spec["exact"])
             generator.preview(model, str(args.preview), ["game", "yaw35"])
-    print("PASS Dewford: all five entrances covered; VXB8 geometry/pages/placements validated")
+    print("PASS Dewford: all five entrances covered; VXB9 geometry/pages/placements validated")
 
 
 if __name__ == "__main__":

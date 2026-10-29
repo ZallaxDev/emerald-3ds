@@ -1,0 +1,15 @@
+# CIDADE DE VERDANTURF, casa: a LIGA POKéMON.
+
+[VerdanturfTown_House_Text_TrainersGatherAtPokemonLeague] 776eddf8d5
+Bem longe, no fundo da CIDADE DE\n
+EVER GRANDE, fica a LIGA POKéMON.\p
+Os TREINADORES que se juntam lá são\n
+todos assustadoramente habilidosos.$
+
+[VerdanturfTown_House_Text_DefeatEliteFourInARow] 290630142b
+Na LIGA POKéMON, acho que as regras\n
+dizem que você tem que enfrentar a\l
+ELITE DOS QUATRO em sequência.\p
+Se perder pra qualquer um deles, tem\n
+que recomeçar o desafio do\l
+primeiro.$

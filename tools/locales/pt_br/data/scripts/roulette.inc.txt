@@ -1,0 +1,40 @@
+# SALÃO DE JOGOS: a ROLETA.
+
+[Roulette_Text_PlayMinimumWagerIsX] 0dfd233602
+A aposta mínima desta mesa\né {STR_VAR_1}. Quer jogar?$
+
+[Roulette_Text_NotEnoughCoins] 9a2bafdaf7
+Você não tem FICHAS suficientes.$
+
+[Roulette_Text_SpecialRateTable] 5d157af31a
+Mesa com prêmio especial agora!$
+
+[Roulette_Text_ControlsInstruction] 7dbb55c70b
+Aposte com o direcional +\ne aperte o botão A.$
+
+[Roulette_Text_ItsAHit] 874acb4622
+Acertou!$
+
+[Roulette_Text_Jackpot] 12d22395d3
+Bolada!$
+
+[Roulette_Text_NothingDoing] 2eb2ad4820
+Não foi dessa vez!$
+
+[Roulette_Text_YouveWonXCoins] 97f182a000
+Você ganhou {STR_VAR_1} FICHAS!$
+
+[Roulette_Text_NoCoinsLeft] 7af4a111d1
+Acabaram as FICHAS…$
+
+[Roulette_Text_KeepPlaying] d0ec97c079
+Continuar jogando?$
+
+[Roulette_Text_BoardWillBeCleared] fe0d5718b5
+A mesa da ROLETA vai ser limpa.$
+
+[Roulette_Text_YouDontHaveACoinCase] 60e139279e
+Você não tem uma SACOLA DE MOEDAS.$
+
+[Roulette_Text_CoinCaseIsFull] fb7d8aa23c
+Sua SACOLA DE MOEDAS tá cheia!\nTroque as FICHAS por prêmios.$

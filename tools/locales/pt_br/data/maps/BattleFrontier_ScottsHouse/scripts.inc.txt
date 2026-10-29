@@ -1,0 +1,137 @@
+# FRONTEIRA DE BATALHA: a casa do SCOTT.
+
+[BattleFrontier_ScottsHouse_Text_WelcomeToBattleFrontier] 5a6d609b23
+SCOTT: Ora, olá, boas-vindas!\n
+Hehe… Desculpe o aperto.\p
+Enfim, {PLAYER}{KUN}, deixe-me dar as\n
+boas-vindas oficiais à FRONTEIRA.\p
+É o meu sonho realizado.\n
+Levou anos e anos, mas finalmente\l
+dei forma ao meu sonho.$
+
+[BattleFrontier_ScottsHouse_Text_HowMuchEffortItTookToMakeReal] af972dfa95
+Pensando bem, foi uma jornada\n
+longuíssima…\p
+Saí de casa sozinho em busca de\n
+TREINADORES fortes.\p
+Ninguém imagina quanto esforço e\n
+tempo foram precisos pra isto existir.$
+
+[BattleFrontier_ScottsHouse_Text_HaveThisAsMementoOfOurPathsCrossing] b2495e6e4d
+Mas isso é passado.\n
+Não adianta ficar remoendo!\p
+Só quero que você aproveite as\n
+batalhas aqui à vontade.\p
+{PLAYER}{KUN}, fique com isto de\n
+lembrança de todas as vezes que\l
+nos cruzamos pelo caminho.$
+
+[BattleFrontier_ScottsHouse_Text_ObtainedXBattlePoints] cc286bc14d
+{PLAYER} recebeu\n
+{STR_VAR_1} Ponto(s) de Batalha.$
+
+[BattleFrontier_ScottsHouse_Text_ExplainBattlePoints] ab24887186
+SCOTT: Dá pra ver os seus Pontos de\n
+Batalha no PASSE DA FRONTEIRA.\p
+Quanto mais sucesso você tiver aqui\n
+na FRONTEIRA, mais Pontos de\l
+Batalha vai juntar.\p
+Use os Pontos como quiser, trocando\n
+por itens, por exemplo.$
+
+[BattleFrontier_ScottsHouse_Text_ExpectingGreatThings] 0a0b32c7bf
+Espero grandes coisas de você!$
+
+[BattleFrontier_ScottsHouse_Text_WhyIGoSeekingTrainers] 055656e20f
+SCOTT: Cada TREINADOR é único.\n
+Cada um tem a sua própria vida.\p
+Mas, numa batalha, não importa\n
+quem eles são.\p
+São todos iguais!\p
+Amo a pureza da batalha, onde\n
+todo mundo é igual.\p
+Por isso vou a todo lugar procurar\n
+TREINADORES que levam a batalha a\l
+sério e convido eles pra cá.$
+
+[BattleFrontier_ScottsHouse_Text_HaveYouMetFrontierBrain] 172f95dba7
+SCOTT: Já conheceu algum\n
+CÉREBRO DA FRONTEIRA?\p
+Melhor ainda, já ganhou algum\n
+símbolo deles?\p
+Escolhi a dedo os CÉREBROS DA\n
+FRONTEIRA como os mais fortes.\p
+Mas tenho certeza de que a sua\n
+força vai espantar até eles!$
+
+[BattleFrontier_ScottsHouse_Text_MayFindWildMonsInFrontier] 039235575d
+SCOTT: Você não treina só pra\n
+batalhar, né?\p
+Acho que lembro de você montando\n
+uma POKéDEX também.\p
+Pois adivinha?\p
+Dá pra encontrar POKéMON selvagens\n
+em algum lugar da FRONTEIRA…\l
+Fufufu!$
+
+[BattleFrontier_ScottsHouse_Text_YouveCollectedAllSilverSymbols] 5f41a57aa5
+SCOTT: Está curtindo a FRONTEIRA\n
+DE BATALHA?\p
+…Espera aí…\n
+Oh!\p
+O seu PASSE DA FRONTEIRA!\n
+Você juntou todos os símbolos\l
+de prata!\p
+Isso é mais que impressionante!\n
+Você é forte, como eu suspeitava!\p
+Normalmente eu não faria isso, mas\n
+é uma ocasião especial!\p
+Quero que fique com isto.\n
+Tenho certeza de que vai usar bem.$
+
+[BattleFrontier_ScottsHouse_Text_YouveCollectedAllGoldSymbols] ebbc46d507
+SCOTT: Espero que esteja curtindo\n
+tudo na FRONTEIRA DE BATALHA.\p
+…Espera aí…\n
+Não acredito no que vejo!\p
+O seu PASSE DA FRONTEIRA!\n
+Você juntou todos os símbolos\l
+de ouro!\p
+Isso é mais que estupendo!\n
+Você é incrível, como eu suspeitava!\p
+… … … … … …\p
+{PLAYER}, você tem que aceitar isto!\p
+Acho que vai saber dar valor ao\n
+meu presente!$
+
+[BattleFrontier_ScottsHouse_Text_SoGladIBroughtYouHere] ae8e6d2b60
+Tenho mesmo o dom de reconhecer um\n
+bom TREINADOR quando vejo um.\p
+Que bom que tive a visão de te\n
+trazer pra cá!$
+
+[BattleFrontier_ScottsHouse_Text_BerryPocketStuffed] 42cfc1bc7f
+O seu BOLSO DE FRUTAS parece\n
+estar lotado.$
+
+[BattleFrontier_ScottsHouse_Text_Beat50TrainersInARow] 74620a85d8
+SCOTT: Oh, fiquei sabendo de você!\n
+Você dominou a TORRE DE BATALHA!\l
+Venceu 50 TREINADORES seguidos?\p
+Fantástico!\n
+Quero que fique com isto!$
+
+[BattleFrontier_ScottsHouse_Text_Beat100TrainersInARow] af157bd144
+SCOTT: Nossa! Fiquei sabendo de você!\n
+Você arrasou na TORRE DE BATALHA!\l
+Venceu 100 TREINADORES seguidos?\p
+Isso é espetacular demais!\n
+Você tem que ficar com isto!$
+
+[BattleFrontier_ScottsHouse_Text_ExpectingToHearEvenGreaterThings] e9346b93cc
+Agora espero ouvir coisas ainda\n
+maiores sobre você!$
+
+[BattleFrontier_ScottsHouse_Text_ComeBackForThisLater] 34eb2dfc1f
+Opa, bom, se estiver carregando\n
+coisa demais, volte depois pra pegar.$

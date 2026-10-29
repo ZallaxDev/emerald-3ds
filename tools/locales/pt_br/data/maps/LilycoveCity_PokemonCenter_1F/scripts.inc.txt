@@ -1,0 +1,16 @@
+# CIDADE DE LILYCOVE: o CENTRO POKéMON.
+
+[LilycoveCity_PokemonCenter_1F_Text_HowManyKindsOfPokemon] 54872a6818
+Quantos tipos de POKéMON será que\n
+existem no mundo?\p
+Seria ótimo cruzar os mares e trocar\n
+POKéMON com gente de longe.$
+
+[LilycoveCity_PokemonCenter_1F_Text_HeardAboutRottenScoundrels] 7b29f63cd6
+Ando ouvindo falar de uns canalhas\n
+que roubam POKéMON e METEORITOS.$
+
+[LilycoveCity_PokemonCenter_1F_Text_HaventSeenRottenScoundrels] d3bcd7c438
+Aqueles canalhas que roubam POKéMON\n
+e METEORITOS…\p
+Não tenho visto eles por aí.$

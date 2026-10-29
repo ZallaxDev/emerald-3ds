@@ -1,0 +1,129 @@
+# CIDADE DE LAVARIDGE: a rua, as FONTES TERMAIS, o OVO e as placas.
+
+[LavaridgeTown_Text_MayNiceBadgesTakeThis] de393536c4
+MAY: {PLAYER}{KUN}! Quanto tempo!\p
+Opa? Enquanto eu estava nas fontes\n
+termais, você ganhou a INSÍGNIA de\l
+LAVARIDGE.\p
+Você deve ter juntado bons\n
+POKéMON…\l
+Não, acho que você treinou eles.\p
+Acho que posso te dar isto.$
+
+[LavaridgeTown_Text_MayExplainGoGogglesChallengeDad] df8426b131
+MAY: Com esses DESERTÓCULOS, você\n
+vai atravessar fácil o deserto\l
+perto da ROTA 111.\p
+Mas, nossa, {PLAYER}{KUN}…\n
+Desafiando GINÁSIOS…\p
+Aposto que está se esforçando\n
+pra não perder pra mim!\p
+{PLAYER}{KUN}, acho que vou desafiar o\n
+seu pai no GINÁSIO de PETALBURG.\p
+Até mais!$
+
+[LavaridgeTown_Text_BrendanNiceBadgesTakeThis] c3fe47a021
+BRENDAN: {PLAYER}, ei, quanto tempo.\n
+Como vão as coisas?\p
+Hmm…\n
+Bela coleção de INSÍGNIAS.\p
+Tá bom, então.\n
+Pode ficar com isto.$
+
+[LavaridgeTown_Text_BrendanExplainGoGogglesChallengeDad] 43fbff5fa0
+BRENDAN: Leve isso se for entrar\n
+naquele deserto perto da ROTA 111.\p
+Deve ter POKéMON que só vivem\n
+no deserto.\l
+Dá uma procurada neles.\p
+Quanto a mim…\n
+Estou pensando em desafiar o NORMAN,\l
+o LÍDER do GINÁSIO de PETALBURG.\p
+Diferente de você, {PLAYER}, o seu pai\n
+parece forte de verdade.\p
+Até mais!$
+
+[LavaridgeTown_Text_HaveEggWillYouTakeIt] dd944f0ccd
+Tenho aqui um OVO.\p
+Eu queria chocar ele cobrindo com\n
+areia quente perto das fontes termais.\l
+Mas parece que não basta…\p
+Dizem que o melhor é levar o OVO junto\n
+com POKéMON, pra lá e pra cá.\p
+Você é TREINADOR, não é?\n
+E os seus POKéMON transbordam energia.\p
+Então, o que me diz?\n
+Leva este OVO pra chocar?$
+
+[LavaridgeTown_Text_HopeYoullWalkPlentyWithEgg] 3611faa871
+Ótimo! Espero que você ande bastante\n
+com este OVO!$
+
+[LavaridgeTown_Text_ReceivedTheEgg] 928f041303
+{PLAYER} recebeu o OVO.$
+
+[LavaridgeTown_Text_NoRoomForThisEgg] 1662305f7d
+Opa? Você tem POKéMON demais.\n
+Não há espaço pra este OVO…$
+
+[LavaridgeTown_Text_AsYouWishThen] 95e07a3055
+Como quiser, então…\p
+Se mudar de ideia sobre chocar\n
+este OVO, estarei aqui.$
+
+[LavaridgeTown_Text_EverySoOftenEggFoundAtDayCare] 32cb49bc34
+De vez em quando, aparece um OVO no\n
+CENTRO DE CUIDADOS POKéMON.\p
+Pelo menos é o que dizem por aí.$
+
+[LavaridgeTown_Text_HotSpringsNeverRunDry] a4770d1bce
+A gente tira quanta água quente\n
+quiser, e as fontes nunca secam.\p
+Não é mágico?\p
+Essas fontes aparecem perto de\n
+vulcões ativos. A água debaixo da\l
+terra é aquecida pelo magma e\l
+sobe como fonte termal.$
+
+[LavaridgeTown_Text_PokemonNippedBackside] 93afdb10d8
+Ficar enterrado nesta areia quente é…\n
+Ah…\p
+Tão quentinho, uma delícia…\p
+Hã? Aaai! Ui!\p
+Um POKéMON mordeu o meu traseiro!$
+
+[LavaridgeTown_Text_OhYouLikeHotSprings] 298c0a60f9
+Ah, você gosta de fontes termais?\p
+Que surpresa, pra alguém tão jovem.$
+
+[LavaridgeTown_Text_BatheInHotSpringsEveryDay] f7d53eaffc
+Tomo banho nas fontes termais todo\n
+dia.\p
+Quero ser uma LÍDER de GINÁSIO linda\n
+e forte como a FLANNERY.$
+
+[LavaridgeTown_Text_IfPokemonInHotSprings] 487d317a3f
+Se botassem POKéMON nas fontes\n
+termais, ia ser muito esquisito.\p
+Podia virar banho elétrico, banho\n
+de espuma ou até banho de lava…$
+
+[LavaridgeTown_Text_HotSpringsClaims] d8381a3670
+Dizem que estas fontes termais\n
+acalmam os nervos, aliviam dores\l
+musculares, resolvem problemas\l
+amorosos e atraem dinheiro…$
+
+[LavaridgeTown_Text_TownSign] c843e1e9d3
+CIDADE DE LAVARIDGE\p
+“FONTES TERMAIS do CENTRO POKéMON\n
+Ótimas pra relaxar!”$
+
+[LavaridgeTown_Text_GymSign] 4174e6fe45
+GINÁSIO POKéMON DE LAVARIDGE\n
+LÍDER: FLANNERY\l
+“Uma paixão que queima!”$
+
+[LavaridgeTown_Text_HerbShopSign] c2fb611370
+LOJA DE ERVAS POKéMON\n
+“Quanto mais amargo, melhor!”$

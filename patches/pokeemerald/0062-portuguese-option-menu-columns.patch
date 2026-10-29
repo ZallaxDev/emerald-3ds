@@ -1,0 +1,112 @@
+Pokémon Emerald 3Ds Dual Screen changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: the OPTION menu's choices column wider for Portuguese
+Applies after 0061-option-menu-frame-and-highlight.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/option_menu.c b/src/option_menu.c
+--- a/src/option_menu.c
++++ b/src/option_menu.c
+@@ -42,6 +42,17 @@
+     WIN_OPTIONS
+ };
+ 
++// The choices' column: from x=104 to x=198 of the options window. Portuguese
++// words are wider (LENTA MÉDIA RÁPIDA, 96 px), so there the column starts
++// right after the longest label and ends near the window's edge (208).
++#if CTR_LANG_PT_BR
++#define CHOICES_LEFT  96
++#define CHOICES_RIGHT 204
++#else
++#define CHOICES_LEFT  104
++#define CHOICES_RIGHT 198
++#endif
++
+ #define YPOS_TEXTSPEED    (MENUITEM_TEXTSPEED * 16)
+ #define YPOS_BATTLESCENE  (MENUITEM_BATTLESCENE * 16)
+ #define YPOS_BATTLESTYLE  (MENUITEM_BATTLESTYLE * 16)
+@@ -431,17 +442,17 @@
+     styles[2] = 0;
+     styles[selection] = 1;
+ 
+-    DrawOptionMenuChoice(gText_TextSpeedSlow, 104, YPOS_TEXTSPEED, styles[0]);
++    DrawOptionMenuChoice(gText_TextSpeedSlow, CHOICES_LEFT, YPOS_TEXTSPEED, styles[0]);
+ 
+     widthSlow = GetStringWidth(FONT_NORMAL, gText_TextSpeedSlow, 0);
+     widthMid = GetStringWidth(FONT_NORMAL, gText_TextSpeedMid, 0);
+     widthFast = GetStringWidth(FONT_NORMAL, gText_TextSpeedFast, 0);
+ 
+-    widthMid -= 94;
+-    xMid = (widthSlow - widthMid - widthFast) / 2 + 104;
++    widthMid -= CHOICES_RIGHT - CHOICES_LEFT;
++    xMid = (widthSlow - widthMid - widthFast) / 2 + CHOICES_LEFT;
+     DrawOptionMenuChoice(gText_TextSpeedMid, xMid, YPOS_TEXTSPEED, styles[1]);
+ 
+-    DrawOptionMenuChoice(gText_TextSpeedFast, GetStringRightAlignXOffset(FONT_NORMAL, gText_TextSpeedFast, 198), YPOS_TEXTSPEED, styles[2]);
++    DrawOptionMenuChoice(gText_TextSpeedFast, GetStringRightAlignXOffset(FONT_NORMAL, gText_TextSpeedFast, CHOICES_RIGHT), YPOS_TEXTSPEED, styles[2]);
+ }
+ 
+ static u8 BattleScene_ProcessInput(u8 selection)
+@@ -463,8 +474,8 @@
+     styles[1] = 0;
+     styles[selection] = 1;
+ 
+-    DrawOptionMenuChoice(gText_BattleSceneOn, 104, YPOS_BATTLESCENE, styles[0]);
+-    DrawOptionMenuChoice(gText_BattleSceneOff, GetStringRightAlignXOffset(FONT_NORMAL, gText_BattleSceneOff, 198), YPOS_BATTLESCENE, styles[1]);
++    DrawOptionMenuChoice(gText_BattleSceneOn, CHOICES_LEFT, YPOS_BATTLESCENE, styles[0]);
++    DrawOptionMenuChoice(gText_BattleSceneOff, GetStringRightAlignXOffset(FONT_NORMAL, gText_BattleSceneOff, CHOICES_RIGHT), YPOS_BATTLESCENE, styles[1]);
+ }
+ 
+ static u8 BattleStyle_ProcessInput(u8 selection)
+@@ -486,8 +497,8 @@
+     styles[1] = 0;
+     styles[selection] = 1;
+ 
+-    DrawOptionMenuChoice(gText_BattleStyleShift, 104, YPOS_BATTLESTYLE, styles[0]);
+-    DrawOptionMenuChoice(gText_BattleStyleSet, GetStringRightAlignXOffset(FONT_NORMAL, gText_BattleStyleSet, 198), YPOS_BATTLESTYLE, styles[1]);
++    DrawOptionMenuChoice(gText_BattleStyleShift, CHOICES_LEFT, YPOS_BATTLESTYLE, styles[0]);
++    DrawOptionMenuChoice(gText_BattleStyleSet, GetStringRightAlignXOffset(FONT_NORMAL, gText_BattleStyleSet, CHOICES_RIGHT), YPOS_BATTLESTYLE, styles[1]);
+ }
+ 
+ static u8 Sound_ProcessInput(u8 selection)
+@@ -510,8 +521,8 @@
+     styles[1] = 0;
+     styles[selection] = 1;
+ 
+-    DrawOptionMenuChoice(gText_SoundMono, 104, YPOS_SOUND, styles[0]);
+-    DrawOptionMenuChoice(gText_SoundStereo, GetStringRightAlignXOffset(FONT_NORMAL, gText_SoundStereo, 198), YPOS_SOUND, styles[1]);
++    DrawOptionMenuChoice(gText_SoundMono, CHOICES_LEFT, YPOS_SOUND, styles[0]);
++    DrawOptionMenuChoice(gText_SoundStereo, GetStringRightAlignXOffset(FONT_NORMAL, gText_SoundStereo, CHOICES_RIGHT), YPOS_SOUND, styles[1]);
+ }
+ 
+ static u8 FrameType_ProcessInput(u8 selection)
+@@ -568,8 +579,8 @@
+ 
+     text[i] = EOS;
+ 
+-    DrawOptionMenuChoice(gText_FrameType, 104, YPOS_FRAMETYPE, 0);
+-    DrawOptionMenuChoice(text, 128, YPOS_FRAMETYPE, 1);
++    DrawOptionMenuChoice(gText_FrameType, CHOICES_LEFT, YPOS_FRAMETYPE, 0);
++    DrawOptionMenuChoice(text, CHOICES_LEFT + 24, YPOS_FRAMETYPE, 1);
+ }
+ 
+ static u8 ButtonMode_ProcessInput(u8 selection)
+@@ -605,17 +616,17 @@
+     styles[2] = 0;
+     styles[selection] = 1;
+ 
+-    DrawOptionMenuChoice(gText_ButtonTypeNormal, 104, YPOS_BUTTONMODE, styles[0]);
++    DrawOptionMenuChoice(gText_ButtonTypeNormal, CHOICES_LEFT, YPOS_BUTTONMODE, styles[0]);
+ 
+     widthNormal = GetStringWidth(FONT_NORMAL, gText_ButtonTypeNormal, 0);
+     widthLR = GetStringWidth(FONT_NORMAL, gText_ButtonTypeLR, 0);
+     widthLA = GetStringWidth(FONT_NORMAL, gText_ButtonTypeLEqualsA, 0);
+ 
+-    widthLR -= 94;
+-    xLR = (widthNormal - widthLR - widthLA) / 2 + 104;
++    widthLR -= CHOICES_RIGHT - CHOICES_LEFT;
++    xLR = (widthNormal - widthLR - widthLA) / 2 + CHOICES_LEFT;
+     DrawOptionMenuChoice(gText_ButtonTypeLR, xLR, YPOS_BUTTONMODE, styles[1]);
+ 
+-    DrawOptionMenuChoice(gText_ButtonTypeLEqualsA, GetStringRightAlignXOffset(FONT_NORMAL, gText_ButtonTypeLEqualsA, 198), YPOS_BUTTONMODE, styles[2]);
++    DrawOptionMenuChoice(gText_ButtonTypeLEqualsA, GetStringRightAlignXOffset(FONT_NORMAL, gText_ButtonTypeLEqualsA, CHOICES_RIGHT), YPOS_BUTTONMODE, styles[2]);
+ }
+ 
+ static void DrawHeaderText(void)

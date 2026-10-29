@@ -1,0 +1,21 @@
+# ROTA 111: o CANTINHO DA VOVÓ.
+
+[Route111_OldLadysRestStop_Text_RestUpHere] f9e73ad46a
+Ai, ai, ai.\n
+Os seus POKéMON não estão exaustos?\p
+Se quiser, descanse aqui.\n
+É uma ótima ideia! Faça isso.$
+
+[Route111_OldLadysRestStop_Text_TakeYourTimeRestUp] 7f54c48ee5
+Isso mesmo.\n
+Descanse com calma!$
+
+[Route111_OldLadysRestStop_Text_StillTiredTakeAnotherRest] 352b8efbab
+Ai, ai, ai.\n
+Os seus POKéMON ainda estão cansados?\p
+Descanse mais um pouco aqui.\n
+É uma ótima ideia. Faça isso.$
+
+[Route111_OldLadysRestStop_Text_DontNeedToBeShy] c010dd9052
+Ah, é?\n
+Não precisa ficar com vergonha.$

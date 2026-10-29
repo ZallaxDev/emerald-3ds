@@ -1,0 +1,609 @@
+# FRONTEIRA DE BATALHA: os andares da PIRÂMIDE, com as dicas dos TREINADORES (saída, itens e TREINADORES que restam).
+
+[BattleFacility_TrainerBattle_PlaceholderText] 4f32b8f226
+Esta é uma mensagem de exemplo.$
+
+[gText_BattlePyramidConfirmRest] 4eb823e9a8
+A sua missão na PIRÂMIDE DE BATALHA\n
+será salva pra você parar por agora.\l
+Tudo bem?$
+
+[gText_BattlePyramidConfirmRetire] 40856d16fe
+Tem certeza de que quer abandonar\n
+a missão na PIRÂMIDE?$
+
+[BattlePyramid_Text_ExitHintUp1] c7a44e91be
+A saída deste andar fica\n
+naquela direção: {UP_ARROW}$
+
+[BattlePyramid_Text_ExitHintLeft1] 8bcd7625c2
+A saída deste andar fica\n
+naquela direção: {LEFT_ARROW}$
+
+[BattlePyramid_Text_ExitHintRight1] 968611cdb3
+A saída deste andar fica\n
+naquela direção: {RIGHT_ARROW}$
+
+[BattlePyramid_Text_ExitHintDown1] 838cd75ba8
+A saída deste andar fica\n
+naquela direção: {DOWN_ARROW}$
+
+[BattlePyramid_Text_ExitHintUp2] 7771c8732d
+A saída deste andar fica\n
+na direção {UP_ARROW}.$
+
+[BattlePyramid_Text_ExitHintLeft2] 70a945ac9b
+A saída deste andar fica\n
+na direção {LEFT_ARROW}.$
+
+[BattlePyramid_Text_ExitHintRight2] f90ee5d2cd
+A saída deste andar fica\n
+na direção {RIGHT_ARROW}.$
+
+[BattlePyramid_Text_ExitHintDown2] 83f7c81859
+A saída deste andar fica\n
+na direção {DOWN_ARROW}.$
+
+[BattlePyramid_Text_ExitHintUp3] 6bf71f3540
+A saída é\n
+pra lá {UP_ARROW}.$
+
+[BattlePyramid_Text_ExitHintLeft3] 694ed460d7
+A saída é\n
+pra lá {LEFT_ARROW}.$
+
+[BattlePyramid_Text_ExitHintRight3] 01e9a51eed
+A saída é\n
+pra lá {RIGHT_ARROW}.$
+
+[BattlePyramid_Text_ExitHintDown3] 57ea98ee71
+A saída é\n
+pra lá {DOWN_ARROW}.$
+
+[BattlePyramid_Text_ExitHintUp4] 66b4216f22
+Neste andar, a saída fica em algum\n
+lugar na direção {UP_ARROW}.$
+
+[BattlePyramid_Text_ExitHintLeft4] 8c58ef19a6
+Neste andar, a saída fica em algum\n
+lugar na direção {LEFT_ARROW}.$
+
+[BattlePyramid_Text_ExitHintRight4] e901d23182
+Neste andar, a saída fica em algum\n
+lugar na direção {RIGHT_ARROW}.$
+
+[BattlePyramid_Text_ExitHintDown4] ec7a1ad7b1
+Neste andar, a saída fica em algum\n
+lugar na direção {DOWN_ARROW}.$
+
+[BattlePyramid_Text_ExitHintUp5] ba7f5b0524
+A saída?\n
+É pra lá {UP_ARROW}.$
+
+[BattlePyramid_Text_ExitHintLeft5] e3f1f78b93
+A saída?\n
+É pra lá {LEFT_ARROW}.$
+
+[BattlePyramid_Text_ExitHintRight5] 60d1615b8b
+A saída?\n
+É pra lá {RIGHT_ARROW}.$
+
+[BattlePyramid_Text_ExitHintDown5] 2b501f17d5
+A saída?\n
+É pra lá {DOWN_ARROW}.$
+
+[BattlePyramid_Text_ExitHintUp6] 61b121297d
+Por acaso, a saída fica\n
+na direção {UP_ARROW}.$
+
+[BattlePyramid_Text_ExitHintLeft6] 5359203cfb
+Por acaso, a saída fica\n
+na direção {LEFT_ARROW}.$
+
+[BattlePyramid_Text_ExitHintRight6] 5f87d5cf49
+Por acaso, a saída fica\n
+na direção {RIGHT_ARROW}.$
+
+[BattlePyramid_Text_ExitHintDown6] 2c0b56b218
+Por acaso, a saída fica\n
+na direção {DOWN_ARROW}.$
+
+[BattlePyramid_Text_EightItemsRemaining1] b3a58c9cbd
+Procurando itens?\p
+Ainda faltam oito itens pra\n
+achar.$
+
+[BattlePyramid_Text_SevenItemsRemaining1] e8a619f6df
+Procurando itens?\p
+Ainda faltam sete itens pra\n
+achar.$
+
+[BattlePyramid_Text_SixItemsRemaining1] 208fc25e34
+Procurando itens?\p
+Ainda faltam seis itens pra\n
+achar.$
+
+[BattlePyramid_Text_FiveItemsRemaining1] 6d6a4d68f7
+Procurando itens?\p
+Ainda faltam cinco itens pra\n
+achar.$
+
+[BattlePyramid_Text_FourItemsRemaining1] d658c876e5
+Procurando itens?\p
+Ainda faltam quatro itens pra\n
+achar.$
+
+[BattlePyramid_Text_ThreeItemsRemaining1] c720fdbbe2
+Procurando itens?\p
+Ainda faltam três itens pra\n
+achar.$
+
+[BattlePyramid_Text_TwoItemsRemaining1] ef7e9e1ba9
+Procurando itens?\p
+Ainda faltam dois itens pra\n
+achar.$
+
+[BattlePyramid_Text_OneItemRemaining1] 4adfd7d8e0
+Procurando itens?\p
+Falta achar só um item.$
+
+[BattlePyramid_Text_ZeroItemsRemaining1] fb900e3c31
+Procurando itens?\p
+Não sobrou nada pra achar!$
+
+[BattlePyramid_Text_EightItemsRemaining2] 7d33997178
+Como você ganhou, vou contar\n
+um segredinho!\p
+Tem oito itens jogados\n
+por aqui.$
+
+[BattlePyramid_Text_SevenItemsRemaining2] 8c94a4fb73
+Como você ganhou, vou contar\n
+um segredinho!\p
+Ainda tem sete itens jogados\n
+por aqui.$
+
+[BattlePyramid_Text_SixItemsRemaining2] f3a7de5b8b
+Como você ganhou, vou contar\n
+um segredinho!\p
+Ainda tem seis itens jogados\n
+por aqui.$
+
+[BattlePyramid_Text_FiveItemsRemaining2] d30729f0b3
+Como você ganhou, vou contar\n
+um segredinho!\p
+Ainda tem cinco itens jogados\n
+por aqui.$
+
+[BattlePyramid_Text_FourItemsRemaining2] 87b9401fb3
+Como você ganhou, vou contar\n
+um segredinho!\p
+Ainda tem quatro itens jogados\n
+por aqui.$
+
+[BattlePyramid_Text_ThreeItemsRemaining2] a0b853c784
+Como você ganhou, vou contar\n
+um segredinho!\p
+Ainda tem três itens jogados\n
+por aqui.$
+
+[BattlePyramid_Text_TwoItemsRemaining2] 5928e4caf1
+Como você ganhou, vou contar\n
+um segredinho!\p
+Ainda tem dois itens jogados\n
+por aqui.$
+
+[BattlePyramid_Text_OneItemRemaining2] f39bf4a6df
+Como você ganhou, vou contar\n
+um segredinho!\p
+Só tem um item jogado\n
+por aqui.$
+
+[BattlePyramid_Text_ZeroItemsRemaining2] 7da103335c
+Como você ganhou, vou contar\n
+um segredinho!\p
+Não sobrou nenhum item\n
+por aqui.$
+
+[BattlePyramid_Text_EightItemsRemaining3] 97019569d4
+Como vão os seus itens?\p
+Acho que ainda faltam oito itens\n
+pra achar neste andar.$
+
+[BattlePyramid_Text_SevenItemsRemaining3] 721919b454
+Como vão os seus itens?\p
+Acho que ainda faltam sete itens\n
+pra achar neste andar.$
+
+[BattlePyramid_Text_SixItemsRemaining3] d9239367af
+Como vão os seus itens?\p
+Acho que ainda faltam seis itens\n
+pra achar neste andar.$
+
+[BattlePyramid_Text_FiveItemsRemaining3] 61c64ff54e
+Como vão os seus itens?\p
+Acho que ainda faltam cinco itens\n
+pra achar neste andar.$
+
+[BattlePyramid_Text_FourItemsRemaining3] 016563ce54
+Como vão os seus itens?\p
+Acho que ainda faltam quatro itens\n
+pra achar neste andar.$
+
+[BattlePyramid_Text_ThreeItemsRemaining3] e741d1c3bc
+Como vão os seus itens?\p
+Acho que ainda faltam três itens\n
+pra achar neste andar.$
+
+[BattlePyramid_Text_TwoItemsRemaining3] cc8b11f702
+Como vão os seus itens?\p
+Acho que ainda faltam dois itens\n
+pra achar neste andar.$
+
+[BattlePyramid_Text_OneItemRemaining3] 218c3ba6f6
+Como vão os seus itens?\p
+Acho que só falta um item pra\n
+achar neste andar.$
+
+[BattlePyramid_Text_ZeroItemsRemaining3] 5cc9408e29
+Como vão os seus itens?\p
+Acho que não tem mais itens pra\n
+achar neste andar. Se cuida!$
+
+[BattlePyramid_Text_EightItemsRemaining4] 22eadd5a3b
+Você é forte, então merece\n
+uma dica!\p
+Parece que tem mais oito itens\n
+no chão.$
+
+[BattlePyramid_Text_SevenItemsRemaining4] ee60239024
+Você é forte, então merece\n
+uma dica!\p
+Parece que tem mais sete itens\n
+no chão.$
+
+[BattlePyramid_Text_SixItemsRemaining4] 7341cac1f5
+Você é forte, então merece\n
+uma dica!\p
+Parece que tem mais seis itens\n
+no chão.$
+
+[BattlePyramid_Text_FiveItemsRemaining4] d51a97137b
+Você é forte, então merece\n
+uma dica!\p
+Parece que tem mais cinco itens\n
+no chão.$
+
+[BattlePyramid_Text_FourItemsRemaining4] bb1001fd90
+Você é forte, então merece\n
+uma dica!\p
+Parece que tem mais quatro itens\n
+no chão.$
+
+[BattlePyramid_Text_ThreeItemsRemaining4] 74e2051a6e
+Você é forte, então merece\n
+uma dica!\p
+Parece que tem mais três itens\n
+no chão.$
+
+[BattlePyramid_Text_TwoItemsRemaining4] ef7b49ed48
+Você é forte, então merece\n
+uma dica!\p
+Parece que tem mais dois itens\n
+no chão.$
+
+[BattlePyramid_Text_OneItemRemaining4] 40f94d6fe5
+Você é forte, então merece\n
+uma dica!\p
+Parece que só tem mais um item\n
+no chão.$
+
+[BattlePyramid_Text_ZeroItemsRemaining4] 1361ef8990
+Você é forte, então merece\n
+uma dica!\p
+Parece que não tem mais itens\n
+no chão.$
+
+[BattlePyramid_Text_EightItemsRemaining5] 8ac3484876
+Neste andar da PIRÂMIDE, dizem\n
+que há oito itens…$
+
+[BattlePyramid_Text_SevenItemsRemaining5] 0ca48d8fab
+Neste andar da PIRÂMIDE, dizem\n
+que há sete itens…$
+
+[BattlePyramid_Text_SixItemsRemaining5] 7da8f9f7ca
+Neste andar da PIRÂMIDE, dizem\n
+que há seis itens…$
+
+[BattlePyramid_Text_FiveItemsRemaining5] 25c6d88f8b
+Neste andar da PIRÂMIDE, dizem\n
+que há cinco itens…$
+
+[BattlePyramid_Text_FourItemsRemaining5] ee23003bb2
+Neste andar da PIRÂMIDE, dizem\n
+que há quatro itens…$
+
+[BattlePyramid_Text_ThreeItemsRemaining5] 1375766d6b
+Neste andar da PIRÂMIDE, dizem\n
+que há três itens…$
+
+[BattlePyramid_Text_TwoItemsRemaining5] 3c8ef2fb1b
+Neste andar da PIRÂMIDE, dizem\n
+que há dois itens…$
+
+[BattlePyramid_Text_OneItemRemaining5] 98837ddb9f
+Neste andar da PIRÂMIDE, dizem\n
+que há um item…$
+
+[BattlePyramid_Text_ZeroItemsRemaining5] 0d95cf60bb
+Neste andar da PIRÂMIDE, dizem\n
+que não há itens…$
+
+[BattlePyramid_Text_EightItemsRemaining6] b6511054d4
+Já juntou algum item?\p
+Acho que há mais oito itens\n
+neste andar.$
+
+[BattlePyramid_Text_SevenItemsRemaining6] 5f158245b4
+Já juntou algum item?\p
+Acho que há mais sete itens\n
+neste andar.$
+
+[BattlePyramid_Text_SixItemsRemaining6] dad8c87eee
+Já juntou algum item?\p
+Acho que há mais seis itens\n
+neste andar.$
+
+[BattlePyramid_Text_FiveItemsRemaining6] db8a11d7ab
+Já juntou algum item?\p
+Acho que há mais cinco itens\n
+neste andar.$
+
+[BattlePyramid_Text_FourItemsRemaining6] c420cacdaa
+Já juntou algum item?\p
+Acho que há mais quatro itens\n
+neste andar.$
+
+[BattlePyramid_Text_ThreeItemsRemaining6] e9b85bcd56
+Já juntou algum item?\p
+Acho que há mais três itens\n
+neste andar.$
+
+[BattlePyramid_Text_TwoItemsRemaining6] 0984c7da6c
+Já juntou algum item?\p
+Acho que há mais dois itens\n
+neste andar.$
+
+[BattlePyramid_Text_OneItemRemaining6] 1256735e09
+Já juntou algum item?\p
+Acho que há mais um item\n
+neste andar.$
+
+[BattlePyramid_Text_ZeroItemsRemaining6] 933b87839b
+Já juntou algum item?\p
+Acho que não há mais itens\n
+neste andar.$
+
+[BattlePyramid_Text_SevenTrainersRemaining1] f9de327a43
+Você foi demais!\p
+Mas ainda tem sete TREINADORES\n
+fortes além de mim!$
+
+[BattlePyramid_Text_SixTrainersRemaining1] 724297597f
+Você foi demais!\p
+Mas ainda tem seis TREINADORES\n
+fortes além de mim!$
+
+[BattlePyramid_Text_FiveTrainersRemaining1] 52f50269e1
+Você foi demais!\p
+Mas ainda tem cinco TREINADORES\n
+fortes além de mim!$
+
+[BattlePyramid_Text_FourTrainersRemaining1] a8d7e75fa1
+Você foi demais!\p
+Mas ainda tem quatro TREINADORES\n
+fortes além de mim!$
+
+[BattlePyramid_Text_ThreeTrainersRemaining1] b7f184a41d
+Você foi demais!\p
+Mas ainda tem três TREINADORES\n
+fortes além de mim!$
+
+[BattlePyramid_Text_TwoTrainersRemaining1] 49faa478e1
+Você foi demais!\p
+Mas ainda tem dois TREINADORES\n
+fortes além de mim!$
+
+[BattlePyramid_Text_OneTrainersRemaining1] fc0be8f81a
+Você foi demais!\p
+Mas ainda tem um TREINADOR\n
+forte além de mim!$
+
+[BattlePyramid_Text_ZeroTrainersRemaining1] ad5ab4ac55
+Você foi demais!\p
+Não sobrou ninguém que\n
+consiga te vencer!$
+
+[BattlePyramid_Text_SevenTrainersRemaining2] 6fb2505d33
+Que raiva!\p
+Mas ainda faltam sete TREINADORES!\n
+Alguém vai te dar uma lição!$
+
+[BattlePyramid_Text_SixTrainersRemaining2] c901485797
+Que raiva!\p
+Mas ainda faltam seis TREINADORES!\n
+Alguém vai te dar uma lição!$
+
+[BattlePyramid_Text_FiveTrainersRemaining2] f1d68c0a4b
+Que raiva!\p
+Mas ainda faltam cinco TREINADORES!\n
+Alguém vai te dar uma lição!$
+
+[BattlePyramid_Text_FourTrainersRemaining2] 3b06fa8aeb
+Que raiva!\p
+Mas ainda faltam quatro TREINADORES!\n
+Alguém vai te dar uma lição!$
+
+[BattlePyramid_Text_ThreeTrainersRemaining2] 297f355548
+Que raiva!\p
+Mas ainda faltam três TREINADORES!\n
+Alguém vai te dar uma lição!$
+
+[BattlePyramid_Text_TwoTrainersRemaining2] f7597d3e82
+Que raiva!\p
+Mas ainda faltam dois TREINADORES!\n
+Alguém vai te dar uma lição!$
+
+[BattlePyramid_Text_OneTrainersRemaining2] f5be3dc430
+Que raiva!\p
+Mas ainda falta um TREINADOR!\n
+Você vai levar uma lição!$
+
+[BattlePyramid_Text_ZeroTrainersRemaining2] 3725662e78
+Que raiva!\p
+Mas não sobrou nenhum TREINADOR\n
+pra te encarar!$
+
+[BattlePyramid_Text_SevenTrainersRemaining3] 3fd3c036ab
+Bem impressionante!\p
+Mas ainda faltam sete TREINADORES\n
+neste andar. Consegue vencer todos?$
+
+[BattlePyramid_Text_SixTrainersRemaining3] 3d72ada0ee
+Bem impressionante!\p
+Mas ainda faltam seis TREINADORES\n
+neste andar. Consegue vencer todos?$
+
+[BattlePyramid_Text_FiveTrainersRemaining3] 5239c2141e
+Bem impressionante!\p
+Mas ainda faltam cinco TREINADORES\n
+neste andar. Consegue vencer todos?$
+
+[BattlePyramid_Text_FourTrainersRemaining3] 0ef6bcf635
+Bem impressionante!\p
+Mas ainda faltam quatro TREINADORES\n
+neste andar. Consegue vencer todos?$
+
+[BattlePyramid_Text_ThreeTrainersRemaining3] c8db805969
+Bem impressionante!\p
+Mas ainda faltam três TREINADORES\n
+neste andar. Consegue vencer todos?$
+
+[BattlePyramid_Text_TwoTrainersRemaining3] a247622f98
+Bem impressionante!\p
+Mas ainda faltam dois TREINADORES\n
+neste andar. Consegue vencer os dois?$
+
+[BattlePyramid_Text_OneTrainersRemaining3] 1dbc1fd126
+Bem impressionante!\p
+Mas ainda falta um TREINADOR\n
+neste andar. Consegue vencer?$
+
+[BattlePyramid_Text_ZeroTrainersRemaining3] 8be265481e
+Bem impressionante!\p
+Você passou por todos os\n
+TREINADORES deste andar.$
+
+[BattlePyramid_Text_SevenTrainersRemaining4] 19804ce9d1
+Talvez você vença os sete\n
+TREINADORES que faltam neste andar.$
+
+[BattlePyramid_Text_SixTrainersRemaining4] ce86c2f798
+Talvez você vença os seis\n
+TREINADORES que faltam neste andar.$
+
+[BattlePyramid_Text_FiveTrainersRemaining4] 6f6a5fef74
+Talvez você vença os cinco\n
+TREINADORES que faltam neste andar.$
+
+[BattlePyramid_Text_FourTrainersRemaining4] 4bee4f521f
+Talvez você vença os quatro\n
+TREINADORES que faltam neste andar.$
+
+[BattlePyramid_Text_ThreeTrainersRemaining4] db85b47d93
+Talvez você vença os três\n
+TREINADORES que faltam neste andar.$
+
+[BattlePyramid_Text_TwoTrainersRemaining4] 240e76f85a
+Talvez você vença os dois\n
+TREINADORES que faltam neste andar.$
+
+[BattlePyramid_Text_OneTrainersRemaining4] aed49f9537
+Talvez você complete a limpa com\n
+o TREINADOR que falta neste andar.$
+
+[BattlePyramid_Text_ZeroTrainersRemaining4] 908e4256f8
+Não sobrou ninguém que\n
+consiga te vencer agora…$
+
+[BattlePyramid_Text_SevenTrainersRemaining5] e4fde9c144
+Talvez você tenha o que é preciso\n
+pra vencer os sete TREINADORES que\l
+restam.$
+
+[BattlePyramid_Text_SixTrainersRemaining5] 5b49c6c361
+Talvez você tenha o que é preciso\n
+pra vencer os seis TREINADORES que\l
+restam.$
+
+[BattlePyramid_Text_FiveTrainersRemaining5] fd4d477c1c
+Talvez você tenha o que é preciso\n
+pra vencer os cinco TREINADORES que\l
+restam.$
+
+[BattlePyramid_Text_FourTrainersRemaining5] 169518610a
+Talvez você tenha o que é preciso\n
+pra vencer os quatro TREINADORES que\l
+restam.$
+
+[BattlePyramid_Text_ThreeTrainersRemaining5] 47fa0a3854
+Talvez você tenha o que é preciso\n
+pra vencer os três TREINADORES que\l
+restam.$
+
+[BattlePyramid_Text_TwoTrainersRemaining5] a64f476180
+Talvez você tenha o que é preciso\n
+pra vencer os dois TREINADORES que\l
+restam.$
+
+[BattlePyramid_Text_OneTrainersRemaining5] 46a6ce1959
+Talvez você tenha o que é preciso\n
+pra vencer o último TREINADOR.$
+
+[BattlePyramid_Text_ZeroTrainersRemaining5] f36552330f
+A sua habilidade é impecável.\p
+Não há mais TREINADORES aqui com\n
+chance de te vencer.$
+
+[BattlePyramid_Text_SevenTrainersRemaining6] 8136b517f8
+Consegue continuar vencendo os\n
+sete TREINADORES que restam?$
+
+[BattlePyramid_Text_SixTrainersRemaining6] c0eea88ea2
+Consegue continuar vencendo os\n
+seis TREINADORES que restam?$
+
+[BattlePyramid_Text_FiveTrainersRemaining6] e0d2b3036d
+Consegue continuar vencendo os\n
+cinco TREINADORES que restam?$
+
+[BattlePyramid_Text_FourTrainersRemaining6] 829c097e57
+Consegue continuar vencendo os\n
+quatro TREINADORES que restam?$
+
+[BattlePyramid_Text_ThreeTrainersRemaining6] e6d1b7dc74
+Consegue continuar vencendo os\n
+três TREINADORES que restam?$
+
+[BattlePyramid_Text_TwoTrainersRemaining6] c5e54b11ee
+Consegue continuar vencendo os\n
+dois TREINADORES que restam?$
+
+[BattlePyramid_Text_OneTrainersRemaining6] 47722024a4
+Consegue vencer o último\n
+TREINADOR que resta?$
+
+[BattlePyramid_Text_ZeroTrainersRemaining6] e8707c1b32
+Não sobrou nenhum TREINADOR que\n
+possa te encarar agora…$

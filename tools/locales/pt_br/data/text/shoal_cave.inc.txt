@@ -1,0 +1,28 @@
+# CAVERNA SHOAL: o homem do SINO CONCHA.
+
+[ShoalCave_LowTideEntranceRoom_Text_AreYouPlanningOnGoingInThere] 4a3de214e0
+Tá pensando em ir lá pro fundo?\pQue tal me trazer uns SAL DE SHOAL\ne umas CONCHAS SHOAL?\pSe me trouxer os ingredientes,\neu faço uma coisa boa pra você.$
+
+[ShoalCave_LowTideEntranceRoom_Text_BringMe4ShoalSaltAndShells] d455717bfc
+Se me trouxer quatro SAL DE SHOAL\ne quatro CONCHAS SHOAL,\leu faço um SINO CONCHA…\pDá pra pegar esses ingredientes\ntodo dia.$
+
+[ShoalCave_LowTideEntranceRoom_Text_WouldYouLikeShellBell] 0817ac6e1f
+Opa! SAL DE SHOAL e CONCHAS SHOAL!\nE na quantidade certa!\pQuer que eu faça um SINO CONCHA\ncom eles?$
+
+[ShoalCave_LowTideEntranceRoom_Text_MakeShellBellRightAway] 298da3186c
+Beleza, então! Vou fazer um\nSINO CONCHA agora mesmo.\p… … … … … … … …\n… … … … … … … …\pPronto! Tá feito!$
+
+[ShoalCave_LowTideEntranceRoom_Text_ExplainShellBell] 409fe2dad3
+Dá isso pra um POKéMON segurar.\nEle vai adorar, pode apostar.\pAh, o som do SINO CONCHA…\nÉ simplesmente divino!\pOs ingredientes aparecem todo dia,\nentão eu posso fazer mais.$
+
+[ShoalCave_LowTideEntranceRoom_Text_WantedToMakeShellBell] a79f701b84
+Ah… É mesmo…\nEu queria fazer um SINO CONCHA…$
+
+[ShoalCave_LowTideEntranceRoom_Text_NoSpaceInYourBag] d9fa03627c
+Se eu fizer, não vai caber\nna sua BOLSA.\pAbra espaço e volte pra buscar\no SINO CONCHA.$
+
+[ShoalCave_Text_WasShoalSaltNowNothing] 61284165fa
+Tinha SAL DE SHOAL aqui.\nMas agora não tem mais nada.$
+
+[ShoalCave_Text_WasShoallShellNowNothing] bdaa3fae23
+Tinha uma CONCHA SHOAL aqui.\nMas agora não tem mais nada.$

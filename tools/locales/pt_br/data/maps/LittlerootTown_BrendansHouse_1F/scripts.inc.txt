@@ -1,0 +1,155 @@
+# A casa do jogador, térreo (os textos PlayersHouse_ servem às duas casas).
+
+[PlayersHouse_1F_Text_IsntItNiceInHere] f54c6e29d4
+MAMÃE: Viu só, {PLAYER}?\n
+Aqui dentro também é bom, não é?$
+
+[PlayersHouse_1F_Text_MoversPokemonGoSetClock] 9402ea13d1
+Os POKéMON da mudança fazem todo o\n
+trabalho de trazer as coisas e limpar.\l
+É tão prático!\p
+{PLAYER}, o seu quarto é lá em cima.\n
+Vá dar uma olhada, meu bem!\p
+O PAPAI comprou um relógio novo para\n
+marcar a nossa mudança.\l
+Não se esqueça de acertá-lo!$
+
+[PlayersHouse_1F_Text_ArentYouInterestedInRoom] 631255735c
+MAMÃE: E então, {PLAYER}?\p
+Não quer ver o seu próprio\n
+quarto?$
+
+[PlayersHouse_1F_Text_GoSetTheClock] ce135c817a
+MAMÃE: {PLAYER}.\p
+Vá acertar o relógio do seu quarto.$
+
+[PlayersHouse_1F_Text_OhComeQuickly] f85044f6b0
+MAMÃE: Oh! {PLAYER}, {PLAYER}!\n
+Rápido! Venha depressa!$
+
+[PlayersHouse_1F_Text_MaybeDadWillBeOn] e300720a18
+MAMÃE: Olhe! É o GINÁSIO DE PETALBURG!\n
+Talvez o PAPAI apareça!$
+
+[PlayersHouse_1F_Text_ItsOverWeMissedHim] 693aaa93cd
+MAMÃE: Ah… Acabou.\p
+Acho que o PAPAI apareceu, mas não\n
+deu tempo de ver. Que pena.$
+
+[PlayersHouse_1F_Text_GoIntroduceYourselfNextDoor] bb09efcb54
+Ah, sim.\n
+Um amigo do PAPAI mora na cidade.\p
+O nome dele é PROF. BIRCH.\p
+Ele mora bem aqui ao lado, então\n
+vá até lá se apresentar.$
+
+[PlayersHouse_1F_Text_SeeYouHoney] c24513bc03
+MAMÃE: Até mais, meu amor!$
+
+[PlayersHouse_1F_Text_DidYouMeetProfBirch] 83473344fb
+MAMÃE: Você já se apresentou ao\n
+PROF. BIRCH?$
+
+[PlayersHouse_1F_Text_YouShouldRestABit] 141cfba9e6
+MAMÃE: Como você está, {PLAYER}?\n
+Você parece meio sem energia.\p
+Acho que deveria descansar um pouco.$
+
+[PlayersHouse_1F_Text_TakeCareHoney] 2dad16dca3
+MAMÃE: Se cuide, meu amor!$
+
+[PlayersHouse_1F_Text_GotDadsBadgeHeresSomethingFromMom] 2d3b1e3b7d
+MAMÃE: Oh? O PAPAI te deu essa\n
+INSÍGNIA?\p
+Então aqui vai algo da MAMÃE!$
+
+[PlayersHouse_1F_Text_DontPushYourselfTooHard] 1855f38cb1
+Não exagere, meu bem.\n
+Você sempre pode voltar para casa.\p
+Vá em frente, meu amor!$
+
+[PlayersHouse_1F_Text_IsThatAPokenav] 5b38bd69fd
+MAMÃE: O que é isso? Um POKéNAV?\n
+Alguém da DEVON te deu?\p
+Então, meu amor, que tal registrar\n
+a sua MAMÃE?\p
+… … …$
+
+[PlayersHouse_1F_Text_RegisteredMom] d2e1ccbc76
+MAMÃE registrada\n
+no POKéNAV.$
+
+[PlayersHouse_1F_Text_Vigoroth1] d525bcda0a
+Fugiiiiih!$
+
+[PlayersHouse_1F_Text_Vigoroth2] b9606b1d1a
+Huggoh, uggo uggo…$
+
+[PlayersHouse_1F_Text_ReportFromPetalburgGym] 47192ff56f
+REPÓRTER: …Esta foi a nossa reportagem\n
+em frente ao GINÁSIO DE PETALBURG.$
+
+[PlayersHouse_1F_Text_TheresAMovieOnTV] 4e705da638
+Está passando um filme na TV.\p
+Dois homens dançam sobre o teclado\n
+de um piano enorme.\p
+Melhor ir andando!$
+
+[PlayersHouse_1F_Text_RunningShoesManual] dbd51cf694
+É o manual de instruções do\n
+TÊNIS DE CORRER.\p
+“Aperte o Botão B para correr usando\n
+o seu TÊNIS DE CORRER.\p
+“Amarre o seu TÊNIS DE CORRER e saia\n
+pela estrada a toda velocidade!”$
+
+[PlayersHouse_1F_Text_TicketFromBrineyCameForYou] e628769b3f
+PAPAI: Hum?\p
+Ora, é {PLAYER}!\p
+Faz tempo que não te vejo, mas você\n
+parece… mais forte, de algum jeito.\p
+É a impressão que eu tenho.\n
+Mas o seu velho ainda não se rendeu!\p
+Ah, sim, tenho algo para você.\n
+Isto chegou para você, de alguém\l
+chamado SR. BRINEY.$
+
+[PlayersHouse_1F_Text_PortsInSlateportLilycove] cddf85dae1
+PAPAI: Hum, um BILHETE de balsa?\p
+Se não me engano, há portos de balsa\n
+em SLATEPORT e LILYCOVE.$
+
+[PlayersHouse_1F_Text_BetterGetBackToGym] 17c293bd4a
+É melhor eu voltar ao GINÁSIO DE\n
+PETALBURG.\p
+MAMÃE, obrigado por cuidar da casa\n
+enquanto eu estou fora.$
+
+[PlayersHouse_1F_Text_DadShouldStayLonger] 85210e7fd7
+MAMÃE: Esse seu PAPAI…\p
+Ele volta para casa depois de tanto\n
+tempo, mas só fala de POKéMON.\p
+Ele devia relaxar e ficar mais um pouco.$
+
+[PlayersHouse_1F_Text_IsThatABreakingStory] 76ee10b2d5
+MAMÃE: É uma notícia urgente?$
+
+[PlayersHouse_1F_Text_LatiEmergencyNewsFlash] 68edbc9b59
+Interrompemos a programação para\n
+um plantão de notícias!\p
+Em vários lugares de HOENN, houve\n
+relatos de um POKéMON… BZZT…\l
+voando pelos céus.\p
+A identidade deste POKéMON ainda\n
+é desconhecida.\p
+Voltamos agora à nossa programação\n
+normal de filmes.$
+
+[PlayersHouse_1F_Text_WhatColorDidTheySay] 0c5a43b231
+MAMÃE: {PLAYER}, você ouviu aquilo?\p
+De que cor o apresentador disse\n
+que era aquele POKéMON?$
+
+[PlayersHouse_1F_Text_StillUnknownPokemon] d32290ccf4
+MAMÃE: Ora, quem diria!\n
+Ainda existem POKéMON desconhecidos.$

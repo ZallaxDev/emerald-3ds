@@ -1,0 +1,92 @@
+# MONTE PYRE: 2º andar.
+
+[MtPyre_2F_Text_MemoriesOfSkitty] 08bdc7fa26
+Lembranças do meu querido SKITTY…\n
+Os meus olhos se enchem de lágrimas.$
+
+[MtPyre_2F_Text_TumbledFromFloorAbove] 63991b196e
+Ai, ui… Tem buracos no chão aqui\n
+e ali.\p
+Não percebi e caí do andar de cima.$
+
+[MtPyre_2F_Text_MarkIntro] a659c1021b
+Ei! Está procurando POKéMON?\n
+Você veio atrás de mim! Que falta\l
+de educação!$
+
+[MtPyre_2F_Text_MarkDefeat] 0b4712ceb3
+Aiiiii!\n
+Desculpa, me perdoa, por favor!$
+
+[MtPyre_2F_Text_MarkPostBattle] 127cac0734
+Quase ninguém vem aqui, então\n
+achei que teria POKéMON raros.$
+
+[MtPyre_2F_Text_LukeIntro] 06d65ddc20
+LUKE: Viemos aqui por um desafio.\p
+Hehe, se eu mostrar pra ela como sou\n
+legal, ela se apaixona. Tenho certeza!\p
+Já sei! Vou acabar com você e mostrar\n
+pra ela como sou legal!$
+
+[MtPyre_2F_Text_LukeDefeat] f3743b86c8
+LUKE: Opa!$
+
+[MtPyre_2F_Text_LukePostBattle] fec4a7a5e8
+LUKE: Bom, perdemos, mas tudo bem!\n
+Estou aqui do seu lado.\l
+Vamos cumprir esse desafio!$
+
+[MtPyre_2F_Text_LukeNotEnoughMons] e5325d70af
+LUKE: Se quiser me enfrentar, traga\n
+mais POKéMON.\p
+Senão, não consigo mostrar pra minha\n
+namorada como sou legal!$
+
+[MtPyre_2F_Text_DezIntro] b1c4d69ac8
+DEZ: Vim aqui num desafio com o meu\n
+namorado.\p
+Dá muito medo, mas estou com o meu\n
+namorado. Tudo bem.\p
+Já sei! Vou fazer o meu namorado\n
+ficar legal vencendo você!$
+
+[MtPyre_2F_Text_DezDefeat] ef7484d595
+DEZ: Buáááá! Que medo!$
+
+[MtPyre_2F_Text_DezPostBattle] f272b338d8
+DEZ: A gente é grudadinho, então\n
+não liga de perder!$
+
+[MtPyre_2F_Text_DezNotEnoughMons] 8890c93444
+DEZ: Se quiser desafiar a gente, traga\n
+pelo menos dois POKéMON.\p
+O meu namorado é forte.\n
+Um POKéMON só não dá nem pro cheiro.$
+
+[MtPyre_2F_Text_LeahIntro] e51f71db53
+Não conheço você…\n
+Vá embora antes que algo te aconteça!$
+
+[MtPyre_2F_Text_LeahDefeat] 1bb2d20408
+Hmm…\n
+Você é resistente.$
+
+[MtPyre_2F_Text_LeahPostBattle] e26fbbc02c
+A minha família treina aqui desde o\n
+tempo da minha bisavó…\p
+É meu dever proteger esta\n
+montanha…$
+
+[MtPyre_2F_Text_ZanderIntro] 56c700ace6
+Kiaaaaah!\n
+Que pavor!$
+
+[MtPyre_2F_Text_ZanderDefeat] e7e279342a
+Nãããão!\n
+Perdi a cabeça!$
+
+[MtPyre_2F_Text_ZanderPostBattle] 2513445097
+Eu me apavoro toda vez que vejo\n
+alguma coisa se mexer…\p
+Não devia ter vindo treinar aqui…$

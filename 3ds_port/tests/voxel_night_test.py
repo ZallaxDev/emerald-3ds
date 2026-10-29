@@ -84,6 +84,7 @@ void VoxelBuilder_Tri(VoxelBuilder *builder, const VoxelVertex *a, const VoxelVe
 void VoxelBuilder_Quad(VoxelBuilder *builder, const VoxelVertex *a, const VoxelVertex *b,
                        const VoxelVertex *c, const VoxelVertex *d)
 { (void)builder, (void)a, (void)b, (void)c, (void)d; }
+float VoxelBuilder_StretchZ(const VoxelBuilder *builder, float z) { (void)builder; return z; }
 float VoxelRelief_CellLift(const VoxelMapInstance *inst, int x, int y) { (void)inst, (void)x, (void)y; return 0.0f; }
 float VoxelRelief_CellShift(const VoxelMapInstance *inst, int x, int y) { (void)inst, (void)x, (void)y; return 0.0f; }
 int VoxelWorld_GetMetatileId(int worldX, int worldY) { (void)worldX, (void)worldY; return 0; }
@@ -624,11 +625,12 @@ int main(void)
 
 def asset_tests(path):
     data = path.read_bytes()
-    assert data[:4] == b"VXB8"
+    assert data[:4] in (b"VXB8", b"VXB9")
+    head = 28 if data[:4] == b"VXB9" else 24    # VXB9: the conditions' count
     page_count = struct.unpack_from("<H", data, 4)[0]
     lit_count = 0
     for index in range(page_count):
-        width, flagged_height, offset = struct.unpack_from("<HHI", data, 24 + index * 8)
+        width, flagged_height, offset = struct.unpack_from("<HHI", data, head + index * 8)
         height = flagged_height & 0x7FFF
         pixels = width * height
         assert offset + pixels * 2 <= len(data)

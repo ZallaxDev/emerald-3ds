@@ -1,0 +1,97 @@
+# CENTRO DE CUIDADOS POKéMON (ROTA 117): o casal e os OVOS.
+
+[Route117_Text_SeeWifeIfYoudLikeMeToRaiseMon] 4f2045cbbd
+Eu cuido do CENTRO DE CUIDADOS.\pA gente cuida dos POKéMON\nqueridos dos TREINADORES.\pSe quiser que eu crie um POKéMON,\nfala com a minha esposa.$
+
+[Route117_Text_DoYouWantEgg] 3bef200773
+Ah, é você!\pA gente tava cuidando dos seus\nPOKéMON e, minha nossa, que susto!\pSeus POKéMON tinham um OVO!\pNão sei como ele foi parar lá,\nmas seus POKéMON tinham um OVO.\pVocê quer, né?$
+
+[Route117_Text_YourMonIsDoingFine] b19199e545
+Ah, é você! Que bom te ver.\nSeu {STR_VAR_1} tá muito bem.$
+
+[Route117_Text_IllKeepIt] 125eb27e0d
+Então eu fico com ele.\nValeu!$
+
+[Route117_Text_YouHaveNoRoomForIt] eb20a87b0d
+Você não tem espaço pra ele…\nVolta quando abrir espaço.$
+
+[Route117_Text_ReceivedEgg] 1dafe4a4f1
+{PLAYER} recebeu o OVO do\ndono do CENTRO DE CUIDADOS.$
+
+[Route117_Text_TakeGoodCareOfIt] 2c5004b5c4
+Cuida bem dele.$
+
+[Route117_Text_FriendlyWithOtherTrainersMon] 9ccce97abe
+Aliás, seu {STR_VAR_1} parecia\nmuito amigo do {STR_VAR_3}\lde {STR_VAR_2}.\pAcho até que vi ele recebendo\numa CARTA.$
+
+[Route117_Text_SeeWifeIfYouWantToPickUpMon] f8be6f7dc1
+Se quiser buscar seus POKéMON,\nfala com a minha esposa.$
+
+[Route117_Text_YourMonsAreDoingFine] c10ec20d7f
+Ah, é você! {STR_VAR_1} e\n{STR_VAR_2} tão muito bem.$
+
+[Route117_Text_IWillKeepDoYouWantIt] 1120a67d5a
+Olha que eu fico com ele mesmo.\nVocê quer, né?$
+
+[Route117_PokemonDayCare_Text_WouldYouLikeUsToRaiseAMon] b30ea43a1f
+Eu cuido do CENTRO DE CUIDADOS.\pA gente pode criar POKéMON\npra você.\pQuer deixar um com a gente?$
+
+[Route117_PokemonDayCare_Text_WhichMonShouldWeRaise] 060710fe8e
+Qual POKéMON a gente vai criar\npra você?$
+
+[Route117_PokemonDayCare_Text_WellRaiseYourMon] 0ff1118d56
+Certo, a gente cuida do seu\n{STR_VAR_1} por um tempo.\pVolta pra buscar depois.$
+
+[Route117_PokemonDayCare_Text_WeCanRaiseOneMore] 56b5391aa5
+A gente pode criar dois POKéMON.\nQuer deixar mais um?$
+
+[Route117_PokemonDayCare_Text_HusbandWasLookingForYou] af3d326cb6
+Meu marido tava te procurando.$
+
+[Route117_PokemonDayCare_Text_FineThenComeAgain] 39fa607b48
+Ah, tudo bem, então.\nVolte sempre.$
+
+[Route117_PokemonDayCare_Text_NotEnoughMoney] d9a092107c
+Você não tem dinheiro suficiente…$
+
+[Route117_PokemonDayCare_Text_TakeOtherOneBackToo] 298c595aa3
+Vai levar o outro também?$
+
+[Route117_PokemonDayCare_Text_ComeAgain] 61a0eea496
+Tudo bem.\nVolte sempre.$
+
+[Route117_PokemonDayCare_Text_GoodToSeeYou] 50c1df2318
+Ah, é você! Que bom te ver.\nSeus POKéMON tão ótimos!$
+
+[Route117_PokemonDayCare_Text_YourMonHasGrownXLevels] e57b34ef68
+Seu {STR_VAR_1} subiu\n{STR_VAR_2} de nível.$
+
+[Route117_PokemonDayCare_Text_YourTeamIsFull] 2dc8ba2364
+Sua equipe tá cheia.\nAbre espaço e volta aqui.$
+
+[Route117_PokemonDayCare_Text_TakeBackWhichMon] d416af10c4
+Qual POKéMON você vai levar?$
+
+[Route117_PokemonDayCare_Text_ItWillCostX] ec2943b31e
+Pra levar seu {STR_VAR_1} de volta,\nfica ¥{STR_VAR_2}.$
+
+[Route117_PokemonDayCare_Text_HeresYourMon] 91465178ba
+Perfeito!\nAqui tá seu POKéMON.$
+
+[Route117_PokemonDayCare_Text_TookBackMon] 4d38483e76
+{PLAYER} buscou {STR_VAR_1}\nno CENTRO DE CUIDADOS.$
+
+[Route117_PokemonDayCare_Text_YouHaveJustOneMon] 4312d92451
+Ué? Mas você só tem um\nPOKéMON.\pVolta outra hora.$
+
+[Route117_PokemonDayCare_Text_TakeYourMonBack] 35a8f4b834
+Vai levar seu POKéMON de volta?$
+
+[Route117_PokemonDayCare_Text_WhatWillYouBattleWith] fc16299c71
+Se deixar esse POKéMON comigo,\nvai batalhar com o quê?\pVolta outra hora.$
+
+[Text_EggHatchHuh] 7ba16a5b28
+Hã?$
+
+[Route117_PokemonDayCare_Text_YoullBeLeftWithJustOne] 6c0f2a7b09
+Hã?\nCalma lá.\pSe deixar esse POKéMON comigo,\nvocê vai ficar com um só.\pMelhor capturar mais alguns\nantes, viu?$

@@ -1,0 +1,67 @@
+# ROTA 103: a primeira batalha contra o RIVAL. A MAY só fala com o menino e
+# o BRENDAN só com a menina, então as falas deles podem flexionar.
+
+[Route103_Text_MayRoute103Pokemon] 791c6152bf
+MAY: Vamos ver… Os POKéMON que\n
+aparecem na ROTA 103 são…$
+
+[Route103_Text_MayLetsBattle] a081286d69
+Ah, oi, {PLAYER}{KUN}!\p
+…Ah, entendi, meu pai te deu\n
+um POKéMON de presente.\p
+Já que estamos aqui, que tal uma\n
+batalha rapidinha?\p
+Vou te mostrar como é treinar\n
+POKéMON!$
+
+[Route103_Text_MayDefeated] 263d8bc0c5
+Uau! Que demais!\n
+{PLAYER}{KUN}, você é bom mesmo!$
+
+[Route103_Text_MayTimeToHeadBack] 29e38f5e02
+MAY: Acho que entendi por que meu pai\n
+está de olho em você.\p
+Você acabou de ganhar esse POKéMON,\n
+e ele já gosta de você.\p
+Acho que você faz amizade fácil com\n
+qualquer tipo de POKéMON.\p
+Bom, hora de voltar pro\n
+LABORATÓRIO.$
+
+[Route103_Text_BrendanRoute103Pokemon] dc5bc4f640
+BRENDAN: Certo, então este e aquele\n
+vivem na ROTA 103…$
+
+[Route103_Text_BrendanLetsBattle] af659cef92
+Opa, é a {PLAYER}!\p
+…Ah, é, meu pai te deu um POKéMON.\p
+Já que estamos aqui, que tal uma\n
+batalhinha?\p
+Vou te ensinar como é treinar\n
+POKéMON!$
+
+[Route103_Text_BrendanDefeated] 1923858112
+Hm, {PLAYER}, você não é nada mal.$
+
+[Route103_Text_BrendanTimeToHeadBack] da35013662
+BRENDAN: Saquei.\n
+Acho que sei por que meu pai está\l
+de olho em você.\p
+Olha, seu POKéMON já gosta de você,\n
+mesmo você tendo acabado de pegar.\p
+{PLAYER}, acho que você faz amizade\n
+fácil com qualquer POKéMON.\p
+Melhor a gente voltar pro LABORATÓRIO.$
+
+[Route103_Text_ShouldHaveBroughtPotion] de79df34c6
+Meu POKéMON está morto de cansaço…\n
+Devia ter trazido uma POÇÃO…$
+
+[Route103_Text_ShortcutToOldale] e3f9bf2c44
+Se você atravessar o mar daqui,\n
+é um atalho pra CIDADE DE OLDALE.\p
+Hehehe, útil, né?$
+
+[Route103_Text_RouteSign] 987fed7f10
+ROTA 103\n
+{DOWN_ARROW} CIDADE DE OLDALE$

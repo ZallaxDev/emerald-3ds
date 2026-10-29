@@ -1,0 +1,131 @@
+# CASA DOS TRUQUES, a entrada: os esconderijos do MESTRE DOS TRUQUES.
+
+[Route110_TrickHouseEntrance_Text_YoureBeingWatched] d34b794c4a
+Alguém está te observando…$
+
+[Route110_TrickHouseEntrance_Text_ConcealedBeneathDesk] 9a17c0178b
+Hã? Grrr…\p
+Como você soube que eu estava\n
+debaixo desta mesa? Que esperteza!$
+
+[Route110_TrickHouseEntrance_Text_ConcealedBehindTree] 59dc57fc4c
+Hã? Grrr…\p
+Como você soube que eu estava\n
+atrás desta árvore? Que esperteza!$
+
+[Route110_TrickHouseEntrance_Text_ConcealedInDresser] eac4b024c0
+Hã? Grrr…\p
+Como você soube que eu estava\n
+neste armário? Que esperteza!$
+
+[Route110_TrickHouseEntrance_Text_ConealedBeyondWindow] d66905a176
+Hã? Grrr…\p
+Como você soube que eu estava\n
+além desta janela? Que esperteza!$
+
+[Route110_TrickHouseEntrance_Text_ConcealedInPlanter] 89f21b2bec
+Hã? Grrr…\p
+Como você soube que eu estava\n
+neste vaso? Que esperteza!$
+
+[Route110_TrickHouseEntrance_Text_ConcealedInCupboard] 3ba2e1e582
+Hã? Grrr…\p
+Como você soube que eu estava\n
+nesta prateleira? Que esperteza!$
+
+[Route110_TrickHouseEntrance_Text_ConcealedBehindWindow] c65f701e09
+Hã? Grrr…\p
+Como você soube que eu estava\n
+atrás desta janela? Que esperteza!$
+
+[Route110_TrickHouseEntrance_Text_ConcealedBeneathCushion] 43a0c06e31
+Hã? Grrr…\p
+Como você soube que eu estava\n
+sob esta almofada? Que esperteza!$
+
+[Route110_TrickHouseEntrance_Text_TheyCallMeTrickMaster] 3ae1743436
+Contemple!\p
+Pois eu sou o homem mais misterioso\n
+de toda a HOENN!\l
+Me chamam de…\p
+O MESTRE DOS TRUQUES!\n
+Uahahaha! Prazer em te conhecer!$
+
+[Route110_TrickHouseEntrance_Text_ComeToChallengeTrickHouse] 80cada3053
+Você, você veio desafiar a minha\n
+CASA DOS TRUQUES, não veio?\p
+É por isso que está aqui, não é?\n
+É, sim!\p
+Desafio aceito!\p
+Entre pelo pergaminho ali, e que\n
+o desafio comece!\p
+Eu vou estar esperando lá no fundo!$
+
+[Route110_TrickHouseEntrance_Text_ItsAScroll] e9e574f3e4
+É um pergaminho.$
+
+[Route110_TrickHouseEntrance_Text_GoInHoleBehindScroll] 54153f0ede
+Tem um buraco grande atrás do\n
+pergaminho!\p
+Quer entrar?$
+
+[Route110_TrickHouseEntrance_Text_LeavingOnJourneyNote] 1a822c87d4
+Tem um bilhete preso no pergaminho…\p
+“Vou partir numa jornada.\n
+Não me procure. MESTRE DOS TRUQUES”$
+
+[Route110_TrickHouseEntrance_Text_NextTimeUseThisTrick] 81e056720c
+Da próxima vez, vou usar este truque,\n
+aquele plano e aquelas artimanhas…\p
+Mufufufu… Modéstia à parte, é\n
+dificílimo, até pra mim!$
+
+[Route110_TrickHouseEntrance_Text_InMidstOfDevisingNewChallenges] 34fa291146
+Hã? O quê?!\n
+Ah, é você!\p
+Estou bolando novos desafios\n
+cheios de truques!\p
+Não é pedir demais um pouco mais de\n
+tempo pra pensar, é?\l
+Você não me negaria isso, né?\l
+Volte daqui a pouco!$
+
+[Route110_TrickHouseEntrance_Text_YoureHereToAcceptReward] e980e47b20
+Ah, é você! Veio pegar o prêmio\n
+de antes, não foi?\l
+Foi, sim!\p
+Tome!\n
+Vou te dar agora!$
+
+[Route110_TrickHouseEntrance_Text_DidYouNotComeToClaimReward] cb43ebb54c
+Hã?\n
+Não veio buscar o seu prêmio?$
+
+[Route110_TrickHouseEntrance_Text_MechadollWhichTent] 465a952c3b
+ROBONECO 5 EU SOU!\n
+SE O PRÊMIO NÃO LEVAR VOCÊ,\l
+O MESTRE DOS TRUQUES NÃO PODE SEGUIR.\p
+TENDA VERMELHA OU TENDA AZUL,\n
+QUAL VOCÊ PREFERE?$
+
+[Route110_TrickHouseEntrance_Text_ThenFarewell] c9273b16f9
+ENTÃO, ADEUS.$
+
+[Route110_TrickHouseEntrance_Text_PCFullAgain] 763d65b0ab
+STATUS DO SEU PC: CHEIO DE NOVO.\n
+MALDADE, ISSO É.$
+
+[Route110_TrickHousePuzzle_Text_FoundAScroll] 7c91619329
+{PLAYER} achou um pergaminho.$
+
+[Route110_TrickHousePuzzle_Text_MemorizedSecretCode] 973c8f3e38
+{PLAYER} decorou a senha secreta\n
+escrita no pergaminho.$
+
+[Route110_TrickHousePuzzle_Text_SecretCodeWrittenOnIt] bb1d6e7935
+Tem uma senha secreta escrita nele.$
+
+[Route110_TrickHouseEntrance_Text_DoorLockedWriteSecretCodeHere] 1487e6d28e
+A porta está trancada.\p
+…Olhando de perto, tem isto escrito\n
+nela: “Escreva a senha secreta aqui.”$

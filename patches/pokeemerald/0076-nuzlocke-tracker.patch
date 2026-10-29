@@ -1,0 +1,87 @@
+diff --git a/src/new_game.c b/src/new_game.c
+--- a/src/new_game.c
++++ b/src/new_game.c
+@@ -45,6 +45,9 @@
+ #include "mystery_gift.h"
+ #include "union_room_chat.h"
+ #include "constants/items.h"
++#if defined(PLATFORM_3DS) && defined(PORT_BRIDGE)
++#include "3ds_nuzlocke.h"
++#endif
+
+ extern const u8 EventScript_ResetAllMapFlags[];
+
+@@ -215,6 +218,10 @@
+     WipeTrainerNameRecords();
+     ResetTrainerHillResults();
+     ResetContestLinkResults();
++#if defined(PLATFORM_3DS) && defined(PORT_BRIDGE)
++    // The Nuzlocke tracker starts empty with the new game.
++    CtrNuzlocke_NewGame();
++#endif
+ }
+
+ static void ResetMiniGamesRecords(void)
+diff --git a/src/save.c b/src/save.c
+--- a/src/save.c
++++ b/src/save.c
+@@ -18,6 +18,18 @@
+ #include "3ds_clock_store.h"
+ #include "3ds_daynight.h"
+ #endif
++#if defined(PLATFORM_3DS) && defined(PORT_BRIDGE)
++#include "3ds_nuzlocke.h"
++// The Nuzlocke tracker's record names the two save slots only: the Trainer
++// Hill and recorded battle sectors are written without a game save.
++#define CTR_NUZLOCKE_SAVE_BYTES ((size_t)SECTOR_ID_HOF_1 * SECTOR_SIZE < sizeof(FLASH_BASE) \
++                                 ? (size_t)SECTOR_ID_HOF_1 * SECTOR_SIZE : sizeof(FLASH_BASE))
++#define CTR_NUZLOCKE_SAVED() CtrNuzlocke_Saved(FLASH_BASE, CTR_NUZLOCKE_SAVE_BYTES)
++#define CTR_NUZLOCKE_LOADED() CtrNuzlocke_Loaded(FLASH_BASE, CTR_NUZLOCKE_SAVE_BYTES)
++#else
++#define CTR_NUZLOCKE_SAVED()
++#define CTR_NUZLOCKE_LOADED()
++#endif
+
+ static u16 CalculateChecksum(void *, u16);
+ static bool8 ReadFlashSector(u8, struct SaveSector *);
+@@ -789,7 +801,10 @@
+     gTrainerHillVBlankCounter = backupVar;
+ #ifdef PLATFORM_3DS
+     if (!gDamagedSaveSectors)
++    {
+         CtrClockStore_Save(FLASH_BASE, sizeof(FLASH_BASE));
++        CTR_NUZLOCKE_SAVED();
++    }
+ #endif
+     return 0;
+ }
+@@ -860,7 +875,10 @@
+         DoSaveFailedScreen(SAVE_NORMAL);
+ #ifdef PLATFORM_3DS
+     if (!gDamagedSaveSectors)
++    {
+         CtrClockStore_Save(FLASH_BASE, sizeof(FLASH_BASE));
++        CTR_NUZLOCKE_SAVED();
++    }
+ #endif
+     return FALSE;
+ }
+@@ -911,7 +929,10 @@
+
+ #ifdef PLATFORM_3DS
+     if (finished && !gDamagedSaveSectors)
++    {
+         CtrClockStore_Save(FLASH_BASE, sizeof(FLASH_BASE));
++        CTR_NUZLOCKE_SAVED();
++    }
+ #endif
+     return finished;
+ }
+@@ -936,6 +957,7 @@
+         gSaveFileStatus = status;
+ #ifdef PLATFORM_3DS
+         CtrClockStore_Load(FLASH_BASE, sizeof(FLASH_BASE));
++        CTR_NUZLOCKE_LOADED();
+ #endif
+         gGameContinueCallback = 0;
+         break;

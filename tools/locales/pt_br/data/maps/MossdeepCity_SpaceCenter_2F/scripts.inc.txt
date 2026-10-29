@@ -1,0 +1,152 @@
+# CIDADE DE MOSSDEEP: o CENTRO ESPACIAL, andar de cima, com MAXIE e STEVEN.
+
+[MossdeepCity_SpaceCenter_2F_Text_MossdeepIdealForRockets] d1be973005
+MOSSDEEP tem tempo quase sempre\n
+ensolarado, e os ventos são estáveis.\p
+É o lugar ideal pra lançar foguetes.$
+
+[MossdeepCity_SpaceCenter_2F_Text_WhyWouldMagmaStealRocketFuel] eb361755a5
+Pra que a EQUIPE MAGMA ia querer\n
+roubar o nosso combustível?$
+
+[MossdeepCity_SpaceCenter_2F_Text_WouldveLikedToBeAstronaut] 35d4567b68
+Se eu fosse um pouco mais novo,\n
+queria ter sido astronauta…\p
+Não… Não é tarde demais!\n
+Eu posso e vou tentar!$
+
+[MossdeepCity_SpaceCenter_2F_Text_MagmaCantGetAwayWithThis] dba5094ac9
+Se a EQUIPE MAGMA levar o\n
+combustível, não vou poder ir pro\l
+espaço!\p
+Não podemos deixar passar um\n
+absurdo desses!$
+
+[MossdeepCity_SpaceCenter_2F_Text_WishOrdinaryPeopleCouldGoIntoSpace] 839a8f4ae1
+Queria que um dia pessoas comuns\n
+pudessem ir pro espaço…$
+
+[MossdeepCity_SpaceCenter_2F_Text_DoesMagmaWantToGoToSpace] 7cdae866d8
+EQUIPE MAGMA…\n
+Eles também querem ir pro espaço?$
+
+[MossdeepCity_SpaceCenter_2F_Text_YoureOutnumberedTakeUsOn] d016952095
+Qual é a sua?\p
+É três contra um, e você ainda\n
+quer enfrentar a gente?$
+
+[MossdeepCity_SpaceCenter_2F_Text_GoodAnswer] 01e0abe4d1
+Boa resposta!\n
+É o que alguém esperto faria!$
+
+[MossdeepCity_SpaceCenter_2F_Text_Grunt5Intro] e93d730db7
+Ousadia demais, hein?\n
+Tá, eu vou primeiro!$
+
+[MossdeepCity_SpaceCenter_2F_Text_Grunt5Defeat] c839de03d7
+Perdi!\n
+Mas!$
+
+[MossdeepCity_SpaceCenter_2F_Text_Grunt6Intro] 7a4548eb05
+Ainda é cedo pra relaxar!\n
+Agora sou eu!$
+
+[MossdeepCity_SpaceCenter_2F_Text_Grunt6Defeat] e78bcbad4f
+Também perdi!\n
+Mas!$
+
+[MossdeepCity_SpaceCenter_2F_Text_Grunt7Intro] ffe7a9b1ef
+Aposto que você quer um descanso.\n
+Mas eu não vou deixar!$
+
+[MossdeepCity_SpaceCenter_2F_Text_Grunt7Defeat] 447c95c968
+A gente é que devia ter descansado…\n
+É isso que devia ter feito…$
+
+[MossdeepCity_SpaceCenter_2F_Text_Grunt6PostBattle] 1fe0202d7b
+Três aqui, e olha a situação\n
+vergonhosa em que nos metemos.$
+
+[MossdeepCity_SpaceCenter_2F_Text_Grunt7PostBattle] d544ebba66
+Nós três perdendo assim…\n
+Ficamos três vezes pior que o normal!$
+
+[MossdeepCity_SpaceCenter_2F_Text_Grunt5PostBattle] cd322e7edd
+Será que a gente está sendo útil\n
+pro nosso líder?$
+
+[MossdeepCity_SpaceCenter_2F_Text_WellTakeCareOfYou] c63603bca6
+Hehehe!\p
+Viemos até aqui buscar combustível,\n
+e alguém atrapalha de novo!\p
+Se você também vai se meter, a\n
+gente cuida de você de uma vez!$
+
+[MossdeepCity_SpaceCenter_2F_Text_MaxieDontInterfere] d93eba34d0
+MAXIE: Saia do caminho!\n
+Não ouse atrapalhar!$
+
+[MossdeepCity_SpaceCenter_2F_Text_StevenWhyStealRocketFuel] 4b6e6743b4
+STEVEN: EQUIPE MAGMA…\p
+Pra que roubar combustível de\n
+foguete?$
+
+[MossdeepCity_SpaceCenter_2F_Text_MaxieUseFuelToEruptVolcano] dfbee37297
+MAXIE: Fufufu… Já que está tão\n
+curioso, merece uma explicação.\p
+Vamos despejar a carga toda no\n
+MONTE CHIMNEY!\p
+Sem o GROUDON, não precisamos mais\n
+daquele monte de escória!\p
+Então vamos usar a força do\n
+combustível pra fazer o vulcão\l
+entrar em erupção!\p
+Vai ser selvagem!$
+
+[MossdeepCity_SpaceCenter_2F_Text_StevenAreYouReadyToBattle] e107803d25
+STEVEN: {PLAYER}{KUN}!\n
+Vai me ajudar?\p
+Vamos batalhar juntos!\n
+Pronto pra isso?$
+
+[MossdeepCity_SpaceCenter_2F_Text_StevenHurryGetReadyQuickly] e95435a8d8
+STEVEN: Então, rápido!\n
+Prepare-se logo!$
+
+[MossdeepCity_SpaceCenter_2F_Text_JustWantToExpandLand] 245cd8b2a1
+Tudo o que eu quero…\n
+Só quero expandir a terra firme…$
+
+[MossdeepCity_SpaceCenter_Text_TabithaDefeat] 12d7f674bf
+Estou com o nosso líder…$
+
+[MossdeepCity_SpaceCenter_2F_Text_MaxieWeFailedIsAquaAlsoMisguided] daa3e4c9b1
+MAXIE: Não conseguimos fazer o vulcão\n
+entrar em erupção…\p
+Não conseguimos controlar o GROUDON\n
+depois de despertá-lo…\p
+O nosso objetivo de expandir a terra\n
+está errado?\p
+… … … … … …\n
+… … … … … …\p
+Se…\n
+Se nós, da MAGMA, estamos errados…\l
+… … … … … …\p
+Então o objetivo da EQUIPE AQUA de\n
+expandir o mar também estaria errado?$
+
+[MossdeepCity_SpaceCenter_2F_Text_MaxieWeWillGiveUp] d22b689fe6
+MAXIE: Muito bem…\n
+Vamos desistir do combustível…\p
+Parece que há assuntos mais\n
+importantes que preciso examinar…$
+
+[MossdeepCity_SpaceCenter_2F_Text_StevenThankYouComeSeeMeAtHome] 06d7faee00
+STEVEN: Ufa, que tensão.\n
+{PLAYER}{KUN}, obrigado.\p
+Tenho algo pra te dar como\n
+agradecimento pela ajuda.\p
+Por favor, venha me ver em casa\n
+depois disto.\p
+Ah, sim, eu não moro na CIDADE DE\n
+RUSTBORO. Moro aqui mesmo, nesta ilha.$

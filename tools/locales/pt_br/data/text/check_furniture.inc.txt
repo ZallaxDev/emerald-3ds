@@ -1,0 +1,22 @@
+# Móveis que se examinam nas casas.
+
+[Text_PictureBookShelf] aff5d7dfa2
+Uma coleção de livros ilustrados\nde POKéMON.$
+
+[Text_BookShelf] b78840c513
+Está cheia de todo tipo de livro.$
+
+[Text_PokemonCenterBookShelf] 913df06658
+Revistas de POKéMON!\nAMIGO POKéMON…\pMANUAL POKéMON…\nPOKéMON FOFINHOS…$
+
+[Text_Vase] 0f747893de
+Este vaso parece caro…\nDeu uma espiada dentro…\pMas estava vazio.$
+
+[Text_EmptyTrashCan] 3c62558597
+Está vazio.$
+
+[Text_ShopShelf] 58405315e6
+As prateleiras estão lotadas de\nprodutos de POKéMON.$
+
+[Text_Blueprint] 3a9f4288c6
+Uma planta de alguma coisa?\nÉ complicado demais!$

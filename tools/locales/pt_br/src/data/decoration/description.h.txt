@@ -1,0 +1,579 @@
+# As descrições das decorações (src/data/decoration/description.h): até 3
+# linhas de 105 px, como o inglês, na janela estreita do PC da BASE SECRETA.
+
+[DecorDesc_SMALL_DESK] 5cb06b971e width=105
+Uma mesa pequena\n
+feita para um.
+
+[DecorDesc_POKEMON_DESK] e8f70b5a35 width=105
+Uma mesa pequena\n
+com o formato de\n
+uma POKé BOLA.
+
+[DecorDesc_HEAVY_DESK] 7f59531dcf width=105
+Uma mesa grande de\n
+aço. Ponha\n
+decorações nela.
+
+[DecorDesc_RAGGED_DESK] 87bfc41860 width=105
+Uma mesa grande de\n
+madeira. Ponha\n
+decorações nela.
+
+[DecorDesc_COMFORT_DESK] e9ff0e2470 width=105
+Uma mesa grande de\n
+folhas. Ponha\n
+decorações nela.
+
+[DecorDesc_PRETTY_DESK] ed09bcf18e width=105
+Uma mesa enorme de\n
+vidro. Cabem muitas\n
+decorações.
+
+[DecorDesc_BRICK_DESK] cc0f92e09e width=105
+Uma mesa enorme de\n
+tijolo. Cabem muitas\n
+decorações.
+
+[DecorDesc_CAMP_DESK] 81ca19716c width=105
+Uma mesa enorme de\n
+troncos. Cabem\n
+muitas decorações.
+
+[DecorDesc_HARD_DESK] 67df82d508 width=105
+Uma mesa enorme de\n
+pedra. Cabem muitas\n
+decorações.
+
+[DecorDesc_SMALL_CHAIR] 87a06b1468 width=105
+Uma cadeira pequena\n
+feita para um.
+
+[DecorDesc_POKEMON_CHAIR] dc6e9bec70 width=105
+Uma cadeira pequena\n
+com o formato de\n
+uma POKé BOLA.
+
+[DecorDesc_HEAVY_CHAIR] be51bfc8b6 width=105
+Uma cadeira pequena\n
+de aço.
+
+[DecorDesc_PRETTY_CHAIR] 8478f9a628 width=105
+Uma cadeira pequena\n
+de vidro.
+
+[DecorDesc_COMFORT_CHAIR] c81b9e6e7a width=105
+Uma cadeira pequena\n
+de folhas.
+
+[DecorDesc_RAGGED_CHAIR] 13e284be01 width=105
+Uma cadeira pequena\n
+de madeira.
+
+[DecorDesc_BRICK_CHAIR] 1d75fdd9c5 width=105
+Uma cadeira pequena\n
+de tijolo.
+
+[DecorDesc_CAMP_CHAIR] 0211e541ac width=105
+Uma cadeira pequena\n
+de troncos.
+
+[DecorDesc_HARD_CHAIR] 7321ba7bed width=105
+Uma cadeira pequena\n
+de pedra.
+
+[DecorDesc_RED_PLANT] 23849b618e width=105
+Uma planta num\n
+vaso, de um vermelho\n
+vivo.
+
+[DecorDesc_TROPICAL_PLANT] 22643d477c width=105
+Uma planta tropical\n
+florida num vaso.
+
+[DecorDesc_PRETTY_FLOWERS] cd14e91dd3 width=105
+Um vaso de flores\n
+lindas.
+
+[DecorDesc_COLORFUL_PLANT] fc7a95fa5c width=105
+Um vaso grande com\n
+muitas flores\n
+coloridas.
+
+[DecorDesc_BIG_PLANT] d63bbc1268 width=105
+Uma planta grande\n
+em forma de\n
+guarda-chuva.
+
+[DecorDesc_GORGEOUS_PLANT] c33cd53c28 width=105
+Uma planta grande e\n
+imponente num vaso.
+
+[DecorDesc_RED_BRICK] 624606f662 width=105
+Um tijolo vermelho.\n
+Dá para pôr\n
+decorações em cima.
+
+[DecorDesc_YELLOW_BRICK] bb3a1b4e5a width=105
+Um tijolo amarelo.\n
+Dá para pôr\n
+decorações em cima.
+
+[DecorDesc_BLUE_BRICK] de6b9ae430 width=105
+Um tijolo azul. Dá\n
+para pôr decorações\n
+em cima.
+
+[DecorDesc_RED_BALLOON] 51f0c132dd width=105
+Um balão vermelho\n
+cheio de água.\n
+Estoura se pisado.
+
+[DecorDesc_BLUE_BALLOON] b8c4e3801c width=105
+Um balão azul cheio\n
+de água. Estoura se\n
+pisado.
+
+[DecorDesc_YELLOW_BALLOON] 3a8b58a862 width=105
+Um balão amarelo\n
+cheio de água.\n
+Estoura se pisado.
+
+[DecorDesc_RED_TENT] 1cb769fdcc width=105
+Uma barraca\n
+vermelha grande. Dá\n
+para entrar nela.
+
+[DecorDesc_BLUE_TENT] c8b81744d6 width=105
+Uma barraca azul\n
+grande. Dá para\n
+entrar nela.
+
+[DecorDesc_SOLID_BOARD] 5ac01e4b92 width=105
+Ponha sobre um\n
+buraco para passar\n
+ao outro lado.
+
+[DecorDesc_SLIDE] b19cebb6b5 width=105
+Use para escorregar\n
+do alto da\n
+plataforma.
+
+[DecorDesc_FENCE_LENGTH] 524b3157fc width=105
+Uma cerca pequena\n
+que bloqueia a\n
+passagem.
+
+[DecorDesc_FENCE_WIDTH] 524b3157fc width=105
+Uma cerca pequena\n
+que bloqueia a\n
+passagem.
+
+[DecorDesc_TIRE] a0a7fd2174 width=105
+Um pneu velho e\n
+grande. Dá para pôr\n
+decorações em cima.
+
+[DecorDesc_STAND] 2e85c53437 width=105
+Um pedestal grande\n
+com degraus.
+
+[DecorDesc_MUD_BALL] dae4d3b955 width=105
+Uma bola grande de\n
+lama. Desmancha se\n
+pisada.
+
+[DecorDesc_BREAKABLE_DOOR] 2a80519c4a width=105
+Uma porta estranha\n
+que dá para\n
+atravessar.
+
+[DecorDesc_SAND_ORNAMENT] 3444dd2c4d width=105
+Um enfeite de areia.\n
+Desmancha se\n
+tocado.
+
+[DecorDesc_SILVER_SHIELD] d94ee36bfb width=105
+Por 50 vitórias\n
+seguidas na TORRE\n
+DE BATALHA.
+
+[DecorDesc_GOLD_SHIELD] 8752c2c684 width=105
+Por 100 vitórias\n
+seguidas na TORRE\n
+DE BATALHA.
+
+[DecorDesc_GLASS_ORNAMENT] 0a3d49eafa width=105
+Réplica em vidro de\n
+uma escultura do\n
+MUSEU DE ARTE.
+
+[DecorDesc_TV] 4b4c5fe56f width=105
+Uma TV de brinquedo\n
+pequena e cinza.
+
+[DecorDesc_ROUND_TV] cf361c93b5 width=105
+Uma TV de brinquedo\n
+no formato de um\n
+SEEDOT.
+
+[DecorDesc_CUTE_TV] 085c90baec width=105
+Uma TV de brinquedo\n
+no formato de um\n
+SKITTY.
+
+[DecorDesc_GLITTER_MAT] db0f132d48 width=105
+Um tapete estranho\n
+que brilha quando\n
+pisado.
+
+[DecorDesc_JUMP_MAT] b35859e3b0 width=105
+Um tapete de truque\n
+que pula quando\n
+pisado.
+
+[DecorDesc_SPIN_MAT] 64396dafd3 width=105
+Um tapete de truque\n
+que gira quando\n
+pisado.
+
+[DecorDesc_C_LOW_NOTE_MAT] 193665108f width=105
+Um tapete que toca\n
+um DÓ grave quando\n
+pisado.
+
+[DecorDesc_D_NOTE_MAT] 16e0ad33c2 width=105
+Um tapete que toca\n
+um RÉ quando\n
+pisado.
+
+[DecorDesc_E_NOTE_MAT] 8b26c9e074 width=105
+Um tapete que toca\n
+um MI quando\n
+pisado.
+
+[DecorDesc_F_NOTE_MAT] fea4111cc1 width=105
+Um tapete que toca\n
+um FÁ quando\n
+pisado.
+
+[DecorDesc_G_NOTE_MAT] eb4f250731 width=105
+Um tapete que toca\n
+um SOL quando\n
+pisado.
+
+[DecorDesc_A_NOTE_MAT] 998b4d69db width=105
+Um tapete que toca\n
+um LÁ quando\n
+pisado.
+
+[DecorDesc_B_NOTE_MAT] 4d09153ba5 width=105
+Um tapete que toca\n
+um SI quando\n
+pisado.
+
+[DecorDesc_C_HIGH_NOTE_MAT] 9117c47342 width=105
+Um tapete que toca\n
+um DÓ agudo quando\n
+pisado.
+
+[DecorDesc_SURF_MAT] 45e3ddcbaa width=105
+Tapete com a imagem\n
+de SURFAR. Ponha\n
+itens em cima.
+
+[DecorDesc_THUNDER_MAT] f93098b0ed width=105
+Tapete com a imagem\n
+de TROVÃO. Ponha\n
+itens em cima.
+
+[DecorDesc_FIRE_BLAST_MAT] 722a4bd04e width=105
+Tapete com a imagem\n
+de RAJADA FOGO.\n
+Ponha itens em cima.
+
+[DecorDesc_POWDER_SNOW_MAT] 4b9d26672e width=105
+Tapete com a imagem\n
+de NEVE EM PÓ. Ponha\n
+itens em cima.
+
+[DecorDesc_ATTRACT_MAT] 71f7fb8d16 width=105
+Tapete com a imagem\n
+de ATRAÇÃO. Ponha\n
+itens em cima.
+
+[DecorDesc_FISSURE_MAT] b10474b44a width=105
+Tapete com a imagem\n
+de FISSURA. Ponha\n
+itens em cima.
+
+[DecorDesc_SPIKES_MAT] fd116263f2 width=105
+Tapete com a imagem\n
+de TACHINHAS. Ponha\n
+itens em cima.
+
+[DecorDesc_BALL_POSTER] 40646e2437 width=105
+Um pôster pequeno\n
+com POKé BOLAS.
+
+[DecorDesc_GREEN_POSTER] 238e37627d width=105
+Um pôster pequeno\n
+com um TREECKO.
+
+[DecorDesc_RED_POSTER] 9260cf97e7 width=105
+Um pôster pequeno\n
+com um TORCHIC.
+
+[DecorDesc_BLUE_POSTER] 142d2730e0 width=105
+Um pôster pequeno\n
+com um MUDKIP.
+
+[DecorDesc_CUTE_POSTER] 56b58360ce width=105
+Um pôster pequeno\n
+com um AZURILL.
+
+[DecorDesc_PIKA_POSTER] 632b047004 width=105
+Um pôster grande\n
+com PIKACHU e\n
+PICHU.
+
+[DecorDesc_LONG_POSTER] 05f15ee6df width=105
+Um pôster grande\n
+com um SEVIPER.
+
+[DecorDesc_SEA_POSTER] 1e3fd993ec width=105
+Um pôster grande\n
+com um RELICANTH.
+
+[DecorDesc_SKY_POSTER] 2dc2fe0a0e width=105
+Um pôster grande\n
+com um WINGULL.
+
+[DecorDesc_KISS_POSTER] 9f93199c59 width=105
+Um pôster grande\n
+com um SMOOCHUM.
+
+[DecorDesc_PICHU_DOLL] 6bca14d450 width=105
+Boneco de PICHU.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_PIKACHU_DOLL] 063f737cb7 width=105
+Boneco de PIKACHU.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_MARILL_DOLL] 572654addf width=105
+Boneco de MARILL.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_TOGEPI_DOLL] e8a92c99cf width=105
+Boneco de TOGEPI.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_CYNDAQUIL_DOLL] a9fb850560 width=105
+Boneco de\n
+CYNDAQUIL. Vai num\n
+tapete ou mesa.
+
+[DecorDesc_CHIKORITA_DOLL] d476faf688 width=105
+Boneco de\n
+CHIKORITA. Vai num\n
+tapete ou mesa.
+
+[DecorDesc_TOTODILE_DOLL] a04076b3b8 width=105
+Boneco de TOTODILE.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_JIGGLYPUFF_DOLL] 7987f3174e width=105
+Boneco de\n
+JIGGLYPUFF. Vai num\n
+tapete ou mesa.
+
+[DecorDesc_MEOWTH_DOLL] eaa1b9445d width=105
+Boneco de MEOWTH.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_CLEFAIRY_DOLL] 25df128a83 width=105
+Boneco de CLEFAIRY.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_DITTO_DOLL] c9f84efef5 width=105
+Boneco de DITTO.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_SMOOCHUM_DOLL] 02fb3ba4f2 width=105
+Boneco de SMOOCHUM.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_TREECKO_DOLL] 2106bcd5e0 width=105
+Boneco de TREECKO.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_TORCHIC_DOLL] 3c44949222 width=105
+Boneco de TORCHIC.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_MUDKIP_DOLL] deff331dab width=105
+Boneco de MUDKIP.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_DUSKULL_DOLL] aab7c7cb8d width=105
+Boneco de DUSKULL.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_WYNAUT_DOLL] 88e47a6666 width=105
+Boneco de WYNAUT.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_BALTOY_DOLL] cd23480422 width=105
+Boneco de BALTOY.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_KECLEON_DOLL] 2e291948e6 width=105
+Boneco de KECLEON.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_AZURILL_DOLL] b17791c896 width=105
+Boneco de AZURILL.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_SKITTY_DOLL] c1418243a2 width=105
+Boneco de SKITTY.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_SWABLU_DOLL] 1cbdc3c76a width=105
+Boneco de SWABLU.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_GULPIN_DOLL] 6c299f99a7 width=105
+Boneco de GULPIN.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_LOTAD_DOLL] f57dc84295 width=105
+Boneco de LOTAD.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_SEEDOT_DOLL] 9a24429046 width=105
+Boneco de SEEDOT.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_PIKA_CUSHION] 16e4efe038 width=105
+Almofada de\n
+PIKACHU. Vai num\n
+tapete ou mesa.
+
+[DecorDesc_ROUND_CUSHION] 50b85de15f width=105
+Almofada de MARILL.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_KISS_CUSHION] 1c787a47fb width=105
+Almofada de\n
+SMOOCHUM. Vai num\n
+tapete ou mesa.
+
+[DecorDesc_ZIGZAG_CUSHION] 0bb938c4af width=105
+Almofada de\n
+ZIGZAGOON. Vai num\n
+tapete ou mesa.
+
+[DecorDesc_SPIN_CUSHION] e31494db92 width=105
+Almofada de SPINDA.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_DIAMOND_CUSHION] 7ab36df579 width=105
+Almofada de\n
+SABLEYE. Vai num\n
+tapete ou mesa.
+
+[DecorDesc_BALL_CUSHION] 67b002780f width=105
+Almofada de BOLA.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_GRASS_CUSHION] 7e512035cc width=105
+Almofada do símbolo\n
+planta. Vai num\n
+tapete ou mesa.
+
+[DecorDesc_FIRE_CUSHION] 1641234de5 width=105
+Almofada do símbolo\n
+fogo. Vai num\n
+tapete ou mesa.
+
+[DecorDesc_WATER_CUSHION] ab06c5e22e width=105
+Almofada do símbolo\n
+água. Vai num\n
+tapete ou mesa.
+
+[DecorDesc_SNORLAX_DOLL] 3a7a1e78d9 width=105
+Um boneco grande.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_RHYDON_DOLL] 3a7a1e78d9 width=105
+Um boneco grande.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_LAPRAS_DOLL] 3a7a1e78d9 width=105
+Um boneco grande.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_VENUSAUR_DOLL] 3a7a1e78d9 width=105
+Um boneco grande.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_CHARIZARD_DOLL] 3a7a1e78d9 width=105
+Um boneco grande.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_BLASTOISE_DOLL] 3a7a1e78d9 width=105
+Um boneco grande.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_WAILMER_DOLL] 3a7a1e78d9 width=105
+Um boneco grande.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_REGIROCK_DOLL] 3a7a1e78d9 width=105
+Um boneco grande.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_REGICE_DOLL] 3a7a1e78d9 width=105
+Um boneco grande.\n
+Vai num tapete ou\n
+mesa.
+
+[DecorDesc_REGISTEEL_DOLL] 3a7a1e78d9 width=105
+Um boneco grande.\n
+Vai num tapete ou\n
+mesa.

@@ -1,0 +1,31 @@
+# FRONTEIRA DE BATALHA: o salão 8.
+
+[BattleFrontier_Lounge8_Text_WhatATrainerNeeds] 34fc9579b7
+Do que um TREINADOR precisa…\p
+Conhecimento…\n
+Estratégia…\l
+Sorte…\l
+Garra…\l
+Espírito…\l
+Coragem…\l
+E talento…\p
+Bom, tenho tudo isso!\n
+Vou ser imbatível em todo prédio!\p
+Hã? POKéMON?\n
+O que é isso?$
+
+[BattleFrontier_Lounge8_Text_KnowAboutFrontierBrains] ddbf2baba2
+Conhece os CÉREBROS DA FRONTEIRA?\p
+É como o SCOTT chama os sete\n
+TREINADORES especiais que comandam\l
+as sete instalações da FRONTEIRA.$
+
+[BattleFrontier_Lounge8_Text_ToldMeIHaveTalentForBattling] bd3b96ea1a
+Na TORRE DE BATALHA, uma moça mais\n
+velha me disse que tenho muito\l
+talento pra batalhar!\p
+Mas eu gosto mais de CONCURSOS\n
+POKéMON!\p
+Só que sou ruim nos CONCURSOS!\p
+Acho que ter talento e gostar de\n
+alguma coisa não é a mesma coisa.$

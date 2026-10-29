@@ -1,0 +1,32 @@
+# ROTA 113: a cinza vulcânica e as placas.
+
+[Route113_Text_AshCanBeFashionedIntoGlass] 0e6822ec95
+Wahahaha! A tecnologia de hoje é\n
+uma maravilha!\p
+Veja esta cinza vulcânica.\n
+Dá pra transformar em vidro.$
+
+[Route113_Text_FunWalkingThroughAsh] aab7da4f03
+É divertido andar pela cinza do vulcão\n
+no chão e na grama.\p
+Dá pra ver por onde você passou.\n
+Muito legal!$
+
+[Route113_Text_RouteSign111] 298b1268aa
+ROTA 113\n
+{RIGHT_ARROW} ROTA 111$
+
+[Route113_Text_RouteSignFallarbor] 5014514573
+ROTA 113\n
+{LEFT_ARROW} CIDADE DE FALLARBOR$
+
+[Route113_Text_TrainerTipsRegisterKeyItems] d26b3c82e5
+DICAS DE TREINADOR\p
+Você pode registrar um dos ITENS-CHAVE\n
+da BOLSA no botão SELECT.\p
+É só apertar SELECT pra usar o\n
+item registrado com facilidade.$
+
+[Route113_Text_GlassWorkshopSign] 00fdfe8e79
+OFICINA DE VIDRO\n
+“Cinza vulcânica vira peça de vidro”$

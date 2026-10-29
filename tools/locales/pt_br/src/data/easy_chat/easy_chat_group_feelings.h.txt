@@ -1,0 +1,210 @@
+# As palavras da FALA FÁCIL, grupo feelings (src/data/easy_chat/easy_chat_group_feelings.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_Meet] e6e3ef5c1e width=72
+ENCONTRAR
+
+[gEasyChatWord_Play] 42c5cda0ff width=72
+BRINCAR
+
+[gEasyChatWord_Hurried] aa5391af61 width=72
+APRESSADO
+
+[gEasyChatWord_Goes] 641dc80ac4 width=72
+VAI
+
+[gEasyChatWord_Giddy] e2d182c47e width=72
+EUFÓRICO
+
+[gEasyChatWord_Happy] 309e84e747 width=72
+FELIZ
+
+[gEasyChatWord_Happiness] 7764cb92a9 width=72
+FELICIDADE
+
+[gEasyChatWord_Excite] d1cdeddee0 width=72
+ANIMAR
+
+[gEasyChatWord_Important] 58bf20abc8 width=72
+IMPORTANTE
+
+[gEasyChatWord_Funny] a7db31891b width=72
+ENGRAÇADO
+
+[gEasyChatWord_Got] de49aad8c8 width=72
+CONSEGUIU
+
+[gEasyChatWord_GoHome] 64812fe8b3 width=72
+IR PRA CASA
+
+[gEasyChatWord_Disappointed] 0f85184508 width=72
+DECEPCIONADO
+
+[gEasyChatWord_Disappoints] fb4549654c width=72
+DECEPCIONA
+
+[gEasyChatWord_Sad] c4c997f696 width=72
+TRISTE
+
+[gEasyChatWord_Try] 51baf72a38 width=72
+TENTAR
+
+[gEasyChatWord_Tries] cbc6169c9c width=72
+TENTA
+
+[gEasyChatWord_Hears] 4da2b7fe27 width=72
+OUVE
+
+[gEasyChatWord_Think] e1d5e6ffa7 width=72
+PENSAR
+
+[gEasyChatWord_Hear] d3a0a98a99 width=72
+OUVIR
+
+[gEasyChatWord_Wants] b4a85047c2 width=72
+QUER
+
+[gEasyChatWord_Misheard] 5f03bd05e7 width=72
+OUVIU MAL
+
+[gEasyChatWord_Dislike] f07e9e0e3c width=72
+NÃO GOSTAR
+
+[gEasyChatWord_Angry] d5d8bd5bbe width=72
+BRAVO
+
+[gEasyChatWord_Anger] 4ba0b888a0 width=72
+RAIVA
+
+[gEasyChatWord_Scary] 6ace5aa259 width=72
+ASSUSTADOR
+
+[gEasyChatWord_Lonesome] 9dbe14b01f width=72
+SOLITÁRIO
+
+[gEasyChatWord_Disappoint] ab9de04a71 width=72
+DECEPCIONAR
+
+[gEasyChatWord_Joy] 16dc18f900 width=72
+ALEGRIA
+
+[gEasyChatWord_Gets] 9079fa1c21 width=72
+CONSEGUE
+
+[gEasyChatWord_Never] f8ed30c200 width=72
+NUNCA
+
+[gEasyChatWord_Darn] 7428134434 width=72
+DROGA
+
+[gEasyChatWord_Downcast] 14c5c3f56a width=72
+ABATIDO
+
+[gEasyChatWord_Incredible] 84560cd808 width=72
+INCRÍVEL
+
+[gEasyChatWord_Likes] ea62ff9942 width=72
+GOSTA
+
+[gEasyChatWord_Dislikes] 963fe60cc5 width=72
+NÃO GOSTA
+
+[gEasyChatWord_Boring] d89f1a596a width=72
+CHATO
+
+[gEasyChatWord_Care] 5f93388d9c width=72
+LIGAR
+
+[gEasyChatWord_Cares] 8ba2d75a17 width=72
+LIGA
+
+[gEasyChatWord_AllRight] 3f27c4535f width=72
+TUDO BEM
+
+[gEasyChatWord_Adore] 787be2830c width=72
+ADORAR
+
+[gEasyChatWord_Disaster] 97e7075b86 width=72
+DESASTRE
+
+[gEasyChatWord_Enjoy] 9c3f6b721c width=72
+CURTIR
+
+[gEasyChatWord_Enjoys] 0b0eef169d width=72
+CURTE
+
+[gEasyChatWord_Eat] 12ef1e2dc4 width=72
+COMER
+
+[gEasyChatWord_Lacking] ab9805b7c3 width=72
+FALTANDO
+
+[gEasyChatWord_Bad] 28f6edbb2a width=72
+RUIM
+
+[gEasyChatWord_Hard] a06a582e9d width=72
+DIFÍCIL
+
+[gEasyChatWord_Terrible] 677bcde1fd width=72
+TERRÍVEL
+
+[gEasyChatWord_Should] 4a05221946 width=72
+DEVERIA
+
+[gEasyChatWord_Nice] 6ae12d1c10 width=72
+LEGAL
+
+[gEasyChatWord_Drink] 4d48a05bb7 width=72
+BEBER
+
+[gEasyChatWord_Surprise] 8753a1765f width=72
+SURPRESA
+
+[gEasyChatWord_Fear] 75eb3ddd7f width=72
+MEDO
+
+[gEasyChatWord_Want] f50a84b00b width=72
+QUERER
+
+[gEasyChatWord_Wait] c26d74df88 width=72
+ESPERAR
+
+[gEasyChatWord_Satisfied] 00f3e1ce6d width=72
+SATISFEITO
+
+[gEasyChatWord_See] 6f97367b2e width=72
+VER
+
+[gEasyChatWord_Rare] 647bf4ae5c width=72
+RARO
+
+[gEasyChatWord_Negative] fe31337a17 width=72
+NEGATIVO
+
+[gEasyChatWord_Done] e782e7728e width=72
+FEITO
+
+[gEasyChatWord_Danger] 9330c1e312 width=72
+PERIGO
+
+[gEasyChatWord_Defeated] 7fdf5e523f width=72
+DERROTADO
+
+[gEasyChatWord_Beat] d1f90e62ad width=72
+VENCER
+
+[gEasyChatWord_Great] da3f9e988f width=72
+ÓTIMO
+
+[gEasyChatWord_Romantic] 98016b81d2 width=72
+ROMÂNTICO
+
+[gEasyChatWord_Question] dcf89b04f7 width=72
+PERGUNTA
+
+[gEasyChatWord_Understand] d95b59d8a6 width=72
+ENTENDER
+
+[gEasyChatWord_Understands] 425f96d7ba width=72
+ENTENDE

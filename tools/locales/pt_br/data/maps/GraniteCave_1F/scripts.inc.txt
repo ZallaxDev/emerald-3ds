@@ -1,0 +1,21 @@
+# CAVERNA GRANITO, 1º andar: o alpinista da MO CLARÃO.
+
+[GraniteCave_1F_Text_GetsDarkAheadHereYouGo] d963773136
+Ei, você.\n
+Mais pra frente fica muito escuro.\l
+Vai ser difícil explorar.\p
+Aquele cara que passou aqui antes…\n
+STEVEN, acho que era isso.\p
+Ele sabia usar CLARÃO, então deve\n
+estar bem, mas…\p
+Bom, pra nós, ALPINISTAS, ajudar quem\n
+a gente encontra é o nosso lema.\p
+Tome, vou passar isto pra você.$
+
+[GraniteCave_1F_Text_ExplainFlash] 5078d82ff5
+Ensine o golpe oculto CLARÃO a um\n
+POKéMON e use.\p
+Ilumina até a escuridão total\n
+das cavernas.\p
+Mas, pra usar, você precisa da INSÍGNIA\n
+do GINÁSIO POKéMON de DEWFORD.$

@@ -1,0 +1,109 @@
+; Weather particles vertex shader: the rain's streaks, the sand's and the ash's
+; flakes (DrawWeather in ctr_voxel.c).
+;
+; Every particle sits at a fixed place in a box, as a fraction of it in
+; 1/32768 (v0.xyz), with its alpha in 1/16384 (v0.w); v1 is the vertex's
+; corner of the particle, in 1/64 of the two vectors `across` and `along`.
+; Nothing is rewritten while it falls: each frame moves the whole box's
+; contents by `boxOffset` (fractions, already wrapped) and the shader wraps
+; every particle back into the box, so the CPU sets a few uniforms and the
+; buffer built at start-up is drawn as it is.
+;   p      = frac(v0.xyz / 32768 + boxOffset)        where in the box
+;   world  = boxBase + p * boxSize + across * cx + along * cy
+; A particle thins to nothing towards the box's sides (boxSize.w across,
+; boxOffset.w along the view) and its top and bottom (boxBase.w), so none is
+; seen to wrap; right in front of the lens (from across.w, over 1 / along.w
+; of depth), so none passes through it as a smear; and into the distance as
+; the world's haze does (fog, as in voxel.v.pica): alpha goes out in colour,
+; halved for the texture environment's doubling, and 1 - haze in alpha.
+;
+; The first uniforms and the constant are voxel.v.pica's own, declared alike
+; so that both programs keep them in the same registers.
+
+.fvec projection[4], modelView[4], origin
+.fvec shadeTint, tintDiff, grade, fog
+.fvec dappleU, dappleV
+
+; x: position scale, y: shade scale, z: 0, w: 1
+.constf ctrVoxelConst(0.001953125, 0.00006103515625, 0.0, 1.0)
+.alias  ones  ctrVoxelConst.wwww
+.alias  zeros ctrVoxelConst.zzzz
+
+.fvec boxOffset, boxSize, boxBase, across, along
+
+; x: box fraction scale, y: corner scale, z: one half, w: alpha halved
+.constf weatherConst(0.000030517578125, 0.015625, 0.5, 0.000030517578125)
+.alias  halves weatherConst.zzzz
+
+.entry weatherMain
+
+.out outpos position
+.out outclr color
+
+.alias inpos    v0 ; x, y, z in the box, alpha
+.alias incorner v1 ; across, along
+
+.proc weatherMain
+	; r0 = where in the box, wrapped to [0, 1)
+	mul r0, weatherConst.xxxx, inpos
+	add r0, boxOffset, r0
+	flr r1, r0
+	add r0, r0, -r1
+
+	; r2 = how far from the nearest side, 0 there and 0.5 in the middle
+	add r2, -halves, r0
+	max r2, r2, -r2
+	add r2, halves, -r2
+	; r3.x = the fade across the sides, r3.y = up and down
+	mul r3.x, boxSize.wwww, r2.xxxx
+	mul r3.z, boxOffset.wwww, r2.zzzz
+	min r3.x, r3.x, r3.z
+	mul r3.y, boxBase.wwww, r2.yyyy
+	min r3.x, r3.x, r3.y
+	min r3.x, ones, r3.x
+
+	; r4 = the particle's place from the anchor
+	mul r4, boxSize, r0
+	add r4, boxBase, r4
+	mul r5, weatherConst.yyyy, incorner
+	mul r6, across, r5.xxxx
+	add r4, r4, r6
+	mul r6, along, r5.yyyy
+	add r4, r4, r6
+	mov r4.w, ones
+
+	; r1 = modelView * r4
+	dp4 r1.x, modelView[0], r4
+	dp4 r1.y, modelView[1], r4
+	dp4 r1.z, modelView[2], r4
+	dp4 r1.w, modelView[3], r4
+
+	; outpos = projection * r1
+	dp4 outpos.x, projection[0], r1
+	dp4 outpos.y, projection[1], r1
+	dp4 outpos.z, projection[2], r1
+	dp4 outpos.w, projection[3], r1
+
+	; r5 = haze from view-space depth (the camera looks down -Z)
+	mul r5, fog.xxxx, r1.zzzz
+	add r5, fog.yyyy, r5
+	max r5, zeros, r5
+	min r5, fog.zzzz, r5
+	add r5, ones, -r5
+
+	; r7 = the fade at the lens: (depth - across.w) x along.w, clamped
+	add r7, -across.wwww, -r1.zzzz
+	mul r7, along.wwww, r7
+	max r7, zeros, r7
+	min r7, ones, r7
+
+	; alpha = shade x fade x lens x (1 - haze), halved
+	mul r6, weatherConst.wwww, inpos.wwww
+	mul r6, r3.xxxx, r6
+	mul r6, r7, r6
+	mul r6, r5, r6
+	mov outclr.xyz, r6
+	mov outclr.w, r5
+
+	end
+.end

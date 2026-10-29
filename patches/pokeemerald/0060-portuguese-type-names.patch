@@ -1,0 +1,83 @@
+Pokémon Emerald 3Ds Dual Screen changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: room for the Portuguese type names
+Applies after 0059-portuguese-category-word-order.patch; apply with tools/bootstrap.py.
+
+diff --git a/include/constants/global.h b/include/constants/global.h
+--- a/include/constants/global.h
++++ b/include/constants/global.h
+@@ -104,7 +104,12 @@
+ #define WONDER_NEWS_TEXT_LENGTH 40
+ #define WONDER_CARD_BODY_TEXT_LINES 4
+ #define WONDER_NEWS_BODY_TEXT_LINES 10
++// 9 for the Portuguese names (TERRESTRE); the other builds keep 6.
++#if CTR_LANG_PT_BR
++#define TYPE_NAME_LENGTH 9
++#else
+ #define TYPE_NAME_LENGTH 6
++#endif
+ #define ABILITY_NAME_LENGTH 12
+ #define TRAINER_NAME_LENGTH 10
+ 
+diff --git a/src/battle_message.c b/src/battle_message.c
+--- a/src/battle_message.c
++++ b/src/battle_message.c
+@@ -1345,7 +1345,7 @@ static const u8 sText_ApostropheS[] = _("'s");
+ 
+ // For displaying names of invalid moves.
+ // This is large enough that the text for TYPE_ELECTRIC will exceed TEXT_BUFF_ARRAY_COUNT.
+-#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN)
++#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || GAME_LANGUAGE == LANGUAGE_ITALIAN || CTR_LANG_PT_BR)
+ static const u8 sATypeMove_Table[NUMBER_OF_MON_TYPES][22] =
+ #else
+ static const u8 sATypeMove_Table[NUMBER_OF_MON_TYPES][17] =
+@@ -2180,7 +2180,14 @@ void BufferStringBattle(u16 stringID)
+         ChooseMoveUsedParticle(gBattleTextBuff1); // buff1 doesn't appear in the string, leftover from japanese move names
+ 
+         if (gBattleMsgDataPtr->currentMove >= MOVES_COUNT)
+-            StringCopy(gBattleTextBuff2, sATypeMove_Table[*(&gBattleStruct->stringMoveType)]);
++        {
++            // Cut to the buffer, which keeps room for the "!" added below.
++            u8 typeMove[sizeof(sATypeMove_Table[0])];
++
++            StringCopy(typeMove, sATypeMove_Table[*(&gBattleStruct->stringMoveType)]);
++            typeMove[TEXT_BUFF_ARRAY_COUNT - 2] = EOS;
++            StringCopy(gBattleTextBuff2, typeMove);
++        }
+         else
+             StringCopy(gBattleTextBuff2, gMoveNames[gBattleMsgDataPtr->currentMove]);
+ 
+diff --git a/src/pokedex.c b/src/pokedex.c
+--- a/src/pokedex.c
++++ b/src/pokedex.c
+@@ -4974,6 +4974,19 @@ static void PrintSearchText(const u8 *str, u32 x, u32 y)
+     AddTextPrinterParameterized4(0, FONT_NORMAL, x, y, 0, 0, color, TEXT_SKIP_DRAW, str);
+ }
+ 
++// The two type boxes are 48 pixels apart: a longer name (TERRESTRE) takes
++// the narrow font.
++static void PrintSearchTypeText(const u8 *str, u32 x, u32 y)
++{
++    u8 color[3];
++    u8 fontId = GetStringWidth(FONT_NORMAL, str, 0) > 46 ? FONT_NARROW : FONT_NORMAL;
++
++    color[0] = TEXT_COLOR_TRANSPARENT;
++    color[1] = TEXT_DYNAMIC_COLOR_6;
++    color[2] = TEXT_COLOR_DARK_GRAY;
++    AddTextPrinterParameterized4(0, fontId, x, y, 0, 0, color, TEXT_SKIP_DRAW, str);
++}
++
+ static void ClearSearchMenuRect(u32 x, u32 y, u32 width, u32 height)
+ {
+     FillWindowPixelRect(0, PIXEL_FILL(0), x, y, width, height);
+@@ -5602,10 +5615,10 @@ static void PrintSelectedSearchParameters(u8 taskId)
+     PrintSearchText(sDexSearchColorOptions[searchParamId].title, 0x2D, 0x21);
+ 
+     searchParamId = gTasks[taskId].tCursorPos_TypeLeft + gTasks[taskId].tScrollOffset_TypeLeft;
+-    PrintSearchText(sDexSearchTypeOptions[searchParamId].title, 0x2D, 0x31);
++    PrintSearchTypeText(sDexSearchTypeOptions[searchParamId].title, 0x2D, 0x31);
+ 
+     searchParamId = gTasks[taskId].tCursorPos_TypeRight + gTasks[taskId].tScrollOffset_TypeRight;
+-    PrintSearchText(sDexSearchTypeOptions[searchParamId].title, 0x5D, 0x31);
++    PrintSearchTypeText(sDexSearchTypeOptions[searchParamId].title, 0x5D, 0x31);
+ 
+     searchParamId = gTasks[taskId].tCursorPos_Order + gTasks[taskId].tScrollOffset_Order;
+     PrintSearchText(sDexOrderOptions[searchParamId].title, 0x2D, 0x41);

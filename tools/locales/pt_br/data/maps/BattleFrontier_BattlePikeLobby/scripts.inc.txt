@@ -1,0 +1,161 @@
+# FRONTEIRA DE BATALHA: a recepção do PICO DE BATALHA.
+
+[BattleFrontier_BattlePikeLobby_Text_WelcomeToBattlePike] 4374435269
+Onde a sorte dos TREINADORES\n
+é posta à prova…\p
+Boas-vindas ao PICO DE BATALHA…\p
+Sou o guia do PICO DE BATALHA…$
+
+[BattleFrontier_BattlePikeLobby_Text_TakeChallenge] 2eced089a7
+Quer encarar o desafio da Escolha\n
+de Batalha?$
+
+[BattleFrontier_BattlePikeLobby_Text_ExplainBattlePike] d99e1cd9c8
+Aqui fazemos um evento chamado\n
+Escolha de Batalha.\p
+As regras da Escolha de Batalha são\n
+bem simples…\p
+Escolha um de três caminhos e chegue\n
+à sala final, no fim do PICO DE\l
+BATALHA. Simples assim.\p
+Mas o que acontece no caminho\n
+escolhido depende só da sorte de\l
+quem desafia…\p
+Se chegar ao fim, você ganha\n
+Pontos de Batalha.\p
+Se quiser interromper o desafio,\n
+fale com a nossa equipe nas salas\l
+grandes do caminho.\p
+Se não salvar antes de interromper,\n
+o desafio será anulado.$
+
+[BattleFrontier_BattlePikeLobby_Text_LookForwardToSeeingYou] 24bcfad0ac
+Esperamos ver você em outra\n
+ocasião…$
+
+[BattleFrontier_BattlePikeLobby_Text_WhichChallengeMode] 8b6b67ad69
+Você pode escolher entre duas\n
+modalidades, Nível 50 e Nível Livre.\l
+Qual vai desafiar?$
+
+[BattleFrontier_BattlePikeLobby_Text_NotEnoughValidMonsLv50] ab9492af4c
+Com o seu perdão, mas…\p
+Você não tem três POKéMON aptos pra\n
+Escolha de Batalha.\p
+Pra entrar, precisa de três POKéMON\n
+diferentes de nível 50 ou menos.\p
+Eles também precisam segurar itens\n
+diferentes.\p
+OVOS{STR_VAR_1} proibidos.\p
+Volte quando estiver tudo\n
+pronto…$
+
+[BattleFrontier_BattlePikeLobby_Text_NotEnoughValidMonsLvOpen] 11627d3815
+Com o seu perdão, mas…\p
+Você não tem três POKéMON aptos pra\n
+Escolha de Batalha.\p
+Pra entrar, precisa de três\n
+POKéMON diferentes.\p
+Eles também precisam segurar itens\n
+diferentes.\p
+OVOS{STR_VAR_1} proibidos.\p
+Volte quando estiver tudo\n
+pronto…$
+
+[BattleFrontier_BattlePikeLobby_Text_PleaseChooseThreeMons] e5dc660873
+Escolha os três POKéMON que vão\n
+participar do desafio, por favor…$
+
+[BattleFrontier_BattlePikeLobby_Text_SaveBeforeChallenge] 4906c97eab
+Antes de começar o desafio da\n
+Escolha de Batalha, preciso salvar\l
+o jogo. Tudo bem?$
+
+[BattleFrontier_BattlePikeLobby_Text_StepThisWay] 7d1f6011a4
+Por aqui, por favor…$
+
+[BattleFrontier_BattlePikeLobby_Text_ChallengeEndedRecordResults] a92503daee
+O seu desafio terminou…\p
+Vou registrar os seus resultados.\n
+Aguarde, por favor…$
+
+[BattleFrontier_BattlePikeLobby_Text_PossessLuckInAbundance] bca537a7e9
+Você completou o desafio…\p
+Devo dizer… Você parece ter sorte\n
+de sobra…$
+
+[BattleFrontier_BattlePikeLobby_Text_ShallRecordResults] 7e8ae8ca14
+Vou registrar os seus resultados.\n
+Aguarde, por favor…$
+
+[BattleFrontier_BattlePikeLobby_Text_AwardYouTheseBattlePoints2] 98a964af80
+Pra celebrar a conclusão do desafio\n
+da Escolha de Batalha, aqui estão\l
+os seus Pontos de Batalha…$
+
+[BattleFrontier_BattlePikeLobby_Text_ReachedBattlePointLimit] c4ae5b3534
+Parece que você chegou ao limite de\n
+Pontos de Batalha…\p
+Troque alguns Pontos de Batalha\n
+por prêmios e depois volte…$
+
+[BattleFrontier_BattlePikeLobby_Text_FailedToSaveBeforeQuitting] 45be15c4bb
+Com o seu perdão, mas…\p
+Você não salvou antes de sair do\n
+desafio da última vez.\p
+Por isso, o seu desafio até aqui foi\n
+anulado. Sinto muito…$
+
+[BattleFrontier_BattlePikeLobby_Text_SnatchedVictoryFromQueen] 832a374f32
+Parabéns…\p
+Você arrancou a vitória da RAINHA\n
+DO PICO e concluiu o evento…$
+
+[BattleFrontier_BattlePikeLobby_Text_AwardYouTheseBattlePoints] ad00c7c13f
+Pela sua sorte impressionante, aqui\n
+estão os seus Pontos de Batalha…$
+
+[BattleFrontier_BattlePikeLobby_Text_OneRoomAwayFromGoal] 95c70b1232
+Argh! Joguei a chance fora!\n
+Eu estava a uma sala do fim!\p
+Aqui, é bom tomar cuidado com\n
+veneno, congelamento e afins.$
+
+[BattleFrontier_BattlePikeLobby_Text_NeverHadToBattleTrainer] 7c4dc8fc46
+Já completei o desafio 10 vezes,\n
+mas nunca tive que batalhar com\l
+um TREINADOR.$
+
+[BattleFrontier_BattlePikeLobby_Text_ThinkAbilitiesUsefulHere] df31cf12c2
+Escuta! Escuta!\p
+Não acha que as habilidades especiais\n
+dos POKéMON vão ser úteis aqui?$
+
+[BattleFrontier_BattlePikeLobby_Text_TrainersWhicheverPathIChoose] a0ff3ee83f
+Que lugar estranho é este?\n
+Não entendo nada!\p
+Já encarei o desafio várias vezes,\n
+mas sempre dou de cara com\l
+TREINADORES, seja qual for o caminho.$
+
+[BattleFrontier_BattlePikeLobby_Text_RulesAreListed] e69801379a
+Aqui estão as regras da Escolha\n
+de Batalha.$
+
+[BattleFrontier_BattlePikeLobby_Text_ReadWhichHeading] d059e37e85
+Qual tópico você quer ler?$
+
+[BattleFrontier_BattlePikeLobby_Text_ExplainPokenavBagRules] a66a860adc
+A BOLSA e o POKéNAV não podem ser\n
+usados na Escolha de Batalha.$
+
+[BattleFrontier_BattlePikeLobby_Text_ExplainHeldItemRules] 46f5f929df
+Na Escolha de Batalha, qualquer FRUTA\n
+ou ERVA que os POKéMON segurem só\l
+funciona uma vez.$
+
+[BattleFrontier_BattlePikeLobby_Text_ExplainMonOrderRules] ee9a21a100
+Na Escolha de Batalha, a ordem dos\n
+POKéMON não pode ser mudada.\p
+A ordem tem que ser definida antes\n
+de começar o desafio.$

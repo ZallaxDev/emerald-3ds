@@ -1,0 +1,22 @@
+# CIDADE DE MOSSDEEP: o POKé MART.
+
+[MossdeepCity_Mart_Text_ReviveIsFantastic] da8d83697b
+O REVIVER é fantástico!\p
+Dê pra um POKéMON desmaiado, e ele\n
+levanta.\p
+Mas cuidado: o REVIVER não recupera\n
+os PP gastos dos golpes.$
+
+[MossdeepCity_Mart_Text_MaxRepelLastsLongest] c282ed0985
+O REPELENTE MÁXIMO afasta todos os\n
+POKéMON fracos.\p
+De todos os REPELENTES, é o que\n
+dura mais.$
+
+[MossdeepCity_Mart_Text_NetAndDiveBallsRare] 19c004834e
+A BOLA TELA e a BOLA MERGULHO são\n
+POKé BOLAS raras, só de MOSSDEEP.\p
+A BOLA TELA funciona bem contra\n
+POKéMON de INSETO e de ÁGUA.\p
+A BOLA MERGULHO é melhor com\n
+POKéMON do fundo do mar.$

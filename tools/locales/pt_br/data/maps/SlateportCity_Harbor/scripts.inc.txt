@@ -1,0 +1,160 @@
+# PORTO DE SLATEPORT: a balsa, o ARCHIE levando o submarino e o CAP. STERN.
+
+[SlateportCity_Harbor_Text_FerryServiceUnavailable] b59851f23b
+Como disse?\n
+Você procura um navio?\p
+Desculpe, o serviço de balsa não está\n
+funcionando no momento…$
+
+[SlateportCity_Harbor_Text_MayISeeYourTicket] c88f6aefb6
+Olá, veio pegar a balsa?\n
+Posso ver o seu BILHETE?$
+
+[SlateportCity_Harbor_Text_YouMustHaveTicket] 90de1176e6
+{PLAYER} não tem o BILHETE…\p
+Sinto muito.\p
+Você precisa de um BILHETE pra\n
+embarcar na balsa.$
+
+[SlateportCity_Harbor_Text_FlashedTicketWhereTo] 463fa0f54d
+{PLAYER} mostrou o BILHETE.\p
+Perfeito! É só isso que precisa!\p
+E para onde você quer ir?$
+
+[SlateportCity_Harbor_Text_SailAnotherTime] a605570b92
+Navegue com a gente outra vez!$
+
+[SlateportCity_Harbor_Text_LilycoveItIs] 3470f80517
+Então é a CIDADE DE LILYCOVE!$
+
+[SlateportCity_Harbor_Text_BattleFrontierItIs] 137da3457a
+Então é a FRONTEIRA DE BATALHA!$
+
+[SlateportCity_Harbor_Text_PleaseBoardFerry] 5b33ea42e0
+Embarque na balsa e aguarde\n
+a partida.$
+
+[SlateportCity_Harbor_Text_WhereWouldYouLikeToGo] 4198824131
+Então, para onde você quer ir?$
+
+[SlateportCity_Harbor_Text_LoveToGoDeepUnderwaterSomeday] 513adf32cf
+Uma viagem ao fundo do mar…\n
+Como será que é?\p
+Adoraria descer bem fundo debaixo\n
+d'água assim um dia.$
+
+[SlateportCity_Harbor_Text_AbnormalWeather] d9e0099c3a
+Pra um navio navegar seguro, a gente\n
+precisa conhecer o tempo!\p
+Falando em tempo, ouvi uma coisa de\n
+um cara do INSTITUTO DO CLIMA.\p
+Ele disse que estão registrando clima\n
+anormal em tudo quanto é lugar!\p
+Você devia visitar o INSTITUTO DO\n
+CLIMA e perguntar por aí!$
+
+[SlateportCity_Harbor_Text_SubTooSmallForMe] 1c6ea362a4
+Eu queria ir com o CAP. STERN na\n
+exploração do fundo do mar.\p
+Mas o submarino é pequeno pra mim.\p
+Se eu me espremesse lá dentro, não\n
+sobraria espaço pro CAPITÃO…$
+
+[SlateportCity_Harbor_Text_SameThugsTriedToRobAtMuseum] 8a5136ca3e
+CAP. STERN: Aqueles bandidos…\p
+São os mesmos que tentaram roubar\n
+as PEÇAS DEVON no MUSEU.$
+
+[SlateportCity_Harbor_Text_ArchieYouAgainHideoutInLilycove] c94f0f388c
+ARCHIE: Ah?\n
+Você de novo…\p
+Que teimosia nos seguir até aqui,\n
+isso eu admito.\p
+Mas agora…\n
+Ninguém nos detém! Ninguém!\p
+Ou vai nos seguir até o nosso\n
+ESCONDERIJO na CIDADE DE LILYCOVE?\p
+Fuahahahaha…$
+
+[SlateportCity_Harbor_Text_CaptSternWhyStealMySubmarine] 51b9a01d50
+CAP. STERN: Por quê…\p
+Por que a EQUIPE AQUA roubaria o meu\n
+SUBMARINO EXPLORADOR 1?\p
+Não podem estar atrás do POKéMON\n
+adormecido no fundo do mar…\p
+Mas, mesmo se eu os seguisse,\n
+não teria a menor chance…$
+
+[SlateportCity_Harbor_Text_TeamAquaLeftNeedDive] eb9ddc2f75
+CAP. STERN: Ah, {PLAYER}{KUN}…\p
+Certo… Então a EQUIPE AQUA partiu\n
+antes que você os parasse…\p
+Ah, não, não se culpe.\n
+A culpa não é sua.\p
+Tentar alcançar um submarino…\n
+É impossível pra quase todo mundo.\p
+Você precisaria de um POKéMON que\n
+saiba MERGULHO…\p
+Talvez se você fosse até a\n
+CIDADE DE MOSSDEEP…\p
+Muitos mergulhadores moram lá, então\n
+alguém pode te ensinar…$
+
+[SlateportCity_Harbor_Text_NeedDiveToCatchSub] ea60195b66
+CAP. STERN: Tentar alcançar um\n
+submarino… É impossível.\p
+Você precisaria de um POKéMON que\n
+saiba MERGULHO…\p
+Talvez se você fosse até a\n
+CIDADE DE MOSSDEEP…\p
+Muitos mergulhadores moram lá, então\n
+alguém pode te ensinar…$
+
+[SlateportCity_Harbor_Text_WontBeLongBeforeWeFinishFerry] d15f1aac10
+CAP. STERN: Ah, é.\n
+O SR. BRINEY veio ao nosso ESTALEIRO.\p
+Não vai demorar pra terminarmos\n
+a balsa!$
+
+[SlateportCity_Harbor_Text_FinishedMakingFerry] c6a325cc18
+CAP. STERN: {PLAYER}{KUN}!\p
+Finalmente terminamos a balsa\n
+S.S. TIDAL!\p
+Não teríamos conseguido sem o\n
+seu amigo SR. BRINEY.\p
+Faça um passeio nela!$
+
+[SlateportCity_Harbor_Text_WouldYouTradeScanner] 5b0f39ddcb
+CAP. STERN: Hã?\n
+{PLAYER}{KUN}, esse item que você tem…\p
+É um SCANNER! Isso ajudaria muito\n
+nas nossas explorações.\p
+{PLAYER}{KUN}, você trocaria o seu\n
+SCANNER por alguma coisa?\p
+Tipo um DENTE ABISSAL ou uma\n
+ESCAMA ABISSAL que eu tenho?$
+
+[SlateportCity_Harbor_Text_IfYouWantToTradeLetMeKnow] caceeac0c1
+CAP. STERN: Tem certeza?\n
+Ele não serve pra você, {PLAYER}{KUN}…\p
+Bom, tudo bem, então. Se quiser\n
+trocar o SCANNER, me avise.$
+
+[SlateportCity_Harbor_Text_TradeForDeepSeaTooth] 37c069e1b4
+CAP. STERN: Então você troca pelo\n
+meu DENTE ABISSAL?$
+
+[SlateportCity_Harbor_Text_TradeForDeepSeaScale] 2ac2184ced
+CAP. STERN: Então você troca pela\n
+minha ESCAMA ABISSAL?$
+
+[SlateportCity_Harbor_Text_WhichOneDoYouWant] c24d664968
+CAP. STERN: Qual você quer?$
+
+[SlateportCity_Harbor_Text_HandedScannerToStern] 54f7a087d4
+{PLAYER} entregou o SCANNER ao\n
+CAP. STERN.$
+
+[SlateportCity_Harbor_Text_ThisWillHelpResearch] 8d1c97a2df
+CAP. STERN: Valeu, {PLAYER}{KUN}!\n
+Isso vai ajudar muito a nossa pesquisa!$

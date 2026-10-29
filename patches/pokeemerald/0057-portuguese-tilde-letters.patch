@@ -1,0 +1,90 @@
+Pokémon Emerald 3Ds Dual Screen changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: ã, õ, Ã and Õ for Portuguese
+Applies to the pinned commit on its own; apply with tools/bootstrap.py.
+
+diff --git a/charmap.txt b/charmap.txt
+--- a/charmap.txt
++++ b/charmap.txt
+@@ -42,6 +42,11 @@
+ SUPER_ER    = 2C
+ '&'         = 2D
+ '+'         = 2E
++@ Portuguese letters the fonts lack; the port draws them at load time.
++'Ã'         = 2F
++'Õ'         = 30
++'ã'         = 31
++'õ'         = 32
+ LV          = 34
+ '='         = 35
+ ';'         = 36
+diff --git a/include/constants/characters.h b/include/constants/characters.h
+--- a/include/constants/characters.h
++++ b/include/constants/characters.h
+@@ -48,6 +48,10 @@
+ #define CHAR_SUPER_ER          0x2C
+ #define CHAR_AMPERSAND         0x2D
+ #define CHAR_PLUS              0x2E
++#define CHAR_A_TILDE           0x2F
++#define CHAR_O_TILDE           0x30
++#define CHAR_a_TILDE           0x31
++#define CHAR_o_TILDE           0x32
+ //
+ #define CHAR_LV                0x34
+ #define CHAR_EQUALS            0x35
+diff --git a/src/fonts.c b/src/fonts.c
+--- a/src/fonts.c
++++ b/src/fonts.c
+@@ -4,8 +4,8 @@ ALIGNED(4) const u16 gFontSmallNarrowLatinGlyphs[] = INCBIN_U16("graphics/fonts/
+ ALIGNED(4) const u8 gFontSmallNarrowLatinGlyphWidths[] = {
+     3,  5,  5,  5,  5,  5,  5,  5,  5,  4,  3,  4,  4,  5,  5,  5,
+     5,  5,  5,  5,  5,  5,  5,  5,  3,  4,  5,  5,  5,  5,  4,  3,
+-    4,  4,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  8,  5,  6,  3,
+-    3,  3,  3,  3,  8,  0,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
++    4,  4,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  8,  5,  6,  5,
++    5,  5,  5,  3,  8,  0,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
+     3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
+     5,  5,  3,  8,  8,  8,  8,  8,  8,  8,  4,  5,  4,  4,  3,  3,
+     3,  3,  3,  3,  3,  3,  3,  3,  5,  3,  3,  3,  3,  3,  3,  4,
+@@ -40,8 +40,8 @@ ALIGNED(4) const u16 gFontSmallLatinGlyphs[] = INCBIN_U16("graphics/fonts/small.
+ ALIGNED(4) const u8 gFontSmallLatinGlyphWidths[] = {
+     3,  5,  5,  5,  5,  5,  5,  5,  5,  4,  3,  4,  4,  5,  5,  5,
+     5,  5,  5,  5,  5,  5,  5,  5,  3,  5,  5,  5,  5,  5,  4,  3,
+-    4,  4,  5,  5,  5,  6,  5,  5,  5,  5,  5,  5,  8,  7,  8,  3,
+-    3,  3,  3,  3,  8,  8,  7,  3,  3,  3,  3,  3,  3,  3,  3,  3,
++    4,  4,  5,  5,  5,  6,  5,  5,  5,  5,  5,  5,  8,  7,  8,  5,
++    5,  5,  5,  3,  8,  8,  7,  3,  3,  3,  3,  3,  3,  3,  3,  3,
+     3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
+     5,  5,  5,  8,  8,  8,  8,  8,  8,  8,  4,  7,  5,  5,  3,  3,
+     3,  3,  3,  3,  3,  3,  3,  3,  5,  3,  3,  3,  3,  3,  3,  4,
+@@ -76,8 +76,8 @@ ALIGNED(4) const u16 gFontNarrowLatinGlyphs[] = INCBIN_U16("graphics/fonts/narro
+ ALIGNED(4) const u8 gFontNarrowLatinGlyphWidths[] = {
+     3,  5,  5,  5,  5,  5,  5,  5,  5,  4,  3,  4,  4,  5,  5,  5,
+     8,  5,  5,  5,  5,  6,  5,  5,  3,  5,  5,  5,  5,  5,  4,  3,
+-    4,  4,  5,  5,  5,  8,  5,  5,  5,  5,  5,  6,  9,  6,  6,  3,
+-    3,  3,  3,  3,  8,  8,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
++    4,  4,  5,  5,  5,  8,  5,  5,  5,  5,  5,  6,  9,  6,  6,  5,
++    5,  5,  5,  3,  8,  8,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
+     3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
+     5,  5,  4,  8,  8,  8,  7,  8,  8,  4,  4,  6,  4,  4,  3,  3,
+     3,  3,  3,  3,  3,  3,  3,  3,  5,  3,  3,  3,  3,  3,  3,  4,
+@@ -112,8 +112,8 @@ ALIGNED(4) const u16 gFontShortLatinGlyphs[] = INCBIN_U16("graphics/fonts/short.
+ ALIGNED(4) const u8 gFontShortLatinGlyphWidths[] = {
+     3,  6,  6,  6,  6,  6,  6,  6,  6,  6,  3,  6,  6,  6,  6,  6,
+     8,  6,  6,  6,  6,  6,  6,  6,  3,  6,  6,  6,  6,  6,  6,  3,
+-    6,  6,  6,  6,  6,  8,  6,  6,  6,  6,  6,  6,  9,  8,  8,  3,
+-    3,  3,  3,  3, 10,  8,  5,  3,  3,  3,  3,  3,  3,  3,  3,  3,
++    6,  6,  6,  6,  6,  8,  6,  6,  6,  6,  6,  6,  9,  8,  8,  6,
++    6,  6,  6,  3, 10,  8,  5,  3,  3,  3,  3,  3,  3,  3,  3,  3,
+     3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
+     6,  6,  6,  8,  8,  8,  8,  8,  8,  4,  6,  8,  5,  5,  3,  3,
+     3,  3,  3,  3,  3,  3,  3,  3,  6,  3,  3,  3,  3,  3,  3,  6,
+@@ -148,8 +148,8 @@ ALIGNED(4) const u16 gFontNormalLatinGlyphs[] = INCBIN_U16("graphics/fonts/norma
+ ALIGNED(4) const u8 gFontNormalLatinGlyphWidths[] = {
+     3,  6,  6,  6,  6,  6,  6,  6,  6,  6,  3,  6,  6,  6,  6,  6,
+     8,  6,  6,  6,  6,  6,  6,  6,  3,  6,  6,  6,  6,  6,  6,  3,
+-    6,  6,  6,  6,  6,  8,  6,  6,  6,  6,  6,  6,  9,  7,  6,  3,
+-    3,  3,  3,  3, 10,  8,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
++    6,  6,  6,  6,  6,  8,  6,  6,  6,  6,  6,  6,  9,  7,  6,  6,
++    6,  6,  6,  3, 10,  8,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
+     3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
+     6,  6,  4,  8,  8,  8,  7,  8,  8,  4,  6,  6,  4,  4,  3,  3,
+     3,  3,  3,  3,  3,  3,  3,  3,  6,  3,  3,  3,  3,  3,  3,  6,

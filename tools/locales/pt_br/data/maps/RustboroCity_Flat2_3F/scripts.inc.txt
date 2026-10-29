@@ -1,0 +1,9 @@
+# Prédio 2 de RUSTBORO, 2º andar.
+
+[RustboroCity_Flat2_3F_Text_PresidentCollectsRareStones] 1ee6634112
+O PRESIDENTE da DEVON gosta de\n
+colecionar pedras raras.$
+
+[RustboroCity_Flat2_3F_Text_PresidentsSonAlsoCollectsRareStones] febd07e926
+Acho que o filho do PRESIDENTE também\n
+coleciona pedras raras.$

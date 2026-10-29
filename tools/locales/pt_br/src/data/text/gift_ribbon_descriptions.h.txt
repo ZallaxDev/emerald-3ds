@@ -1,0 +1,140 @@
+# As descrições das FITAS (src/data/text/gift_ribbon_descriptions.h), duas linhas na tela
+# de FITAS do POKéNAV, até 126 px como o inglês.
+
+[gGiftRibbonDescriptionPart1_2003RegionalTourney] 5ed379831b width=126
+TORNEIO REGIONAL 2003
+
+[gGiftRibbonDescriptionPart2_Champion] 2fe5cc123c width=126
+FITA DE CAMPEÃO
+
+[gGiftRibbonDescriptionPart1_2003NationalTourney] 98388beeb5 width=126
+TORNEIO NACIONAL 2003
+
+[gGiftRibbonDescriptionPart1_2003GlobalCup] 1488442a45 width=126
+COPA MUNDIAL 2003
+
+[gGiftRibbonDescriptionPart2_RunnerUp] 8312b239c1 width=126
+FITA de vice-campeão
+
+[gGiftRibbonDescriptionPart2_Semifinalist] 594b66aa0c width=126
+FITA de semifinalista
+
+[gGiftRibbonDescriptionPart1_2004RegionalTourney] dded386365 width=126
+TORNEIO REGIONAL 2004
+
+[gGiftRibbonDescriptionPart1_2004NationalTourney] f640d5b29a width=126
+TORNEIO NACIONAL 2004
+
+[gGiftRibbonDescriptionPart1_2004GlobalCup] 6c382d02df width=126
+COPA MUNDIAL 2004
+
+[gGiftRibbonDescriptionPart1_2005RegionalTourney] e6f220edfe width=126
+TORNEIO REGIONAL 2005
+
+[gGiftRibbonDescriptionPart1_2005NationalTourney] c11251456d width=126
+TORNEIO NACIONAL 2005
+
+[gGiftRibbonDescriptionPart1_2005GlobalCup] 1181b1338f width=126
+COPA MUNDIAL 2005
+
+[gGiftRibbonDescriptionPart1_PokemonBattleCup] 77cf25e4d2 width=126
+COPA BATALHA POKéMON
+
+[gGiftRibbonDescriptionPart2_Participation] ccc7901128 width=126
+FITA de participação
+
+[gGiftRibbonDescriptionPart1_PokemonLeague] 1a11998b67 width=126
+LIGA POKéMON
+
+[gGiftRibbonDescriptionPart1_AdvanceCup] 700ce8fcac width=126
+COPA ADVANCE
+
+[gGiftRibbonDescriptionPart1_PokemonTournament] 65c10b3af3 width=126
+Torneio POKéMON
+
+[gGiftRibbonDescriptionPart2_Participation2] ccc7901128 width=126
+FITA de participação
+
+[gGiftRibbonDescriptionPart1_PokemonEvent] eae0c5a24b width=126
+Evento POKéMON
+
+[gGiftRibbonDescriptionPart1_PokemonFestival] 87b8044aa0 width=126
+Festival POKéMON
+
+[gGiftRibbonDescriptionPart1_DifficultyClearing] a36a459b5c width=126
+Desafio difícil vencido
+
+[gGiftRibbonDescriptionPart2_Commemorative] d59512af6f width=126
+FITA comemorativa
+
+[gGiftRibbonDescriptionPart1_ClearingAllChallenges] 919cba1572 width=126
+FITA dada por vencer
+
+[gGiftRibbonDescriptionPart2_ClearingAllChallenges] 07ece207eb width=126
+todos os desafios.
+
+[gGiftRibbonDescriptionPart1_100StraightWin] 65d04ee7bc width=126
+100 vitórias seguidas
+
+[gGiftRibbonDescriptionPart1_DarknessTower] 00affa520d width=126
+TORRE DAS TREVAS venc.
+
+[gGiftRibbonDescriptionPart1_RedTower] c3f9c9c378 width=126
+TORRE VERMELHA vencida
+
+[gGiftRibbonDescriptionPart1_BlackironTower] 30c3bc0ef6 width=126
+TORRE FERRO NEGRO venc.
+
+[gGiftRibbonDescriptionPart1_FinalTower] dd88f838b6 width=126
+TORRE FINAL vencida
+
+[gGiftRibbonDescriptionPart1_LegendMaking] 56d10f5c46 width=126
+Criador de lendas
+
+[gGiftRibbonDescriptionPart1_PokemonCenterTokyo] 9e1849f936 width=126
+CENTRO POKéMON TÓQUIO
+
+[gGiftRibbonDescriptionPart1_PokemonCenterOsaka] fe0bf1d95b width=126
+CENTRO POKéMON OSAKA
+
+[gGiftRibbonDescriptionPart1_PokemonCenterNagoya] 7629671565 width=126
+CENTRO POKéMON NAGOYA
+
+[gGiftRibbonDescriptionPart1_PokemonCenterNY] 6062cab439 width=126
+CENTRO POKéMON NY
+
+[gGiftRibbonDescriptionPart1_SummerHolidays] 411c2d1772 width=126
+FITA do verão
+
+[gGiftRibbonDescriptionPart1_WinterHolidays] b44f4a2f41 width=126
+FITA do inverno
+
+[gGiftRibbonDescriptionPart1_SpringHolidays] 4bb8d8f362 width=126
+FITA da primavera
+
+[gGiftRibbonDescriptionPart1_Evergreen] 5924de909c width=126
+FITA sempre-verde
+
+[gGiftRibbonDescriptionPart1_SpecialHoliday] 5523619719 width=126
+FITA de data especial
+
+[gGiftRibbonDescriptionPart1_HardWorker] 12d05a6787 width=126
+FITA do trabalhador
+
+[gGiftRibbonDescriptionPart1_LotsOfFriends] d099b043a1 width=126
+FITA dos muitos amigos
+
+[gGiftRibbonDescriptionPart1_FullOfEnergy] c8172753ed width=126
+FITA cheia de energia
+
+[gGiftRibbonDescriptionPart1_LovedPokemon] bdcff8bf54 width=126
+Uma FITA comemorativa
+
+[gGiftRibbonDescriptionPart2_LovedPokemon] da10b8f457 width=126
+de um POKéMON amado.
+
+[gGiftRibbonDescriptionPart1_LoveForPokemon] bd5fa6fea3 width=126
+FITA que mostra o
+
+[gGiftRibbonDescriptionPart2_LoveForPokemon] 9c3bcbfec8 width=126
+amor pelos POKéMON.

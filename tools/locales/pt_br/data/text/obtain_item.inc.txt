@@ -1,0 +1,34 @@
+# As mensagens de item recebido, comuns a todos os mapas. O bolso vem do
+# nome em src/strings.c ({STR_VAR_3}: ITENS, POKé BOLAS, MT E MO…).
+
+[gText_ObtainedTheItem] 93580f3714
+Obteve {STR_VAR_2}!$
+
+[gText_TheBagIsFull] b547b9c2c4
+A BOLSA está cheia…$
+
+[gText_PutItemInPocket] 54d6ba9342
+{PLAYER} guardou {STR_VAR_2}\n
+no bolso {STR_VAR_3}.$
+
+[gText_PlayerFoundOneItem] 1fdc249f79
+{PLAYER} achou {STR_VAR_2}!$
+
+[gText_TooBadBagIsFull] 9b81d84920
+Que pena!\n
+A BOLSA está cheia…$
+
+[gText_PlayerPutItemInBag] 2e6013ec81
+{PLAYER} guardou {STR_VAR_2}\n
+na BOLSA.$
+
+[gText_ObtainedTheDecor] 93580f3714
+Obteve {STR_VAR_2}!$
+
+[gText_NoRoomLeftForAnother] 114dee2f5e
+Que pena! Não há espaço para\n
+mais um(a) {STR_VAR_2}…$
+
+[gText_TheDecorWasTransferredToThePC] b3d55a8913
+{STR_VAR_2} foi enviado(a)\n
+para o PC.$

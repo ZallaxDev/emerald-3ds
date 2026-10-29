@@ -1,0 +1,41 @@
+# CENTRO POKéMON de PETALBURG: o PC e as vantagens de tipo.
+
+[PetalburgCity_PokemonCenter_1F_Text_PCStorageSystem] bf08283986
+Esse Sistema de Armazenamento de\n
+POKéMON pelo PC…\p
+Quem inventou deve ser algum tipo\n
+de gênio da ciência!$
+
+[PetalburgCity_PokemonCenter_1F_Text_OranBerryRegainedHP] 4d9afb9bef
+Quando meu POKéMON comeu uma\n
+FRUTA ORAN, recuperou PS!$
+
+[PetalburgCity_PokemonCenter_1F_Text_ManyTypesOfPokemon] 281d54db0d
+Existem muitos tipos de POKéMON.\p
+Todo tipo tem pontos fortes e\n
+fracos contra outros tipos.\p
+Dependendo dos tipos dos POKéMON,\n
+a batalha pode ser fácil ou difícil.$
+
+[PetalburgCity_PokemonCenter_1F_Text_TreeckoIsGrassType] 4b344a76ad
+Por exemplo, o seu TREECKO\n
+é do tipo PLANTA.\p
+Ele é forte contra os tipos ÁGUA e\n
+TERRESTRE.\p
+Mas é fraco contra POKéMON do\n
+tipo FOGO.$
+
+[PetalburgCity_PokemonCenter_1F_Text_TorchicIsFireType] a3ab9cb175
+Por exemplo, o seu TORCHIC\n
+é do tipo FOGO.\p
+Ele é forte contra os tipos PLANTA e\n
+INSETO.\p
+Mas é fraco contra POKéMON do\n
+tipo ÁGUA.$
+
+[PetalburgCity_PokemonCenter_1F_Text_MudkipIsWaterType] a5d5c2292b
+Por exemplo, o seu MUDKIP\n
+é do tipo ÁGUA.\p
+Ele é forte contra o tipo FOGO.\p
+Mas é fraco contra POKéMON dos\n
+tipos PLANTA e ELÉTRICO.$

@@ -17,7 +17,7 @@ Pack files:
     followers/mon/KEY.bin   one per sprite, KEY = national dex number "025",
                             "025_f" (female), "201_03" (Unown's letter 3)
     followers/text/LL.bin   the follower messages in one language (en, es,
-                            fr, it): HGSS's message bank 265
+                            fr, it, de): HGSS's message bank 265
     followers/sources.txt   the pinned commits
 
 A .bin (little endian):
@@ -65,9 +65,9 @@ MAGIC = b"FMN1"
 TEXT_MAGIC = b"FMT1"
 TEXT_BANK = 265
 TEXT_COUNT = 759
-LANGUAGES = ("en", "es", "fr", "it")
+LANGUAGES = ("en", "es", "fr", "it", "de")
 # The fourth letter of the game code: the ROM's language.
-ROM_LANGUAGES = {"E": "en", "S": "es", "F": "fr", "I": "it"}
+ROM_LANGUAGES = {"E": "en", "S": "es", "F": "fr", "I": "it", "D": "de"}
 FRAMES = 8
 HOSTS = ("https://raw.githubusercontent.com/{repo}/{commit}/{path}",
          "https://cdn.jsdelivr.net/gh/{repo}@{commit}/{path}")
@@ -189,13 +189,14 @@ def param_flags(csv_text: str) -> list[int]:
 
 # --- fetching ---------------------------------------------------------------
 
-# The game's character set (charmap.txt) for what the four languages' bank 265
+# The game's character set (charmap.txt) for what the five languages' bank 265
 # holds. Letters and digits are computed; anything else unknown becomes "?".
 _CHARS = {
     " ": 0x00, "Ç": 0x04, "È": 0x05, "à": 0x16, "á": 0x17, "ç": 0x19, "è": 0x1A, "é": 0x1B,
     "ê": 0x1C, "î": 0x20, "ò": 0x22, "ó": 0x23, "ô": 0x24, "œ": 0x25, "ù": 0x26, "ú": 0x27,
     "û": 0x28, "ñ": 0x29, "¿": 0x51, "¡": 0x52, "â": 0x68, "í": 0x6F, "!": 0xAB, "?": 0xAC,
     ".": 0xAD, "-": 0xAE, "'": 0xB4, "’": 0xB4, ",": 0xB8, ":": 0xF0, "ü": 0xF6,
+    "ß": 0x15, "Ä": 0xF1, "Ö": 0xF2, "Ü": 0xF3, "ä": 0xF4, "ö": 0xF5,
 }
 _VARS = {"0101": b"\xFD\x02", "0103": b"\xFD\x01", "0108": b"\xFD\x03", "0200": b""}
 _TOKEN = re.compile(r"\[VAR ([0-9A-F]{4})\([^\]]*\)\]|\\(.)|(.)", re.S)

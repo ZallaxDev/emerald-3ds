@@ -1,0 +1,45 @@
+# CAMINHO SUBMARINO: sala 3, com a SHELLY.
+
+[SeafloorCavern_Room3_Text_ShellyIntro] 5b7f9f7407
+Ahahahaha!\p
+Como chegou aqui sem submarino?\n
+Que criança impressionante!\p
+Mas… Não dá pra deixar você se\n
+metendo aqui.\p
+E eu quero o troco pelo que houve\n
+no INSTITUTO DO CLIMA…\p
+Vou te dar um gostinho de dor!\n
+Conforme-se!$
+
+[SeafloorCavern_Room3_Text_ShellyDefeat] c2ef5c87a9
+Ahahahaha!\p
+Ai!$
+
+[SeafloorCavern_Room3_Text_ShellyPostBattle] 1e2fcb7a0d
+Ahahahaha!\n
+Você é forte demais.\p
+Que pena você não ser da EQUIPE\n
+AQUA.\p
+Podia curtir o mundo fabuloso que o\n
+nosso CHEFE prometeu, como um\l
+de nós…$
+
+[SeafloorCavern_Room3_Text_Grunt5Intro] 7e104f45e0
+Pro nosso sonho virar realidade,\n
+precisamos do poder dos POKéMON.\p
+Mas intrometidos como você usam\n
+o poder dos POKéMON pra atrapalhar\l
+até num lugar destes!\p
+A vida não funciona do jeito que\n
+a gente precisa!$
+
+[SeafloorCavern_Room3_Text_Grunt5Defeat] d665e1c370
+Guah!$
+
+[SeafloorCavern_Room3_Text_Grunt5PostBattle] ee6853ceaa
+Sabe, a gente não ousa questionar\n
+os motivos do nosso líder.\p
+Mas aqui está você, uma criança\n
+qualquer, enfrentando o nosso CHEFE.\p
+Talvez…\n
+Você seja alguém especial…$

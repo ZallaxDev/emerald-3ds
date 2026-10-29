@@ -112,6 +112,7 @@ static void VoxelBuilder_Init(VoxelBuilder *b, VoxelVertex *s, unsigned cap)
 { memset(b, 0, sizeof(*b)); b->vertices = s; b->capacity = cap; }
 static void VoxelBuilder_SetAtlas(VoxelBuilder *b, const VoxelAtlasMap *a) { b->atlas = a; }
 static void VoxelBuilder_SetOrigin(VoxelBuilder *b, int x, int z) { b->originX = (float)x; b->originZ = (float)z; }
+static void VoxelBuilder_SetStretch(VoxelBuilder *b, const VoxelMapInstance *inst) { (void)b; (void)inst; }
 
 /* The world of the test: which cells draw what. id = hash of the cell. */
 static int Cell_id(int x, int y) { return (int)(((unsigned)(x * 31 + y * 17 + 5) * 2654435761u) >> 24) % 40; }

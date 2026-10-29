@@ -1,0 +1,78 @@
+# CATARATA DOS METEOROS: as EQUIPES MAGMA e AQUA e o PROF. COZMO.
+
+[MeteorFalls_1F_1R_Text_WithThisMeteorite] 4b83844b42
+Hehehe!\p
+Com este METEORITO, aquela coisa\n
+no MONTE CHIMNEY vai…$
+
+[MeteorFalls_1F_1R_Text_DontExpectMercyFromMagma] 88a9203f07
+Hã?\p
+Não sei quem você é, mas, se ficar\n
+no caminho da EQUIPE MAGMA, não\l
+espere piedade!$
+
+[MeteorFalls_1F_1R_Text_HoldItRightThereMagma] da1be21fb7
+Parados aí, EQUIPE MAGMA!\p
+Vocês estão muito enganados se acham\n
+que o mundo é de vocês!$
+
+[MeteorFalls_1F_1R_Text_BeSeeingYouTeamAqua] b29c3ff7ad
+Hehehe!\n
+Até a EQUIPE AQUA apareceu!\p
+Mas dá trabalho demais lidar com\n
+vocês todos…\p
+Heh, não importa!\p
+Já temos o METEORITO, então vamos\n
+pro MONTE CHIMNEY!\p
+Hehehe! Até mais, seus bobalhões\n
+da EQUIPE AQUA!$
+
+[MeteorFalls_1F_1R_Text_ArchieSeenYouBefore] 281ead993e
+ARCHIE: Eu não te vi antes?\n
+No MUSEU de SLATEPORT?\p
+Ah, então o seu nome é {PLAYER}.\p
+Naquela hora, achei que você fosse\n
+um capanga da EQUIPE MAGMA.\p
+Hunf…\n
+Você é uma criança esquisita.\p
+A EQUIPE MAGMA é um grupo perigoso\n
+de fanáticos.\p
+Eles destroem tudo, dizendo que\n
+querem expandir a terra firme.\p
+São os rivais de nós, a EQUIPE AQUA,\n
+que ama o mar!$
+
+[MeteorFalls_1F_1R_Text_BossWeShouldChaseMagma] 4cfc5a3f15
+CHEFE, temos que ir atrás da\n
+EQUIPE MAGMA…$
+
+[MeteorFalls_1F_1R_Text_ArchieYesNoTellingWhatMagmaWillDo] 361396cf82
+ARCHIE: Sim, sim, temos que ir!\n
+Precisamos correr.\p
+Não dá pra saber o que a EQUIPE MAGMA\n
+vai fazer no MONTE CHIMNEY!$
+
+[MeteorFalls_1F_1R_Text_ArchieFarewell] 1396759050
+ARCHIE: {PLAYER}, fique de olho na\n
+EQUIPE MAGMA você também.\p
+Adeus!$
+
+[MeteorFalls_1F_1R_Text_MeetProfCozmo] a65800e284
+Eu… Eu sou o COZMO…\n
+Sou PROFESSOR…\p
+A EQUIPE MAGMA me pediu pra guiar\n
+eles até a CATARATA DOS METEOROS…\p
+Mas me enganaram.\n
+Até levaram o meu METEORITO…\p
+E aí outro bando parecido, a\n
+EQUIPE AQUA, apareceu.\p
+Depois disso…\n
+Não entendi mais nada.\p
+Mas essa EQUIPE MAGMA…\p
+O que eles vão fazer com o METEORITO\n
+no MONTE CHIMNEY?$
+
+[MeteorFalls_1F_1R_Text_WhatsTeamMagmaDoingAtMtChimney] 08c5f1f7dd
+PROF. COZMO: Mas essa EQUIPE MAGMA…\p
+O que eles vão fazer com o METEORITO\n
+no MONTE CHIMNEY?$

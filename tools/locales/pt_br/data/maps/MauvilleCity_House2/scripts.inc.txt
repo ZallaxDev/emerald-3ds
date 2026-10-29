@@ -1,0 +1,24 @@
+# CIDADE DE MAUVILLE, casa 2: a troca da CARTA PORTO pela SACOLA DE MOEDAS.
+
+[MauvilleCity_House2_Text_BuyHarborMailAtSlateport] 663e5adefe
+Se eu tivesse BICICLETA, era fácil ir\n
+até SLATEPORT fazer compras.\p
+Eu ia poder comprar CARTA PORTO no\n
+POKé MART de SLATEPORT…$
+
+[MauvilleCity_House2_Text_TradeHarborMailForCoinCase] 72c920eda8
+Ah! Você tem CARTA PORTO?\n
+Troca por uma SACOLA DE MOEDAS?$
+
+[MauvilleCity_House2_Text_IllTradeYouCoinCase] 5425ef6a4c
+Ah, que alegria!\n
+Certo, te dou uma SACOLA DE MOEDAS!$
+
+[MauvilleCity_House2_Text_UseCoinCaseAtGameCorner] ccdc24b159
+Essa SACOLA DE MOEDAS serve\n
+no SALÃO DE JOGOS.$
+
+[MauvilleCity_House2_Text_ThatsDisappointing] cb639154fe
+Ah, que decepção.\p
+Precisa de uma SACOLA DE MOEDAS pro\n
+SALÃO DE JOGOS.$

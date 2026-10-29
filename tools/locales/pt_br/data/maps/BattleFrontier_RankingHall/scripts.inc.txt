@@ -1,0 +1,33 @@
+# FRONTEIRA DE BATALHA: o SALÃO DO RANKING.
+
+[BattleFrontier_RankingHall_Text_ExplainRankingHall] 387fc02bd3
+Este é o SALÃO DO RANKING.\p
+Aqui homenageamos os TREINADORES\n
+imortais que deixaram grandes\l
+recordes nos eventos da FRONTEIRA.$
+
+[BattleFrontier_RankingHall_Text_DomePikeFactoryRecords] 289bb8af7f
+Recordes da CÚPULA, do PICO\n
+e da FÁBRICA DE BATALHA$
+
+[BattleFrontier_RankingHall_Text_PalaceArenaPyramidRecords] a2ee2d958d
+Recordes do PALÁCIO, da ARENA\n
+e da PIRÂMIDE DE BATALHA$
+
+[BattleFrontier_RankingHall_Text_IsYourNameOnThisList] f206b978c2
+Oi, o seu nome está nesta lista?$
+
+[BattleFrontier_RankingHall_Text_WowThatsSuper] 0a46607c43
+Uau, que demais!\n
+Vou ter que me esforçar mais também!$
+
+[BattleFrontier_RankingHall_Text_WorkHarderIfYouSawFriendsName] 40e62d0c4d
+Ah, é mesmo?\p
+Se visse o nome de um amigo aqui,\n
+aposto que ia se esforçar mais!$
+
+[BattleFrontier_RankingHall_Text_MyNamesNotUpThere] 6c46f169c3
+Hum…\n
+O meu nome não está aí…\p
+Bom, é natural, já que ainda não\n
+encarei nenhum desafio.$

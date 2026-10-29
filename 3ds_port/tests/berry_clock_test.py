@@ -46,6 +46,9 @@ int CtrSettings_GetInt(const char *key, int fallback) {
     if (!strcmp(key, "show_clock")) return 1;
     return fallback;
 }
+void CtrSettings_SetInt(const char *key, int value) {
+    if (!strcmp(key, "clock_speed")) sSpeed = value;
+}
 static int TotalSeconds(const struct Time *time) {
     return time->days * 86400 + time->hours * 3600 + time->minutes * 60 + time->seconds;
 }

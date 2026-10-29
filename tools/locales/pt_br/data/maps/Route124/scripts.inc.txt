@@ -1,0 +1,4 @@
+# ROTA 124: a placa do caçador de tesouros.
+
+[Route124_Text_HuntersHouse] a720471ccd
+CASA DO CAÇADOR$

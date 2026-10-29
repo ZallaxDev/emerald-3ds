@@ -142,9 +142,17 @@ class RomTests(unittest.TestCase):
                 romlib.load_rom(self._write(tmp, bytes(data)))
             self.assertIn(romlib.FRENCH_SHA1, str(ctx.exception))
 
+    def test_modified_japanese_emerald_is_rejected(self):
+        data = bytearray(b"\xff" * romlib.ROM_SIZE)
+        data[0xA0:0xB0] = b"POKEMON EMERBPEJ"
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(BuilderError) as ctx:
+                romlib.load_rom(self._write(tmp, bytes(data)))
+            self.assertIn(romlib.JAPANESE_SHA1, str(ctx.exception))
+
     def test_each_region_requires_its_exact_hash_even_when_trimmed_or_zipped(self):
         # Synthetic fixtures substitute the known clean hash, not the validation.
-        for code in ("BPEE", "BPES", "BPEF"):
+        for code in ("BPEE", "BPES", "BPEF", "BPEJ"):
             data = bytearray(b"\xff" * romlib.ROM_SIZE)
             data[0xA0:0xB0] = b"POKEMON EMER" + code.encode()
             sha = hashlib.sha1(data).hexdigest()
@@ -158,6 +166,20 @@ class RomTests(unittest.TestCase):
                     loaded = romlib.load_rom(path)
                     self.assertEqual((loaded.code, loaded.sha1, loaded.data), (code, sha, data))
 
+    def test_other_regional_gen3_games_are_named(self):
+        # A Spanish FireRed or a German Ruby is named, not reported as an unknown file.
+        cases = {b"POKEMON FIREBPRS": "Pokemon FireRed (Spain)",
+                 b"POKEMON RUBYAXVD": "Pokemon Ruby (Germany)",
+                 b"POKEMON LEAFBPGJ": "Pokemon LeafGreen (Japan)"}
+        for head, name in cases.items():
+            data = bytearray(b"\xff" * romlib.ROM_SIZE)
+            data[0xA0:0xB0] = head
+            with tempfile.TemporaryDirectory() as tmp:
+                with self.assertRaises(BuilderError) as ctx:
+                    romlib.load_rom(self._write(tmp, bytes(data)))
+                self.assertEqual(ctx.exception.code, "rom_wrong_game")
+                self.assertIn(name, ctx.exception.message)
+
     def test_zip_must_hold_one_rom(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "r.zip"
@@ -170,15 +192,21 @@ class RomTests(unittest.TestCase):
 
 class RegionalBuildTests(unittest.TestCase):
     def test_matching_spanish_recipe_builds_and_english_recipe_is_rejected(self):
+        self._matching_recipe_builds("BPES")
+
+    def test_matching_japanese_recipe_builds_and_english_recipe_is_rejected(self):
+        self._matching_recipe_builds("BPEJ")
+
+    def _matching_recipe_builds(self, code):
         data = bytearray(b"\xff" * romlib.ROM_SIZE)
-        data[0xA0:0xB0] = b"POKEMON EMERBPES"
+        data[0xA0:0xB0] = b"POKEMON EMER" + code.encode()
         data[0x200:0x204] = b"TEST"
         sha = hashlib.sha1(data).hexdigest()
         crc = zlib.crc32(b"TEST") & 0xFFFFFFFF
         abi = pak.engine_abi([("game/test.bin", 4, crc)])
-        with tempfile.TemporaryDirectory() as tmp, patch.dict(romlib.ROM_PROFILES, {"BPES": sha}):
+        with tempfile.TemporaryDirectory() as tmp, patch.dict(romlib.ROM_PROFILES, {code: sha}):
             root = Path(tmp)
-            source = root / "spanish.gba"
+            source = root / "regional.gba"
             source.write_bytes(data)
             recipe = rcp.Recipe(engine_abi=abi, rom_sha1=romlib.SUPPORTED_SHA1, release="test",
                                 entries=[{"path": "game/test.bin", "size": 4, "crc": crc,
@@ -187,7 +215,7 @@ class RegionalBuildTests(unittest.TestCase):
             output = root / "output.pak"
             with self.assertRaises(BuilderError) as ctx:
                 build_pack(source, Payload(root), output)
-            self.assertIn("BPES", str(ctx.exception))
+            self.assertIn(code, str(ctx.exception))
             self.assertFalse(output.exists())
             recipe.rom_sha1 = sha
             recipe.save(root / "emerald3ds.recipe")

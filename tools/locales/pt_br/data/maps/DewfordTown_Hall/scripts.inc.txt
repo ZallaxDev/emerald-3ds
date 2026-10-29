@@ -1,0 +1,184 @@
+# SALÃO DE DEWFORD: as modas da ilha (as palavras vêm do EASY CHAT).
+
+[DewfordTown_Hall_Text_CantImagineLifeWithoutTrend] 9d19d18fa8
+O que está na moda? Ora, só pode ser\n
+“{STR_VAR_1}”!\p
+Nem imagino como seria a vida\n
+sem “{STR_VAR_1}”!$
+
+[DewfordTown_Hall_Text_GettingBoredOfTrend] 0f8c3c84dd
+O que está na moda? Ora, só pode ser\n
+“{STR_VAR_1}”!\p
+Mas já estou meio enjoado.\p
+Preciso procurar a próxima moda.$
+
+[DewfordTown_Hall_Text_TeachingMonAboutTrend] ca5244b672
+Estou ensinando o meu POKéMON sobre\n
+“{STR_VAR_1}”,\l
+mas não está indo bem.\p
+Acho que é demais pra ele.$
+
+[DewfordTown_Hall_Text_DeepLinkBetweenXAndY] bf40f9f548
+Estou estudando o modernoso\n
+“{STR_VAR_1}” agora.\p
+É verdade que tem uma ligação forte\n
+entre “{STR_VAR_1}”\l
+e “{STR_VAR_2}”?$
+
+[DewfordTown_Hall_Text_MyHunchWasRight] 18fd87cb91
+Ah!\n
+Então eu estava certo!\p
+Estou um passo mais perto de ficar\n
+na moda, oba!$
+
+[DewfordTown_Hall_Text_NotEasyToKeepUp] 2940466c36
+O quê?!\n
+É mesmo?!\p
+Não é fácil pra um velho como eu\n
+acompanhar as modas!$
+
+[DewfordTown_Hall_Text_TVShowAboutTrend] 285e51cf64
+Essa história toda de\n
+“{STR_VAR_1}”…\l
+Não tem um programa de TV sobre isso?$
+
+[DewfordTown_Hall_Text_IsTrendMorePopularAcrossSea] a945f2c6c6
+Do outro lado do mar…\p
+“{STR_VAR_1}”\n
+faz ainda mais sucesso?$
+
+[DewfordTown_Hall_Text_CollectTrendMerchandise] b2b71806d6
+Eu coleciono produtos oficiais\n
+licenciados de\l
+“{STR_VAR_1}”.\p
+Tenho BONECOS oficiais de\n
+“{STR_VAR_1}”…\p
+Roupas oficiais da marca\n
+“{STR_VAR_1}”…\p
+E livros ilustrados licenciados\n
+de “{STR_VAR_1}”.\p
+Hehe, são meus!\n
+Não vou dividir nada com você!$
+
+[DewfordTown_Hall_Text_BooksAboutTrend] a7c5dd869d
+COMO DISTINGUIR O BOM\n
+“{STR_VAR_1}” DO\l
+MAU “{STR_VAR_1}”…\p
+A LIGAÇÃO ENTRE\n
+“{STR_VAR_1}” E OS\l
+POKéMON…\p
+O ÚTIL\n
+“{STR_VAR_1}”…\p
+A estante está lotada de livros sobre\n
+“{STR_VAR_1}”.$
+
+[DewfordTown_Hall_Text_TrendsScream] a81c689a7e
+O título é “O GRITO DE\n
+{STR_VAR_1}”.$
+
+[DewfordTown_Hall_Text_TrendsSmile] 8dd2b3f45e
+O título é “O SORRISO DE\n
+{STR_VAR_1}”.$
+
+[DewfordTown_Hall_Text_LastTrend] 07c4b95c32
+O título é “O ÚLTIMO\n
+{STR_VAR_1}”.$
+
+[DewfordTown_Hall_Text_BirthOfTrend] 47a861f5f9
+O título é “O NASCIMENTO DE\n
+{STR_VAR_1}”.$
+
+[DewfordTown_Hall_Text_SawTrendCoolestThing] 106e9a27b0
+Eu vi “{STR_VAR_1}”!\n
+Legal, né?\p
+É, tipo, a coisa mais legal que tem!\p
+Foi incrível!\n
+Era de verdade, ah, se era!$
+
+[DewfordTown_Hall_Text_AllegedTrendNotAuthentic] 26d7db43a0
+Ah, não, não, não.\p
+Esse tal de\n
+“{STR_VAR_1}”\l
+que você diz que viu, não é.\p
+O original é muito…\n
+Como posso dizer?\l
+Mais afiado, e mais suave!\p
+Ah, tanto faz. É impressionante!$
+
+[DewfordTown_Hall_Text_ComposedTrendThemeSong] 80fbe7c879
+Ei, escuta, compus uma música-tema\n
+para “{STR_VAR_1}”.\p
+“{STR_VAR_1}”\n
+faz o maior sucesso agora.\p
+Beleza, escuta!\n
+… …\p
+Ah!\n
+{STR_VAR_1}!\p
+Maravilhoso\n
+{STR_VAR_1}!$
+
+[DewfordTown_Hall_Text_WorkOnYourSinging] 18c8e8afe4
+… …\p
+Ouso dizer, meu caro, que valeria a\n
+pena treinar o seu canto antes de\l
+se meter com\l
+“{STR_VAR_1}”.$
+
+[DewfordTown_Hall_Text_OrganizeTrendParty] 7657e5d96d
+Enfim, como eu dizia, a gente devia\n
+se juntar e organizar uma festa de\l
+“{STR_VAR_1}”\l
+na ilha.$
+
+[DewfordTown_Hall_Text_BrilliantIndeed] 1096042b09
+Ah, que ideia esplêndida!\p
+Vai decidir de uma vez por todas\n
+quem é o melhor em\l
+“{STR_VAR_1}”.\l
+Brilhante, de fato!\p
+A partir de hoje, nossa vida vai girar\n
+em torno de “{STR_VAR_1}”!$
+
+[DewfordTown_Hall_Text_TrendHasBecomePartOfLife] 44bd06a798
+Mas eu estava pensando…\p
+Você não concorda que\n
+“{STR_VAR_1}”\l
+deixou de ser só moda e virou\l
+parte do nosso dia a dia?$
+
+[DewfordTown_Hall_Text_TrendWeighsHeavilyOnMind] d51d134204
+Como disse?\n
+Tanto assim, é?\p
+Mas é verdade que\n
+“{STR_VAR_1}”\l
+pesa na cabeça da gente, acordado\l
+ou dormindo.\p
+Sem dúvida, você é o PROFESSOR de\n
+“{STR_VAR_1}”,\l
+meu caro!$
+
+[DewfordTown_Hall_Text_IfWeTeamUpWellBeInvincible] 320b190bdd
+Se você e eu formarmos uma dupla,\n
+ninguém vai nos vencer em tudo que\l
+for “{STR_VAR_1}”!$
+
+[DewfordTown_Hall_Text_WellBeTrendDuo] f82a7ed569
+Na mosca, meu amigo!\p
+Seremos a DUPLA\n
+“{STR_VAR_1}”!\p
+Não é uma bela imagem?\n
+Hahahah!$
+
+[DewfordTown_Hall_Text_GiveYouSludgeBomb] effd8edf9b
+Pra mim, BOMBA LODO está no auge\n
+da popularidade. É a tal.\p
+Hã? Você está me dizendo que não\n
+conhece BOMBA LODO?\p
+Isso é de dar dó.\n
+Vou te dar uma.$
+
+[DewfordTown_Hall_Text_LoveSludgeBombButTrendInToo] 982a6a630b
+Eu adoro BOMBA LODO.\p
+Mas POKéMON com o golpe\n
+“{STR_VAR_1}”\l
+também estão na moda.$

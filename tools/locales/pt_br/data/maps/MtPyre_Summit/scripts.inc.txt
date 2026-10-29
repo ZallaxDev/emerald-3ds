@@ -1,0 +1,197 @@
+# MONTE PYRE: o topo, a EQUIPE AQUA, o ARCHIE, os ORBES e as lendas de HOENN.
+
+[MtPyre_Summit_Text_Grunt1Intro] be7fba3cd9
+Não! Aqueles capangas da EQUIPE MAGMA\n
+chegaram antes da gente!\p
+Não podemos ficar pra trás!$
+
+[MtPyre_Summit_Text_Grunt1Defeat] 85256ddb4c
+Achei que você fosse da MAGMA e\n
+tivesse voltado…$
+
+[MtPyre_Summit_Text_Grunt1PostBattle] 1e215614e7
+É, você é forte…\n
+Mas a gente é muitos!$
+
+[MtPyre_Summit_Text_Grunt2Intro] 0b58cd9386
+Ha!\n
+Azar o seu!\p
+Se chegasse antes, só ia enfrentar\n
+a fracote da EQUIPE MAGMA.\p
+Mas, como chegou agora, vai ter que\n
+encarar a gente, os durões!$
+
+[MtPyre_Summit_Text_Grunt2Defeat] a78b4f6bb0
+Argh… Devia ter deixado você enfrentar\n
+a EQUIPE MAGMA primeiro…$
+
+[MtPyre_Summit_Text_Grunt2PostBattle] e7db6099fc
+Você não sabe de nada!\n
+Então por que se mete com a gente?$
+
+[MtPyre_Summit_Text_Grunt3Intro] 12ddc8f54f
+Você…\n
+A gente te viu no MONTE CHIMNEY.\p
+Você não é de nenhuma EQUIPE, então\n
+por que está aqui?$
+
+[MtPyre_Summit_Text_Grunt3Defeat] 9cd52fd5e4
+Se for se meter com alguém, que seja\n
+com a EQUIPE MAGMA…$
+
+[MtPyre_Summit_Text_Grunt3PostBattle] a22c809b9c
+Heh, não importa!\n
+Ganhamos tempo!\p
+O CHEFE já deve ter pegado o que\n
+queria!$
+
+[MtPyre_Summit_Text_Grunt4Intro] 0ba221c8b7
+Ah, já sei!\n
+Você tentou entrar na EQUIPE MAGMA,\l
+mas eles não te quiseram!\p
+Pois não pense que a gente vai te\n
+deixar entrar na EQUIPE AQUA!$
+
+[MtPyre_Summit_Text_Grunt4Defeat] c5c5cf0307
+Se você quer tanto entrar na EQUIPE\n
+AQUA, a gente pode pensar…$
+
+[MtPyre_Summit_Text_Grunt4PostBattle] 1b2a40e70e
+Nós, os membros, e o nosso líder\n
+formamos uma ótima combinação.$
+
+[MtPyre_Summit_Text_ArchieWeGotTheOrbLetsGo] f6672f37e8
+ARCHIE: O MAXIE da EQUIPE MAGMA chegou\n
+antes, mas a gente também conseguiu\l
+o que queria.\p
+O ORBE VERMELHO guardado no MONTE\n
+PYRE… Agora está comigo, o ARCHIE!\p
+Fufufu… Agora podemos realizar o\n
+nosso objetivo final!\p
+Certo, EQUIPE!\n
+Vamos embora!$
+
+[MtPyre_Summit_Text_BothOrbsTakenMagmaLeftThis] 72a5a16e5d
+Ah, não…\n
+Isso não pode acontecer…\p
+Não só o ORBE AZUL, mas até o ORBE\n
+VERMELHO foi levado…\p
+O ORBE AZUL e o ORBE VERMELHO nunca\n
+podem ser separados. Eles andam juntos.\p
+O que aqueles homens querem fazer\n
+com os dois ORBES?\p
+… … … … … …\n
+… … … … … …\p
+Ah, sim. Foi a EQUIPE MAGMA que veio\n
+e levou o ORBE AZUL primeiro?\p
+Bem, na pressa, eles deixaram isto\n
+para trás.\p
+Não consigo imaginar o que seja\n
+exatamente.\p
+Quero que você fique com isto.\n
+Talvez seja útil de algum jeito.$
+
+[MtPyre_Summit_Text_OrbsHaveBeenTaken] 29e70bbc89
+O ORBE AZUL e o ORBE VERMELHO levados\n
+por aqueles homens sinistros…\p
+Eles nunca podem ficar separados…\n
+Temo que algo terrível aconteça…$
+
+[MtPyre_Summit_Text_GroudonKyogreAwakened] 5ef2544d4f
+Minha nossa…\p
+Você diz que o GROUDON e o KYOGRE\n
+foram despertados?\p
+Dizem que o ORBE AZUL e o ORBE\n
+VERMELHO acalmaram a fúria dos\l
+dois POKéMON…\p
+Dizem também que o verdadeiro dono\n
+dos ORBES ainda existe.\p
+Mas ninguém sabe a quem, ou a quê,\n
+os ORBES pertencem.\p
+Pode ser um humano, ou talvez um\n
+POKéMON, mas ninguém sabe.$
+
+[MtPyre_Summit_Text_ThoseTwoMenReturnedOrbs] 569ba8b497
+Os dois homens que levaram os ORBES\n
+voltaram para devolvê-los por conta\l
+própria.\p
+Aqueles homens…\n
+Talvez não sejam tão maus assim…$
+
+[MtPyre_Summit_Text_SuperAncientPokemonTaughtUs] b932cd75a0
+A encarnação da terra, do mar e\n
+do céu…\p
+Dizem que essa é a identidade dos\n
+POKéMON superantigos…\p
+Assim como nós, humanos, e os POKéMON\n
+temos vida, o nosso mundo também\l
+está vivo…\p
+Foi isso que os POKéMON superantigos\n
+nos ensinaram…$
+
+[MtPyre_Summit_Text_WillYouHearOutMyTale] 4e2a764523
+O MONTE PYRE é onde acalmamos os\n
+espíritos dos POKéMON que partiram…\p
+Deste lugar alto, dá pra ver toda\n
+a região de HOENN…\p
+Os espíritos dos POKéMON devem\n
+encontrar consolo aqui…\p
+Será coincidência você estar aqui…\p
+Quer ouvir a minha história? Uma\n
+história contada há muito em HOENN?$
+
+[MtPyre_Summit_Text_GroudonKyogreTale] d24ed247b3
+Aconteceu há muito, muito tempo…\p
+O mundo foi abalado por um choque\n
+feroz entre o POKéMON da terra\l
+e o POKéMON do mar…\p
+O POKéMON da terra ergueu montanhas\n
+e criou continentes…\p
+O POKéMON do mar ergueu ondas\n
+enormes e escavou oceanos…\p
+O duelo feroz deles não tinha fim.\p
+O mundo foi tomado por incêndios\n
+imensos e tempestades violentas.\p
+O ORBE AZUL e o ORBE VERMELHO\n
+puseram fim à calamidade.\p
+A luz dos dois ORBES acalmou os\n
+adversários furiosos.\p
+Os dois, já mansos, mergulharam no\n
+fundo do mar, onde acabaram\l
+desaparecendo…$
+
+[MtPyre_Summit_Text_WellThatTooIsFine] 05b8711e81
+Entendo…\n
+Bem, isso também está bem…$
+
+[MtPyre_Summit_Text_MaxieSilence] 198ca02228
+MAXIE: {PLAYER}…\p
+… … … … … …\n
+… … … … … …$
+
+[MtPyre_Summit_Text_HearTheNewLegendOfHoenn] 8aeca1693d
+O meu papel é passar as lendas de\n
+HOENN para as futuras gerações.\p
+E a crise que acabou de terminar em\n
+SOOTOPOLIS reescreveu uma lenda…\p
+Tem tempo pra ouvir a nova lenda\n
+de HOENN?$
+
+[MtPyre_Summit_Text_HoennTrioTale] 751a7eaadc
+Aconteceu há muito, muito tempo…\p
+O mundo foi abalado por um choque\n
+feroz entre o POKéMON da terra\l
+e o POKéMON do mar…\p
+O POKéMON da terra ergueu montanhas\n
+e criou continentes…\p
+O POKéMON do mar ergueu ondas\n
+enormes e escavou oceanos…\p
+O duelo feroz deles não tinha fim.\p
+O mundo foi tomado por incêndios\n
+imensos e tempestades violentas.\p
+Foi então que o POKéMON do céu\n
+desceu de uma tempestade.\p
+O POKéMON, de um verde vivo,\n
+acalmou os dois POKéMON furiosos.\p
+Então, missão cumprida, o POKéMON\n
+verde voou para o azul infinito…$

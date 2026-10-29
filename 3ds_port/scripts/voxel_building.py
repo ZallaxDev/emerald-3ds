@@ -2519,7 +2519,7 @@ class PlanPrism:
     taking the facade's row at that height."""
 
     def __init__(self, name, plan, y0, y1, side, top=None, shrink=1.0, open_top=False,
-                 inward=False):
+                 inward=False, art=None):
         self.name, self.plan = name, [tuple(map(float, p)) for p in plan]
         self.y0, self.y1, self.side = float(y0), float(y1), side
         # `shrink`: the top's plan is the foot's scaled about its middle (a
@@ -2531,6 +2531,35 @@ class PlanPrism:
         # `open_top`: no top at all (another part lays it: a basin's rim);
         # `inward`: the walls of a hollow, facing into it (a pool's sides)
         self.open_top, self.inward = open_top, inward
+        # `art`: the texture the strip is in. Where every texel of the strip
+        # a side face reads is one opaque colour, the face is one polygon
+        # reading one of them (~clamp) instead of a piece per repeat of the
+        # strip: the same colour on the same pixels, a few triangles instead
+        # of dozens (a fence rail's back, 2 px of strip repeated along it,
+        # was a pair of triangles every 2 px - and every triangle a chunk
+        # holds is built, lit and packed on the console)
+        self.art = art
+
+    def _plain_texel(self, tile):
+        """The (u, v) of a texel of the tile when all of its rectangle is one
+        opaque colour in `art`, else None."""
+        if self.art is None:
+            return None
+        u0, v0, u1, v1 = (int(math.floor(c + EPS)) if k < 2 else int(math.ceil(c - EPS))
+                          for k, c in enumerate(tile.rect))
+        W, H = self.art.size
+        if u1 <= u0 or v1 <= v0 or u0 < 0 or v0 < 0 or u1 > W or v1 > H:
+            return None
+        px = self.art.load()
+        first = px[u0, v0]
+        if len(first) < 4 or first[3] < 128:
+            return None
+        for v in range(v0, v1):
+            for u in range(u0, u1):
+                c = px[u, v]
+                if c[3] < 128 or c[:3] != first[:3]:
+                    return None
+        return (u0 + 0.5, v0 + 0.5)
 
     def emit(self, mesh):
         pl = self.plan
@@ -2541,6 +2570,7 @@ class PlanPrism:
         # a wall taller than the drawing above its foot: the strip's rows
         # repeat up it (a tower whose top is off the map)
         tile = Tile(u0, max(0.0, foot - (y1 - y0)), u1, foot - 0.0)
+        plain = self._plain_texel(tile)
         cx = sum(p[0] for p in pl) / n
         cz = sum(p[1] for p in pl) / n
         k_ = self.shrink
@@ -2578,6 +2608,13 @@ class PlanPrism:
             off = (-(y1 - y0)) % ph
             face = [(0.0, off), (L, off), (L, off + y1 - y0), (0.0, off + y1 - y0)]
             shade = SHADE_EAST if nx > 0.3 else SHADE_WEST if nx < -0.3 else SHADE_BACK
+            if plain is not None:
+                # one colour wherever the pieces would read: the face whole
+                pts = [at(i, s, y1 - (t - off)) + plain for s, t in face]
+                for k in range(1, len(pts) - 1):
+                    self._tri(mesh, (pts[0], pts[k], pts[k + 1]), (nx, 0.0, nz), shade,
+                              self.name + ".side~behind~clamp")
+                continue
             for piece in tile_pieces(face, tile, None, None):
                 pts = [at(i, s, y1 - (t - off)) + (u, v) for s, t, u, v in piece]
                 for k in range(1, len(pts) - 1):
@@ -2843,15 +2880,20 @@ class Card:
     as it is lifted - its foot drawn where it was.
     """
 
-    def __init__(self, name, art, foot, voff=0, base=0):
+    def __init__(self, name, art, foot, voff=0, base=0, span=None):
         self.name, self.art, self.foot, self.voff = name, art, float(foot), voff
         self.base = float(base)
+        # (u0, u1, v0): its extent, where the art's own pixels are not all of
+        # it - a beam whose other animation frame reaches further
+        self.span = span
 
     def emit(self, mesh):
         W, H = self.art.size
         px = self.art.load()
         cols = [u for u in range(W) if any(px[u, v][3] >= 128 for v in range(H))]
         rows = [v for v in range(H) if any(px[u, v][3] >= 128 for u in range(W))]
+        if self.span is not None:
+            cols, rows = [self.span[0], self.span[1] - 1], [self.span[2]]
         if not cols:
             return
         u0, u1 = float(min(cols)), float(max(cols) + 1)
@@ -2860,6 +2902,28 @@ class Card:
         front = [(u0, b - 1.0, f + b), (u1, b - 1.0, f + b), (u1, b + h, f + b), (u0, b + h, f + b)]
         mesh.poly([(x, y, z, x, z - y + self.voff) for (x, y, z) in front], SHADE_ART,
                   self.name + ".card")
+
+
+class Ribbon:
+    """A strip running back across the plan, from (za, ya) to (zb, yb), u0
+    to u1 wide, its drawing projected (v = z - y): a beam of light from one
+    post to the next, exact at 45 degrees and a strip in the air from any
+    other angle. `voff`: the rows below the model's drawing where its own
+    pixels are."""
+
+    def __init__(self, name, u0, u1, za, ya, zb, yb, voff=0):
+        self.name, self.voff = name, voff
+        self.u0, self.u1 = float(u0), float(u1)
+        self.a, self.b = (float(za), float(ya)), (float(zb), float(yb))
+
+    def emit(self, mesh):
+        (za, ya), (zb, yb) = self.a, self.b
+        # wound as a card is: its lower edge on the screen first
+        lo, hi = ((zb, yb), (za, ya)) if zb - yb > za - ya else ((za, ya), (zb, yb))
+        quad = [(self.u0, lo[1], lo[0]), (self.u1, lo[1], lo[0]),
+                (self.u1, hi[1], hi[0]), (self.u0, hi[1], hi[0])]
+        mesh.poly([(x, y, z, x, z - y + self.voff) for (x, y, z) in quad], SHADE_ART,
+                  self.name + ".ribbon~proj")
 
 
 class Facet:

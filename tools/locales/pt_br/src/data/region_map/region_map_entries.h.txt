@@ -1,0 +1,277 @@
+# Os nomes de lugares (src/data/region_map/region_map_entries.h, gerado de
+# region_map_sections.json): a placa ao entrar num mapa, o mapa da região,
+# o resumo. Até 16 caracteres (o espaço guarda 19, a placa tem 80 px na
+# fonte estreita): as cidades só com o nome próprio (opção decidida em
+# 09/10), as rotas ROTA 101, os outros lugares na forma dos diálogos ou
+# abreviados. Os lugares de Kanto e das ILHAS SEVII não aparecem no
+# Emerald e ficam como estão.
+
+[sMapName_ABANDONED_SHIP] 3d6407afad width=120
+NAVIO ABANDONADO
+
+[sMapName_ALTERING_CAVE] a16da11bcf width=120
+CAVERNA MUTANTE
+
+[sMapName_ANCIENT_TOMB] 82be77fc48 width=120
+TUMBA ANTIGA
+
+[sMapName_AQUA_HIDEOUT] 470f894261 width=120
+ESCOND. AQUA
+
+[sMapName_ARTISAN_CAVE] 1b4f07a9a1 width=120
+CAVERNA ARTESÃ
+
+[sMapName_BATTLE_FRONTIER] 50cfeb960e width=120
+FRONT. BATALHA
+
+[sMapName_BIRTH_ISLAND] 8d9285fdd2 width=120
+ILHA NATAL
+
+[sMapName_CAVE_OF_ORIGIN] e8bcd346b2 width=120
+CAV. DA ORIGEM
+
+[sMapName_DESERT_RUINS] 7bff2fc873 width=120
+RUÍNAS DESERTO
+
+[sMapName_DESERT_UNDERPASS] 9b5f36fab6 width=120
+PASS. DO DESERTO
+
+[sMapName_DEWFORD_TOWN] 4cbe97e48a width=120
+DEWFORD
+
+[sMapName_EVER_GRANDE_CITY] 04484d2f28 width=120
+EVER GRANDE
+
+[sMapName_FALLARBOR_TOWN] 680f6e8595 width=120
+FALLARBOR
+
+[sMapName_FARAWAY_ISLAND] 527c87e057 width=120
+ILHA DISTANTE
+
+[sMapName_FIERY_PATH] 39df5f55b7 width=120
+CAMINHO ARDENTE
+
+[sMapName_FORTREE_CITY] ee8b73d5a3 width=120
+FORTREE
+
+[sMapName_GRANITE_CAVE] e348becb34 width=120
+CAVERNA GRANITO
+
+[sMapName_INSIDE_OF_TRUCK] 108d245b52 width=120
+NO CAMINHÃO
+
+[sMapName_ISLAND_CAVE] 5b97b40355 width=120
+CAVERNA DA ILHA
+
+[sMapName_JAGGED_PASS] 99413136e3 width=120
+TRILHA ESCARPADA
+
+[sMapName_LAVARIDGE_TOWN] e7c637b187 width=120
+LAVARIDGE
+
+[sMapName_LILYCOVE_CITY] fb61d4cde1 width=120
+LILYCOVE
+
+[sMapName_LITTLEROOT_TOWN] 0d0be40159 width=120
+LITTLEROOT
+
+[sMapName_MAGMA_HIDEOUT] 27f813f86a width=120
+ESCOND. MAGMA
+
+[sMapName_MARINE_CAVE] ba5b1dfe35 width=120
+CAVERNA MARINHA
+
+[sMapName_MAUVILLE_CITY] 8b1c0b129f width=120
+MAUVILLE
+
+[sMapName_METEOR_FALLS] b2b9b65f79 width=120
+CAT. METEOROS
+
+[sMapName_MIRAGE_ISLAND] 586deee96f width=120
+ILHA MIRAGEM
+
+[sMapName_MIRAGE_TOWER] 47c4f4c025 width=120
+TORRE MIRAGEM
+
+[sMapName_MOSSDEEP_CITY] bfb7ab18d9 width=120
+MOSSDEEP
+
+[sMapName_MT__CHIMNEY] 07e5adf726 width=120
+MONTE CHIMNEY
+
+[sMapName_MT__PYRE] a7894f88c0 width=120
+MONTE PYRE
+
+[sMapName_NAVEL_ROCK] 5deb0fc318 width=120
+ROCHA UMBIGO
+
+[sMapName_NEW_MAUVILLE] 6ef562a2f4 width=120
+NOVA MAUVILLE
+
+[sMapName_OLDALE_TOWN] a3f78a9a97 width=120
+OLDALE
+
+[sMapName_PACIFIDLOG_TOWN] 7cbf6e80fe width=120
+PACIFIDLOG
+
+[sMapName_PETALBURG_CITY] 6a9ef23e22 width=120
+PETALBURG
+
+[sMapName_PETALBURG_WOODS] 637c1852dc width=120
+BOSQUE PETALBURG
+
+[sMapName_ROUTE_101] 3885e8af5f width=120
+ROTA 101
+
+[sMapName_ROUTE_102] de3424ea1c width=120
+ROTA 102
+
+[sMapName_ROUTE_103] 3a99f13514 width=120
+ROTA 103
+
+[sMapName_ROUTE_104] 281e5656bc width=120
+ROTA 104
+
+[sMapName_ROUTE_105] 89243e5713 width=120
+ROTA 105
+
+[sMapName_ROUTE_106] d5f4c03e74 width=120
+ROTA 106
+
+[sMapName_ROUTE_107] 7a8c5e73b3 width=120
+ROTA 107
+
+[sMapName_ROUTE_108] cba446a52b width=120
+ROTA 108
+
+[sMapName_ROUTE_109] cf1b9f36b9 width=120
+ROTA 109
+
+[sMapName_ROUTE_110] c980828252 width=120
+ROTA 110
+
+[sMapName_ROUTE_111] 2f40cee298 width=120
+ROTA 111
+
+[sMapName_ROUTE_112] 966b18ceb6 width=120
+ROTA 112
+
+[sMapName_ROUTE_113] 8dc1a1afaa width=120
+ROTA 113
+
+[sMapName_ROUTE_114] 043fb684da width=120
+ROTA 114
+
+[sMapName_ROUTE_115] fda8e82832 width=120
+ROTA 115
+
+[sMapName_ROUTE_116] feec33efd0 width=120
+ROTA 116
+
+[sMapName_ROUTE_117] d2d26f6317 width=120
+ROTA 117
+
+[sMapName_ROUTE_118] f43a61e0c1 width=120
+ROTA 118
+
+[sMapName_ROUTE_119] 1a238e8f47 width=120
+ROTA 119
+
+[sMapName_ROUTE_120] 2db7f9d080 width=120
+ROTA 120
+
+[sMapName_ROUTE_121] f131788474 width=120
+ROTA 121
+
+[sMapName_ROUTE_122] 8cae2734dc width=120
+ROTA 122
+
+[sMapName_ROUTE_123] 7dbe75617b width=120
+ROTA 123
+
+[sMapName_ROUTE_124] b01a7fd4a1 width=120
+ROTA 124
+
+[sMapName_ROUTE_125] 75df1e002f width=120
+ROTA 125
+
+[sMapName_ROUTE_126] 299f227bde width=120
+ROTA 126
+
+[sMapName_ROUTE_127] 02462445a5 width=120
+ROTA 127
+
+[sMapName_ROUTE_128] a6acd2dcbe width=120
+ROTA 128
+
+[sMapName_ROUTE_129] 2c25a1813a width=120
+ROTA 129
+
+[sMapName_ROUTE_130] 38c7684466 width=120
+ROTA 130
+
+[sMapName_ROUTE_131] 1135ebb7f8 width=120
+ROTA 131
+
+[sMapName_ROUTE_132] 6635a47307 width=120
+ROTA 132
+
+[sMapName_ROUTE_133] b6f8bd0ab8 width=120
+ROTA 133
+
+[sMapName_ROUTE_134] d40a02ca00 width=120
+ROTA 134
+
+[sMapName_RUSTBORO_CITY] 43baa8a0a8 width=120
+RUSTBORO
+
+[sMapName_RUSTURF_TUNNEL] f1f54b3082 width=120
+TÚNEL RUSTURF
+
+[sMapName_SAFARI_ZONE] 67ef112027 width=120
+ZONA DE SAFÁRI
+
+[sMapName_SCORCHED_SLAB] def5b7f768 width=120
+LAJE CHAMUSCADA
+
+[sMapName_SEAFLOOR_CAVERN] 467c314328 width=120
+CAM. SUBMARINO
+
+[sMapName_SEALED_CHAMBER] 18e2fd5a4f width=120
+CÂMARA SELADA
+
+[sMapName_SECRET_BASE] ff13338a1b width=120
+BASE SECRETA
+
+[sMapName_SHOAL_CAVE] 792dccf2fd width=120
+CAV. BANCO AREIA
+
+[sMapName_SKY_PILLAR] 23b9e5dd45 width=120
+PILAR CELESTE
+
+[sMapName_SLATEPORT_CITY] 071676fc3b width=120
+SLATEPORT
+
+[sMapName_SOOTOPOLIS_CITY] 02dc584e92 width=120
+SOOTOPOLIS
+
+[sMapName_SOUTHERN_ISLAND] 900820999a width=120
+ILHA DO SUL
+
+[sMapName_TERRA_CAVE] 2d2cab7415 width=120
+CAVERNA TERRA
+
+[sMapName_TRAINER_HILL] 05b3f31a9b width=120
+COL. TREINADORES
+
+[sMapName_UNDERWATER] 9763336fe2 width=120
+FUNDO DO MAR
+
+[sMapName_VERDANTURF_TOWN] a17dc62c57 width=120
+VERDANTURF
+
+[sMapName_VICTORY_ROAD] 9144369a52 width=120
+ESTR. DA VITÓRIA
+
+[sMapName__AQUA__HIDEOUT_Clone] 4c529ba4c2 width=120
+ESCOND. {AQUA}

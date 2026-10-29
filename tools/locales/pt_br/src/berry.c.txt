@@ -1,0 +1,261 @@
+# As descrições das FRUTAS (src/berry.c), na etiqueta da FRUTA: duas linhas
+# numa janela de 25 tiles (200 px). Os nomes (CHERI, ORAN…) ficam, como no
+# padrão oficial FRUTA ORAN.
+
+[sBerryDescriptionPart1_Cheri] 01ef860014 width=200
+Dá flores delicadas e bonitas.
+
+[sBerryDescriptionPart2_Cheri] 1212793eb3 width=200
+A FRUTA, vermelho-viva, é bem picante.
+
+[sBerryDescriptionPart1_Chesto] cf13f17fea width=200
+A casca grossa e a polpa desta FRUTA
+
+[sBerryDescriptionPart2_Chesto] 8cac1e5480 width=200
+são muito duras. Tem sabor seco.
+
+[sBerryDescriptionPart1_Pecha] 2747b8f028 width=200
+Muito doce e deliciosa.
+
+[sBerryDescriptionPart2_Pecha] fbf0b024c9 width=200
+Também é bem macia: cuidado ao pegar.
+
+[sBerryDescriptionPart1_Rawst] 27f7b14616 width=200
+Se as folhas crescem longas e
+
+[sBerryDescriptionPart2_Rawst] 4991fdb2ab width=200
+enroladas, a FRUTA fica bem amarga.
+
+[sBerryDescriptionPart1_Aspear] b204183144 width=200
+A FRUTA, dura, é cheia de um suco
+
+[sBerryDescriptionPart2_Aspear] 58004b2ae1 width=200
+encorpado. É bem azeda.
+
+[sBerryDescriptionPart1_Leppa] 7ae8c90ce0 width=200
+Cresce mais devagar que a CHERI.
+
+[sBerryDescriptionPart2_Leppa] 8767fef488 width=200
+Quanto menor a FRUTA, mais gostosa.
+
+[sBerryDescriptionPart1_Oran] 0d6a5240a9 width=200
+Uma FRUTA curiosa, de sabores mistos.
+
+[sBerryDescriptionPart2_Oran] f1996a3426 width=200
+As FRUTAS crescem em meio dia.
+
+[sBerryDescriptionPart1_Persim] 966a2e58a2 width=200
+Adora o sol. A cor da FRUTA fica
+
+[sBerryDescriptionPart2_Persim] 38b6764372 width=200
+mais viva quando exposta ao sol.
+
+[sBerryDescriptionPart1_Lum] 31a0b451a0 width=200
+Cresce devagar. Se cuidada com
+
+[sBerryDescriptionPart2_Lum] 9aa4ad9d96 width=200
+carinho, pode dar duas FRUTAS.
+
+[sBerryDescriptionPart1_Sitrus] ba22802485 width=200
+Parente próxima da ORAN. A FRUTA,
+
+[sBerryDescriptionPart2_Sitrus] 2ae068713b width=200
+grande, tem um sabor equilibrado.
+
+[sBerryDescriptionPart1_Figy] f1ba36aea3 width=200
+A FRUTA, que parece mastigada,
+
+[sBerryDescriptionPart2_Figy] f292cacdc4 width=200
+é cheia de substâncias picantes.
+
+[sBerryDescriptionPart1_Wiki] 95816184fc width=200
+Dizem que a FRUTA ficou irregular
+
+[sBerryDescriptionPart2_Wiki] e97d22f4c5 width=200
+pros POKéMON poderem segurar.
+
+[sBerryDescriptionPart1_Mago] 020ae1dd12 width=200
+A FRUTA fica curva ao crescer.
+
+[sBerryDescriptionPart2_Mago] c80a2c0f37 width=200
+Quanto mais curva, mais doce.
+
+[sBerryDescriptionPart1_Aguav] 92535195ba width=200
+A flor é delicada. É rara por
+
+[sBerryDescriptionPart2_Aguav] 9dc19cd107 width=200
+conseguir crescer sem luz.
+
+[sBerryDescriptionPart1_Iapapa] 77b15eb0e1 width=200
+A FRUTA é muito grande e azeda.
+
+[sBerryDescriptionPart2_Iapapa] b9e1ebbbd2 width=200
+Leva pelo menos um dia pra crescer.
+
+[sBerryDescriptionPart1_Razz] c820482912 width=200
+A FRUTA vermelha é meio picante.
+
+[sBerryDescriptionPart2_Razz] 0e6fda2e51 width=200
+Cresce rápido, em só quatro horas.
+
+[sBerryDescriptionPart1_Bluk] 86098017e0 width=200
+A FRUTA é azul por fora, mas
+
+[sBerryDescriptionPart2_Bluk] b53b313fd4 width=200
+deixa a boca preta quando comida.
+
+[sBerryDescriptionPart1_Nanab] 0098eec1df width=200
+Esta FRUTA foi a sétima
+
+[sBerryDescriptionPart2_Nanab] 404cf215ce width=200
+descoberta no mundo. É doce.
+
+[sBerryDescriptionPart1_Wepear] 1e0189e144 width=200
+A flor é pequena e branca. Tem um
+
+[sBerryDescriptionPart2_Wepear] e0245c715a width=200
+equilíbrio delicado de amargo e azedo.
+
+[sBerryDescriptionPart1_Pinap] efd541ec5d width=200
+Sofre com vento e frio.
+
+[sBerryDescriptionPart2_Pinap] 0ed439e263 width=200
+A polpa é picante; a casca, azeda.
+
+[sBerryDescriptionPart1_Pomeg] 7b7773b9c9 width=200
+Não importa quanto seja regada,
+
+[sBerryDescriptionPart2_Pomeg] 29313e2c92 width=200
+só chega a dar seis FRUTAS.
+
+[sBerryDescriptionPart1_Kelpsy] 5fd18986c1 width=200
+Uma variedade rara, com forma de
+
+[sBerryDescriptionPart2_Kelpsy] 0e271d6cc9 width=200
+raiz. Dá uma flor bem grande.
+
+[sBerryDescriptionPart1_Qualot] 31bda8711e width=200
+Adora água. Cresce forte até em
+
+[sBerryDescriptionPart2_Qualot] ad67541c5c width=200
+lugares onde chove sem parar.
+
+[sBerryDescriptionPart1_Hondew] d5ff08ee77 width=200
+Uma FRUTA muito valiosa e rara
+
+[sBerryDescriptionPart2_Hondew] 36d39872b5 width=200
+de se ver. É deliciosa.
+
+[sBerryDescriptionPart1_Grepa] 44f3c17689 width=200
+Apesar de macia e redonda,
+
+[sBerryDescriptionPart2_Grepa] 3418c9f2b6 width=200
+a FRUTA é azeda de um jeito incrível.
+
+[sBerryDescriptionPart1_Tamato] 4f54804cd5 width=200
+A FRUTA é picante de torcer a boca.
+
+[sBerryDescriptionPart2_Tamato] 4afe24b2f5 width=200
+Leva tempo pra crescer.
+
+[sBerryDescriptionPart1_Cornn] 04ba77e2d1 width=200
+Uma FRUTA de uma era antiga. Pode não
+
+[sBerryDescriptionPart2_Cornn] 2b51b99a8f width=200
+crescer se não for plantada em grupo.
+
+[sBerryDescriptionPart1_Magost] c6029ae0c1 width=200
+Uma FRUTA muito conhecida pelo
+
+[sBerryDescriptionPart2_Magost] 59a2c9167f width=200
+sabor bem equilibrado.
+
+[sBerryDescriptionPart1_Rabuta] b142b464a8 width=200
+Uma variedade rara, coberta de
+
+[sBerryDescriptionPart2_Rabuta] 2cbf3e61b0 width=200
+pelos. É bem amarga.
+
+[sBerryDescriptionPart1_Nomel] 9c594d3fe1 width=200
+Bem azeda. Uma mordida e você fica
+
+[sBerryDescriptionPart2_Nomel] df2cc9ea82 width=200
+três dias sem sentir gosto de nada.
+
+[sBerryDescriptionPart1_Spelon] 8fc8c38e49 width=200
+A FRUTA, vermelho-viva, é bem picante.
+
+[sBerryDescriptionPart2_Spelon] 672ace15b2 width=200
+As verrugas soltam algo picante.
+
+[sBerryDescriptionPart1_Pamtre] 28de7cc518 width=200
+Chega pelo mar, vinda de algum lugar.
+
+[sBerryDescriptionPart2_Pamtre] 92ede3478a width=200
+Acham que ela cresce em outra terra.
+
+[sBerryDescriptionPart1_Watmel] 4c78fd2db3 width=200
+Uma FRUTA enorme: já acharam
+
+[sBerryDescriptionPart2_Watmel] e9d4324196 width=200
+algumas com mais de 50 cm. Muito doce.
+
+[sBerryDescriptionPart1_Durin] c22096c750 width=200
+Amarga só de olhar. É tão amarga
+
+[sBerryDescriptionPart2_Durin] 30de0958f9 width=200
+que ninguém nunca comeu ela pura.
+
+[sBerryDescriptionPart1_Belue] 28e80963d1 width=200
+É brilhante e parece gostosa, mas
+
+[sBerryDescriptionPart2_Belue] a77de1c208 width=200
+é azeda demais. Demora pra crescer.
+
+[sBerryDescriptionPart1_Liechi] 07a312e887 width=200
+Uma FRUTA misteriosa. Dizem que
+
+[sBerryDescriptionPart2_Liechi] 65df17b3c4 width=200
+ela guarda o poder do mar.
+
+[sBerryDescriptionPart1_Ganlon] 07a312e887 width=200
+Uma FRUTA misteriosa. Dizem que
+
+[sBerryDescriptionPart2_Ganlon] 00cdc0140f width=200
+ela guarda o poder da terra.
+
+[sBerryDescriptionPart1_Salac] 07a312e887 width=200
+Uma FRUTA misteriosa. Dizem que
+
+[sBerryDescriptionPart2_Salac] a39ba859bd width=200
+ela guarda o poder do céu.
+
+[sBerryDescriptionPart1_Petaya] 07a312e887 width=200
+Uma FRUTA misteriosa. Dizem que
+
+[sBerryDescriptionPart2_Petaya] 15f18e0baa width=200
+ela guarda o poder de todos os seres.
+
+[sBerryDescriptionPart1_Apicot] c20500ebf3 width=200
+Uma FRUTA muito intrigante. Não dá
+
+[sBerryDescriptionPart2_Apicot] f97587bd12 width=200
+pra saber o que faz nem pra que serve.
+
+[sBerryDescriptionPart1_Lansat] e81dadd082 width=200
+Dizem que é uma FRUTA lendária.
+
+[sBerryDescriptionPart2_Lansat] 07cc8634fb width=200
+Quem a carrega fica feliz, dizem.
+
+[sBerryDescriptionPart1_Starf] 94b33b7eb8 width=200
+Tão forte que foi largada no fim do
+
+[sBerryDescriptionPart2_Starf] 23d2937b0a width=200
+mundo. Muitos acham que é miragem.
+
+[sBerryDescriptionPart1_Enigma] 4ebb6f6794 width=200
+Uma FRUTA totalmente enigmática.
+
+[sBerryDescriptionPart2_Enigma] 1bc562258c width=200
+Parece ter o poder das estrelas.

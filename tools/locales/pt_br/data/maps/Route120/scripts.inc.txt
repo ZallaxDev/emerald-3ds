@@ -1,0 +1,72 @@
+# ROTA 120: o STEVEN, o ESCOPO DEVON e os KECLEON invisíveis.
+
+[Route120_Text_StevenGreeting] aa7573ce96
+STEVEN: Hum? {PLAYER}{KUN}, oi.\n
+Quanto tempo.\p
+Tem alguma coisa aqui que você\n
+não consegue ver, não é?\p
+Bom, se eu usasse este aparelho no\n
+obstáculo invisível…\p
+Não, não. Em vez de explicar, é\n
+melhor mostrar.\l
+É mais divertido.\p
+{PLAYER}{KUN}, os seus POKéMON estão\n
+prontos pra batalha?$
+
+[Route120_Text_StevenIllWaitHere] 4d1fce5d53
+STEVEN: Não?\p
+Eu espero aqui enquanto você se\n
+prepara.$
+
+[Route120_Text_StevenReadyForBattle] 74928cec80
+STEVEN: {PLAYER}{KUN}, os seus POKéMON\n
+estão prontos pra batalha?$
+
+[Route120_Text_StevenShowMeYourPower] 5b7128adf4
+STEVEN: {PLAYER}{KUN}, me mostre o seu\n
+verdadeiro poder de TREINADOR!$
+
+[Route120_Text_StevenUsedDevonScope] 4c19b6f53d
+STEVEN usou o ESCOPO DEVON.\p
+Um POKéMON invisível ficou\n
+completamente visível!\p
+O POKéMON se assustou e atacou!$
+
+[Route120_Text_StevenGiveDevonScope] 00f523281a
+STEVEN: Entendo…\n
+O seu estilo de batalha é intrigante.\p
+Os seus POKéMON cresceram muito\n
+desde que nos vimos em DEWFORD.\p
+Quero que você fique com este\n
+ESCOPO DEVON.\p
+Quem sabe, pode haver outros\n
+POKéMON escondidos.$
+
+[Route120_Text_StevenGoodbye] ab48518abe
+STEVEN: {PLAYER}{KUN}.\p
+Gosto de ver POKéMON e TREINADORES\n
+que se esforçam juntos.\p
+Acho que você está indo muito bem.\p
+Bom, vamos nos encontrar de novo\n
+em algum lugar.$
+
+[Kecleon_Text_SomethingUnseeable] 7d8966153b
+Tem alguma coisa invisível no caminho.$
+
+[Kecleon_Text_WantToUseDevonScope] ceb2773fa9
+Tem alguma coisa invisível no caminho.\p
+Quer usar o ESCOPO DEVON?$
+
+[Kecleon_Text_UseDevonScopeMonAttacked] debcc3f5a1
+{PLAYER} usou o ESCOPO DEVON.\p
+Um POKéMON invisível ficou\n
+completamente visível!\p
+O POKéMON se assustou e atacou!$
+
+[Route120_Text_RouteSignFortree] d5f2db3fc1
+ROTA 120\n
+{LEFT_ARROW} CIDADE DE FORTREE$
+
+[Route120_Text_RouteSign121] ea54e4dd6b
+{RIGHT_ARROW} ROTA 121\n
+{LEFT_ARROW} ROTA 120$

@@ -1,0 +1,46 @@
+Pokémon Emerald 3Ds Dual Screen changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: the Pokédex names the Pokémon on its info page, and under the list's cursor, for the top screen's device window (3ds_port/src/3ds_dex_top_game.c).
+Applies after 0054-pokedex-capture-layout.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/pokedex.c b/src/pokedex.c
+--- a/src/pokedex.c
++++ b/src/pokedex.c
+@@ -5869,7 +5869,39 @@
+     return sPokedexView != NULL && (gMain.callback2 == CB2_Pokedex || gMain.callback2 == CB2_OpenPokedex);
+ }
+ 
++// The Pokemon the top screen shows in the device's window (3ds_dex_top_game.c),
++// as a national dex number: the one on the info page (and its area, cry and
++// size pages; the list's task waits in Task_WaitForExitInfoScreen for as long
++// as any of those is up), else the one the list or the search results have
++// under the cursor, when it has been seen; 0 otherwise.
++u16 CtrPokedex_InfoDexNum(void)
++{
++    if (!CtrPokedex_IsOpen() || gMain.callback2 != CB2_Pokedex)
++        return 0;
++    if (sPokedexListItem != NULL
++        && (FuncIsActiveTask(Task_WaitForExitInfoScreen) || FuncIsActiveTask(Task_HandleInfoScreenInput)
++            || FuncIsActiveTask(Task_WaitForExitSearchResultsInfoScreen)))
++        return sPokedexListItem->dexNum;
++    if (FuncIsActiveTask(Task_HandlePokedexInput) || FuncIsActiveTask(Task_HandleSearchResultsInput)
++     || FuncIsActiveTask(Task_HandlePokedexStartMenuInput) || FuncIsActiveTask(Task_HandleSearchResultsStartMenuInput))
++    {
++        const struct PokedexListItem *item;
+ 
++        if (sPokedexView->selectedPokemon >= sPokedexView->pokemonListCount)
++            return 0;
++        item = &sPokedexView->pokedexList[sPokedexView->selectedPokemon];
++        return item->seen ? item->dexNum : 0;
++    }
++    return 0;
++}
++
++// Whether the list is scrolling: the top screen waits for it to settle.
++bool8 CtrPokedex_ListScrolling(void)
++{
++    return sPokedexView != NULL && sPokedexView->scrollTimer != 0;
++}
++
++
+ // The tile the screen on show carries out past its edges on the bottom
+ // screen (3ds_video.c, CentredFillOf), as bg << 16 | column << 8 | row (or
+ // 1 << 20 | bg << 16 | a tilemap entry): the stripes behind every page, the

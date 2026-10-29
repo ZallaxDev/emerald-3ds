@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include "3ds_encounters.h"
 
@@ -29,6 +30,13 @@ int main(void)
     }
     assert(CtrEncounters_Resolve(rules, 2, 0, 16, 2, 10, CTR_TIME_COUNT) == 10);
     assert(CtrEncounters_Resolve(NULL, 0, 0, 16, 2, 10, CTR_TIME_NIGHT) == 10);
-    puts("PASS encounters: time boundaries, midnight, route/slot/species guards, original fallbacks");
+    /* The water ones are met surfing and diving (on an underwater map's
+     * seaweed the player is not surfing); the land ones only on foot. */
+    assert(!CtrEncounters_PlayerInWater(false, false));
+    assert(CtrEncounters_PlayerInWater(true, false));
+    assert(CtrEncounters_PlayerInWater(false, true));
+    assert(CtrEncounters_PlayerInWater(true, true));
+    puts("PASS encounters: time boundaries, midnight, route/slot/species guards, original fallbacks, "
+         "water while surfing or diving");
     return 0;
 }

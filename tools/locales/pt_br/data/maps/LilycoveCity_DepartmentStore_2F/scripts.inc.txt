@@ -1,0 +1,13 @@
+# CIDADE DE LILYCOVE: a LOJA DE DEPARTAMENTOS, 1º andar.
+
+[LilycoveCity_DepartmentStore_2F_Text_LearnToUseItemsProperly] a6dd067e05
+Aprenda a usar bem os itens.\n
+Isso é o básico, sério.$
+
+[LilycoveCity_DepartmentStore_2F_Text_GoodGiftForHusband] fe2c692375
+O meu marido está me esperando em\n
+casa. O que seria um bom presente?$
+
+[LilycoveCity_DepartmentStore_2F_Text_StockUpOnItems] ee52d7522a
+Vou sair numa longa viagem em breve.\n
+Preciso estocar itens.$

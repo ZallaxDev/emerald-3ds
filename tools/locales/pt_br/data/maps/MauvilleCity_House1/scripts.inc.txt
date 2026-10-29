@@ -1,0 +1,28 @@
+# CIDADE DE MAUVILLE, casa 1: o CARA DO ESMAGA PEDRA.
+
+[MauvilleCity_House1_Text_ImRockSmashDudeTakeThis] 9c1baeb268
+Uhuu!\p
+Ouvi dizer que me chamam de HOMEM\n
+DO ESMAGA PEDRA, mas acho isso meio\l
+humilhante.\p
+Acho que mereço mais respeito, tipo,\n
+CARA DO ESMAGA PEDRA.\p
+Uhuu!\p
+Enfim, os seus POKéMON parecem bem\n
+fortes.\p
+Gostei!\n
+Tome, pegue esta MÁQUINA OCULTA!$
+
+[MauvilleCity_House1_Text_ExplainRockSmash] eab16eeda1
+Essa MO tem ESMAGA PEDRA.\p
+Se você topar com pedras enormes\n
+bloqueando o caminho…\p
+Bom, use esse golpe de MO e esmague\n
+elas pra fora do caminho!\p
+Isso aí! Esmague as pedras, eu digo!\n
+Uhuu!$
+
+[MauvilleCity_House1_Text_MonCanFlyOutOfSmashedRock] 14796808a8
+Ah, é, se você esmaga uma pedra, um\n
+POKéMON pode sair voando de lá.\p
+Uhuu!$

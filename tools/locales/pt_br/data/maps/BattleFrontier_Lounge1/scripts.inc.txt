@@ -1,0 +1,106 @@
+# FRONTEIRA DE BATALHA: o salão do CRIADOR POKéMON que avalia os POKéMON.
+
+[BattleFrontier_Lounge1_Text_PokemonBreederIntro] 31496d9331
+Crio POKéMON há 70 anos!\n
+Sou o homem que veneram como o\l
+lendário maior CRIADOR POKéMON!\p
+Quando tiver a minha experiência,\n
+vai ver as qualidades dos POKéMON\l
+num piscar de olhos.\p
+Você é TREINADOR. Não quer saber\n
+das qualidades dos seus POKéMON?\p
+Aqui!\n
+Vamos ver os seus POKéMON!$
+
+[BattleFrontier_Lounge1_Text_AverageAbility] 2dd8a2972e
+…Hum…\p
+Este, no geral, eu diria que tem\n
+qualidades medianas.$
+
+[BattleFrontier_Lounge1_Text_BetterThanAverageAbility] e83b22b893
+…Hum…\p
+Este, no geral, eu diria que tem\n
+qualidades acima da média.$
+
+[BattleFrontier_Lounge1_Text_ImpressiveAbility] 4b37b03e46
+…Hum…\p
+Este, no geral, eu diria que tem\n
+qualidades impressionantes!$
+
+[BattleFrontier_Lounge1_Text_OutstandingAbility] 163cfb188f
+…Hum…\p
+Este, no geral, eu diria que tem\n
+qualidades excepcionais!$
+
+[BattleFrontier_Lounge1_Text_BestAspectHP] 5cfb384496
+Aliás, o melhor dele, eu diria,\n
+são os PS…$
+
+[BattleFrontier_Lounge1_Text_BestAspectAtk] d18021f12f
+Aliás, o melhor dele, eu diria,\n
+é o ATAQUE…$
+
+[BattleFrontier_Lounge1_Text_BestAspectDef] 98de72b636
+Aliás, o melhor dele, eu diria,\n
+é a DEFESA…$
+
+[BattleFrontier_Lounge1_Text_BestAspectSpAtk] 78ebfe1aec
+Aliás, o melhor dele, eu diria,\n
+é o ATAQUE ESPECIAL…$
+
+[BattleFrontier_Lounge1_Text_BestAspectSpDef] 8e95fce9be
+Aliás, o melhor dele, eu diria,\n
+é a DEFESA ESPECIAL…$
+
+[BattleFrontier_Lounge1_Text_BestAspectSpeed] 58500f1973
+Aliás, o melhor dele, eu diria,\n
+é a VELOCIDADE…$
+
+[BattleFrontier_Lounge1_Text_StatRelativelyGood] e7965a34cd
+Esse atributo é relativamente bom.\n
+…Hum… É o que eu acho.$
+
+[BattleFrontier_Lounge1_Text_StatImpressive] 1912475cc4
+Esse atributo é impressionante.\n
+…Hum… É o que eu acho.$
+
+[BattleFrontier_Lounge1_Text_StatOutstanding] d40a4c924e
+Esse atributo é excepcional!\n
+…Hum… É o que eu acho.$
+
+[BattleFrontier_Lounge1_Text_StatFlawless] c665505fee
+Impecável! Uma perfeição!\n
+…Hum… É o que eu acho.$
+
+[BattleFrontier_Lounge1_Text_NoTimeForMyAdvice] fe1658347f
+Quê?\n
+Não tem tempo pros meus conselhos?\p
+Devia ter vontade de aprender com\n
+a experiência dos mais velhos!$
+
+[BattleFrontier_Lounge1_Text_HaveBusinessNeedsTending] 93be2bfae9
+Sim, o que foi agora?\p
+Tenho assuntos pra resolver!\n
+Deixe pra próxima!$
+
+[BattleFrontier_Lounge1_Text_LetsLookAtYourPokemon] 5dd7abc7cc
+Ah, jovem! Tem curiosidade sobre as\n
+qualidades dos seus POKéMON?\p
+Aqui, aqui!\n
+Vamos ver os seus POKéMON!$
+
+[BattleFrontier_Lounge1_Text_EvenICantTell] f4dcdd5392
+Sou especialista, mas nem eu sei\n
+dizer nada de um POKéMON no OVO!\p
+Mostre um POKéMON!\n
+É um POKéMON que eu preciso ver!$
+
+[BattleFrontier_Lounge1_Text_SaidMyMonIsOutstanding] 2861d1c2ce
+Ele disse que o meu POKéMON é\n
+excepcional! Que bom que criei ele\l
+com cuidado!$
+
+[BattleFrontier_Lounge1_Text_DidntDoAnythingSpecialRaisingIt] f3e6a5585a
+Ele disse que o meu POKéMON é\n
+excepcional! Mas eu não fiz nada\l
+de especial pra criar ele…$

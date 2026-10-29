@@ -1,0 +1,15 @@
+# O POKé MART da CIDADE DE OLDALE.
+
+[OldaleTown_Mart_Text_PokeBallsAreSoldOut] 4164750046
+O atendente disse que esgotaram.\n
+Não consigo comprar POKé BOLAS.$
+
+[OldaleTown_Mart_Text_ImGoingToBuyPokeBalls] a8f2f57aad
+Vou comprar um monte de POKé BOLAS\n
+e capturar um monte de POKéMON!$
+
+[OldaleTown_Mart_Text_RestoreHPWithPotion] 4e209fa127
+Se um POKéMON se machuca, perde PS\n
+e desmaia, ele não pode batalhar.\p
+Para o seu POKéMON não desmaiar,\n
+recupere os PS dele com uma POÇÃO.$

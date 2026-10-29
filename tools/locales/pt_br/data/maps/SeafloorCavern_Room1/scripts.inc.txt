@@ -1,0 +1,24 @@
+# CAMINHO SUBMARINO: sala 1.
+
+[SeafloorCavern_Room1_Text_Grunt1Intro] 9b6df9b0c3
+Não precisamos de criança aqui!\n
+Vai pra casa logo!$
+
+[SeafloorCavern_Room1_Text_Grunt1Defeat] 04bcaf8719
+Quero ir pra casa…$
+
+[SeafloorCavern_Room1_Text_Grunt1PostBattle] b6895f868a
+Quero uma promoção pra mandar nos\n
+CAPANGAS…$
+
+[SeafloorCavern_Room1_Text_Grunt2Intro] 097649eac2
+Aquele submarino… É apertado demais.\n
+Estou todo dolorido!$
+
+[SeafloorCavern_Room1_Text_Grunt2Defeat] 213155b33e
+Perder dói!$
+
+[SeafloorCavern_Room1_Text_Grunt2PostBattle] 2e49e03c36
+Aquele submarino que roubamos, cara,\n
+é uma viagem brutal.\l
+É apertado demais lá dentro!$

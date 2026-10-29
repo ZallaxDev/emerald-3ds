@@ -7,6 +7,9 @@
     python tools/bootstrap.py --make --spanish-rom esmeralda.gba   # Spanish (BPES) build
     python tools/bootstrap.py --make --french-rom emeraude.gba     # French (BPEF) build
     python tools/bootstrap.py --make --italian-rom smeraldo.gba    # Italian (BPEI) build
+    python tools/bootstrap.py --make --japanese-rom emerald-ja.gba # Japanese (BPEJ) build
+    python tools/bootstrap.py --make --port-lang pt_br   # Brazilian Portuguese over the English game
+    python tools/bootstrap.py --make --german-rom smaragd.gba      # German (BPED) build
 
 1. Reads upstream.lock and fetches exactly that commit of pret/pokeemerald into
    build/upstream (a shallow fetch of one commit).
@@ -18,11 +21,15 @@
    includes (`make generated`) and the 3DSX (`make -C 3ds_port`). Run it from
    a shell where devkitPro, a host compiler and Python are available (on
    Windows, devkitPro's MSYS2 shell with MinGW64 on PATH).
-5. With --spanish-rom / --french-rom / --italian-rom: after the generated
-   includes, tools/localize_spanish.py (docs/SPANISH.md), tools/localize_french.py
-   or tools/localize_italian.py stages the texts and graphics of that language
-   from the player's clean ROM.
+5. With --spanish-rom / --french-rom / --italian-rom / --german-rom / --japanese-rom: after
+   the generated includes, tools/localize_spanish.py (docs/SPANISH.md),
+   tools/localize_french.py, tools/localize_italian.py, tools/localize_german.py or
+   tools/localize_japanese.py (docs/JAPANESE.md) stages the texts and graphics
+   of that language from the player's clean ROM.
    Switching language back and forth resets the tree.
+6. With --port-lang pt_br: the port's own interface (bottom screen labels,
+   extras, data pack errors) in Brazilian Portuguese, and the game's texts
+   from tools/locales/pt_br (tools/localize_portuguese.py, docs/PORTUGUESE.md).
 """
 
 from __future__ import annotations
@@ -82,10 +89,18 @@ def main() -> int:
     ap.add_argument("--spanish-rom", type=Path, help="stage the Spanish data from a clean BPES ROM")
     ap.add_argument("--french-rom", type=Path, help="stage the French data from a clean BPEF ROM")
     ap.add_argument("--italian-rom", type=Path, help="stage the Italian data from a clean BPEI ROM")
+    ap.add_argument("--japanese-rom", type=Path, help="stage the Japanese data from a clean BPEJ ROM")
+    ap.add_argument("--port-lang", choices=["en", "pt_br"], default="en",
+                    help="language of the port's own interface (PORT_LANG=)")
+    ap.add_argument("--german-rom", type=Path, help="stage the German data from a clean BPED ROM")
     ap.add_argument("--make", action="store_true", help="build the tools and the 3DSX afterwards")
     ap.add_argument("-j", "--jobs", type=int, default=4)
     ap.add_argument("--python", default=sys.executable, help="Python the build calls (PYTHON=)")
     args = ap.parse_args()
+    if args.port_lang == "pt_br" and (args.spanish_rom or args.french_rom or args.italian_rom
+                                      or args.german_rom or args.japanese_rom):
+        ap.error("--port-lang pt_br goes over the English game, not the Spanish, French, Italian, "
+                 "German or Japanese one")
 
     lock = tomllib.loads((ROOT / "upstream.lock").read_text(encoding="utf-8"))
     repo, commit = lock["pokeemerald"]["repository"], lock["pokeemerald"]["commit"]
@@ -99,6 +114,11 @@ def main() -> int:
         locale = ("french", args.french_rom, "localize_french.py", "french.json.gz")
     elif args.italian_rom:
         locale = ("italian", args.italian_rom, "localize_italian.py", "italian.json.gz")
+    elif args.german_rom:
+        locale = ("german", args.german_rom, "localize_german.py", "german.json.gz")
+    elif args.japanese_rom:
+        locale = ("japanese", args.japanese_rom, "localize_japanese.py", "japanese.json.gz")
+    portuguese = args.port_lang == "pt_br"
     patches = sorted((ROOT / "patches" / "pokeemerald").glob("*.patch"))
     marker = tree / ".emerald3ds-patches"
     digest = patch_digest(patches)
@@ -108,23 +128,22 @@ def main() -> int:
         head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=tree, capture_output=True,
                               text=True).stdout.strip()
     stale = not marker.exists() or marker.read_text().strip() != digest
-    if args.clean or locale or previous_locale or head != commit or stale:
+    if args.clean or locale or portuguese or previous_locale or head != commit or stale:
         if head != commit:
             fetch(tree, repo, commit)
         run(["git", "reset", "-q", "--hard", commit], cwd=tree)
         (tree / ".emerald3ds-locale").unlink(missing_ok=True)
-        if locale or previous_locale:
+        if locale or portuguese or previous_locale:
             # Objects and staged data of the other language must not be
             # reused: rebuild every native object when the language changes.
             shutil.rmtree(tree / "3ds_port/build", ignore_errors=True)
             shutil.rmtree(tree / "3ds_port/romfs", ignore_errors=True)
             (tree / "src/data/region_map/region_map_entries.h").unlink(missing_ok=True)
-        if previous_locale:
+        manifest_name = {"BPEF": "french.json.gz", "BPES": "spanish.json.gz", "BPEI": "italian.json.gz",
+                         "BPED": "german.json.gz", "BPEJ": "japanese.json.gz"}.get(previous_name.split()[0] if previous_name else "")
+        if manifest_name:
             import gzip
             import json
-            manifest_name = {"BPEF": "french.json.gz", "BPES": "spanish.json.gz",
-                             "BPEI": "italian.json.gz"}.get(previous_name.split()[0]
-                                                           if previous_name else "", "spanish.json.gz")
             manifest = json.loads(gzip.decompress((ROOT / "tools/locales" / manifest_name).read_bytes()))
             for relative, _, _ in manifest["graphics"]:
                 for name in (relative, relative[:-3]) if relative.endswith(".lz") else (relative,):
@@ -166,8 +185,11 @@ def main() -> int:
     if locale:
         run([args.python, ROOT / "tools" / locale[2], "--tree", tree,
              "--rom", locale[1].resolve()])
+    if portuguese:
+        run([args.python, ROOT / "tools/localize_portuguese.py", "--tree", tree])
     if args.make:
-        run(["make", "-C", "3ds_port", "-j%d" % args.jobs, "PYTHON=%s" % args.python], cwd=tree)
+        run(["make", "-C", "3ds_port", "-j%d" % args.jobs, "PYTHON=%s" % args.python,
+             "PORT_LANG=%s" % args.port_lang], cwd=tree)
     return 0
 
 

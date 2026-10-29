@@ -1,0 +1,15 @@
+# Prédio 2 de RUSTBORO, 1º andar.
+
+[RustboroCity_Flat2_2F_Text_DevonWasTinyInOldDays] 93d42fef83
+Antigamente, a DEVON era só uma\n
+empresinha bem pequenininha.$
+
+[RustboroCity_Flat2_2F_Text_MyDaddyMadeThisYouCanHaveIt] 412a0a7355
+O meu papai trabalha na CORPORAÇÃO.\p
+Foi o meu papai que fez isto!\n
+Mas eu não sei usar, então é seu.$
+
+[RustboroCity_Flat2_2F_Text_GoingToWorkAtDevonToo] e02c45799f
+O meu papai trabalha na CORPORAÇÃO.\p
+Quando eu crescer, também vou\n
+trabalhar na DEVON.$

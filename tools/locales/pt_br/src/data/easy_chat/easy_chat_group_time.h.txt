@@ -1,0 +1,138 @@
+# As palavras da FALA FÁCIL, grupo time (src/data/easy_chat/easy_chat_group_time.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_Fall] cb9b50b507 width=72
+OUTONO
+
+[gEasyChatWord_Morning] d1bce2ddeb width=72
+MANHÃ
+
+[gEasyChatWord_Tomorrow] f08faee6ce width=72
+AMANHÃ
+
+[gEasyChatWord_Last] 7e70d2e585 width=72
+ÚLTIMO
+
+[gEasyChatWord_Day] 9d1fece7b6 width=72
+DIA
+
+[gEasyChatWord_Sometime] 0989ab36b7 width=72
+ALGUM DIA
+
+[gEasyChatWord_Always] ae0ecf3287 width=72
+SEMPRE
+
+[gEasyChatWord_Current] e6303ccf1c width=72
+ATUAL
+
+[gEasyChatWord_Forever] e4633e6488 width=72
+PARA SEMPRE
+
+[gEasyChatWord_Days] 55284f7808 width=72
+DIAS
+
+[gEasyChatWord_End] d205abee3d width=72
+FIM
+
+[gEasyChatWord_Tuesday] 59ffd47bc9 width=72
+TERÇA
+
+[gEasyChatWord_Yesterday] a05fa5b3b2 width=72
+ONTEM
+
+[gEasyChatWord_Today] 7a46866bc7 width=72
+HOJE
+
+[gEasyChatWord_Friday] c1d6fd2d1d width=72
+SEXTA
+
+[gEasyChatWord_Monday] c1db390d16 width=72
+SEGUNDA
+
+[gEasyChatWord_Later] 4d38f661ca width=72
+DEPOIS
+
+[gEasyChatWord_Earlier] da4a5e7105 width=72
+MAIS CEDO
+
+[gEasyChatWord_Another] 0edc437659 width=72
+OUTRO
+
+[gEasyChatWord_Time] 64269f9bd2 width=72
+TEMPO
+
+[gEasyChatWord_Finish] 2d355f8760 width=72
+TERMINAR
+
+[gEasyChatWord_Wednesday] a86e95a3de width=72
+QUARTA
+
+[gEasyChatWord_Soon] 540a681e8a width=72
+LOGO
+
+[gEasyChatWord_Start] 7196e7c29d width=72
+COMEÇAR
+
+[gEasyChatWord_Month] d3bb0c3f4f width=72
+MÊS
+
+[gEasyChatWord_Stop] 3259ad677e width=72
+PARAR
+
+[gEasyChatWord_Now] 9841c42093 width=72
+AGORA
+
+[gEasyChatWord_Final] 3acd080cfa width=72
+FINAL
+
+[gEasyChatWord_Next] 1992d5e8d5 width=72
+PRÓXIMO
+
+[gEasyChatWord_Age] 4aaae5b2c1 width=72
+IDADE
+
+[gEasyChatWord_Saturday] 16bef9735e width=72
+SÁBADO
+
+[gEasyChatWord_Summer] 38b64509e7 width=72
+VERÃO
+
+[gEasyChatWord_Sunday] 7925aa41cf width=72
+DOMINGO
+
+[gEasyChatWord_Beginning] 8a3171f81e width=72
+COMEÇO
+
+[gEasyChatWord_Spring] 27b2eec784 width=72
+PRIMAVERA
+
+[gEasyChatWord_Daytime] 21be90ade8 width=72
+DE DIA
+
+[gEasyChatWord_Winter] 6ced44c7b5 width=72
+INVERNO
+
+[gEasyChatWord_Daily] 06b7689242 width=72
+DIÁRIO
+
+[gEasyChatWord_Olden] 4017b1a7dc width=72
+ANTIGAMENTE
+
+[gEasyChatWord_Almost] 334b38b722 width=72
+QUASE
+
+[gEasyChatWord_Nearly] 4624f8aa89 width=72
+POR POUCO
+
+[gEasyChatWord_Thursday] f197735989 width=72
+QUINTA
+
+[gEasyChatWord_Nighttime] 11f5d137b9 width=72
+À NOITE
+
+[gEasyChatWord_Night] 3737cd82c6 width=72
+NOITE
+
+[gEasyChatWord_Week] 3a79bc501d width=72
+SEMANA

@@ -1,0 +1,12 @@
+# O atendente dos POKé MARTS.
+
+[gText_HowMayIServeYou] b0fe8101f3
+Boas-vindas!\p
+Em que posso ajudar?$
+
+[gText_PleaseComeAgain] 7c3fb31d53
+Volte sempre!$
+
+[gText_PlayerWhatCanIDoForYou] 5c1f3cf577
+{PLAYER}{STRING 5}, boas-vindas!\p
+O que posso fazer por você?$

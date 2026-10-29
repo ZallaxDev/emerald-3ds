@@ -1,0 +1,55 @@
+# TENDA DE BATALHA DE VERDANTURF, a recepção.
+
+[VerdanturfTown_BattleTentLobby_Text_MonsReluctantToUseDislikedMoves] 5c101d6b95
+Se não gosta de um golpe, o POKéMON\n
+fica com preguiça de usar.\p
+Não importa o quanto ele seja\n
+forte.\p
+Por exemplo, um POKéMON de natureza\n
+GENTIL provavelmente não gosta\l
+de machucar os oponentes.\p
+Se ele não rende tudo o que pode,\n
+deve estar usando contra a vontade\l
+um golpe de que não gosta.$
+
+[VerdanturfTown_BattleTentLobby_Text_GentleMonsScaryIfAngry] 92299aa3d0
+A minha irmã mais velha costuma ser\n
+gentil. Mas, quando fica brava,\l
+ela dá muito, muito medo!\p
+Aposto que um POKéMON gentil também\n
+dá medo quando fica bravo!$
+
+[VerdanturfTown_BattleTentLobby_Text_AttractionRunsDeep] ba11ffbfea
+O que sinto pelos meus POKéMON…\n
+É uma atração profunda…\p
+Ah, oi, você não viu isso, viu?\n
+Bom, tanto faz.\p
+Que tal esta MT pro seu\n
+POKéMON?$
+
+[VerdanturfTown_BattleTentLobby_Text_AttractionMutual] 3d2172ac5d
+O que sinto pelos meus POKéMON…\n
+Tenho certeza de que é recíproco!\p
+Eles batalham exatamente do jeito\n
+que eu quero!$
+
+[VerdanturfTown_BattleTentLobby_Text_TaughtWhatKindsOfMoves] 4efc7c09a7
+Que tipo de golpe você ensinou\n
+pros seus POKéMON?\p
+Acho que você leva vantagem se eles\n
+souberem se curar ou se proteger.$
+
+[VerdanturfTown_BattleTentLobby_Text_ScottCanMeetToughTrainers] 29261617c7
+SCOTT: E aí, {PLAYER}{KUN}!\n
+Achei que ia te ver aqui.\p
+A TENDA DE BATALHA é um lugar onde\n
+você encontra TREINADORES fortes.\p
+Não importa quais são as regras,\n
+nem como são as batalhas.\p
+{PLAYER}{KUN}, espero que você dê\n
+o seu melhor!$
+
+[VerdanturfTown_BattleTentLobby_Text_ScottVisitRegularly] f4411ad4b7
+SCOTT: Venho aqui sempre, na esperança\n
+de ver TREINADORES fortes em ação,\l
+seja qual for a situação.$

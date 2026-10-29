@@ -1,0 +1,25 @@
+# O questionário dos POKé MARTS e as senhas do PRESENTE MISTERIOSO e do EVENTO MISTERIOSO.
+
+[Questionnaire_Text_FillOut] 10c17339fc
+Tem um questionário aqui.\nQuer preencher?$
+
+[Questionnaire_Text_ThankYou] 04598b3229
+Obrigado por preencher o nosso\nquestionário.\pA sua opinião vai ser usada\npra referência futura.$
+
+[Questionnaire_Text_YouKnowThoseWordsGift] fd97a545f8
+Ah, olá!\nVocê conhece essas palavras?\pEntão deve saber do\nPRESENTE MISTERIOSO.\pDaqui pra frente, você vai poder\nreceber PRESENTES MISTERIOSOS!$
+
+[Questionnaire_Text_YouCanAccessMysteryGift] ea86c30b9c
+Depois de salvar o jogo, você pode\nacessar o PRESENTE MISTERIOSO.$
+
+[Questionnaire_Text_YouKnowThoseWordsEvent] ae0f773c31
+Ah, olá!\nVocê conhece essas palavras?\pEntão deve saber do\nEVENTO MISTERIOSO.$
+
+[Questionnaire_Text_YouCanAccessMysteryEvent] 25c3f91104
+Depois de salvar o jogo, você pode\nacessar o EVENTO MISTERIOSO.$
+
+[MysteryGift_Text_TheresATicketForYou] 2e29399af8
+Obrigado por usar o sistema de\nEVENTO MISTERIOSO.\pVocê deve ser {PLAYER}.\nTem um bilhete aqui pra você.$
+
+[MysteryGift_Text_TryUsingItAtLilycovePort] cf45ba94a6
+Parece que é pra usar no porto\nda CIDADE DE LILYCOVE.\pQue tal ir lá descobrir\ndo que se trata?$

@@ -1,0 +1,9 @@
+# CIDADE DE OLDALE, primeira casa.
+
+[OldaleTown_House1_Text_LeftPokemonGoesOutFirst] e2adb4611d
+Quando começa uma batalha POKéMON,\n
+o primeiro da lista entra primeiro.\p
+Então, quando tiver mais POKéMON na\n
+sua equipe, experimente mudar a ordem\l
+dos seus POKéMON.\p
+Isso pode te dar uma vantagem.$

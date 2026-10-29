@@ -1,0 +1,109 @@
+Visible wild Pokemon: a diving player is in the water, as a surfing one is
+(CtrEncounters_PlayerInWater): the ones on the seaweed are met under the sea.
+
+diff --git a/src/wild_encounter.c b/src/wild_encounter.c
+--- a/src/wild_encounter.c
++++ b/src/wild_encounter.c
+@@ -844,6 +844,15 @@ static bool8 VisibleTileFits(s16 x, s16 y, bool8 water)
+     return VisibleTileKind(x, y, water) && GetObjectEventIdByXY(x, y) == OBJECT_EVENTS_COUNT;
+ }
+ 
++/* Where the water ones are met: surfing, or diving (3ds_encounters.h). Under
++ * the sea the player is not surfing, and the ones on the seaweed were never
++ * met: with MANY, nothing was, as they replace the random encounters. */
++static bool8 VisiblePlayerInWater(void)
++{
++    return CtrEncounters_PlayerInWater(TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING) != 0,
++                                       TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_UNDERWATER) != 0);
++}
++
+ u32 ShinyOdds_WildPersonality(void); // pokemon.c
+ 
+ static u32 VisibleRollPersonality(void)
+@@ -1164,7 +1173,7 @@ static void VisibleStartBattle(struct VisibleWild *v)
+     BattleSetup_StartWildBattle();
+ }
+ 
+-static void VisibleMove(struct VisibleWild *v, s16 px, s16 py, bool8 surfing)
++static void VisibleMove(struct VisibleWild *v, s16 px, s16 py, bool8 inWater)
+ {
+     static const s8 sSteps[4][2] = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}};
+     u32 dir;
+@@ -1191,7 +1200,7 @@ static void VisibleMove(struct VisibleWild *v, s16 px, s16 py, bool8 surfing)
+     if (tx == px && ty == py)
+     {
+         /* Into the player: a battle, if the player stands where it lives. */
+-        if (v->water == surfing)
++        if (v->water == inWater)
+             v->idle = 0xFFFF;    /* asks for the battle (VisibleWild_Update) */
+         else
+             v->idle = 60;
+@@ -1234,7 +1243,7 @@ void VisibleWild_CameraShift(s16 dx, s16 dy)
+ bool8 VisibleWild_StepOnto(void)
+ {
+     struct ObjectEvent *player = &gObjectEvents[gPlayerAvatar.objectEventId];
+-    bool8 surfing = TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING) != 0;
++    bool8 inWater = VisiblePlayerInWater();
+     s16 px = player->currentCoords.x, py = player->currentCoords.y;
+     u32 i;
+ 
+@@ -1244,7 +1253,7 @@ bool8 VisibleWild_StepOnto(void)
+     {
+         struct VisibleWild *v = &sVisible[i];
+ 
+-        if (!v->active || v->vanishing || v->spriteId == VW_NONE || v->water != surfing)
++        if (!v->active || v->vanishing || v->spriteId == VW_NONE || v->water != inWater)
+             continue;
+         if ((v->x == px && v->y == py) || (v->progress && v->x + v->dx == px && v->y + v->dy == py))
+         {
+@@ -1287,13 +1296,13 @@ static void WildLogMap(void)
+     sNum = gSaveBlock1Ptr->location.mapNum;
+     headerId = GetCurrentMapWildMonHeaderId();
+     CtrLog_Write(CTR_LOG_GAME, "wild: map %d/%d header %d (land %d water %d) rate %lu%% disabled %d "
+-                 "repel %u lead lv %d visible %lu (replaces random %d)",
++                 "repel %u lead lv %d visible %lu (replaces random %d) in water %d",
+                  sGroup, sNum, headerId == HEADER_NONE ? -1 : headerId,
+                  headerId != HEADER_NONE && GetLandMonsInfo(headerId) != NULL,
+                  headerId != HEADER_NONE && gWildMonHeaders[headerId].waterMonsInfo != NULL,
+                  (unsigned long)EncounterRatePercent(), sWildEncountersDisabled, VarGet(VAR_REPEL_STEP_COUNT),
+                  (int)GetMonData(&gPlayerParty[0], MON_DATA_LEVEL), (unsigned long)VISIBLE_MOST(),
+-                 VISIBLE_REPLACES_RANDOM());
++                 VISIBLE_REPLACES_RANDOM(), VisiblePlayerInWater());
+ }
+ 
+ void VisibleWild_Update(void)
+@@ -1301,7 +1310,7 @@ void VisibleWild_Update(void)
+     struct ObjectEvent *player;
+     u16 headerId;
+     u32 i, percent, most;
+-    bool8 surfing, idle, settled;
++    bool8 inWater, idle, settled;
+ 
+     if (gMain.callback2 == CB2_Overworld)
+         WildLogMap();
+@@ -1383,7 +1392,7 @@ void VisibleWild_Update(void)
+     headerId = GetCurrentMapWildMonHeaderId();
+     VisiblePrefetch(headerId);
+     player = &gObjectEvents[gPlayerAvatar.objectEventId];
+-    surfing = TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING) != 0;
++    inWater = VisiblePlayerInWater();
+     idle = !ArePlayerFieldControlsLocked() && !ScriptContext_IsEnabled()
+         && gPlayerAvatar.tileTransitionState == T_NOT_MOVING;
+     settled = FollowerMon_PalettesSettled();
+@@ -1436,14 +1445,14 @@ void VisibleWild_Update(void)
+                 || (v->x == player->currentCoords.x && v->y == player->currentCoords.y && !v->progress);
+ 
+             // It walked into the player: a repel keeps it off, as it keeps random ones.
+-            if (touched && v->water == surfing && (v->idle != 0xFFFF || IsWildLevelAllowedByRepel(v->level)))
++            if (touched && v->water == inWater && (v->idle != 0xFFFF || IsWildLevelAllowedByRepel(v->level)))
+             {
+                 VisibleStartBattle(v);
+                 return;
+             }
+             if (v->idle == 0xFFFF)
+                 v->idle = 60;
+-            VisibleMove(v, player->currentCoords.x, player->currentCoords.y, surfing);
++            VisibleMove(v, player->currentCoords.x, player->currentCoords.y, inWater);
+             // Often enough to be told from the others at a glance: a shiny
+             // one's icon is drawn in the same colours as any other's.
+             if (v->shiny && ++v->sparkle >= 40)

@@ -65,7 +65,7 @@ the two releases for you and shows this path only when it is safe; the game
 also refuses an incompatible pack when it starts.
 
 **Full update: generate the pack again.** When a release changes the data
-(most of them while the game is in Alpha):
+(most of them while the game is in beta):
 
 1. Either use the **web builder at <https://emerald-3ds.com>**, where you select your ROM
    and the pack is built inside your browser: the ROM is read locally and never

@@ -1,0 +1,30 @@
+# FRONTEIRA DE BATALHA: o corredor do PALÁCIO.
+
+[BattleFrontier_BattlePalaceCorridor_Text_PeopleAndMonAreSame] ddadeb2857
+Pessoas e POKéMON, no fundo,\n
+são iguais…\p
+A natureza de cada um faz com que\n
+seja bom em umas coisas e não\l
+em outras.$
+
+[BattleFrontier_BattlePalaceCorridor_Text_LetMonDoWhatItLikes] 3647f6d2c1
+Em vez de forçar um POKéMON a fazer\n
+o que não gosta, deixe-o fazer o\l
+que gosta e sabe fazer bem.\p
+Se coloque no lugar do POKéMON e\n
+pense em que golpes ele gostaria.$
+
+[BattleFrontier_BattlePalaceCorridor_Text_MonDifferentWhenCornered] 6aa3bab488
+A natureza de um POKéMON é uma\n
+coisa notável…\p
+Alguns POKéMON agem de um jeito\n
+totalmente diferente quando\l
+encurralados.$
+
+[BattleFrontier_BattlePalaceCorridor_Text_BeginningToUnderstandNature] 4390ee6cdb
+Está começando a entender como a\n
+natureza faz um POKéMON agir?$
+
+[BattleFrontier_BattlePalaceCorridor_Text_HeartfeltBondBetweenYouAndMons] 8316e8a796
+Ah… Vejo um laço forte e sincero\n
+entre você e os seus POKéMON…$

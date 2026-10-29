@@ -1,0 +1,9 @@
+# CAMINHO SUBMARINO: o submarino roubado.
+
+[Underwater_SeafloorCavern_Text_SubExplorer1] 216187ffb4
+“EXPLORADOR SUBMARINO 1” está\n
+pintado no casco.\p
+É o submarino que a EQUIPE AQUA\n
+roubou em SLATEPORT!\p
+A EQUIPE AQUA deve ter\n
+desembarcado aqui.$

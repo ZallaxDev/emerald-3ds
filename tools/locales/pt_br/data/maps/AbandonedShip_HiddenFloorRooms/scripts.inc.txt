@@ -1,0 +1,5 @@
+# NAVIO ABANDONADO: os quartos escondidos.
+
+[AbandonedShip_HiddenFloorRooms_Text_BrightShinyTrash] 972c15292b
+Brilha que só!\n
+Mas é só lixo…$

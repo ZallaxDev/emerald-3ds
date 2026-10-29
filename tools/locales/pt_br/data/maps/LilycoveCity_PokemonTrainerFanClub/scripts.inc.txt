@@ -1,0 +1,256 @@
+# CIDADE DE LILYCOVE: o FÃ-CLUBE DOS TREINADORES POKéMON.
+
+[LilycoveCity_PokemonTrainerFanClub_Text_OhWowItsPlayer] e3021aa858
+Uau!\n
+É {PLAYER}!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_HeardAboutYouImYourFan] 80e88e0687
+Fiquei sabendo!\n
+Você é muito forte, né?\p
+A gente sempre discute quem é o\n
+TREINADOR mais forte de todos.\p
+Quando ouvi falar de você, decidi\n
+ser seu fã!\p
+Espero que continue batalhando com\n
+outros TREINADORES fortes.\p
+Assim a gente vê mais das suas\n
+batalhas quentíssimas.\p
+E os outros daqui vão ver como\n
+você é demais.\p
+Lembre: estou torcendo por você,\n
+{PLAYER}!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_YoureOneWeWantToWin] ac466b9839
+E aí, {PLAYER}!\n
+É você que a gente quer ver ganhar!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_OthersDontKnowYoureTheBest] 9d869d8aa6
+Os outros não sabem que você é o\n
+máximo dos máximos!\p
+Não é, {PLAYER}?\n
+Mostre pra eles a sua garra!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_TrainersPowerIsOutOfTheOrdinary] 4465689f0a
+Desculpa, mas o TREINADOR de quem\n
+todo mundo fala é {STR_VAR_1},\l
+sem dúvida!\p
+A força desse TREINADOR…\n
+É fora do comum.$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_TrainerIsBestNoOneWantsToListen] e81bce2131
+Droga… Vivo dizendo que {STR_VAR_1}\n
+é o melhor agora…\p
+Mas ninguém quer ouvir…$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_HearingAboutToughNewTrainer] e8d72baf39
+Ando ouvindo falar de um TREINADOR\n
+novo muito forte.\p
+Dizem que ele vence até LÍDERES de\n
+GINÁSIO.\p
+Você sabe algo desse TREINADOR\n
+novo?$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_ImPullingForYou] e04e172895
+Ah!\n
+{PLAYER}!\p
+Manda ver!\n
+Estou torcendo por você!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_BrawlyNoImYourFan] 41b95bc053
+Ai…\n
+BRAWLY…\p
+Ah, não! Espera!\n
+Não é isso! Não, não, não!\p
+Sou seu fã de corpo e alma!\p
+Então me dê orgulho!\n
+Manda ver!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_ICantHelpLikingBrawly] e88a445b27
+Não tem jeito, só consigo gostar\n
+do BRAWLY…$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_NobodyUnderstandsBrawly] f6bb94a633
+Ninguém entende o charme do\n
+BRAWLY…\p
+Não me importo!\p
+Mesmo que seja só eu, vou continuar\n
+torcendo pelo BRAWLY!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_MyFavoriteTrainerIsBrawly] 18990c5bfd
+Digam o que quiserem, o meu\n
+TREINADOR favorito é o BRAWLY,\l
+LÍDER do GINÁSIO de DEWFORD!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_YouveSurpassedYourFather] 3a7957a80f
+Você superou o seu próprio pai em\n
+tudo!\p
+Sou eu que estou dizendo, então\n
+não há a menor dúvida!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_YourFatherNeverGaveUpSoKeepOnBattling] 5ba792fdff
+Mesmo quando as coisas ficaram\n
+feias, o seu pai nunca desistiu.\p
+Isso eu sei que é verdade.\p
+Você nunca desiste, mesmo se\n
+perder! Então continue batalhando!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_LongWayToGoComparedToNorman] 3e6248b78f
+O NORMAN batalhava com mais força,\n
+carisma e espetáculo que você.\p
+Mesmo que digam que você é forte…\p
+Ainda falta muito pra você chegar\n
+ao nível do seu pai.$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_YouAndNormanAreDifferent] 6ac98598ae
+Você está começando a ter a mesma\n
+aura impressionante do NORMAN.\p
+Mas tem algo bem diferente entre\n
+você e o NORMAN.\p
+Não posso dizer o que é.\n
+Descubra por conta própria.$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_WeDiscussStrongestTrainers] be5a4ee25d
+Todo mundo aqui é muito fã de\n
+batalhas POKéMON.\p
+A gente discute quem é o TREINADOR\n
+mais forte de todos.\p
+Se você ganhar fama, a gente pode\n
+até virar seu fã!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_OhWoweeItsPlayer] 6657a28f1f
+Uaaaau! É {PLAYER}!\n
+E é de verdade!\p
+Por favor, aperta a minha mão,\n
+aperta a minha mão!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_AlwaysCheerForYou] 9de8ca8532
+Vou sempre torcer por você, {PLAYER}!\n
+Sempre, sempre!\p
+Não quero nunca te ver perder,\n
+{PLAYER}.\p
+Porque sei que você é muito,\n
+muito forte, {PLAYER}!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_EveryoneThinksTrainerIsCool] 27168cd21a
+{STR_VAR_1} é muito legal…\p
+Todo mundo acha, né, né?$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_TrainerIsReallyCoolItsJustMe] 5f59bce286
+{STR_VAR_1} é muito legal mesmo,\n
+não acha?\p
+Mesmo que seja só eu, vou continuar\n
+torcendo pro meu TREINADOR favorito.$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_WishThereWasTrainerLikeThat] d3b9941efd
+O meu TREINADOR favorito é…\p
+Legal…\p
+Forte…\p
+E bem gente boa…\p
+Queria que existisse um TREINADOR\n
+assim…$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_WantToBeStrongLikeYou] 2bb225cd80
+Uau! É {PLAYER}!\n
+Demais!\p
+Quando eu crescer, quero ser forte\n
+que nem você, {PLAYER}!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_OnlyOneWhoCheersForYou] 3d5cc864b2
+Mesmo que seja só eu…\p
+Você vai ser sempre a única pessoa\n
+por quem eu torço, {PLAYER}!\p
+Porque eu acredito em você, {PLAYER}!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_TrainerIsWickedlyCool] 73ae68de55
+{STR_VAR_1} é legal demais…\n
+Quero apertar a mão do meu herói.$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_NeverGoingToStopBeingTrainersFan] 4d036d3fe8
+Mesmo que seja só eu…\p
+Nunca vou deixar de ser fã de\n
+{STR_VAR_1}!\p
+Porque ouvi dizer que {STR_VAR_1}\n
+nunca perde!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_YoureAmazingAfterAll] fdbfad7221
+{PLAYER}!\n
+Você é incrível mesmo!\p
+Desde que pus os olhos em você,\n
+sabia que era demais.\p
+Pelo jeito, os meus olhos não\n
+me enganaram.$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_ImInYourCorner] 999a5ab217
+Esquece os outros.\n
+Estou do seu lado!\p
+Não precisa se preocupar. É só ir\n
+lá e batalhar como sempre.$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_ThinkTrainerIsNumberOne] 727c94e7cd
+Acho que você é um TREINADOR\n
+bem decente.\p
+Mas também acho que {STR_VAR_1}\n
+é o número um agora.\p
+É só a minha opinião.\n
+Não se preocupe muito.$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_YoureMaybeStrongerThanTrainer] 121b3674fe
+Uau, você é forte mesmo.\n
+Talvez até mais que {STR_VAR_1}.\p
+Mas {STR_VAR_1} precisa de mim.\p
+Se eu não torcer por {STR_VAR_1},\n
+quem vai torcer?$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_YouChangedMyMind] e4f1757f7d
+Você me fez mudar de ideia!\n
+Você é forte, né?\p
+Queria que me contasse como\n
+ficou tão forte!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_YouBattleAttractivelyInToughSituation] 2b83543903
+Quanto mais difícil a situação,\n
+mais bonito você batalha.\p
+Não vejo a hora da sua próxima\n
+batalha!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_TrainerIsStandout] fad29d2800
+Entre os TREINADORES do momento,\n
+{STR_VAR_1} é quem se destaca.\p
+Aquela força não é normal.\p
+Você vai bem, mas não está no mesmo\n
+nível de {STR_VAR_1}.$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_NoOneCanKnockYouButTrainerStronger] 48ee769dee
+Você é muito popular…\p
+É forte e cuida bem dos POKéMON.\n
+Ninguém pode falar mal de você.\p
+Mas, sabe, eu acredito em {STR_VAR_1}.\p
+{STR_VAR_1} com certeza é mais forte!\n
+Tenho certeza!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_YouImpressive] be934709ed
+Você…\p
+Impressionante!$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_OnlyIRecognizeYourTrueWorth] a3f874611b
+O seu verdadeiro valor, basta que\n
+eu o reconheça.\p
+Duvido que os outros entendam o\n
+poder oculto que pulsa aí dentro.$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_HaventRealizedPotential] df5eec1038
+Sim, vejo força nos seus olhos.\p
+Mas!\p
+Você ainda não alcançou todo o\n
+seu potencial.$
+
+[LilycoveCity_PokemonTrainerFanClub_Text_YourePowerfulButNotTrueStrength] c9f6bb5cf8
+É verdade que você tem um\n
+poder enorme.\p
+Mas!\n
+Dá pra perceber…\p
+Essa força ainda não pode ser\n
+considerada força de verdade!\p
+A força de verdade é…!\n
+… …\p
+Na verdade, também não faço ideia.$

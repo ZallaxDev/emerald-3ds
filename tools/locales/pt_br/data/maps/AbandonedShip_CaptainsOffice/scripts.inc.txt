@@ -1,0 +1,18 @@
+# NAVIO ABANDONADO: a cabine do capitão e o SCANNER.
+
+[AbandonedShip_CaptainsOffice_Text_NoSuccessFindingScanner] 104b1b91c4
+Estou investigando este navio a pedido\n
+do CAP. STERN.\p
+Ele também me pediu pra achar um\n
+SCANNER, mas não tive sorte…$
+
+[AbandonedShip_CaptainsOffice_Text_OhCanYouDeliverScanner] ed1ad5838d
+Oh! É um SCANNER!\p
+Escuta, pode entregar isso pro\n
+CAP. STERN?\p
+Quero investigar este navio mais\n
+um pouco.$
+
+[AbandonedShip_CaptainsOffice_Text_ThisIsSSCactus] d652e29086
+Este navio se chama S.S. CACTUS.\n
+Parece ser de outra época.$

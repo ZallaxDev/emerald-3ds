@@ -1,0 +1,82 @@
+# Quadros dos vencedores de CONCURSO (MUSEU de LILYCOVE).
+
+[gContestHallPaintingCaption] b9eda9c3a9
+{STR_VAR_1}\n{STR_VAR_3} de {STR_VAR_2}$
+
+[gContestPaintingContest] b387108e7a
+CONCURSO$
+
+[gContestRankNormal] f6b9857fe1
+NÍVEL NORMAL$
+
+[gContestRankSuper] 7c75dd68cb
+NÍVEL SUPER$
+
+[gContestRankHyper] 2895371d31
+NÍVEL HIPER$
+
+[gContestRankMaster] 983d0e6f29
+NÍVEL MESTRE$
+
+[gContestLink] 624c5cbc02
+CONEXÃO$
+
+[gContestCoolness] ec615db473
+ESTILO$
+
+[gContestBeauty] 0113cb0592
+BELEZA$
+
+[gContestCuteness] 935f6980e0
+FOFURA$
+
+[gContestSmartness] b2f1e9344c
+ESPERTEZA$
+
+[gContestToughness] 5ccacc3e9a
+FORÇA$
+
+[gContestPaintingCool1] c803652775
+Estilo sem parar:\no inestimável {STR_VAR_1}$
+
+[gContestPaintingCool2] 1837aa069f
+Olha só!\nO POKéMON boa-pinta {STR_VAR_1}$
+
+[gContestPaintingCool3] 2e52dc44d9
+O maravilhoso, incrível e\ngrandioso {STR_VAR_1}$
+
+[gContestPaintingBeauty1] 658321df25
+A última Vênus do século:\no belo {STR_VAR_1}$
+
+[gContestPaintingBeauty2] 668b5ef6b5
+O sorriso deslumbrante e\nbrilhante de {STR_VAR_1}$
+
+[gContestPaintingBeauty3] 514ac4a5da
+O superídolo do CENTRO POKéMON:\no incomparável {STR_VAR_1}$
+
+[gContestPaintingCute1] 52a41085c4
+O amável e doce {STR_VAR_1}$
+
+[gContestPaintingCute2] 568d879705
+O retrato vencedor do\nlindo {STR_VAR_1}$
+
+[gContestPaintingCute3] c9e21ff9fd
+Dá uma piscadinha!\nO POKéMON fofo {STR_VAR_1}$
+
+[gContestPaintingSmart1] 8d5872d373
+O maestro da esperteza:\no sábio POKéMON {STR_VAR_1}$
+
+[gContestPaintingSmart2] a9c5888c0d
+{STR_VAR_1}: o escolhido entre\ntodos os POKéMON$
+
+[gContestPaintingSmart3] 7e0a3527c3
+O momento de elegância do\nexcelente {STR_VAR_1}$
+
+[gContestPaintingTough1] e8bdc5551f
+O velocista de músculos\npoderosos {STR_VAR_1}$
+
+[gContestPaintingTough2] 15f249b6f6
+O forte, mais forte e\nfortíssimo {STR_VAR_1}$
+
+[gContestPaintingTough3] 057019b8da
+O hiper POKéMON durão\n{STR_VAR_1}$

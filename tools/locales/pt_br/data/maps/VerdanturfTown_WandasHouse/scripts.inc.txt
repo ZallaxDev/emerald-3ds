@@ -1,0 +1,87 @@
+# CASA DA WANDA, em VERDANTURF: o WALLY, o TIO, a WANDA e o namorado.
+
+[VerdanturfTown_WandasHouse_Text_StrongerSpeech] 43f180580c
+WALLY: Perdi pra você, {PLAYER}, mas não\n
+estou mais pra baixo.\p
+Porque agora tenho um novo objetivo.\n
+Junto com o meu RALTS, vou desafiar\l
+os GINÁSIOS POKéMON e virar um\l
+grande TREINADOR.\p
+Fica de olho em mim, {PLAYER}.\n
+Vou ficar mais forte que você.\p
+Quando isso acontecer, vou te\n
+desafiar pra outra batalha.$
+
+[VerdanturfTown_WandasHouse_Text_StrongerSpeechShort] 6cb83246ac
+WALLY: Fica de olho em mim, {PLAYER}.\n
+Vou ficar mais forte que você.\p
+Quando isso acontecer, vou te\n
+desafiar pra outra batalha.$
+
+[VerdanturfTown_WandasHouse_Text_WallysNextDoor] 3abe20c629
+TIO: Ah! {PLAYER}{KUN}!\n
+O WALLY está na casa ao lado.\p
+Mas, olha, tenho uma coisa pra\n
+te contar.\p
+A natureza daqui está fazendo\n
+maravilhas pela saúde do WALLY.\p
+Talvez não seja só a natureza.\n
+Podem ser os POKéMON que estão dando\l
+esperança ao menino.$
+
+[VerdanturfTown_WandasHouse_Text_WallySlippedOff] 023553f4ce
+O WALLY foi embora…\n
+Saiu escondido, sozinho…$
+
+[VerdanturfTown_WandasHouse_Text_WallyGoneThatFar] a02a15ca62
+TIO: É mesmo?\n
+O WALLY foi tão longe assim\l
+sozinho…\p
+Bom, tenho que dar o braço a torcer:\n
+ele é filho do meu irmão caçula.$
+
+[VerdanturfTown_WandasHouse_Text_MeetWanda] c4b92f3fc0
+WANDA: Quem é você?\n
+Ah, claro, já sei!\p
+Você é {PLAYER}, de quem o WALLY\n
+me falou.\p
+Eu sou prima do WALLY.\n
+Prazer em te conhecer!\p
+Acho que o WALLY ficou muito mais\n
+animado e saudável desde que\l
+veio pra cá.$
+
+[VerdanturfTown_WandasHouse_Text_DontWorryAboutWally] aaad203565
+WANDA: Não se preocupe com o WALLY.\n
+Ele vai ficar bem.\p
+Eu conheço o meu priminho, e ele\n
+também tem POKéMON com ele.$
+
+[VerdanturfTown_WandasHouse_Text_CanSeeGirlfriendEveryDay] 30da99be77
+Graças a você, posso ver a minha\n
+namorada todo dia.\l
+Se estou feliz? Pode apostar!$
+
+[VerdanturfTown_WandasHouse_Text_DaughtersBoyfriendDriven] d6e7a5d052
+O namorado da minha filha é uma pessoa\n
+muito determinada e apaixonada.\p
+Ele está cavando um túnel sem parar\n
+só pra poder ver a minha filha.\p
+A minha filha está meio preocupada,\n
+então vai muito até o túnel.$
+
+[VerdanturfTown_WandasHouse_Text_DaughtersBoyfriendWasDigging] 9a7a30091b
+É impressionante. O namorado da minha\n
+filha cavava o túnel com as mãos!\p
+É inacreditável!$
+
+[VerdanturfTown_WandasHouse_Text_IfAnythingHappenedToWally] 4dec5be398
+Se acontecesse alguma coisa com o\n
+WALLY, eu nunca mais ia conseguir\l
+olhar nos olhos dos pais dele,\l
+em PETALBURG…$
+
+[VerdanturfTown_WandasHouse_Text_WallyWasInEverGrande] 9e2b1faa67
+O WALLY estava em EVER GRANDE?\p
+Os pais dele, em PETALBURG, iam ficar\n
+boquiabertos com isso!$

@@ -1,0 +1,41 @@
+# CIDADE DE VERDANTURF: a moça que avalia a amizade dos POKéMON.
+
+[VerdanturfTown_FriendshipRatersHouse_Text_SeeHowMuchPokemonLikesYou] bd66050bfa
+Deixa eu ver o seu POKéMON.\n
+Vou ver o quanto ele gosta de você.\p
+Ah.\n
+O seu POKéMON…$
+
+[VerdanturfTown_FriendshipRatersHouse_Text_AdoresYou] 963bee7989
+Ele te adora.\n
+Não tem como te amar mais.\l
+Até eu fico feliz de ver.$
+
+[VerdanturfTown_FriendshipRatersHouse_Text_VeryHappy] f4c6447bb8
+Ele parece muito feliz.\n
+Dá pra ver que gosta muito de você.$
+
+[VerdanturfTown_FriendshipRatersHouse_Text_LikesYouQuiteALot] cc7563d8bb
+Ele gosta bastante de você.\n
+Parece querer um pouco de dengo.$
+
+[VerdanturfTown_FriendshipRatersHouse_Text_GettingUsedToYou] 1596d54460
+Ele está se acostumando com você.\n
+Parece confiar em você.$
+
+[VerdanturfTown_FriendshipRatersHouse_Text_NotUsedToYou] 1134c4310c
+Ele ainda não se acostumou com você.\n
+Nem te ama, nem te odeia.$
+
+[VerdanturfTown_FriendshipRatersHouse_Text_VeryWary] b19e823680
+Ele está muito desconfiado.\n
+Tem uma maldade assustadora no olhar.\l
+Não gosta nada de você.$
+
+[VerdanturfTown_FriendshipRatersHouse_Text_DetestsYou] a08f803477
+É meio difícil pra mim dizer isto…\p
+O seu POKéMON simplesmente te detesta.\n
+Isso não te incomoda?$
+
+[VerdanturfTown_FriendshipRatersHouse_Text_Pikachu] 4e81dc0826
+PIKACHU: Pika pika!$

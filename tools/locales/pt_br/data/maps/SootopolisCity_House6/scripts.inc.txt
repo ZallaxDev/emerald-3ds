@@ -1,0 +1,21 @@
+# CIDADE DE SOOTOPOLIS: a casa do BONECO WAILMER.
+
+[SootopolisCity_House6_Text_FirstGuestInWhileTakeDoll] e96239edb0
+Olá! Faz tempo que não recebo\n
+visita.\p
+Você alegrou o meu dia, então vou\n
+te dar um BONECO WAILMER grande.$
+
+[SootopolisCity_House6_Text_TakeGoodCareOfIt] e73ff1fc6c
+Cuide bem dele!$
+
+[SootopolisCity_House6_Text_IllHoldItForYou] 52cb80a028
+Ah, quer, mas não agora?\n
+Tá, então guardo pra você.$
+
+[SootopolisCity_House6_Text_DontWantThisDoll] 79ed2f55ed
+Tem certeza?\n
+Não quer este BONECO?$
+
+[SootopolisCity_House6_Text_LovePlushDolls] 5a51221b9f
+Eu amo BONECOS de pelúcia!$

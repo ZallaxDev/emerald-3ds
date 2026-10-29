@@ -1,0 +1,11 @@
+# ROTA 119: a casa do boato da CAVERNA DA ORIGEM.
+
+[Route119_House_Text_RumorAboutCaveOfOrigin] 838f12cca2
+Ouvi falar de uma caverna chamada\n
+CAVERNA DA ORIGEM.\p
+Dizem que o espírito dos POKéMON\n
+revive lá. Será que algo assim\l
+pode mesmo acontecer?$
+
+[Route119_House_Text_Wingull] d6ce32141e
+WINGULL: Pihyoh!$

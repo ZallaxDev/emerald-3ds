@@ -1,0 +1,130 @@
+# CIDADE DE LILYCOVE: o MUSEU DE LILYCOVE, térreo.
+
+[LilycoveCity_LilycoveMuseum_1F_Text_WelcomeToLilycoveMuseum] 64d9739e11
+Boas-vindas ao MUSEU DE LILYCOVE.\p
+Aproveite com calma a nossa coleção\n
+de obras fantásticas com POKéMON.$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_ImCuratorHaveYouViewedOurPaintings] d67f952e9d
+Sou o CURADOR deste MUSEU de\n
+belas-artes.\p
+É animador ver alguém tão jovem\n
+no nosso MUSEU.\p
+Já viu a nossa coleção de quadros?$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_NotDisturbYouTakeYourTime] 6288e13fe9
+Ah, então não vou incomodar.\n
+Fique à vontade, sem pressa.$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_HaveYouAnInterestInPaintings] 1dedcd0e11
+Oh? Acredito que você seja TREINADOR\n
+de POKéMON.\p
+Também se interessa por quadros?$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_HonoredYoudVisitInSpiteOfThat] 3cfe62fc5b
+Entendo…\p
+É uma honra receber a sua visita\n
+mesmo assim.$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_ExcellentCanYouComeWithMe] e69bfbb42b
+Ah, excelente!\n
+Você gosta de quadros!\p
+Então, posso pedir que me\n
+acompanhe?$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_VeryOldPainting] 174ada48c4
+É um quadro muito antigo.\n
+A tinta está descascando aqui e ali.$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_OddLandscapeFantasticScenery] 93c4e0c854
+É uma paisagem estranha, com um\n
+cenário bizarro e fantástico.$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_PaintingOfBeautifulWoman] 0913c7eb4b
+É o quadro de uma linda mulher\n
+sorrindo com um POKéMON no colo.$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_PaintingOfLegendaryPokemon] c1eee7605a
+É o quadro de um POKéMON lendário\n
+de muito tempo atrás.\p
+O artista pintou isto da\n
+imaginação.$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_PaintingOfGrassPokemon] 5092b338f8
+É o quadro de POKéMON de PLANTA\n
+balançando na brisa.\p
+Parecem curtir o carinho suave\n
+do vento.$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_PaintingOfBerries] ffcf16e9ee
+É um quadro de FRUTAS com cara\n
+de deliciosas.\p
+Este quadro dá até fome!$
+
+[LilycoveCity_LilycoveMuseum_Text_BirdPokemonSculptureReplica] 5cfdcfc3a0
+É a réplica de uma escultura famosa.\p
+Retrata um antigo POKéMON PÁSSARO.$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_BigPokeBallCarvedFromStone] 473a3aa049
+É uma POKé BOLA grande esculpida\n
+numa pedra preta.\p
+Parece que era usada em festivais\n
+antigamente.$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_StoneTabletWithAncientText] 0f11b8fd52
+É uma enorme tábua de pedra com\n
+POKéMON e um texto denso em letras\l
+miúdas de uma língua antiga e\l
+ilegível.$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_WorksOfMagnificence] f8851e9c9b
+Hmmm…\n
+Que obras magníficas…$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_MustntForgetLoveForFineArts] 554f07300a
+Batalhar com POKéMON é divertido,\n
+isso eu admito.\p
+Mas não se pode esquecer o amor\n
+pelas belas-artes.$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_ThisMuseumIsInspiration] 6a7eeb696b
+Este MUSEU DE ARTE… Dá pra ver\n
+muitos quadros fantásticos.\p
+E o CURADOR é uma pessoa maravilhosa.\p
+Pra artistas como eu, este MUSEU\n
+é uma inspiração.$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_ThisLadyIsPretty] 3798c59529
+Esta moça é bonita!\n
+Parece a mamãe!$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_ThisPokemonIsAdorable] d716c522ca
+Este POKéMON é uma graça!\n
+Igualzinho ao nosso filhinho!$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_HeardMuseumGotNewPaintings] 3283995292
+Ouvi dizer que este MUSEU DE ARTE\n
+recebeu quadros novos.\p
+Claro que vim correndo.\p
+Os quadros novos estão no\n
+andar de cima?$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_CuratorHasBeenCheerful] 20cefc90db
+Ultimamente, o CURADOR anda\n
+alegre como nunca.\p
+Aposto que aconteceu algo bom\n
+pra ele. Com certeza.$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_AimToSeeGreatPaintings] 540f8de030
+Quero ver muitos quadros incríveis\n
+aqui e aprender com eles.\p
+Sonho em um dia ter uma obra minha\n
+exposta aqui.$
+
+[LilycoveCity_LilycoveMuseum_1F_Text_MuseumTouristDestination] 13d1fa6e0c
+O MUSEU DE ARTE virou um ponto\n
+turístico favorito.\p
+É ótimo pra LILYCOVE…\n
+Não, ótimo pra região de HOENN!\p
+Foi o que ouvi: um TREINADOR sozinho\n
+conseguiu todos os quadros lá de cima.$

@@ -1,0 +1,164 @@
+# CIDADE DE DEWFORD: o SR. BRINEY, o pescador da VARA ANTIGA, o rapaz das modas e as placas.
+
+[DewfordTown_Text_TinyIslandCommunity] ba0ed1af68
+DEWFORD é uma comunidade numa ilhinha.\n
+Se algo vira moda aqui, todo mundo\l
+adere na hora.$
+
+[DewfordTown_Text_TownSign] 01292ca4b4
+CIDADE DE DEWFORD\n
+“Uma ilhinha no mar azul.”$
+
+[DewfordTown_Text_GymSign] 0a5dee15ab
+GINÁSIO POKéMON DE DEWFORD\n
+LÍDER: BRAWLY\l
+“Uma onda gigante na luta!”$
+
+[DewfordTown_Text_HallSign] 664dbc8af9
+SALÃO DE DEWFORD\n
+“Onde todo mundo troca informações!”$
+
+[Route104_Text_LandedInDewfordDeliverLetter] 11b0a5cc61
+SR. BRINEY: Ahoy!\n
+Chegamos a DEWFORD.\p
+Imagino que você vai entregar aquela\n
+CARTA para, quem era mesmo, o STEVEN!$
+
+[DewfordTown_Text_SetSailBackToPetalburg] 9d10a052b2
+SR. BRINEY: Já entregou a sua\n
+CARTA?\p
+Ou queria voltar navegando\n
+para PETALBURG?$
+
+[DewfordTown_Text_PetalburgWereSettingSail2] db131e3025
+SR. BRINEY: Então é PETALBURG!\p
+Levantar âncora!\n
+PEEKO, minha querida, vamos zarpar!$
+
+[DewfordTown_Text_GoDeliverIllBeWaiting] 6b3108eb33
+SR. BRINEY: Então vá entregar a\n
+CARTA. Eu fico esperando.$
+
+[DewfordTown_Text_BrineyLandedInDewford] dede7ad429
+SR. BRINEY: Ahoy!\n
+Chegamos a DEWFORD!\p
+É só me avisar quando quiser\n
+zarpar de novo!$
+
+[DewfordTown_Text_WhereAreWeBound] c0039783b1
+SR. BRINEY: Ahoy!\n
+Por você, eu vou pro mar quando for!\p
+Agora, meu amigo, para onde vamos?$
+
+[DewfordTown_Text_PetalburgWereSettingSail] 67b78ac0cc
+SR. BRINEY: PETALBURG, é?\p
+Levantar âncora!\n
+PEEKO, minha querida, vamos zarpar!$
+
+[DewfordTown_Text_SlateportWereSettingSail] 1f7486a7fb
+SR. BRINEY: SLATEPORT, é?\p
+Levantar âncora!\n
+PEEKO, minha querida, vamos zarpar!$
+
+[DewfordTown_Text_JustTellMeWhenYouNeedToSetSail] 29f54d80de
+SR. BRINEY: É só me avisar quando\n
+precisar zarpar de novo!$
+
+[DewfordTown_Text_GettingItchToFish] f8c596fabb
+Este é um ponto de pesca famoso.\n
+Deu vontade de pescar?$
+
+[DewfordTown_Text_GiveYouOneOfMyRods] de774b1e7b
+Gostei de ouvir, gostei mesmo!\p
+Vou te dar uma das minhas VARAS\n
+de pesca.$
+
+[DewfordTown_Text_ThrowInFishingAdvice] 31637cac59
+E, de bônus, ainda te dou uma\n
+dica de pesca!\p
+Primeiro, fique de frente pra água\n
+e use a VARA.\p
+Concentre-se…\n
+Se algo morder, puxe a VARA.\p
+Às vezes você fisga algo na hora,\n
+mas, com os peixes maiores, tem\l
+que acertar o tempo dos puxões\l
+pra trazer pra fora.$
+
+[DewfordTown_Text_ThatsTooBadThen] a6cf72b783
+Ah, é?\n
+Que pena, então.$
+
+[DewfordTown_Text_HowsYourFishing] 73c3af544f
+E aí!\n
+Como vai a pescaria?$
+
+[DewfordTown_Text_GreatHaulInSomeBigOnes] 49f7389d9e
+É mesmo! Que ótimo!\n
+Pegue uns bem grandes!$
+
+[DewfordTown_Text_FishingAdvice] 8011c94edd
+Ei, não desanima!\n
+Vou te dar uma dica de pesca.\p
+Primeiro, fique de frente pra água\n
+e use a VARA.\p
+Concentre-se…\n
+Se algo morder, puxe a VARA.\p
+Às vezes você fisga algo na hora,\n
+mas, com os peixes maiores, tem\l
+que acertar o tempo dos puxões\l
+pra trazer pra fora.$
+
+[DewfordTown_Text_XIsTheBiggestHappeningThingRight] 859307ea24
+Eu curto o que está na moda e bombando.\n
+Estou sempre de olho.\p
+Escuta, já ouviu falar desse novo\n
+“{STR_VAR_1}”?\p
+Isso aí!\n
+Claro que você conhece!\p
+Quer dizer, puxa,\n
+“{STR_VAR_1}”…\l
+É o que tem de mais legal!\p
+De onde quer que você venha,\n
+“{STR_VAR_1}”\l
+é o que mais está bombando, né?$
+
+[DewfordTown_Text_TellMeWhatsNewAndIn] 37c039b465
+Hã?\n
+Não é o que está bombando?\p
+Bom, então você tem que me contar:\n
+o que é novidade e o que está na moda?$
+
+[DewfordTown_Text_OfCourseIKnowAboutThat] 04d22016ab
+Hã?\n
+“{STR_VAR_2}”?\p
+… …\p
+…Hã… É! Isso mesmo!\n
+É, eu sabia! Sabia o tempo todo!\p
+Claro que eu conheço!\n
+“{STR_VAR_2}”, né?\p
+É, isso aí, é a moda!\n
+Não é que “{STR_VAR_2}”\l
+é o máximo?\p
+É o que há de mais moderno.\n
+Achou que eu não ia saber?\p
+“{STR_VAR_1}”…\n
+Isso é, tipo, coisa do passado.\p
+Agora, “{STR_VAR_2}” é\n
+o que está em sintonia com os tempos!$
+
+[DewfordTown_Text_XHuhIThinkYIsCool] 347863be65
+Hmm…\n
+“{STR_VAR_2}”, é?\p
+Mas, pessoalmente, acho que\n
+“{STR_VAR_1}”\l
+é que é legal de verdade.$
+
+[DewfordTown_Text_HearOfAnyTrendsComeShareWithMe] bbfe65317b
+Bom, se souber de alguma moda nova,\n
+vem me contar, tá?$
+
+[DewfordTown_Text_YeahDefinitionOfInRightNow] 7f16642f1c
+É, com certeza!\p
+“{STR_VAR_1}” é a\n
+definição de moda agora.$

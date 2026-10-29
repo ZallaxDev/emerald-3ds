@@ -1,0 +1,85 @@
+# CÉREBROS DA FRONTEIRA: as falas de vitória e derrota.
+
+[gText_AnabelWonSilver] da391dfa88
+Que decepção…$
+
+[gText_AnabelDefeatSilver] 173380b529
+Certo, entendi…$
+
+[gText_AnabelWonGold] 615dc77dfc
+Sinto muito mesmo…$
+
+[gText_AnabelDefeatGold] d0c859a075
+Obrigada…$
+
+[gText_TuckerWonSilver] a05b924250
+Ahahaha! Não tá com vergonha?\nTodo mundo tá vendo!$
+
+[gText_TuckerDefeatSilver] cb1e2f0648
+Grr…\nMas o quê…$
+
+[gText_TuckerWonGold] 2639e0f5cf
+Meu título de ÁS DA CÚPULA não\né só enfeite!$
+
+[gText_TuckerDefeatGold] 5b1ab1c182
+Ahahaha!\nQue inspiração!$
+
+[gText_NolandWonSilver] 71e4e91893
+Isso é que é trabalho!\nFoi uma boa lição, né?$
+
+[gText_NolandDefeatSilver] a3bfd5e82f
+Mandou bem!\nVocê sabe o que tá fazendo!$
+
+[gText_NolandWonGold] c1e4f5b9fe
+Ei, ei, ei!\nJá acabou?$
+
+[gText_NolandDefeatGold] 389f061693
+O que aconteceu aqui?$
+
+[gText_LucyWonSilver] 4ec03c9a06
+Hunf…$
+
+[gText_LucyDefeatSilver] 7566a51311
+Urgh…$
+
+[gText_LucyWonGold] b8021454a1
+Há!$
+
+[gText_LucyDefeatGold] 7060719c67
+Droga!$
+
+[gText_GretaWonSilver] 125abc1767
+Ah, qual é!\nVocê tem que se esforçar mais!$
+
+[gText_GretaDefeatSilver] 077cdebdfe
+Não acredito!\nMandou bem!$
+
+[gText_GretaWonGold] 85da0997d7
+Hehe!\nO que você esperava?$
+
+[gText_GretaDefeatGold] dcbfcadb84
+Hã?\nÉ sério?!$
+
+[gText_SpenserWonSilver] 9962251a88
+Seus POKéMON são fracos porque\nvocê treina sem firmeza!$
+
+[gText_SpenserDefeatSilver] 9e283cc126
+Ah…\nIsso sim é outra coisa…$
+
+[gText_SpenserWonGold] ee5f30fa60
+Gwahahaha!\nIrmãos, não temos nada a temer!$
+
+[gText_SpenserDefeatGold] 7b0aba1428
+Gwah!\nHahahaha!$
+
+[gText_BrandonWonSilver] 3bbe6ddde0
+Ei! O que deu em você?!\nCadê o esforço? Levanta!$
+
+[gText_BrandonDefeatSilver] 17065994ea
+Isso! Mandou muito bem!\nTrabalhou duro pra isso!$
+
+[gText_BrandonWonGold] b82f8f5a69
+Ei! Não desista agora!\nLevanta! Não perca a fé em si!$
+
+[gText_BrandonDefeatGold] 8ecd57e7c0
+Isso! Você conseguiu!\nContinuou se esforçando pra isso!$

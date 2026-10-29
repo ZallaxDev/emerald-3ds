@@ -1,0 +1,17 @@
+# NOVA MAUVILLE: o gerador.
+
+[NewMauville_Inside_Text_GeneratorRadiatingHeat] 5df4c333e4
+O gerador solta um calor que dá pra\n
+sentir mesmo de longe.\p
+Parece que precisa ser desligado\n
+o quanto antes.$
+
+[NewMauville_Inside_Text_GeneratorQuietedDown] 42530e6189
+O gerador se acalmou.$
+
+[NewMauville_Inside_Text_SteppedOnSwitchGeneratorStopped] 1048dcdd28
+{PLAYER} pisou no interruptor.\p
+Clique…\p
+… … … … … … … …\n
+… … … … … … … …\p
+Parece que o gerador parou…$

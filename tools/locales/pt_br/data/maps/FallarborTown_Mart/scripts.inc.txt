@@ -1,0 +1,18 @@
+# CIDADE DE FALLARBOR: o POKé MART.
+
+[FallarborTown_Mart_Text_DecidingSkittyEvolve] 66db9dfbb4
+Não consigo decidir se faço o meu\n
+SKITTY evoluir ou não.\p
+É só usar esta PEDRA DA LUA, mas é\n
+tão difícil decidir…\p
+Se ele evoluir, vai ficar muito mais\n
+forte.\p
+Mas também vai ficar tão diferente.$
+
+[FallarborTown_Mart_Text_Skitty] ff9bd9f5ad
+SKITTY: Miau?$
+
+[FallarborTown_Mart_Text_SellNuggetIFound] 19589c88e3
+Esta PEPITA que achei aqui…\n
+Acho que vou ter que vender, já\l
+que não serve pra mais nada.$

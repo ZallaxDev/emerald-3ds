@@ -1,0 +1,32 @@
+# O quarto do jogador (os textos PlayersHouse_ servem às duas casas).
+
+[PlayersHouse_2F_Text_ClockIsStopped] ad18c722f5
+O relógio está parado…\p
+Melhor acertar e ligar!$
+
+[PlayersHouse_2F_Text_HowDoYouLikeYourRoom] 341edffe71
+MAMÃE: {PLAYER}, gostou do seu\n
+quarto novo?\p
+Ótimo! Tudo bem arrumadinho!\p
+Lá embaixo também já terminaram\n
+de arrumar a mudança.\p
+POKéMON de mudança são tão práticos!\p
+Ah, confira se está tudo certo\n
+em cima da sua escrivaninha.$
+
+[PlayersHouse_2F_Text_Notebook] 4f057d1f1e
+{PLAYER} abriu o caderno.\p
+REGRA DE AVENTURA Nº 1\n
+Abra o MENU com START.\p
+REGRA DE AVENTURA Nº 2\n
+Registre o seu progresso com SALVAR.\p
+As outras páginas estão em branco…$
+
+[Common_Text_LookCloserAtMap] 7aeae6237f
+{PLAYER} olhou de perto o mapa\n
+da região de HOENN.$
+
+[PlayersHouse_2F_Text_ItsAGameCube] e3f6145633
+É um Nintendo GameCube.\p
+Um Game Boy Advance está conectado\n
+para servir de Controle.$

@@ -1,0 +1,17 @@
+# CIDADE DE FORTREE: o POKé MART.
+
+[FortreeCity_Mart_Text_SuperRepelBetter] 24b045e187
+O SUPER REPELENTE dura bastante e\n
+resolve o problema.\p
+É bem melhor que um REPELENTE\n
+comum.$
+
+[FortreeCity_Mart_Text_StockUpOnItems] 43382c7aa2
+Eu sempre compro mais itens do que\n
+sei que vou precisar.\p
+Nunca se sabe o que pode acontecer.\n
+Melhor prevenir que remediar!$
+
+[FortreeCity_Mart_Text_RareCandyMakesMonGrow] 1470f42b12
+Um DOCE RARO faz um POKéMON subir\n
+um nível na hora.$

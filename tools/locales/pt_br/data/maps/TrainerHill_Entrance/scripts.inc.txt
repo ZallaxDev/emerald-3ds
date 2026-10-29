@@ -1,0 +1,161 @@
+# COLINA DOS TREINADORES: a recepção, o dono no terraço e o elevador (todos os textos ficam neste arquivo).
+
+[TrainerHill_Entrance_Text_StillGettingReady] b987872cbd
+Esta é a COLINA DOS TREINADORES, onde\n
+você curte batalhas em dupla com\l
+muitos TREINADORES.\p
+Infelizmente, ainda estamos\n
+preparando tudo. Volte depois!$
+
+[TrainerHill_Entrance_Text_WelcomeToTrainerHill] 2cbd703ec0
+Boas-vindas!\p
+Esta é a COLINA DOS TREINADORES, onde\n
+você curte batalhas em dupla com\l
+muitos TREINADORES!$
+
+[TrainerHill_Entrance_Text_SaveGameBeforeEnter] 8cc1246f0b
+É a sua primeira visita?\p
+Antes de entrar, salve o jogo,\n
+por favor.$
+
+[TrainerHill_Entrance_Text_TrainersUpToFloorX] 9234805206
+Vejamos…\n
+Os TREINADORES daqui agora estão…\p
+Até o andar nº {STR_VAR_1}.$
+
+[TrainerHill_Entrance_Text_TrainersInEveryRoom] 47482928f1
+Vejamos…\n
+Os TREINADORES daqui agora estão…\p
+Parece que tem TREINADORES em\n
+todas as salas.$
+
+[TrainerHill_Entrance_Text_LikeToChallengeTrainers] f4d96ebde5
+Quer desafiar os TREINADORES que\n
+estão esperando?$
+
+[TrainerHill_Entrance_Text_TimeProgessGetSetGo] 028cade63f
+Vou cronometrar o seu tempo.\n
+Boa sorte!\p
+Preparar…\p
+Apontar…\p
+Já!$
+
+[TrainerHill_Entrance_Text_PleaseVisitUsAgain] 83604b5e1c
+Volte a nos visitar!$
+
+[TrainerHill_Entrance_Text_TooBadTremendousEffort] bd8e2b20ec
+Que pena.\p
+Acho que você se esforçou muito\n
+nas batalhas.\p
+Volte e tente de novo!$
+
+[TrainerHill_Entrance_Text_HopeYouGiveItYourBest] 79805e1eab
+Espero que dê o seu melhor.$
+
+[TrainerHill_Entrance_Text_MovedReceptionHereForSwitch] 362f46537c
+Quando os TREINADORES trocam de\n
+lugar, a movimentação é uma loucura.\p
+Pra evitar o tumulto, mudamos o\n
+balcão de recepção pra cá.\p
+Desculpe o transtorno.$
+
+[TrainerHill_Entrance_Text_ThankYouForPlaying] 4c057a289e
+Obrigado por participar!$
+
+[TrainerHill_Entrance_Text_ExplainTrainerHill] 94a0fe8a3d
+Aqui na COLINA DOS TREINADORES,\n
+fazemos um evento chamado Contra\l
+o Tempo.\p
+É uma corrida que mede quanto você\n
+leva pra chegar deste balcão até o\l
+nosso dono, no terraço.\p
+Os melhores tempos ficam no Quadro\n
+de Tempos: dispute com os amigos.\p
+Nas batalhas com TREINADORES do\n
+caminho, não se ganha EXP. nem\l
+dinheiro.$
+
+[TrainerHill_Entrance_Text_NeedAtLeastTwoPokemon] 78cd2603d0
+Ah, desculpe, mas parece que você\n
+só tem um POKéMON.\p
+É preciso ter pelo menos dois\n
+POKéMON pra entrar no evento.$
+
+[TrainerHill_Roof_Text_YouFinallyCameBravo] e8035b6f93
+Hum! Hum!\p
+Você finalmente veio!\n
+Sim, você chegou!\p
+Pera! Não fala!\n
+Já sei por que subiu até aqui\l
+por conta própria!\p
+Queria me ver, o dono da COLINA\n
+DOS TREINADORES, porque…\p
+Quer formar dupla comigo!\n
+Uau-hu!\p
+…Hã?\n
+Não é isso?\p
+Enfim, vi você subindo.\n
+Que batalhas maravilhosas! Bravo!$
+
+[TrainerHill_Roof_Text_HaveTheMostMarvelousGift] 1c373eba47
+Pra alguém maravilhoso como você,\n
+tenho o presente mais maravilhoso!$
+
+[TrainerHill_Roof_Text_FullUpBeBackLaterForThis] ac5949009f
+Ah, não, está cheio de coisas!\n
+Volte depois pra pegar isto!$
+
+[TrainerHill_Roof_Text_GotHereMarvelouslyQuickly] 968227aba8
+Ah, pera aí! Por acaso você chegou\n
+aqui maravilhosamente rápido?\p
+Que esplêndido! Nem precisava ter\n
+tanta pressa pra me ver!\p
+Que delícia. Vou mandar atualizar o\n
+Quadro de Tempos da recepção!$
+
+[TrainerHill_Roof_Text_YouWerentVeryQuick] 4180abb917
+Mas, ah…\n
+Você demorou um pouco pra chegar.$
+
+[TrainerHill_Roof_Text_ArriveZippierNextTime] 098716a32e
+Talvez me agrade mais se você\n
+chegar mais ligeiro da próxima vez.\p
+Aí vou adorar formar dupla com\n
+você!\p
+Até a próxima, amigo!$
+
+[TrainerHill_Roof_Text_BuiltTrainerHillToFindPartner] f41e85c4e7
+Mandei construir a COLINA DOS\n
+TREINADORES por um único motivo!\p
+Achar o parceiro ideal pra formar\n
+dupla comigo!$
+
+[TrainerHill_Entrance_Text_ChallengeTime] 2bba552c3e
+{STR_VAR_1} min {STR_VAR_2},{STR_VAR_3} s$
+
+[TrainerHill_Entrance_Text_WhatSortOfTrainersAreAhead] 289181f87a
+Quem sabe que TREINADORES e POKéMON\n
+me esperam lá na frente?\p
+Só sei que vou tirar do caminho\n
+quem ficar na minha frente!$
+
+[TrainerHill_Entrance_Text_CantWaitToTestTheWaters] a7e726120c
+Ouvi dizer que TREINADORES fortes\n
+vêm de todo canto pra COLINA.\p
+Não vejo a hora de testar!\p
+Vou tirar do caminho quem ficar\n
+na minha frente!$
+
+[TrainerHill_Entrance_Text_FriendsTryingToReachTimeBoardTop] 8029f38edc
+Está vendo o Quadro de Tempos ali?\p
+Eu e os meus amigos estamos vendo\n
+quem chega ao topo mais rápido.$
+
+[TrainerHill_Entrance_Text_DoYouKnowWhenTheyOpen] d7e77d8c6f
+Sabe quando vão abrir este lugar?\p
+Estou esperando aqui pra ser o\n
+primeiro desafiante de todos!$
+
+[TrainerHill_Elevator_Text_ReturnToReception] c302b860d1
+Quer voltar ao balcão de\n
+recepção?$

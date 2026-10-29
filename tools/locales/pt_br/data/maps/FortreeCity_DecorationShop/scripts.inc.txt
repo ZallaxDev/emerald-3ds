@@ -1,0 +1,14 @@
+# CIDADE DE FORTREE: a loja de decoração.
+
+[FortreeCity_DecorationShop_Text_MerchandiseSentToPC] f1d827f461
+O que você compra aqui vai direto\n
+pro seu PC.\p
+Incrível! Queria que me entregassem\n
+em casa desse jeito também.$
+
+[FortreeCity_DecorationShop_Text_BuyingDeskForDolls] 5ed9d89b94
+Vou comprar uma mesa bonita e botar\n
+as minhas BONECAS fofas em cima.\p
+Senão, quando eu decorar a minha\n
+BASE SECRETA, as BONECAS vão se\l
+sujar ou pegar farpas.$

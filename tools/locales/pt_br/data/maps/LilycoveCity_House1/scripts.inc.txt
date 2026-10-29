@@ -1,0 +1,10 @@
+# CIDADE DE LILYCOVE: a casa do KECLEON.
+
+[LilycoveCity_House1_Text_PokemonPartnersNotTools] 2818db53ee
+Os POKéMON são parceiros das pessoas.\n
+Não são ferramentas.\p
+Infelizmente, tem gente que não\n
+entende isso…$
+
+[LilycoveCity_House1_Text_Kecleon] 49c151c696
+KECLEON: Ruroro?$

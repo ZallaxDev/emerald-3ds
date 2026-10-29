@@ -1,0 +1,53 @@
+# ESCONDERIJO MAGMA: 2º andar.
+
+[MagmaHideout_2F_1R_Text_Grunt14Intro] ce52b07251
+Quê, quê, quê?\p
+Só membros da EQUIPE MAGMA podem\n
+ficar aqui!\p
+Mas você não está com o uniforme da\n
+EQUIPE MAGMA…\p
+Que suspeito!\n
+Batalhe comigo!$
+
+[MagmaHideout_2F_1R_Text_Grunt14Defeat] 3c9de610c5
+Aiaiai…\n
+O meu orgulho de membro da MAGMA…$
+
+[MagmaHideout_2F_1R_Text_Grunt14PostBattle] 4061583905
+Se você sofre de calafrios, devia\n
+entrar pra EQUIPE MAGMA.$
+
+[MagmaHideout_2F_1R_Text_Grunt3Intro] a5f6da2c51
+Pare aí!\p
+Acha mesmo que vou ficar de boca\n
+fechada e te deixar passar?$
+
+[MagmaHideout_2F_1R_Text_Grunt3Defeat] ea835477bd
+Uau!\n
+Me rendo!$
+
+[MagmaHideout_2F_1R_Text_Grunt3PostBattle] 4ec4a0ad4d
+Talvez fosse melhor ter te deixado\n
+passar sem desafio…$
+
+[MagmaHideout_2F_1R_Text_Grunt4Intro] d78938ae6c
+Arrá!\n
+Um intruso!$
+
+[MagmaHideout_2F_1R_Text_Grunt4Defeat] 0eb30b0f5f
+Graaah!$
+
+[MagmaHideout_2F_1R_Text_Grunt4PostBattle] a8a6471216
+Eu já perdi.\p
+Preciso mesmo continuar correndo\n
+em círculos?$
+
+[MagmaHideout_2F_1R_Text_Grunt5Intro] 35147e36a4
+Opa, opa!\n
+Um intruso!$
+
+[MagmaHideout_2F_1R_Text_Grunt5Defeat] f6e0286db6
+Resmungo…$
+
+[MagmaHideout_2F_1R_Text_Grunt5PostBattle] ae2f72cff5
+Na verdade, não sou bom de batalha…$

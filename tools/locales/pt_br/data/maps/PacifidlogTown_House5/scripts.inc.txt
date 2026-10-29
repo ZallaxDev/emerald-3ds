@@ -1,0 +1,15 @@
+# CIDADE DE PACIFIDLOG: a casa da ILHA MIRAGEM.
+
+[PacifidlogTown_House5_Text_CantSeeMirageIslandToday] 92d45fd488
+Não dá pra ver a ILHA MIRAGEM hoje…$
+
+[PacifidlogTown_House5_Text_CanSeeMirageIslandToday] 03f3f70b17
+Oh! Minha nossa!\n
+Dá pra ver a ILHA MIRAGEM hoje!$
+
+[PacifidlogTown_House5_Text_MirageIslandAppearDependingOnWeather] 91dfced01d
+A ILHA MIRAGEM…\p
+Ela deve aparecer e sumir conforme\n
+o tempo, que cria as miragens.\p
+Ou será que ela aparece e some de\n
+verdade?$

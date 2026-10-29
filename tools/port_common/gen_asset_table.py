@@ -94,10 +94,13 @@ def parse_incbins_by_source() -> list[tuple[Path, str, list[str], bool]]:
     return result
 
 
-def parse_symbol_addresses_from_map() -> tuple[dict[tuple[str, str], int], dict[str, list[tuple[str, int]]]]:
+def parse_symbol_addresses_from_map() -> tuple[
+    dict[tuple[str, str], int], dict[str, list[tuple[str, int]]], dict[tuple[str, str], int]
+]:
     lines = MAP_FILE.read_text(encoding="utf-8", errors="ignore").splitlines()
     symbols: dict[tuple[str, str], int] = {}
     symbols_by_name: dict[str, list[tuple[str, int]]] = {}
+    sizes: dict[tuple[str, str], int] = {}
 
     # Skip the "Discarded input sections" block to avoid 0x00000000 entries.
     start = 0
@@ -107,7 +110,9 @@ def parse_symbol_addresses_from_map() -> tuple[dict[tuple[str, str], int], dict[
             break
 
     sec_pat = re.compile(r"^\s*\.rodata\.([A-Za-z_][A-Za-z0-9_]*)\s*$")
-    addr_pat = re.compile(r"^\s*0x([0-9a-fA-F]+)\s+0x[0-9a-fA-F]+\s+(build/root/\S+\.o)\s*$")
+    # addr, section size, object — size is the stub: INCBIN placeholders are
+    # 1/2/4 bytes; an #else-free array (e.g. Japanese latin font stubs) is larger.
+    addr_pat = re.compile(r"^\s*0x([0-9a-fA-F]+)\s+0x([0-9a-fA-F]+)\s+(build/root/\S+\.o)\s*$")
 
     i = start
     while i < len(lines):
@@ -125,16 +130,18 @@ def parse_symbol_addresses_from_map() -> tuple[dict[tuple[str, str], int], dict[
             continue
 
         addr = int(m_addr.group(1), 16)
-        obj = m_addr.group(2).replace("\\", "/")
+        size = int(m_addr.group(2), 16)
+        obj = m_addr.group(3).replace("\\", "/")
         sym = m_sec.group(1)
 
         if addr != 0:
             symbols[(obj, sym)] = addr
+            sizes[(obj, sym)] = size
             symbols_by_name.setdefault(sym, []).append((obj, addr))
 
         i += 2
 
-    return symbols, symbols_by_name
+    return symbols, symbols_by_name, sizes
 
 
 def generate_missing(incbins) -> None:
@@ -232,7 +239,7 @@ def main() -> None:
 
     incbins = parse_incbins_by_source()
     generate_missing(incbins)
-    sym_addrs, sym_addrs_by_name = parse_symbol_addresses_from_map()
+    sym_addrs, sym_addrs_by_name, sym_sizes = parse_symbol_addresses_from_map()
 
     entries: list[tuple[int, int, str]] = []
     ptr_entries: list[tuple[int, int, int]] = []
@@ -240,6 +247,12 @@ def main() -> None:
     # Symbols that a source file's own INCBIN already accounts for.
     claimed = {(f"build/root/{src_rel.with_suffix('.o').as_posix()}", sym)
                for src_rel, sym, _, _ in incbins if src_rel.suffix == ".c"}
+    # INCBIN_U8/U16/U32 stubs are usually 1, 2 or 4 bytes, but grouped palette
+    # INCBINs keep a typed .rodata size (e.g. u16[][16] → 0x200) that is still
+    # a stub and MUST be staged. Japanese builds replace Latin .latfont INCBINs
+    # with empty arrays behind PORT_BRIDGE; the parser still sees the #else
+    # path — skip only those inactive .latfont files (not every size > 4).
+    INC_BIN_STUB_MAX = 4
 
     for index, (src_rel, sym, rel_paths, is_static) in enumerate(incbins, start=1):
         if (index % 100) == 0:
@@ -257,6 +270,10 @@ def main() -> None:
                 obj_rel, addr = candidates[0]
             else:
                 continue
+
+        stub_size = sym_sizes.get((obj_rel, sym), 0)
+        if stub_size > INC_BIN_STUB_MAX and any(p.endswith(".latfont") for p in rel_paths):
+            continue
 
         asset_info = copy_or_concat_asset(obj_rel, sym, rel_paths)
         if asset_info is None:

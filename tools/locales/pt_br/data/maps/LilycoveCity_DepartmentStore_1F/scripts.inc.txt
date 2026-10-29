@@ -1,0 +1,43 @@
+# CIDADE DE LILYCOVE: a LOJA DE DEPARTAMENTOS, térreo.
+
+[LilycoveCity_DepartmentStore_1F_Text_WelcomeToDeptStore] 70d3b1c690
+Boas-vindas à LOJA DE\n
+DEPARTAMENTOS DE LILYCOVE.$
+
+[LilycoveCity_DepartmentStore_1F_Text_IBuyAllSortsOfThings] 782412aa61
+Sempre que venho à LOJA DE\n
+DEPARTAMENTOS, acabo comprando\l
+um monte de coisa, de tão divertido.$
+
+[LilycoveCity_DepartmentStore_1F_Text_MomBuyingMeFurniture] 7c92cb7f38
+Hoje a minha mãe vai me comprar uns\n
+móveis bonitos.$
+
+[LilycoveCity_DepartmentStore_1F_Text_BuyingSomethingForAzumarill] 878e268d0c
+Vou comprar algo pro meu AZUMARILL\n
+de prêmio por ganhar um CONCURSO.$
+
+[LilycoveCity_DepartmentStore_1F_Text_Azumarill] dd15ec6c9e
+AZUMARILL: Maririruu!$
+
+[LilycoveCity_DepartmentStore_1F_Text_FloorNamesSign] 96adcc6045
+T: ATENDIMENTO\n
+   CANTO DA LOTERIA\p
+1º: ZONA DO TREINADOR\p
+2º: COLEÇÃO DE BATALHA\p
+3º: CANTO DAS MT\p
+4º: ANDAR DOS BONECOS\p
+TERRAÇO: PRAÇA DO TERRAÇO$
+
+[LilycoveCity_DepartmentStore_1F_Text_WirelessCommIsFun] 4d50f8f678
+A Comunicação Sem Fio é muito\n
+divertida, não é?\p
+Acho que dá pra fazer coisas que\n
+não dava antes.\p
+Por exemplo, agora dá pra trocar\n
+com gente com quem não dava antes.\p
+Acho que vai ser emocionante!$
+
+[LilycoveCity_DepartmentStore_1F_Text_SpreadWordAboutWirelessComm] ea0c113c3f
+Quero espalhar pra todo mundo como a\n
+Comunicação Sem Fio é divertida.$

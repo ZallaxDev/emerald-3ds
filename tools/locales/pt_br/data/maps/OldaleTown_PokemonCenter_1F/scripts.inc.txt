@@ -1,0 +1,24 @@
+# O CENTRO POKéMON da CIDADE DE OLDALE.
+
+[OldaleTown_PokemonCenter_1F_Text_TrainersCanUsePC] d04da78f1a
+Aquele PC ali no canto é para\n
+qualquer TREINADOR POKéMON usar.\p
+Então, claro, você também pode\n
+usar à vontade.$
+
+[OldaleTown_PokemonCenter_1F_Text_PokemonCentersAreGreat] 8adf5ae2de
+Os CENTROS POKéMON são ótimos!\p
+Dá para usar os serviços quanto\n
+quiser, e é tudo de graça.\l
+Não precisa se preocupar com nada!$
+
+[OldaleTown_PokemonCenter_1F_Text_WirelessClubNotAvailable] 3ad801e36e
+O CLUBE SEM FIO POKéMON do\n
+segundo andar foi construído agora.\p
+Mas dizem que ainda estão fazendo\n
+ajustes.$
+
+[OldaleTown_PokemonCenter_1F_Text_TradedInWirelessClub] 2ce521374d
+O CLUBE SEM FIO POKéMON do\n
+segundo andar foi construído agora.\p
+Eu já troquei POKéMON lá.$

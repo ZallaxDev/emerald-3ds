@@ -1,0 +1,21 @@
+# ROTA 105: a ligação do PAPAI pelo POKéNAV.
+
+[Route104_Text_DadPokenavCall] d4ffaddece
+… … … … … …\n
+… … … … … Bipe!\p
+PAPAI: Ah, {PLAYER}?\p
+… … … … … …\n
+Onde você está agora?\l
+Parece que está ventando aí.\p
+O SR. STONE, da DEVON, me contou\n
+do seu POKéNAV, então resolvi\l
+te ligar.\p
+Parece que você está bem,\n
+e pra mim isso basta.\p
+Se cuida, viu?\p
+… … … … … …\n
+… … … … … Clique!$
+
+[Route104_Text_RegisteredDadInPokenav] 57e81b18d3
+O PAPAI, NORMAN, foi registrado\n
+no POKéNAV.$

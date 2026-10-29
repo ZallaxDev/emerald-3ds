@@ -1,0 +1,34 @@
+# TENDA DE BATALHA DE SLATEPORT, a recepção.
+
+[SlateportCity_BattleTentLobby_Text_CouldntFindMonForMe] 8437290003
+Então, tipo, não achei nenhum POKéMON\n
+que fosse, tipo, a minha cara.\p
+Aí pensei, tipo, vou reclamar\n
+pro cara ali, né?\p
+E ele nem quis me ouvir, tipo, qual é!\n
+Tipo, que mancada, cara!\p
+Ei, tipo, você! Fica na sua, tá?\n
+Só, sabe, pega isto aqui!$
+
+[SlateportCity_BattleTentLobby_Text_ExplainTorment] ea690dafd6
+Isso é, tipo, a MT41, sabe?\n
+É ATORMENTAR, tá me ouvindo?\p
+Tipo, não deixa o outro usar o\n
+mesmo golpe duas vezes, sacou?\p
+E, ó, escuta aqui, tipo, não estou\n
+te atormentando, não!$
+
+[SlateportCity_BattleTentLobby_Text_IllTryUsingBugMons] 088e402e6a
+Não gosto muito de POKéMON INSETO,\n
+mas acho que vou usar uns pra\l
+variar.\p
+Vai saber, posso até passar a\n
+gostar deles!$
+
+[SlateportCity_BattleTentLobby_Text_BattleEvenWithoutToughMons] a3a8289e2b
+Aqui dá pra batalhar à vontade, mesmo\n
+sem ter POKéMON fortes.$
+
+[SlateportCity_BattleTentLobby_Text_NiceIfMoreSelection] fb930c2693
+Não seria legal se tivesse mais\n
+opções pra escolher?$

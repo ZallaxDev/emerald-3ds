@@ -1,0 +1,1418 @@
+# As descrições dos golpes (src/data/text/move_descriptions.h): duas linhas,
+# na largura das inglesas. Os golpes citados vão pelo nome oficial.
+
+[sPoundDescription] 39b5c6ca70
+Bate no alvo com as patas\n
+ou com a cauda.
+
+[sKarateChopDescription] 241bfec65a
+Um golpe de caratê com\n
+alta chance de crítico.
+
+[sDoubleSlapDescription] e0549a4273
+Estapeia o alvo de 2 a\n
+5 vezes seguidas.
+
+[sCometPunchDescription] 6d636e5f71
+Soca o alvo de 2 a 5\n
+vezes seguidas.
+
+[sMegaPunchDescription] 6ceb832b7e
+Um soco dado com uma\n
+força incrível.
+
+[sPayDayDescription] d47f1bc63d
+Atira moedas no alvo. O\n
+dinheiro volta depois.
+
+[sFirePunchDescription] 76e43bfba3
+Um soco de fogo que pode\n
+queimar o alvo.
+
+[sIcePunchDescription] ec8cd4d37a
+Um soco gelado que pode\n
+congelar o alvo.
+
+[sThunderPunchDescription] 0561c2858f
+Um soco elétrico que pode\n
+paralisar o alvo.
+
+[sScratchDescription] cd6148f67f
+Arranha o alvo com\n
+garras afiadas.
+
+[sViceGripDescription] 0d5d99a563
+Prende o alvo com pinças\n
+grandes e fortes.
+
+[sGuillotineDescription] c6c1863735
+Um ataque de pinça que\n
+pode nocautear de vez.
+
+[sRazorWindDescription] 6fc17e8291
+Golpe de 2 turnos que\n
+atinge no 2º turno.
+
+[sSwordsDanceDescription] fa0199c8d7
+Uma dança de luta que\n
+sobe muito o ATAQUE.
+
+[sCutDescription] 4103c18506
+Corta o alvo com foices,\n
+garras etc.
+
+[sGustDescription] 5e3e3b2352
+Atinge o alvo com uma\n
+rajada de vento das asas.
+
+[sWingAttackDescription] ba9245a4c7
+Atinge o alvo com as asas\n
+bem abertas.
+
+[sWhirlwindDescription] e6795bcd66
+Sopra o alvo para longe\n
+e acaba a batalha.
+
+[sFlyDescription] 2332ec31b4
+Voa no 1º turno e ataca\n
+no turno seguinte.
+
+[sBindDescription] d1762489b9
+Prende e aperta o alvo\n
+por 2 a 5 turnos.
+
+[sSlamDescription] ed55c78b6c
+Bate no alvo com uma cauda\n
+comprida, cipó etc.
+
+[sVineWhipDescription] 1c76d5d280
+Chicoteia o alvo com\n
+cipós finos e longos.
+
+[sStompDescription] 876ee06e8c
+Pisa no alvo com força.\n
+Pode fazê-lo hesitar.
+
+[sDoubleKickDescription] 721b6693ac
+Um chute duplo que\n
+acerta o alvo 2 vezes.
+
+[sMegaKickDescription] 9d925a41dd
+Um chute fortíssimo,\n
+dado com muita força.
+
+[sJumpKickDescription] 050273fe97
+Um chute com pulo. Se\n
+errar, fere o usuário.
+
+[sRollingKickDescription] 7941fb1263
+Um chute rápido dado\n
+depois de um giro.
+
+[sSandAttackDescription] 03631a62d2
+Joga areia na cara do\n
+alvo e baixa a PRECISÃO.
+
+[sHeadbuttDescription] f07da4bd06
+Uma cabeçada que pode\n
+fazer o alvo hesitar.
+
+[sHornAttackDescription] f9a9483e49
+Fura o alvo com chifres\n
+afiados.
+
+[sFuryAttackDescription] bd6c3e12fe
+Fura o alvo de 2 a 5\n
+vezes com chifres etc.
+
+[sHornDrillDescription] 0ec829cd9a
+Nocaute de um golpe só,\n
+com um chifre-broca.
+
+[sTackleDescription] 42a40393a3
+Avança no alvo com o\n
+corpo inteiro.
+
+[sBodySlamDescription] 9c1f44d689
+Uma pancada com o corpo\n
+que pode paralisar.
+
+[sWrapDescription] 3ce3181d53
+Enrola e aperta o alvo\n
+de 2 a 5 vezes.
+
+[sTakeDownDescription] 4dcea3f8cc
+Uma investida doida que\n
+também fere o usuário.
+
+[sThrashDescription] b023f34001
+Fúria de 2 a 3 turnos\n
+que confunde o usuário.
+
+[sDoubleEdgeDescription] 267fde69f4
+Investida arriscada que\n
+também fere o usuário.
+
+[sTailWhipDescription] a342c653de
+Abana a cauda para baixar\n
+a DEFESA do alvo.
+
+[sPoisonStingDescription] 08f6b7302d
+Ferroada tóxica que\n
+pode envenenar.
+
+[sTwineedleDescription] 0a73e15b64
+Ferrões nas patas furam\n
+o alvo 2 vezes.
+
+[sPinMissileDescription] 771ff123e1
+Dispara espinhos que\n
+acertam de 2 a 5 vezes.
+
+[sLeerDescription] c81eba407c
+Encara o alvo para\n
+baixar a DEFESA.
+
+[sBiteDescription] dd41c8fa58
+Morde com presas cruéis.\n
+Pode fazer hesitar.
+
+[sGrowlDescription] 5a14e12196
+Rosna fofinho para baixar\n
+o ATAQUE do alvo.
+
+[sRoarDescription] ae98f0058b
+Espanta o alvo e acaba\n
+a batalha.
+
+[sSingDescription] bfd5c87cb3
+Uma canção suave que faz\n
+o alvo dormir pesado.
+
+[sSupersonicDescription] ec713c8ce2
+Ondas sonoras estranhas\n
+que podem confundir.
+
+[sSonicBoomDescription] 18adaa9fe5
+Ondas de choque que\n
+sempre tiram 20 PS.
+
+[sDisableDescription] 1e9fa57ff9
+Bloqueia com a mente um\n
+dos golpes do alvo.
+
+[sAcidDescription] a51cc500ee
+Jato de ácido corrosivo.\n
+Pode baixar a DEFESA.
+
+[sEmberDescription] ae5bd83a81
+Um ataque de fogo fraco\n
+que pode queimar.
+
+[sFlamethrowerDescription] 89628818f5
+Um ataque de fogo forte\n
+que pode queimar.
+
+[sMistDescription] aec8e91e37
+Cria uma névoa que impede\n
+a queda dos atributos.
+
+[sWaterGunDescription] e53c5d5d4a
+Esguicha água para\n
+atacar o alvo.
+
+[sHydroPumpDescription] cf19d9d552
+Dispara água com muita\n
+força contra o alvo.
+
+[sSurfDescription] 53717c7a6b
+Cria uma onda enorme e\n
+a joga sobre o alvo.
+
+[sIceBeamDescription] 57fbb7a5b3
+Raio gelado contra o alvo.\n
+Pode congelar.
+
+[sBlizzardDescription] 8725a516de
+Atinge com uma tempestade\n
+gelada. Pode congelar.
+
+[sPsybeamDescription] 85349f78cc
+Dispara um raio estranho\n
+que pode confundir.
+
+[sBubbleBeamDescription] c986fcb8fa
+Jato forte de bolhas.\n
+Pode baixar a VELOC.
+
+[sAuroraBeamDescription] 4cfa47bde9
+Raio da cor do arco-íris.\n
+Pode baixar o ATAQUE.
+
+[sHyperBeamDescription] 883a4e6419
+Forte, mas o usuário fica\n
+parado no turno seguinte.
+
+[sPeckDescription] 9acd73ae9c
+Ataca o alvo com\n
+bicadas.
+
+[sDrillPeckDescription] e34214f6d1
+Ataque giratório, com o\n
+bico como uma broca.
+
+[sSubmissionDescription] 02c11edcaf
+Pancada imprudente que\n
+também fere o usuário.
+
+[sLowKickDescription] 91d22bfbc5
+Um chute que dá mais dano\n
+em alvos pesados.
+
+[sCounterDescription] 1d96a87406
+Devolve um golpe físico\n
+com o dobro da força.
+
+[sSeismicTossDescription] 83112dc653
+Tira tantos PS quanto\n
+o nível do usuário.
+
+[sStrengthDescription] 91fbdd56b7
+Acumula força enorme\n
+e acerta o alvo.
+
+[sAbsorbDescription] 0b9a3a05a1
+Um ataque que absorve\n
+metade do dano causado.
+
+[sMegaDrainDescription] 0b9a3a05a1
+Um ataque que absorve\n
+metade do dano causado.
+
+[sLeechSeedDescription] 44599c7545
+Planta uma semente que\n
+rouba PS todo turno.
+
+[sGrowthDescription] eb7a9811f1
+Faz o corpo crescer e\n
+sobe o AT. ESP.
+
+[sRazorLeafDescription] 4ae2a7cf1e
+Corta o alvo com folhas.\n
+Alta chance de crítico.
+
+[sSolarBeamDescription] c1a4308425
+Absorve luz num turno e\n
+ataca no seguinte.
+
+[sPoisonPowderDescription] 0931554e76
+Espalha um pó tóxico que\n
+pode envenenar.
+
+[sStunSporeDescription] 47ece4ac25
+Espalha um pó que pode\n
+paralisar o alvo.
+
+[sSleepPowderDescription] 60bc8a60ae
+Espalha um pó que pode\n
+fazer o alvo dormir.
+
+[sPetalDanceDescription] b023f34001
+Fúria de 2 a 3 turnos\n
+que confunde o usuário.
+
+[sStringShotDescription] 0fa5f22b98
+Enrola o alvo com fios\n
+para baixar a VELOC.
+
+[sDragonRageDescription] 52f4975239
+Ondas de choque que\n
+sempre tiram 40 PS.
+
+[sFireSpinDescription] df4ad53be7
+Prende o alvo num anel de\n
+fogo por 2 a 5 turnos.
+
+[sThunderShockDescription] ace144dda8
+Ataque elétrico que pode\n
+paralisar o alvo.
+
+[sThunderboltDescription] 227719ed47
+Ataque elétrico forte\n
+que pode paralisar.
+
+[sThunderWaveDescription] 7cd4b14d48
+Um choque fraco que\n
+paralisa o alvo.
+
+[sThunderDescription] cc0166943a
+Um raio que pode\n
+paralisar o alvo.
+
+[sRockThrowDescription] 8f02efd5bb
+Atira pedrinhas para\n
+atingir o alvo.
+
+[sEarthquakeDescription] 98eb08768f
+Um terremoto forte, sem\n
+efeito em alvos voadores.
+
+[sFissureDescription] dd8c304901
+Nocaute de um golpe só\n
+que abre uma fenda.
+
+[sDigDescription] 6688dd8404
+Cava no 1º turno e ataca\n
+no turno seguinte.
+
+[sToxicDescription] b5102f2069
+Envenena o alvo com uma\n
+toxina que vai piorando.
+
+[sConfusionDescription] 749720f5c7
+Ataque psíquico que\n
+pode confundir.
+
+[sPsychicDescription] 82a2571765
+Ataque psíquico forte.\n
+Pode baixar a DEF. ESP.
+
+[sHypnosisDescription] 82d8dcebca
+Um golpe hipnótico que\n
+pode fazer dormir.
+
+[sMeditateDescription] bd924adc6c
+Medita em paz para\n
+subir o ATAQUE.
+
+[sAgilityDescription] 0ad88b7022
+Relaxa o corpo para subir\n
+muito a VELOCIDADE.
+
+[sQuickAttackDescription] 10f14a010f
+Um ataque rapidíssimo que\n
+sempre vem primeiro.
+
+[sRageDescription] 6a9bdbfa7e
+Sobe o ATAQUE do usuário\n
+cada vez que é atingido.
+
+[sTeleportDescription] 5994222279
+Golpe psíquico para fugir\n
+da batalha na hora.
+
+[sNightShadeDescription] 83112dc653
+Tira tantos PS quanto\n
+o nível do usuário.
+
+[sMimicDescription] 862ac85dac
+Copia um golpe do alvo\n
+durante a batalha.
+
+[sScreechDescription] 033931a951
+Um grito que baixa muito\n
+a DEFESA do alvo.
+
+[sDoubleTeamDescription] 725d1d1a4c
+Cria cópias ilusórias\n
+para fugir dos golpes.
+
+[sRecoverDescription] 0b1f10d563
+Recupera até metade dos\n
+PS máximos do usuário.
+
+[sHardenDescription] ee2b139785
+Enrijece os músculos\n
+para subir a DEFESA.
+
+[sMinimizeDescription] b381ab4afb
+Diminui de tamanho para\n
+fugir dos golpes.
+
+[sSmokescreenDescription] b8a677eb26
+Baixa a PRECISÃO do alvo\n
+com fumaça, tinta etc.
+
+[sConfuseRayDescription] b51c5883ab
+Um raio sinistro que\n
+confunde o alvo.
+
+[sWithdrawDescription] f6527be485
+Se esconde no casco duro\n
+para subir a DEFESA.
+
+[sDefenseCurlDescription] afc9266afa
+Se enrola para esconder\n
+os pontos fracos.
+
+[sBarrierDescription] 1d595d3319
+Cria uma barreira que\n
+sobe muito a DEFESA.
+
+[sLightScreenDescription] 3916c937de
+Parede de luz que reduz\n
+o dano especial.
+
+[sHazeDescription] a43145eeb6
+Névoa negra que desfaz\n
+as mudanças de atributos.
+
+[sReflectDescription] c4791b6e30
+Parede de luz que reduz\n
+o dano físico.
+
+[sFocusEnergyDescription] 9ba6ab0b9b
+Concentra a força para\n
+subir a chance de crítico.
+
+[sBideDescription] a67eee6c10
+Aguenta golpes 2 turnos\n
+e devolve o dobro.
+
+[sMetronomeDescription] b6bf3ce622
+Balança o dedo e usa um\n
+golpe qualquer, ao acaso.
+
+[sMirrorMoveDescription] 6558d11114
+Responde ao ataque do\n
+alvo com o mesmo golpe.
+
+[sSelfDestructDescription] 966b70cd35
+Dano enorme, mas faz o\n
+usuário desmaiar.
+
+[sEggBombDescription] 06a2414787
+Arremessa um ovo com\n
+força contra o alvo.
+
+[sLickDescription] f02b4cbf72
+Lambe com uma língua\n
+comprida. Pode paralisar.
+
+[sSmogDescription] 1fa6367939
+Ataque de gás tóxico\n
+que pode envenenar.
+
+[sSludgeDescription] 0a6ac85e59
+Arremessa lodo contra o\n
+alvo. Pode envenenar.
+
+[sBoneClubDescription] 5490aeca5e
+Bate com um osso. Pode\n
+fazer o alvo hesitar.
+
+[sFireBlastDescription] 40f900e62a
+Incinera o que atinge.\n
+Pode queimar.
+
+[sWaterfallDescription] 5104febd61
+Avança com a força de\n
+quem sobe cachoeiras.
+
+[sClampDescription] db2036c4c0
+Prende e aperta o alvo\n
+por 2 a 5 turnos.
+
+[sSwiftDescription] 9733869c49
+Raios em forma de estrela\n
+que nunca erram.
+
+[sSkullBashDescription] ac4903f579
+Abaixa a cabeça e ataca\n
+no turno seguinte.
+
+[sSpikeCannonDescription] 0df0cdb97d
+Dispara espinhos que\n
+acertam de 2 a 5 vezes.
+
+[sConstrictDescription] 54a1622278
+Aperta o alvo com força.\n
+Pode baixar a VELOC.
+
+[sAmnesiaDescription] b8319fa143
+Esquece algo e sobe\n
+muito a DEF. ESP.
+
+[sKinesisDescription] 78da6cb452
+Distrai o alvo. Pode\n
+baixar a PRECISÃO.
+
+[sSoftBoiledDescription] 0b1f10d563
+Recupera até metade dos\n
+PS máximos do usuário.
+
+[sHiJumpKickDescription] 6c96b895b0
+Joelhada com pulo. Se\n
+errar, fere o usuário.
+
+[sGlareDescription] b7e478a253
+Intimida e assusta o alvo\n
+até paralisá-lo.
+
+[sDreamEaterDescription] 0a230cc85b
+Rouba metade do dano de\n
+um alvo adormecido.
+
+[sPoisonGasDescription] 9c37fc708a
+Envolve o alvo num gás\n
+tóxico. Pode envenenar.
+
+[sBarrageDescription] c5f45a2b21
+Atira objetos redondos\n
+de 2 a 5 vezes.
+
+[sLeechLifeDescription] 6aff9e4320
+Um ataque que rouba\n
+metade do dano causado.
+
+[sLovelyKissDescription] 8deb108428
+Pede um beijo com cara\n
+feia e faz dormir.
+
+[sSkyAttackDescription] a965108d4c
+Procura pontos fracos e\n
+ataca no turno seguinte.
+
+[sTransformDescription] fbaafe77ab
+Muda as células e vira\n
+uma cópia do alvo.
+
+[sBubbleDescription] 5eb4a6c130
+Ataque com bolhas. Pode\n
+baixar a VELOC. do alvo.
+
+[sDizzyPunchDescription] d4c801ec9f
+Um soco ritmado que pode\n
+confundir o alvo.
+
+[sSporeDescription] 46eb5ed6c0
+Nuvem de esporos que\n
+sempre faz dormir.
+
+[sFlashDescription] 1649e13199
+Solta um clarão forte\n
+que baixa a PRECISÃO.
+
+[sPsywaveDescription] 01f4384d00
+Ataca com uma onda\n
+psíquica de força variada.
+
+[sSplashDescription] d73f347791
+É só um borrifo...\n
+Não faz nada de nada.
+
+[sAcidArmorDescription] 38d6fa2258
+Liquefaz o corpo para\n
+subir muito a DEFESA.
+
+[sCrabhammerDescription] 6fcaf95f54
+Martela com a pinça. Tem\n
+alta chance de crítico.
+
+[sExplosionDescription] 966b70cd35
+Dano enorme, mas faz o\n
+usuário desmaiar.
+
+[sFurySwipesDescription] 1a8f508ca2
+Arranha o alvo de 2 a 5\n
+vezes com garras etc.
+
+[sBonemerangDescription] edac9b8602
+Atira um osso bumerangue\n
+que acerta 2 vezes.
+
+[sRestDescription] 1f211311d8
+Dorme 2 turnos e\n
+recupera PS e status.
+
+[sRockSlideDescription] ce0a698928
+Arremessa rochas enormes.\n
+Pode fazer hesitar.
+
+[sHyperFangDescription] 97526b1447
+Ataca com presas afiadas.\n
+Pode fazer hesitar.
+
+[sSharpenDescription] 4845791802
+Reduz os polígonos e\n
+sobe o ATAQUE.
+
+[sConversionDescription] fb910fcd9c
+Muda o tipo do usuário\n
+para o de um golpe seu.
+
+[sTriAttackDescription] 88d7582eaf
+Dispara três tipos de\n
+raio ao mesmo tempo.
+
+[sSuperFangDescription] c61f3cc9c3
+Morde com presas afiadas\n
+e corta metade dos PS.
+
+[sSlashDescription] 324c75e854
+Corta com garras etc. Tem\n
+alta chance de crítico.
+
+[sSubstituteDescription] 8144b8f9b9
+Cria um boneco usando 1/4\n
+dos PS máximos.
+
+[sStruggleDescription] e29bccb79f
+Só quando os PP acabam.\n
+Também fere o usuário.
+
+[sSketchDescription] 05f8114d7c
+Copia para sempre o\n
+último golpe do alvo.
+
+[sTripleKickDescription] 76c7006d96
+Chuta 3 vezes seguidas,\n
+cada vez mais forte.
+
+[sThiefDescription] 056473f5fb
+Ao atacar, pode roubar\n
+o item do alvo.
+
+[sSpiderWebDescription] 462ccfc4a7
+Enreda o alvo para que\n
+não fuja nem troque.
+
+[sMindReaderDescription] a631690ef5
+Lê as ações do alvo para\n
+o próximo golpe acertar.
+
+[sNightmareDescription] 0d07e97f3e
+Tira 1/4 dos PS de um\n
+alvo adormecido por turno.
+
+[sFlameWheelDescription] 4495621de7
+Avanço em chamas que\n
+pode queimar o alvo.
+
+[sSnoreDescription] 08cc8bc3f2
+Um ataque barulhento que\n
+só funciona dormindo.
+
+[sCurseDescription] 4f43bcf932
+Um golpe que funciona\n
+diferente no tipo FANTASMA.
+
+[sFlailDescription] be78567b7d
+Mais dano quanto menos\n
+PS o usuário tiver.
+
+[sConversion2Description] c905ff7abe
+Resiste ao tipo do\n
+último ataque recebido.
+
+[sAeroblastDescription] 90eb822116
+Rajada de ar no vácuo.\n
+Alta chance de crítico.
+
+[sCottonSporeDescription] d06c1f94e3
+Esporos grudam no alvo e\n
+baixam muito a VELOC.
+
+[sReversalDescription] be78567b7d
+Mais dano quanto menos\n
+PS o usuário tiver.
+
+[sSpiteDescription] e7da6530ee
+Por rancor, corta os PP\n
+do último golpe do alvo.
+
+[sPowderSnowDescription] 9dcd478af9
+Atinge com neve gelada.\n
+Pode congelar.
+
+[sProtectDescription] 5a5fecd2fa
+Evita ataques, mas pode\n
+falhar se usado seguido.
+
+[sMachPunchDescription] 667f33d0dc
+Um soco tão rápido que\n
+sempre vem primeiro.
+
+[sScaryFaceDescription] 2ca9827984
+Faz cara feia e baixa\n
+muito a VELOC. do alvo.
+
+[sFaintAttackDescription] 473fa2c1f1
+Atrai o alvo e ataca\n
+sem nunca errar.
+
+[sSweetKissDescription] c016a8fbcb
+Pede um beijo com cara\n
+fofa. Pode confundir.
+
+[sBellyDrumDescription] e05d302a62
+Leva o ATAQUE ao máximo\n
+em troca de PS.
+
+[sSludgeBombDescription] 0a6ac85e59
+Arremessa lodo contra o\n
+alvo. Pode envenenar.
+
+[sMudSlapDescription] e6997024b4
+Joga lama na cara do alvo\n
+e baixa a PRECISÃO.
+
+[sOctazookaDescription] fef4b6f2c7
+Atira tinta que fere\n
+e baixa a PRECISÃO.
+
+[sSpikesDescription] eac43d990f
+Espalha espinhos que\n
+ferem quem entra.
+
+[sZapCannonDescription] a71dba824f
+Forte e sempre paralisa,\n
+mas tem pouca PRECISÃO.
+
+[sForesightDescription] f3d9c5a608
+Anula a esquiva extra\n
+do alvo.
+
+[sDestinyBondDescription] c444d40770
+Se o usuário desmaiar, o\n
+alvo desmaia junto.
+
+[sPerishSongDescription] e61456088c
+Quem ouve esta canção\n
+desmaia em 3 turnos.
+
+[sIcyWindDescription] 7fb5ef70be
+Um ataque gelado que\n
+baixa a VELOC. do alvo.
+
+[sDetectDescription] 5a5fecd2fa
+Evita ataques, mas pode\n
+falhar se usado seguido.
+
+[sBoneRushDescription] ada73393c2
+Bate no alvo com um osso\n
+de 2 a 5 vezes.
+
+[sLockOnDescription] fc6d876f1b
+Mira no alvo para o\n
+próximo golpe acertar.
+
+[sOutrageDescription] b023f34001
+Fúria de 2 a 3 turnos\n
+que confunde o usuário.
+
+[sSandstormDescription] 1802d68f1a
+Causa uma tempestade de\n
+areia por vários turnos.
+
+[sGigaDrainDescription] 6aff9e4320
+Um ataque que rouba\n
+metade do dano causado.
+
+[sEndureDescription] e594ea7096
+Aguenta 1 turno com\n
+pelo menos 1 PS.
+
+[sCharmDescription] dda57404a9
+Encanta o alvo e baixa\n
+muito o ATAQUE dele.
+
+[sRolloutDescription] 8c6d1f723e
+Ataque de 5 turnos, cada\n
+vez mais forte.
+
+[sFalseSwipeDescription] be1036c934
+Um ataque que deixa o\n
+alvo com pelo menos 1 PS.
+
+[sSwaggerDescription] b8f9e85500
+Confunde o alvo, mas sobe\n
+muito o ATAQUE dele.
+
+[sMilkDrinkDescription] 0b1f10d563
+Recupera até metade dos\n
+PS máximos do usuário.
+
+[sSparkDescription] 8c5809a45e
+Investida elétrica que\n
+pode paralisar o alvo.
+
+[sFuryCutterDescription] bc3e403435
+Um ataque mais forte a\n
+cada acerto seguido.
+
+[sSteelWingDescription] 32b5699635
+Atinge o alvo com asas\n
+duras bem abertas.
+
+[sMeanLookDescription] d953bce99a
+Um olhar malvado que\n
+impede a fuga.
+
+[sAttractDescription] bc374231d2
+O sexo oposto fica com\n
+menos vontade de atacar.
+
+[sSleepTalkDescription] cda875aabf
+Usa ao acaso um golpe\n
+seu enquanto dorme.
+
+[sHealBellDescription] 08b5a70e81
+Um sino suave que cura\n
+todos os problemas.
+
+[sReturnDescription] 244ed70228
+Um ataque mais forte\n
+quanto maior a amizade.
+
+[sPresentDescription] 1c0d2a7108
+Um presente que é uma\n
+bomba. Pode curar PS.
+
+[sFrustrationDescription] 77b2b9c3f1
+Mais forte se o POKéMON\n
+não gosta do TREINADOR.
+
+[sSafeguardDescription] fcfb371459
+Uma força mística que\n
+impede problemas de status.
+
+[sPainSplitDescription] b4a0a3fd9d
+Soma os PS do usuário e\n
+do alvo e divide igual.
+
+[sSacredFireDescription] fddb8ac2e0
+Ataque de fogo místico\n
+que pode queimar.
+
+[sMagnitudeDescription] fba4009d0a
+Um tremor de terra com\n
+força ao acaso.
+
+[sDynamicPunchDescription] f583e928dd
+Forte e sempre confunde,\n
+mas tem pouca PRECISÃO.
+
+[sMegahornDescription] 5216d8ebac
+Uma chifrada brutal com\n
+os chifres para frente.
+
+[sDragonBreathDescription] cb63b1344f
+Atinge o alvo com um\n
+sopro incrível.
+
+[sBatonPassDescription] b5e8656f4c
+Troca o usuário, mas os\n
+efeitos continuam.
+
+[sEncoreDescription] 1739d731d4
+O alvo repete o último\n
+golpe por 2 a 6 turnos.
+
+[sPursuitDescription] 9622148b6c
+Dano maior num alvo que\n
+está saindo da batalha.
+
+[sRapidSpinDescription] 9c981721bd
+Gira o corpo bem rápido\n
+para atingir o alvo.
+
+[sSweetScentDescription] be08529d1a
+Atrai o alvo e reduz\n
+a esquiva dele.
+
+[sIronTailDescription] b76bc6328e
+Ataca com cauda dura como\n
+pedra. Pode baixar a DEF.
+
+[sMetalClawDescription] f7d6a43a17
+Ataque com garras que\n
+pode subir o ATAQUE.
+
+[sVitalThrowDescription] 2fcf342f57
+O golpe vem por último,\n
+mas nunca erra.
+
+[sMorningSunDescription] 7a378919c0
+Recupera PS. A quantia\n
+depende do clima.
+
+[sSynthesisDescription] 7a378919c0
+Recupera PS. A quantia\n
+depende do clima.
+
+[sMoonlightDescription] 7a378919c0
+Recupera PS. A quantia\n
+depende do clima.
+
+[sHiddenPowerDescription] b3cf9758ae
+O efeito varia de\n
+POKéMON para POKéMON.
+
+[sCrossChopDescription] 5f5a15bf96
+Um golpe cruzado duplo.\n
+Alta chance de crítico.
+
+[sTwisterDescription] 5485b7ba86
+Cria um tornado violento\n
+que atinge o alvo.
+
+[sRainDanceDescription] 0cadcdff03
+Sobe o poder dos golpes\n
+de ÁGUA por 5 turnos.
+
+[sSunnyDayDescription] fea427495a
+Sobe o poder dos golpes\n
+de FOGO por 5 turnos.
+
+[sCrunchDescription] 7d6a284e67
+Mastiga com presas afiadas.\n
+Pode baixar a DEF. ESP.
+
+[sMirrorCoatDescription] 6d4b98f6c5
+Devolve um ataque especial\n
+com o dobro da força.
+
+[sPsychUpDescription] 658211e3cd
+Copia os efeitos do alvo\n
+para o usuário.
+
+[sExtremeSpeedDescription] 892e7f4e2f
+Um ataque rapidíssimo\n
+e muito forte.
+
+[sAncientPowerDescription] 7bb4906226
+Um ataque que pode subir\n
+todos os atributos.
+
+[sShadowBallDescription] b58bfeac2c
+Atira uma massa negra que\n
+pode baixar a DEF. ESP.
+
+[sFutureSightDescription] 04e4c56955
+Concentra o poder para\n
+atacar 2 turnos depois.
+
+[sRockSmashDescription] 86afb4e891
+Um ataque que quebra\n
+pedras. Pode baixar a DEF.
+
+[sWhirlpoolDescription] d67e45f205
+Prende o alvo num redemo-\n
+inho por 2 a 5 turnos.
+
+[sBeatUpDescription] 0a11666678
+Chama a equipe para\n
+participar do ataque.
+
+[sFakeOutDescription] ab65a8e1ad
+Ataca primeiro no 1º turno\n
+e faz o alvo hesitar.
+
+[sUproarDescription] 2ab20201ed
+Faz barulho por 2 a 5\n
+turnos e impede o sono.
+
+[sStockpileDescription] f5e75f14cf
+Acumula força por até\n
+3 turnos.
+
+[sSpitUpDescription] 4e68192122
+Solta a força acumulada\n
+(quanto mais, melhor).
+
+[sSwallowDescription] c75b55a2e0
+Absorve a força acumulada\n
+e recupera PS.
+
+[sHeatWaveDescription] 194aed0b5b
+Sopra ar quente no alvo.\n
+Pode queimar.
+
+[sHailDescription] b16705176f
+Chama uma chuva de\n
+granizo que fere por turno.
+
+[sTormentDescription] 62f07a8474
+Atormenta o alvo, que não\n
+repete o mesmo golpe.
+
+[sFlatterDescription] 422aa50450
+Confunde o alvo, mas\n
+sobe o AT. ESP. dele.
+
+[sWillOWispDescription] 817462db50
+Queima o alvo com um\n
+fogo intenso.
+
+[sMementoDescription] cfa243d066
+O usuário desmaia e baixa\n
+os atributos do alvo.
+
+[sFacadeDescription] 47f8557da2
+Sobe o ATAQUE se tiver\n
+queimadura, paralisia etc.
+
+[sFocusPunchDescription] 4b864650e8
+Um soco fortíssimo. Falha\n
+se o usuário for atingido.
+
+[sSmellingSaltDescription] 2edac2b0fe
+Forte contra alvos para-\n
+lisados, mas os cura.
+
+[sFollowMeDescription] 3f4ef12be6
+Chama a atenção para que\n
+só ataquem o usuário.
+
+[sNaturePowerDescription] 60581c9930
+O tipo do ataque muda\n
+conforme o lugar.
+
+[sChargeDescription] 8b51b34565
+Carrega energia para o\n
+próximo golpe elétrico.
+
+[sTauntDescription] cb68198fc5
+Provoca o alvo, que só\n
+pode usar golpes de ataque.
+
+[sHelpingHandDescription] 81364e037c
+Sobe o poder dos golpes\n
+do parceiro.
+
+[sTrickDescription] dd6101c6c4
+Engana o alvo e troca\n
+os itens segurados.
+
+[sRolePlayDescription] 4f9e83cf50
+Imita o alvo e copia a\n
+habilidade dele.
+
+[sWishDescription] 0660224842
+Um desejo que recupera\n
+PS. Demora a fazer efeito.
+
+[sAssistDescription] 719da9cfd3
+Ataca com um golpe\n
+qualquer da equipe.
+
+[sIngrainDescription] d21a08666d
+Cria raízes que curam PS.\n
+O usuário não pode trocar.
+
+[sSuperpowerDescription] 4c703b3579
+Sobe muito a força, mas\n
+baixa os atributos.
+
+[sMagicCoatDescription] a29b36e373
+Devolve efeitos especiais\n
+para quem os usou.
+
+[sRecycleDescription] bc7b2aeb5b
+Recicla um item usado\n
+para usá-lo de novo.
+
+[sRevengeDescription] e2e4246e3a
+Fica mais forte se o\n
+usuário já foi ferido.
+
+[sBrickBreakDescription] 14e70b5595
+Quebra barreiras como\n
+REFLETIR e causa dano.
+
+[sYawnDescription] 98900ff610
+Faz o alvo bocejar e\n
+dormir no turno seguinte.
+
+[sKnockOffDescription] 12adf9262d
+Derruba o item do alvo\n
+para que não o use.
+
+[sEndeavorDescription] 25336d564d
+Mais forte se os PS do\n
+usuário forem menores.
+
+[sEruptionDescription] ea8fbb3072
+Quanto mais PS o usuário\n
+tiver, maior o dano.
+
+[sSkillSwapDescription] c4ae9918c7
+O usuário troca de\n
+habilidade com o alvo.
+
+[sImprisonDescription] fe44f1d62b
+Impede o alvo de usar os\n
+golpes que o usuário sabe.
+
+[sRefreshDescription] d565c8df6c
+Cura envenenamento,\n
+paralisia ou queimadura.
+
+[sGrudgeDescription] 87dabf48e6
+Se desmaiar, zera os PP\n
+do último golpe do alvo.
+
+[sSnatchDescription] 050e7dca07
+Rouba o efeito do golpe\n
+que o alvo vai usar.
+
+[sSecretPowerDescription] 87e939bd5e
+Um ataque com efeitos\n
+que variam com o lugar.
+
+[sDiveDescription] ad937989ee
+Mergulha no 1º turno e\n
+ataca no turno seguinte.
+
+[sArmThrustDescription] b2e24a287c
+Golpes de braço reto que\n
+acertam de 2 a 5 vezes.
+
+[sCamouflageDescription] 5227f33838
+Muda o tipo do POKéMON\n
+conforme o lugar.
+
+[sTailGlowDescription] dce94cbc29
+Solta uma luz que sobe\n
+muito o AT. ESP.
+
+[sLusterPurgeDescription] 283fee4b77
+Ataca com uma luz forte.\n
+Pode baixar a DEF. ESP.
+
+[sMistBallDescription] 435f400128
+Ataca com penugem. Pode\n
+baixar o AT. ESP.
+
+[sFeatherDanceDescription] 69495dab94
+Cobre o alvo de penas e\n
+baixa muito o ATAQUE.
+
+[sTeeterDanceDescription] 2902140a35
+Confunde todos os\n
+POKéMON em campo.
+
+[sBlazeKickDescription] f1016c8c28
+Chute com alta chance de\n
+crítico. Pode queimar.
+
+[sMudSportDescription] d12cc25ffc
+Se cobre de lama para\n
+resistir à eletricidade.
+
+[sIceBallDescription] 35a54e4f98
+Ataque de 5 turnos que\n
+fica mais forte a cada vez.
+
+[sNeedleArmDescription] c5dbd3f44d
+Ataca com braços de\n
+espinho. Pode fazer hesitar.
+
+[sSlackOffDescription] 6b3064b716
+Fica de boa e recupera\n
+metade dos PS máximos.
+
+[sHyperVoiceDescription] fcb407abc0
+Ataque barulhento que\n
+fere com ondas sonoras.
+
+[sPoisonFangDescription] 8e2e4f9b9b
+Mordida com presas.\n
+Pode envenenar feio.
+
+[sCrushClawDescription] 67432eeac5
+Rasga com garras afiadas.\n
+Pode baixar a DEFESA.
+
+[sBlastBurnDescription] 883a4e6419
+Forte, mas o usuário fica\n
+parado no turno seguinte.
+
+[sHydroCannonDescription] 883a4e6419
+Forte, mas o usuário fica\n
+parado no turno seguinte.
+
+[sMeteorMashDescription] ac488e7c3e
+Um soco como um meteoro.\n
+Pode subir o ATAQUE.
+
+[sAstonishDescription] f92c44c032
+Um ataque que assusta e\n
+pode fazer o alvo hesitar.
+
+[sWeatherBallDescription] bde6f80ea2
+O tipo e o poder mudam\n
+conforme o clima.
+
+[sAromatherapyDescription] 62624240d1
+Um aroma suave que cura\n
+todos os problemas.
+
+[sFakeTearsDescription] bf869483ab
+Finge chorar e baixa\n
+muito a DEF. ESP. do alvo.
+
+[sAirCutterDescription] cf1331ab4f
+Corta com vento afiado.\n
+Alta chance de crítico.
+
+[sOverheatDescription] 91b95fd937
+Ataque com força total, mas\n
+baixa muito o AT. ESP.
+
+[sOdorSleuthDescription] f3d9c5a608
+Anula a esquiva extra\n
+do alvo.
+
+[sRockTombDescription] ddf28e731c
+Prende o alvo com pedras\n
+e baixa a VELOC.
+
+[sSilverWindDescription] 0c7527bfef
+Um ataque de pó que pode\n
+subir os atributos.
+
+[sMetalSoundDescription] 8606ec2657
+Um ruído horrível que\n
+baixa muito a DEF. ESP.
+
+[sGrassWhistleDescription] c8796a0de8
+Faz o alvo dormir com\n
+uma melodia gostosa.
+
+[sTickleDescription] 3d7af56e1e
+Faz o alvo rir e baixa\n
+o ATAQUE e a DEFESA.
+
+[sCosmicPowerDescription] 202291fdfb
+Sobe a DEFESA e a DEF.\n
+ESP. com um poder místico.
+
+[sWaterSpoutDescription] 96f9abe4e7
+Mais dano quanto mais PS\n
+o usuário tiver.
+
+[sSignalBeamDescription] 3b01d318ea
+Um raio estranho que\n
+pode confundir o alvo.
+
+[sShadowPunchDescription] 3dd5689c75
+Um soco das sombras\n
+que não dá para desviar.
+
+[sExtrasensoryDescription] b9647a49e7
+Um poder estranho que\n
+pode fazer o alvo hesitar.
+
+[sSkyUppercutDescription] dc74b7f126
+Um gancho dado como se\n
+pulasse para o céu.
+
+[sSandTombDescription] 7f549bf008
+Prende o alvo em areia\n
+movediça por 2 a 5 turnos.
+
+[sSheerColdDescription] 3ceca263aa
+Um ataque gelado que, se\n
+acertar, nocauteia.
+
+[sMuddyWaterDescription] 1328bae6de
+Ataca com água barrenta.\n
+Pode baixar a PRECISÃO.
+
+[sBulletSeedDescription] 5889ff091f
+Dispara de 2 a 5 sementes\n
+seguidas no alvo.
+
+[sAerialAceDescription] 129e56dd82
+Um ataque rapidíssimo\n
+que não dá para desviar.
+
+[sIcicleSpearDescription] e67df5b86f
+Dispara de 2 a 5\n
+pingentes de gelo seguidos.
+
+[sIronDefenseDescription] 9f1abed876
+Endurece o corpo para\n
+subir muito a DEFESA.
+
+[sBlockDescription] 594333b55c
+Fecha o caminho do alvo\n
+para impedir a fuga.
+
+[sHowlDescription] 0f02c00279
+Uiva para se animar e\n
+sobe o ATAQUE.
+
+[sDragonClawDescription] 9d82f96ff8
+Corta o alvo com garras\n
+afiadas.
+
+[sFrenzyPlantDescription] 883a4e6419
+Forte, mas o usuário fica\n
+parado no turno seguinte.
+
+[sBulkUpDescription] 24402171b1
+Infla os músculos e sobe\n
+o ATAQUE e a DEFESA.
+
+[sBounceDescription] 3a095e4ef2
+Pula e cai no turno\n
+seguinte. Pode paralisar.
+
+[sMudShotDescription] cce33d482b
+Atira lama no alvo e\n
+baixa a VELOC.
+
+[sPoisonTailDescription] abe9a1a890
+Alta chance de crítico.\n
+Pode envenenar.
+
+[sCovetDescription] 92f24a05b3
+Pede com jeitinho o item\n
+que o alvo segura.
+
+[sVoltTackleDescription] 79c7d2a087
+Investida arriscada que\n
+fere um pouco o usuário.
+
+[sMagicalLeafDescription] 812fd68122
+Ataca com uma folha\n
+estranha que nunca erra.
+
+[sWaterSportDescription] 261c98e904
+Se encharca para\n
+resistir ao fogo.
+
+[sCalmMindDescription] 29c64e613b
+Concentra a mente e sobe\n
+o AT. ESP. e a DEF. ESP.
+
+[sLeafBladeDescription] dbed280cfe
+Corta com uma folha afiada.\n
+Alta chance de crítico.
+
+[sDragonDanceDescription] b0cc1177cc
+Uma dança mística que\n
+sobe ATAQUE e VELOC.
+
+[sRockBlastDescription] 6f4d639461
+Arremessa rochas no alvo\n
+de 2 a 5 vezes seguidas.
+
+[sShockWaveDescription] 47fb4379d8
+Um ataque elétrico rápido\n
+que não dá para desviar.
+
+[sWaterPulseDescription] 22346e8f9b
+Ataca com ondas ultras-\n
+sônicas. Pode confundir.
+
+[sDoomDesireDescription] 976706a491
+Chama a luz do sol para\n
+atacar 2 turnos depois.
+
+[sPsychoBoostDescription] 91b95fd937
+Ataque com força total, mas\n
+baixa muito o AT. ESP.

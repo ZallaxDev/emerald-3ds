@@ -1,0 +1,19 @@
+# CIDADE DE LAVARIDGE: o CENTRO POKéMON.
+
+[LavaridgeTown_PokemonCenter_1F_Text_TrainersPokemonSpendTimeTogether] b20ca1723f
+Acho que os POKéMON se aproximam dos\n
+TREINADORES quando ficam juntos.\p
+Quanto mais tempo, melhor.\n
+É o que eu acho.$
+
+[LavaridgeTown_PokemonCenter_1F_Text_HotSpringCanInvigorate] 082de5c0b6
+É meio mágico como só ficar numa\n
+piscina termal já dá energia.\p
+Queria poder deixar os meus POKéMON\n
+de molho também.$
+
+[LavaridgeTown_PokemonCenter_1F_Text_TrainersShouldRestToo] 20e3e8bb95
+Hohoho! Ei, criança, dá pra chegar\n
+nas fontes termais por aqui.\p
+Se os POKéMON descansam, os\n
+TREINADORES também devem descansar.$

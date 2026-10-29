@@ -1,0 +1,19 @@
+# CIDADE DE FORTREE: a casa de quem conheceu o STEVEN.
+
+[FortreeCity_House3_Text_MetStevenHadAmazingPokemon] d5dab3960e
+Falando de POKéDEX, lembrei de uma\n
+coisa.\p
+Conheci um TREINADOR, o STEVEN,\n
+quando procurava pedras raras.\p
+Nossa, ele tinha uns POKéMON\n
+incríveis.\p
+Não eram só raros: eram treinados\n
+a um nível assustador!\p
+Ele pode ser até mais forte que a\n
+LÍDER do GINÁSIO desta cidade…$
+
+[FortreeCity_House3_Text_OhYouHavePokedex] 667acf31fc
+O que é isso aí com você?\p
+… … … … … …\p
+Ah, se chama POKéDEX?\n
+Que demais!$

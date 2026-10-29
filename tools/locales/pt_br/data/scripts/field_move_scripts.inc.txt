@@ -1,0 +1,55 @@
+# Golpes de campo: CORTE, ESMAGA PEDRA, FORÇA, CACHOEIRA e MERGULHO.
+
+[Text_WantToCut] b909125e4d
+Parece que dá pra derrubar esta\nárvore com CORTE!\pQuer usar CORTE?$
+
+[Text_MonUsedFieldMove] 3183671143
+{STR_VAR_1} usou {STR_VAR_2}!$
+
+[Text_CantCut] fd0dabc6f0
+Parece que dá pra derrubar esta\nárvore com CORTE!$
+
+[Text_WantToSmash] c7f523f872
+Parece que dá pra quebrar esta pedra.\nQuer usar ESMAGA PEDRA?$
+
+[Text_CantSmash] d43cba62b3
+É uma pedra bruta, mas um POKéMON\ntalvez consiga quebrá-la.$
+
+[Text_WantToStrength] 7d9382c206
+É uma rocha enorme, mas um POKéMON\ntalvez consiga empurrá-la.\pQuer usar FORÇA?$
+
+[Text_MonUsedStrength] 82b5af72f7
+{STR_VAR_1} usou FORÇA!\pCom a FORÇA de {STR_VAR_1},\ndá pra mover as rochas!$
+
+[Text_CantStrength] c2d2f0fa7d
+É uma rocha enorme, mas um POKéMON\ntalvez consiga empurrá-la.$
+
+[Text_StrengthActivated] 7c96f319fe
+Com FORÇA, dá pra mover\nas rochas.$
+
+[Text_CantWaterfall] 1d07b25e02
+Uma parede de água despenca\ncom um rugido forte.$
+
+[Text_WantToWaterfall] 4b18966e53
+É uma cachoeira enorme.\nQuer usar CACHOEIRA?$
+
+[Text_MonUsedWaterfall] e8086528b4
+{STR_VAR_1} usou CACHOEIRA.$
+
+[Text_CantDive] a7310180f4
+O mar é fundo aqui. Um POKéMON\ntalvez consiga mergulhar.$
+
+[Text_WantToDive] 0128b6a735
+O mar é fundo aqui.\nQuer usar MERGULHO?$
+
+[Text_MonUsedDive] 3de7899cdd
+{STR_VAR_1} usou MERGULHO.$
+
+[Text_CantSurface] 41b02842c5
+A luz vem lá de cima.\nUm POKéMON talvez consiga subir.$
+
+[Text_WantToSurface] b83e4efae6
+A luz vem lá de cima.\nQuer usar MERGULHO?$
+
+[Text_FailSweetScent] d2e9573796
+Parece que não tem nada aqui…$

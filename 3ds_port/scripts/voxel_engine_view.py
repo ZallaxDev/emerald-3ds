@@ -69,10 +69,15 @@ SCRATCH = 8192 + 64 * 18          # ctr_voxel.c VOXEL_CHUNK_SCRATCH
 # its own block, the largest ~80 KiB. To confirm on the console: no "no
 # linear memory" line in port.log.
 STATIC_BUDGET = 160 * 1024
-PAGE_ARENA = 1024 * 1024          # ctr_voxel.c VOXEL_PAGE_VRAM_BUDGET
+PAGE_ARENA = 1088 * 1024          # ctr_voxel.c VOXEL_PAGE_VRAM_BUDGET
 SHAPE_FLAT, SHAPE_WATER = 0, 7    # voxel_world.h VoxelVisualShape
 SUN_DX, SUN_DZ, AMBIENT = 0.85, 0.55, 0.70
 TREE_DIM = 128
+# the secondary tilesets voxel_tree.c tells apart, as voxel_scene_dump.c reads them
+TREE_TILESETS = {"gTileset_Dewford": 1, "gTileset_Fortree": 2, "gTileset_Mauville": 3,
+                 "gTileset_Lavaridge": 4, "gTileset_Rustboro": 5, "gTileset_Lilycove": 6,
+                 "gTileset_EverGrande": 7, "gTileset_BattleFrontierOutsideWest": 8,
+                 "gTileset_Mossdeep": 9, "gTileset_Fallarbor": 10}
 
 
 def build_dump():
@@ -113,15 +118,17 @@ class Buildings:
     def __init__(self, path=None):
         with open(path or os.path.join(PORT, "romfs", "voxel", "buildings.bin"), "rb") as source:
             b = self.blob = source.read()
-        if b[:4] != b"VXB8":
+        if b[:4] not in (b"VXB8", b"VXB9"):
             raise ValueError("unsupported buildings format: %r" % b[:4])
         (npages, nmodels, npm, nplaces, hbytes, nmasks) = struct.unpack_from("<6H", b, 4)
         nverts, nvar, ndecks = struct.unpack_from("<IHH", b, 16)
-        o = 24
+        # VXB9: the placements' conditions (voxel_building.c PlacementLive)
+        nconds = struct.unpack_from("<H", b, 24)[0] if b[:4] == b"VXB9" else 0
+        head = o = 28 if b[:4] == b"VXB9" else 24
         raw_pages = [struct.unpack_from("<HHI", b, o + 8 * i) for i in range(npages)]
-        self.page_glow = [b[:4] == b"VXB8" and bool(height & 0x8000)
+        self.page_glow = [b[:4] in (b"VXB8", b"VXB9") and bool(height & 0x8000)
                           for width, height, offset in raw_pages]
-        self.pages = [(width, height & 0x7FFF if b[:4] == b"VXB8" else height, offset)
+        self.pages = [(width, height & 0x7FFF if b[:4] in (b"VXB8", b"VXB9") else height, offset)
                       for width, height, offset in raw_pages]
         o += npages * 8
         self.models = []
@@ -135,7 +142,7 @@ class Buildings:
         self.placements = [struct.unpack_from("<HHHHHHI", b, o + 16 * i) for i in range(nplaces)]
         o += nplaces * 16
         # a model's cells: its offset into them, 255 a cell it does not own
-        self.model_heights = [struct.unpack_from("<I", b, 24 + npages * 8 + 16 * i + 12)[0]
+        self.model_heights = [struct.unpack_from("<I", b, head + npages * 8 + 16 * i + 12)[0]
                               for i in range(nmodels)]
         self.heights = b[o:o + hbytes]
         o += hbytes
@@ -143,6 +150,12 @@ class Buildings:
         o += hbytes * 2 + nmasks * 32 + hbytes
         o += o & 1
         o += nvar * 6 + ndecks * 8
+        # placement index -> (metatile, x, y): it stands while that cell holds it
+        self.conditions = {}
+        for i in range(nconds):
+            k, metatile, x, y = struct.unpack_from("<HHBB", b, o + 6 * i)
+            self.conditions[k] = (metatile, x, y)
+        o += nconds * 6
         o += (-o) & 3
         self.vert_at = o
         self._pages = {}
@@ -252,7 +265,7 @@ def dump(layout_id):
     primary, secondary = entry["primary_tileset"], entry["secondary_tileset"]
     indoor = primary != "gTileset_General"
     flags = (1 if indoor else 0) | (2 if primary == "gTileset_General" else 0) \
-        | (4 if secondary == "gTileset_Dewford" else 0)
+        | TREE_TILESETS.get(secondary, 0) << 2
     tmp = os.path.join(PORT, "build", "scene_%s_%d" % (layout_id, os.getpid()))
     with open(tmp + ".in", "wb") as f:
         f.write(struct.pack("<HHHH", index, w, h, flags))
@@ -579,12 +592,8 @@ def static_bytes(bld, page_model):
 def layout_pages(bld):
     """Layout id (1-based) -> its page's (width, rows), from the placements
     (one page a layout)."""
-    b = bld.blob
-    npages, nmodels, npm, nplaces = struct.unpack_from("<4H", b, 4)
-    o = 24 + npages * 8 + nmodels * 16 + npm * 8
     out = {}
-    for i in range(nplaces):
-        lid, pm = struct.unpack_from("<HH", b, o + 16 * i)
+    for lid, pm, *_ in bld.placements:
         out[lid] = bld.pages[bld.page_models[pm][1]][:2]
     return out
 

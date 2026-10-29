@@ -21,3 +21,8 @@ uint16_t CtrEncounters_Resolve(const CtrTimedEncounterRule *rules, size_t count,
             return rules[index].species[phase];
     return original;
 }
+
+bool CtrEncounters_PlayerInWater(bool surfing, bool underwater)
+{
+    return surfing || underwater;
+}

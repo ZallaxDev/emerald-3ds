@@ -1,0 +1,46 @@
+Seed normal 3DS boots/resets and portable trainer-ID generation from console timing.
+Keep legacy seed values for deterministic scenario recording/playback.
+
+diff --git a/src/main.c b/src/main.c
+--- a/src/main.c
++++ b/src/main.c
+@@ -30,6 +30,9 @@
+ #ifdef PORT_BRIDGE
+ #include "port_platform.h"
+ #include "port_log.h"
++#ifdef PLATFORM_3DS
++u16 Port_RngSeed(u16 fallback);
++#endif
+ #endif
+
+ static void VBlankIntr(void);
+@@ -140,7 +143,9 @@
+     PORT_BOOT_STEP(0xA009);
+     InitMapMusic();
+     PORT_BOOT_STEP(0xA00A);
+-#ifdef BUGFIX
++#if defined(PLATFORM_3DS) && defined(PORT_BRIDGE)
++    SeedRng(Port_RngSeed(0));
++#elif defined(BUGFIX)
+     SeedRngWithRtc(); // see comment at SeedRngWithRtc definition below
+ #endif
+     PORT_BOOT_STEP(0xA00B);
+diff --git a/src/new_game.c b/src/new_game.c
+--- a/src/new_game.c
++++ b/src/new_game.c
+@@ -88,8 +88,15 @@
+     }
+ }
+
++#if defined(PLATFORM_3DS) && defined(PORT_BRIDGE) && defined(PORTABLE)
++void Port_ReseedForNewGame(void);
++#endif
++
+ static void InitPlayerTrainerId(void)
+ {
++#if defined(PLATFORM_3DS) && defined(PORT_BRIDGE) && defined(PORTABLE)
++    Port_ReseedForNewGame();
++#endif
+ #ifndef PORTABLE
+     u32 trainerId = (Random() << 16) | GetGeneratedTrainerIdLower();
+ #else // Since Emerald generates the TID FRLG-style, based on a hardware timer, it won't work on other platforms

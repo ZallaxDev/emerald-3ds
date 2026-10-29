@@ -1,0 +1,59 @@
+# CAVERNA DA ORIGEM: o WALLACE e a pergunta sobre o RAYQUAZA.
+
+[CaveOfOrigin_B1F_Text_WallaceStory] f8956fd6b4
+Ah, então você é {PLAYER}{KUN}?\n
+Ouvi falar das suas façanhas.\p
+O meu nome é WALLACE.\p
+Eu era o LÍDER do GINÁSIO de\n
+SOOTOPOLIS, mas surgiu um assunto.\p
+Então confiei o GINÁSIO ao meu\n
+mestre, o JUAN.\p
+… … … … … …\n
+… … … … … …\p
+GROUDON e KYOGRE, os dois POKéMON\n
+que estão causando este caos, são\l
+considerados POKéMON superantigos.\p
+Mas não existem só dois POKéMON\n
+superantigos.\p
+Há mais um em algum lugar.\p
+Em algum lugar, existe um POKéMON\n
+superantigo chamado RAYQUAZA.\p
+Dizem que foi o RAYQUAZA que acalmou\n
+os dois combatentes num passado\l
+distante.\p
+Mas nem eu faço ideia de onde\n
+o RAYQUAZA esteja…$
+
+[CaveOfOrigin_B1F_Text_WhereIsRayquaza] 9db7e0fba1
+WALLACE: {PLAYER}{KUN}, por acaso sabe\n
+onde o RAYQUAZA está agora?\p
+Se souber, por favor, me diga.$
+
+[CaveOfOrigin_B1F_Text_ButWereInCaveOfOrigin] 89eb687263
+WALLACE: A CAVERNA DA ORIGEM?\p
+Mas é aqui mesmo!\n
+Preciso de algo melhor que isso!\p
+Por favor, pense onde o RAYQUAZA\n
+pode estar agora.$
+
+[CaveOfOrigin_B1F_Text_OldLadyDidntMentionThat] 950cd87366
+WALLACE: O MONTE PYRE?\p
+Mas, quando encontrei a senhora de\n
+lá agora há pouco, ela não disse nada.\p
+Duvido muito que a senhora\n
+escondesse algo de mim…\p
+{PLAYER}{KUN}, pode pensar nisso com\n
+mais calma pra mim?$
+
+[CaveOfOrigin_B1F_Text_CantYouRememberSomehow] 78e977dd3e
+WALLACE: Hã? Não se lembra?\n
+Hum… Isso é um problema…\p
+Não consegue se lembrar de algum\n
+jeito?$
+
+[CaveOfOrigin_B1F_Text_WellHeadToSkyPillar] 546b3ba4a4
+WALLACE: O PILAR CELESTE?\p
+É isso!\n
+Só pode ser o PILAR CELESTE!\p
+{PLAYER}{KUN}, não há tempo a perder!\n
+Vamos já pro PILAR CELESTE!$

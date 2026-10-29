@@ -1,0 +1,43 @@
+# CASA DOS TRUQUES, sala 8.
+
+[Route110_TrickHousePuzzle8_Text_WroteSecretCodeLockOpened] 6cd887219b
+{PLAYER} escreveu a senha secreta\n
+na porta.\p
+“Eu amo o MESTRE DOS TRUQUES.”\n
+… … … … … … … …\p
+A fechadura abriu com um clique!$
+
+[Route110_TrickHousePuzzle8_Text_VincentIntro] 6250f343d9
+Poucos TREINADORES chegaram\n
+até aqui.$
+
+[Route110_TrickHousePuzzle8_Text_VincentDefeat] 7ca74a3234
+Então você também tem força…$
+
+[Route110_TrickHousePuzzle8_Text_VincentPostBattle] 8f1ef3b8d3
+Você venceu o CAMPEÃO da LIGA\n
+POKéMON? Aí já é demais!$
+
+[Route110_TrickHousePuzzle8_Text_KeiraIntro] 0b54270ead
+Considere-se com sorte por batalhar\n
+comigo!$
+
+[Route110_TrickHousePuzzle8_Text_KeiraDefeat] 0864ff6d18
+Isso não está certo!\n
+Eu não posso perder!$
+
+[Route110_TrickHousePuzzle8_Text_KeiraPostBattle] 0f593c5407
+É um milagre você ter me vencido.\n
+Pode se gabar disso.$
+
+[Route110_TrickHousePuzzle8_Text_LeroyIntro] 7bf399f844
+Você também está encarando o desafio\n
+da CASA DOS TRUQUES.$
+
+[Route110_TrickHousePuzzle8_Text_LeroyDefeat] a3c1d88961
+Entendo…\n
+Você tem um estilo extraordinário.$
+
+[Route110_TrickHousePuzzle8_Text_LeroyPostBattle] 5d3a5795fb
+Ver alguém como você deve agradar\n
+o MESTRE DOS TRUQUES.$

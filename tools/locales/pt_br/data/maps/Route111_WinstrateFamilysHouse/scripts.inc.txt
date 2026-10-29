@@ -1,0 +1,45 @@
+# ROTA 111: a casa da família WINSTRATE.
+
+[Route111_WinstrateFamilysHouse_Text_MySonIsStrongerThanYou] 1b407f28e2
+Nunca vi um TREINADOR usar POKéMON\n
+com tanta habilidade.\p
+Mas fique sabendo: o meu filho é\n
+mais forte que você.\p
+Ele até desafiou a LIGA POKéMON,\n
+viu?$
+
+[Route111_WinstrateFamilysHouse_Text_LikeYouToHaveMachoBrace] a02d5ed33d
+A gente usa esta PULSEIRA MACHO pra\n
+fortalecer melhor os POKéMON\l
+no treino.\p
+Você venceu todos nós, então não sei\n
+se precisa, mas queremos que\l
+fique com a nossa PULSEIRA MACHO.$
+
+[Route111_WinstrateFamilysHouse_Text_PassionateAboutBattles] fe06e13734
+Quando o assunto é batalha POKéMON,\n
+a gente se empolga mesmo.$
+
+[Route111_WinstrateFamilysHouse_Text_StrongerFamilyMembers] 7cf456f234
+A mamãe é mais forte que o papai.\p
+Eu sou mais forte que a mamãe.\p
+E a vovó é mais forte que eu!\p
+Mas o meu irmão mais velho é mais\n
+forte que a vovó.$
+
+[Route111_WinstrateFamilysHouse_Text_GrandsonStrong] de0b29cd21
+Não há dúvida de que você é forte.\p
+Mas, se enfrentasse o meu neto,\n
+acabaria chorando de raiva.\p
+Ele é mais forte que qualquer\n
+TREINADOR que a gente conhece.\p
+A esta altura, deve estar desafiando\n
+o CAMPEÃO da LIGA POKéMON.\p
+Conhecendo o meu neto, ele já pode\n
+ser o CAMPEÃO!$
+
+[Route111_WinstrateFamilysHouse_Text_GrandsonStrongShort] 865e3e7bdc
+A esta altura, o meu neto deve estar\n
+desafiando o CAMPEÃO da LIGA POKéMON.\p
+Conhecendo o meu neto, ele já pode\n
+ser o CAMPEÃO!$

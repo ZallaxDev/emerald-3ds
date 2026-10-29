@@ -1,0 +1,19 @@
+# ESCONDERIJO MAGMA: 3º andar, outra sala.
+
+[MagmaHideout_3F_2R_Text_Grunt10Intro] 6df408c6b0
+Entendo tudo o que o nosso líder diz.\n
+Mas sabe de uma coisa?\p
+Desenterrar um POKéMON superantigo\n
+e roubar o METEORITO dos outros…\p
+Acho que a gente está passando\n
+dos limites. O que você acha?$
+
+[MagmaHideout_3F_2R_Text_Grunt10Defeat] 33fe385848
+É, acho que tem alguma coisa errada\n
+no que a gente faz.$
+
+[MagmaHideout_3F_2R_Text_Grunt10PostBattle] db9abf40ca
+Sabe, perder pra você clareou as\n
+minhas ideias.\p
+Da próxima vez que vir o nosso líder,\n
+vou perguntar o que a gente faz.$

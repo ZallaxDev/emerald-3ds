@@ -1,0 +1,26 @@
+Pokémon Emerald 3Ds Dual Screen changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: a POKéMON's category with "POKéMON" before or after it
+Applies after 0058-portuguese-battle-word-order.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/international_string_util.c b/src/international_string_util.c
+--- a/src/international_string_util.c
++++ b/src/international_string_util.c
+@@ -83,11 +83,16 @@
+     return finalWidth;
+ }
+ 
++// Around a POKéMON's category ("SEED POKéMON"), for languages that put
++// "POKéMON" first.
++static const u8 sText_CategoryPrefix[] = _("");
++static const u8 sText_CategorySuffix[] = _(" POKéMON");
++
+ void CopyMonCategoryText(int dexNum, u8 *dest)
+ {
+-    u8 *str = StringCopy(dest, gPokedexEntries[dexNum].categoryName);
+-    *str = CHAR_SPACE;
+-    StringCopy(str + 1, gText_Pokemon);
++    u8 *str = StringCopy(dest, sText_CategoryPrefix);
++    str = StringCopy(str, gPokedexEntries[dexNum].categoryName);
++    StringCopy(str, sText_CategorySuffix);
+ }
+ 
+ u8 *GetStringClearToWidth(u8 *dest, int fontId, const u8 *str, int totalStringWidth)

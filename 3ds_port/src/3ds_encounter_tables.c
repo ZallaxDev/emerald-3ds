@@ -59,3 +59,10 @@ const struct WildPokemonInfo *CtrEncounters_Land(const struct WildPokemonInfo *o
     timed.wildPokemon = slots;
     return &timed;
 }
+
+/* A separately enabled wild randomizer overrides this identity projection.
+ * Keep it side-effect-free: the bottom-screen snapshot reads it every frame. */
+__attribute__((weak)) uint16_t CtrEncounters_DisplaySpecies(uint16_t species)
+{
+    return species;
+}

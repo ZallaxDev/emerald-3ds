@@ -1,0 +1,940 @@
+# A página CONFERIR dos contatos do POKéNAV (src/data/text/match_call_messages.h):
+# estratégia, POKéMON e duas linhas de apresentação de cada TREINADOR. A lista
+# tem 16 tiles na fonte estreita, onde cabem os 147 px da fonte normal da
+# linha mais larga do inglês.
+
+[gText_MatchCallAromaLady_Rose_Strategy] 3a6c858fe0 width=147
+Acalmar o calor da luta.
+
+[gText_MatchCallAromaLady_Rose_Pokemon] da99f39078 width=147
+POKéMON PLANTA perfumados.
+
+[gText_MatchCallAromaLady_Rose_Intro1] a2b571b356 width=147
+Aromas calmantes deixam
+
+[gText_MatchCallAromaLady_Rose_Intro2] 274299c072 width=147
+corpo e mente saudáveis.
+
+[gText_MatchCallRuinManiac_Andres_Strategy] 39f99cca7d width=147
+Não sou muito bom nisso.
+
+[gText_MatchCallRuinManiac_Andres_Pokemon] e07b2e5834 width=147
+Parceiros de exploração.
+
+[gText_MatchCallRuinManiac_Andres_Intro1] 0070531a6f width=147
+Procuro ruínas e relíquias
+
+[gText_MatchCallRuinManiac_Andres_Intro2] 56036af173 width=147
+no fundo do mar.
+
+[gText_MatchCallRuinManiac_Dusty_Strategy] d8b1bf3b80 width=147
+Esmagar com força!
+
+[gText_MatchCallRuinManiac_Dusty_Pokemon] 5207b26aed width=147
+POKéMON PEDRA escarpados.
+
+[gText_MatchCallRuinManiac_Dusty_Intro1] fb5336b64e width=147
+Atrás de saberes antigos,
+
+[gText_MatchCallRuinManiac_Dusty_Intro2] 5069713556 width=147
+eu viajo pelo mundo.
+
+[gText_MatchCallTuber_Lola_Strategy] 41e6bc1b8a width=147
+Vou me esforçar!
+
+[gText_MatchCallTuber_Lola_Pokemon] 53c598d16d width=147
+POKéMON que nadam bem.
+
+[gText_MatchCallTuber_Lola_Intro1] c4eb5e1d21 width=147
+Queria nadar sem precisar
+
+[gText_MatchCallTuber_Lola_Intro2] ed09057b0f width=147
+da minha boia.
+
+[gText_MatchCallTuber_Ricky_Strategy] f5afcfc278 width=147
+Não sei. Vou me esforçar.
+
+[gText_MatchCallTuber_Ricky_Pokemon] 52eae53ec3 width=147
+POKéMON ÁGUA são parceiros.
+
+[gText_MatchCallTuber_Ricky_Intro1] b59780fe33 width=147
+Não é que eu não sei nadar.
+
+[gText_MatchCallTuber_Ricky_Intro2] b0b8b5dd1e width=147
+Só gosto da minha boia.
+
+[gText_MatchCallSisAndBro_LilaAndRoy_Strategy] 131994f138 width=147
+A gente divide as tarefas.
+
+[gText_MatchCallSisAndBro_LilaAndRoy_Pokemon] 242108593d width=147
+POKéMON amigáveis.
+
+[gText_MatchCallSisAndBro_LilaAndRoy_Intro1] f7f1021a42 width=147
+Curtimos POKéMON juntos,
+
+[gText_MatchCallSisAndBro_LilaAndRoy_Intro2] dff9542647 width=147
+como irmã e irmão.
+
+[gText_MatchCallCooltrainer_Cristin_Strategy] dbbf47895e width=147
+Termino com golpes fortes!
+
+[gText_MatchCallCooltrainer_Cristin_Pokemon] 82fa400fd2 width=147
+Uma mistura de tipos.
+
+[gText_MatchCallCooltrainer_Cristin_Intro1] b383cfb38f width=147
+Quero ser a TREINADORA
+
+[gText_MatchCallCooltrainer_Cristin_Intro2] c6842e4a11 width=147
+mais forte de todas!
+
+[gText_MatchCallCooltrainer_Brooke_Strategy] 074edc5b72 width=147
+Explorar a fraqueza.
+
+[gText_MatchCallCooltrainer_Brooke_Pokemon] 76d53ed862 width=147
+O equilíbrio é essencial.
+
+[gText_MatchCallCooltrainer_Brooke_Intro1] 1821266f29 width=147
+O meu objetivo é ser
+
+[gText_MatchCallCooltrainer_Brooke_Intro2] 878c27b489 width=147
+CAMPEÃ POKéMON.
+
+[gText_MatchCallCooltrainer_Wilton_Strategy] 92260e0d39 width=147
+Desestabilizar o rival.
+
+[gText_MatchCallCooltrainer_Wilton_Pokemon] 8574155414 width=147
+O tipo não importa.
+
+[gText_MatchCallCooltrainer_Wilton_Intro1] db9a0112c7 width=147
+Sou um dos melhores alunos
+
+[gText_MatchCallCooltrainer_Wilton_Intro2] 27cf512c90 width=147
+da ESCOLA DE TREINADORES.
+
+[gText_MatchCallHexManiac_Valerie_Strategy] 3248ddae8c width=147
+Sofrimento lento.
+
+[gText_MatchCallHexManiac_Valerie_Pokemon] 3231d122f1 width=147
+Assustadores de noite.
+
+[gText_MatchCallHexManiac_Valerie_Intro1] a9c31ed9b6 width=147
+Eu vejo coisas que os
+
+[gText_MatchCallHexManiac_Valerie_Intro2] c51374fccd width=147
+outros não veem...
+
+[gText_MatchCallLady_Cindy_Strategy] f625172ad8 width=147
+Tudo pra ganhar.
+
+[gText_MatchCallLady_Cindy_Pokemon] c8b81d3f2b width=147
+Tipos deslumbrantes!
+
+[gText_MatchCallLady_Cindy_Intro1] b107ac7462 width=147
+Tenho uma piscina em casa
+
+[gText_MatchCallLady_Cindy_Intro2] 43f48d1572 width=147
+só pros meus POKéMON.
+
+[gText_MatchCallBeauty_Thalia_Strategy] 90decfad46 width=147
+Vai cair no meu feitiço!
+
+[gText_MatchCallBeauty_Thalia_Pokemon] 19d0138ac5 width=147
+Tipo ÁGUA maduro.
+
+[gText_MatchCallBeauty_Thalia_Intro1] 9548eb14f2 width=147
+Sonho em dar a volta ao
+
+[gText_MatchCallBeauty_Thalia_Intro2] bbdfd6a031 width=147
+mundo num cruzeiro de luxo.
+
+[gText_MatchCallBeauty_Jessica_Strategy] 9da9c5116b width=147
+Vou te desviar do caminho.
+
+[gText_MatchCallBeauty_Jessica_Pokemon] 9d02dc33e9 width=147
+Fofos, é claro.
+
+[gText_MatchCallBeauty_Jessica_Intro1] 49dc806f14 width=147
+Adoro a ZONA DE SAFÁRI.
+
+[gText_MatchCallBeauty_Jessica_Intro2] bc465166b8 width=147
+Sempre acabo indo pra lá.
+
+[gText_MatchCallRichBoy_Winston_Strategy] bffe96cbe9 width=147
+Estratégia? Pra quê?
+
+[gText_MatchCallRichBoy_Winston_Pokemon] 20d8c3aae8 width=147
+Gastei uma fortuna nele!
+
+[gText_MatchCallRichBoy_Winston_Intro1] 35e3822070 width=147
+Sou rico, então durmo numa
+
+[gText_MatchCallRichBoy_Winston_Intro2] 465d469b27 width=147
+cama de POKéMON sob medida.
+
+[gText_MatchCallPokeManiac_Steve_Strategy] 2ab612490e width=147
+Derrubar na força.
+
+[gText_MatchCallPokeManiac_Steve_Pokemon] 1d262b5168 width=147
+Passei a noite pra pegar.
+
+[gText_MatchCallPokeManiac_Steve_Intro1] 388f142142 width=147
+POKéMON grandes, fortes e
+
+[gText_MatchCallPokeManiac_Steve_Intro2] 0d8ce87f4c width=147
+parrudos são os melhores...
+
+[gText_MatchCallSwimmer_Tony_Strategy] 0323dc7dcc width=147
+Investir a toda velocidade!
+
+[gText_MatchCallSwimmer_Tony_Pokemon] c55867dd57 width=147
+Tipo ÁGUA estiloso!
+
+[gText_MatchCallSwimmer_Tony_Intro1] 701cee74f9 width=147
+Quando não estou nadando,
+
+[gText_MatchCallSwimmer_Tony_Intro2] cfee003da5 width=147
+estou puxando ferro.
+
+[gText_MatchCallBlackBelt_Nob_Strategy] e47efd9796 width=147
+Pancadaria total!
+
+[gText_MatchCallBlackBelt_Nob_Pokemon] 73a02d6771 width=147
+Tipo LUTADOR.
+
+[gText_MatchCallBlackBelt_Nob_Intro1] 8a04372714 width=147
+Sem querer me gabar, eu
+
+[gText_MatchCallBlackBelt_Nob_Intro2] c1203d5aa1 width=147
+quebro dez telhas!
+
+[gText_MatchCallBlackBelt_Koji_Strategy] 9edfb34bf8 width=147
+Veja o poder do caratê!
+
+[gText_MatchCallBlackBelt_Koji_Pokemon] 422e2d1fda width=147
+Meus parceiros de treino!
+
+[gText_MatchCallBlackBelt_Koji_Intro1] f1add05392 width=147
+Vamos discutir os assuntos
+
+[gText_MatchCallBlackBelt_Koji_Intro2] 36557437d8 width=147
+do mundo com os punhos!
+
+[gText_MatchCallGuitarist_Fernando_Strategy] 9670fe5e30 width=147
+Rock de som atordoante!
+
+[gText_MatchCallGuitarist_Fernando_Pokemon] a93f7eea21 width=147
+Combo de eletricidade e som!
+
+[gText_MatchCallGuitarist_Fernando_Intro1] f1f278d872 width=147
+As minhas músicas vão
+
+[gText_MatchCallGuitarist_Fernando_Intro2] 6f7a5d8237 width=147
+chocar e atordoar você!
+
+[gText_MatchCallGuitarist_Dalton_Strategy] 2c359890a2 width=147
+Vou te eletrizar!
+
+[gText_MatchCallGuitarist_Dalton_Pokemon] 89a08b5b5d width=147
+São ELÉTRICOS!
+
+[gText_MatchCallGuitarist_Dalton_Intro1] e8162ae945 width=147
+Quero fazer as pessoas
+
+[gText_MatchCallGuitarist_Dalton_Intro2] 3121967912 width=147
+chorarem com as músicas.
+
+[gText_MatchCallKindler_Bernie_Strategy] d8c239c859 width=147
+Queimar tudo!
+
+[gText_MatchCallKindler_Bernie_Pokemon] 9cc6ee7ff2 width=147
+POKéMON que queimam.
+
+[gText_MatchCallKindler_Bernie_Intro1] d16e8d4488 width=147
+Ao acender uma fogueira,
+
+[gText_MatchCallKindler_Bernie_Intro2] 7afdc63fcd width=147
+tenha água por perto.
+
+[gText_MatchCallCamper_Ethan_Strategy] 07225ae72d width=147
+Aguentar firme!
+
+[gText_MatchCallCamper_Ethan_Pokemon] 897046c754 width=147
+Crio qualquer POKéMON.
+
+[gText_MatchCallCamper_Ethan_Intro1] c17e50afd3 width=147
+POKéMON criados no mato
+
+[gText_MatchCallCamper_Ethan_Intro2] 688021f6a5 width=147
+ficam fortes!
+
+[gText_MatchCallOldCouple_JohnAndJay_Strategy] feec068406 width=147
+O amor faz a gente vencer.
+
+[gText_MatchCallOldCouple_JohnAndJay_Pokemon] f68f6fad49 width=147
+Estão com a gente há anos.
+
+[gText_MatchCallOldCouple_JohnAndJay_Intro1] cc4d4dc112 width=147
+Casados há 50 anos, criamos
+
+[gText_MatchCallOldCouple_JohnAndJay_Intro2] 988df36316 width=147
+POKéMON com dedicação.
+
+[gText_MatchCallBugManiac_Jeffrey_Strategy] ed9371f382 width=147
+Atacar em ondas!
+
+[gText_MatchCallBugManiac_Jeffrey_Pokemon] 1e8c137b8a width=147
+POKéMON INSETO são legais.
+
+[gText_MatchCallBugManiac_Jeffrey_Intro1] 3ea641cadd width=147
+Vou à floresta todo dia
+
+[gText_MatchCallBugManiac_Jeffrey_Intro2] 45eedcaec0 width=147
+pegar POKéMON INSETO.
+
+[gText_MatchCallPsychic_Cameron_Strategy] 85a5b9320b width=147
+Atordoar e confundir!
+
+[gText_MatchCallPsychic_Cameron_Pokemon] 110aef964e width=147
+Os de poderes estranhos.
+
+[gText_MatchCallPsychic_Cameron_Intro1] 1d921c3d0f width=147
+Eu sei exatamente o que
+
+[gText_MatchCallPsychic_Cameron_Intro2] 71b9734b5c width=147
+você está pensando!
+
+[gText_MatchCallPsychic_Jacki_Strategy] 8fe1621257 width=147
+Lutar com toda a força.
+
+[gText_MatchCallPsychic_Jacki_Pokemon] b62ad4f912 width=147
+POKéMON cheios de mistério.
+
+[gText_MatchCallPsychic_Jacki_Intro1] 440df7120e width=147
+Quando a gente conversou,
+
+[gText_MatchCallPsychic_Jacki_Intro2] 9374e8b4d5 width=147
+eu usava telepatia.
+
+[gText_MatchCallGentleman_Walter_Strategy] f90e5e8d12 width=147
+Calmo e controlado.
+
+[gText_MatchCallGentleman_Walter_Pokemon] f202bb1c01 width=147
+POKéMON distintos.
+
+[gText_MatchCallGentleman_Walter_Intro1] 2ccb5fdf72 width=147
+Tomamos um chazinho todo
+
+[gText_MatchCallGentleman_Walter_Intro2] 9f5e3b29e7 width=147
+dia. É importado.
+
+[gText_MatchCallSchoolKid_Karen_Strategy] d28b7c4010 width=147
+Uso a cabeça pra lutar.
+
+[gText_MatchCallSchoolKid_Karen_Pokemon] cddfba49cc width=147
+Adoro qualquer POKéMON!
+
+[gText_MatchCallSchoolKid_Karen_Intro1] a4bee450c0 width=147
+O meu pai me dá mesada
+
+[gText_MatchCallSchoolKid_Karen_Intro2] aba169b494 width=147
+quando tiro 10 na prova.
+
+[gText_MatchCallSchoolKid_Jerry_Strategy] 24e8931abe width=147
+O meu saber é imbatível!
+
+[gText_MatchCallSchoolKid_Jerry_Pokemon] aad77a6811 width=147
+Qualquer POKéMON esperto!
+
+[gText_MatchCallSchoolKid_Jerry_Intro1] efb22ccd67 width=147
+Quero ser pesquisador
+
+[gText_MatchCallSchoolKid_Jerry_Intro2] 6bb9ee06ea width=147
+de POKéMON no futuro.
+
+[gText_MatchCallSrAndJr_AnnaAndMeg_Strategy] 1a479d1e9a width=147
+A gente conversa antes.
+
+[gText_MatchCallSrAndJr_AnnaAndMeg_Pokemon] 89c03fda52 width=147
+POKéMON que as duas curtem.
+
+[gText_MatchCallSrAndJr_AnnaAndMeg_Intro1] c49eb322ab width=147
+Somos veterana e caloura
+
+[gText_MatchCallSrAndJr_AnnaAndMeg_Intro2] 17fa9f3097 width=147
+fãs de POKéMON!
+
+[gText_MatchCallPokefan_Isabel_Strategy] 3f820c6faa width=147
+Vão com tudo, queridos!
+
+[gText_MatchCallPokefan_Isabel_Pokemon] a26adbf84b width=147
+Não tenho preferência.
+
+[gText_MatchCallPokefan_Isabel_Intro1] 559bc846e6 width=147
+Quando saio pra comprar
+
+[gText_MatchCallPokefan_Isabel_Intro2] b570616613 width=147
+a janta, também luto.
+
+[gText_MatchCallPokefan_Miguel_Strategy] 0762a3dae9 width=147
+Eu luto com amor!
+
+[gText_MatchCallPokefan_Miguel_Pokemon] a56be83790 width=147
+POKéMON criado com amor!
+
+[gText_MatchCallPokefan_Miguel_Intro1] 48cea017a1 width=147
+É importante ganhar a
+
+[gText_MatchCallPokefan_Miguel_Intro2] dc31cacc56 width=147
+confiança dos POKéMON.
+
+[gText_MatchCallExpert_Timothy_Strategy] d3c073f91a width=147
+Eu leio os seus golpes!
+
+[gText_MatchCallExpert_Timothy_Pokemon] 982b559ebc width=147
+A essência do LUTADOR.
+
+[gText_MatchCallExpert_Timothy_Intro1] 3916bc07a7 width=147
+Ainda não estou pronto pra
+
+[gText_MatchCallExpert_Timothy_Intro2] 2b7e5fa5e3 width=147
+dar lugar aos jovens!
+
+[gText_MatchCallExpert_Shelby_Strategy] 1fcd07e2ff width=147
+Atacar defendendo.
+
+[gText_MatchCallExpert_Shelby_Pokemon] bd6093c67e width=147
+O tipo LUTADOR.
+
+[gText_MatchCallExpert_Shelby_Intro1] b632789508 width=147
+Por ser velha, tenho o meu
+
+[gText_MatchCallExpert_Shelby_Intro2] 1ffdde5b2e width=147
+próprio jeito de lutar.
+
+[gText_MatchCallYoungster_Calvin_Strategy] 1f97fc99c1 width=147
+Faço o que posso.
+
+[gText_MatchCallYoungster_Calvin_Pokemon] e7555f77fb width=147
+Uso tipos diferentes.
+
+[gText_MatchCallYoungster_Calvin_Intro1] a0f7a42a79 width=147
+Vou continuar treinando até
+
+[gText_MatchCallYoungster_Calvin_Intro2] 34a8dcb815 width=147
+vencer um LÍDER DE GINÁSIO.
+
+[gText_MatchCallFisherman_Elliot_Strategy] 9f7e08116a width=147
+Luto com paciência.
+
+[gText_MatchCallFisherman_Elliot_Pokemon] da6c940cab width=147
+POKéMON ÁGUA pra lutar!
+
+[gText_MatchCallFisherman_Elliot_Intro1] 56031ff85c width=147
+Sou o único no mundo que
+
+[gText_MatchCallFisherman_Elliot_Intro2] 703a3888a1 width=147
+pegou um POKéMON enorme!
+
+[gText_MatchCallTriathlete_Isaiah_Strategy] adbf577305 width=147
+Aproveitar o ambiente!
+
+[gText_MatchCallTriathlete_Isaiah_Pokemon] 2de7d45d84 width=147
+Viva o tipo ÁGUA!
+
+[gText_MatchCallTriathlete_Isaiah_Intro1] 8211d4a04c width=147
+Não vou perder pra um
+
+[gText_MatchCallTriathlete_Isaiah_Intro2] 9f92de47d6 width=147
+NADADOR de praia qualquer!
+
+[gText_MatchCallTriathlete_Maria_Strategy] 8f554e15ce width=147
+Velocidade acima de tudo!
+
+[gText_MatchCallTriathlete_Maria_Pokemon] 116a68579c width=147
+Uso um POKéMON veloz.
+
+[gText_MatchCallTriathlete_Maria_Intro1] 20063eb91d width=147
+A maratona é um desafio
+
+[gText_MatchCallTriathlete_Maria_Intro2] 37497ba997 width=147
+contra você mesmo.
+
+[gText_MatchCallTriathlete_Abigail_Strategy] 155e9b6b77 width=147
+A defesa é essencial.
+
+[gText_MatchCallTriathlete_Abigail_Pokemon] f1f04bf01c width=147
+O meu POKéMON é firme.
+
+[gText_MatchCallTriathlete_Abigail_Intro1] ca57d14137 width=147
+Comecei pra fazer dieta,
+
+[gText_MatchCallTriathlete_Abigail_Intro2] cf6a15d188 width=147
+mas acabei pegando gosto.
+
+[gText_MatchCallTriathlete_Dylan_Strategy] 9ce1060271 width=147
+Atacar antes de apanhar!
+
+[gText_MatchCallTriathlete_Dylan_Pokemon] 4495ee3afe width=147
+Um POKéMON corredor!
+
+[gText_MatchCallTriathlete_Dylan_Intro1] 48778b648a width=147
+Se você correr sem parar,
+
+[gText_MatchCallTriathlete_Dylan_Intro2] 88f161513d width=147
+vira um só com o vento.
+
+[gText_MatchCallTriathlete_Katelyn_Strategy] c69daea8e6 width=147
+Ataque total!
+
+[gText_MatchCallTriathlete_Katelyn_Pokemon] c6df90af7e width=147
+POKéMON ÁGUA mandam!
+
+[gText_MatchCallTriathlete_Katelyn_Intro1] 50277631ce width=147
+Tenho que nadar mais de
+
+[gText_MatchCallTriathlete_Katelyn_Intro2] 34c58f1b4f width=147
+10 km todo dia.
+
+[gText_MatchCallTriathlete_Benjamin_Strategy] 99a4e53f82 width=147
+Empurrar sem parar!
+
+[gText_MatchCallTriathlete_Benjamin_Pokemon] 850289ed37 width=147
+A força do AÇO.
+
+[gText_MatchCallTriathlete_Benjamin_Intro1] 7579486cb2 width=147
+Se estiver suando, beba
+
+[gText_MatchCallTriathlete_Benjamin_Intro2] fb6c6040ff width=147
+líquidos sempre.
+
+[gText_MatchCallTriathlete_Pablo_Strategy] 72b32701c9 width=147
+Tirar a força da ÁGUA.
+
+[gText_MatchCallTriathlete_Pablo_Pokemon] dd3bbba922 width=147
+POKéMON ÁGUA casca-grossa.
+
+[gText_MatchCallTriathlete_Pablo_Intro1] 7feebb2cb9 width=147
+Treinar POKéMON é bom, mas
+
+[gText_MatchCallTriathlete_Pablo_Intro2] 7d4ac2b76a width=147
+não se esqueça de você.
+
+[gText_MatchCallDragonTamer_Nicolas_Strategy] 5f6cd4e12d width=147
+É a força dos POKéMON!
+
+[gText_MatchCallDragonTamer_Nicolas_Pokemon] 3da0d6ffbf width=147
+Veja o poder dos DRAGÕES!
+
+[gText_MatchCallDragonTamer_Nicolas_Intro1] 0c07f5b4cf width=147
+Um dia vou ser lendário
+
+[gText_MatchCallDragonTamer_Nicolas_Intro2] 9411e64d3f width=147
+como o mais forte!
+
+[gText_MatchCallBirdKeeper_Robert_Strategy] d81471eed5 width=147
+Veja a minha técnica!
+
+[gText_MatchCallBirdKeeper_Robert_Pokemon] 67f8c50647 width=147
+PÁSSAROS em voo elegante.
+
+[gText_MatchCallBirdKeeper_Robert_Intro1] 5d4ce672d7 width=147
+POKéMON PÁSSARO, leve o meu
+
+[gText_MatchCallBirdKeeper_Robert_Intro2] 58c31476b0 width=147
+amor até aquela garota!
+
+[gText_MatchCallNinjaBoy_Lao_Strategy] 989fc02b3f width=147
+Você vai sofrer com veneno!
+
+[gText_MatchCallNinjaBoy_Lao_Pokemon] 6f5d095bea width=147
+POKéMON venenosos.
+
+[gText_MatchCallNinjaBoy_Lao_Intro1] 37d01b19b4 width=147
+Eu treino pra um dia
+
+[gText_MatchCallNinjaBoy_Lao_Intro2] 8475eb4b38 width=147
+virar um ninja.
+
+[gText_MatchCallBattleGirl_Cyndy_Strategy] d4a32f4009 width=147
+Quem bate primeiro ganha!
+
+[gText_MatchCallBattleGirl_Cyndy_Pokemon] f8fba581ce width=147
+Tipo LUTADOR veloz.
+
+[gText_MatchCallBattleGirl_Cyndy_Intro1] 5763851c1f width=147
+Se os POKéMON perderem,
+
+[gText_MatchCallBattleGirl_Cyndy_Intro2] 28ce0fc595 width=147
+eu sigo na luta!
+
+[gText_MatchCallParasolLady_Madeline_Strategy] 452a232a8e width=147
+Vai, vai, meus POKéMON!
+
+[gText_MatchCallParasolLady_Madeline_Pokemon] 77dbf723da width=147
+Crio qualquer um.
+
+[gText_MatchCallParasolLady_Madeline_Intro1] 7c8cd5ab93 width=147
+Os raios UV são inimigos da
+
+[gText_MatchCallParasolLady_Madeline_Intro2] 2e03273e03 width=147
+pele. Proteja-se.
+
+[gText_MatchCallSwimmer_Jenny_Strategy] f9a91e0801 width=147
+Sem piedade!
+
+[gText_MatchCallSwimmer_Jenny_Pokemon] 2b9b6ccb12 width=147
+POKéMON ÁGUA fofos.
+
+[gText_MatchCallSwimmer_Jenny_Intro1] c6db02f752 width=147
+Tenho fãs demais.
+
+[gText_MatchCallSwimmer_Jenny_Intro2] 7fd48529e8 width=147
+Já dei entrevista na TV.
+
+[gText_MatchCallPicnicker_Diana_Strategy] 2d10cc4488 width=147
+Penso nisso e naquilo.
+
+[gText_MatchCallPicnicker_Diana_Pokemon] 9cdf910b36 width=147
+Gosto de todos os POKéMON.
+
+[gText_MatchCallPicnicker_Diana_Intro1] 7f62532651 width=147
+O que será que tem depois
+
+[gText_MatchCallPicnicker_Diana_Intro2] 4df58318a4 width=147
+daquele morro?
+
+[gText_MatchCallTwins_AmyAndLiv_Strategy] 24c6d48f43 width=147
+Lutamos juntas!
+
+[gText_MatchCallTwins_AmyAndLiv_Pokemon] 229caa82b8 width=147
+Treinamos juntas!
+
+[gText_MatchCallTwins_AmyAndLiv_Intro1] 7b4262b13e width=147
+Curtimos os mesmos POKéMON,
+
+[gText_MatchCallTwins_AmyAndLiv_Intro2] a8dbb1e387 width=147
+mas não os mesmos doces.
+
+[gText_MatchCallSailor_Ernest_Strategy] eb65350467 width=147
+Resolvo tudo na força!
+
+[gText_MatchCallSailor_Ernest_Pokemon] 7eb8c683fa width=147
+Tipos ÁGUA e LUTADOR.
+
+[gText_MatchCallSailor_Ernest_Intro1] 14270709f5 width=147
+Marinheiro é bicho bruto!
+
+[gText_MatchCallSailor_Ernest_Intro2] 0693541e70 width=147
+Alguma reclamação?
+
+[gText_MatchCallSailor_Cory_Strategy] b3dd6aabd9 width=147
+Topo luta a qualquer hora!
+
+[gText_MatchCallSailor_Cory_Pokemon] 780dfac099 width=147
+POKéMON ÁGUA são os meus!
+
+[gText_MatchCallSailor_Cory_Intro1] bd9c31d04b width=147
+Pra gritar alto, puxe
+
+[gText_MatchCallSailor_Cory_Intro2] e3c9624fa3 width=147
+o ar com a barriga!
+
+[gText_MatchCallCollector_Edwin_Strategy] b7c9f4a86b width=147
+Proteger os POKéMON.
+
+[gText_MatchCallCollector_Edwin_Pokemon] dd9979bc43 width=147
+Adoro POKéMON raros.
+
+[gText_MatchCallCollector_Edwin_Intro1] 3e0e7a815e width=147
+Quero colecionar todos os
+
+[gText_MatchCallCollector_Edwin_Intro2] 9798a4b824 width=147
+POKéMON raros do mundo.
+
+[gText_MatchCallPkmnBreeder_Lydia_Strategy] aaa39a314e width=147
+Conto com a força.
+
+[gText_MatchCallPkmnBreeder_Lydia_Pokemon] 453d51386d width=147
+POKéMON são meus filhos.
+
+[gText_MatchCallPkmnBreeder_Lydia_Intro1] fb13c85ded width=147
+Pra criar POKéMON é preciso
+
+[gText_MatchCallPkmnBreeder_Lydia_Intro2] 9a84479ba3 width=147
+saber e amor.
+
+[gText_MatchCallPkmnBreeder_Isaac_Strategy] a1bc68d256 width=147
+Ataque com tudo!
+
+[gText_MatchCallPkmnBreeder_Isaac_Pokemon] 907cbcefdc width=147
+Qualquer um. Eu crio.
+
+[gText_MatchCallPkmnBreeder_Isaac_Intro1] 4381f3ab08 width=147
+Dou {POKEBLOCK}S pra eles
+
+[gText_MatchCallPkmnBreeder_Isaac_Intro2] 0a74f996ea width=147
+ganharem os CONCURSOS.
+
+[gText_MatchCallPkmnBreeder_Gabrielle_Strategy] 493bd8e3b1 width=147
+Crio POKéMON com carinho.
+
+[gText_MatchCallPkmnBreeder_Gabrielle_Pokemon] ccab1aaf00 width=147
+POKéMON gostosos de criar.
+
+[gText_MatchCallPkmnBreeder_Gabrielle_Intro1] 0eefe93aba width=147
+Trate com respeito todo
+
+[gText_MatchCallPkmnBreeder_Gabrielle_Intro2] ba07478c74 width=147
+POKéMON que encontrar.
+
+[gText_MatchCallPkmnRanger_Catherine_Strategy] f5a2a57f92 width=147
+Confio nos meus POKéMON.
+
+[gText_MatchCallPkmnRanger_Catherine_Pokemon] a6102df84f width=147
+Gosto de POKéMON fortes.
+
+[gText_MatchCallPkmnRanger_Catherine_Intro1] f8801f8854 width=147
+Treino com os meus POKéMON
+
+[gText_MatchCallPkmnRanger_Catherine_Intro2] 97e37709ef width=147
+pra trabalhar em resgates.
+
+[gText_MatchCallPkmnRanger_Jackson_Strategy] ed9371f382 width=147
+Atacar em ondas!
+
+[gText_MatchCallPkmnRanger_Jackson_Pokemon] e7555f77fb width=147
+Uso tipos diferentes.
+
+[gText_MatchCallPkmnRanger_Jackson_Intro1] afe8861d58 width=147
+Quem destrói a natureza
+
+[gText_MatchCallPkmnRanger_Jackson_Intro2] faa00700da width=147
+nunca deve ser perdoado!
+
+[gText_MatchCallLass_Haley_Strategy] a4c329d3d5 width=147
+Vou mostrar a minha garra!
+
+[gText_MatchCallLass_Haley_Pokemon] c50ceae42a width=147
+POKéMON fofos são os meus!
+
+[gText_MatchCallLass_Haley_Intro1] 410b746047 width=147
+Depois de cada batalha, eu
+
+[gText_MatchCallLass_Haley_Intro2] c6e8cd518a width=147
+tomo banho com os POKéMON.
+
+[gText_MatchCallBugCatcher_James_Strategy] b99b5aefe2 width=147
+Ataque relâmpago!
+
+[gText_MatchCallBugCatcher_James_Pokemon] 3afb4b2a91 width=147
+POKéMON INSETO são os nº 1!
+
+[gText_MatchCallBugCatcher_James_Intro1] 51bf326cda width=147
+Pra pegar POKéMON INSETO,
+
+[gText_MatchCallBugCatcher_James_Intro2] 2c0679c1ec width=147
+acorde cedo.
+
+[gText_MatchCallHiker_Trent_Strategy] 98c6c6971f width=147
+Luto com força.
+
+[gText_MatchCallHiker_Trent_Pokemon] 6281574fd1 width=147
+POKéMON de corpo duro.
+
+[gText_MatchCallHiker_Trent_Intro1] 9a0660dde0 width=147
+Planejei por um mês a
+
+[gText_MatchCallHiker_Trent_Intro2] 23087445c3 width=147
+trilha de hoje.
+
+[gText_MatchCallHiker_Sawyer_Strategy] b772c86d53 width=147
+Gosto de calor!
+
+[gText_MatchCallHiker_Sawyer_Pokemon] 205695cc12 width=147
+POKéMON quentes!
+
+[gText_MatchCallHiker_Sawyer_Intro1] 55602e0185 width=147
+Amo POKéMON, mas também
+
+[gText_MatchCallHiker_Sawyer_Intro2] 57df591d1b width=147
+adoro fazer trilha!
+
+[gText_MatchCallYoungCouple_LoisAndHal_Strategy] b687d0c37c width=147
+Estratégia apaixonada!
+
+[gText_MatchCallYoungCouple_LoisAndHal_Pokemon] 4f6d2540d6 width=147
+POKéMON apaixonados!
+
+[gText_MatchCallYoungCouple_LoisAndHal_Intro1] 408dec531c width=147
+A gente é muito apaixonado!
+
+[gText_MatchCallYoungCouple_LoisAndHal_Intro2] 75a0499d3e width=147
+Apaixonados pra sempre!
+
+[gText_MatchCallPkmnTrainer_Wally_Strategy] d04e413a23 width=147
+A gente se solta de vez.
+
+[gText_MatchCallPkmnTrainer_Wally_Pokemon] ffc4569e24 width=147
+O 1º POKéMON que peguei.
+
+[gText_MatchCallPkmnTrainer_Wally_Intro1] 9c622f0e9a width=147
+Eu e os POKéMON ficamos
+
+[gText_MatchCallPkmnTrainer_Wally_Intro2] 7cd2f383b5 width=147
+mais fortes juntos.
+
+[gText_MatchCallRockinWhiz_Roxanne_Strategy] 6812639c0b width=147
+Ataque forte tipo PEDRA.
+
+[gText_MatchCallRockinWhiz_Roxanne_Pokemon] ff79d6f9de width=147
+Prefiro POKéMON duros.
+
+[gText_MatchCallRockinWhiz_Roxanne_Intro1] 20deec8b96 width=147
+Liderar um GINÁSIO grande
+
+[gText_MatchCallRockinWhiz_Roxanne_Intro2] 1ab605d983 width=147
+é muita responsabilidade.
+
+[gText_MatchCallTheBigHit_Brawly_Strategy] f73f3b315e width=147
+Ação física direta!
+
+[gText_MatchCallTheBigHit_Brawly_Pokemon] c8b85c81ab width=147
+POKéMON LUTADOR mandam!
+
+[gText_MatchCallTheBigHit_Brawly_Intro1] c190f64460 width=147
+O mundo me espera como a
+
+[gText_MatchCallTheBigHit_Brawly_Intro2] a8fdd0fe35 width=147
+próxima grande onda!
+
+[gText_MatchCallSwellShock_Wattson_Strategy] 2a84a1e69b width=147
+Escolho eletrizar.
+
+[gText_MatchCallSwellShock_Wattson_Pokemon] 309488599c width=147
+Leve um choque elétrico!
+
+[gText_MatchCallSwellShock_Wattson_Intro1] 3494612c8e width=147
+Nunca se entrega uma luta.
+
+[gText_MatchCallSwellShock_Wattson_Intro2] 2980a25b80 width=147
+Nem eu posso fazer isso.
+
+[gText_MatchCallPassionBurn_Flannery_Strategy] c52d1e5ff0 width=147
+Lutar com agressividade.
+
+[gText_MatchCallPassionBurn_Flannery_Pokemon] 89ad6b37fb width=147
+Queimar de paixão!
+
+[gText_MatchCallPassionBurn_Flannery_Intro1] db859d0cf5 width=147
+Lave todo o cansaço do
+
+[gText_MatchCallPassionBurn_Flannery_Intro2] 83136eaf00 width=147
+dia nas fontes termais!
+
+[gText_MatchCallReliableOne_Dad_Strategy] 48e9739fdb width=147
+Adapto o meu estilo.
+
+[gText_MatchCallReliableOne_Dad_Pokemon] 225ce92a77 width=147
+Criados com equilíbrio.
+
+[gText_MatchCallReliableOne_Dad_Intro1] 867264a9b3 width=147
+Ando 30 minutos de casa
+
+[gText_MatchCallReliableOne_Dad_Intro2] 8dcda59f32 width=147
+até aqui todo dia.
+
+[gText_MatchCallSkyTamer_Winona_Strategy] 52dda163fd width=147
+Aproveito a velocidade.
+
+[gText_MatchCallSkyTamer_Winona_Pokemon] a93f5a4c9b width=147
+Bailarinos graciosos do céu.
+
+[gText_MatchCallSkyTamer_Winona_Intro1] fe81602ce9 width=147
+O ideal seria viver em
+
+[gText_MatchCallSkyTamer_Winona_Intro2] e55ae674f4 width=147
+harmonia com a natureza.
+
+[gText_MatchCallMysticDuo_TateAndLiza_Strategy] 4215826fbc width=147
+Lutamos em cooperação.
+
+[gText_MatchCallMysticDuo_TateAndLiza_Pokemon] 2f04ea5f42 width=147
+POKéMON sempre amigáveis.
+
+[gText_MatchCallMysticDuo_TateAndLiza_Intro1] b31d21066f width=147
+O papai tem dificuldade de
+
+[gText_MatchCallMysticDuo_TateAndLiza_Intro2] 92e2022eb3 width=147
+saber quem é quem!
+
+[gText_MatchCallDandyCharm_Juan_Strategy] 2eb9fa2e01 width=147
+Esplêndido poder aquático.
+
+[gText_MatchCallDandyCharm_Juan_Pokemon] 9b805f84eb width=147
+POKéMON elegantes!
+
+[gText_MatchCallDandyCharm_Juan_Intro1] f6608de9a7 width=147
+A admiração das belas
+
+[gText_MatchCallDandyCharm_Juan_Intro2] 7d7818004d width=147
+moças me enche de energia!
+
+[gText_MatchCallEliteFour_Sidney_Strategy] ea8a329913 width=147
+Ataque acima da defesa!
+
+[gText_MatchCallEliteFour_Sidney_Pokemon] b391d92be6 width=147
+As belezas do lado SOMBRIO.
+
+[gText_MatchCallEliteFour_Sidney_Intro1] a1d48508e1 width=147
+Me chamavam de vândalo,
+
+[gText_MatchCallEliteFour_Sidney_Intro2] 3a25435881 width=147
+mas sou da ELITE DOS 4!
+
+[gText_MatchCallEliteFour_Phoebe_Strategy] 5cfd4b0b67 width=147
+Confundir e desnortear.
+
+[gText_MatchCallEliteFour_Phoebe_Pokemon] bbd90798c0 width=147
+Não há nada de certo.
+
+[gText_MatchCallEliteFour_Phoebe_Intro1] 620e34657c width=147
+Como estará a minha avó
+
+[gText_MatchCallEliteFour_Phoebe_Intro2] c4ad93b44e width=147
+no MONTE PYRE?
+
+[gText_MatchCallEliteFour_Glacia_Strategy] ce98826b39 width=147
+Uso itens pra me ajudar.
+
+[gText_MatchCallEliteFour_Glacia_Pokemon] 2cef8b639e width=147
+Paixão ardente no frio!
+
+[gText_MatchCallEliteFour_Glacia_Intro1] a108e332f0 width=147
+O tipo GELO treina melhor
+
+[gText_MatchCallEliteFour_Glacia_Intro2] 5cd355a87c width=147
+nesta terra quente.
+
+[gText_MatchCallEliteFour_Drake_Strategy] fe6128a7ca width=147
+Usar habilidades fortes.
+
+[gText_MatchCallEliteFour_Drake_Pokemon] 3a24f5e70b width=147
+O poder bruto dos DRAGÕES!
+
+[gText_MatchCallEliteFour_Drake_Intro1] 3e9c17dc8c width=147
+Eu me dedico ao POKéMON
+
+[gText_MatchCallEliteFour_Drake_Intro2] ce4649a752 width=147
+que me salvou.
+
+[gText_MatchCallChampion_Wallace_Strategy] 154b555c1e width=147
+Dignidade e respeito.
+
+[gText_MatchCallChampion_Wallace_Pokemon] ea1e50bf58 width=147
+Prefiro POKéMON graciosos.
+
+[gText_MatchCallChampion_Wallace_Intro1] 7689bdad35 width=147
+Represento a beleza e
+
+[gText_MatchCallChampion_Wallace_Intro2] 6d0db50944 width=147
+também a inteligência.

@@ -1,0 +1,13 @@
+# PRESENTE MISTERIOSO: o BILHETE MÍSTICO.
+
+[sText_MysticTicketForYou] 4742421319
+Obrigado por usar o sistema de\nPRESENTE MISTERIOSO.\pVocê deve ser {PLAYER}.\nTem um bilhete aqui pra você.$
+
+[sText_MysticTicketUseAtPort] 92253a72d5
+Parece que é pra usar no porto\nda CIDADE DE LILYCOVE.\pQue tal ir lá descobrir\ndo que se trata?$
+
+[sText_MysticTicketThankYou] d213ee074c
+Obrigado por usar o sistema de\nPRESENTE MISTERIOSO.$
+
+[sText_MysticTicketBagFull] a2d54d9296
+Ah, desculpe, {PLAYER}.\nO bolso de ITENS CHAVE tá cheio.\pGuarde alguma coisa no PC\ne volte pra buscar isto.$

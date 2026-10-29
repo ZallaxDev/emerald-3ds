@@ -1,0 +1,183 @@
+# CIDADE DE FORTREE: o GINÁSIO da WINONA.
+
+[FortreeCity_Gym_Text_GymGuideAdvice] 8b57a91c7b
+E aí, como vai, {PLAYER},\n
+futura estrela da LIGA?\p
+A WINONA, LÍDER do GINÁSIO de\n
+FORTREE, é mestre do tipo VOADOR.\p
+Ela espera no fundo do GINÁSIO,\n
+atrás das portas giratórias.\p
+Ela aguarda novos desafiantes\n
+que queiram alçar voo!\p
+Certo, manda ver!$
+
+[FortreeCity_Gym_Text_GymGuidePostVictory] dfb0ffee53
+Conseguiu!\n
+Você decolou!$
+
+[FortreeCity_Gym_Text_JaredIntro] 66d53e7b2b
+Contemple o estilo elegante de\n
+batalha dos POKéMON PÁSSAROS!$
+
+[FortreeCity_Gym_Text_JaredDefeat] d924a7e29f
+Você…\n
+Você é forte…$
+
+[FortreeCity_Gym_Text_JaredPostBattle] e534b96877
+Um TREINADOR precisa ser esperto pra\n
+acompanhar as reviravoltas.\p
+Você tem esperteza pra chegar até\n
+a nossa LÍDER?$
+
+[FortreeCity_Gym_Text_EdwardoIntro] cd735426b3
+Quem ama POKéMON PÁSSAROS sonha\n
+em entrar neste GINÁSIO.\p
+Como membro do GINÁSIO de FORTREE,\n
+não posso perder!$
+
+[FortreeCity_Gym_Text_EdwardoDefeat] 6edec4ff77
+Foi peso demais pra eu aguentar…$
+
+[FortreeCity_Gym_Text_EdwardoPostBattle] 3dcc0984e0
+O mundo é enorme e está cheio de\n
+TREINADORES fortes.\p
+Vou continuar treinando pra ficar\n
+ainda mais forte.$
+
+[FortreeCity_Gym_Text_FlintIntro] 6962c7cb1a
+A WINONA, a nossa LÍDER, nem precisa\n
+perder tempo com você!\p
+Eu já dou conta!$
+
+[FortreeCity_Gym_Text_FlintDefeat] 79b012ba1f
+WINONA, eu…\n
+Eu perdi!$
+
+[FortreeCity_Gym_Text_FlintPostBattle] 65e728ee86
+A WINONA é linda e forte.\n
+É a LÍDER perfeita!\p
+Que vergonha…$
+
+[FortreeCity_Gym_Text_AshleyIntro] 244c913296
+A própria WINONA me ensinou!\n
+Você não me vence fácil!$
+
+[FortreeCity_Gym_Text_AshleyDefeat] fc28388728
+Fui derrotada…$
+
+[FortreeCity_Gym_Text_AshleyPostBattle] 695cf0e017
+Graças à WINONA, o povo de FORTREE\n
+vive sem medo.$
+
+[FortreeCity_Gym_Text_HumbertoIntro] 47480dd99a
+Quando a WINONA batalha, o rosto dela\n
+brilha com uma bela determinação…\p
+Não vou deixar você ver essa cena\n
+linda!$
+
+[FortreeCity_Gym_Text_HumbertoDefeat] 74650fdd23
+Ugh!\n
+Não consegui te parar.$
+
+[FortreeCity_Gym_Text_HumbertoPostBattle] a8aba3420e
+Tome cuidado!\n
+Se ficar olhando pra WINONA, você\l
+vai se esborrachar no chão!$
+
+[FortreeCity_Gym_Text_DariusIntro] 6982ab315e
+Saiba que existem POKéMON do tipo\n
+VOADOR de todo tipo.\p
+Você sabe disso, né?$
+
+[FortreeCity_Gym_Text_DariusDefeat] 2a814252ff
+Parece que você entende do assunto!$
+
+[FortreeCity_Gym_Text_DariusPostBattle] 5657ffd9a1
+Tá, você me venceu.\n
+Mas tome cuidado! Os POKéMON da\l
+nossa LÍDER WINONA não brincam.$
+
+[FortreeCity_Gym_Text_WinonaIntro] dc7e750279
+Sou a WINONA. Sou a LÍDER do\n
+GINÁSIO POKéMON de FORTREE.\p
+Tornei-me uma só com os POKéMON\n
+PÁSSAROS e cruzei os céus…\p
+Por mais dura que fosse a batalha,\n
+triunfamos com elegância…\p
+Contemple a coreografia elegante\n
+minha e dos POKéMON PÁSSAROS!$
+
+[FortreeCity_Gym_Text_WinonaDefeat] 6baeeb3935
+Nunca vi um TREINADOR comandar\n
+POKéMON com mais elegância que eu…\p
+Em reconhecimento à sua habilidade,\n
+entrego esta INSÍGNIA.$
+
+[FortreeCity_Gym_Text_ReceivedFeatherBadge] 94048dba86
+{PLAYER} recebeu a INSÍGNIA DA PENA\n
+da WINONA.$
+
+[FortreeCity_Gym_Text_ExplainFeatherBadgeTakeThis] 74f051a03d
+Com a INSÍGNIA DA PENA, todos os\n
+POKéMON até o NV. 70, mesmo os\l
+recebidos em trocas, vão obedecer\l
+a todos os seus comandos.\p
+Você também poderá usar o golpe\n
+de MO VOAR fora da batalha.\p
+E isto…\n
+Isto é um presente meu.$
+
+[FortreeCity_Gym_Text_ExplainAerialAce] 911c7f0292
+A MT40 contém ÁS DOS ARES.\p
+A velocidade dele…\n
+Nenhum POKéMON consegue se esquivar.\p
+… … … … … …$
+
+[FortreeCity_Gym_Text_RegisteredWinona] 8224456ec4
+A LÍDER WINONA foi registrada\n
+no POKéNAV.$
+
+[FortreeCity_Gym_Text_WinonaPostBattle] 2912ad6d6c
+Mesmo derrotada por você, continuo\n
+dedicada aos POKéMON PÁSSAROS.$
+
+[FortreeCity_Gym_Text_GymStatue] 04acc43305
+GINÁSIO POKéMON DE FORTREE$
+
+[FortreeCity_Gym_Text_GymStatueCertified] 33862b06f0
+GINÁSIO POKéMON DE FORTREE\p
+TREINADORES APROVADOS POR WINONA:\n
+{PLAYER}$
+
+[FortreeCity_Gym_Text_WinonaPreRematch] 5be8e5d801
+WINONA: Nós, humanos, nunca\n
+escapamos da gravidade.\p
+Mas, buscando a excelência, temos\n
+o poder de voar!\p
+Você alcançou o topo como atual\n
+CAMPEÃO da LIGA.\p
+Por favor, me mostre o seu poder\n
+em pleno voo!$
+
+[FortreeCity_Gym_Text_WinonaRematchDefeat] 17a00b36ce
+De novo não alcancei a sua altura…$
+
+[FortreeCity_Gym_Text_WinonaPostRematch] 0c106132ce
+WINONA: Mesmo tendo perdido, as asas\n
+do meu coração seguem inteiras.\p
+Posso subir e voar outra vez, e\n
+mais outra.\p
+Tenho certeza disso!$
+
+[FortreeCity_Gym_Text_WinonaRematchNeedTwoMons] 967014d806
+WINONA: Nós, humanos, nunca\n
+escapamos da gravidade.\p
+Mas, buscando a excelência, temos\n
+o poder de voar!\p
+Você alcançou o topo como atual\n
+CAMPEÃO da LIGA.\p
+Por favor, me mostre o seu poder\n
+em pleno voo!\p
+Ah, não… Você só tem um POKéMON?\p
+Por favor, volte com pelo menos\n
+dois POKéMON.$

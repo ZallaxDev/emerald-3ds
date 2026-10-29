@@ -1,0 +1,76 @@
+# PROF. BIRCH avalia a POKéDEX.
+
+[gBirchDexRatingText_AreYouCurious] 0feb10b96e
+PROF. BIRCH: Ah, {PLAYER}{KUN}!\pQuer saber como anda a\nsua POKéDEX?$
+
+[gBirchDexRatingText_Cancel] e0caaecdb3
+Hm? Ah, você ainda não capturou\nPOKéMON suficientes pra valer a pena.$
+
+[gBirchDexRatingText_SoYouveSeenAndCaught] 7c8f8cb07e
+Hmhm…\pEntão você viu {STR_VAR_1} POKéMON\ne capturou {STR_VAR_2} POKéMON…$
+
+[gBirchDexRatingText_LessThan10] 388e9d4ad3
+Ande mais pelo mato e procure\nPOKéMON com mais atenção.$
+
+[gBirchDexRatingText_LessThan20] f719938415
+Parece que você tá pegando o jeito.\nMas daqui pra frente fica mais difícil.$
+
+[gBirchDexRatingText_LessThan30] 8fccc3548e
+Alguns POKéMON só aparecem em\ncertos lugares.\lÉ preciso persistência.$
+
+[gBirchDexRatingText_LessThan40] 2ae97626ee
+Bom, ainda falta quantidade,\nmas já tá parecendo mais\luma POKéDEX.$
+
+[gBirchDexRatingText_LessThan50] 2f1d73b1d1
+Tá ficando bem bom.\nContinue se esforçando.$
+
+[gBirchDexRatingText_LessThan60] a63502cecb
+Tá usando alguma VARA?\nTem muitos POKéMON no mar.$
+
+[gBirchDexRatingText_LessThan70] 4473fc38cc
+Em vez de só capturar POKéMON,\nque tal fazer eles evoluírem também?$
+
+[gBirchDexRatingText_LessThan80] fad4022e09
+Essa vai ser uma POKéDEX\nfantástica.\lÉ o que eu sinto.$
+
+[gBirchDexRatingText_LessThan90] 56c685e453
+Você já juntou tudo isso…\nSeu talento é notável!$
+
+[gBirchDexRatingText_LessThan100] 28c6903bc9
+Já foi à ZONA DE SAFÁRI?\pDizem que tem POKéMON que só\ndá pra capturar lá.$
+
+[gBirchDexRatingText_LessThan110] d1a8b27e62
+Você finalmente chegou à marca\nde 100 espécies.\pÉ uma POKéDEX impressionante!$
+
+[gBirchDexRatingText_LessThan120] 09cef88c2f
+Talvez tenha POKéMON que dá pra\nachar usando ESMAGA PEDRA.$
+
+[gBirchDexRatingText_LessThan130] 210123f9f9
+Você devia conseguir mais POKéMON\ntrocando com outras pessoas.$
+
+[gBirchDexRatingText_LessThan140] 94325b2b35
+Ouvi falar de POKéMON que evoluem\nquando passam a amar de verdade\lquem os treina.$
+
+[gBirchDexRatingText_LessThan150] 06881fa093
+Eu não fazia ideia de que havia tantas\nespécies de POKéMON na região\lde HOENN.$
+
+[gBirchDexRatingText_LessThan160] c96dfe1b56
+De vez em quando, alguns POKéMON\naparecem em massa.\pNão perca chances\ncomo essas.$
+
+[gBirchDexRatingText_LessThan170] b8647f6b1a
+Dá pra ter uma ótima ideia dos\nPOKéMON da região de HOENN\lolhando a sua POKéDEX.$
+
+[gBirchDexRatingText_LessThan180] 08d6b45b1f
+Eu diria que você já poderia dar\naula sobre POKéMON, e muito\lbem, aliás!$
+
+[gBirchDexRatingText_LessThan190] 6567d4476d
+Com uma POKéDEX tão completa,\nvocê manda muito nisso!$
+
+[gBirchDexRatingText_LessThan200] 69cb65ba28
+Você tá bem perto de completar\nesta POKéDEX.\lSinto isso nos ossos!$
+
+[gBirchDexRatingText_DexCompleted] 29ca072a2a
+Parabéns!\nSua POKéDEX está completa!$
+
+[gBirchDexRatingText_OnANationwideBasis] e0eb5096e8
+Hmhm…\nNo nível nacional…\pVocê viu {STR_VAR_1} POKéMON\ne capturou {STR_VAR_2} POKéMON…$

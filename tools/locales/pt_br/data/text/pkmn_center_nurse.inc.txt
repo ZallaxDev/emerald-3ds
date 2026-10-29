@@ -1,0 +1,53 @@
+# A enfermeira dos CENTROS POKéMON.
+
+[gText_WouldYouLikeToRestYourPkmn] d3e82f7875
+Olá, e boas-vindas ao\n
+CENTRO POKéMON.\p
+Nós recuperamos totalmente os seus\n
+POKéMON cansados.\p
+Gostaria de deixar os seus POKéMON?$
+
+[gText_IllTakeYourPkmn] 5a2247027c
+Certo, vou levar os seus POKéMON\n
+por alguns segundos.$
+
+[gText_RestoredPkmnToFullHealth] 1a4ec100f7
+Obrigada por esperar.\p
+Os seus POKéMON estão\n
+totalmente recuperados.$
+
+[gText_WeHopeToSeeYouAgain] 407712edb8
+Esperamos te ver de novo!$
+
+[gText_WelcomeCutShort] de3ae202ed
+Olá, e boas-vindas ao\n
+CENTRO POKéMON.\p
+Nós recuperamos totalmente os seus\n
+POKéMON cansados.\p
+Gostaria de…$
+
+[gText_NoticesGoldCard] 97bda7925c
+E-esse cartão…\n
+Será que é… O CARTÃO DE OURO?!\p
+Oh, que dourado brilhante!\n
+As quatro estrelas parecem cintilar!\p
+Já vi vários TREINADORES com um\n
+CARTÃO DE PRATA, mas, {PLAYER},\l
+é a primeira vez que vejo alguém\l
+com um CARTÃO DE OURO!\p
+Certo, {PLAYER}, me conceda a honra\n
+de cuidar dos seus POKéMON!$
+
+[gText_YouWantTheUsual] 43369e159b
+Que alegria te ver, {PLAYER}!\n
+O de sempre, não é?$
+
+[gText_IllTakeYourPkmn2] 5a2247027c
+Certo, vou levar os seus POKéMON\n
+por alguns segundos.$
+
+[gText_ThankYouForWaiting] 609b561c07
+Obrigada por esperar.$
+
+[gText_WeHopeToSeeYouAgain2] 407712edb8
+Esperamos te ver de novo!$

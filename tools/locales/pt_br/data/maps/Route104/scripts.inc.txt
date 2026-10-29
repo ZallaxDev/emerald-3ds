@@ -1,0 +1,177 @@
+# ROTA 104: os moradores, as placas e o RIVAL com o sistema de CHAMADAS do
+# POKéNAV (MATCH CALL). A MAY só fala com o menino e o BRENDAN só com a
+# menina.
+
+[Route104_Text_BrineyLivesInSeasideCottage] cebd4e5b2b
+Naquela casinha à beira-mar mora\n
+o SR. BRINEY.\p
+Ele já foi um grande marinheiro,\n
+sem medo do mar, por mais bravo\l
+que estivesse.$
+
+[Route104_Text_WhatsItLikeAtBottomOfSea] 95f3c05d5b
+O mar, né?\p
+Como será lá no fundo\n
+do mar?$
+
+[Route104_Text_ThrowBallAtWeakenedPokemon] b19d00a796
+Se for jogar uma POKé BOLA, primeiro\n
+enfraqueça o POKéMON selvagem.\p
+Fica mais fácil de pegar se ele estiver\n
+envenenado, queimado ou dormindo.$
+
+[Route104_Text_OnlyThrowBallAtWildPokemon] 2ca25a9508
+Tentar roubar o POKéMON dos outros\n
+é coisa de ladrão.\p
+Só jogue POKé BOLAS em POKéMON\n
+selvagens.$
+
+[Route104_Text_ImNotATrainer] 11305ee4b6
+Ah, não, eu não treino POKéMON.\p
+Mas é isso aí: se dois TREINADORES se\n
+olham, é um desafio para batalhar.\p
+Se não quiser batalhar, fique fora\n
+da vista deles.$
+
+[Route104_Text_LikeFillingMouthWithSeedsTakeThis] 2b6e367f08
+Eu adoro encher a boca de sementes\n
+e cuspir tudo bem rápido!\p
+Pode ficar com isto, experimenta!\p
+Use num POKéMON e ele aprende um\n
+golpe que dispara sementes rapidinho.$
+
+[Route104_Text_TMsAreOneTimeUse] e8990b586c
+Um conselho!\p
+Uma MT, MÁQUINA TÉCNICA, só serve\n
+uma vez.\p
+Depois de usar, ela some.\n
+Pense bem antes de usar!$
+
+[Route104_Text_DontNeedThisTakeIt] 096f6be498
+Esta FLORICULTURA começou a vender\n
+mudas há pouco tempo.\p
+Fiquei tão feliz que exagerei\n
+nas compras.\p
+Não preciso mais desta ERVA BRANCA.\n
+Você fica com ela, por favor?$
+
+[Route104_Text_FlowerShopSellingSaplings] 152b6829f2
+Esta FLORICULTURA começou a vender\n
+mudas há pouco tempo.\p
+Fiquei tão feliz que exagerei nas\n
+compras. Onde eu ponho tudo isso?$
+
+[Route104_Text_MrBrineysCottage] a14f552347
+CASA DO SR. BRINEY$
+
+[Route104_Text_RouteSignPetalburg] c93e544ae4
+ROTA 104\n
+{RIGHT_ARROW} CIDADE DE PETALBURG$
+
+[Route104_Text_RouteSignRustboro] 65521274bf
+ROTA 104\n
+{UP_ARROW} CIDADE DE RUSTBORO$
+
+[Route104_Text_PrettyPetalFlowShop] 5499207742
+FLORICULTURA PÉTALA BONITA$
+
+[Route104_Text_TrainerTipsDoubleBattles] 4f4757d4f0
+DICAS DE TREINADOR\p
+Na região de HOENN há duplas de\n
+TREINADORES que desafiam os outros\l
+para batalhas de 2 contra 2, as\l
+BATALHAS DUPLAS.\p
+Numa BATALHA DUPLA, você manda\n
+dois POKéMON: o primeiro e o segundo\l
+da lista. Preste atenção na ordem\l
+dos seus POKéMON.$
+
+[Route104_Text_MayWeShouldRegister] 53181fcc2b
+MAY: Ah, oi, {PLAYER}{KUN}!\p
+A DEVON pôs o sistema de CHAMADAS\n
+no seu POKéNAV, né?\p
+Vamos registrar um ao outro pra\n
+gente se falar a qualquer hora.$
+
+[Route104_Text_RegisteredMay] 870c4fc26f
+{PLAYER} registrou a MAY\n
+no POKéNAV.$
+
+[Route104_Text_MayHowsYourPokedex] b5cd72a54e
+MAY: Ah, falando nisso, {PLAYER}{KUN},\n
+como vai a sua POKéDEX?$
+
+[Route104_Text_MayMinesDecentLetsBattle] 0f1b6746c2
+A minha está indo bem.\n
+Então…\l
+Que tal uma batalhinha?$
+
+[Route104_Text_MayHaventRaisedPokemon] bea2ab92a3
+MAY: Ué, o que foi?\p
+Você não pegou nem treinou muito\n
+os seus POKéMON?\p
+Isso não é nada bom pra quem treina!$
+
+[Route104_Text_MayLetsBattle] f85bf52934
+MAY: E aí, o que acha?\n
+Que tal uma batalhinha aqui?$
+
+[Route104_Text_MayIntro] c49df1aa04
+MAY: Você acabou de começar,\n
+{PLAYER}{KUN}. Eu não vou perder!$
+
+[Route104_Text_MayDefeat] 658b9a1c59
+Eita!\n
+Você é melhor do que eu esperava!$
+
+[Route104_Text_MayPostBattle] 94d676ced7
+MAY: Dá pra ver que você ficou bom\n
+em lidar com POKéMON.\p
+Mas, em vez de só fazer eles\n
+batalharem, seja como o SR. BRINEY.\p
+Também é importante fazer amizade\n
+com os POKéMON.$
+
+[Route104_Text_BrendanWeShouldRegister] b8ddef6d97
+BRENDAN: Ah, e aí, {PLAYER}!\p
+Legal, a DEVON pôs o sistema de\n
+CHAMADAS no seu POKéNAV!\p
+Vamos registrar um ao outro no\n
+POKéNAV pra gente manter contato.$
+
+[Route104_Text_RegisteredBrendan] f8b2f9ac98
+{PLAYER} registrou o BRENDAN\n
+no POKéNAV.$
+
+[Route104_Text_BrendanHowsYourPokedex] d67a98903b
+BRENDAN: {PLAYER}, como vai a POKéDEX?\n
+Já preencheu alguma página?$
+
+[Route104_Text_BrendanDoingGreatLetsBattle] f4571cb8ed
+Eu estou indo muito bem!\p
+Quer ver o quanto eu sou bom numa\n
+batalha?$
+
+[Route104_Text_BrendanNoConfidence] 0754344c67
+BRENDAN: Que foi? Não confia nos\n
+seus POKéMON?$
+
+[Route104_Text_BrendanLetsBattle] d76835d346
+BRENDAN: E aí?\n
+Quer batalhar comigo?$
+
+[Route104_Text_BrendanIntro] 5a8fe1842d
+BRENDAN: Sei que você acabou de\n
+começar, mas não vou pegar leve!$
+
+[Route104_Text_BrendanDefeat] 25c927ce95
+Hmm…\n
+Você é bem boa.$
+
+[Route104_Text_BrendanPostBattle] 2c3971bfbb
+BRENDAN: Você ficou bem boa em\n
+lidar com POKéMON.\p
+Mas, sabe, não dá pra só ficar\n
+fazendo os POKéMON batalharem.\p
+Como o SR. BRINEY, é importante\n
+fazer amizade com os seus POKéMON.$

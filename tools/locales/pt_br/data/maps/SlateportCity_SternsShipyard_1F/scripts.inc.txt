@@ -1,0 +1,78 @@
+# ESTALEIRO DO STERN, térreo: o DOCK e o SR. BRINEY.
+
+[SlateportCity_SternsShipyard_1F_Text_CantMakeHeadsOrTails] ebe4f4d895
+Hum… Se isto vai aqui, e aquilo\n
+vai ali…\p
+Então onde vai esta coisa?\n
+E aquele troço ali?\p
+Aaargh! Não estou entendendo\n
+nada disto!$
+
+[SlateportCity_SternsShipyard_1F_Text_MeetDockDeliverToStern] 5ae229e817
+Hm?\n
+Oi, eu sou o DOCK.\p
+O CAP. STERN me encomendou o\n
+projeto de uma balsa.\p
+Ah! Isso aí…\n
+São as PEÇAS DEVON?\p
+Mas, hmm…\n
+Assim não dá…\p
+O CAP. STERN saiu pra algum lugar.\n
+Disse que tinha um trabalho a fazer.\p
+Você pode ir achar o CAP. STERN\n
+e entregar isso a ele?$
+
+[SlateportCity_SternsShipyard_1F_Text_CouldYouFindStern] 63602148f6
+DOCK: Aonde será que o CAP. STERN\n
+foi?\p
+Você pode achar o CAP. STERN e\n
+entregar esse pacote a ele?$
+
+[SlateportCity_SternsShipyard_1F_Text_CouldUseAdviceFromVeteran] 80c207409c
+DOCK: Construir navios é uma arte.\p
+Muita coisa não se resolve só\n
+fazendo contas.\p
+Eu precisava muito do conselho de um\n
+veterano que conheça o mar…$
+
+[SlateportCity_SternsShipyard_1F_Text_BrineyJoinedUs] a9ed557c9e
+DOCK: Oi! O SR. BRINEY veio nos\n
+ajudar.\p
+Graças ao velho marinheiro, a balsa\n
+está ficando pronta aos poucos.$
+
+[SlateportCity_SternsShipyard_1F_Text_FerryIsReady] 181e10efbe
+DOCK: A balsa finalmente está pronta!\p
+A nova S.S. TIDAL é mesmo uma\n
+maravilha da tecnologia!\p
+Mas tenho a sensação de que dá pra\n
+fazer algo ainda melhor.\p
+Sabe, a tecnologia nunca para\n
+de avançar.$
+
+[SlateportCity_SternsShipyard_1F_Text_DecidedToHelpDock] c5874d306f
+SR. BRINEY: Ah, {PLAYER}{KUN}!\n
+Quanto tempo!\p
+É, desde que te conheci, este velho lobo\n
+do mar anda cheio de energia!\p
+Então resolvi ajudar o DOCK a fazer\n
+uma balsa.\p
+Afinal, uma balsa leva muita\n
+gente.\p
+Mas, sabe, esse DOCK é mesmo\n
+especial.\p
+Com o talento dele pra tecnologia e\n
+a minha experiência, com certeza a\l
+gente constrói um baita navio!$
+
+[SlateportCity_SternsShipyard_1F_Text_SeaIsLikeLivingThing] 0a3ea454c1
+As estações, o tempo, onde a lua\n
+fica no céu…\p
+Essas e outras coisas fazem\n
+o mar mudar de cara.\p
+É isso aí!\n
+O mar é como um ser vivo!$
+
+[SlateportCity_SternsShipyard_1F_Text_GetSeasickEasily] 93ad826720
+Eu enjoo no mar muito fácil.\n
+Então eu ajudo aqui, em vez disso.$

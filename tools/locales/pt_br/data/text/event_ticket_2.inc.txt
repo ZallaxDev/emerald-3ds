@@ -1,0 +1,31 @@
+# Bilhetes de evento: MAPA ANTIGO, BILHETES AURORA e MÍSTICO, e o Sr. BRINEY.
+
+[EventTicket_Text_OldSeaMapTooFar] a64e8780a4
+E aí, jovem?\pO quê, é você que tem um mapa\nvelho e rasgado?\pDeixa eu ver.\n… … … … … …\pNossa, isso é longe demais.\nAcho que não posso te ajudar…$
+
+[EventTicket_Text_BrineyHoldOnASecond] b4d01f982d
+BRINEY: Espere aí!\pQue ideia é essa de recusar\nalguém a quem eu devo tanto?$
+
+[EventTicket_Text_BrineyLetsSail] 67f987d5ed
+{PLAYER}{KUN}, me desculpe mesmo.\pVocê veio pedir a minha ajuda\ne quase te mandaram embora.\pBom, deixa eu consertar isso.\pVamos zarpar agora mesmo, claro!\pVamos achar a ilha deste\nMAPA ANTIGO!$
+
+[EventTicket_Text_OddTicketGetOnBoard] c5d322feca
+Foi você que trouxe aquele\nbilhete esquisito?\pVocê quer ir pra uma ilha\nlonge, muito longe.\pNinguém sabe o que tem lá…\pSó de pensar, meu sangue de\nmarinheiro ferve!\pSobe a bordo, jovem!$
+
+[FarawayIsland_Entrance_Text_SailorReturn] 34bd35c26c
+O CAPITÃO BRINEY às vezes é tão\nimprevisível…\pQuer voltar pra LILYCOVE?$
+
+[BirthIsland_Harbor_Text_SailorReturn] f1fd139f1b
+Que ilha de formato estranho, né?\nQuer voltar pra LILYCOVE?$
+
+[EventTicket_Text_OddTicketsWhereTo] f7b95a607b
+Foi você que trouxe aqueles\nbilhetes esquisitos?\p… … …Hmm.\pCom esses bilhetes, dá pra ir\npra ilhas longe, muito longe.\pNinguém sabe o que tem lá\nnem o que pode acontecer.\pSó de pensar, meu sangue de\nmarinheiro ferve!\pSobe a bordo, jovem!\nPra onde vamos primeiro?$
+
+[NavelRock_Harbor_Text_SailorReturn] ddae3365c1
+Vo… Você ouviu isso?\nAquele rosnado grave lá do fundo.\pTem certeza de que é seguro?\nNão acha melhor a gente ir embora?$
+
+[FarawayIsland_Entrance_Text_Sign] eb3e6ffcc3
+A escrita está apagada, como se\ntivesse sido feita há muito tempo…\p“…bro, 6º dia\nSe algum humano… pisar aqui…\lde novo… que seja uma pess… boa…\l…om essa esperança, eu par…”$
+
+[FarawayIsland_Interior_Text_Mew] 0df2235dc2
+Myuu…$

@@ -1,0 +1,15 @@
+# LIGA POKéMON: o HALL DA FAMA.
+
+[EverGrandeCity_HallOfFame_Text_HereWeHonorLeagueChampions] 6490f7051d
+WALLACE: Esta sala…\p
+É aqui que guardamos o registro dos\n
+POKéMON que venceram batalhas\l
+duríssimas.\p
+É aqui que os CAMPEÕES da LIGA\n
+são homenageados.$
+
+[EverGrandeCity_HallOfFame_Text_LetsRecordYouAndYourPartnersNames] 64a6ff088b
+WALLACE: Venha, vamos registrar o seu\n
+nome como TREINADOR que triunfou na\l
+LIGA POKéMON, e o nome dos parceiros\l
+que batalharam com você.$

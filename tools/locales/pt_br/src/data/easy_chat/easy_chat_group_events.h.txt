@@ -1,0 +1,90 @@
+# As palavras da FALA FÁCIL, grupo events (src/data/easy_chat/easy_chat_group_events.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_Appeal] e1a476f66b width=72
+APELO
+
+[gEasyChatWord_Events] c5f548a22c width=72
+EVENTOS
+
+[gEasyChatWord_StayAtHome] 367bcc5123 width=72
+CASEIRO
+
+[gEasyChatWord_Berry] 72a331bd69 width=72
+FRUTA
+
+[gEasyChatWord_Contest] 22f1dfb18d width=72
+CONCURSO
+
+[gEasyChatWord_Mc] dc8d73b230 width=72
+APRESENTADOR
+
+[gEasyChatWord_Judge] 30bd2e4161 width=72
+JUIZ
+
+[gEasyChatWord_Super] 5004e32432 width=72
+SUPER
+
+[gEasyChatWord_Stage] c846023e98 width=72
+PALCO
+
+[gEasyChatWord_HallOfFame] 32065dbe94 width=72
+HALL DA FAMA
+
+[gEasyChatWord_Evolution] 18df2d0756 width=72
+EVOLUÇÃO
+
+[gEasyChatWord_Hyper] 98cfefccd4 width=72
+HIPER
+
+[gEasyChatWord_BattleTower] fbd1b89e76 width=72
+TORRE BAT.
+
+[gEasyChatWord_Leaders] f6613813bf width=72
+LÍDERES
+
+[gEasyChatWord_BattleRoom] f6bb67e66c width=72
+SALA BAT.
+
+[gEasyChatWord_Hidden] 1ba3456507 width=72
+ESCONDIDO
+
+[gEasyChatWord_SecretBase] ff13338a1b width=72
+BASE SECRETA
+
+[gEasyChatWord_Blend] 3894252161 width=72
+MISTURA
+
+[gEasyChatWord_POKEBLOCK] 8403feb786 width=72
+{POKEBLOCK}
+
+[gEasyChatWord_Master] 74ffc874ad width=72
+MESTRE
+
+[gEasyChatWord_Rank] 9cc2229409 width=72
+NÍVEL
+
+[gEasyChatWord_Ribbon] 90ded0833b width=72
+FITA
+
+[gEasyChatWord_Crush] 63fcbf90e2 width=72
+TRITURAR
+
+[gEasyChatWord_Direct] 622a656538 width=72
+DIRETO
+
+[gEasyChatWord_Tower] 12af5dbb57 width=72
+TORRE
+
+[gEasyChatWord_Union] 363cb5cb9b width=72
+UNIÃO
+
+[gEasyChatWord_Room] b163faddbb width=72
+SALA
+
+[gEasyChatWord_Wireless] b611477f8e width=72
+SEM FIO
+
+[gEasyChatWord_Frontier] 00e1f3330e width=72
+FRONTEIRA

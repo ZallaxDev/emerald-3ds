@@ -1,0 +1,4657 @@
+# O menu principal: a janela tem a largura da tela.
+
+[gText_MainMenuNewGame] f6f0416884 width=150
+NOVO JOGO
+
+[gText_MainMenuContinue] ff3dbb4248 width=150
+CONTINUAR
+
+[gText_MainMenuOption] 5b8ec92558 width=150
+OPÇÕES
+
+[gText_MainMenuMysteryGift] 38d1678325 width=150
+PRESENTE MISTERIOSO
+
+[gText_MainMenuMysteryGift2] 38d1678325 width=150
+PRESENTE MISTERIOSO
+
+[gText_MainMenuMysteryEvents] 14e5d0d0bf width=150
+EVENTOS MISTERIOSOS
+
+# SIM e NÃO: a janela de cinco tiles tem espaço para três letras.
+
+[gText_Yes] 8fff039853 width=24
+SIM
+
+[gText_No] a0509b7780 width=24
+NÃO
+
+# O menu START: as entradas cabem na largura de POKéMON (42 px).
+
+[gText_MenuBag] 332c000cf7 width=42
+BOLSA
+
+[gText_MenuSave] 508156a39b width=42
+SALVAR
+
+[gText_MenuOption] 5b8ec92558 width=42
+OPÇÕES
+
+[gText_MenuExit] bb1b38004d width=42
+SAIR
+
+[gText_MenuRetire] 0e25d55e0a width=42
+PARAR
+
+[gText_MenuRest] cbaaa18133 width=42
+PAUSAR
+
+# A mãe do rival fala de "{STR_VAR_1}" (GetRivalSonDaughterString): com o
+# possessivo, para a concordância vir junto.
+
+[gText_Son] f0cbc0ee7d width=72
+nosso filho
+
+[gText_Daughter] 6490e67e82 width=72
+nossa filha
+
+# A escolha do primeiro POKéMON, na BOLSA do PROF. BIRCH (ROTA 101): a caixa
+# de mensagem da tela tem a largura das outras.
+
+[gText_BirchInTrouble] 7d7ec5bc54 width=208
+O PROF. BIRCH está em apuros!\n
+Solte um POKéMON e salve-o!
+
+[gText_ConfirmStarterChoice] f9f15b3147 width=208
+Você escolhe este POKéMON?
+
+# Os POKé MARTS. O menu ajusta a largura às entradas; as mensagens saem
+# na caixa de mensagem (208 px, ou a largura do inglês quando é maior).
+
+[gText_ShopBuy] 6bb45f3794 width=48
+COMPRAR
+
+[gText_ShopSell] 264137beb1 width=48
+VENDER
+
+[gText_ShopQuit] 5860c84587 width=48
+SAIR
+
+# A janela tem 96 px; {STR_VAR_1} é a quantidade, de até 4 dígitos.
+[gText_InBagVar1] 90ab92d791 width=140
+NA BOLSA: {STR_VAR_1}
+
+# A última linha da lista de itens (15 tiles).
+[gText_QuitShopping] c42d94b637 width=100
+Sair da loja.
+
+[gText_Var1CertainlyHowMany] 7f17a11bad width=208
+{STR_VAR_1}? Claro.\n
+Quantas unidades você quer?
+
+[gText_Var1CertainlyHowMany2] 7f17a11bad width=208
+{STR_VAR_1}? Claro.\n
+Quantas unidades você quer?
+
+[gText_Var1AndYouWantedVar2] 3efd0147d5 width=240
+{STR_VAR_1}? E você quer {STR_VAR_2}?\n
+Vai custar ¥{STR_VAR_3}.
+
+[gText_Var1IsItThatllBeVar2] e1157d9620 width=216
+{STR_VAR_1}, certo?\n
+Vai custar ¥{STR_VAR_2}. Vai levar?
+
+[gText_YouWantedVar1ThatllBeVar2] 7f5b9ebb09 width=230
+Você quer {STR_VAR_1}?\n
+Vai custar ¥{STR_VAR_2}. Tudo bem?
+
+[gText_HereYouGoThankYou] d2725908a5 width=208
+Aqui está!\n
+Muito obrigado.
+
+[gText_ThankYouIllSendItHome] 6f96feed49 width=208
+Obrigado!\n
+Vou mandar para o PC da sua casa.
+
+[gText_ThanksIllSendItHome] 5566bc373c width=208
+Valeu!\n
+Vou mandar para o seu PC em casa.
+
+[gText_YouDontHaveMoney] 2528019b58 width=208
+Você não tem dinheiro suficiente.{PAUSE_UNTIL_PRESS}
+
+[gText_NoMoreRoomForThis] 438fb28ae9 width=208
+Você não tem mais espaço para\n
+este item.{PAUSE_UNTIL_PRESS}
+
+[gText_SpaceForVar1Full] b5de72d132 width=208
+O espaço de {STR_VAR_1} está cheio.{PAUSE_UNTIL_PRESS}
+
+[gText_AnythingElseICanHelp] 4f4635a815 width=208
+Posso ajudar em mais alguma\n
+coisa?
+
+[gText_CanIHelpWithAnythingElse] 28bae54743 width=208
+Posso ajudar em mais alguma coisa?
+
+[gText_ThrowInPremierBall] 73f851cd43 width=208
+E leve uma BOLA PRESENTEADA de brinde.{PAUSE_UNTIL_PRESS}
+
+[gText_CantBuyKeyItem] 2af9bff187 width=208
+{STR_VAR_2}? Ah, não.\n
+Isso eu não posso comprar.{PAUSE_UNTIL_PRESS}
+
+[gText_HowManyToSell] 2468db0b90 width=208
+{STR_VAR_2}?\n
+Quantas unidades quer vender?
+
+[gText_ICanPayVar1] a853a37376 width=208
+Posso pagar ¥{STR_VAR_1}.\n
+Pode ser?
+
+[gText_TurnedOverVar1ForVar2] 4ba0d45068 width=208
+Entregou {STR_VAR_2}\n
+e recebeu ¥{STR_VAR_1}.
+
+# ---------------------------------------------------------------- BOLSA
+
+# A BOLSA: as ações do menu de um item, na fonte estreita, em colunas de
+# 56 px a partir de x=8 (48 px de texto; medidos aqui na fonte normal).
+
+[gMenuText_Use] 7dcf46a0ef width=56
+USAR
+
+[gMenuText_Toss] 4e8ae1245c width=56
+DESCARTAR
+
+[gText_Toss] 4e8ae1245c width=56
+DESCARTAR
+
+[gMenuText_Register] 0391d22030 width=56
+REGISTRAR
+
+[gText_Register] 0391d22030 width=56
+REGISTRAR
+
+[gMenuText_Give] a5fae5b4e2 width=56
+DAR
+
+[gMenuText_Give2] a5fae5b4e2 width=56
+DAR
+
+[gText_Give2] a5fae5b4e2 width=56
+DAR
+
+[gMenuText_Check] d37267cb29 width=56
+VER
+
+[gText_Check] d37267cb29 width=56
+VER
+
+[gMenuText_CheckTag] 4c73dcd0f2 width=56
+VER ETIQ.
+
+[gMenuText_Walk] abe59e364f width=56
+ANDAR
+
+[gMenuText_Deselect] 9bb2544d0b width=56
+DESMARCAR
+
+[gText_Deselect] 9bb2544d0b width=56
+DESMARCAR
+
+[gMenuText_Confirm] f6fda10d33 width=56
+CONFIRMAR
+
+[gMenuText_Show] 40ae6fd23e width=56
+MOSTRAR
+
+# CANCEL aparece em muitas janelas do jogo, algumas do tamanho exato da
+# palavra: VOLTAR tem a mesma largura.
+
+[gText_Cancel2] 1507c40f04
+VOLTAR
+
+# Os bolsos da BOLSA: a janela do nome tem 64 px.
+
+[gText_ItemsPocket] a5ef8f60cf width=64
+ITENS
+
+[gText_PokeBallsPocket] 45a1d46176 width=64
+POKé BOLAS
+
+[gText_TMHMPocket] a23cbc63df width=64
+MTs E MOs
+
+[gText_BerriesPocket] fba348a585 width=64
+FRUTAS
+
+[gText_KeyItemsPocket] 0a6c54eddf width=64
+ITENS CHAVE
+
+# A última linha da lista de itens (80 px, como os nomes dos itens).
+
+[gText_CloseBag] 7886114b0d width=80
+FECHAR BOLSA
+
+# Na janela de descrição (3 linhas de 102 px); {STR_VAR_1} é o nome de um
+# item e {STR_VAR_2}, quando há, a quantidade (até 3 dígitos: essas entradas
+# têm a largura do inglês, que conta o placeholder do mesmo jeito).
+# O nome do item vai sem artigo, e o texto evita o gênero dele.
+
+[gText_Var1IsSelected] e810a4f468 width=102
+Selecionou\n
+{STR_VAR_1}.
+
+[gText_TossHowManyVar1s] c738796829 width=102
+Quantas unidades\n
+de {STR_VAR_1}\n
+descartar?
+
+[gText_ConfirmTossItems] be1650eb0e width=131
+Quer mesmo\n
+descartar {STR_VAR_2}\n
+de {STR_VAR_1}?
+
+[gText_ThrewAwayVar2Var1s] 4bb97b46be width=131
+Descartou {STR_VAR_2}\n
+de {STR_VAR_1}.
+
+[gText_DepositHowManyVar1] ff48c8aa84 width=102
+Guardar quantas\n
+unidades de\n
+{STR_VAR_1}?
+
+[gText_DepositedVar2Var1s] 4e82d89da0 width=127
+Guardou {STR_VAR_2}\n
+de {STR_VAR_1}.
+
+[gText_NoRoomForItems] c13fb2d4b2 width=102
+Não há espaço para\n
+guardar itens.
+
+[gText_CantStoreImportantItems] b130988545 width=102
+Itens importantes\n
+não podem ficar\n
+no PC!
+
+[gText_MoveVar1Where] 7f2c22bc42 width=102
+Mover\n
+{STR_VAR_1}\n
+para onde?
+
+[gText_ReturnToVar1] d094803a66 width=102
+Voltar para\n
+{STR_VAR_1}.
+
+# Para onde VOLTAR leva ({STR_VAR_1} acima).
+
+[gText_TheField] 74290c16b1 width=102
+o mapa
+
+[gText_TheBattle] 219ed72c3a width=102
+a batalha
+
+[gText_ThePokemonList] 54b6b886fa width=102
+a lista de POKéMON
+
+[gText_TheShop] 66d3d1475c width=102
+a loja
+
+[gText_ThePC] 9c3806228e width=102
+o PC
+
+# Na caixa de mensagem da BOLSA e ao usar itens (208 px).
+
+[gText_CantWriteMail] 9ab77bc157 width=208
+Não dá para escrever\n
+CARTAS aqui.
+
+[gText_Var1CantBeHeld] 075f274964 width=208
+Não dá para segurar\n
+{STR_VAR_1}.
+
+[gText_Var1CantBeHeldHere] 046232650d width=208
+Não dá para segurar\n
+{STR_VAR_1} aqui.
+
+[gText_NoPokemon] 90d03d1516 width=208
+Não tem nenhum\n
+POKéMON.
+
+[gText_DadsAdvice] 157e30d85c width=208
+Conselho do PAPAI…\n
+{PLAYER}, cada coisa tem a sua hora\l
+e o seu lugar!{PAUSE_UNTIL_PRESS}
+
+[gText_CantDismountBike] 002de62319 width=208
+Não dá para descer da BICICLETA aqui.{PAUSE_UNTIL_PRESS}
+
+[gText_BootedUpTM] 15a777148f width=208
+Ligou uma MT.
+
+[gText_BootedUpHM] 5855cfee5f width=208
+Ligou uma MO.
+
+[gText_TMHMContainedVar1] bcd58c4899 width=208
+Ela tem o golpe\n
+{STR_VAR_1}.\p
+Ensinar {STR_VAR_1}\n
+a um POKéMON?
+
+[gText_ItemFinderNearby] e12b4a7486 width=208
+Hã?\n
+O ACHADOR DE ITENS tá reagindo!\p
+Tem um item enterrado por aqui!{PAUSE_UNTIL_PRESS}
+
+[gText_ItemFinderOnTop] 221032d2a9 width=208
+Opa!\n
+O ACHADOR DE ITENS tá tremendo todo!{PAUSE_UNTIL_PRESS}
+
+[gText_ItemFinderNothing] 60df653093 width=208
+… … … …Nada!\n
+Nenhum sinal.{PAUSE_UNTIL_PRESS}
+
+[gText_CoinCase] 29d3141568 width=208
+Suas FICHAS:\n
+{STR_VAR_1}{PAUSE_UNTIL_PRESS}
+
+[gText_PlayerUsedVar2] aa983bd643 width=208
+{PLAYER} usou\n
+{STR_VAR_2}.{PAUSE_UNTIL_PRESS}
+
+[gText_RepelEffectsLingered] 37dbd0dd2f width=208
+Mas o efeito do REPELENTE\n
+ainda tá valendo.{PAUSE_UNTIL_PRESS}
+
+[gText_UsedVar2WildLured] 322a9f6905 width=208
+{PLAYER} usou\n
+{STR_VAR_2}.\p
+POKéMON selvagens vão ser atraídos.{PAUSE_UNTIL_PRESS}
+
+[gText_UsedVar2WildRepelled] b17a76b96c width=208
+{PLAYER} usou\n
+{STR_VAR_2}.\p
+POKéMON selvagens vão ser afastados.{PAUSE_UNTIL_PRESS}
+
+[gText_BoxFull] 3ec32cddf9 width=208
+A CAIXA tá cheia.{PAUSE_UNTIL_PRESS}
+
+[gText_PowderQty] aa25d91247 width=208
+QTD. DE PÓ: {STR_VAR_1}{PAUSE_UNTIL_PRESS}
+
+[gText_WontHaveEffect] 1716666980 width=208
+Isso não vai ter efeito nenhum.{PAUSE_UNTIL_PRESS}
+
+[gText_BagIsFull] 7e594d8a29 width=208
+A BOLSA tá cheia.{PAUSE_UNTIL_PRESS}
+
+# A fala do Prof. Birch (src/main_menu.c): o POKéMON saindo da bola, numa
+# caixa de mensagem, e o menu de gênero, numa janela de 6 tiles.
+
+[gText_ThisIsAPokemon] 008934bd0c width=208
+Isto é o que chamamos de “POKéMON”.{PAUSE 96}\p
+
+[gText_BirchBoy] 0858b75d3b width=40
+MENINO
+
+[gText_BirchGirl] 333d234676 width=40
+MENINA
+
+# O menu de opções (src/option_menu.c). Os rótulos vão até x=92; os valores
+# ficam entre x=96 e x=204 (patch 0045), o TIPO da moldura em 24 px.
+
+[gText_Option] 5b8ec92558 width=60
+OPÇÕES
+
+[gText_TextSpeed] ff4b6daacb width=88
+VEL. DO TEXTO
+
+[gText_BattleScene] 8b3175525e width=88
+ANIMAÇÕES
+
+[gText_BattleStyle] 9c1dbf8dfd width=88
+ESTILO BATALHA
+
+[gText_Sound] 955c8b401b width=88
+SOM
+
+[gText_ButtonMode] 48c5931c4b width=88
+MODO DOS BOTÕES
+
+[gText_Frame] 6d649eb34a width=88
+MOLDURA
+
+[gText_OptionMenuCancel] 1507c40f04 width=88
+VOLTAR
+
+[gText_TextSpeedSlow] b34bd128ac width=30
+{COLOR GREEN}{SHADOW LIGHT_GREEN}LENTA
+
+[gText_TextSpeedMid] af0b6e95ac width=30
+{COLOR GREEN}{SHADOW LIGHT_GREEN}MÉDIA
+
+[gText_TextSpeedFast] 33d7d5ed01 width=36
+{COLOR GREEN}{SHADOW LIGHT_GREEN}RÁPIDA
+
+[gText_BattleSceneOn] ae183e6301 width=40
+{COLOR GREEN}{SHADOW LIGHT_GREEN}SIM
+
+[gText_BattleSceneOff] a7e323f6e6 width=40
+{COLOR GREEN}{SHADOW LIGHT_GREEN}NÃO
+
+[gText_BattleStyleShift] 97702b095f width=60
+{COLOR GREEN}{SHADOW LIGHT_GREEN}ALTERNADO
+
+[gText_BattleStyleSet] cee783625b width=40
+{COLOR GREEN}{SHADOW LIGHT_GREEN}FIXO
+
+[gText_SoundStereo] a8dc3b670d width=50
+{COLOR GREEN}{SHADOW LIGHT_GREEN}ESTÉREO
+
+[gText_FrameType] f67efadb77 width=24
+{COLOR GREEN}{SHADOW LIGHT_GREEN}TIPO
+
+# O menu CONTINUAR (src/main_menu.c): JOGADOR e POKéDEX à esquerda, com o
+# valor alinhado em x=100; TEMPO e INSÍGNIAS a partir de x=108.
+
+[gText_ContinueMenuPlayer] 5055efde51 width=54
+JOGADOR
+
+[gText_ContinueMenuTime] 64269f9bd2 width=60
+TEMPO
+
+[gText_ContinueMenuBadges] 0a93c8513e width=60
+INSÍGNIAS
+
+# Mensagens do save ao abrir o jogo, em caixa de mensagem.
+
+[gText_SaveFileUpdated] 7d81f9b9d6 width=208
+Os dados salvos foram atualizados.
+
+[gText_SaveFileCorrupted] 511a4aa0cf width=208
+Os dados salvos estão corrompidos.\n
+Os dados anteriores serão carregados.
+
+[gText_SaveFileErased] 03d1a727fa width=208
+Os dados salvos foram apagados\n
+por estarem corrompidos ou com defeito.
+
+[gText_BatteryRunDry] 6606baab1a width=208
+A bateria interna acabou.\n
+O jogo pode ser jogado.\p
+Mas os eventos ligados ao relógio\n
+não vão mais acontecer.
+
+# O PC do jogador (src/player_pc.c): os menus se ajustam ao texto; as
+# descrições e mensagens vão na caixa de diálogo, as do depósito de itens
+# numa janela de 13 tiles.
+
+[gText_Cancel] 1507c40f04 width=90
+VOLTAR
+
+[gText_Decoration] 9cb976dd2f width=90
+DECORAÇÃO
+
+[gText_DepositItem] 080dd293fd width=90
+GUARDAR ITEM
+
+[gText_ItemStorage] 2014bad8d9 width=90
+ITENS GUARDADOS
+
+[gText_Mailbox] 172e168c47 width=90
+CARTAS
+
+[gText_MoveToBag] 05d7de447b width=90
+PARA A BOLSA
+
+[gText_Read] 0a3768425d width=90
+LER
+
+[gText_TossItem] f29aa74d1f width=90
+DESCARTAR
+
+[gText_TurnOff] 3caa119c81 width=90
+DESLIGAR
+
+[gText_WithdrawItem] 98e2f00f86 width=90
+RETIRAR ITEM
+
+[gText_MailToBagMessageErased] 69eda9f22d width=208
+A CARTA voltou para a BOLSA\ncom a mensagem apagada.{PAUSE_UNTIL_PRESS}
+
+[gText_MessageWillBeLost] 911d954c26 width=208
+A mensagem será perdida.\nTudo bem?
+
+[gText_NoItems] 80253959c3 width=208
+Não há itens.{PAUSE_UNTIL_PRESS}
+
+[gText_NoMailHere] 818372c97a width=208
+Não há CARTAS aqui.{PAUSE_UNTIL_PRESS}
+
+[gText_StoreItemsInPC] ae53063a5c width=208
+Guardar itens no PC.
+
+[gText_TakeOutItemsFromPC] e297ff9caf width=208
+Retirar itens do PC.
+
+[gText_ThrowAwayItemsInPC] 99a1ff08a3 width=208
+Jogar fora itens guardados no PC.
+
+[gText_WhatToDoWithVar1sMail] 2895bab09f width=208
+O que deseja fazer com a\nCARTA de {STR_VAR_1}?
+
+[gText_WhatWouldYouLike] 7b52603bb2 width=208
+O que você deseja fazer?
+
+[gText_GoBackPrevMenu] 46313be8c5 width=104
+Voltar ao\nmenu anterior.
+
+[gText_NoRoomInBag] 8bc775f840 width=104
+Não há mais espaço\nna BOLSA.
+
+[gText_TooImportantToToss] 251112abc5 width=104
+Isso é importante\ndemais para ser\ndescartado!
+
+[gText_WithdrawHowManyItems] 06bd828766 width=104
+Retirar quantos\n{STR_VAR_1}?
+
+[gText_WithdrawXItems] c05bf1f84d width=120
+Retirou {STR_VAR_2}\n{STR_VAR_1}.
+
+# O sistema de CAIXAS (src/pokemon_storage_system.c): os menus se ajustam
+# ao número de letras; as mensagens vão numa janela de 18 tiles (144 px);
+# as descrições do menu principal, na caixa de diálogo.
+
+[gPCText_Bag] 332c000cf7 width=90
+BOLSA
+
+[gPCText_Beach] ceb835f4de width=90
+PRAIA
+
+[gPCText_Cancel] 1507c40f04 width=90
+VOLTAR
+
+[gPCText_Cave] b1e3943cc1 width=90
+CAVERNA
+
+[gPCText_City] 55f447a461 width=90
+CIDADE
+
+[gPCText_Crag] bf90bde248 width=90
+ROCHEDO
+
+[gPCText_Desert] 8444e9ae2f width=90
+DESERTO
+
+[gPCText_Etcetera] 416400de0c width=90
+OUTROS
+
+[gPCText_Forest] 29c7af3348 width=90
+FLORESTA
+
+[gPCText_Friends] 223635cc48 width=90
+AMIGOS
+
+[gPCText_Give] a5fae5b4e2 width=90
+DAR
+
+[gPCText_Info] 9c9cf99982 width=90
+INFO
+
+[gPCText_Jump] bb0d79b578 width=90
+IR PARA
+
+[gPCText_Machine] 1d6e327716 width=90
+MÁQUINA
+
+[gPCText_Mark] 20b7a63446 width=90
+MARCAR
+
+[gPCText_Move] 3bf08a84f1 width=90
+MOVER
+
+[gPCText_Name] a9d371451b width=90
+NOME
+
+[gPCText_Place] 1127ccbfa2 width=90
+COLOCAR
+
+[gPCText_Pokecenter] 8abde0f9af width=90
+CENTRO POKé
+
+[gPCText_PolkaDot] bfb5b90ca7 width=90
+BOLINHAS
+
+[gPCText_Release] f73b278fda width=90
+SOLTAR
+
+[gPCText_River] 9cefb5f80e width=90
+RIO
+
+[gPCText_Savanna] e1aadc1f77 width=90
+SAVANA
+
+[gPCText_Scenery1] cfa6d4a1b8 width=90
+PAISAGEM 1
+
+[gPCText_Scenery2] d97959e0ca width=90
+PAISAGEM 2
+
+[gPCText_Scenery3] 1d2b7a41e8 width=90
+PAISAGEM 3
+
+[gPCText_Seafloor] 79ab1e4e59 width=90
+FUNDO MAR
+
+[gPCText_Shift] 149b8de2b0 width=90
+TROCAR
+
+[gPCText_Simple] 1c34a90a63 width=90
+SIMPLES
+
+[gPCText_Sky] 65b5966c26 width=90
+CÉU
+
+[gPCText_Snow] 4bbd1caa53 width=90
+NEVE
+
+[gPCText_Store] a022ae64c8 width=90
+GUARDAR
+
+[gPCText_Summary] 1450844d24 width=90
+RESUMO
+
+[gPCText_Switch] b02cbd93fe width=90
+TROCAR
+
+[gPCText_Take] 06614e39f2 width=90
+PEGAR
+
+[gPCText_Volcano] 43fd415f47 width=90
+VULCÃO
+
+[gPCText_Wallpaper] f00e8e606b width=90
+FUNDO
+
+[gPCText_Withdraw] b4bcf59859 width=90
+RETIRAR
+
+[gText_DepositPokemon] 76d7902854 width=90
+DEPOSITAR
+
+[gText_MoveItems] 6e46477b0f width=90
+MOVER ITENS
+
+[gText_MovePokemon] 37e7fb9b7b width=90
+MOVER POKéMON
+
+[gText_SeeYa] 6a4946d8dc width=90
+ATÉ MAIS!
+
+[gText_WithdrawPokemon] eb946f0023 width=90
+RETIRAR
+
+[gText_DepositMonDescription] ad209827e6 width=208
+Guarde POKéMON da equipe nas CAIXAS.
+
+[gText_MoveItemsDescription] e54f650846 width=208
+Mova itens segurados por POKéMON\nnas CAIXAS ou na equipe.
+
+[gText_MoveMonDescription] 022b9ed1e0 width=208
+Organize os POKéMON nas CAIXAS e\nna sua equipe.
+
+[gText_SeeYaDescription] 349bf7a9c5 width=208
+Voltar ao menu anterior.
+
+[gText_WithdrawMonDescription] 41b4e3757e width=208
+Leve POKéMON das CAIXAS para\na sua equipe.
+
+[gText_BagIsFull2] d76a045011 width=144
+A BOLSA está cheia.
+
+[gText_BoxIsFull2] 11b25bfc90 width=144
+A CAIXA está cheia.
+
+[gText_ByeByePkmn] 257c67bb06 width=144
+Tchau, {DYNAMIC 0}!
+
+[gText_ChangedToNewItem] 9567cdc2fd width=144
+Trocado por {DYNAMIC 0}.
+
+[gText_ContinueBoxOperations] d850aa85cc width=144
+Continuar nas CAIXAS?
+
+[gText_DepositInWhichBox] ae37e87288 width=144
+Depositar em qual CAIXA?
+
+[gText_ExitFromBox] 56388e51f6 width=144
+Sair da CAIXA?
+
+[gText_FourEllipsesExclamation] e2ad6dd9d2 width=144
+… … … … !
+
+[gText_GiveToAPkmn] 73b2ae41a8 width=144
+DAR a um POKéMON?
+
+[gText_ItemIsNowHeld] 94b64a89ea width=144
+{DYNAMIC 0} entregue.
+
+[gText_JumpToWhichBox] f648a1b66b width=144
+Ir para qual CAIXA?
+
+[gText_JustOnePkmn] 43061d4787 width=208
+Você só tem um POKéMON com você.
+
+[gText_MailCantBeStored] 2c444bd288 width=144
+Não dá para guardar CARTA!
+
+[gText_MarkYourPkmn] 3eb5795dd4 width=144
+Marque o seu POKéMON.
+
+[gText_PartyFull] 88eb261383 width=144
+Sua equipe está cheia!
+
+[gText_PickTheWallpaper] 32ef8a24b0 width=144
+Escolha o fundo.
+
+[gText_PkmnCameBack] e6d82bcde6 width=144
+{DYNAMIC 0} voltou!
+
+[gText_PkmnIsSelected] fcab592a76 width=144
+{DYNAMIC 0} selecionado.
+
+[gText_PkmnWasDeposited] 8de4ca6d2e width=144
+{DYNAMIC 0} foi guardado.
+
+[gText_PkmnWasReleased] 0f8f327cee width=144
+{DYNAMIC 0} foi solto.
+
+[gText_PlacedItemInBag] 9a38cbf157 width=144
+O item foi para a BOLSA.
+
+[gText_PleasePickATheme] 79b7087542 width=144
+Escolha um tema.
+
+[gText_PleaseRemoveTheMail] 7ed3728edb width=144
+Remova a CARTA, por favor.
+
+[gText_PutItemInBag] 47a200a54a width=144
+Pôr este item na BOLSA?
+
+[gText_ReleaseThisPokemon] 58c86f3878 width=144
+Soltar este POKéMON?
+
+[gText_ThatsYourLastPkmn] cd96404095 width=144
+É o seu último POKéMON!
+
+[gText_WasItWorriedAboutYou] 0ec55c45fd width=144
+Ele se preocupou com você?
+
+[gText_WhatDoYouWantToDo] 8d4f6ef55f width=144
+O que você quer fazer?
+
+[gText_WhichOneWillYouTake] 39182b81f9 width=144
+Qual você vai levar?
+
+[gText_YouCantReleaseAnEgg] e28c017f9c width=144
+Um OVO não pode ser solto.
+
+[gText_YourPartysFull] 611c510c01 width=144
+Sua equipe está cheia!
+
+[gText_YoureHoldingAPkmn] 58e509ee93 width=144
+Você está com um POKéMON!
+
+[gText_Box] 5d27af0eb9 width=40
+CAIXA
+
+[gText_EggNickname] 715a2d4c2e width=40
+OVO
+
+# O menu START (src/start_menu.c): a janela de salvar tem 14 tiles, a das
+# SAFARI BALLS 9 tiles, com o número no lugar do {STR_VAR_1}.
+
+[gText_SavingPlayer] 5055efde51 width=60
+JOGADOR
+
+[gText_SavingTime] 64269f9bd2 width=60
+TEMPO
+
+[gText_SavingBadges] 0a93c8513e width=60
+INSÍGNIAS
+
+[gText_SafariBallStock] 6103285b8b width=124
+BOLAS SAFÁRI\nEstoque: {STR_VAR_1}
+
+# O resumo do POKéMON (src/pokemon_summary_screen.c). Títulos em 11 tiles;
+# atributos à esquerda em 6 tiles, à direita centralizados em 36 px (por
+# isso AT.ESP e DEF.ESP); APELO e ATRAP. em 5 tiles; o quadro de natureza,
+# origem e OVO em 18 tiles (144 px). As larguras das frases de origem
+# contam os códigos de cor como texto; as linhas reais ficam abaixo de 144.
+
+[gText_PkmnInfo] d62b3b3e52 width=88
+INFO POKéMON
+
+[gText_PkmnSkills] bfbdcfea89 width=88
+ATRIBUTOS
+
+[gText_BattleMoves] 0e54668249 width=88
+GOLPES DE LUTA
+
+[gText_ContestMoves] 5e3f529e72 width=88
+GOLPES CONC.
+
+[gText_Info] 9c9cf99982 width=60
+INFO
+
+[gText_Switch] b02cbd93fe width=60
+TROCAR
+
+[gText_RentalPkmn] 755d279110 width=144
+POKéMON ALUGADO
+
+[gText_TypeSlash] 23b582f48e width=40
+TIPO/
+
+[gText_OTSlash] 19eae4f147 width=30
+TO/
+
+[gText_None] 0654a028e5 width=80
+NADA
+
+[gText_RibbonsVar1] 3a312b4a83 width=120
+FITAS: {STR_VAR_1}
+
+[gText_HP4] 5200bdfc01 width=40
+PS
+
+[gText_Attack3] df86d4b6db width=48
+ATAQUE
+
+[gText_Defense3] d4f6d85456 width=48
+DEFESA
+
+[gText_SpAtk4] 4881ee79a1 width=38
+AT.ESP
+
+[gText_SpDef4] 3b0727a5ad width=40
+DEF.ESP
+
+[gText_Speed2] 265ffc5673 width=38
+VELOC.
+
+[gText_ExpPoints] 49b6e97d3e width=80
+PONTOS EXP.
+
+[gText_NextLv] df8e4370df width=80
+PRÓX. NV.
+
+[gText_Status] 7168833cc8 width=48
+STATUS
+
+[gText_Power] c2b6b521a7 width=72
+PODER
+
+[gText_Accuracy2] 3d61db27cf width=72
+PRECISÃO
+
+[gText_Appeal] e1a476f66b width=40
+APELO
+
+[gText_Jam] 18951a64f6 width=40
+ATRAP.
+
+[gText_HMMovesCantBeForgotten2] 0c23ac9d64 width=160
+Golpes de MO não podem\n
+ser esquecidos agora.
+
+[gText_EggAboutToHatch] 974f6baa4e width=144
+Está fazendo barulho.\n
+Vai chocar logo!
+
+[gText_EggFromHotSprings] 750be19f3a width=144
+Um OVO POKéMON obtido\n
+nas fontes termais.
+
+[gText_EggFromTraveler] 6e07dc116d width=144
+Um OVO POKéMON curioso\n
+obtido de um viajante.
+
+[gText_EggWillHatchSoon] 02240fcb1b width=144
+Ele se mexe às vezes.\n
+Deve chocar em breve.
+
+[gText_EggWillTakeALongTime] 98dd1f5144 width=144
+Parece que este OVO vai\n
+demorar muito para chocar.
+
+[gText_EggWillTakeSomeTime] 5003e8f71e width=144
+O que vai sair daqui?\n
+Ainda vai demorar.
+
+[gText_OddEggFoundByCouple] 180bb4247a width=144
+Um OVO POKéMON curioso\n
+achado na CRECHE.
+
+[gText_PeculiarEggNicePlace] a1eae0c4a8 width=144
+Um OVO POKéMON peculiar\n
+obtido no lugar legal.
+
+[gText_PeculiarEggTrade] bf882ca1eb width=144
+Um OVO POKéMON peculiar\n
+obtido numa troca.
+
+[gText_XNature] ac2ddc5d29 width=270
+Natureza {DYNAMIC 0}{DYNAMIC 2}{DYNAMIC 1}{DYNAMIC 5}
+
+[gText_XNatureMetAtYZ] 8d24a89530 width=270
+Natureza {DYNAMIC 0}{DYNAMIC 2}{DYNAMIC 1}{DYNAMIC 5},\n
+encontrado no {LV_2}{DYNAMIC 0}{DYNAMIC 3}{DYNAMIC 1},\n
+{DYNAMIC 0}{DYNAMIC 4}{DYNAMIC 1}.
+
+[gText_XNatureHatchedAtYZ] 20e65b9ac3 width=270
+Natureza {DYNAMIC 0}{DYNAMIC 2}{DYNAMIC 1}{DYNAMIC 5},\n
+chocado no {LV_2}{DYNAMIC 0}{DYNAMIC 3}{DYNAMIC 1},\n
+{DYNAMIC 0}{DYNAMIC 4}{DYNAMIC 1}.
+
+[gText_XNatureObtainedInTrade] d0076530db width=270
+Natureza {DYNAMIC 0}{DYNAMIC 2}{DYNAMIC 1}{DYNAMIC 5},\n
+obtido numa troca.
+
+[gText_XNatureFatefulEncounter] ba5853f89f width=270
+Natureza {DYNAMIC 0}{DYNAMIC 2}{DYNAMIC 1}{DYNAMIC 5},\n
+obtido num encontro\n
+do destino no {LV_2}{DYNAMIC 0}{DYNAMIC 3}{DYNAMIC 1}.
+
+[gText_XNatureProbablyMetAt] bf75217d3c width=270
+Natureza {DYNAMIC 0}{DYNAMIC 2}{DYNAMIC 1}{DYNAMIC 5},\n
+talvez visto no {LV_2}{DYNAMIC 0}{DYNAMIC 3}{DYNAMIC 1},\n
+{DYNAMIC 0}{DYNAMIC 4}{DYNAMIC 1}.
+
+[gText_XNatureMetSomewhereAt] f94aa7efc3 width=270
+Natureza {DYNAMIC 0}{DYNAMIC 2}{DYNAMIC 1}{DYNAMIC 5},\n
+visto em algum lugar\n
+no {LV_2}{DYNAMIC 0}{DYNAMIC 3}{DYNAMIC 1}.
+
+[gText_XNatureHatchedSomewhereAt] c1a3c71074 width=270
+Natureza {DYNAMIC 0}{DYNAMIC 2}{DYNAMIC 1}{DYNAMIC 5},\n
+chocado em algum lugar\n
+no {LV_2}{DYNAMIC 0}{DYNAMIC 3}{DYNAMIC 1}.
+
+# A tela da equipe (src/party_menu.c): as mensagens vão na caixa de diálogo;
+# os atributos, na janela de subida de nível (10 tiles) e nas mensagens.
+
+[gText_HP3] 5200bdfc01 width=40
+PS
+
+[gText_SpAtk3] 4881ee79a1 width=48
+AT. ESP.
+
+[gText_SpDef3] 3b0727a5ad width=48
+DEF. ESP.
+
+[gText_12PoofForgotMove] 2862488cb3 width=208
+1, {PAUSE 15}2 e{PAUSE 15}… {PAUSE 15}… {PAUSE 15}… {PAUSE 15}{PLAY_SE SE_BALL_BOUNCE_1}Puf!\p
+{STR_VAR_1} esqueceu como\n
+usar {STR_VAR_2}.\p
+E…{PAUSE_UNTIL_PRESS}
+
+[gText_BagFullCouldNotRemoveItem] b4d6e0bcb5 width=208
+A BOLSA está cheia. Não deu para\n
+tirar o item do POKéMON.{PAUSE_UNTIL_PRESS}
+
+[gText_CancelBattle] 6878f779b2 width=208
+Cancelar a batalha?
+
+[gText_CancelChallenge] 78d7977bf4 width=208
+Cancelar o desafio?
+
+[gText_CancelParticipation] d4decaee34 width=208
+Cancelar a participação?
+
+[gText_CantSwitchWithAlly] 745d05f04a width=208
+Não dá para trocar os POKéMON de\n
+{STR_VAR_1} com os seus!{PAUSE_UNTIL_PRESS}
+
+[gText_CantUseUntilNewBadge] 3483ccff8f width=208
+Isso só pode ser usado com uma\n
+nova INSÍGNIA.{PAUSE_UNTIL_PRESS}
+
+[gText_EggCantBattle] 409a88e364 width=208
+Um OVO não pode lutar!{PAUSE_UNTIL_PRESS}
+
+[gText_EggCantBeTradedNow] d2f991301d width=208
+Um OVO não pode ser trocado agora.
+
+[gText_EscapeFromHere] 85c554a777 width=208
+Quer fugir daqui e voltar\n
+para {STR_VAR_1}?
+
+[gText_ItemThrownAway] ead1e79fd2 width=208
+{STR_VAR_1}\n
+foi jogado fora.{PAUSE_UNTIL_PRESS}
+
+[gText_MailMessageWillBeLost] 822edf7af1 width=208
+Se a CARTA sair, a mensagem\n
+será perdida. Tudo bem?
+
+[gText_MailSentToPC] 0ea873af95 width=208
+A CARTA foi enviada ao seu PC.{PAUSE_UNTIL_PRESS}
+
+[gText_MailTakenFromPkmn] de228a34f3 width=208
+A CARTA foi tirada do\n
+POKéMON.{PAUSE_UNTIL_PRESS}
+
+[gText_MailTransferredFromMailbox] 96ffe3fdf7 width=208
+A CARTA veio das\n
+CARTAS do PC.{PAUSE_UNTIL_PRESS}
+
+[gText_MoveNotLearned] f58fababaf width=208
+{STR_VAR_1} não aprendeu o\n
+golpe {STR_VAR_2}.{PAUSE_UNTIL_PRESS}
+
+[gText_MovesPPIncreased] 93310c246e width=208
+Os PP de {STR_VAR_1} aumentaram.{PAUSE_UNTIL_PRESS}
+
+[gText_NoMoreThanVar1Pkmn] 1116374a76 width=208
+Só podem entrar até\n
+{STR_VAR_1} POKéMON.{PAUSE_UNTIL_PRESS}
+
+[gText_OnlyPkmnForBattle] eaea70fe85 width=208
+É o seu único\n
+POKéMON para lutar.
+
+[gText_PCMailboxFull] 406f1ad349 width=208
+As CARTAS do seu PC estão cheias.{PAUSE_UNTIL_PRESS}
+
+[gText_PPWasRestored] 34c08ec4bc width=208
+Os PP foram restaurados.{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnAdoresBaseVar2Fell] 5c3c277d43 width=208
+{STR_VAR_1} adora você!\n
+O {STR_VAR_2} base caiu!{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnAlreadyHoldingItemSwitch] 59b47279d8 width=208
+{STR_VAR_1} já está segurando\n
+um(a) {STR_VAR_2}.\p
+Quer trocar os\n
+dois itens?
+
+[gText_PkmnAlreadyInBattle] 061f72f81d width=208
+{STR_VAR_1} já está\n
+na batalha!{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnAlreadyKnows] 4a874a3971 width=208
+{STR_VAR_1} já conhece\n
+{STR_VAR_2}.{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnAlreadySelected] 76f841aba2 width=208
+{STR_VAR_1} já foi\n
+escolhido.{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnBaseVar2StatIncreased] 237c591348 width=208
+O {STR_VAR_2} base de\n
+{STR_VAR_1} aumentou.{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnBecameHealthy] 61b25bd16a width=208
+{STR_VAR_1} ficou saudável.{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnBurnHealed] aa5f2d5d85 width=208
+A queimadura de {STR_VAR_1}\n
+sarou.{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnCantBeTradedNow] 375fd6f5de width=208
+Esse POKéMON não pode ser\n
+trocado agora.
+
+[gText_PkmnCantLearnMove] 4a13da1bbd width=208
+{STR_VAR_1} e {STR_VAR_2}\n
+não são compatíveis.\p
+{STR_VAR_2} não pode ser\n
+aprendido.{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnCantParticipate] 4ab210b272 width=208
+Esse POKéMON não pode participar.{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnCantSwitchOut] 84ea1ac027 width=208
+{STR_VAR_1} não pode ser\n
+trocado!{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnCuredOfParalysis] 8a2803b17c width=208
+{STR_VAR_1} foi curado da\n
+paralisia.{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnCuredOfPoison] 00c48e97ea width=208
+{STR_VAR_1} foi curado do\n
+veneno.{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnElevatedToLvVar2] 3aacd23ec8 width=208
+{STR_VAR_1} subiu para o\n
+Nv. {STR_VAR_2}.
+
+[gText_PkmnFriendlyBaseVar2CantFall] 130cd04d7b width=208
+{STR_VAR_1} ficou amigável.\n
+O {STR_VAR_2} base não pode cair!{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnFriendlyBaseVar2Fell] 3e94d9d47d width=208
+{STR_VAR_1} ficou amigável.\n
+O {STR_VAR_2} base caiu!{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnGotOverInfatuation] 7f42d22b40 width=208
+{STR_VAR_1} superou a\n
+paixão.{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnHPRestoredByVar2] 60a18f269c width=208
+{STR_VAR_1} recuperou\n
+{STR_VAR_2} PS.{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnHasNoEnergy] 3b348db66c width=208
+{STR_VAR_1} não tem energia\n
+para lutar!{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnHoldingItemCantHoldMail] bfdb065212 width=208
+Este POKéMON está segurando um\n
+item. Não pode segurar CARTA.{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnLearnedMove3] d7bee1210f width=208
+{STR_VAR_1} aprendeu\n
+{STR_VAR_2}!
+
+[gText_PkmnNeedsToReplaceMove] 208cef9366 width=208
+{STR_VAR_1} quer aprender o\n
+golpe {STR_VAR_2}.\p
+Mas {STR_VAR_1} já conhece\n
+quatro golpes.\p
+Apagar um golpe e trocar\n
+por {STR_VAR_2}?
+
+[gText_PkmnNotHolding] 217e3ec02b width=208
+{STR_VAR_1} não está\n
+segurando nada.{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnSnappedOutOfConfusion] ee33e1399a width=208
+{STR_VAR_1} saiu da\n
+confusão.{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnThawedOut] 7b76cac62d width=208
+{STR_VAR_1} descongelou.{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnWasGivenItem] c33660f849 width=208
+{STR_VAR_1} recebeu\n
+{STR_VAR_2} para segurar.{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnWokeUp2] ac94e8efef width=208
+{STR_VAR_1} acordou.{PAUSE_UNTIL_PRESS}
+
+[gText_ReceivedItemFromPkmn] 39a4d1ac70 width=208
+Recebeu {STR_VAR_2}\n
+de {STR_VAR_1}.{PAUSE_UNTIL_PRESS}
+
+[gText_RemoveMailBeforeItem] c1ff05597b width=208
+Tire a CARTA antes de\n
+segurar um item.{PAUSE_UNTIL_PRESS}
+
+[gText_ReturnToHealingSpot] e73212f1c8 width=208
+Quer voltar ao último lugar de\n
+cura usado em {STR_VAR_1}?
+
+[gText_ReturnToWaitingRoom] 0fec2d4915 width=208
+Voltar à SALA DE ESPERA?
+
+[gText_SendMailToPC] 1a419962ee width=208
+Mandar a CARTA tirada\n
+para o seu PC?
+
+[gText_StopLearningMove2] b8c99ebeb0 width=208
+Parar de ensinar\n
+{STR_VAR_2}?
+
+[gText_SwitchedPkmnItem] df3c238d3e width=208
+{STR_VAR_2} foi tirado e\n
+trocado por {STR_VAR_1}.{PAUSE_UNTIL_PRESS}
+
+[gText_ThrowAwayItem] 01986e3d9d width=208
+Jogar fora este\n
+{STR_VAR_1}?
+
+[gText_WhichMoveToForget] a3022e39f0 width=208
+Qual golpe deve ser esquecido?{PAUSE_UNTIL_PRESS}
+
+# A tela da POKéDEX (src/pokedex.c). Na busca, o parâmetro escolhido fica
+# numa caixa de x=45 a 136 e a lista à direita a partir de x=152; as
+# explicações, na caixa de baixo, de x=8. Na página do POKéMON, ALT. e PESO
+# vão de x=96 até o valor, em x=129.
+
+[gText_DexHoennTitle] 189f13db4c width=88
+DEX HOENN
+
+[gText_DexNatTitle] eeb6969c19 width=88
+DEX NACIONAL
+
+[gText_DexSearchColorBlack] a9414ab04c width=88
+PRETO
+
+[gText_DexSearchColorBlue] c4f8490d87 width=88
+AZUL
+
+[gText_DexSearchColorBrown] 6eef516af6 width=88
+MARROM
+
+[gText_DexSearchColorGray] 037cb3e3ea width=88
+CINZA
+
+[gText_DexSearchColorGreen] 5becf070a5 width=88
+VERDE
+
+[gText_DexSearchColorPink] 1228b178c7 width=88
+ROSA
+
+[gText_DexSearchColorPurple] d41b9248b4 width=88
+ROXO
+
+[gText_DexSearchColorRed] bb4e68e797 width=88
+VERMELHO
+
+[gText_DexSearchColorWhite] 40d23f3b3a width=88
+BRANCO
+
+[gText_DexSearchColorYellow] f83a0e5447 width=88
+AMARELO
+
+[gText_DexSearchDontSpecify] ae7a602126 width=88
+QUALQUER
+
+[gText_DexSearchTypeNone] 0654a028e5 width=88
+NENHUM
+
+[gText_DexSortAtoZTitle] b6fcf8960a width=88
+MODO A A Z
+
+[gText_DexSortHeaviestTitle] 37a789ce5e width=88
+MAIS PESADOS
+
+[gText_DexSortLightestTitle] 4b8929b5c7 width=88
+MAIS LEVES
+
+[gText_DexSortNumericalTitle] 970220f6f9 width=88
+MODO NUMÉRICO
+
+[gText_DexSortSmallestTitle] 3f4b6c9491 width=88
+MENORES
+
+[gText_DexSortTallestTitle] b50b603473 width=88
+MAIORES
+
+[gText_DexHoennDescription] 9dd941de07 width=216
+POKéDEX da região de HOENN
+
+[gText_DexNatDescription] 202732749b width=216
+POKéDEX da edição nacional
+
+[gText_DexSortAtoZDescription] ad86dadb9a width=216
+POKéMON vistos e capturados em\n
+ordem alfabética.
+
+[gText_DexSortHeaviestDescription] 732158d41e width=216
+POKéMON capturados do mais\n
+pesado ao mais leve.
+
+[gText_DexSortLightestDescription] 1a5dcad21e width=216
+POKéMON capturados do mais\n
+leve ao mais pesado.
+
+[gText_DexSortNumericalDescription] b185da23b5 width=216
+POKéMON listados pelo\n
+número.
+
+[gText_DexSortSmallestDescription] 35d27d6836 width=216
+POKéMON capturados do menor\n
+ao maior.
+
+[gText_DexSortTallestDescription] 33b6466f15 width=216
+POKéMON capturados do maior\n
+ao menor.
+
+[gText_ExecuteSearchSwitch] 929abb925a width=216
+Fazer a busca ou a troca.
+
+[gText_ListByBodyColor] 32ca70b97f width=216
+Listar pela cor do corpo.\n
+Só POKéMON vistos.
+
+[gText_ListByFirstLetter] 196e5ea9a6 width=216
+Listar pela primeira letra do nome.\n
+Só POKéMON vistos.
+
+[gText_ListByType] 8e4d40e4dc width=216
+Listar pelo tipo.\n
+Só POKéMON capturados.
+
+[gText_NoMatchingPkmnWereFound] 85438f3721 width=216
+Nenhum POKéMON foi encontrado.
+
+[gText_ReturnToPokedex] a0d861db54 width=216
+Voltar à POKéDEX.
+
+[gText_SearchCompleted] 1c0cbd1bf8 width=216
+Busca concluída.
+
+[gText_SearchForPkmnBasedOnParameters] 1714e20097 width=216
+Buscar POKéMON pelos\n
+parâmetros escolhidos.
+
+[gText_SearchingPleaseWait] 4cfb176f29 width=216
+Buscando…\n
+Aguarde.
+
+[gText_SelectPokedexListingMode] 8c16081cf0 width=216
+Escolha como listar a POKéDEX.
+
+[gText_SelectPokedexMode] 63a7de27d0 width=216
+Escolha o modo da POKéDEX.
+
+[gText_SwitchPokedexListings] fa79abc5a0 width=216
+Trocar a lista da POKéDEX.
+
+[gText_HTHeight] 64c38cf29a width=33
+ALT.
+
+[gText_WTWeight] 404e0bbdbc width=33
+PESO
+
+[gText_CryOf] 62eb07e0ce width=100
+GRITO DE
+
+[gText_SizeComparedTo] 4e98a5f99d width=160
+TAMANHO COMPARADO A 
+
+[gText_PokedexRegistration] c315ab8879 width=208
+Registro na POKéDEX concluído.
+
+# A altura e o peso de uma espécie ainda não capturada, nas unidades do
+# patch 0046 (metros e quilos, com vírgula).
+
+[gText_UnkHeight] 38ef2c688d width=55
+{CLEAR_TO 0x0C}??,? m
+
+[gText_UnkWeight] bb6f6700f8 width=55
+???,? kg
+
+# A caixa SIM/NÃO dos scripts (menu.c), como a do apelido, e as da BATTLE
+# FACTORY.
+
+[gText_YesNo] 95fce33b3f width=24
+SIM\n
+NÃO
+
+[gText_Yes2] 8fff039853 width=24
+SIM
+
+[gText_No2] a0509b7780 width=24
+NÃO
+
+[gText_Yes3] 8fff039853 width=24
+SIM
+
+[gText_No3] a0509b7780 width=24
+NÃO
+
+[gText_No4] a0509b7780 width=24
+NÃO
+
+# O POKéNAV e as CHAMADAS (src/pokenav_*.c, src/match_call.c). As
+# explicações do menu têm 24 tiles (192 px); as dicas de botões, 16 tiles;
+# o quadro do TREINADOR, 11 tiles (88 px); a mensagem de chamada, 28 tiles.
+# EQUIPE fica no campo de 8 letras do nome da CAIXA.
+
+[gText_CallCantBeMadeHere] d37c607d62 width=190
+Não dá para ligar daqui.
+
+[gText_CallRegisteredTrainer] 043f6efe76 width=190
+Ligar para um TREINADOR.
+
+[gText_CheckAllPokemonInDetail] 78c22c18a2 width=190
+Ver todos os POKéMON em detalhes.
+
+[gText_CheckMapOfHoenn] 8149cebc02 width=190
+Ver o mapa da região de HOENN.
+
+[gText_CheckObtainedRibbons] 39ac2eefeb width=190
+Ver as FITAS obtidas.
+
+[gText_CheckPartyPokemonInDetail] eb16dcef5b width=190
+Ver a equipe em detalhes.
+
+[gText_CheckPokemonInDetail] 0910aa688f width=190
+Ver POKéMON em detalhes.
+
+[gText_FindBeautifulPokemon] ffccc46e6c width=190
+Achar POKéMON belos.
+
+[gText_FindCoolPokemon] 283bd17c1d width=190
+Achar POKéMON estilosos.
+
+[gText_FindCutePokemon] dd86b7ffb0 width=190
+Achar POKéMON fofos.
+
+[gText_FindSmartPokemon] fd6d5011ed width=190
+Achar POKéMON espertos.
+
+[gText_FindToughPokemon] 0272f3600b width=190
+Achar POKéMON fortes.
+
+[gText_NoRibbonWinners] cc5c8666dd width=190
+Não há vencedores de FITAS.
+
+[gText_PutAwayPokenav] c71abcbcfd width=190
+Guardar o POKéNAV.
+
+[gText_ReturnToConditionMenu] 3ed3b376ee width=190
+Voltar ao menu de CONDIÇÃO.
+
+[gText_ReturnToPokenavMenu] fee965a0a3 width=190
+Voltar ao menu do POKéNAV.
+
+[gText_PokenavCondition_MarkingButtons] 2ccfe709dc width=126
+{A_BUTTON}MARCAR {B_BUTTON}VOLTAR
+
+[gText_PokenavCondition_MonListButtons] ff73d70457 width=126
+{A_BUTTON}CONDIÇÃO {B_BUTTON}VOLTAR
+
+[gText_PokenavCondition_MonStatusButtons] bae527f909 width=126
+{A_BUTTON}MARCAS {B_BUTTON}VOLTAR
+
+[gText_PokenavMap_ZoomedInButtons] d725c7532b width=126
+{A_BUTTON}TUDO {B_BUTTON}VOLTAR
+
+[gText_PokenavMap_ZoomedOutButtons] 1c7c9ca2c6 width=126
+{A_BUTTON}ZOOM {B_BUTTON}VOLTAR
+
+[gText_PokenavMatchCall_CallMenuButtons] 209a6d8c54 width=126
+{A_BUTTON}OK {B_BUTTON}VOLTAR
+
+[gText_PokenavMatchCall_CheckTrainerButtons] d4f1312856 width=126
+{B_BUTTON}VOLTAR
+
+[gText_PokenavMatchCall_TrainerListButtons] 68be53efdb width=126
+{A_BUTTON}MENU {B_BUTTON}VOLTAR
+
+[gText_PokenavRibbons_MonListButtons] 9d938e7b5a width=126
+{A_BUTTON}FITAS {B_BUTTON}VOLTAR
+
+[gText_PokenavRibbons_RibbonCheckButtons] d4f1312856 width=126
+{B_BUTTON}VOLTAR
+
+[gText_PokenavRibbons_RibbonListButtons] 8d3da3cf02 width=126
+{A_BUTTON}VER {B_BUTTON}VOLTAR
+
+[gText_BrawlyMatchCallDesc] bcf283e89f width=88
+GOLPE FORTE
+
+[gText_ChampionMatchCallDesc] f40e717094 width=88
+CAMPEÃO
+
+[gText_EliteFourMatchCallDesc] b5cca4e546 width=88
+ELITE DOS 4
+
+[gText_FlanneryMatchCallDesc] a21b0b27bb width=88
+PAIXÃO ARDENTE
+
+[gText_JuanMatchCallDesc] 64b8e0a528 width=88
+CHARME DÂNDI
+
+[gText_MayBrendanMatchCallDesc] 03d88bb00f width=88
+VIZINHO LEGAL
+
+[gText_MomMatchCallDesc] 4a225b5191 width=88
+CALMA E GENTIL
+
+[gText_MrStoneMatchCallDesc] 4da44515cc width=88
+PRES. DEVON
+
+[gText_NormanMatchCallDesc] 765752f6af width=88
+O CONFIÁVEL
+
+[gText_NumberOfBattles] b698530d96 width=88
+N.º de batalhas
+
+[gText_NumberRegistered] ebfb4676c9 width=88
+N.º registrados
+
+[gText_ProfBirchMatchCallDesc] a42649a3fa width=88
+PROF. {PKMN}
+
+[gText_RoxanneMatchCallDesc] ecfaa5af18 width=88
+GÊNIO ROCHOSO
+
+[gText_ScottMatchCallDesc] ccb1bbf8c0 width=88
+OLHAR ESQUIVO
+
+[gText_StevenMatchCallDesc] 41dfec0e0e width=88
+DURO COMO ROCHA
+
+[gText_TateLizaMatchCallDesc] 3ca6d12099 width=88
+DUPLA MÍSTICA
+
+[gText_WallyMatchCallDesc] 51d1ec306c width=88
+FÃ DE {PKMN}
+
+[gText_WattsonMatchCallDesc] 834e3793de width=88
+CHOQUE BACANA
+
+[gText_WinonaMatchCallDesc] 7c7864af0e width=88
+DOMADORA DO CÉU
+
+[gText_MatchCallSteven_Intro1_AfterMeteorFallsBattle] c5d8f8da6c width=140
+Sou o mais forte e o mais
+
+[gText_MatchCallSteven_Intro1_BeforeMeteorFallsBattle] fb4737685b width=140
+Eu subiria até cachoeiras
+
+[gText_MatchCallSteven_Intro2_AfterMeteorFallsBattle] d72d9162e1 width=140
+animado, afinal!
+
+[gText_MatchCallSteven_Intro2_BeforeMeteorFallsBattle] 9cd815417f width=140
+por uma pedra rara!
+
+[gText_MatchCallSteven_Pokemon] ee7a7f7684 width=140
+POKéMON METAL supremos.
+
+[gText_MatchCallSteven_Strategy] 9067181c9a width=140
+Atacar os pontos fracos!
+
+[gText_PokenavMatchCall_SelfIntroduction] 8cedc7e098 width=140
+APRESENTAÇÃO
+
+[gText_PokenavMatchCall_Strategy] b571d21b72 width=140
+ESTRATÉGIA
+
+[gText_PokenavMatchCall_TrainerPokemon] 51b52fdab4 width=140
+SEUS POKéMON
+
+[gText_TrainerCloseBy] a78cab38ef width=208
+Esse TREINADOR está por perto.\n
+Fale com ele pessoalmente!
+
+[gText_Call] 1b3cb48469 width=48
+LIGAR
+
+[gText_Cancel6] 1507c40f04 width=48
+VOLTAR
+
+[gText_InParty] 3f516fce1c width=48
+EQUIPE
+
+[gText_MomMatchCallName] 3c93964ebb width=48
+MAMÃE
+
+[gText_MrStoneMatchCallName] 80932b0b55 width=48
+SR. STONE
+
+[gText_NormanMatchCallName] 22338f0423 width=48
+PAPAI
+
+[gText_Number2] 29b315d116 width=48
+N.º
+
+[gText_NumberIndex] fcb36a68ad width=60
+N.º {DYNAMIC 0}
+
+[gText_ProfBirchMatchCallName] 757f680dc9 width=60
+PROF. BIRCH
+
+[gText_RibbonsF700] cc7899feda width=87
+FITAS {DYNAMIC 0}
+
+[gText_Unknown] 25ba44ec3b width=48
+DESCONH.
+
+# A janela de subida de nível (src/menu_specialized.c): o nome até x=56, onde
+# começa o +.
+
+[gText_MaxHP] 3042aaf698 width=54
+PS MÁX.
+
+[gText_Attack] df86d4b6db width=54
+ATAQUE
+
+[gText_Defense] d4f6d85456 width=54
+DEFESA
+
+[gText_SpAtk] 4881ee79a1 width=54
+AT. ESP.
+
+[gText_SpDef] 3b0727a5ad width=54
+DEF. ESP.
+
+[gText_Speed] 265ffc5673 width=54
+VELOC.
+
+# POKé BOLAS no plural, quando se recebe mais de uma (src/item.c).
+
+[gText_PokeBalls] 45a1d46176
+POKé BOLAS
+
+# ---------------------------------------------------------------- PC dos mapas (09/10)
+
+# Daqui para baixo, o PC dos mapas assumiu o resto de `strings.c`, só os
+
+# textos que o jogo usa (os sem referência no código ficam de fora). A
+
+# largura vem da janela de cada texto, conferida no código; sem medida,
+
+# fica a do inglês.
+
+#
+
+# Menu principal: a janela de erro tem a largura da tela (208 px).
+
+[gText_WirelessNotConnected] 7156760f70
+O Adaptador Sem Fio não\nestá conectado.
+
+[gText_MysteryGiftCantUse] a0d6dfa734 width=208
+O PRESENTE MISTERIOSO não funciona\ncom o Adaptador Sem Fio ligado.
+
+[gText_MysteryEventsCantUse] bfe1dd2cd5 width=208
+Os EVENTOS MISTERIOSOS não funcionam\ncom o Adaptador Sem Fio ligado.
+
+# HALL DA FAMA: a barra de cima é larga e usa a fonte pequena; as
+
+# mensagens vão na janela 0 (208 px).
+
+[gText_PickNextCancel] ee4b32b3b3 width=150
+{DPAD_UPDOWN}ESCOLHER {A_BUTTON}SEGUIR {B_BUTTON}VOLTAR
+
+[gText_PickCancel] 0442ed283c width=150
+{DPAD_UPDOWN}ESCOLHER {A_BUTTON}{B_BUTTON}VOLTAR
+
+[gText_AButtonExit] 1f4f7c68c6 width=150
+{A_BUTTON}SAIR
+
+[gText_WelcomeToHOF] 71947ec1b4 width=208
+Boas-vindas ao HALL DA FAMA!
+
+[gText_HOFCorrupted] 48a7f2ff21 width=208
+Dados do HALL DA FAMA corrompidos.
+
+[gText_HOFNumber] 88859bf04a
+HALL DA FAMA Nº {STR_VAR_1}
+
+[gText_LeagueChamp] 244113cd88
+TOPO DA LIGA!\nPARABÉNS!
+
+[gText_Number] 29b315d116
+Nº
+
+[gText_Level] f60a5bd08f
+Nv.
+
+[gText_Name] a9d371451b
+NOME
+
+# Mapa: a janela "VOAR pra onde?" tem 14 tiles.
+
+[gText_FlyToWhere] 34929c4d1f width=108
+VOAR pra onde?
+
+# FICHAS: alinhadas à direita em 64 px; 4 dígitos e FICHAS cabem.
+
+[gText_Coins] 39fff1288b width=111
+{STR_VAR_1} FICHAS
+
+# Etiqueta da FRUTA: TAM. e DUREZA numa janela de 18 tiles; o título
+
+# centrado em 8 tiles.
+
+[gText_SizeSlash] 91b0c6cb72 width=40
+TAM. /
+
+[gText_FirmSlash] 3c16f92e00 width=40
+DUR. /
+
+[gBerryFirmnessString_VerySoft] 074796cc04 width=80
+Bem mole
+
+[gBerryFirmnessString_Soft] 968c009e49 width=80
+Mole
+
+[gBerryFirmnessString_Hard] 20a89915f1 width=80
+Dura
+
+[gBerryFirmnessString_VeryHard] 5017214025 width=80
+Bem dura
+
+[gBerryFirmnessString_SuperHard] c793f1b89e width=80
+Duríssima
+
+[gText_BerryTag] 2f0b2185ea width=64
+ETIQUETA
+
+# Cores dos {POKEBLOCK}S na lista do ESTOJO (14 tiles, com o nome
+
+# {POKEBLOCK} na frente).
+
+[gText_RedPokeblock] 38d495a5c5 width=56
+{POKEBLOCK} VERMELHO
+
+[gText_BluePokeblock] ab9fe07226 width=56
+{POKEBLOCK} AZUL
+
+[gText_PinkPokeblock] a82920ad41 width=56
+{POKEBLOCK} ROSA
+
+[gText_GreenPokeblock] f91322ec77 width=56
+{POKEBLOCK} VERDE
+
+[gText_YellowPokeblock] 0701269aeb width=56
+{POKEBLOCK} AMARELO
+
+[gText_PurplePokeblock] cc150e58c7 width=56
+{POKEBLOCK} ROXO
+
+[gText_IndigoPokeblock] 0d6f06be89 width=56
+{POKEBLOCK} ANIL
+
+[gText_BrownPokeblock] 5e15826525 width=56
+{POKEBLOCK} MARROM
+
+[gText_LiteBluePokeblock] 572b766263 width=56
+{POKEBLOCK} AZUL-CL.
+
+[gText_OlivePokeblock] 6e8c156ee9 width=56
+{POKEBLOCK} OLIVA
+
+[gText_GrayPokeblock] ec1a104197 width=56
+{POKEBLOCK} CINZA
+
+[gText_BlackPokeblock] f57f40c55d width=56
+{POKEBLOCK} PRETO
+
+[gText_WhitePokeblock] 1e0b750413 width=56
+{POKEBLOCK} BRANCO
+
+[gText_GoldPokeblock] 6c098d2ac8 width=56
+{POKEBLOCK} DOURADO
+
+# Listas de troca e compra da FRONTEIRA e de outros balcões (field_specials.c):
+
+# nome até a coluna do preço ({CLEAR_TO}), preço em PB. Nomes dos catálogos de
+
+# itens e golpes; as decorações, provisórias como no glossário.
+
+[gText_EnergyPowder50] ef6872e1b1 width=104
+PÓ ENERGÉTICO{CLEAR_TO 114}{FONT_SMALL}50
+
+[gText_EnergyRoot80] 77bd16fbdd width=104
+RAIZ ENERGIA{CLEAR_TO 114}{FONT_SMALL}80
+
+[gText_HealPowder50] b68eacee72 width=104
+PÓ CURATIVO{CLEAR_TO 114}{FONT_SMALL}50
+
+[gText_RevivalHerb300] 9f994497a3 width=104
+ERVA REVIVER{CLEAR_TO 108}{FONT_SMALL}300
+
+[gText_Protein1000] 36afc2c29e width=104
+PROTEÍNA{CLEAR_TO 99}{FONT_SMALL}1.000
+
+[gText_Iron1000] 319c922bf8 width=104
+FERRO{CLEAR_TO 99}{FONT_SMALL}1.000
+
+[gText_Carbos1000] 43bf6d5a8d width=104
+CARBONO{CLEAR_TO 99}{FONT_SMALL}1.000
+
+[gText_Calcium1000] 648f983ee0 width=104
+CÁLCIO{CLEAR_TO 99}{FONT_SMALL}1.000
+
+[gText_Zinc1000] 25ee029122 width=104
+ZINCO{CLEAR_TO 99}{FONT_SMALL}1.000
+
+[gText_HPUp1000] a764dfb6ed width=104
+PS UP{CLEAR_TO 99}{FONT_SMALL}1.000
+
+[gText_PPUp3000] 0fb3605750 width=104
+PP UP{CLEAR_TO 99}{FONT_SMALL}3.000
+
+[gText_KissPoster16BP] 3c93d944df width=112
+PÔSTER BEIJO{CLEAR_TO 0x5E}16PB
+
+[gText_KissCushion32BP] bb64ee0cd5 width=112
+ALMOFADA BEIJO{CLEAR_TO 0x5E}32PB
+
+[gText_SmoochumDoll32BP] dad88397c5 width=112
+BONECO SMOOCHUM{CLEAR_TO 0x5E}32PB
+
+[gText_TogepiDoll48BP] d729d7965b width=112
+BONECO TOGEPI{CLEAR_TO 0x5E}48PB
+
+[gText_MeowthDoll48BP] 789a658562 width=112
+BONECO MEOWTH{CLEAR_TO 0x5E}48PB
+
+[gText_ClefairyDoll48BP] 6d6b7221bf width=112
+BONECO CLEFAIRY{CLEAR_TO 0x5E}48PB
+
+[gText_DittoDoll48BP] a369d23d2c width=112
+BONECO DITTO{CLEAR_TO 0x5E}48PB
+
+[gText_CyndaquilDoll80BP] 881c1886c4 width=112
+BON. CYNDAQUIL{CLEAR_TO 0x5E}80PB
+
+[gText_ChikoritaDoll80BP] 3d8bdbfc8b width=112
+BON. CHIKORITA{CLEAR_TO 0x5E}80PB
+
+[gText_TotodileDoll80BP] 8f07b25e65 width=112
+BONECO TOTODILE{CLEAR_TO 0x5E}80PB
+
+[gText_LaprasDoll128BP] 02e029f3a5 width=112
+BONECO LAPRAS{CLEAR_TO 0x58}128PB
+
+[gText_SnorlaxDoll128BP] f9b29dc8ad width=112
+BONECO SNORLAX{CLEAR_TO 0x58}128PB
+
+[gText_VenusaurDoll256BP] 0f6deeaa70 width=112
+BON. VENUSAUR{CLEAR_TO 0x58}256PB
+
+[gText_CharizardDoll256BP] f738936df0 width=112
+BON. CHARIZARD{CLEAR_TO 0x58}256PB
+
+[gText_BlastoiseDoll256BP] f38eb02c7c width=112
+BON. BLASTOISE{CLEAR_TO 0x58}256PB
+
+[gText_Protein1BP] ec25d7691f width=112
+PROTEÍNA{CLEAR_TO 0x64}1PB
+
+[gText_Calcium1BP] 6bfbb3ced6 width=112
+CÁLCIO{CLEAR_TO 0x64}1PB
+
+[gText_Iron1BP] 7dac022196 width=112
+FERRO{CLEAR_TO 0x64}1PB
+
+[gText_Zinc1BP] 194e1d9c2f width=112
+ZINCO{CLEAR_TO 0x64}1PB
+
+[gText_Carbos1BP] 03278ad1f4 width=112
+CARBONO{CLEAR_TO 0x64}1PB
+
+[gText_HpUp1BP] 38de2f13ae width=112
+PS UP{CLEAR_TO 0x64}1PB
+
+[gText_Leftovers48BP] 732eb17301 width=112
+SOBRAS{CLEAR_TO 0x5E}48PB
+
+[gText_WhiteHerb48BP] 74f30e07be width=112
+ERVA BRANCA{CLEAR_TO 0x5E}48PB
+
+[gText_QuickClaw48BP] 551d5d1e43 width=112
+GARRA RÁPIDA{CLEAR_TO 0x5E}48PB
+
+[gText_MentalHerb48BP] 86136b9b06 width=112
+ERVA MENTAL{CLEAR_TO 0x5E}48PB
+
+[gText_BrightPowder64BP] c5a70c0276 width=112
+PÓ BRILHANTE{CLEAR_TO 0x5E}64PB
+
+[gText_ChoiceBand64BP] 53c3b51f46 width=112
+FAIXA ESCOLHA{CLEAR_TO 0x5E}64PB
+
+[gText_KingsRock64BP] d33c16db7b width=112
+PEDRA DO REI{CLEAR_TO 0x5E}64PB
+
+[gText_FocusBand64BP] d2934da5c9 width=112
+FAIXA FOCAL.{CLEAR_TO 0x5E}64PB
+
+[gText_ScopeLens64BP] 61a7889b44 width=112
+LENTE ALCANCE{CLEAR_TO 0x5E}64PB
+
+[gText_Softboiled16BP] 0fcc894542 width=104
+COZIDOS{CLEAR_TO 0x4E}16PB
+
+[gText_SeismicToss24BP] 424c9d68cd width=104
+ARR. SÍSMICO{CLEAR_TO 0x4E}24PB
+
+[gText_DreamEater24BP] f8c31a030a width=104
+DEVOR. SONHO{CLEAR_TO 0x4E}24PB
+
+[gText_MegaPunch24BP] 3bd6a6b399 width=104
+MEGASSOCO{CLEAR_TO 0x4E}24PB
+
+[gText_MegaKick48BP] 7d66aff79f width=104
+MEGACHUTE{CLEAR_TO 0x4E}48PB
+
+[gText_BodySlam48BP] d25e02cd85 width=104
+PANC. CORPO{CLEAR_TO 0x4E}48PB
+
+[gText_RockSlide48BP] 7a8f1e6c0b width=104
+DESL. PEDRAS{CLEAR_TO 0x4E}48PB
+
+[gText_Counter48BP] 26798e46bf width=104
+CONTRA-ATAC.{CLEAR_TO 0x4E}48PB
+
+[gText_ThunderWave48BP] 06b48a2584 width=104
+ONDA TROVÃO{CLEAR_TO 0x4E}48PB
+
+[gText_SwordsDance48BP] d9c31d8e1f width=104
+DANÇA ESPADA{CLEAR_TO 0x4E}48PB
+
+[gText_DefenseCurl16BP] 9c69a4f067 width=104
+ESPIRAL DEF.{CLEAR_TO 0x4E}16PB
+
+[gText_Snore24BP] 77352af3d1 width=104
+RONCO{CLEAR_TO 0x4E}24PB
+
+[gText_MudSlap24BP] f0e6ec61ea width=104
+TAPA DE LAMA{CLEAR_TO 0x4E}24PB
+
+[gText_Swift24BP] 97b2dc07a7 width=104
+ATAQUE VELOZ{CLEAR_TO 0x4E}24PB
+
+[gText_IcyWind24BP] 13f3348e06 width=104
+VENTO GELADO{CLEAR_TO 0x4E}24PB
+
+[gText_Endure48BP] f3875fb2c0 width=104
+RESISTÊNCIA{CLEAR_TO 0x4E}48PB
+
+[gText_PsychUp48BP] 0bd353b6ec width=104
+CARGA PSÍQ.{CLEAR_TO 0x4E}48PB
+
+[gText_IcePunch48BP] 75a469c6b9 width=104
+SOCO DE GELO{CLEAR_TO 0x4E}48PB
+
+[gText_ThunderPunch48BP] 87a0e32a19 width=104
+SOCO TROVÃO{CLEAR_TO 0x4E}48PB
+
+[gText_FirePunch48BP] 5166801d61 width=104
+SOCO DE FOGO{CLEAR_TO 0x4E}48PB
+
+# Outras listas de field_specials.c, com a largura da janela de cada uma
+
+# (tiles × 8, menos a seta).
+
+[gText_BlueFlute] f846f4bd34 width=70
+FLAUTA AZUL
+
+[gText_YellowFlute] e7455c6875 width=70
+FLAUTA AMAR.
+
+[gText_RedFlute] dc2ff90d20 width=70
+FLAUTA VERM.
+
+[gText_WhiteFlute] 96801c2c4d width=70
+FL. BRANCA
+
+[gText_BlackFlute] 7b34ba411f width=70
+FLAUTA PRETA
+
+[gText_PrettyChair] 92c6e87bee width=70
+CADEIRA BELA
+
+[gText_PrettyDesk] 40fb5c4655 width=70
+MESA BELA
+
+[gText_Exit] bb1b38004d width=40
+SAIR
+
+[gText_BattleTower2] fbd1b89e76 width=80
+TORRE
+
+[gText_BattleDome] 5a1f22c3a9 width=80
+CÚPULA
+
+[gText_BattlePalace] 8ce19449a1 width=80
+PALÁCIO
+
+[gText_BattleArena] a923af42b7 width=80
+ARENA
+
+[gText_BattleFactory] 396c12a193 width=80
+FÁBRICA
+
+[gText_BattlePike] 4afea876c4 width=80
+PICO
+
+[gText_BattlePyramid] 15dd7c6ba8 width=80
+PIRÂMIDE
+
+[gText_RankingHall] b7992ef40e width=80
+SALÃO RANKING
+
+[gText_ExchangeService] 65294744cc width=80
+TROCAS
+
+[gText_SlateportCity] 071676fc3b width=81
+SLATEPORT
+
+[gText_BattleFrontier] 50cfeb960e width=81
+FRONTEIRA
+
+[gText_SouthernIsland] 900820999a width=81
+ILHA DO SUL
+
+[gText_NavelRock] 5deb0fc318 width=81
+ROCHA UMBIGO
+
+[gText_BirthIsland] 8d9285fdd2 width=81
+ILHA NATAL
+
+[gText_FarawayIsland] 527c87e057 width=81
+ILHA DISTANTE
+
+[gText_BattleTrainers] f7862320da width=88
+TREINADORES
+
+[gText_BattleBasics] e7c18fd53e width=88
+O BÁSICO
+
+[gText_PokemonNature] 77995bdec9 width=88
+NATUREZA
+
+[gText_PokemonMoves] 7c5b3fa46a width=88
+GOLPES
+
+[gText_Underpowered] dd93d78204 width=88
+SEM FORÇA
+
+[gText_WhenInDanger] 560059efbd width=88
+EM APUROS
+
+# Tempo e contagem em mensagens ({STR_VAR}), o porte do LOTAD/SEEDOT e o
+
+# elevador (centrado em 64 px).
+
+[gText_99TimesPlus] 69ae35cf09 width=80
+99 vezes ou +
+
+[gText_1MinutePlus] 9b1241bbd4 width=80
+1 minuto ou +
+
+[gText_SpaceSeconds] 3e441fc593 width=80
+ segundos
+
+[gText_SpaceTimes] 2e6eefd076 width=80
+ vez(es)
+
+[gText_BigGuy] 19a0107a2c width=60
+Grandão
+
+[gText_BigGirl] 4b1c4fd77e width=60
+Grandona
+
+[gText_ElevatorNowOn] 8d638146e9 width=64
+Andar:
+
+[gText_1F] e2e11f3bee width=24
+1º
+
+[gText_2F] 44cc8040ac width=24
+2º
+
+[gText_3F] 5bab17fb39 width=24
+3º
+
+[gText_4F] 162b1d940f width=24
+4º
+
+[gText_5F] 6da79561d1 width=24
+5º
+
+[gText_6F] 80bdd38fb8 width=24
+6º
+
+[gText_7F] ca90b2acb4 width=24
+7º
+
+[gText_8F] e88958cb93 width=24
+8º
+
+[gText_9F] 9c172585d6 width=24
+9º
+
+[gText_10F] 4ea72b9f99 width=24
+10º
+
+[gText_11F] 168050a1e4 width=24
+11º
+
+[gText_B1F] d081c1f3e0 width=24
+S1
+
+[gText_B2F] ec2e144a8d width=24
+S2
+
+[gText_B3F] 304c1a62ad width=24
+S3
+
+[gText_B4F] 2511a75ea7 width=24
+S4
+
+[gText_Rooftop] 5367e8919c width=64
+TERRAÇO
+
+[gText_BP] 03b8a126d8
+PB
+
+# PRESENTE MISTERIOSO (mystery_gift_menu.c): o título vai no alto a x=4
+
+# e as dicas de botão, na fonte pequena, alinhadas à direita em 222 px; o
+
+# menu de opções tem 19 tiles; as mensagens, uma janela de 28 tiles (216
+
+# px). Perguntas de SIM/NÃO vão numa janela de 20 tiles (152 px) quando o
+
+# inglês cabe nela.
+
+[gText_MysteryGift] 38d1678325 width=112
+PRESENTE MISTERIOSO
+
+[gText_PickOKExit] f70f1959bf width=120
+{DPAD_UPDOWN}ESCOLHER {A_BUTTON}OK {B_BUTTON}SAIR
+
+[gText_PickOKCancel] 2525ce1992 width=120
+{DPAD_UPDOWN}ESCOLHER {A_BUTTON}OK {B_BUTTON}VOLTAR
+
+[gText_WonderCards] c53334ee7f width=144
+CARTÕES MARAVILHA
+
+[gText_WonderNews] 7eb690423f width=144
+NOTÍCIAS MARAVILHA
+
+[gText_WirelessCommunication] bf0ea8cab2 width=144
+COMUNICAÇÃO SEM FIO
+
+[gText_Friend2] 1ea03fc165 width=104
+AMIGO
+
+[gText_Exit3] bb1b38004d width=104
+SAIR
+
+[gText_Receive] a0efd10a50 width=104
+RECEBER
+
+[gText_Send] a2469c4782 width=104
+ENVIAR
+
+[gText_VarietyOfEventsImportedWireless] ea9ea3f786 width=216
+Vários eventos vão ser importados\npor Comunicação Sem Fio.
+
+[gText_WonderCardsInPossession] 8680b5925f width=216
+Leia os CARTÕES MARAVILHA que\nvocê tem.
+
+[gText_ReadNewsThatArrived] 206ad874c7 width=216
+Leia as NOTÍCIAS que chegaram.
+
+[gText_ReturnToTitle] 0f9a26e755 width=216
+Voltar à tela de título.
+
+[gText_DontHaveCardNewOneInput] 7160f6f85f width=216
+Você não tem CARTÃO MARAVILHA,\nentão um CARTÃO novo vai entrar.
+
+[gText_DontHaveNewsNewOneInput] 520826725a width=216
+Você não tem NOTÍCIAS MARAVILHA,\nentão NOTÍCIAS novas vão entrar.
+
+[gText_WhereShouldCardBeAccessed] df10177dee width=216
+Por onde acessar o\nCARTÃO MARAVILHA?
+
+[gText_WhereShouldNewsBeAccessed] ece5672a57 width=216
+Por onde acessar as\nNOTÍCIAS MARAVILHA?
+
+[gText_Communicating] 0ded7a66ec width=216
+Comunicando…
+
+[gText_CommunicationCompleted] 8e1a24d486 width=216
+Comunicação concluída.
+
+[gText_CommunicationError] 7956729d4c width=216
+Erro de comunicação.
+
+[gText_CommunicationCanceled] bbbf3d42bd width=216
+A comunicação foi cancelada.
+
+[gText_ThrowAwayWonderCard] a348ada5b6 width=152
+Jogar fora o CARTÃO\nMARAVILHA e pôr um novo?
+
+[gText_HaventReceivedCardsGift] 2550985aaf width=216
+Você não recebeu o presente do\nCARTÃO. Pôr um novo mesmo assim?
+
+[gText_WonderCardReceivedFrom] 06c70669b9 width=216
+Chegou um CARTÃO MARAVILHA\nde {STR_VAR_1}.
+
+[gText_WonderNewsReceivedFrom] 9673a6736e width=216
+Chegaram NOTÍCIAS MARAVILHA\nde {STR_VAR_1}.
+
+[gText_WonderCardReceived] 5d1187ea6e width=216
+Chegou um CARTÃO MARAVILHA\nnovo.
+
+[gText_WonderNewsReceived] aa3c084196 width=216
+Chegaram NOTÍCIAS MARAVILHA\nnovas.
+
+[gText_NewStampReceived] 0971816afa width=216
+Chegou um SELO novo.
+
+[gText_NewTrainerReceived] 69ef8fc761 width=216
+Chegou um TREINADOR novo.
+
+[gText_AlreadyHadCard] 3dfac4d4f5 width=216
+Você já tinha esse\nCARTÃO MARAVILHA.
+
+[gText_AlreadyHadNews] 8d56c7fd2b width=216
+Você já tinha essas\nNOTÍCIAS MARAVILHA.
+
+[gText_AlreadyHadStamp] 250700d6c9 width=216
+Você já tinha esse\nSELO.
+
+[gText_NoMoreRoomForStamps] 4bfba71a40 width=216
+Não tem mais espaço pra\nSELOS.
+
+[gText_RecordUploadedViaWireless] af9743bd43 width=216
+O seu registro foi enviado pela\nCOMUNICAÇÃO SEM FIO.
+
+[gText_CantAcceptCardFromTrainer] c9879413dd width=216
+Não dá pra aceitar CARTÃO\nMARAVILHA desse TREINADOR.
+
+[gText_CantAcceptNewsFromTrainer] 2d7dc4a7d3 width=216
+Não dá pra aceitar NOTÍCIAS\nMARAVILHA desse TREINADOR.
+
+[gText_NothingSentOver] a4973a0048 width=216
+Nada foi enviado…
+
+[gText_WhatToDoWithCards] 89771744e2 width=216
+O que você quer fazer com os\nCARTÕES MARAVILHA?
+
+[gText_WhatToDoWithNews] a5400d9068 width=216
+O que você quer fazer com as\nNOTÍCIAS MARAVILHA?
+
+[gText_SendingWonderCard] ec0a9a71d9 width=216
+Enviando o seu CARTÃO MARAVILHA…
+
+[gText_SendingWonderNews] 99a5ca21b2 width=216
+Enviando as suas NOTÍCIAS MARAVILHA…
+
+[gText_WonderCardSentTo] a9c702d96b width=216
+O seu CARTÃO MARAVILHA foi enviado\npara {STR_VAR_1}.
+
+[gText_WonderNewsSentTo] e4fbc80a90 width=216
+As suas NOTÍCIAS MARAVILHA foram\nenviadas para {STR_VAR_1}.
+
+[gText_StampSentTo] 6ff93ba248 width=216
+SELO enviado para {STR_VAR_1}.
+
+[gText_GiftSentTo] 98aae62f3a width=216
+PRESENTE enviado para {STR_VAR_1}.
+
+[gText_OtherTrainerHasCard] 7b7079037a width=216
+O outro TREINADOR já tem o mesmo\nCARTÃO MARAVILHA.
+
+[gText_OtherTrainerHasNews] 4339a8b479 width=216
+O outro TREINADOR já tem as mesmas\nNOTÍCIAS MARAVILHA.
+
+[gText_OtherTrainerHasStamp] b548aee198 width=216
+O outro TREINADOR já tem o mesmo\nSELO.
+
+[gText_OtherTrainerCanceled] acd51435a3 width=216
+O outro TREINADOR cancelou\na comunicação.
+
+[gText_CantSendGiftToTrainer] 02168062f9 width=216
+Não dá pra mandar PRESENTE\nMISTERIOSO pra esse TREINADOR.
+
+[gText_IfThrowAwayCardEventWontHappen] 7b97ec4823 width=156
+Sem o CARTÃO, o evento não\nvai acontecer. Tudo bem?
+
+[gText_OkayToDiscardNews] 170c005bae width=152
+Pode descartar estas\nNOTÍCIAS?
+
+[gText_HaventReceivedGiftOkayToDiscard] 2474dd5f35 width=152
+Você não recebeu o PRESENTE.\nPode descartar mesmo assim?
+
+[gText_DataWillBeSaved] 14ebe3d1a3 width=216
+Os dados vão ser salvos.\nAguarde.
+
+[gText_SaveCompletedPressA] 809d93e81c width=216
+Salvo.\nAperte o botão A.
+
+[gText_WonderCardThrownAway] 82c2888ea7 width=216
+O CARTÃO MARAVILHA foi jogado fora.
+
+[gText_WonderNewsThrownAway] bc00dde047 width=216
+NOTÍCIAS MARAVILHA jogadas fora.
+
+# Quadros de resultados da FRONTEIRA e dos CONCURSOS por conexão
+
+# (frontier_util.c), numa janela de 28 tiles: título centrado (216 px);
+
+# rótulos ATUAL/RECORDE/ANTER./TOTAL em x=64 até a sequência (46 px); as
+
+# categorias de CONCURSO em x=6 até os números, em x=64 (56 px).
+
+[gText_Cool] 2991fd24ef width=56
+ESTILO
+
+[gText_Beauty] bed48404f8 width=56
+BELEZA
+
+[gText_Cute] 4b766bb69f width=56
+FOFURA
+
+[gText_Smart] a4969f2088 width=56
+ESPERTEZA
+
+[gText_Tough] 1c4ae12ec4 width=56
+FORÇA
+
+[gText_FacilitySingle] 7d3c3bdf6d
+{STR_VAR_1} INDIV.
+
+[gText_FacilityDouble] 628cab4b37
+{STR_VAR_1} DUPLA
+
+[gText_FacilityMulti] b7e45595b4
+{STR_VAR_1} MÚLT.
+
+[gText_FacilityLink] 703ec4081b
+{STR_VAR_1} LINK
+
+[gText_LinkContestResults] cacd20c22d width=216
+Resultados dos CONCURSOS de {PLAYER}
+
+[gText_1st] efc920c5fc width=38
+1º
+
+[gText_2nd] 008413d5e7 width=38
+2º
+
+[gText_3rd] a120779984 width=38
+3º
+
+[gText_4th] e1e535b650 width=38
+4º
+
+[gText_SingleBattleRoomResults] b56eb26302 width=216
+{PLAYER}: Sala de Batalha Individual
+
+[gText_DoubleBattleRoomResults] 3c2c9d4021 width=216
+{PLAYER}: Sala de Batalha Dupla
+
+[gText_MultiBattleRoomResults] 3aa0070d45 width=216
+{PLAYER}: Sala de Batalha Múltipla
+
+[gText_LinkMultiBattleRoomResults] 296fa7a404 width=216
+{PLAYER}: Sala Múltipla por Conexão
+
+[gText_SingleBattleTourneyResults] 0708f35e46 width=216
+{PLAYER}: Torneio Individual
+
+[gText_DoubleBattleTourneyResults] b531d0c6a2 width=216
+{PLAYER}: Torneio Duplo
+
+[gText_SingleBattleHallResults] b6c5879a0f width=216
+{PLAYER}: Salão Individual
+
+[gText_DoubleBattleHallResults] d3c6a0b275 width=216
+{PLAYER}: Salão Duplo
+
+[gText_BattleChoiceResults] da48b8a540 width=216
+{PLAYER}: Escolha de Batalha
+
+[gText_SetKOTourneyResults] 0e7441c44d width=216
+{PLAYER}: Torneio de Nocaute
+
+[gText_BattleSwapSingleResults] bd03e2a31f width=216
+{PLAYER}: Troca de Batalha Individual
+
+[gText_BattleSwapDoubleResults] 714d601150 width=216
+{PLAYER}: Troca de Batalha Dupla
+
+[gText_BattleQuestResults] cc718bdbf7 width=216
+{PLAYER}: Missão de Batalha
+
+[gText_Lv502] 13f0a8a25c width=46
+NV. 50
+
+[gText_OpenLv] 28a9cbc9b2 width=46
+LIVRE
+
+[gText_WinStreak] ff17f35fac
+Seguidas: {STR_VAR_1}
+
+[gText_Current] e6303ccf1c width=46
+ATUAL
+
+[gText_Record] 31355a2868 width=46
+RECORDE
+
+[gText_Prev] ff9162ff2f width=46
+ANTER.
+
+[gText_RentalSwap] 7b61efc72d
+Alug./Troca
+
+[gText_Total] b25928c699 width=46
+TOTAL
+
+[gText_ClearStreak] 66b2964e4d
+Seguidas: {STR_VAR_1}
+
+[gText_Championships] bd7a720e95
+Títulos: {STR_VAR_1}
+
+[gText_RoomsCleared] 25411c0835
+Salas: {STR_VAR_1}
+
+[gText_TimesCleared] fc2b464289
+Vencidas:{CLEAR 0x05}{STR_VAR_1}
+
+[gText_KOsInARow] acfe0733f8
+Nocautes: {STR_VAR_1}
+
+[gText_TimesVar1] 242fb85534
+Total: {STR_VAR_1}
+
+[gText_FloorsCleared] bc8dc48986
+Andares: {STR_VAR_1}
+
+[gText_RecordsLv50] 13f0a8a25c width=46
+NV. 50
+
+[gText_RecordsOpenLevel] 32c7557ca3
+NV. LIVRE
+
+[gText_FrontierFacilityWinStreak] 301aaa757f
+Seguidas: {STR_VAR_2}
+
+[gText_FrontierFacilityClearStreak] 47c32b07d6
+Seguidas: {STR_VAR_2}
+
+[gText_FrontierFacilityRoomsCleared] 92135d94f9
+Salas: {STR_VAR_2}
+
+[gText_FrontierFacilityKOsStreak] 4db8b49b80
+Nocautes: {STR_VAR_2}
+
+[gText_FrontierFacilityFloorsCleared] 52585dd772
+Andares: {STR_VAR_2}
+
+# PASSE DA FRONTEIRA (frontier_pass.c): os três títulos centrados em 96 px;
+
+# a descrição embaixo tem 30 tiles; no mapa, o nome da instalação tem 10
+
+# tiles e a descrição, 26.
+
+[gText_SymbolsEarned] 5080f2a0a0 width=96
+Símbolos
+
+[gText_BattleRecord] def51b558b width=96
+Gravação
+
+[gText_BattlePoints] ee29811b55 width=96
+Pontos de Batalha
+
+[gText_CheckFrontierMap] b9b0c5473b width=232
+Ver o MAPA DA FRONTEIRA.
+
+[gText_CheckTrainerCard] 8bb96f24d6 width=232
+Ver o CARTÃO DE TREINADOR.
+
+[gText_ViewRecordedBattle] 65d68adf65 width=232
+Ver a batalha gravada.
+
+[gText_PutAwayFrontierPass] 1a284c9f14 width=232
+Guardar o PASSE DA FRONTEIRA.
+
+[gText_CurrentBattlePoints] 205a8e80e7 width=232
+Os seus Pontos de Batalha atuais.
+
+[gText_CollectedSymbols] 2a8d13a3bc width=232
+Os Símbolos que você conquistou.
+
+[gText_BattleTowerAbilitySymbol] 61f2bd0e24 width=232
+TORRE DE BATALHA: Símbolo da Habilidade
+
+[gText_BattleDomeTacticsSymbol] 87eefe5fec width=232
+CÚPULA DE BATALHA: Símbolo da Tática
+
+[gText_BattlePalaceSpiritsSymbol] 7c7c9acdda width=232
+PALÁCIO DE BATALHA: Símbolo do Espírito
+
+[gText_BattleArenaGutsSymbol] 7d5e057766 width=232
+ARENA DE BATALHA: Símbolo da Garra
+
+[gText_BattleFactoryKnowledgeSymbol] 2993a080aa width=232
+FÁBRICA DE BATALHA: Símbolo do Saber
+
+[gText_BattlePikeLuckSymbol] b25830a685 width=232
+PICO DE BATALHA: Símbolo da Sorte
+
+[gText_BattlePyramidBraveSymbol] 10fa863d25 width=232
+PIRÂMIDE DE BATALHA: Símbolo da Bravura
+
+[gText_ThereIsNoBattleRecord] af1caa1d2d width=232
+Não há batalha gravada.
+
+[gText_BattleTower3] fbd1b89e76 width=80
+TORRE
+
+[gText_BattleDome2] 5a1f22c3a9 width=80
+CÚPULA
+
+[gText_BattlePalace2] 8ce19449a1 width=80
+PALÁCIO
+
+[gText_BattleArena2] a923af42b7 width=80
+ARENA
+
+[gText_BattleFactory2] 396c12a193 width=80
+FÁBRICA
+
+[gText_BattlePike2] 4afea876c4 width=80
+PICO
+
+[gText_BattlePyramid2] 15dd7c6ba8 width=80
+PIRÂMIDE
+
+[gText_BattleTowerDesc] c2f5f4713f width=208
+Derrote os rivais e chegue ao topo!\nA sua habilidade vai ser testada.
+
+[gText_BattleDomeDesc] f9435fc18b width=208
+Vença sem parar no torneio!\nA sua tática vai ser testada.
+
+[gText_BattlePalaceDesc] ae8a4380bb width=208
+Veja os POKéMON batalharem!\nO seu espírito vai ser testado.
+
+[gText_BattleArenaDesc] 4d5e744d43 width=208
+Vença com POKéMON em equipe!\nA sua garra vai ser testada.
+
+[gText_BattleFactoryDesc] dd1c11e5f0 width=208
+Vença com POKéMON alugados!\nO seu saber vai ser testado.
+
+[gText_BattlePikeDesc] 9dd3de9297 width=208
+Escolha um de três caminhos!\nA sua sorte vai ser testada.
+
+[gText_BattlePyramidDesc] 8cf7fc5c8c width=208
+Explore até chegar ao topo!\nA sua bravura vai ser testada.
+
+# TRITURA FRUTAS (berry_crush.c): mensagens na caixa de mensagem; os
+
+# resultados e rankings, com a largura do inglês.
+
+[gText_ReadyPickBerry] 55e6cc49e2 width=208
+Pronto pra TRITURAR FRUTAS?\nEscolha uma FRUTA pra usar.\p
+
+[gText_WaitForAllChooseBerry] 05bc5b2e8d width=208
+Aguarde enquanto cada participante\nescolhe uma FRUTA.
+
+[gText_EndedWithXUnitsPowder] 6a83e35a4b width=212
+{PAUSE_MUSIC}{PLAY_BGM MUS_LEVEL_UP}Você fez {STR_VAR_1} unidades de\nPÓ DE FRUTA bem fininho.{RESUME_MUSIC}\pO seu total de PÓ DE FRUTA\né {STR_VAR_2}.\p
+
+[gText_RecordingGameResults] 78d13d4e83 width=208
+Gravando os resultados do jogo\nno save.\lAguarde.
+
+[gText_PlayBerryCrushAgain] de8104a5db width=208
+Jogar TRITURA FRUTAS de novo?
+
+[gText_YouHaveNoBerries] 0b70b3df1e width=208
+Você não tem FRUTAS.\nO jogo vai ser cancelado.
+
+[gText_MemberDroppedOut] a780cc7e31 width=208
+Alguém saiu.\nO jogo vai ser cancelado.
+
+[gText_TimesUpNoGoodPowder] 16442e9983 width=208
+Acabou o tempo.\pNão deu pra fazer um bom\nPÓ DE FRUTA…\p
+
+[gText_CommunicationStandby2] 795a08e0b9 width=208
+Aguardando comunicação…
+
+[gText_SpaceTimes2] 2e6eefd076 width=45
+ vez(es)
+
+[gText_Var1Berry] 25cdf11e1a
+FRUTA {STR_VAR_1}
+
+[gText_TimeColon] 179578fe1b width=60
+Tempo:
+
+[gText_PressingSpeed] afcd9b1b77
+Velocidade:
+
+[gText_Silkiness] 37c3366bc1
+Finura:
+
+[gText_SpaceMin] 2e87c2212e
+ min.
+
+[gText_SpaceSec] e4e78163a6
+ s
+
+[gText_TimesPerSec] 923fdda5f0
+ vezes/s
+
+[gText_PressesRankings] 228bd78a80
+Ranking de Apertos
+
+[gText_CrushingResults] 8da1908074
+Resultado
+
+[gText_NeatnessRankings] 9393e6bd0e
+Ranking de Finura
+
+[gText_CoopRankings] cafe8c445a
+Ranking de Equipe
+
+[gText_PressingPowerRankings] a21952048d
+Ranking de Força
+
+[gText_BerryCrush2] 8d9e34e09d width=180
+TRITURA FRUTAS
+
+[gText_PressingSpeedRankings] e767f36b1d
+Ranking de Rapidez
+
+[gText_Var1Players] 8887654ede width=180
+{STR_VAR_1} JOGADORES
+
+# DECORAÇÃO (decoration.c): o menu se ajusta ao texto (até 18 tiles); as
+
+# categorias, numa janela de 12 tiles; as mensagens, na caixa de mensagem.
+
+[gText_Decorate] 95bf030e34
+DECORAR
+
+[gText_PutAway] 17efaae8bd
+GUARDAR
+
+[gText_Toss2] 4e8ae1245c width=48
+JOGAR
+
+[gText_PutOutSelectedDecorItem] 33ddec06a2 width=208
+Coloca a decoração escolhida.
+
+[gText_StoreChosenDecorInPC] 6e7aa2e95e width=208
+Guarda a decoração escolhida no PC.
+
+[gText_ThrowAwayUnwantedDecors] 3d5d0ef5df width=208
+Joga fora as decorações que não quer.
+
+[gText_NoDecorations] 110da31c1b width=208
+Não há decorações.{PAUSE_UNTIL_PRESS}
+
+[gText_Desk] a780d2f83d width=88
+MESA
+
+[gText_Chair] 442793e2d0 width=88
+CADEIRA
+
+[gText_Plant] 61728f6dd4 width=88
+PLANTA
+
+[gText_Ornament] 65753a5fda width=88
+ENFEITE
+
+[gText_Mat] 0a9e7cdadc width=88
+TAPETE
+
+[gText_Poster] 4406244e30 width=88
+PÔSTER
+
+[gText_Doll] 8fb1d9815e width=88
+BONECO
+
+[gText_Cushion] 0b716742ca width=88
+ALMOFADA
+
+[gText_PlaceItHere] 5b4cdcf39f width=208
+Colocar aqui?
+
+[gText_CantBePlacedHere] aee9035b15 width=208
+Não dá pra colocar aqui.
+
+[gText_CancelDecorating] 7d7070f5c3 width=208
+Parar de decorar?
+
+[gText_InUseAlready] cf44934928 width=208
+Já está em uso.
+
+[gText_NoMoreDecorations] 444f6b0cfd
+Não cabe mais nenhuma decoração.\nO máximo é {STR_VAR_1}.
+
+[gText_NoMoreDecorations2] 444f6b0cfd
+Não cabe mais nenhuma decoração.\nO máximo é {STR_VAR_1}.
+
+[gText_CantPlaceInRoom] 71dcf23225 width=208
+Esta decoração não pode ficar\nno seu quarto.
+
+[gText_CantThrowAwayInUse] 446ca01281 width=208
+Esta decoração está em uso.\nNão dá pra jogar fora.
+
+[gText_DecorationWillBeDiscarded] 4e9feca156 width=208
+{STR_VAR_1} vai ser descartado.\nTudo bem?
+
+[gText_DecorationThrownAway] 71311841f3 width=208
+A decoração foi jogada fora.
+
+[gText_StopPuttingAwayDecorations] aec9d50483 width=208
+Parar de guardar decorações?
+
+[gText_NoDecorationHere] 8857de86c2 width=208
+Não tem decoração aqui.
+
+[gText_ReturnDecorationToPC] 2f2de60480 width=208
+Devolver esta decoração ao PC?
+
+[gText_DecorationReturnedToPC] 09ce242829 width=208
+A decoração voltou pro PC.
+
+[gText_NoDecorationsInUse] 2cbae1db93 width=208
+Não há decorações em uso.{PAUSE_UNTIL_PRESS}
+
+# Bate-papo da SALA UNIÃO (union_room_chat.c): os botões do teclado e as
+
+# frases prontas ficam na largura do inglês; as mensagens, numa janela
+
+# larga como a caixa de mensagem.
+
+[gText_Upper] 1dacd1c358
+ABC
+
+[gText_Lower] 346e3ee198
+abc
+
+[gText_Symbols] fab167e9c6
+SÍMB.
+
+[gText_Register2] 0391d22030
+REGIST.
+
+[gText_Exit2] bb1b38004d
+SAIR
+
+[gText_QuitChatting] 7bf3eb33a7 width=208
+Sair do bate-papo?
+
+[gText_RegisterTextWhere] 29697a73b1 width=208
+Registrar o texto onde?
+
+[gText_RegisterTextHere] ef3e59ab63 width=208
+Registrar o texto aqui?
+
+[gText_InputText] 746797b583 width=208
+Digite o texto.
+
+[gText_F700JoinedChat] ba470f4934 width=208
+{DYNAMIC 0} entrou no bate-papo!
+
+[gText_F700LeftChat] 544cbad235 width=208
+{DYNAMIC 0} saiu do bate-papo.
+
+[gText_ExitingChat] 39c625e858 width=208
+Saindo do bate-papo…
+
+[gText_LeaderLeftEndingChat] 5196cea648 width=208
+O LÍDER, {DYNAMIC 0}, saiu,\ne o bate-papo acabou.
+
+[gText_RegisteredTextChangedOKToSave] 760623f7f5 width=208
+O texto registrado mudou.\nPode salvar o jogo?
+
+[gText_AlreadySavedFile_Chat] 3780954e28 width=208
+Já existe um jogo salvo.\nPode substituir?
+
+[gText_SavingDontTurnOff_Chat] 30607f964d width=208
+SALVANDO…\nNÃO DESLIGUE O APARELHO.
+
+[gText_PlayerSavedGame_Chat] e20b4c8e53 width=208
+{DYNAMIC 0} salvou o jogo.
+
+[gText_IfLeaderLeavesChatEnds] 8cbaf78361 width=208
+Se o LÍDER sair, o bate-papo\nacaba. Tudo bem?
+
+[gText_Hello] c65f99f8c5
+OLÁ
+
+[gText_Trade] 91e044d0ff
+TROCA
+
+[gText_Battle] ce9e1aaf32
+LUTA
+
+[gText_Lets] d3a071cb2e
+BORA
+
+[gText_Sorry] 08b4b7de83
+OPS!
+
+[gText_YaySmileEmoji] 17f452ce35
+EBA{EMOJI_BIGSMILE}
+
+[gText_ThankYou] 04209ee721
+VALEU
+
+[gText_ByeBye] a8b4aff084
+TCHAU!
+
+# CARTÃO DE TREINADOR (trainer_card.c): na frente, os rótulos à esquerda
+
+# e o valor à direita; no verso, o rótulo em x=16 e o valor alinhado à
+
+# direita em 216 px.
+
+[gText_TrainerCardName] fec4d1213b width=54
+NOME:
+
+[gText_TrainerCardIDNo] 8b9d3d695a width=54
+Nº ID
+
+[gText_TrainerCardMoney] 6bfef49ec2 width=54
+DINHEIRO
+
+[gText_TrainerCardTime] 64269f9bd2 width=54
+TEMPO
+
+[gText_Var1sTrainerCard] 0188cfa2d9 width=200
+CARTÃO DE TREINADOR de {STR_VAR_1}
+
+[gText_HallOfFameDebut] 16bb7391dd width=130
+ESTREIA NO HALL DA FAMA
+
+[gText_LinkBattles] 81e4aef41f width=120
+BATALHAS LINK
+
+[gText_LinkCableBattles] da1091b12a width=120
+BATALHAS POR CABO
+
+[gText_WinsLosses] 8d026c5a16
+V:{COLOR RED}{SHADOW LIGHT_RED}{STR_VAR_1}{COLOR DARK_GRAY}{SHADOW LIGHT_GRAY}  D:{COLOR RED}{SHADOW LIGHT_RED}{STR_VAR_2}{COLOR DARK_GRAY}{SHADOW LIGHT_GRAY}
+
+[gText_PokemonTrades] 1e484846cd width=120
+TROCAS POKéMON
+
+[gText_UnionTradesAndBattles] eccd2db1f7 width=130
+TROCAS/LUTAS UNIÃO
+
+[gText_BerryCrush] 8d9e34e09d width=120
+TRITURA FRUTAS
+
+[gText_WaitingTrainerFinishReading] 0756383354 width=208
+Esperando o outro TREINADOR terminar\nde ler o seu CARTÃO DE TREINADOR.
+
+[gText_PokeblocksWithFriends] c0e40651a3 width=120
+{POKEBLOCK}S C/ AMIGOS
+
+[gText_WonContestsWFriends] 20925139e0 width=130
+CONCURSOS C/ AMIGOS
+
+[gText_BattlePtsWon] e709f2b950 width=120
+PONTOS DE BATALHA
+
+[gText_NumBP] ad8a75f866
+{STR_VAR_1}{COLOR DARK_GRAY}{SHADOW LIGHT_GRAY}PB
+
+[gText_BattleTower] fbd1b89e76 width=120
+TORRE DE BATALHA
+
+[gText_WinsStraight] 301814f651
+V/{COLOR RED}{SHADOW LIGHT_RED}{STR_VAR_1}{COLOR DARK_GRAY}{SHADOW LIGHT_GRAY}  SEG./{COLOR RED}{SHADOW LIGHT_RED}{STR_VAR_2}
+
+# ESTOJO {POKEBLOCK} (pokeblock.c): sabores no quadro do {POKEBLOCK},
+
+# mensagens na janela de pergunta.
+
+[gText_Spicy] 234b920b28 width=40
+APIM.
+
+[gText_Dry] 1feeb060cd width=40
+SECO
+
+[gText_Sweet] 23bf6d6c7a width=40
+DOCE
+
+[gText_Bitter] 33c904d6a3 width=40
+AMARGO
+
+[gText_Sour] 239faf8848 width=40
+AZEDO
+
+[gText_StowCase] e6304e3884
+Guardar.
+
+[gText_ThrowAwayVar1] 01986e3d9d
+Jogar fora\n{STR_VAR_1}?
+
+[gText_Var1ThrownAway] 30747094c2
+{STR_VAR_1}\nfoi jogado fora.
+
+# TV (tv.c): pedaços que entram nas frases dos programas ({STR_VAR}).
+
+[gText_Dad] 22338f0423 width=40
+PAPAI
+
+[gText_Mom] 3c93964ebb width=40
+MAMÃE
+
+[gText_Lv50] 13f0a8a25c width=80
+NV. 50
+
+[gText_OpenLevel] 32c7557ca3 width=80
+NÍVEL LIVRE
+
+[gText_Slots] 11944395bb width=80
+CAÇA-NÍQUEIS
+
+[gText_Roulette] 255b1a1211 width=80
+ROLETA
+
+[gText_Good] 61dedcf053 width=80
+Bom
+
+[gText_VeryGood] f5babd3920 width=80
+Muito bom
+
+[gText_Excellent] 1aafbf548b width=80
+Excelente
+
+[gText_SoSo] 1b06044bc6 width=80
+Mais ou menos
+
+[gText_Bad] be7e10d1c5 width=80
+Ruim
+
+[gText_TheWorst] 1b3a0049ab width=80
+O pior
+
+[gText_Spicy2] 680c1e02bc width=80
+apimentado
+
+[gText_Dry2] ef926a8521 width=80
+seco
+
+[gText_Sweet2] 457774c6f0 width=80
+doce
+
+[gText_Bitter2] 23fda791fa width=80
+amargo
+
+[gText_Sour2] 000b4b94cb width=80
+azedo
+
+[gText_Single] 36fb236688 width=80
+INDIVIDUAL
+
+[gText_Double] 097274c5c7 width=80
+DUPLA
+
+[gText_Jackpot] 3c72d419af width=80
+máximo
+
+[gText_First] e0996a37c1 width=80
+primeiro
+
+[gText_Second] 352f7829a2 width=80
+segundo
+
+[gText_Third] 34fb3300b9 width=80
+terceiro
+
+# COLHEITA DO DODRIO (dodrio_berry_picking.c): recordes e mensagens em
+
+# janelas de 28 tiles; o anúncio dos resultados, de 19 a 22.
+
+[gText_BerryPickingRecords] 98c6dc125e width=200
+RECORDES DA COLHEITA DO DODRIO
+
+[gText_BerriesPicked] 69053d298b width=100
+FRUTAS colhidas:
+
+[gText_BestScore] 57c0f9e921 width=100
+Melhor placar:
+
+[gText_BerriesInRowFivePlayers] 5bb43f3b62 width=200
+FRUTAS seguidas com\ncinco jogadores:
+
+[gText_BerryPickingResults] 23e977b4db width=200
+Resultados da COLHEITA!
+
+[gText_AnnouncingRankings] 560eb56159 width=150
+Classificação!
+
+[gText_AnnouncingPrizes] 49aa686dfa width=150
+Prêmios!
+
+[gText_FirstPlacePrize] 3d7539abaf width=200
+Quem ficou em primeiro ganha\neste {DYNAMIC 0}!
+
+[gText_CantHoldAnyMore] 7e83a5603b width=200
+Não cabe mais nada!
+
+[gText_FilledStorageSpace] 38d280c7e3 width=200
+Encheu o espaço de guardar.
+
+[gText_WantToPlayAgain] d838573301 width=150
+Jogar de novo?
+
+[gText_SomeoneDroppedOut] abc83f72ed width=200
+Alguém saiu.\nA conexão vai ser cancelada.
+
+[gText_SpacePoints] 027f4971dd width=45
+ pontos
+
+[gText_CommunicationStandby3] 795a08e0b9 width=200
+Aguardando comunicação…
+
+# FÁBRICA DE BATALHA (battle_factory_screen.c): título em 12 tiles,
+
+# informação em 20, opções em 8 (aluguel) ou 9 (troca).
+
+[gText_RentalPkmn2] 755d279110 width=92
+ALUGUEL
+
+[gText_SelectFirstPkmn] c02de4c96b width=156
+Escolha o 1º POKéMON.
+
+[gText_SelectSecondPkmn] c348a25019 width=156
+Escolha o 2º POKéMON.
+
+[gText_SelectThirdPkmn] 47e5dd10b2 width=156
+Escolha o 3º POKéMON.
+
+[gText_Rent] 5d0389d350 width=56
+ALUGAR
+
+[gText_Summary] 1450844d24 width=56
+RESUMO
+
+[gText_Others2] dee9889ad6 width=56
+OUTROS
+
+[gText_TheseThreePkmnOkay] c8732fb14c width=156
+Esses três POKéMON estão OK?
+
+[gText_CantSelectSamePkmn] f3391bdf16 width=156
+Não dá pra repetir {PKMN}.
+
+[gText_PkmnSwap] 6d1cf16f39 width=92
+TROCA
+
+[gText_SelectPkmnToSwap] ff0df0d42d width=156
+Escolha o POKéMON pra trocar.
+
+[gText_SelectPkmnToAccept] 87a2efb44c width=156
+Escolha o POKéMON novo.
+
+[gText_Swap] 04841d4fdb width=64
+TROCAR
+
+[gText_Summary2] 1450844d24 width=64
+RESUMO
+
+[gText_Rechoose] 571527727b width=64
+VOLTAR
+
+[gText_QuitSwapping] 862130517b width=156
+Parar de trocar?
+
+[gText_PkmnForSwap] 22331219fa width=64
+{PKMN} P/ TROCA
+
+[gText_Cancel3] 1507c40f04 width=64
+VOLTAR
+
+[gText_AcceptThisPkmn] 97203d3cd9 width=156
+Receber este POKéMON?
+
+[gText_SamePkmnInPartyAlready] af9ba48934 width=156
+{PKMN} igual já na equipe.
+
+# PIRÂMIDE DE BATALHA no menu START (start_menu.c): o andar, numa janela
+
+# pequena, na largura do inglês.
+
+[gText_BattlePyramidFloor] 668b9bc258 width=76
+PIRÂMIDE\n{STR_VAR_1}
+
+[gText_Floor1] b9649fdb12 width=76
+1º andar
+
+[gText_Floor2] e6d1e5547f width=76
+2º andar
+
+[gText_Floor3] c428479823 width=76
+3º andar
+
+[gText_Floor4] 1055fe8520 width=76
+4º andar
+
+[gText_Floor5] 908ff97dc0 width=76
+5º andar
+
+[gText_Floor6] a86aa5cd30 width=76
+6º andar
+
+[gText_Floor7] e867ea542f width=76
+7º andar
+
+[gText_Peak] c83dbbd3e6 width=76
+Topo
+
+# Menus de escolha dos scripts (script_menu.c): a janela se ajusta ao
+
+# texto mais largo.
+
+[gText_SomeonesPC] 21d7e2c03b width=100
+PC DE ALGUÉM
+
+[gText_LanettesPC] dd7e4fca96 width=100
+PC DA LANETTE
+
+[gText_PlayersPC] f9bea2d0e2 width=100
+PC de {PLAYER}
+
+[gText_HallOfFame] 32065dbe94 width=100
+HALL DA FAMA
+
+[gText_LogOff] a9edf59524 width=100
+DESLIGAR
+
+[gText_MenuOptionBag] 332c000cf7 width=100
+BOLSA
+
+[gText_MenuOptionSave] 508156a39b width=100
+SALVAR
+
+[gText_MenuOptionOption] 5b8ec92558 width=100
+OPÇÕES
+
+[gText_MenuOptionExit] bb1b38004d width=100
+SAIR
+
+# PULO POKéMON (pokemon_jump.c): recordes e mensagens em janelas largas.
+
+[gText_SpacePoints2] 027f4971dd width=45
+ pontos
+
+[gText_SpaceTimes3] 2e6eefd076 width=45
+ vez(es)
+
+[gText_PkmnJumpRecords] 8f71669de8 width=200
+RECORDES DO PULO POKéMON
+
+[gText_JumpsInARow] e5e6a04a54 width=100
+Pulos seguidos:
+
+[gText_BestScore2] 57c0f9e921 width=100
+Melhor placar:
+
+[gText_ExcellentsInARow] 796980d981 width=110
+EXCELENTES seg.:
+
+[gText_AwesomeWonF701F700] 9867013f94 width=200
+Placar incrível! Você\nganhou {DYNAMIC 1} {DYNAMIC 0}!
+
+[gText_FilledStorageSpace2] 38d280c7e3 width=200
+Encheu o espaço de guardar.
+
+[gText_CantHoldMore] 7e83a5603b width=200
+Não cabe mais nada!
+
+[gText_WantToPlayAgain2] d838573301 width=150
+Jogar de novo?
+
+[gText_SomeoneDroppedOut2] abc83f72ed width=200
+Alguém saiu.\nA conexão vai ser cancelada.
+
+[gText_CommunicationStandby4] 795a08e0b9 width=200
+Aguardando comunicação…
+
+# COLINA DOS TREINADORES (trainer_hill.c): o quadro de tempos.
+
+[gText_NormalTagMatch] d61fd459c7 width=110
+DESAFIO NORMAL
+
+[gText_VarietyTagMatch] f59472223c width=110
+DESAFIO VARIADO
+
+[gText_UniqueTagMatch] 5195bf2fd5 width=110
+DESAFIO ÚNICO
+
+[gText_ExpertTagMatch] 1056754f9b width=110
+DESAFIO EXPERT
+
+[gText_TimeBoard] 986fd13ef0 width=80
+TEMPOS
+
+[gText_TimeCleared] 804a3163a6 width=80
+TEMPO
+
+[gText_XMinYDotZSec] 67b734ba10
+{STR_VAR_1} min. {STR_VAR_2}.{STR_VAR_3} s
+
+[gText_TrainerHill1F] e2e11f3bee
+1º
+
+[gText_TrainerHill2F] 44cc8040ac
+2º
+
+[gText_TrainerHill3F] 5bab17fb39
+3º
+
+[gText_TrainerHill4F] 162b1d940f
+4º
+
+# Acerto do relógio (reset_rtc_screen.c): janelas de mensagem.
+
+[gText_ResetRTCConfirmCancel] 110eb06074 width=150
+Acertar o relógio?\nA: Confirmar, B: Voltar
+
+[gText_PresentTime] 433aa750fa width=150
+Hora atual do jogo
+
+[gText_PreviousTime] 512a833f19 width=150
+Hora anterior do jogo
+
+[gText_PleaseResetTime] 24bfe1e8f7 width=200
+Acerte a hora.
+
+[gText_ClockHasBeenReset] c73754a724 width=200
+O relógio foi acertado.\nSalvando os dados. Aguarde.
+
+[gText_SaveCompleted] dc4ce62bcc width=150
+Salvo.
+
+[gText_SaveFailed] acdf8f4140 width=150
+Não deu pra salvar…
+
+[gText_NoSaveFileCantSetTime] 8b43b41587 width=200
+Não há jogo salvo, então não\ndá pra acertar a hora.
+
+[gText_Day] 9d1fece7b6
+DIA
+
+[gText_Confirm2] f6fda10d33 width=60
+CONFIRMAR
+
+# Etiqueta da FRUTA e uso de {POKEBLOCK} (berry_tag_screen.c,
+
+# use_pokeblock.c): a NATUREZA no quadro; as melhorias, em mensagens.
+
+[gText_NatureSlash] f2ffd8c6a0 width=60
+NATUR./
+
+[gText_GetsAPokeBlockQuestion] d52a13e58f width=100
+ ganha um {POKEBLOCK}?
+
+[gText_Coolness] d8b69bdec6 width=80
+O ESTILO
+
+[gText_Beauty3] 43834164d5 width=80
+A BELEZA
+
+[gText_Cuteness] a993d4ad0f width=80
+A FOFURA
+
+[gText_Smartness] 021fd70718 width=80
+A ESPERTEZA
+
+[gText_Toughness] e7651a149e width=80
+A FORÇA
+
+[gText_WasEnhanced] d85e61a9cf width=100
+melhorou!
+
+[gText_NothingChanged] 0ab429eeda width=120
+Nada mudou!
+
+[gText_WontEatAnymore] 5b6966c844 width=150
+Não quer comer mais…
+
+# Textos soltos de várias telas. As mensagens vão na caixa de mensagem ou
+
+# numa janela da mesma largura (208 px); os rótulos ficam na largura do
+
+# inglês, salvo onde a nota diz outra coisa.
+
+[gText_Give] fbefae1e96
+Dar
+
+[gText_NoNeed] e4ba461c8a
+Nada
+
+[gText_PlayersBattleResults] cf32a2793a width=208
+RESULTADOS DE {PLAYER}
+
+[gText_TotalRecordWLD] e9ce9c9546
+TOTAL V:{STR_VAR_1} D:{STR_VAR_2} E:{STR_VAR_3}
+
+[gText_WinLoseDraw] 42b2d6214d
+{CLEAR_TO 0x53}VIT.{CLEAR_TO 0x80}DER.{CLEAR_TO 0xB0}EMP.
+
+[gText_234Players] fdf8c7d8e0
+2 JOGAD.\n3 JOGAD.\n4 JOGAD.
+
+[gText_BlenderMaxSpeedRecord] 766105252a width=180
+LIQUIDIFICADOR\nRECORDE DE VELOCIDADE!
+
+[gText_SavingDontTurnOff2] 30607f964d width=208
+SALVANDO…\nNÃO DESLIGUE O APARELHO.
+
+[gText_Powder] dc70ffc05d
+PÓ
+
+[gText_BronzeCard] 264d71b402
+BRONZE
+
+[gText_CopperCard] 8eaf0145c8
+COBRE
+
+[gText_GoldCard] 81ff70acd7 width=36
+OURO
+
+[gText_SilverCard] 462e8399a4
+PRATA
+
+[gText_NumPlayerLink] ae40f89f3f
+{STR_VAR_1}P LINK
+
+[gText_ClearAllSaveData] 2978bb4f35 width=208
+Apagar todos os dados salvos?
+
+[gText_ClearingData] e1bcf17623 width=208
+Apagando os dados…\nAguarde.
+
+[gText_AnnouncingResults] 32dddfd736 width=208
+O resultado!
+
+[gText_CommunicationStandby] 795a08e0b9 width=208
+Aguardando comunicação…
+
+[gText_ContestantsMonWon] 96251a66d8 width=208
+{STR_VAR_2} de {STR_VAR_1} venceu!
+
+[gText_PreliminaryResults] 8c371957aa width=208
+O resultado da primeira fase!
+
+[gText_Round2Results] 083e319f4a width=208
+O resultado da segunda fase!
+
+[gDaycareText_DontLikeOther] b9190d9a20 width=208
+Os dois não parecem se dar\nmuito bem.
+
+[gDaycareText_GetAlong] cc3f94185d width=208
+Os dois parecem se dar bem.
+
+[gDaycareText_GetAlongVeryWell] 82b7744f02 width=208
+Os dois parecem se dar\nmuito bem.
+
+[gDaycareText_PlayOther] b02a6dbcd4 width=208
+Os dois preferem brincar com outros\nPOKéMON a brincar juntos.
+
+[gText_Exit4] bb1b38004d
+SAIR
+
+[gText_DexNational] f949d8c363
+NACIONAL
+
+[gText_PokedexDiploma] 6f3ff93d8d
+JOGADOR: {CLEAR 0x10}{COLOR RED}{SHADOW LIGHT_RED}{PLAYER}{COLOR DARK_GRAY}{SHADOW LIGHT_GRAY}\n\nEste documento certifica\nque você completou\ncom sucesso a\nPOKéDEX {STR_VAR_1}.\n\n{CLEAR_TO 0x42}{COLOR RED}{SHADOW LIGHT_RED}GAME FREAK
+
+[gText_HatchedFromEgg] e3342a99db width=208
+{STR_VAR_1} saiu do OVO!
+
+[gText_NicknameHatchPrompt] 57b47399b7 width=208
+Quer dar um apelido ao\n{STR_VAR_1} que acabou de nascer?
+
+[gText_CommunicationStandby5] 795a08e0b9 width=208
+Aguardando comunicação…
+
+[gText_ItGotAway] bbe5013e57 width=208
+Escapou…{PAUSE_UNTIL_PRESS}
+
+[gText_NotEvenANibble] 9ece9fcfba width=208
+Nem uma beliscada…{PAUSE_UNTIL_PRESS}
+
+[gText_OhABite] 49f0becf52 width=208
+Opa! Fisgou!
+
+[gText_PokemonOnHook] afba777d72 width=208
+Tem um POKéMON no anzol!{PAUSE_UNTIL_PRESS}
+
+[gText_PkmnFainted_FldPsn] 8e9f3ba62f width=208
+{STR_VAR_1} desmaiou…\p\n
+
+[gText_0Pts] d7d0653ee0 width=48
+0 pts
+
+[gText_10Pts] d9f1abbd7f width=48
+10 pts
+
+[gText_20Pts] a530453732 width=48
+20 pts
+
+[gText_30Pts] 4455c5fd16 width=48
+30 pts
+
+[gText_40Pts] 7d312c9828 width=48
+40 pts
+
+[gText_50Pts] 29822be3a0 width=48
+50 pts
+
+[gText_60Pts] 4a8a95d7b2 width=48
+60 pts
+
+[gText_70Pts] 8e2c75f492 width=48
+70 pts
+
+[gText_80Pts] d8cba4ae6b width=48
+80 pts
+
+[gText_90Pts] 1b9779cc16 width=48
+90 pts
+
+[gText_100Pts] c48369f30b width=48
+100 pts
+
+[gText_Gold] 81ff70acd7 width=36
+OURO
+
+[gText_Silver] 462e8399a4
+PRATA
+
+[gText_CantBeUsedOnPkmn] b675e7f468 width=208
+Não dá pra usar\nnesse POKéMON.{PAUSE_UNTIL_PRESS}
+
+[gText_Time] 64269f9bd2 width=30
+TEMPO
+
+[gText_IDNumber] 8b9d3d695a
+Nº ID
+
+[gText_QuizLady_Lady] fc40dd4181
+Moça
+
+[gText_ABtnRegistrationCounter] f7520bf96f width=208
+Botão A: Balcão de Inscrição
+
+[gText_ABtnTitleScreen] 26077dbc6a width=208
+Botão A: Tela de Título
+
+[gText_CommErrorCheckConnections] 92f7fd4389 width=208
+Erro de comunicação…\nConfira todas as conexões e\ndesligue e ligue o aparelho.
+
+[gText_CommErrorEllipsis] d00807d859 width=208
+Erro de comunicação…
+
+[gText_MoveCloserToLinkPartner] 0dbb401407 width=208
+Chegue mais perto dos parceiros.\nEvite obstáculos entre vocês.
+
+[gText_FromSpace] 6e9b4e1652
+De
+
+[gText_Friend] 2394299d6f
+Amigo
+
+[gText_MoveRelearnerAccuracy] 1019a88d18
+PRECISÃO/
+
+[gText_MoveRelearnerAppeal] e1a476f66b width=50
+IMPACTO
+
+[gText_MoveRelearnerBattleMoves] 0e54668249 width=120
+GOLPES DE BATALHA
+
+[gText_MoveRelearnerContestMovesTitle] fba5a778b9 width=120
+GOLPES DE CONCURSO
+
+[gText_MoveRelearnerJam] 18951a64f6 width=40
+ATRAP.
+
+[gText_MoveRelearnerPower] d7c4809515
+PODER/
+
+[gText_MoveRelearnerAndPoof] c5b394e24b width=208
+{PAUSE 32}1, {PAUSE 15}2, e {PAUSE 15}… {PAUSE 15}… {PAUSE 15}… {PAUSE 15}{PLAY_SE SE_BALL_BOUNCE_1}Puf!\p
+
+[gText_MoveRelearnerGiveUp] fcc93ff85a width=208
+Desistir de ensinar um golpe\nnovo a {STR_VAR_1}?
+
+[gText_MoveRelearnerPkmnForgotMoveAndLearnedNew] eae286b1d3 width=208
+{STR_VAR_1} esqueceu {STR_VAR_3}.\pE…\p{STR_VAR_1} aprendeu {STR_VAR_2}.
+
+[gText_MoveRelearnerPkmnLearnedMove] d7bee1210f width=208
+{STR_VAR_1} aprendeu\n{STR_VAR_2}!
+
+[gText_MoveRelearnerPkmnTryingToLearnMove] 0e8c2591ff width=208
+{STR_VAR_1} quer aprender\n{STR_VAR_2}.\pMas {STR_VAR_1} não pode saber mais\nque quatro golpes.\pApagar um golpe antigo pra\nabrir espaço pra {STR_VAR_2}?
+
+[gText_MoveRelearnerStopTryingToTeachMove] b8c99ebeb0 width=208
+Parar de ensinar\n{STR_VAR_2}?
+
+[gText_MoveRelearnerTeachMoveConfirm] 4f2999c7bd width=208
+Ensinar {STR_VAR_2}?
+
+[gText_MoveRelearnerWhichMoveToForget] a9aa99130d width=208
+Qual golpe deve ser\nesquecido?\p
+
+[gText_TeachWhichMoveToPkmn] d6ad8d9e6b width=208
+Que golpe ensinar a {STR_VAR_1}?
+
+[gText_DontRemoveCableTurnOff] 6e023dbb7c width=208
+Não tire o cabo Game Link.\nNão desligue o aparelho.
+
+[gText_EventSafelyLoaded] bf0c58e8fd width=208
+O evento foi carregado.
+
+[gText_LinkStandby2] 92c0cd8345 width=208
+Aguardando conexão…\n… … Botão B: Cancelar
+
+[gText_LoadErrorEndingSession] dd8ae66bce width=208
+Erro ao carregar.\nEncerrando a sessão.
+
+[gText_LoadingEvent] 8f122ad7d5 width=208
+Carregando o evento…
+
+[gText_PressAToLoadEvent] faa49070e5 width=208
+Aperte o botão A pra carregar.\n… … Botão B: Cancelar
+
+[gText_InGameClockUsable] 609f2c871f width=208
+O acerto do relógio do jogo\nagora pode ser usado.
+
+[gText_BoxName] da42769045
+NOME?
+
+[gText_MoveOkBack] 98ce8808e0 width=100
+{DPAD_NONE}MOVER  {A_BUTTON}OK  {B_BUTTON}VOLTAR
+
+[gText_PkmnsNickname] cd7efa00f7 width=160
+Apelido de {STR_VAR_1}?
+
+[gText_TellHimTheWords] 371d137596 width=160
+Diga as palavras.
+
+[gText_YourName] 192c6610a8
+SEU NOME?
+
+[gText_ButtonTypeNormal] 835d9b0597
+{COLOR GREEN}{SHADOW LIGHT_GREEN}NORMAL
+
+[gText_Var1AteTheVar2] 8540712ddf width=208
+{STR_VAR_1} comeu o\n{STR_VAR_2}.{PAUSE_UNTIL_PRESS}
+
+[gText_Var1DisdainfullyAteVar2] 33464235b1 width=208
+{STR_VAR_1} comeu com desdém o\n{STR_VAR_2}.{PAUSE_UNTIL_PRESS}
+
+[gText_Var1HappilyAteVar2] df8278682e width=208
+{STR_VAR_1} comeu feliz o\n{STR_VAR_2}.{PAUSE_UNTIL_PRESS}
+
+[gText_MixingRecords] fa5b9d21cd width=208
+Misturando registros…
+
+[gText_RecordMixingComplete] ed78553f6c width=208
+Registros misturados.\nObrigado por esperar.
+
+[gText_Ferry] 09d2c81b84
+BALSA
+
+[gText_Hideout] 7d0108498f width=80
+ESCONDERIJO
+
+[gText_PokemonCenter] 9b055d9fe7 width=90
+CENTRO POKéMON
+
+[gText_PokemonLeague] 1a11998b67
+LIGA POKéMON
+
+[gText_SecretBase] ff13338a1b width=80
+BASE SECRETA
+
+[gText_BackupMemoryDamaged] e2e93a6d8e width=208
+A memória de backup está danificada,\nou a bateria interna acabou.\nDá pra jogar, mas não salvar.
+
+[gText_CheckCompleted] 8ee89ec673 width=208
+Verificação concluída.\nTentando salvar de novo.\nAguarde.
+
+[gText_GamePlayCannotBeContinued] 74ad34c353 width=208
+{COLOR RED}“O jogo não pode continuar.\nVoltando à tela de título…”
+
+[gText_SaveCompleteGameCannotContinue] 938c60b5ad width=208
+Salvo.\n{COLOR RED}“O jogo não pode continuar.\nVoltando à tela de título.”
+
+[gText_SaveCompletePressA] 7750f851c2 width=208
+Salvo.\n{COLOR RED}“Aperte o botão A.”
+
+[gText_SaveFailedCheckingBackup] 64519b1a71 width=208
+Falha ao salvar. Verificando a\nmemória de backup… Aguarde.\n{COLOR RED}“Tempo necessário: cerca de 1 minuto”
+
+[gText_ApostropheSBase] 9eb737e3e6
+ BASE
+
+[gText_DelRegist] f71f86cf40
+APAGAR
+
+[gText_NoRegistry] 0527d87a93 width=208
+Não há REGISTRO.{PAUSE_UNTIL_PRESS}
+
+[gText_OkayToDeleteFromRegistry] a9b1011a2d width=208
+Pode apagar {STR_VAR_1}\ndo REGISTRO?
+
+[gText_RegisteredDataDeleted] bc0b5ea811 width=208
+Os dados registrados foram apagados.{PAUSE_UNTIL_PRESS}
+
+[gText_QuitTheGame] 993fdc1f69 width=208
+Sair do jogo?
+
+[gText_ReelTimeHelp] ccc731cdf7
+HORA DO GIRO\nÉ a sua chance de mirar\ne acertar os símbolos!\nO giro dura pelo número\nde voltas ganhas.\nTermina num Grande Bônus.
+
+[gText_YouDontHaveThreeCoins] 586258c465 width=208
+Você não tem três FICHAS.
+
+[gText_YouveGot9999Coins] 27841b18fd width=208
+Você tem 9.999 FICHAS.
+
+[gText_YouveRunOutOfCoins] 506eae46df width=208
+Suas FICHAS acabaram.\nFim de jogo!
+
+[gText_ByeByeVar1] 0c0e6d99e6 width=208
+Tchau, {STR_VAR_2}!
+
+[gText_TakeGoodCareOfX] cac06a8223 width=208
+Cuide bem de {STR_VAR_3}!
+
+[gText_XSentOverY] 37b2a0e7b5 width=208
+{STR_VAR_1} mandou {STR_VAR_3}.
+
+[gText_XWillBeSentToY] 26dbde91ef width=208
+{STR_VAR_2} vai ser\nenviado a {STR_VAR_1}.
+
+[gText_BattleWasRefused] 3b1ac7a2be width=208
+A batalha foi recusada.{PAUSE 60}
+
+[gText_CommStandbyAwaitingOtherPlayer] de2a67f940 width=208
+Aguardando comunicação…\nEsperando o outro jogador escolher.
+
+[gText_RefusedBattle] 7322c99ee1 width=208
+Recusou a batalha.{PAUSE 60}
+
+[gText_Peekaboo] 01b7103b18
+ACHOU!
+
+[gText_Cancel4] 1507c40f04
+VOLTAR
+
+[gText_Confirm3] f6fda10d33
+OK
+
+[gText_IsThisTheCorrectTime] 784b662b37 width=208
+Esta é a hora certa?
+
+[gText_PeopleBattling] 7b3c9203c6 width=130
+Batalhando:
+
+[gText_PeopleCommunicating] ea1cceae46 width=130
+Comunicando:
+
+[gText_PeopleInUnionRoom] 0b9c99530e width=150
+Na SALA UNIÃO:
+
+[gText_PeopleTrading] a356095f3c width=130
+Trocando:
+
+[gText_WirelessCommStatus] 10fe56ca0c width=200
+Status da Comunicação Sem Fio
+
+# FALA FÁCIL (easy_chat.c): só a interface; as palavras continuam em inglês
+
+# até a decisão do roadmap. Título centrado em 144 px; instruções e
+
+# perguntas numa janela de 24 tiles (184 px); nomes dos grupos em colunas
+
+# de 84 px (72 px de texto).
+
+[gText_CombineFourWordsOrPhrases] cf03e0d33f width=184
+Junte quatro palavras ou frases
+
+[gText_AndMakeYourProfile] 11a027f53f width=184
+e monte o seu perfil.
+
+[gText_CombineSixWordsOrPhrases] a40f33bb1b width=184
+Junte seis palavras ou frases
+
+[gText_AndMakeAMessage] 43efeb2b23 width=184
+e monte uma mensagem.
+
+[gText_FindWordsThatDescribeYour] 4b7285f026 width=184
+Ache palavras que descrevam
+
+[gText_FeelingsRightNow] 02eeeecf49 width=184
+o que você sente agora.
+
+[gText_CombineNineWordsOrPhrases] 2da22ca690 width=184
+Junte nove palavras ou frases
+
+[gText_AndMakeAMessage2] 43efeb2b23 width=184
+e monte uma mensagem.
+
+[gText_ChangeJustOneWordOrPhrase] 8150fa44e4 width=184
+Troque só uma palavra ou frase
+
+[gText_AndImproveTheBardsSong] 54270deca0 width=184
+e melhore a canção do BARDO.
+
+[gText_YourProfile] c1c9cbe699 width=144
+Seu perfil
+
+[gText_YourFeelingAtTheBattlesStart] 62b14b15a2 width=184
+O que sente no começo da batalha
+
+[gText_WhatYouSayIfYouWin] 5c4b375e7f width=184
+O que diz se ganhar a batalha
+
+[gText_WhatYouSayIfYouLose] d775f2becf width=184
+O que diz se perder a batalha
+
+[gText_TheAnswer] 7011b1a621 width=144
+A resposta
+
+[gText_TheMailMessage] 996acf0231 width=144
+A mensagem da CARTA
+
+[gText_TheBardsSong2] 7aae18451e width=144
+A canção nova
+
+[gText_CombineTwoWordsOrPhrases] 85141b0c29 width=184
+Junte duas palavras ou frases
+
+[gText_AndMakeATrendySaying] 8cdaaee2cf width=184
+e monte uma frase da moda.
+
+[gText_TheTrendySaying] dde8ccdae8 width=144
+A frase da moda
+
+[gText_IsAsShownOkay] f616d55360 width=184
+está assim. Tudo bem?
+
+[gText_CombineTwoWordsOrPhrases2] 85141b0c29 width=184
+Junte duas palavras ou frases
+
+[gText_ToTeachHerAGoodSaying] 237290257e width=184
+pra ensinar um bom ditado a ela.
+
+[gText_FindWordsWhichFit] 4d0647abef width=184
+Ache palavras que combinem
+
+[gText_TheTrainersImage] fe61827ffe width=184
+com a imagem do TREINADOR.
+
+[gText_TheImage] abef2f6210 width=144
+A imagem:
+
+[gText_OutOfTheListedChoices] 1586179b80 width=184
+Entre as opções da lista,
+
+[gText_SelectTheAnswerToTheQuiz] 9663cb00f9 width=184
+escolha a resposta do quiz!
+
+[gText_AndCreateAQuiz] d1208bca9c width=184
+e crie um quiz!
+
+[gText_PickAWordOrPhraseAnd] fd0d531c51 width=184
+Escolha uma palavra ou frase e
+
+[gText_SetTheQuizAnswer] 9f5bb98cf3 width=184
+defina a resposta do quiz.
+
+[gText_TheAnswerColon] 87e681d3a1 width=144
+A resposta:
+
+[gText_ApprenticePhrase] 5d494af039 width=144
+Frase do aprendiz:
+
+[gText_QuitEditing] fea09776b1 width=184
+Parar de editar?
+
+[gText_StopGivingPkmnMail] 365dacb4a3 width=184
+Parar de dar a CARTA ao POKéMON?
+
+[gText_AndFillOutTheQuestionnaire] 6eff9089c9 width=184
+e preencha o questionário.
+
+[gText_LetsReplyToTheInterview] 0efcca9880 width=184
+Vamos responder à entrevista!
+
+[gText_AllTextBeingEditedWill] 03d3b8cdff width=184
+Todo o texto em edição
+
+[gText_BeDeletedThatOkay] e6963b5023 width=184
+vai ser apagado. Tudo bem?
+
+[gText_OnlyOnePhrase] 24e37a7426 width=184
+Só dá pra trocar uma frase.
+
+[gText_OriginalSongWillBeUsed] 48970358a8 width=184
+A canção original vai ser usada.
+
+[gText_CombineTwoWordsOrPhrases3] b74e2def82 width=184
+Junte duas palavras ou frases.
+
+[gText_Profile] 79799fc6ec width=144
+PERFIL
+
+[gText_AtTheBattlesStart] 7fa72007ad width=144
+No começo da batalha:
+
+[gText_UponWinningABattle] b1ef1bab08 width=144
+Ao ganhar a batalha:
+
+[gText_UponLosingABattle] 67114674c3 width=144
+Ao perder a batalha:
+
+[gText_TheBardsSong] 8d241611e3 width=144
+A canção do BARDO
+
+[gText_WhatsHipAndHappening] ffc297ac07 width=144
+O que tá na moda?
+
+[gText_Interview] 19ad8ec723 width=144
+Entrevista
+
+[gText_GoodSaying] 66586533ac width=144
+Bom ditado
+
+[gText_FansQuestion] c09606d1bf width=144
+Pergunta do fã
+
+[gText_ApprenticesPhrase] d5306569bb width=144
+Frase do aprendiz
+
+[gText_Questionnaire] de4b1837fb width=144
+QUESTIONÁRIO
+
+[gText_YouCannotQuitHere] 1ed118e56a width=184
+Não dá pra sair aqui.
+
+[gText_SectionMustBeCompleted] 459b670a73 width=184
+Esta parte precisa ser completada.
+
+[gText_F700sQuiz] abcdf14cf1 width=144
+Quiz de {DYNAMIC 0}
+
+[gText_Lady] fc40dd4181
+Moça
+
+[gText_AfterYouHaveReadTheQuiz] e9a8ac573b width=184
+Depois de ler a pergunta
+
+[gText_QuestionPressTheAButton] 6e1f59958a width=184
+do quiz, aperte o botão A.
+
+[gText_TheQuizAnswerIs] bf1fb1963b width=184
+A resposta do quiz é?
+
+[gText_LikeToQuitQuiz] 50e3e30268 width=184
+Quer desistir deste desafio
+
+[gText_ChallengeQuestionMark] 85a4644a39 width=184
+de quiz?
+
+[gText_IsThisQuizOK] 4936593f59 width=184
+Este quiz está OK?
+
+[gText_CreateAQuiz] e8ed502ef0 width=144
+Crie um quiz!
+
+[gText_SelectTheAnswer] 04bcf0836e width=144
+Escolha a resposta!
+
+[gText_LyricsCantBeDeleted] 430e7a987d width=184
+Não dá pra apagar a letra.
+
+[gEasyChatGroupName_Trainer] 6df205ccba width=72
+TREINADOR
+
+[gEasyChatGroupName_Status] 7168833cc8 width=72
+ESTADO
+
+[gEasyChatGroupName_Battle] ce9e1aaf32 width=72
+BATALHA
+
+[gEasyChatGroupName_Greetings] e2c3787421 width=72
+SAUDAÇÕES
+
+[gEasyChatGroupName_People] 04c1b69737 width=72
+PESSOAS
+
+[gEasyChatGroupName_Voices] 36ea3bfd03 width=72
+VOZES
+
+[gEasyChatGroupName_Speech] 4ab47d93a1 width=72
+FALA
+
+[gEasyChatGroupName_Endings] 73c16912b6 width=72
+FINAIS
+
+[gEasyChatGroupName_Feelings] d4de2fae6d width=72
+SENTIMENTOS
+
+[gEasyChatGroupName_Conditions] c8ae8eb068 width=72
+CONDIÇÕES
+
+[gEasyChatGroupName_Actions] bbb86bcb94 width=72
+AÇÕES
+
+[gEasyChatGroupName_Lifestyle] 3ec595e8e6 width=72
+ESTILO VIDA
+
+[gEasyChatGroupName_Hobbies] fe0561fe64 width=72
+HOBBIES
+
+[gEasyChatGroupName_Time] 64269f9bd2 width=72
+TEMPO
+
+[gEasyChatGroupName_Misc] 367b0006c4 width=72
+OUTROS
+
+[gEasyChatGroupName_Adjectives] 0415474144 width=72
+ADJETIVOS
+
+[gEasyChatGroupName_Events] c5f548a22c width=72
+EVENTOS
+
+[gEasyChatGroupName_Move1] cd50cefcee width=72
+GOLPE 1
+
+[gEasyChatGroupName_Move2] f5450e0c29 width=72
+GOLPE 2
+
+[gEasyChatGroupName_TrendySaying] d0026a5b0f width=72
+FRASE MODA
+
+[gText_DelAll] 02edf59c87
+APAGAR
+
+[gText_Cancel5] 1507c40f04
+VOLTAR
+
+[gText_Quiz] c3e61f52b9
+QUIZ
+
+[gText_Answer] 64b080ec54
+RESP.
+
+# Textos de src/strings.c que o jogo usa e tinham ficado de fora (10/10):
+# a tela da equipe, as listas de escolha dos scripts, os nomes da
+# FRONTEIRA, das moças de LILYCOVE e outros. Os nomes próprios ficam.
+
+[gText_ExpandedPlaceholder_Emerald] 55973449f3 width=120
+ESMERALDA
+
+[gText_Item] e849c5f964 width=120
+ITEM
+
+[gText_Mail] 0d8e8b084c width=120
+CARTA
+
+[gText_Take] 06614e39f2 width=120
+PEGAR
+
+[gText_Store] a022ae64c8 width=120
+GUARDAR
+
+[gText_Shift] 149b8de2b0 width=120
+TROCAR
+
+[gText_SendOut] 64d10dc53e width=120
+ENVIAR
+
+[gText_Switch2] b02cbd93fe width=120
+TROCAR
+
+[gText_Summary5] 1450844d24 width=120
+RESUMO
+
+[gText_Enter] 54febf3139 width=120
+ENTRAR
+
+[gText_NoEntry] b95a32a286 width=120
+NÃO ENTRA
+
+[gText_Take2] 06614e39f2 width=120
+PEGAR
+
+[gText_Read2] 0a3768425d width=120
+LER
+
+[gText_Trade4] 91e044d0ff width=120
+TROCAR
+
+[gText_ChoosePokemon] ba9981c402 width=160
+Escolha um POKéMON.
+
+[gText_MoveToWhere] cf1c7b7156 width=160
+Mover para onde?
+
+[gText_TeachWhichPokemon] f398afea9f width=160
+Ensinar qual POKéMON?
+
+[gText_UseOnWhichPokemon] 8018485ca3 width=160
+Usar em qual POKéMON?
+
+[gText_GiveToWhichPokemon] c8a226d0b1 width=160
+Dar a qual POKéMON?
+
+[gText_DoWhatWithPokemon] a4b41457dc width=160
+O que fazer com este {PKMN}?
+
+[gText_NothingToCut] 97df7496e9 width=160
+Não há nada para CORTAR.
+
+[gText_CantSurfHere] 40b2da38f5 width=160
+Não dá para SURFAR aqui.
+
+[gText_AlreadySurfing] c1ce5660ac width=160
+Você já está SURFANDO.
+
+[gText_CantUseHere] 0046ae2d89 width=160
+Não dá para usar aqui.
+
+[gText_RestoreWhichMove] e428a8083d width=160
+Restaurar qual golpe?
+
+[gText_BoostPp] 453300917f width=160
+Aumentar os PP de qual golpe?
+
+[gText_DoWhatWithItem] f0b2ef22da width=160
+O que fazer com o item?
+
+[gText_NoPokemonForBattle] c192d9c14e width=160
+Nenhum POKéMON para lutar!
+
+[gText_ChoosePokemon2] ba9981c402 width=160
+Escolha um POKéMON.
+
+[gText_NotEnoughHp] 2667a0f571 width=160
+PS insuficiente…
+
+[gText_PokemonAreNeeded] b8eaec4ccb width=179
+Precisa de {STR_VAR_1} POKéMON.
+
+[gText_PokemonCantBeSame] 48ff3ea0ae width=160
+Os POKéMON não podem repetir.
+
+[gText_NoIdenticalHoldItems] 6bd8ccc50c width=160
+Itens segurados repetidos.
+
+[gText_CurrentIsTooFast] d77570c990 width=160
+A correnteza é forte demais!
+
+[gText_DoWhatWithMail] a62ffe766f width=160
+O que fazer com a CARTA?
+
+[gText_ChoosePokemonCancel] 6d5889975c width=160
+Escolha um POKéMON ou VOLTE.
+
+[gText_ChoosePokemonConfirm] 62f90e196f width=160
+Escolha os POKéMON e confirme.
+
+[gText_EnjoyCycling] d2edde0840 width=160
+Bom passeio de bicicleta!
+
+[gText_InUseAlready_PM] cf44934928 width=160
+Isso já está em uso.
+
+[gText_AlreadyHoldingOne] 49025ab78e width=168
+{STR_VAR_1} já segura\n
+um(a) {STR_VAR_2}.
+
+[gText_NoUse] ed27f728fe width=160
+Não serve.
+
+[gText_Able] fee3999bd9 width=120
+PODE
+
+[gText_First_PM] 2f20f7ce5f width=120
+1º
+
+[gText_Second_PM] 739c9e403a width=120
+2º
+
+[gText_Third_PM] a50aba57a0 width=120
+3º
+
+[gText_Able2] fee3999bd9 width=120
+PODE
+
+[gText_NotAble] 454e3f875d width=120
+NÃO PODE
+
+[gText_Able3] 06e0dbc687 width=120
+PODE!
+
+[gText_NotAble2] 97c7186b88 width=120
+NÃO PODE!
+
+[gText_Learned] 18745fb931 width=120
+APRENDEU
+
+[gText_Have] 3eeb2596cd width=120
+TEM
+
+[gText_DontHave] af28641b01 width=120
+NÃO TEM
+
+[gText_Fourth] a778f3156e width=120
+4º
+
+[gText_OtherTrainersPkmnCantBeTraded] f9d624b708 width=208
+O POKéMON do outro TREINADOR\n
+não pode ser trocado agora.
+
+[gText_OtherTrainerCantAcceptPkmn] 6c787b0003 width=208
+O outro TREINADOR não pode\n
+aceitar esse POKéMON agora.
+
+[gText_CantTradeWithTrainer] 7629b5b1f8 width=208
+Você não pode trocar com esse\n
+TREINADOR agora.
+
+[gText_NotPkmnOtherTrainerWants] 221c738b0e width=208
+Esse não é o tipo de POKéMON\n
+que o outro TREINADOR quer.
+
+[gText_ThatIsntAnEgg] a7096539e1 width=208
+Isso não é um OVO.
+
+[gText_Petalburg] bbb72d352a width=120
+PETALBURG
+
+[gText_Slateport] 5b45fe52b6 width=120
+SLATEPORT
+
+[gText_Dewford] 764ce695c1 width=120
+DEWFORD
+
+[gText_Enter2] 54febf3139 width=120
+ENTRAR
+
+[gText_Info2] 9c9cf99982 width=120
+INFO
+
+[gText_WhatsAContest] ea1d801db5 width=120
+O que é CONCURSO?
+
+[gText_TypesOfContests] 4e3c026e9e width=120
+Tipos de CONCURSO
+
+[gText_Ranks] 00926d0eca width=120
+Níveis
+
+[gText_CoolnessContest] 0496f8ef18 width=120
+CONCURSO ESTILO
+
+[gText_BeautyContest] 5549cf9c36 width=120
+CONCURSO BELEZA
+
+[gText_CutenessContest] c0258eb5ae width=120
+CONCURSO FOFURA
+
+[gText_SmartnessContest] cac77fc5b8 width=120
+CONC. ESPERTEZA
+
+[gText_ToughnessContest] b4c313666d width=120
+CONCURSO FORÇA
+
+[gText_Decoration2] 9cb976dd2f width=120
+DECORAÇÃO
+
+[gText_PackUp] f168e2d68a width=120
+DESMONTAR
+
+[gText_Registry] b14e18379b width=120
+REGISTRO
+
+[gText_Information] b8ff98db93 width=120
+INFORMAÇÕES
+
+[gText_Mach] ab604b250b width=120
+MACH
+
+[gText_Acro] 33a6e719e2 width=120
+ACRO
+
+[gText_Psn] 6facc3332c width=120
+ENV
+
+[gText_Par] e7df76d7a9 width=120
+PAR
+
+[gText_Slp] d66ea66b50 width=120
+DOR
+
+[gText_Brn] 7ee447790d width=120
+QUE
+
+[gText_Frz] d8e9996159 width=120
+CON
+
+[gText_SawIt] 8961aabf8e width=120
+Já vi
+
+[gText_NotYet] 8de95fd5b4 width=120
+Ainda não
+
+[gText_SingleBattle] a851771634 width=120
+BATALHA SIMPLES
+
+[gText_DoubleBattle] 6e4774eec6 width=120
+BATALHA DUPLA
+
+[gText_MultiBattle] acbae79ba5 width=120
+BATALHA MÚLTIPLA
+
+[gText_Challenge] e9166b5b8a width=120
+DESAFIO
+
+[gText_Info3] 9c9cf99982 width=120
+INFO
+
+[gText_FreshWaterAndPrice] 001285dc44 width=120
+ÁGUA FRESCA{CLEAR_TO 0x48}¥200
+
+[gText_SodaPopAndPrice] 3c9c765194 width=120
+REFRIGERANTE{CLEAR_TO 0x48}¥300
+
+[gText_LemonadeAndPrice] a882260c4b width=120
+LIMONADA{CLEAR_TO 0x48}¥350
+
+[gText_HowToRide] dfe778597a width=120
+COMO ANDAR
+
+[gText_HowToTurn] 5a32e54e1f width=120
+COMO VIRAR
+
+[gText_SandySlopes] 11bd39e6c5 width=120
+LADEIRAS
+
+[gText_Wheelies] c9ca21f537 width=120
+EMPINAR
+
+[gText_BunnyHops] b151df4e86 width=120
+PULINHOS
+
+[gText_Jump] bb0d79b578 width=120
+PULAR
+
+[gText_Satisfied] 154e46efcd width=120
+Satisfeito
+
+[gText_Dissatisfied] eac7a00ff7 width=120
+Insatisfeito
+
+[gText_Excellent2] 1aafbf548b width=120
+Excelente
+
+[gText_NotSoGood] 4b1821a11b width=120
+Nem tanto
+
+[gText_Right] 954daa8b00 width=120
+Direita
+
+[gText_Left] 8ae1c34bd3 width=120
+Esquerda
+
+[gText_Normal] 21b3708ac8 width=120
+NORMAL
+
+[gText_Super] 5004e32432 width=120
+SUPER
+
+[gText_Hyper] 98cfefccd4 width=120
+HIPER
+
+[gText_Master] 74ffc874ad width=120
+MESTRE
+
+[gText_Cool2] 2991fd24ef width=120
+ESTILO
+
+[gText_Beauty2] bed48404f8 width=120
+BELEZA
+
+[gText_Cute2] 4b766bb69f width=120
+FOFURA
+
+[gText_Smart2] a4969f2088 width=120
+ESPERTEZA
+
+[gText_Tough2] 1c4ae12ec4 width=120
+FORÇA
+
+[gText_Items] a5ef8f60cf width=120
+ITENS
+
+[gText_Key_Items] 0a6c54eddf width=120
+ITENS CHAVE
+
+[gText_Poke_Balls] 45a1d46176 width=120
+POKé BOLAS
+
+[gText_TMs_Hms] a23cbc63df width=120
+MT e MO
+
+[gText_Berries2] fba348a585 width=120
+FRUTAS
+
+[gText_Opponent] 9749741ff0 width=120
+OPONENTE
+
+[gText_Tourney_Tree] 1d01eb2045 width=120
+CHAVES
+
+[gText_ReadyToStart] 3a2d035415 width=120
+PRONTO
+
+[gText_NormalRank] 2e00ec3a78 width=120
+NÍVEL NORMAL
+
+[gText_SuperRank] 61ce6c63c1 width=120
+NÍVEL SUPER
+
+[gText_HyperRank] 1d2de54f47 width=120
+NÍVEL HIPER
+
+[gText_MasterRank] 2a580e245e width=120
+NÍVEL MESTRE
+
+[gText_Single2] 36fb236688 width=120
+SIMPLES
+
+[gText_Double2] 097274c5c7 width=120
+DUPLA
+
+[gText_Multi] 73cadb41b4 width=120
+MÚLTIPLA
+
+[gText_MultiLink] df3e91b734 width=120
+MÚLT. CONECT.
+
+[gText_BattleBag] f701028b39 width=120
+BOLSA BATALHA
+
+[gText_HeldItem] e5f02d19c1 width=120
+ITEM SEGURADO
+
+[gText_LinkContest] 7b66c261c7 width=120
+CONCURSO CONECT.
+
+[gText_5BP] 65f4e63d52 width=120
+  5PB
+
+[gText_10BP] 722f2f9c6c width=120
+10PB
+
+[gText_15BP] 655917d575 width=120
+15PB
+
+[gText_RedTent] 1bc9a41979 width=120
+BARRACA VERM.
+
+[gText_BlueTent] 5112184eea width=120
+BARRACA AZUL
+
+[gText_ClawFossil] e15d0df7b0 width=120
+FÓSSIL GARRA
+
+[gText_RootFossil] 6c944b05fb width=120
+FÓSSIL RAIZ
+
+[gText_IllBattleNow] 957ac0833f width=120
+Vou lutar agora!
+
+[gText_IWon] 5df02f95a3 width=120
+Eu venci!
+
+[gText_ILost] 23515c82df width=120
+Eu perdi!
+
+[gText_IWontTell] 570c25ccb4 width=120
+Não vou contar.
+
+[gText_TradeCenter] 66cb62425b width=120
+CENTRO DE TROCAS
+
+[gText_Colosseum] c2df12bd72 width=120
+COLISEU
+
+[gText_RecordCorner] 64afe93a82 width=120
+CANTO DOS REGISTROS
+
+[gText_BerryCrush3] 8d9e34e09d width=120
+TRITURA FRUTAS
+
+[gText_DodrioBerryPicking] 48026adc77 width=120
+COLHEITA DODRIO
+
+[gText_BecomeLeader] 9b7ea7add4 width=120
+SER O LÍDER
+
+[gText_JoinGroup] 5536418619 width=120
+ENTRAR NO GRUPO
+
+[gText_TwoStyles] 822c092ff9 width=120
+DOIS ESTILOS
+
+[gText_Lv50_3] 13f0a8a25c width=120
+NV. 50
+
+[gText_OpenLevel2] 32c7557ca3 width=120
+NÍVEL LIVRE
+
+[gText_MonTypeAndNo] 91f42b057b width=120
+TIPO E Nº {PKMN}
+
+[gText_HoldItems] 4244f7bc48 width=120
+ITENS SEGURADOS
+
+[gText_Symbols2] fab167e9c6 width=120
+SÍMBOLOS
+
+[gText_Record3] 31355a2868 width=120
+RECORDE
+
+[gText_BattlePts] 7d69f0f930 width=120
+PTS. BATALHA
+
+[gText_TowerInfo] 3488626287 width=120
+INFO DA TORRE
+
+[gText_BattleMon] bdb950e5dd width=120
+{PKMN} DE BATALHA
+
+[gText_BattleSalon] 67576aa017 width=120
+SALÃO DE BATALHA
+
+[gText_MultiLink2] df3e91b734 width=120
+MÚLT. CONECT.
+
+[gText_BattleRules] 65abe0a664 width=120
+REGRAS
+
+[gText_JudgeMind] dc4e3e0446 width=120
+JUIZ: MENTE
+
+[gText_JudgeSkill] b721f0f9fe width=120
+JUIZ: TÉCNICA
+
+[gText_JudgeBody] c226a7df8d width=120
+JUIZ: CORPO
+
+[gText_Matchup] ac535b81dd width=120
+CONFRONTO
+
+[gText_TourneyTree] 1d01eb2045 width=120
+CHAVES
+
+[gText_DoubleKO] 3e298cae58 width=120
+NOCAUTE DUPLO
+
+[gText_BasicRules] dd66af15b2 width=120
+REGRAS BÁSICAS
+
+[gText_SwapPartners] e4db167cb5 width=120
+TROCA: PARCEIRO
+
+[gText_SwapNumber] 35a6706c52 width=120
+TROCA: NÚMERO
+
+[gText_SwapNotes] b30f439c57 width=120
+TROCA: NOTAS
+
+[gText_OpenLevel3] 32c7557ca3 width=120
+NÍVEL LIVRE
+
+[gText_PyramidPokemon] c76947f6d2 width=120
+PIRÂMIDE: POKéMON
+
+[gText_PyramidTrainers] 4c223050ab width=120
+PIRÂMIDE: TREIN.
+
+[gText_PyramidMaze] 28eb1a1326 width=120
+PIRÂMIDE: LABIRINTO
+
+[gText_BattleBag2] f701028b39 width=120
+BOLSA BATALHA
+
+[gText_PokenavAndBag] c5f7b16f30 width=120
+POKéNAV E BOLSA
+
+[gText_HeldItems] b081382a4d width=120
+ITENS SEGURADOS
+
+[gText_PokemonOrder] 037ec3b5f9 width=120
+ORDEM DOS POKéMON
+
+[gText_BattlePokemon] fc2e01bafe width=120
+POKéMON DE BATALHA
+
+[gText_GoOn] d2e5a765ac width=120
+CONTINUAR
+
+[gText_Record2] 31355a2868 width=120
+RECORDE
+
+[gText_Rest] cbaaa18133 width=120
+DESCANSAR
+
+[gText_Retire] 0e25d55e0a width=120
+DESISTIR
+
+[gText_LilycoveCity] fb61d4cde1 width=120
+LILYCOVE
+
+[gText_CaveOfOrigin] e8bcd346b2 width=120
+CAV. DA ORIGEM
+
+[gText_MtPyre] a7894f88c0 width=120
+MONTE PYRE
+
+[gText_SkyPillar] 23b9e5dd45 width=120
+PILAR CELESTE
+
+[gText_DontRemember] cbe88c2ff2 width=120
+Não lembro
+
+[gText_Ok] d9e172ae23 width=120
+OK!
+
+[gText_Red] bb4e68e797 width=120
+VERMELHO
+
+[gText_Blue] c4f8490d87 width=120
+AZUL
+
+[gText_ContestLady_Coolness] 10fd644b5a width=120
+estilo
+
+[gText_ContestLady_Beauty] 874f5e379b width=120
+beleza
+
+[gText_ContestLady_Cuteness] 41b7dd4c84 width=120
+fofura
+
+[gText_ContestLady_Smartness] dbee94d60b width=120
+esperteza
+
+[gText_ContestLady_Toughness] ef532ea6ec width=120
+força
+
+[gText_FavorLady_Slippery] b91b61fb06 width=120
+escorregadio
+
+[gText_FavorLady_Roundish] bd49c331e8 width=120
+arredondado
+
+[gText_FavorLady_Whamish] 4f77acfa1d width=120
+impactante
+
+[gText_FavorLady_Shiny] 0d48364405 width=120
+brilhante
+
+[gText_FavorLady_Sticky] 3e0fd166d4 width=120
+grudento
+
+[gText_FavorLady_Pointy] 546b9719ff width=120
+pontudo
+
+[gText_Hoenn] d53c3ebf40 width=120
+HOENN
+
+[gText_DexHoenn] d53c3ebf40 width=120
+HOENN
+
+[gText_BlueFlute2] f846f4bd34 width=120
+FLAUTA AZUL
+
+[gText_YellowFlute2] e7455c6875 width=120
+FLAUTA AMAR.
+
+[gText_RedFlute2] dc2ff90d20 width=120
+FLAUTA VERM.
+
+[gText_WhiteFlute2] 96801c2c4d width=120
+FLAUTA BRANCA
+
+[gText_BlackFlute2] 7b34ba411f width=120
+FLAUTA PRETA
+
+[gText_GlassChair] 2f42d72c84 width=120
+CADEIRA VIDRO
+
+[gText_GlassDesk] 1859487916 width=120
+MESA DE VIDRO
+
+[gText_RedShard] fe252d6765 width=120
+CACO VERMELHO
+
+[gText_YellowShard] 94dd7dc831 width=120
+CACO AMARELO
+
+[gText_BlueShard] 41a8fda545 width=120
+CACO AZUL
+
+[gText_GreenShard] 0fd452bf8e width=120
+CACO VERDE
+
+[gText_DeepSeaTooth] b81cb37ff3 width=120
+DENTE ABISSAL
+
+[gText_DeepSeaScale] f7cc0d6769 width=120
+ESCAMA ABISS.
+
+[gText_MoveRelearnerPP] 612082b4ed width=120
+PP/
+
+[gText_AboutE_Mode] 06ae98ae80 width=120
+SOBRE O MODO E
+
+[gText_AboutG_Mode] a3151d3531 width=120
+SOBRE O MODO G
+
+[gText_E_Mode] 07567ce9e7 width=120
+MODO E
+
+[gText_G_Mode] 46c32926e0 width=120
+MODO G

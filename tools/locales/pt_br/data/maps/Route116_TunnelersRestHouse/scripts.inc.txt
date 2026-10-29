@@ -1,0 +1,34 @@
+# CASA DE DESCANSO DOS ESCAVADORES, na ROTA 116.
+
+[Route116_TunnelersRestHouse_Text_WeHadToStopBoring] 20a99c4223
+Aquele TÚNEL RUSTURF ali…\p
+No começo, tinha uma equipe enorme\n
+furando a rocha com máquinas de ponta.\l
+Mas tivemos que parar.\p
+Descobrimos que a obra ia prejudicar\n
+os POKéMON selvagens da\l
+região.\p
+Então, não nos resta nada além de\n
+ficar à toa por aqui.$
+
+[Route116_TunnelersRestHouse_Text_ManDiggingHisWayToVerdanturf] afb28c8cc2
+Tem um homem cavando até VERDANTURF\n
+sozinho. Ele está louco pra\l
+conseguir atravessar.\p
+Ele diz que, cavando aos pouquinhos\n
+sem máquinas, não incomoda os\l
+POKéMON e não prejudica\l
+a natureza.\p
+Será que ele já conseguiu passar?$
+
+[Route116_TunnelersRestHouse_Text_GetToVerdanturfWithoutTunnel] 786204ff3a
+Pra chegar a VERDANTURF sem usar\n
+este TÚNEL, você teria que cruzar o\l
+mar até DEWFORD, navegar até\l
+SLATEPORT e passar por MAUVILLE.$
+
+[Route116_TunnelersRestHouse_Text_TunnelHasGoneThrough] 1423d067ee
+Ficou sabendo? O TÚNEL até VERDANTURF\n
+foi aberto!\p
+Às vezes, se você deseja com força,\n
+os sonhos se realizam.$

@@ -1,0 +1,23 @@
+# MONTE PYRE: 1º andar.
+
+[MtPyre_1F_Text_TakeThisForYourOwnGood] 2d8a3107ce
+Todo tipo de ser vagueia pelas\n
+encostas do MONTE PYRE…\p
+Não se sabe o que pode acontecer.\n
+Leve isto. É para o seu bem.$
+
+[MtPyre_1F_Text_ExplainCleanseTag] a1d1b45834
+Deixe um POKéMON segurar esse\n
+TALISMÃ PURO.\p
+Ele ajuda a afastar POKéMON\n
+selvagens.$
+
+[MtPyre_1F_Text_ComeToPayRespects] 886e050439
+Veio prestar homenagem aos espíritos\n
+dos POKéMON que partiram?\p
+Você deve gostar muito dos seus\n
+POKéMON.$
+
+[MtPyre_1F_Text_RestingPlaceOfZigzagoon] d2a1f3cf71
+Aqui descansa o meu ZIGZAGOON.\n
+Eu gostava tanto dele…$

@@ -1,0 +1,11 @@
+# ROTA 112: a estação do TELEFÉRICO.
+
+[Route112_CableCarStation_Text_CableCarReadyGetOn] d66e82e86e
+O TELEFÉRICO está pronto pra subir.\n
+Gostaria de embarcar?$
+
+[Route112_CableCarStation_Text_StepThisWay] fb68724fa9
+Por aqui, por favor.$
+
+[Route112_CableCarStation_Text_RideAnotherTime] af2b1bed7b
+Volte outra hora, por favor.$

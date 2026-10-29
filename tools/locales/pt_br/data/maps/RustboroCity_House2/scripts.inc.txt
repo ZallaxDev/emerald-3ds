@@ -1,0 +1,11 @@
+# CIDADE DE RUSTBORO, casa 2.
+
+[RustboroCity_House2_Text_TrainerSchoolExcellent] 2dee3a4279
+A ESCOLA DE TREINADORES é excelente.\p
+Quem estuda lá pode até virar\n
+LÍDER DE GINÁSIO.$
+
+[RustboroCity_House2_Text_RoxanneKnowsALot] 91b36de0f3
+A ROXANNE, a LÍDER DE GINÁSIO, sabe\n
+muito sobre POKéMON.\p
+E ela é muito forte, também!$

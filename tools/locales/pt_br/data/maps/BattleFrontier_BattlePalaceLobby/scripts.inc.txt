@@ -1,0 +1,270 @@
+# FRONTEIRA DE BATALHA: a recepção do PALÁCIO DE BATALHA.
+
+[BattleFrontier_BattlePalaceLobby_Text_WelcomeForSingleBattle] fdefafc2c5
+Onde o coração dos TREINADORES\n
+é posto à prova.\p
+Boas-vindas ao PALÁCIO DE BATALHA.\p
+Aceito desafios aos SALÕES DE\n
+BATALHA SIMPLES.$
+
+[BattleFrontier_BattlePalaceLobby_Text_TakeSingleBattleChallenge] fd554b5be6
+Deseja encarar o desafio do\n
+SALÃO DE BATALHA SIMPLES?$
+
+[BattleFrontier_BattlePalaceLobby_Text_ExplainSingleBattleChallenge] 9f9be784c6
+No PALÁCIO DE BATALHA há vários\n
+auditórios de BATALHAS SIMPLES,\l
+chamados SALÕES DE BATALHA SIMPLES.\p
+As BATALHAS SIMPLES seguem o modo\n
+de sempre, com uma regra crucial\l
+que deve ser obedecida.\p
+Os TREINADORES só podem trocar\n
+os POKéMON que estão em campo.\p
+Fora isso, é proibido dar ordens\n
+aos POKéMON.\p
+Os POKéMON agem conforme a sua\n
+natureza e batalham sozinhos.\p
+Você deve confiar nos seus POKéMON\n
+e acompanhar de perto.\p
+Se tiver a honra de vencer sete\n
+TREINADORES seguidos, damos\l
+Pontos de Batalha.\p
+Se quiser interromper o desafio,\n
+salve o jogo.\p
+Se não salvar antes de interromper,\n
+o desafio será anulado.$
+
+[BattleFrontier_BattlePalaceLobby_Text_ReturnWhenFortified] 9f6c41d309
+Quando o seu coração e os seus\n
+POKéMON estiverem fortes, volte.$
+
+[BattleFrontier_BattlePalaceLobby_Text_WhichChallenge] ca1fa22933
+Há dois SALÕES DE BATALHA, Nível 50\n
+e Nível Livre.\l
+Qual desafio você escolhe?$
+
+[BattleFrontier_BattlePalaceLobby_Text_NotEnoughValidMonsLv50] eae95f9b6f
+Ai…\p
+Você não tem os três POKéMON\n
+exigidos pro desafio.\p
+Pra entrar, precisa de três POKéMON\n
+de espécies diferentes.\p
+Todos eles precisam ser de nível\n
+50 ou menos.\p
+Também não podem segurar o mesmo\n
+tipo de item.\p
+OVOS{STR_VAR_1} proibidos.\p
+Volte quando estiver tudo pronto.$
+
+[BattleFrontier_BattlePalaceLobby_Text_NotEnoughValidMonsLvOpen] a157c2c033
+Ai…\p
+Você não tem os três POKéMON\n
+exigidos pro desafio.\p
+Pra entrar, precisa de três POKéMON\n
+de espécies diferentes.\p
+Também não podem segurar o mesmo\n
+tipo de item.\p
+OVOS{STR_VAR_1} proibidos.\p
+Volte quando estiver tudo pronto.$
+
+[BattleFrontier_BattlePalaceLobby_Text_NowSelectThreeMons] d5d457b163
+Muito bem. Agora escolha os seus\n
+três POKéMON.$
+
+[BattleFrontier_BattlePalaceLobby_Text_MustSaveBeforeChallenge2] e909c8681a
+Preciso salvar antes de te levar ao\n
+SALÃO DE BATALHA. Tudo bem?$
+
+[BattleFrontier_BattlePalaceLobby_Text_FollowMe] 4fa392952d
+Muito bem.\n
+Agora me acompanhe.$
+
+[BattleFrontier_BattlePalaceLobby_Text_ResultsWillBeRecorded] 8c92c0463e
+Foi um privilégio ver as façanhas\n
+dos seus POKéMON.\p
+O resultado será registrado.\n
+Aguarde um instante, por favor.$
+
+[BattleFrontier_BattlePalaceLobby_Text_FirmTrueBondsFor7WinStreak] 39b9909c06
+Uma sequência de 7 vitórias…\p
+O laço entre o seu coração e os seus\n
+POKéMON parece firme e verdadeiro.$
+
+[BattleFrontier_BattlePalaceLobby_Text_FeatWillBeRecorded] 15c569d360
+A sua façanha será registrada.\n
+Aguarde um instante, por favor.$
+
+[BattleFrontier_BattlePalaceLobby_Text_BattlePointsFor7WinStreak] 23a0217117
+Pela façanha das 7 vitórias seguidas,\n
+aqui estão Pontos de Batalha.$
+
+[BattleFrontier_BattlePalaceLobby_Text_NoSpaceForPrize] 4cc8bc9b43
+Parece que não há espaço pro\n
+nosso prêmio.\p
+Volte depois de arrumar a sua\n
+BOLSA.$
+
+[BattleFrontier_BattlePalaceLobby_Text_WeHaveBeenWaiting] 530deffdc5
+Estávamos esperando você…$
+
+[BattleFrontier_BattlePalaceLobby_Text_MustSaveBeforeChallenge] e909c8681a
+Preciso salvar antes de te levar ao\n
+SALÃO DE BATALHA. Tudo bem?$
+
+[BattleFrontier_BattlePalaceLobby_Text_FailedToSaveBeforeEndingChallenge] 17ed136683
+Ai…\p
+Você não salvou antes de encerrar\n
+o desafio da última vez.\p
+Por isso, o seu desafio foi anulado.\n
+É uma pena.$
+
+[BattleFrontier_BattlePalaceLobby_Text_ReceivedPrize] 1b34ee42d5
+{PLAYER} recebeu o prêmio:\n
+{STR_VAR_1}.$
+
+[BattleFrontier_BattlePalaceLobby_Text_LadyCanTellWhatMonsThink] b6ef4126ad
+Pra um cara durão como eu, POKéMON\n
+durões são os melhores.\p
+Ataque é a melhor defesa!\n
+Ataque sem trégua é o máximo!\p
+Mas não era disso que eu queria\n
+falar.\p
+De vez em quando, uma moça muito\n
+fofa passa por aqui.\p
+Ela diz que sabe o que os POKéMON\n
+estão pensando.\p
+Isso eu não sei, mas que ela é\n
+fofa, é.\p
+Hã?\n
+Por que está me olhando assim?$
+
+[BattleFrontier_BattlePalaceLobby_Text_NatureAndMovesKeyHere] 4303e0727c
+Hmm…\p
+Parece que a natureza dos POKéMON\n
+e os golpes que aprenderam são a\l
+chave das batalhas daqui.\p
+Mais precisamente: o quanto os\n
+golpes combinam com a natureza\l
+do POKéMON.\p
+Se o seu POKéMON está em apuros e\n
+não rende o que pode, talvez seja\l
+bom ver se os golpes combinam\l
+com a natureza dele.$
+
+[BattleFrontier_BattlePalaceLobby_Text_MonDocileButTransforms] 5fac262c05
+O meu POKéMON costuma ser bem dócil.\p
+Mas, num SALÃO DE BATALHA, às vezes\n
+ele parece virar outro bicho!\p
+Fica intimidador demais.\n
+Chega a assustar.$
+
+[BattleFrontier_BattlePalaceLobby_Text_WhatNatureFavorsChippingAway] ed02af1af4
+Qual seria a natureza de um POKéMON\n
+que prefere enfraquecer o oponente\l
+e ir desgastando aos poucos?\p
+Eu ia me surpreender se fosse uma\n
+natureza preguiçosa.\p
+Mas, não, não pode ser.$
+
+[BattleFrontier_BattlePalaceLobby_Text_WelcomeForDoubleBattle] 70dca0d138
+Onde o coração dos TREINADORES\n
+é posto à prova.\p
+Boas-vindas ao PALÁCIO DE BATALHA.\p
+Aceito desafios aos SALÕES DE\n
+BATALHA DUPLA.$
+
+[BattleFrontier_BattlePalaceLobby_Text_TakeDoubleBattleChallenge] 605aa38505
+Deseja encarar o desafio do\n
+SALÃO DE BATALHA DUPLA?$
+
+[BattleFrontier_BattlePalaceLobby_Text_ExplainDoubleBattleChallenge] 72bbf8b122
+No PALÁCIO DE BATALHA há vários\n
+auditórios de BATALHAS DUPLAS,\l
+chamados SALÕES DE BATALHA DUPLA.\p
+As BATALHAS DUPLAS seguem o modo\n
+de sempre, com uma regra crucial\l
+que deve ser obedecida.\p
+Os TREINADORES só podem trocar\n
+os POKéMON que estão em campo.\p
+Fora isso, é proibido dar ordens\n
+aos POKéMON.\p
+Os POKéMON agem conforme a sua\n
+natureza e batalham sozinhos.\p
+Você deve confiar nos seus POKéMON\n
+e acompanhar de perto.\p
+Se tiver a honra de vencer sete\n
+TREINADORES seguidos, damos\l
+Pontos de Batalha.\p
+Se quiser interromper o desafio,\n
+salve o jogo.\p
+Se não salvar antes de interromper,\n
+o desafio será anulado.$
+
+[BattleFrontier_BattlePalaceLobby_Text_ToDefeatMavenAnd7Trainers] 9a8088a6e7
+Vencer o SÁBIO DO PALÁCIO e sete\n
+TREINADORES seguidos…$
+
+[BattleFrontier_BattlePalaceLobby_Text_PresentYouWithBattlePoints] d761f18744
+Em honra do laço entre você e os seus\n
+POKéMON, aqui estão Pontos de\l
+Batalha.$
+
+[BattleFrontier_BattlePalaceLobby_Text_LikeToRecordMatch] 09d3db680d
+Quer gravar a sua última batalha do\n
+PALÁCIO no PASSE DA FRONTEIRA?$
+
+[BattleFrontier_BattlePalaceLobby_Text_RulesAreListed] 10fe43a648
+Aqui estão as regras do SALÃO\n
+DE BATALHA.$
+
+[BattleFrontier_BattlePalaceLobby_Text_ReadWhichHeading] d059e37e85
+Qual tópico você quer ler?$
+
+[BattleFrontier_BattlePalaceLobby_Text_ExplainRulesBasics] c89239c030
+Aqui, os POKéMON precisam pensar e\n
+batalhar sozinhos.\p
+Ao contrário dos selvagens, POKéMON\n
+que vivem com pessoas agem de\l
+jeitos diferentes conforme a natureza.$
+
+[BattleFrontier_BattlePalaceLobby_Text_ExplainRulesNature] 1217511a90
+Conforme a natureza, um POKéMON pode\n
+preferir atacar a qualquer custo.\p
+Outro pode preferir se proteger\n
+de todo mal.\p
+E outro pode gostar de irritar ou\n
+confundir os oponentes.\p
+Pela natureza, o POKéMON tem golpes\n
+favoritos que sabe usar bem.\p
+E também pode não gostar de certos\n
+golpes que tem dificuldade de usar.$
+
+[BattleFrontier_BattlePalaceLobby_Text_ExplainRulesMoves] 3ed68d89bb
+Há golpes ofensivos, que causam dano\n
+direto no oponente.\p
+Há golpes defensivos, usados pra se\n
+preparar pros ataques ou recuperar\l
+PS e afins.\p
+E há outros golpes meio estranhos,\n
+que enfraquecem o oponente com\l
+problemas como envenenamento e\l
+paralisia.\p
+Os POKéMON escolhem golpes dessas\n
+três categorias.$
+
+[BattleFrontier_BattlePalaceLobby_Text_ExplainRulesUnderpowered] 863779014c
+Sem as ordens do TREINADOR, um\n
+POKéMON pode não conseguir usar\l
+bem certos golpes.\p
+Um POKéMON não é bom com golpes\n
+de que não gosta.\p
+Se ele só sabe golpes que não\n
+combinam com a natureza, muitas\l
+vezes não rende o que pode.$
+
+[BattleFrontier_BattlePalaceLobby_Text_ExplainRulesWhenInDanger] 205d315dd2
+Conforme a natureza, um POKéMON em\n
+apuros pode começar a usar golpes\l
+que não combinam com ela.\p
+Se um POKéMON agir estranho num\n
+aperto, observe com atenção.$

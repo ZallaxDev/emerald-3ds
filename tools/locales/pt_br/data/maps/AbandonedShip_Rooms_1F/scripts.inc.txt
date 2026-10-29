@@ -1,0 +1,45 @@
+# NAVIO ABANDONADO: cabines do convés.
+
+[AbandonedShip_Rooms_1F_Text_TakingALookAround] bfa7492c5d
+Navios assim são raros, então estou\n
+dando uma olhada.\p
+Humhum…\n
+Parece que há outras cabines…$
+
+[AbandonedShip_Rooms_1F_Text_ThaliaIntro] b6c799e702
+O que te trouxe até aqui? Que\n
+curiosidade, hein!$
+
+[AbandonedShip_Rooms_1F_Text_ThaliaDefeat] 30e11db875
+Além de curiosidade, tem força…$
+
+[AbandonedShip_Rooms_1F_Text_ThaliaPostBattle] 162eba6435
+O homem da cabine ao lado…\p
+Diz que só está passeando, mas\n
+sei não.$
+
+[AbandonedShip_Rooms_1F_Text_ThaliaRegister] 493263a2d3
+Que TREINADOR forte!\n
+Vou te registrar de lembrança!$
+
+[AbandonedShip_Rooms_1F_Text_ThaliaRematchIntro] 3df84a9a23
+O que te fez voltar? Que curiosidade,\n
+hein!$
+
+[AbandonedShip_Rooms_1F_Text_ThaliaRematchDefeat] 0f244293e8
+Forte demais, não?$
+
+[AbandonedShip_Rooms_1F_Text_ThaliaPostRematch] db453c88ac
+Tenho certeza de que aquele homem\n
+apronta alguma! Ele é muito suspeito!$
+
+[AbandonedShip_Rooms_1F_Text_DemetriusIntro] bc9c40a636
+Aaah!\n
+Me acharam! …Hã?$
+
+[AbandonedShip_Rooms_1F_Text_DemetriusDefeat] 281a2a10fa
+Ah, você não é a minha mãe.$
+
+[AbandonedShip_Rooms_1F_Text_DemetriusPostBattle] cc0a43230a
+Aprontei e a minha mãe vai brigar,\n
+então fugi. Não conta onde estou!$

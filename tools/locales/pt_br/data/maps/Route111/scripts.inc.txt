@@ -1,0 +1,151 @@
+# ROTA 111: a família WINSTRATE, o deserto e a TORRE MIRAGEM.
+
+[Route111_Text_BattleOurFamily] 85c8d46512
+Olá! Você está viajando, não é?\p
+Que tal enfrentar a nossa família de\n
+quatro numa série de batalhas\l
+POKéMON?$
+
+[Route111_Text_IsThatSo] af68bf6509
+Ah, é?\n
+Se mudar de ideia, é só aparecer!$
+
+[Route111_Text_VictorIntro] 372a674e60
+Esse é o espírito! Gostei de você!$
+
+[Route111_Text_VictorDefeat] 89343d8242
+Aiai!\n
+Você é bem mais forte do que eu pensei!$
+
+[Route111_Text_VictorPostBattle] 04bcfdca68
+Ei, pessoal!\n
+Achei um TREINADOR muito forte!$
+
+[Route111_Text_VictoriaIntro] 57394d57b4
+Minha nossa! Que juventude!\p
+Mas pra vencer o meu marido, você\n
+deve ser um baita TREINADOR.\p
+Agora é a minha vez de batalhar!$
+
+[Route111_Text_VictoriaDefeat] 845fea8bdb
+Puxa vida!\n
+Não acredito na sua força!$
+
+[Route111_Text_VictoriaPostBattle] a9d56f89ca
+Tem um TREINADOR forte aqui!\n
+Forte de verdade!$
+
+[Route111_Text_ViviIntro] f5d42c1f07
+Você é mais forte que a mamãe? Uau!\p
+Mas eu também sou forte!\n
+Sério! De verdade!$
+
+[Route111_Text_ViviDefeat] 00e57cdbf2
+Hã? Eu perdi?$
+
+[Route111_Text_ViviPostBattle] 2bd14eb51d
+Que chato…\p
+Snif… Vovó!$
+
+[Route111_Text_VickyIntro] b7ca504881
+Como ousa fazer a minha neta chorar!\p
+Vou te dar uma lição!\n
+Prepare-se pra perder!$
+
+[Route111_Text_VickyDefeat] 710dd478e2
+Kwah! Você é forte…\n
+A minha neta tinha razão…$
+
+[Route111_Text_VickyPostBattle] 804efbc66b
+Se não estiver com pressa,\n
+fique um pouco com a gente.$
+
+[Route111_Text_ToughToKeepWinningUpTheRanks] b73010d7fa
+Se não treinar mais os seus POKéMON,\n
+vai ser difícil continuar subindo.\p
+Dizem que a ELITE DOS QUATRO da LIGA\n
+POKéMON é muito mais forte que\l
+qualquer LÍDER de GINÁSIO.$
+
+[Route111_Text_WinstrateFamilyDestroyedMe] 9e9d70e9e4
+Desafiei a família WINSTRATE, mas\n
+quatro lutas seguidas é pesado…\l
+Eles acabaram comigo.$
+
+[Route111_Text_RouteSignMauville] 119eba45e5
+ROTA 111\n
+{DOWN_ARROW} CIDADE DE MAUVILLE$
+
+[Route111_Text_WinstrateHouseSign] 4372933346
+“Nossa família tem um só coração!”\n
+CASA DOS WINSTRATE$
+
+[Route111_Text_RouteSign112] b31af62803
+ROTA 111\n
+{LEFT_ARROW} ROTA 112$
+
+[Route111_Text_RouteSign113] 5213a62255
+ROTA 111\n
+{LEFT_ARROW} ROTA 113$
+
+[Route111_Text_OldLadysRestStopSign] 6ff644cacb
+CANTINHO DA VOVÓ\n
+“Entre e descanse esses ossos.”$
+
+[Route111_Text_TrainerTipsSpAtkSpDef] ebd39371cf
+DICAS DE TREINADOR\p
+Um dos indicadores da força de um\n
+POKéMON é o AT. ESP., que quer dizer\l
+“ATAQUE ESPECIAL”.\p
+Do mesmo jeito, DEF. ESP. quer dizer\n
+“DEFESA ESPECIAL”.$
+
+[Route111_Text_ShouldBeMirageTowerAroundHere] 3448b77eb0
+Deve ter uma torre de areia em\n
+algum lugar por aqui.\p
+Mas, por algum motivo, às vezes dá\n
+pra ver, às vezes não.\p
+Por isso eu chamo de TORRE MIRAGEM.$
+
+[Route111_Text_MirageTowerClearlyVisible] 5553dae4e6
+Estou vendo!\n
+A torre de areia!\p
+A torre que chamavam de miragem\n
+está bem ali, nítida!\p
+Mas parece tão frágil…\n
+Pode desmoronar a qualquer hora…\p
+Quero entrar, mas não tenho\n
+coragem…$
+
+[Route111_Text_ThatWasShockingSandRainedDown] c4479bba17
+Uau…\n
+Que susto.\p
+De repente, choveu areia aos\n
+montes.\p
+Como era lá dentro?\n
+Tinha fantasma de areia?$
+
+[Route111_Text_MirageTowerHasntBeenSeenSince] 956c83cf44
+Desde que falei com você, a torre\n
+de areia sumiu.\p
+Talvez fosse mesmo a\n
+TORRE MIRAGEM…$
+
+[Route111_Text_ClawFossilDisappeared] 55bbbe99bd
+O FÓSSIL GARRA sumiu na areia…$
+
+[Route111_Text_RootFossilDisappeared] 6691f89968
+O FÓSSIL RAIZ sumiu na areia…$
+
+[Route111_Text_MauvilleUncleToldMeToTakeRockSmash] 27e0389396
+Ah, não!\p
+O meu tio de MAUVILLE falou pra eu\n
+levar ESMAGA PEDRA se fosse pra\l
+ROTA 111!\p
+O meu tio? Ele mora na frente da\n
+loja de bicicletas de MAUVILLE.$
+
+[Route111_Text_TrainerHillSign] 72af7a6e71
+{RIGHT_ARROW} ENTRADA DA COLINA DOS TREINADORES\p
+“Conquistem as alturas, TREINADORES\n
+de sangue quente!”$

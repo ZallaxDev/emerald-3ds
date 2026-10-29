@@ -1,0 +1,13 @@
+# CIDADE DE EVER GRANDE: as placas.
+
+[EverGrandeCity_Text_EnteringVictoryRoad] 1d5cd5c69d
+ENTRADA DA ESTRADA DA VITÓRIA$
+
+[EverGrandeCity_Text_EnteringPokemonLeague] 8c68eff5d2
+ENTRADA DA LIGA POKéMON\n
+PORTÃO CENTRAL$
+
+[EverGrandeCity_Text_CitySign] f0ccdfabf9
+CIDADE DE EVER GRANDE\p
+“O paraíso das flores, do mar e\n
+dos POKéMON.”$

@@ -1,0 +1,88 @@
+# ROTA 113: a OFICINA DE VIDRO.
+
+[Route113_GlassWorkshop_Text_GoCollectAshWithThis] b569af88ac
+Esta área é coberta de cinza\n
+vulcânica, uf-uf!\p
+Tenho um dom especial, uf-uf.\p
+Faço vidro com cinza vulcânica e\n
+faço itens, uf-uf.\p
+Vá juntar cinza com isto, uf-uf.$
+
+[Route113_GlassWorkshop_Text_ExplainSootSack] ad6f874bec
+É só levar essa SACOLA e andar pelos\n
+montes de cinza, uf-uf.\p
+Ela vai se encher de cinza vulcânica,\n
+uf-uf.\p
+Quando achar que juntou bastante,\n
+venha falar comigo, uf-uf.$
+
+[Route113_GlassWorkshop_Text_LetsSeeCollectedAshes] a76caadd8a
+Juntou cinza, uf-uf?\n
+Deixa eu ver, uf-uf.$
+
+[Route113_GlassWorkshop_Text_NotEnoughAshNeedX] bef7a33e8f
+Hmmm…\n
+Não tem cinza suficiente, uf-uf.\l
+Não dá pra fazer vidro, uf-uf.\p
+Vejamos… Você precisa andar\n
+{STR_VAR_1} passos pra eu fazer\l
+uma FLAUTA AZUL, uf-uf.$
+
+[Route113_GlassWorkshop_Text_WhichGlassItemWoudYouLike] d26dd1385d
+Oh!\n
+Você juntou muita cinza, uf-uf!\p
+Vou fazer uma peça de vidro, uf-uf!\n
+Qual você quer, uf-uf?$
+
+[Route113_GlassWorkshop_Text_IsThatTheItemForYou] 3d897db32c
+{STR_VAR_1}, uf-uf?\n
+É essa que você quer, uf-uf?$
+
+[Route113_GlassWorkshop_Text_WhichWouldYouLike] c922f6f1aa
+Qual você quer, uf-uf?$
+
+[Route113_GlassWorkshop_Text_IllMakeItemForYou] 021153d7f8
+{STR_VAR_1}, então, uf-uf!\p
+Certo! Vou fazer pra você, uf-uf.\n
+Espere um pouquinho, uf-uf.$
+
+[Route113_GlassWorkshop_Text_NotEnoughAshToMakeItem] 9a732b0b38
+{STR_VAR_1}, uf-uf?\p
+Mas não tem cinza suficiente pra\n
+fazer isso, uf-uf.\p
+Vejamos… Você precisa andar\n
+{STR_VAR_2} passos pela cinza\l
+pra eu fazer esse item, uf-uf.\p
+Qual item você prefere que eu faça,\n
+então, uf-uf?$
+
+[Route113_GlassWorkshop_Text_AllThatAshButDontWantAnything] 9c925524c4
+Juntou toda essa cinza e não quer\n
+nada, uf-uf?$
+
+[Route113_GlassWorkshop_Text_IveFinishedGlassItem] 1ede563d08
+Ah, terminei: {STR_VAR_1}.\n
+Pode levar, uf-uf.$
+
+[Route113_GlassWorkshop_Text_NoRoomInBag] 97285c4caf
+Opa?\n
+Não tem espaço na BOLSA, uf-uf.\p
+Eu guardo pra você. Volte depois,\n
+uf-uf.$
+
+[Route113_GlassWorkshop_Text_NoRoomInPC] 0da0d1cf4e
+Opa?\n
+Não tem espaço no PC, uf-uf?\p
+Eu guardo pra você. Volte depois,\n
+uf-uf.$
+
+[Route113_GlassWorkshop_Text_HaventGotYourSootSack] 55b630d385
+Hã? Você não está com a SACOLA,\n
+uf-uf.\p
+Tem que levar ela junto pra juntar\n
+cinza vulcânica, uf-uf.$
+
+[Route113_GlassWorkshop_Text_FunToBlowGlassFlute] ca4af8ae09
+É divertido soprar uma flauta de\n
+vidro enquanto o chefe fala.\p
+Uf-uf! Puf-puf!$

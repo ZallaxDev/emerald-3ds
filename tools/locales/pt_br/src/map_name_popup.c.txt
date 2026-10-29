@@ -1,0 +1,26 @@
+# A placa do andar na PIRÂMIDE DE BATALHA (src/map_name_popup.c), na fonte
+# estreita da placa, onde cabem os nomes de lugar de até 16 caracteres.
+
+[sText_PyramidFloor1] f21f267f9f width=100
+PIRÂMIDE ANDAR 1
+
+[sText_PyramidFloor2] 51bdb9da1c width=100
+PIRÂMIDE ANDAR 2
+
+[sText_PyramidFloor3] 9ee20d9668 width=100
+PIRÂMIDE ANDAR 3
+
+[sText_PyramidFloor4] 5667655936 width=100
+PIRÂMIDE ANDAR 4
+
+[sText_PyramidFloor5] e3ab1afc0e width=100
+PIRÂMIDE ANDAR 5
+
+[sText_PyramidFloor6] 3a22dc4862 width=100
+PIRÂMIDE ANDAR 6
+
+[sText_PyramidFloor7] 6010eaa3de width=100
+PIRÂMIDE ANDAR 7
+
+[sText_Pyramid] aed0972cc4 width=100
+PIRÂMIDE

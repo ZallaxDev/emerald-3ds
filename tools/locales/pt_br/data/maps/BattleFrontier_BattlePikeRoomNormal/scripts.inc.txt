@@ -1,0 +1,198 @@
+# FRONTEIRA DE BATALHA: as salas do PICO, com as surpresas e a LUCY.
+
+[BattleFrontier_BattlePikeRoomNormal_Text_WillRestoreToFullHealth] 48de2b6c7d
+Boas-vindas…\n
+A sua sorte merece elogios…\p
+Os seus POKéMON serão totalmente\n
+recuperados…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_EnjoyRestOfChallenge] f744d58a07
+Aproveite o resto do desafio da\n
+Escolha de Batalha…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_WillRestoreOneMon] 4a3e452e24
+Ah, você tem sorte.\n
+Estou de bom humor agora.\p
+Vou recuperar totalmente um dos\n
+seus POKéMON.$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_BestOfLuckFarewell] 6e8a25b800
+Boa sorte pra você.\n
+Adeus.$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_CareForBattleWillRestoreMons] a036be3d74
+Com licença…\p
+Quer uma batalha?\n
+Se vencer, recupero os seus POKéMON.$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_NowShallWe] 3f0b65a474
+Muito bem…\n
+Vamos lá?$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_HowUnsportingOfYou] 25c17e0fd8
+Entendo…\n
+Que falta de espírito esportivo…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_WillRestoreMonsAsPromised] b911281d75
+Magnífico…\p
+Como prometido, vou recuperar\n
+totalmente os seus POKéMON.$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_BestOfLuckFarewell2] 6e8a25b800
+Boa sorte pra você.\n
+Adeus.$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_WatchOut] 10b3aea727
+Minha nossa!\p
+Cuidado!$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_KirliaStop] 1cb67d4e14
+Ei, ei!\n
+KIRLIA, pare com isso!$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_DusclopsStop] 61ed3d111a
+Ei, ei!\n
+DUSCLOPS, pare com isso!$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_KirliaUsedToxic] 8b6f7d37a8
+KIRLIA usou TÓXICO!$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_KirliaUsedHypnosis] 4ebdf652e4
+KIRLIA usou HIPNOSE!$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_KirliaUsedThunderWave] 6918d9ff9f
+KIRLIA usou ONDA TROVÃO!$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_KirliaUsedWillOWisp] 3711d68ae8
+KIRLIA usou FOGO FÁTUO!$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_DusclopsUsedWillOWisp] 88a26af59e
+DUSCLOPS usou FOGO FÁTUO!$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_DusclopsUsedIceBeam] 42d48a1d7b
+DUSCLOPS usou RAIO CONGELANTE!$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_ThatsEnough] 1e53eeed4d
+Olha aqui!\n
+Já chega!$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_ApologizeForKirlia] 5741e4c17b
+Preciso pedir desculpas…\p
+O meu KIRLIA é muito tímido…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_ApologizeForDusclops] be4087426d
+Preciso pedir desculpas…\p
+O meu DUSCLOPS é muito tímido…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_AttacksWhenStartled] 9118e2e43e
+Ele ataca sem aviso quando alguém\n
+o assusta…\p
+Você e os seus POKéMON estão bem?$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_ApologizeHopeMonsAreFine] 1bb82673c0
+Peço desculpas pelo que houve…\n
+Espero que os seus POKéMON estejam\l
+bem.$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_Silence] e4bddd8be9
+… … … … … …\n
+… … … … … …$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_BattleSomewhatToughTrainer] 2fc4c617f6
+Boas-vindas…\p
+Aqui, você vai batalhar com um\n
+TREINADOR um tanto forte…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_RestoreToFullHealth] 9bceeef4a2
+Que maravilha…\p
+Em honra da sua vitória, os seus\n
+POKéMON serão totalmente recuperados…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_EnjoyRestOfChallenge2] f744d58a07
+Aproveite o resto do desafio da\n
+Escolha de Batalha…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_ImThePikeQueen] 8a88432956
+Eu sou a LUCY…\n
+Aqui, eu sou a lei…\l
+Porque sou a RAINHA DO PICO…\p
+Você já sabe, mas, pra seguir,\n
+vai ter que me vencer…\p
+…Não sou de conversa fiada.\n
+Anda. Vem logo…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_HopeYouDidntUseUpLuck] d6fd85019f
+A sua sorte…\n
+Espero que não tenha acabado aqui…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_LucyShowMeFrontierPass] 388798d093
+LUCY: … … … … … …\n
+Mostre o seu PASSE DA FRONTEIRA…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_ReceivedLuckSymbol] ca11d488f6
+O Símbolo da Sorte foi gravado no\n
+PASSE DA FRONTEIRA!$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_AllThereIsDisappear] d3184adc8b
+…É só isso…\n
+Agora suma…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_LucyYouAgain] d45b8f8926
+LUCY: …Você de novo…\p
+… … … … … …\p
+…Pisei em flores e enfrentei\n
+tempestades pra chegar onde estou…\p
+Não sinto vontade nenhuma de\n
+continuar perdendo pro mesmo\l
+oponente…\p
+… … … … … …\n
+Tá… Eu vou…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_NowComeOn] b3aea0b29d
+Agora!\n
+Vem!$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_LucyFrontierPass] 05b2fbed7b
+LUCY: … … … … … …\p
+…PASSE DA FRONTEIRA…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_LuckSymbolTookGoldenShine] 513feb02c2
+O Símbolo da Sorte ganhou um\n
+brilho dourado!$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_IWontForget] 8fb4610b4f
+…Você eu não vou esquecer…\n
+…Nunca…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_ChoseRoomNoHeal] ab881801bb
+Boas-vindas…\p
+Hihi…\n
+Parece que a sorte te abandonou…\p
+Se não tivesse escolhido esta sala,\n
+os seus POKéMON podiam ser curados…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_ChoseRoomHealOne] 50633f94a9
+Boas-vindas…\p
+Como escolheu esta sala, vou\n
+recuperar totalmente um POKéMON…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_ChoseRoomHealTwo] 21e4b77b93
+Boas-vindas…\p
+Como escolheu esta sala, vou\n
+recuperar totalmente dois POKéMON…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_WillRestoreAllMons] 42c06394f8
+Boas-vindas…\p
+Hihi…\n
+Agradeça à sua boa estrela…\p
+Como escolheu esta sala, todos os\n
+seus POKéMON serão recuperados…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_ShallFetchOurMaster] 7b1f88d986
+Vou chamar a nossa mestra…$
+
+[BattleFrontier_BattlePikeRoomNormal_Text_WillRestoreTwoMons] dcbd238cdf
+Ah, você tem sorte!\n
+Estou de bom humor agora.\p
+Vou recuperar totalmente dois dos\n
+seus POKéMON!$

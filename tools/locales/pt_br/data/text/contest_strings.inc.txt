@@ -1,0 +1,601 @@
+# CONCURSOS: efeitos das apresentações, mensagens do palco e categorias.
+
+[gText_HighlyAppealingMove] ab30dac186
+Um golpe de muito impacto.$
+
+[gText_UserMoreEasilyStartled] 07911b8c64
+Depois deste golpe, quem usa\nse assusta mais fácil.$
+
+[gText_GreatAppealButNoMoreToEnd] e1b53871f9
+Grande impacto, mas depois\nnão se apresenta mais.$
+
+[gText_UsedRepeatedlyWithoutBoringJudge] 8e3721e0a2
+Pode ser repetido sem\nentediar o JUIZ.$
+
+[gText_AvoidStartledByOthersOnce] f5d0e968ab
+Evita se assustar com os\noutros uma vez.$
+
+[gText_AvoidStartledByOthers] ae8adc4749
+Evita se assustar com os\noutros.$
+
+[gText_AvoidStartledByOthersLittle] c30c1a0f38
+Evita um pouco se assustar\ncom os outros.$
+
+[gText_UserLessLikelyStartled] 8c31237b14
+Depois deste golpe, quem usa\nse assusta menos.$
+
+[gText_SlightlyStartleFrontMon] ee4b958519
+Assusta um pouco o\nPOKéMON da frente.$
+
+[gText_SlightlyStartleAppealed] 76c0a802fa
+Assusta um pouco os que\njá se apresentaram.$
+
+[gText_StartleAppealedBeforeUser] 7a94949d30
+Assusta o POKéMON que se\napresentou antes.$
+
+[gText_StartleAllAppealed] 9412f13403
+Assusta todos os POKéMON\nque já se apresentaram.$
+
+[gText_BadlyStartleFrontMon] c49cd8f4ce
+Assusta muito o\nPOKéMON da frente.$
+
+[gText_BadlyStartleAppealed] 1aecb26025
+Assusta muito os que\njá se apresentaram.$
+
+[gText_StartleAppealedBeforeUser2] 7a94949d30
+Assusta o POKéMON que se\napresentou antes.$
+
+[gText_StartleAllAppealed2] 9412f13403
+Assusta todos os POKéMON\nque já se apresentaram.$
+
+[gText_ShiftJudgesAttentionFromOthers] 8c98dee937
+Desvia a atenção do JUIZ\ndos outros.$
+
+[gText_StartleMonHasJudgesAttention] 116f8520f1
+Assusta o POKéMON que tem\na atenção do JUIZ.$
+
+[gText_JamOthersMissesTurn] fef6ebf020
+Atrapalha os outros e perde\numa vez de se apresentar.$
+
+[gText_StartleMonsMadeSameTypeAppeal] 9ba86ce16f
+Assusta POKéMON que fizeram\napresentação do mesmo tipo.$
+
+[gText_BadlyStartleCoolAppeals] f731efe9cb
+Assusta muito POKéMON que\nse apresentaram com ESTILO.$
+
+[gText_BadlyStartleBeautyAppeals] 0408d6c8e1
+Assusta muito POKéMON que\nse apresentaram com BELEZA.$
+
+[gText_BadlyStartleCuteAppeals] c636292a56
+Assusta muito POKéMON que\nse apresentaram com FOFURA.$
+
+[gText_BadlyStartleSmartAppeals] 95e1747b1e
+Assusta muito POKéMON que\nusaram ESPERTEZA.$
+
+[gText_BadlyStartleToughAppeals] d899aa49a0
+Assusta muito POKéMON que\nse apresentaram com FORÇA.$
+
+[gText_MakeMonAfterUserNervous] 3fcd41a230
+Deixa nervoso um POKéMON\nque vem depois.$
+
+[gText_MakeAllMonsAfterUserNervous] f0b4259f38
+Deixa nervosos todos os\nPOKéMON que vêm depois.$
+
+[gText_WorsenConditionOfThoseMadeAppeals] 3486649c7c
+Piora a condição dos que\njá se apresentaram.$
+
+[gText_BadlyStartleMonsGoodCondition] 8106b4cbb6
+Assusta muito POKéMON em\nboa condição.$
+
+[gText_AppealGreatIfPerformedFirst] ce4fd8c2ed
+Funciona muito bem se\nfor o primeiro.$
+
+[gText_AppealGreatIfPerformedLast] ce3ec5e228
+Funciona muito bem se\nfor o último.$
+
+[gText_AppealAsGoodAsThoseBeforeIt] 836e00ad25
+Vale tanto quanto as\napresentações anteriores.$
+
+[gText_AppealAsGoodAsOneBeforeIt] 13d323d3f7
+Vale tanto quanto a\napresentação anterior.$
+
+[gText_AppealBetterLaterItsPerformed] 8f4c565112
+Funciona melhor quanto\nmais tarde for feito.$
+
+[gText_AppealVariesDependingOnTiming] 798340457e
+A qualidade varia conforme\no momento.$
+
+[gText_WorksWellIfSameTypeAsBefore] 78472c8539
+Funciona bem se for do mesmo\ntipo da anterior.$
+
+[gText_WorksWellIfDifferentTypeAsBefore] 516ef99f8f
+Funciona bem se for de tipo\ndiferente da anterior.$
+
+[gText_AffectedByAppealInFront] d855ac20aa
+Depende de como foi a\napresentação da frente.$
+
+[gText_UpsConditionHelpsPreventNervousness] d7a971e904
+Melhora a condição.\nAjuda a evitar o nervoso.$
+
+[gText_AppealWorksWellIfConditionGood] 272212d1d1
+Funciona bem se a condição\nde quem usa for boa.$
+
+[gText_NextAppealMadeEarlier] 93ce69b8d9
+A próxima apresentação pode\nvir antes no próximo turno.$
+
+[gText_NextAppealMadeLater] ee7359483a
+A próxima apresentação pode\nvir depois no próximo turno.$
+
+[gText_TurnOrderMoreEasilyScrambled] 078b0f6af9
+Facilita embaralhar a\nordem do próximo turno.$
+
+[gText_ScrambleOrderOfNextAppeals] da9daf34fd
+Embaralha a ordem do\npróximo turno.$
+
+[gText_AppealExcitesAudienceInAnyContest] 2314cd48fd
+Empolga a plateia em\nqualquer CONCURSO.$
+
+[gText_BadlyStartlesMonsGoodAppeals] 5a3a9a9e1b
+Assusta muito todos que\nfizeram boas apresentações.$
+
+[gText_AppealBestMoreCrowdExcited] 5b3bcfb978
+Funciona melhor quanto mais\na plateia estiver empolgada.$
+
+[gText_TemporarilyStopCrowdExcited] 48e5d35f10
+Impede por um tempo que\na plateia se empolgue.$
+
+[gText_RainDance] b5c2c9e188
+DANÇA CHUVA$
+
+[gText_Rage] 7a557f03ee
+IRA$
+
+[gText_FocusEnergy] 5ce5acb525
+FOC. ENERGIA$
+
+[gText_Hypnosis] ebbc8d6df6
+HIPNOSE$
+
+[gText_Softboiled] 9527ac59b6
+COZIDOS$
+
+[gText_HornAttack] eebf36103b
+ATAQ. CHIFRE$
+
+[gText_SwordsDance] 99731a2eb7
+DANÇA ESPADA$
+
+[gText_Conversion] d2f9591666
+CONVERSÃO$
+
+[gText_SunnyDay] b1ad74f279
+DIA DE SOL$
+
+[gText_Rest2] 9c2529dd84
+DESCANSAR$
+
+[gText_Vicegrip] b57e62bcf8
+AGARRAMENTO$
+
+[gText_DefenseCurl] 8d73d11a33
+ESPIRAL DEF.$
+
+[gText_LockOn] d3897e7ddb
+MIRAR$
+
+[gContestMoveTypeCoolText] 20ef494b67
+ESTILO$
+
+[gContestMoveTypeBeautyText] 0113cb0592
+BELEZA$
+
+[gContestMoveTypeCuteText] 083936aece
+FOFURA$
+
+[gContestMoveTypeSmartText] 08a49986bf
+ESPERTEZA$
+
+[gContestMoveTypeToughText] dd290f699e
+FORÇA$
+
+[gText_AppealNumWhichMoveWillBePlayed] fb769a61d7
+Apresentação nº {STR_VAR_1}!\nQue golpe vai ser usado?$
+
+[gText_AppealNumButItCantParticipate] e4164ffd85
+Apresentação nº {STR_VAR_1}!\nMas não pode participar!$
+
+[gText_MonAppealedWithMove] 0917deaea9
+{STR_VAR_1} se apresentou com\n{STR_VAR_2}!$
+
+[gText_MonWasWatchingOthers] c9a7256701
+{STR_VAR_1} ficou olhando\nos outros.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_AllOutOfAppealTime] 2480af6765
+Acabou o tempo de\napresentações!{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_ButAppealWasJammed] 6f57e63da7
+Mas a apresentação foi\natrapalhada.$
+
+[gText_FollowedAnotherMonsLead] b3f78eec6c
+Seguiu o exemplo de outro\nPOKéMON.$
+
+[gText_ButItMessedUp] 58f41aa185
+Mas deu errado.$
+
+[gText_WentBetterThanUsual] be3d76e88d
+Foi melhor que o\nnormal.$
+
+[gText_JudgeLookedAwayForSomeReason] f627d95ad9
+O JUIZ desviou o olhar\npor algum motivo.$
+
+[gText_WorkedHardToBuildOnPastMistakes] faf6dcc0a0
+Se esforçou aprendendo\ncom os erros.$
+
+[gText_CantMakeAnyMoreMoves] d55a442486
+Não pode mais usar\ngolpes.$
+
+[gText_WorkedFrighteninglyWell] 00d105138d
+Funcionou assustadoramente\nbem.$
+
+[gText_WorkedHardAsStandoutMon] b8e5c06a64
+Se esforçou tanto quanto\no POKéMON em destaque.$
+
+[gText_JudgedLookedOnExpectantly] c3ecc5d56a
+O JUIZ olhou cheio de\nexpectativa.$
+
+[gText_WorkedRatherWell] f78d9267e2
+Funcionou bem.$
+
+[gText_WorkedLittleBetterThanUsual] c8f862b765
+Funcionou um pouco melhor\nque o normal.$
+
+[gText_MonFailedToStandOutAtAll] 143cab4a77
+{STR_VAR_1} não chamou\natenção nenhuma…{PAUSE_UNTIL_PRESS}$
+
+[gText_MonDidntStandOutVeryMuch] cabbbd0828
+{STR_VAR_1} não chamou\nmuita atenção…{PAUSE_UNTIL_PRESS}$
+
+[gText_MonCaughtALittleAttention] f8cc0eb9c0
+{STR_VAR_1} chamou um\npouco de atenção.{PAUSE_UNTIL_PRESS}$
+
+[gText_MonAttractedALotOfAttention] fa152cde65
+{STR_VAR_1} chamou muita\natenção.{PAUSE_UNTIL_PRESS}$
+
+[gText_MonCommandedTotalAttention] 7c66982271
+{STR_VAR_1} prendeu toda\na atenção.{PAUSE_UNTIL_PRESS}$
+
+[gText_MonHasntMadeItsAppeal] b53b582456
+{STR_VAR_1} ainda não se\napresentou.{PAUSE_UNTIL_PRESS}$
+
+[gText_AnticipationSwelledForMonsAppealNext2] c5e91ebba6
+A expectativa cresceu pela\napresentação de {STR_VAR_1}.$
+
+[gText_EmptyContestString] 3cdf2936da
+$
+
+[gText_JudgesViewsOnMonHeldFirm] e7be0f68e9
+A opinião do JUIZ sobre\n{STR_VAR_1} não mudou.$
+
+[gText_MonsXChangedPerceptions] f4e8f725f3
+{STR_VAR_3} de {STR_VAR_1}\nmudou as impressões.$
+
+[gText_MonsAppealEffectWoreOff] cbb28f9492
+O efeito da apresentação\nde {STR_VAR_1} acabou.$
+
+[gText_SpecialAppealsEffectWoreOff] c7d9717a40
+O efeito da apresentação\nespecial acabou.$
+
+[gText_EveryonesAppealsMadeToLookSame] a6934f165d
+As apresentações de todos\nficaram parecendo iguais.$
+
+[gText_CheapenedMonsAppeal] c3172baf9c
+Desvalorizou a apresentação\nde {STR_VAR_2}.$
+
+[gText_CheapenedAppealOfThoseAhead] 44d5d3605c
+Desvalorizou quem se\napresentou antes.$
+
+[gText_StoleAttentionAwayFromMon] dcfb9c6a4d
+Roubou a atenção\nde {STR_VAR_2}.$
+
+[gText_CheapenedMonsAppeal2] c3172baf9c
+Desvalorizou a apresentação\nde {STR_VAR_2}.$
+
+[gText_SeverelyCheapenedOtherAppeals] cfa0836c13
+Desvalorizou muito as\noutras apresentações.$
+
+[gText_AnticipationSwelledForMonsAppealNext] c5e91ebba6
+A expectativa cresceu pela\napresentação de {STR_VAR_1}.$
+
+[gText_CheapenedAppealOfThoseAhead2] 44d5d3605c
+Desvalorizou quem se\napresentou antes.$
+
+[gText_CheapenedJudgesFavoriteAppeal] 3298da9164
+Desvalorizou a apresentação\nfavorita do JUIZ.$
+
+[gText_AppealsOfOthersCheapenedByHalf] 1b8a51dfde
+As apresentações dos outros\nperderam metade do valor.$
+
+[gText_StoodOutToMakeUpForBeingJammed] 7ff6a48124
+Se destacou pra compensar\no atrapalho.$
+
+[gText_CantParticipateInAppealsAnyMore] 28017cae7a
+Não pode mais participar\ndas apresentações.$
+
+[gText_TouchedJudgeForFantasticAppeal] cfde527f8b
+Emocionou o JUIZ com uma\napresentação fantástica.$
+
+[gText_AnticipationRoseForUpcomingAppeals] d124460b47
+A expectativa cresceu pelas\npróximas apresentações.$
+
+[gText_StoodOutAsMuchAsSpecialAppeals] a3349ab5cb
+Se destacou tanto quanto\napresentações especiais.$
+
+[gText_StoodOutAsMuchAsMon] 3689c01cce
+Se destacou tanto quanto\n{STR_VAR_1}.$
+
+[gText_JammedAppealsMadeEvenLessNoticeable] 4ebd979be3
+Apresentações atrapalhadas\nchamaram menos atenção.$
+
+[gText_EveryonesAppealsMadeSame] c8b4a51afb
+As apresentações de todos\nficaram iguais.$
+
+[gText_BecameMoreConsciousOfOtherMons] 5214dae976
+Ficou mais atento aos\noutros POKéMON.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MonCantMakeAnAppealAfterThis] 532f6c160d
+{STR_VAR_1} não pode se\napresentar depois disso.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_SettledDownJustLittleBit] db135b4920
+Se acalmou só um\npouquinho.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_BecameObliviousToOtherMons] e12f7641fe
+Esqueceu os outros\nPOKéMON.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_BecameLessAwareOfOtherMons] 91bbce9aaf
+Ficou menos atento aos\noutros POKéMON.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_StoppedCaringAboutOtherMons] bc6ac6ddec
+Parou de ligar muito pros\noutros POKéMON.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_TriedToStartleOtherMons] cdb4d981d5
+Tentou assustar os\noutros POKéMON.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_TriedToDazzleOthers] 0f741371a8
+Tentou ofuscar os\noutros.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_JudgeLookedAwayFromMon] 2260c71552
+O JUIZ desviou o olhar\nde {STR_VAR_1}.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_TriedToUnnerveNextMon] 6fb361706d
+Tentou deixar nervoso o\npróximo POKéMON.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MonBecameNervous] bf28fe00c8
+{STR_VAR_1} ficou\nnervoso.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_AppealTriedToUnnerveWaitingMons] e0e6175294
+A apresentação tentou abalar\nos POKéMON na espera.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_TauntedMonsDoingWell] 1fa87a6aef
+Provocou os POKéMON que\niam bem.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MonRegainedItsForm] 27cbfb3a3a
+{STR_VAR_1} recuperou\na forma.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_TriedToJamMonDoingWell] cf9bc71e67
+Tentou atrapalhar os POKéMON\nque iam bem.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_StandoutMonHustledEvenMore] 0df2031686
+{STR_VAR_1}, em destaque,\nse esforçou ainda mais.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_LargelyUnnoticedMonWorkedHard] 4b6d0f10d3
+{STR_VAR_1}, quase ignorado,\nse esforçou muito.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_WorkedAsMuchAsMonBefore] 179cfb94e0
+Rendeu tanto quanto os\nPOKéMON anteriores.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MonsAppealDidNotGoWell] bf6b65d324
+A apresentação de {STR_VAR_1}\nnão foi bem.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_WorkedAsMuchAsPrecedingMon] a39e92bfb0
+Rendeu tanto quanto o\nPOKéMON anterior.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MonsAppealDidNotGoWell2] bf6b65d324
+A apresentação de {STR_VAR_1}\nnão foi bem.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MonsAppealDidNotGoWell3] bf6b65d324
+A apresentação de {STR_VAR_1}\nnão foi bem.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MonsAppealWentSlightlyWell] c44a06cc3a
+A apresentação de {STR_VAR_1}\nfoi razoável.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MonsAppealWentPrettyWell] 482414cd5a
+A apresentação de {STR_VAR_1}\nfoi bem boa.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MonsAppealWentExcellently] 3c6872f482
+A apresentação de {STR_VAR_1}\nfoi excelente.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MonsAppealWasDud] 6081de4402
+A apresentação de {STR_VAR_1}\nfoi um fiasco.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MonsAppealDidNotWorkVeryWell] 15dc8b301f
+A apresentação de {STR_VAR_1}\nnão funcionou muito.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MonsAppealWentSlightlyWell2] c44a06cc3a
+A apresentação de {STR_VAR_1}\nfoi razoável.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MonsAppealWentPrettyWell2] 482414cd5a
+A apresentação de {STR_VAR_1}\nfoi bem boa.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MonsAppealWentVeryWell] 15d0bd1791
+A apresentação de {STR_VAR_1}\nfoi muito boa.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MonsAppealWentExcellently2] 3c6872f482
+A apresentação de {STR_VAR_1}\nfoi excelente.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_SameTypeAsOneBeforeGood] 72752506b4
+É do mesmo tipo do POKéMON\nanterior. Muito bem!{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_NotSameTypeAsOneBeforeGood] bba8d04aa4
+Não é do mesmo tipo do\nanterior. Muito bem!{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_StoodOutMuchMoreThanMonBefore] 8fae9746b4
+Se destacou muito mais que\no POKéMON anterior.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_DidntDoAsWellAsMonBefore] c9490abcff
+Não foi tão bem quanto o\nPOKéMON anterior.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MonsConditionRoseAboveUsual] ad8d4232b4
+A condição de {STR_VAR_1}\nsubiu acima do normal.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MonsHotStatusMadeGreatAppeal] 831c97b089
+A boa fase de {STR_VAR_1}\nrendeu ótima apresentação!{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MovedUpInLineForNextAppeal] 04e8ecc2c0
+Subiu na fila pra próxima\napresentação.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_MovedBackInLineForNextAppeal] a27dad2e0a
+Desceu uma posição na fila\npra próxima apresentação.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_ScrambledUpOrderForNextTurn] 5128c3faae
+Embaralhou a ordem do\npróximo turno.{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$
+
+[gText_JudgeLookedAtMonExpectantly] c4219b26bf
+O JUIZ olhou {STR_VAR_1}\ncheio de expectativa.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_AppealComboWentOverWell] 5bf0014ba8
+A combinação\nfoi bem.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_AppealComboWentOverVeryWell] 86397ca3eb
+A combinação\nfoi muito bem.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_AppealComboWentOverExcellently] 712c3d56ab
+A combinação\nfoi excelente.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_MonManagedToAvertGaze] 4092530135
+{STR_VAR_1} conseguiu\ndesviar o olhar.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_MonManagedToAvoidSeeingIt] 74790b3331
+{STR_VAR_1} conseguiu\nnão ver.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_MonIsntFazedByThatSortOfThing] 4a183b7d33
+{STR_VAR_1} não se abala\ncom esse tipo de coisa.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_MonBecameALittleDistracted] 828c9b3334
+{STR_VAR_1} se distraiu\num pouco.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_TriedToStartleOtherPokemon] cb48bd8738
+Tentou assustar os\noutros POKéMON.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_MonLookedDownOutOfDistraction] 73089bba7b
+{STR_VAR_1} olhou pra baixo,\ndistraído.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_MonTurnedBackOutOfDistraction] bcab9e4d76
+{STR_VAR_1} se virou de\ncostas, distraído.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_MonCouldntHelpUtteringCry] d92afbccde
+{STR_VAR_1} não conseguiu\nsegurar um grito.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_MonCouldntHelpLeapingUp] 46f7675d87
+{STR_VAR_1} não conseguiu\nevitar um pulo.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_MonTrippedOutOfDistraction] c5687cb9be
+{STR_VAR_1} tropeçou de\ntão distraído.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_MonWasTooNervousToMove] 38fcceeb0a
+{STR_VAR_1} ficou nervoso\ndemais pra se mexer.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_ButItMessedUp2] 1dfe025a8d
+Mas deu errado.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_ButItFailedToMakeTargetNervous] 7866b8279a
+Mas não conseguiu deixar\no alvo nervoso.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_ButItFailedToMakeAnyoneNervous] 06b26d4aac
+Mas não conseguiu deixar\nninguém nervoso.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_ButItWasIgnored] af8bf54f4f
+Mas foi ignorado…{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_CouldntImproveItsCondition] c2b8b49892
+Mas não conseguiu melhorar\na condição…{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_BadConditionResultedInWeakAppeal] 0a257c72e8
+A condição ruim rendeu uma\napresentação fraca.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_MonWasUnaffected] 85a0c551b1
+{STR_VAR_1} não foi\nafetado.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_RepeatedAppeal] 638677bcb3
+{STR_VAR_1} decepcionou ao\nrepetir uma apresentação.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_MonsXWentOverGreat] 5874c26a2c
+{STR_VAR_3} de {STR_VAR_1}\nfoi um sucesso.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_MonsXDidntGoOverWell] e20efd16dc
+{STR_VAR_3} de {STR_VAR_1}\nnão agradou aqui…{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_MonsXGotTheCrowdGoing] c28d27699e
+{STR_VAR_3} de {STR_VAR_1}\nempolgou a plateia.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_MonCantAppealNextTurn] 2aadf8fb44
+{STR_VAR_1} não pode se\napresentar no próximo turno…{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_AttractedCrowdsAttention] c693ad0f37
+Chamou a atenção da\nplateia.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_CrowdContinuesToWatchMon] 909f76e17b
+A plateia continua de olho\nem {STR_VAR_3}.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_MonsMoveIsIgnored] 7cb04ff8c0
+{STR_VAR_2} de\n{STR_VAR_1} foi ignorado.{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[gText_Contest_Shyness] fd1c64760a
+timidez$
+
+[gText_Contest_Anxiety] 5df715dc27
+ansiedade$
+
+[gText_Contest_Laziness] 825beef9a4
+preguiça$
+
+[gText_Contest_Hesitancy] 634f96d6a6
+hesitação$
+
+[gText_Contest_Fear] c2ab6585fe
+medo$
+
+[gText_Contest_Coolness] a1d0886544
+estilo$
+
+[gText_Contest_Beauty] c6b692e8df
+beleza$
+
+[gText_Contest_Cuteness] ce35b77c3e
+fofura$
+
+[gText_Contest_Smartness] 2f1d4e706f
+esperteza$
+
+[gText_Contest_Toughness] f7394e5675
+força$
+
+[gText_Tension] 77fa228c80
+EMPOLGAÇÃO$
+
+[gText_CoolMove] 532ebe616b
+Golpe ESTILO$
+
+[gText_BeautyMove] 0fafe46309
+Golpe BELEZA$
+
+[gText_CuteMove] 3d17ee5109
+Golpe FOFURA$
+
+[gText_SmartMove] 6da390de2a
+Golpe ESPERTEZA$
+
+[gText_ToughMove] 2280093321
+Golpe FORÇA$
+
+[gText_3QuestionMarks] 1b609b46cc
+???$

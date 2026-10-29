@@ -1,0 +1,31 @@
+Pokémon Emerald 3Ds Dual Screen changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: the OPTION menu's frame and highlight on the taller, wider screen
+Applies after 0060-portuguese-type-names.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/option_menu.c b/src/option_menu.c
+--- a/src/option_menu.c
++++ b/src/option_menu.c
+@@ -373,7 +373,10 @@ static void Task_OptionMenuFadeOut(u8 taskId)
+ 
+ static void HighlightOptionMenuItem(u8 index)
+ {
+-    SetGpuReg(REG_OFFSET_WIN0H, WIN_RANGE(16, DISPLAY_WIDTH - 16));
++    // The highlight spans the options window (tiles 2..27), not the screen: a
++    // window edge is 8 bits, and the 3DS's DISPLAY_WIDTH - 16 = 384 wrapped
++    // to a band over x=17..128 that left half the selected row darkened.
++    SetGpuReg(REG_OFFSET_WIN0H, WIN_RANGE(16, 224));
+     SetGpuReg(REG_OFFSET_WIN0V, WIN_RANGE(index * 16 + 40, index * 16 + 56));
+ }
+ 
+@@ -658,8 +661,10 @@ static void DrawBgWindowFrames(void)
+     FillBgTilemapBufferRect(1, TILE_TOP_CORNER_L,  1,  4,  1,  1,  7);
+     FillBgTilemapBufferRect(1, TILE_TOP_EDGE,      2,  4, 26,  1,  7);
+     FillBgTilemapBufferRect(1, TILE_TOP_CORNER_R, 28,  4,  1,  1,  7);
+-    FillBgTilemapBufferRect(1, TILE_LEFT_EDGE,     1,  5,  1, 18,  7);
+-    FillBgTilemapBufferRect(1, TILE_RIGHT_EDGE,   28,  5,  1, 18,  7);
++    // The edges end above the bottom corners (row 19). The original height of
++    // 18 ran to row 22, off the GBA's 20 rows but visible on the 3DS.
++    FillBgTilemapBufferRect(1, TILE_LEFT_EDGE,     1,  5,  1, 14,  7);
++    FillBgTilemapBufferRect(1, TILE_RIGHT_EDGE,   28,  5,  1, 14,  7);
+     FillBgTilemapBufferRect(1, TILE_BOT_CORNER_L,  1, 19,  1,  1,  7);
+     FillBgTilemapBufferRect(1, TILE_BOT_EDGE,      2, 19, 26,  1,  7);
+     FillBgTilemapBufferRect(1, TILE_BOT_CORNER_R, 28, 19,  1,  1,  7);

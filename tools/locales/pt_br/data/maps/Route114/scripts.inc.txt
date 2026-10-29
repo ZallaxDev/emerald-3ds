@@ -1,0 +1,25 @@
+# ROTA 114: o dono do POOCHYENA e as placas.
+
+[Route114_Text_AllMyMonDoesIsRoarTakeThis] 4982efe490
+O meu POKéMON só sabe dar RUGIDO…\n
+Ninguém tem coragem de chegar perto…\p
+Ai… Se puder, leve esta MT\n
+pra longe…$
+
+[Route114_Text_ExplainRoar] 79a37a81e7
+A MT05 contém RUGIDO.\n
+O RUGIDO faz os POKéMON fugirem.$
+
+[Route114_Text_Poochyena] 25be4b1c3f
+Au! Au-au!$
+
+[Route114_Text_MeteorFallsSign] 9ca57553ce
+CATARATA DOS METEOROS\n
+POR AQUI PARA A CIDADE DE RUSTBORO$
+
+[Route114_Text_FossilManiacsHouseSign] ddab699986
+CASA DO MANÍACO POR FÓSSEIS\n
+“Aceitamos fósseis com gratidão!”$
+
+[Route114_Text_LanettesHouse] 797db9c6ff
+CASA DA LANETTE$

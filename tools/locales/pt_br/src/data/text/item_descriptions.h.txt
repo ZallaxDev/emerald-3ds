@@ -1,0 +1,1531 @@
+# As descrições dos itens na BOLSA (src/data/text/item_descriptions.h):
+# até 3 linhas na largura da janela. Um item “segurado” é o que o
+# POKéMON leva consigo (hold item).
+
+[sMasterBallDesc] f96935e404
+A melhor BOLA, que\n
+captura qualquer\n
+POKéMON sem falhar.
+
+[sUltraBallDesc] ae085fc8ea
+Uma BOLA ainda\n
+melhor, com mais\n
+chance de captura.
+
+[sGreatBallDesc] 925c958427
+Uma boa BOLA, com\n
+mais chance de\n
+captura que a POKé.
+
+[sPokeBallDesc] 5cb226f074
+Uma ferramenta\n
+para capturar\n
+POKéMON selvagens.
+
+[sSafariBallDesc] 20d661e0cf
+Uma BOLA especial\n
+que só funciona na\n
+ZONA DE SAFÁRI.
+
+[sNetBallDesc] 4e68842835
+Funciona bem com\n
+POKéMON dos tipos\n
+ÁGUA e INSETO.
+
+[sDiveBallDesc] 51292a06e7
+Funciona melhor\n
+com POKéMON do\n
+fundo do mar.
+
+[sNestBallDesc] 01a148ce8e
+Funciona melhor\n
+com POKéMON mais\n
+fracos.
+
+[sRepeatBallDesc] 988b598c27
+Funciona melhor\n
+com POKéMON que\n
+já foram pegos.
+
+[sTimerBallDesc] 8e22ef4b68
+Fica mais forte\n
+quanto mais turnos\n
+a batalha durar.
+
+[sLuxuryBallDesc] 8257139c6a
+Uma BOLA gostosa\n
+que deixa o\n
+POKéMON amigável.
+
+[sPremierBallDesc] ed73a3a29d
+Uma BOLA rara,\n
+feita para lembrar\n
+um evento.
+
+[sPotionDesc] c76bbeb374
+Recupera 20 PS\n
+de um POKéMON.
+
+[sAntidoteDesc] 8883c31da1
+Cura um POKéMON\n
+envenenado.
+
+[sBurnHealDesc] b4fb17deb3
+Cura um POKéMON\n
+queimado.
+
+[sIceHealDesc] 6464ea6808
+Descongela um\n
+POKéMON congelado.
+
+[sAwakeningDesc] cd5ad44f09
+Acorda um POKéMON\n
+adormecido.
+
+[sParalyzeHealDesc] 26d9c2727a
+Cura um POKéMON\n
+paralisado.
+
+[sFullRestoreDesc] 75c05b44c0
+Recupera todos os\n
+PS e cura o status\n
+de um POKéMON.
+
+[sMaxPotionDesc] d24b5b0a66
+Recupera todos os\n
+PS de um POKéMON.
+
+[sHyperPotionDesc] 86bd1b727f
+Recupera 200 PS\n
+de um POKéMON.
+
+[sSuperPotionDesc] 8103306c4e
+Recupera 50 PS\n
+de um POKéMON.
+
+[sFullHealDesc] 35aa469c0f
+Cura qualquer\n
+problema de status\n
+de um POKéMON.
+
+[sReviveDesc] 1dd9191a17
+Reanima um POKéMON\n
+desmaiado com\n
+metade dos PS.
+
+[sMaxReviveDesc] 2fab8463fc
+Reanima um POKéMON\n
+desmaiado com\n
+todos os PS.
+
+[sFreshWaterDesc] 88c57425ca
+Água mineral que\n
+recupera 50 PS.
+
+[sSodaPopDesc] 90876028ca
+Um refri com gás\n
+que recupera\n
+60 PS.
+
+[sLemonadeDesc] 649621712d
+Uma bebida bem\n
+doce que recupera\n
+80 PS.
+
+[sMoomooMilkDesc] e3fd76087a
+Um leite nutritivo\n
+que recupera\n
+100 PS.
+
+[sEnergyPowderDesc] b05fa2df91
+Um pó amargo que\n
+recupera 50 PS.
+
+[sEnergyRootDesc] 6ab25368c8
+Uma raiz amarga\n
+que recupera\n
+200 PS.
+
+[sHealPowderDesc] 5da3e20791
+Um pó amargo que\n
+cura qualquer\n
+problema de status.
+
+[sRevivalHerbDesc] a2d870128c
+Uma erva amarga\n
+que reanima um\n
+POKéMON desmaiado.
+
+[sEtherDesc] 5d691c56d0
+Recupera 10 PP\n
+de um golpe\n
+escolhido.
+
+[sMaxEtherDesc] fd3691290b
+Recupera todos os\n
+PP de um golpe\n
+escolhido.
+
+[sElixirDesc] b7e61d1794
+Recupera 10 PP de\n
+todos os golpes.
+
+[sMaxElixirDesc] 90d96c5caf
+Recupera todos os\n
+PP dos golpes de\n
+um POKéMON.
+
+[sLavaCookieDesc] ca4cde13ba
+Uma especialidade\n
+local que cura\n
+qualquer status.
+
+[sBlueFluteDesc] db8b15c0f0
+Uma flauta de vidro\n
+que acorda POKéMON\n
+adormecidos.
+
+[sYellowFluteDesc] b2e164d292
+Uma flauta de vidro\n
+que tira o POKéMON\n
+da confusão.
+
+[sRedFluteDesc] 85741bbcda
+Uma flauta de vidro\n
+que tira o POKéMON\n
+da paixão.
+
+[sBlackFluteDesc] 2d8c2feffb
+Uma flauta de vidro\n
+que afasta POKéMON\n
+selvagens.
+
+[sWhiteFluteDesc] 999f44d3a3
+Uma flauta de vidro\n
+que atrai POKéMON\n
+selvagens.
+
+[sBerryJuiceDesc] 561be7c954
+Um suco 100% puro\n
+que recupera\n
+20 PS.
+
+[sSacredAshDesc] a712c1e9b7
+Reanima e recupera\n
+todos os POKéMON\n
+desmaiados.
+
+[sShoalSaltDesc] faf1be7151
+Sal tirado do fundo\n
+da CAVERNA SHOAL.
+
+[sShoalShellDesc] 5c7c42b7af
+Uma concha achada\n
+no fundo da\n
+CAVERNA SHOAL.
+
+[sRedShardDesc] 15af81e345
+O caco de um item\n
+antigo. Vale pouco\n
+na venda.
+
+[sBlueShardDesc] 15af81e345
+O caco de um item\n
+antigo. Vale pouco\n
+na venda.
+
+[sYellowShardDesc] 15af81e345
+O caco de um item\n
+antigo. Vale pouco\n
+na venda.
+
+[sGreenShardDesc] 15af81e345
+O caco de um item\n
+antigo. Vale pouco\n
+na venda.
+
+[sHPUpDesc] ca79c1b23e
+Aumenta os PS base\n
+de um POKéMON.
+
+[sProteinDesc] ac02414542
+Aumenta o ATAQUE\n
+base de um\n
+POKéMON.
+
+[sIronDesc] 2319062fff
+Aumenta a DEFESA\n
+base de um\n
+POKéMON.
+
+[sCarbosDesc] 93e769c1cd
+Aumenta a\n
+VELOCIDADE base\n
+de um POKéMON.
+
+[sCalciumDesc] 900ffcd7cf
+Aumenta o AT. ESP.\n
+base de um\n
+POKéMON.
+
+[sRareCandyDesc] a30654d807
+Sobe o nível de\n
+um POKéMON em 1.
+
+[sPPUpDesc] f829c3ea05
+Aumenta o máximo\n
+de PP de um golpe\n
+escolhido.
+
+[sZincDesc] 6bfd107a3a
+Aumenta a DEF. ESP.\n
+base de um\n
+POKéMON.
+
+[sPPMaxDesc] f51e54a6c9
+Leva os PP de um\n
+golpe ao máximo.
+
+[sGuardSpecDesc] 775e117a35
+Impede que os\n
+atributos caiam\n
+na batalha.
+
+[sDireHitDesc] 26aeffdfaf
+Aumenta a chance\n
+de acerto crítico\n
+numa batalha.
+
+[sXAttackDesc] 1574342a45
+Aumenta o ATAQUE\n
+durante uma\n
+batalha.
+
+[sXDefendDesc] f841551c12
+Aumenta a DEFESA\n
+durante uma\n
+batalha.
+
+[sXSpeedDesc] a0c114e3e5
+Aumenta a\n
+VELOCIDADE numa\n
+batalha.
+
+[sXAccuracyDesc] e7c920d2e5
+Aumenta a PRECISÃO\n
+dos golpes durante\n
+uma batalha.
+
+[sXSpecialDesc] 9bd18b5245
+Aumenta o AT. ESP.\n
+durante uma\n
+batalha.
+
+[sPokeDollDesc] a32d08ad53
+Use para fugir de\n
+qualquer batalha\n
+com um selvagem.
+
+[sFluffyTailDesc] a32d08ad53
+Use para fugir de\n
+qualquer batalha\n
+com um selvagem.
+
+[sSuperRepelDesc] e38451373f
+Afasta POKéMON\n
+selvagens fracos\n
+por 200 passos.
+
+[sMaxRepelDesc] 9fa26a8f15
+Afasta POKéMON\n
+selvagens fracos\n
+por 250 passos.
+
+[sEscapeRopeDesc] 25bf00ee1d
+Use para sair na\n
+hora de cavernas\n
+e labirintos.
+
+[sRepelDesc] 25927de60b
+Afasta POKéMON\n
+selvagens fracos\n
+por 100 passos.
+
+[sSunStoneDesc] be06603317
+Faz certas\n
+espécies de\n
+POKéMON evoluírem.
+
+[sMoonStoneDesc] be06603317
+Faz certas\n
+espécies de\n
+POKéMON evoluírem.
+
+[sFireStoneDesc] be06603317
+Faz certas\n
+espécies de\n
+POKéMON evoluírem.
+
+[sThunderStoneDesc] be06603317
+Faz certas\n
+espécies de\n
+POKéMON evoluírem.
+
+[sWaterStoneDesc] be06603317
+Faz certas\n
+espécies de\n
+POKéMON evoluírem.
+
+[sLeafStoneDesc] be06603317
+Faz certas\n
+espécies de\n
+POKéMON evoluírem.
+
+[sTinyMushroomDesc] 44078b5ec9
+Um cogumelo comum\n
+que vale pouco\n
+na venda.
+
+[sBigMushroomDesc] 823a33e9cf
+Um cogumelo raro\n
+que vale bastante\n
+na venda.
+
+[sPearlDesc] c24b50bb6e
+Uma pérola bonita\n
+que vale pouco\n
+na venda.
+
+[sBigPearlDesc] 374b7f171d
+Uma pérola grande\n
+e linda que vale\n
+bastante na venda.
+
+[sStardustDesc] aaf7bc5c7f
+Uma linda areia\n
+vermelha. Vale\n
+bastante na venda.
+
+[sStarPieceDesc] 92d43b0c96
+Um caco de joia\n
+vermelha. Vale\n
+muito na venda.
+
+[sNuggetDesc] 5c8b9e59a6
+Uma pepita de ouro\n
+puro. Vale bastante\n
+na venda.
+
+[sHeartScaleDesc] 926d1ab44a
+Uma escama linda,\n
+muito cobiçada por\n
+colecionadores.
+
+[sOrangeMailDesc] ed84ad2fe0
+CARTA com estampa\n
+de ZIGZAGOON, para\n
+um POKéMON levar.
+
+[sHarborMailDesc] c99581ab9b
+CARTA com estampa\n
+de WINGULL, para\n
+um POKéMON levar.
+
+[sGlitterMailDesc] 344a908f9e
+CARTA com estampa\n
+de PIKACHU, para\n
+um POKéMON levar.
+
+[sMechMailDesc] e5a00831e0
+CARTA com estampa\n
+de MAGNEMITE, para\n
+um POKéMON levar.
+
+[sWoodMailDesc] 1e2974c0af
+CARTA com estampa\n
+de SLAKOTH, para\n
+um POKéMON levar.
+
+[sWaveMailDesc] 8e0d433540
+CARTA com estampa\n
+de WAILMER, para\n
+um POKéMON levar.
+
+[sBeadMailDesc] 0576e2de7a
+CARTA com desenho\n
+do POKéMON que\n
+a segura.
+
+[sShadowMailDesc] f8f252e4bf
+CARTA com estampa\n
+de DUSKULL, para\n
+um POKéMON levar.
+
+[sTropicMailDesc] 5e27ce5b49
+CARTA com estampa\n
+de BELLOSSOM, para\n
+um POKéMON levar.
+
+[sDreamMailDesc] 0576e2de7a
+CARTA com desenho\n
+do POKéMON que\n
+a segura.
+
+[sFabMailDesc] 02884c605a
+CARTA com estampa\n
+chique, para um\n
+POKéMON levar.
+
+[sRetroMailDesc] 8d7515850d
+CARTA com desenhos\n
+de três POKéMON.
+
+[sCheriBerryDesc] d567be7a6d
+Se segurada, cura\n
+a paralisia na\n
+batalha.
+
+[sChestoBerryDesc] e732984a6c
+Se segurada,\n
+acorda o POKéMON\n
+na batalha.
+
+[sPechaBerryDesc] e794ea95b6
+Se segurada, cura\n
+o envenenamento\n
+na batalha.
+
+[sRawstBerryDesc] ba70b2b0bf
+Se segurada, cura\n
+queimaduras na\n
+batalha.
+
+[sAspearBerryDesc] d4c4a09089
+Se segurada,\n
+descongela o\n
+POKéMON na luta.
+
+[sLeppaBerryDesc] 33e503958f
+Se segurada,\n
+recupera 10 PP\n
+na batalha.
+
+[sOranBerryDesc] f644f4c38c
+Se segurada,\n
+recupera 10 PS\n
+na batalha.
+
+[sPersimBerryDesc] 5569538cd7
+Se segurada, cura\n
+a confusão na\n
+batalha.
+
+[sLumBerryDesc] 6c5bfb8645
+Se segurada, cura\n
+qualquer status\n
+na batalha.
+
+[sSitrusBerryDesc] 30b7cdf1f2
+Se segurada,\n
+recupera 30 PS\n
+na batalha.
+
+[sFigyBerryDesc] 7bdf8ed386
+Se segurada,\n
+recupera PS, mas\n
+pode confundir.
+
+[sWikiBerryDesc] 7bdf8ed386
+Se segurada,\n
+recupera PS, mas\n
+pode confundir.
+
+[sMagoBerryDesc] 7bdf8ed386
+Se segurada,\n
+recupera PS, mas\n
+pode confundir.
+
+[sAguavBerryDesc] 7bdf8ed386
+Se segurada,\n
+recupera PS, mas\n
+pode confundir.
+
+[sIapapaBerryDesc] 7bdf8ed386
+Se segurada,\n
+recupera PS, mas\n
+pode confundir.
+
+[sRazzBerryDesc] 7fbdf0ea28
+Para {POKEBLOCK}S. Plante\n
+em solo fértil para\n
+colher RAZZ.
+
+[sBlukBerryDesc] cf70efbba8
+Para {POKEBLOCK}S. Plante\n
+em solo fértil para\n
+colher BLUK.
+
+[sNanabBerryDesc] 149c261673
+Para {POKEBLOCK}S. Plante\n
+em solo fértil para\n
+colher NANAB.
+
+[sWepearBerryDesc] af089313b9
+Para {POKEBLOCK}S. Plante\n
+em solo fértil para\n
+colher WEPEAR.
+
+[sPinapBerryDesc] eaeffcc653
+Para {POKEBLOCK}S. Plante\n
+em solo fértil para\n
+colher PINAP.
+
+[sPomegBerryDesc] de2bbdacb4
+Deixa o POKéMON\n
+amigável, mas baixa\n
+os PS base.
+
+[sKelpsyBerryDesc] 5b71e585e0
+Deixa o POKéMON\n
+amigável, mas baixa\n
+o ATAQUE base.
+
+[sQualotBerryDesc] 11532ab3c5
+Deixa o POKéMON\n
+amigável, mas baixa\n
+a DEFESA base.
+
+[sHondewBerryDesc] 8a3a9daafc
+Deixa o POKéMON\n
+amigável, mas baixa\n
+o AT. ESP. base.
+
+[sGrepaBerryDesc] 4c6df10404
+Deixa o POKéMON\n
+amigável, mas baixa\n
+a DEF. ESP. base.
+
+[sTamatoBerryDesc] 55ad483414
+Deixa o POKéMON\n
+amigável, mas baixa\n
+a VELOC. base.
+
+[sCornnBerryDesc] 3c37c3cef4
+Para {POKEBLOCK}S. Plante\n
+em solo fértil para\n
+colher CORNN.
+
+[sMagostBerryDesc] e3c415d50b
+Para {POKEBLOCK}S. Plante\n
+em solo fértil para\n
+colher MAGOST.
+
+[sRabutaBerryDesc] 44a8fa04e7
+Para {POKEBLOCK}S. Plante\n
+em solo fértil para\n
+colher RABUTA.
+
+[sNomelBerryDesc] 36e9b68dd2
+Para {POKEBLOCK}S. Plante\n
+em solo fértil para\n
+colher NOMEL.
+
+[sSpelonBerryDesc] 43425b6c56
+Para {POKEBLOCK}S. Plante\n
+em solo fértil para\n
+colher SPELON.
+
+[sPamtreBerryDesc] c8545ac283
+Para {POKEBLOCK}S. Plante\n
+em solo fértil para\n
+colher PAMTRE.
+
+[sWatmelBerryDesc] fcf8ae3d63
+Para {POKEBLOCK}S. Plante\n
+em solo fértil para\n
+colher WATMEL.
+
+[sDurinBerryDesc] 1689afb238
+Para {POKEBLOCK}S. Plante\n
+em solo fértil para\n
+colher DURIN.
+
+[sBelueBerryDesc] a115da35a4
+Para {POKEBLOCK}S. Plante\n
+em solo fértil para\n
+colher BELUE.
+
+[sLiechiBerryDesc] 6049943b49
+Se segurada, sobe\n
+o ATAQUE num\n
+aperto.
+
+[sGanlonBerryDesc] d5ea5bf6c5
+Se segurada, sobe\n
+a DEFESA num\n
+aperto.
+
+[sSalacBerryDesc] 90f0dc01f5
+Se segurada, sobe\n
+a VELOCIDADE num\n
+aperto.
+
+[sPetayaBerryDesc] 05b7b6cc90
+Se segurada, sobe\n
+o AT. ESP. num\n
+aperto.
+
+[sApicotBerryDesc] 88b52be397
+Se segurada, sobe\n
+a DEF. ESP. num\n
+aperto.
+
+[sLansatBerryDesc] 30a18fa795
+Se segurada, sobe\n
+a chance de crítico\n
+num aperto.
+
+[sStarfBerryDesc] e752e3bd99
+Se segurada, sobe\n
+muito um atributo\n
+num aperto.
+
+[sEnigmaBerryDesc] a834abb318
+Para {POKEBLOCK}S. Plante\n
+em solo fértil para\n
+colher um mistério.
+
+[sBrightPowderDesc] 1873da99d2
+Se segurado,\n
+ofusca o alvo e\n
+baixa a PRECISÃO.
+
+[sWhiteHerbDesc] bfdaec3ae9
+Se segurada,\n
+restaura qualquer\n
+atributo reduzido.
+
+[sMachoBraceDesc] 68fa9776dc
+Se segurada, ajuda\n
+a crescer, mas\n
+reduz a VELOC.
+
+[sExpShareDesc] 09dac8a95d
+Se segurado, ganha\n
+EXP. das batalhas\n
+sem participar.
+
+[sQuickClawDesc] e572c0b75b
+Se segurada, às\n
+vezes deixa atacar\n
+primeiro.
+
+[sSootheBellDesc] 388e4ce63f
+Se segurado, acalma\n
+o espírito e cria\n
+amizade.
+
+[sMentalHerbDesc] c9dadf1d59
+Se segurada, tira\n
+o POKéMON da\n
+paixão.
+
+[sChoiceBandDesc] d1789b4582
+Aumenta o poder de\n
+um golpe, mas só\n
+permite usar ele.
+
+[sKingsRockDesc] dc4e8b1815
+Se segurada, pode\n
+fazer o alvo\n
+hesitar.
+
+[sSilverPowderDesc] 57c7c22a4f
+Se segurado, sobe o\n
+poder dos golpes\n
+de tipo INSETO.
+
+[sAmuletCoinDesc] 1e0455a355
+Dobra o dinheiro da\n
+batalha se o dono\n
+participar.
+
+[sCleanseTagDesc] 6b9ba0579e
+Se segurado, ajuda\n
+a afastar POKéMON\n
+selvagens.
+
+[sSoulDewDesc] cb5561e0cd
+Se segurada, sobe\n
+AT. ESP. e DEF. ESP.\n
+de LATIOS e LATIAS.
+
+[sDeepSeaToothDesc] 803f5305a9
+Se segurado, sobe\n
+o AT. ESP. de\n
+CLAMPERL.
+
+[sDeepSeaScaleDesc] 5865a464ab
+Se segurada, sobe\n
+a DEF. ESP. de\n
+CLAMPERL.
+
+[sSmokeBallDesc] 6c6f9357e0
+Se segurada,\n
+garante a fuga de\n
+POKéMON selvagens.
+
+[sEverstoneDesc] e68c07c649
+Um item misterioso\n
+que impede a\n
+evolução.
+
+[sFocusBandDesc] 250ac78c60
+Se segurada, às\n
+vezes impede que o\n
+POKéMON desmaie.
+
+[sLuckyEggDesc] ceb7f0f0bd
+Se segurado, ganha\n
+mais EXP. nas\n
+batalhas.
+
+[sScopeLensDesc] bc2da574e1
+Se segurada, sobe\n
+a chance de acerto\n
+crítico.
+
+[sMetalCoatDesc] 47bf6c8926
+Se segurado, sobe o\n
+poder dos golpes\n
+de tipo AÇO.
+
+[sLeftoversDesc] 68d58a4098
+Se segurado,\n
+recupera PS aos\n
+poucos na batalha.
+
+[sDragonScaleDesc] 9da91c1584
+Escama estranha\n
+de POKéMON de\n
+tipo DRAGÃO.
+
+[sLightBallDesc] 96d0997230
+Se segurada, sobe\n
+o AT. ESP. de\n
+PIKACHU.
+
+[sSoftSandDesc] 869be54e12
+Se segurada, sobe o\n
+poder dos golpes\n
+de tipo TERRESTRE.
+
+[sHardStoneDesc] 306af4adee
+Se segurada, sobe o\n
+poder dos golpes\n
+de tipo PEDRA.
+
+[sMiracleSeedDesc] de8b649885
+Se segurada, sobe o\n
+poder dos golpes\n
+de tipo PLANTA.
+
+[sBlackGlassesDesc] b9204d5b4b
+Se segurado, sobe o\n
+poder dos golpes\n
+de tipo SOMBRIO.
+
+[sBlackBeltDesc] d9e234cb4a
+Se segurada, sobe o\n
+poder dos golpes\n
+de tipo LUTADOR.
+
+[sMagnetDesc] 14be7814b2
+Se segurado, sobe o\n
+poder dos golpes\n
+de tipo ELÉTRICO.
+
+[sMysticWaterDesc] 0389ed8550
+Se segurada, sobe o\n
+poder dos golpes\n
+de tipo ÁGUA.
+
+[sSharpBeakDesc] dcbce6f150
+Se segurado, sobe o\n
+poder dos golpes\n
+de tipo VOADOR.
+
+[sPoisonBarbDesc] 4ef40de13a
+Se segurada, sobe o\n
+poder dos golpes\n
+de tipo VENENOSO.
+
+[sNeverMeltIceDesc] 4ec8313c3c
+Se segurado, sobe o\n
+poder dos golpes\n
+de tipo GELO.
+
+[sSpellTagDesc] 742849e179
+Se segurado, sobe o\n
+poder dos golpes\n
+de tipo FANTASMA.
+
+[sTwistedSpoonDesc] 487c9ea383
+Se segurada, sobe o\n
+poder dos golpes\n
+de tipo PSÍQUICO.
+
+[sCharcoalDesc] adf71578d7
+Se segurado, sobe o\n
+poder dos golpes\n
+de tipo FOGO.
+
+[sDragonFangDesc] 3c0c8fea15
+Se segurada, sobe o\n
+poder dos golpes\n
+de tipo DRAGÃO.
+
+[sSilkScarfDesc] b0aba13829
+Se segurado, sobe o\n
+poder dos golpes\n
+de tipo NORMAL.
+
+[sUpGradeDesc] 8cd27faa15
+Uma caixa curiosa\n
+feita pela\n
+SILPH CO.
+
+[sShellBellDesc] f7d95be975
+Se segurado,\n
+recupera PS ao\n
+atingir o alvo.
+
+[sSeaIncenseDesc] a18bbce606
+Se segurado, sobe\n
+um pouco os golpes\n
+de tipo ÁGUA.
+
+[sLaxIncenseDesc] cfb2b399f8
+Se segurado, baixa\n
+de leve a PRECISÃO\n
+do adversário.
+
+[sLuckyPunchDesc] e2c17ba65d
+Se segurado, sobe\n
+a chance de crítico\n
+de CHANSEY.
+
+[sMetalPowderDesc] 2644dad80a
+Se segurado, sobe\n
+a DEFESA de\n
+DITTO.
+
+[sThickClubDesc] 2ba8e19b25
+Se segurado, sobe\n
+o ATAQUE de CUBONE\n
+ou MAROWAK.
+
+[sStickDesc] be327b9bf2
+Se segurado, sobe\n
+o crítico de\n
+FARFETCH'D.
+
+[sRedScarfDesc] 1dc0a6f6d5
+Se segurado, sobe\n
+o ESTILO nos\n
+CONCURSOS.
+
+[sBlueScarfDesc] 168239d338
+Se segurado, sobe\n
+a BELEZA nos\n
+CONCURSOS.
+
+[sPinkScarfDesc] cc0f590a97
+Se segurado, sobe\n
+a FOFURA nos\n
+CONCURSOS.
+
+[sGreenScarfDesc] 7c75657b0d
+Se segurado, sobe\n
+a ESPERTEZA nos\n
+CONCURSOS.
+
+[sYellowScarfDesc] e4d385b8ba
+Se segurado, sobe\n
+a FORÇA nos\n
+CONCURSOS.
+
+[sMachBikeDesc] f2abaa0971
+Bicicleta dobrável\n
+que dobra a sua\n
+velocidade ou mais.
+
+[sCoinCaseDesc] f76c6070f2
+Um estojo que\n
+guarda até 9.999\n
+FICHAS.
+
+[sItemfinderDesc] 20a7babb29
+Um aparelho que\n
+apita perto de\n
+itens escondidos.
+
+[sOldRodDesc] f381f5e376
+Use em qualquer\n
+água para pescar\n
+POKéMON selvagens.
+
+[sGoodRodDesc] 958b0cea87
+Uma vara boa para\n
+pescar POKéMON\n
+selvagens.
+
+[sSuperRodDesc] e5e710d031
+A melhor vara para\n
+pescar POKéMON\n
+selvagens.
+
+[sSSTicketDesc] 8f1b847708
+O bilhete que você\n
+precisa para viajar\n
+de balsa.
+
+[sContestPassDesc] 47e784d0d4
+O passe que você\n
+precisa para entrar\n
+nos CONCURSOS.
+
+[sWailmerPailDesc] f52359e251
+Ferramenta para\n
+regar FRUTAS e\n
+plantas.
+
+[sDevonGoodsDesc] a16d16b279
+Um pacote com\n
+peças de máquina\n
+da DEVON.
+
+[sSootSackDesc] 0ded4aa0c6
+Um saco para juntar\n
+e guardar cinza\n
+vulcânica.
+
+[sBasementKeyDesc] 815d3af13d
+A chave de NEW\n
+MAUVILLE, embaixo\n
+de MAUVILLE.
+
+[sAcroBikeDesc] 6d3c5dbc46
+Bicicleta dobrável\n
+que dá saltos e\n
+empina.
+
+[sPokeblockCaseDesc] c7d5704bac
+Um estojo para os\n
+{POKEBLOCK}S feitos\n
+no MISTURADOR.
+
+[sLetterDesc] c44fdf2347
+Uma carta para o\n
+STEVEN, do\n
+PRESIDENTE DEVON.
+
+[sEonTicketDesc] d6b20dbdbe
+O bilhete de uma\n
+balsa para uma ilha\n
+distante no sul.
+
+[sRedOrbDesc] 27c47266e6
+Um orbe vermelho\n
+brilhante, com um\n
+poder antigo.
+
+[sBlueOrbDesc] ee246d6a3c
+Um orbe azul\n
+brilhante, com um\n
+poder antigo.
+
+[sScannerDesc] c9ac1e22eb
+Um aparelho achado\n
+dentro do\n
+NAVIO ABANDONADO.
+
+[sGoGogglesDesc] 1ca2b7d88d
+Óculos maneiros\n
+que protegem os\n
+olhos da areia.
+
+[sMeteoriteDesc] f848b7e5c6
+Um meteorito\n
+achado em\n
+METEOR FALLS.
+
+[sRoom1KeyDesc] d73f62a07a
+Abre uma porta\n
+dentro do\n
+NAVIO ABANDONADO.
+
+[sRoom2KeyDesc] d73f62a07a
+Abre uma porta\n
+dentro do\n
+NAVIO ABANDONADO.
+
+[sRoom4KeyDesc] d73f62a07a
+Abre uma porta\n
+dentro do\n
+NAVIO ABANDONADO.
+
+[sRoom6KeyDesc] d73f62a07a
+Abre uma porta\n
+dentro do\n
+NAVIO ABANDONADO.
+
+[sStorageKeyDesc] 8bdb650a56
+A chave do\n
+depósito dentro do\n
+NAVIO ABANDONADO.
+
+[sRootFossilDesc] fc6c603f26
+O fóssil de um\n
+POKéMON antigo do\n
+fundo do mar.
+
+[sClawFossilDesc] fc6c603f26
+O fóssil de um\n
+POKéMON antigo do\n
+fundo do mar.
+
+[sDevonScopeDesc] 413b436dec
+Aparelho da DEVON\n
+que detecta\n
+POKéMON invisíveis.
+
+[sTM01Desc] 49dabd5a70
+Forte, mas falha\n
+se o usuário for\n
+atingido antes.
+
+[sTM02Desc] 8673aa210d
+Fisga e corta o\n
+alvo com garras\n
+longas e afiadas.
+
+[sTM03Desc] 13f9bda7ae
+Solta uma onda\n
+ultrassônica que\n
+pode confundir.
+
+[sTM04Desc] 42b5167445
+Concentra a mente\n
+para subir AT. ESP.\n
+e DEF. ESP.
+
+[sTM05Desc] b4ec7f1b84
+Um rugido feroz\n
+que espanta o alvo\n
+e acaba a batalha.
+
+[sTM06Desc] 837d72d25a
+Envenena o alvo\n
+com uma toxina\n
+que vai piorando.
+
+[sTM07Desc] 77e0f4c14f
+Cria uma chuva de\n
+granizo que fere\n
+todos menos GELO.
+
+[sTM08Desc] 0fa075a86c
+Infla os músculos\n
+para subir ATAQUE\n
+e DEFESA.
+
+[sTM09Desc] b6b9e345fb
+Dispara de 2 a 5\n
+sementes seguidas\n
+no alvo.
+
+[sTM10Desc] b15987fbbe
+O poder do ataque\n
+muda de POKéMON\n
+para POKéMON.
+
+[sTM11Desc] 2d64fd0546
+Sobe o poder dos\n
+golpes de FOGO\n
+por 5 turnos.
+
+[sTM12Desc] 4701781e78
+Provoca o alvo, que\n
+só pode usar golpes\n
+de ataque.
+
+[sTM13Desc] 3812343363
+Dispara um raio\n
+gelado que pode\n
+congelar o alvo.
+
+[sTM14Desc] 22a503d252
+Uma nevasca brutal\n
+que pode congelar\n
+o alvo.
+
+[sTM15Desc] ca2c636fde
+Muito forte, mas\n
+precisa recarregar\n
+no turno seguinte.
+
+[sTM16Desc] bc473fae1c
+Cria uma parede de\n
+luz que reduz o\n
+dano especial.
+
+[sTM17Desc] a557c81238
+Anula todo o dano,\n
+mas pode falhar se\n
+usado seguido.
+
+[sTM18Desc] e80a58aa9d
+Sobe o poder dos\n
+golpes de ÁGUA\n
+por 5 turnos.
+
+[sTM19Desc] eca9097493
+Recupera metade do\n
+dano causado por\n
+este golpe.
+
+[sTM20Desc] 3e10a5219d
+Um poder místico\n
+que protege de\n
+qualquer status.
+
+[sTM21Desc] 612d40d17c
+Quanto menos ele\n
+gosta de você, mais\n
+forte o golpe.
+
+[sTM22Desc] 33244e0e5a
+Absorve luz no 1º\n
+turno e ataca no\n
+turno seguinte.
+
+[sTM23Desc] 399d8b97ca
+Golpeia com uma\n
+cauda dura. Pode\n
+baixar a DEFESA.
+
+[sTM24Desc] b7857760f6
+Um ataque elétrico\n
+forte que pode\n
+paralisar.
+
+[sTM25Desc] 614088830f
+Atinge o alvo com\n
+um trovão. Pode\n
+paralisar.
+
+[sTM26Desc] 9d370f90fb
+Causa um terremoto\n
+que não afeta\n
+alvos voadores.
+
+[sTM27Desc] 1947f8a3be
+Quanto mais ele\n
+gosta de você, mais\n
+forte o golpe.
+
+[sTM28Desc] 590662e837
+Cava no 1º turno\n
+e ataca no turno\n
+seguinte.
+
+[sTM29Desc] 7ad9fdf519
+Um ataque psíquico\n
+forte que pode\n
+baixar a DEF. ESP.
+
+[sTM30Desc] 0e2968433f
+Lança uma massa\n
+sombria. Pode\n
+baixar a DEF. ESP.
+
+[sTM31Desc] 4e344c4cea
+Quebra barreiras\n
+como TELA DE LUZ\n
+e causa dano.
+
+[sTM32Desc] e450bbffd6
+Cria cópias de si\n
+para ficar difícil\n
+de acertar.
+
+[sTM33Desc] 281de63854
+Cria uma parede de\n
+luz que enfraquece\n
+ataques físicos.
+
+[sTM34Desc] 2cc8722815
+Dá um choque no\n
+alvo que nunca\n
+erra.
+
+[sTM35Desc] 527c47f19f
+Solta um jato de\n
+fogo que pode\n
+queimar o alvo.
+
+[sTM36Desc] 1267a4416a
+Arremessa lodo no\n
+alvo. Pode\n
+envenenar.
+
+[sTM37Desc] 3d8a5dac38
+Uma tempestade de\n
+areia que atinge\n
+por vários turnos.
+
+[sTM38Desc] 5128412d42
+Um ataque de fogo\n
+forte que pode\n
+queimar o alvo.
+
+[sTM39Desc] c056a30655
+Prende o alvo com\n
+pedras. Pode baixar\n
+a VELOCIDADE.
+
+[sTM40Desc] 604fa95350
+Um ataque muito\n
+rápido que não dá\n
+para desviar.
+
+[sTM41Desc] 366898bebc
+Impede o alvo de\n
+usar o mesmo\n
+golpe seguido.
+
+[sTM42Desc] 6a99753d56
+Sobe o ATAQUE se\n
+envenenado,\n
+queimado ou paral.
+
+[sTM43Desc] f87c3c86d3
+O efeito extra do\n
+ataque depende do\n
+lugar.
+
+[sTM44Desc] 6c7dd34244
+Dorme 2 turnos\n
+para recuperar PS\n
+e status.
+
+[sTM45Desc] 7199f522be
+Dificulta o ataque\n
+de um alvo do sexo\n
+oposto.
+
+[sTM46Desc] bd7d3c0c1a
+Ao atacar, pode\n
+roubar o item que\n
+o alvo segura.
+
+[sTM47Desc] a34c1c9a5c
+Abre as asas duras\n
+como aço e acerta\n
+o alvo.
+
+[sTM48Desc] a1c0439e77
+Troca de habilidade\n
+com o alvo no turno\n
+em que é usado.
+
+[sTM49Desc] 6662dd51cd
+Rouba o efeito do\n
+golpe que o alvo\n
+ia usar.
+
+[sTM50Desc] 981098bf59
+Ataque com força\n
+total, mas baixa\n
+muito o AT. ESP.
+
+[sHM01Desc] f6e81ee5ea
+Ataca o alvo com\n
+lâminas ou garras\n
+afiadas.
+
+[sHM02Desc] 87884afa45
+Voa no 1º turno\n
+e ataca no turno\n
+seguinte.
+
+[sHM03Desc] f7041dfe95
+Cria uma onda\n
+enorme e a joga\n
+sobre o alvo.
+
+[sHM04Desc] 3effc0d2fc
+Acumula uma força\n
+enorme e acerta\n
+o alvo.
+
+[sHM05Desc] f15b584bcd
+Solta um clarão\n
+forte que reduz a\n
+PRECISÃO.
+
+[sHM06Desc] cca3f427e7
+Um ataque que\n
+quebra pedras.\n
+Pode baixar a DEF.
+
+[sHM07Desc] 78ffe8eca7
+Ataca com força\n
+para subir\n
+cachoeiras.
+
+[sHM08Desc] 396bd76d54
+Mergulha no 1º\n
+turno e ataca no\n
+turno seguinte.
+
+[sOaksParcelDesc] 4c69ae5d78
+Um pacote para o\n
+PROF. OAK, do\n
+atendente do MART.
+
+[sPokeFluteDesc] 7668f1aefa
+Uma flauta de som\n
+doce que acorda\n
+POKéMON.
+
+[sSecretKeyDesc] 72d7bccdcf
+A chave da entrada\n
+do GINÁSIO de\n
+CINNABAR.
+
+[sBikeVoucherDesc] 3bf43d4e0b
+Um vale para pegar\n
+uma bicicleta na\n
+LOJA DE BIKES.
+
+[sGoldTeethDesc] 7f189559e0
+Dentadura de ouro\n
+que o GUARDA do\n
+SAFÁRI perdeu.
+
+[sOldAmberDesc] ad96c7bb3c
+Uma pedra com os\n
+genes de um\n
+POKéMON antigo.
+
+[sCardKeyDesc] d61d5fc016
+Um cartão que abre\n
+portas no prédio\n
+da SILPH CO.
+
+[sLiftKeyDesc] e3efb6c327
+A chave do elevador\n
+do ESCONDERIJO da\n
+EQUIPE ROCKET.
+
+[sHelixFossilDesc] 61de3df4d2
+Pedaço da concha\n
+de um POKéMON\n
+marinho antigo.
+
+[sDomeFossilDesc] b3fe9a24e5
+Um pedaço da casca\n
+de um POKéMON\n
+marinho antigo.
+
+[sSilphScopeDesc] 87b131af8c
+O escopo da SILPH\n
+CO. revela POKéMON\n
+invisíveis.
+
+[sBicycleDesc] 6a25418522
+Bicicleta dobrável\n
+mais rápida que\n
+o TÊNIS DE CORRER.
+
+[sTownMapDesc] 3ecba85fa7
+Pode ser visto a\n
+qualquer hora. Diz\n
+onde você está.
+
+[sVSSeekerDesc] 7ba130ce26
+Recarregável. Avisa\n
+quais TREINADORES\n
+querem batalhar.
+
+[sFameCheckerDesc] 13adce3d5e
+Guarda informações\n
+de gente famosa\n
+para consultar.
+
+[sTMCaseDesc] 74a42963c0
+Um estojo prático\n
+que guarda MTs\n
+e MOs.
+
+[sBerryPouchDesc] 98927931e0
+Uma bolsa prática\n
+que guarda\n
+FRUTAS.
+
+[sTeachyTVDesc] f4cebc6d0b
+Uma TV sintonizada\n
+num programa de\n
+dicas de batalha.
+
+[sTriPassDesc] e05690a45b
+Passe de balsa\n
+entre as ILHAS UM,\n
+DOIS e TRÊS.
+
+[sRainbowPassDesc] 3b119e4976
+Para as balsas de\n
+VERMILION e das\n
+ILHAS SEVII.
+
+[sTeaDesc] ccc703c35b
+Um chá que mata a\n
+sede, feito por\n
+uma senhora.
+
+[sMysticTicketDesc] 42f1821e11
+O bilhete para o\n
+navio que vai até\n
+NAVEL ROCK.
+
+[sAuroraTicketDesc] 60b7b27f2b
+O bilhete para o\n
+navio que vai até\n
+BIRTH ISLAND.
+
+[sPowderJarDesc] 899223f598
+Guarda o PÓ DE\n
+FRUTA feito no\n
+TRITURADOR.
+
+[sRubyDesc] 98e550f8f5
+Uma joia vermelha\n
+reluzente que\n
+simboliza a paixão.
+
+[sSapphireDesc] 85e8c70a0a
+Uma joia azul\n
+brilhante que\n
+simboliza lealdade.
+
+[sMagmaEmblemDesc] 3f2755dabc
+Uma medalha com o\n
+mesmo formato do\n
+símbolo da MAGMA.
+
+[sOldSeaMapDesc] a5c12e2dac
+Uma carta náutica\n
+desbotada que leva\n
+a uma certa ilha.

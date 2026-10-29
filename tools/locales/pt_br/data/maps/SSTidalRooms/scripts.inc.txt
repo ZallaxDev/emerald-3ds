@@ -1,0 +1,113 @@
+# S.S. TIDAL: as cabines.
+
+[SSTidalRooms_Text_TakeRestOnBed] b47a5c76d3
+Tem uma cama…\n
+Vamos descansar.$
+
+[SSTidalRooms_Text_ColtonIntro] 93caf5e919
+Vou muito à CIDADE DE LILYCOVE.\p
+Gosto de assistir aos CONCURSOS,\n
+sabe?$
+
+[SSTidalRooms_Text_ColtonDefeat] 631d8fc1cf
+Que batalha agradável!$
+
+[SSTidalRooms_Text_ColtonPostBattle] 9a5c87a052
+Fico tão animado imaginando que\n
+POKéMON vou ver no próximo CONCURSO.\l
+A expectativa é uma emoção!$
+
+[SSTidalRooms_Text_MicahIntro] 5502b52e28
+Os seus amigos são fortes?$
+
+[SSTidalRooms_Text_MicahDefeat] 7db840eeec
+Os seus amigos são fortes mesmo.$
+
+[SSTidalRooms_Text_MicahPostBattle] 3273222dcd
+Amigos não precisam ser humanos.\n
+Pra mim, os POKéMON são amigos\l
+preciosos!$
+
+[SSTidalRooms_Text_ThomasIntro] a6cca7d23f
+Criança…\n
+Você bateu na porta?$
+
+[SSTidalRooms_Text_ThomasDefeat] 71d8b454f3
+Uma derrota deve ser aceita sem\n
+pressa nem pânico.$
+
+[SSTidalRooms_Text_ThomasPostBattle] 3a7a71364a
+Nunca perder a compostura é o código\n
+de conduta do CAVALHEIRO.$
+
+[SSTidalRooms_Text_JedIntro] c639541342
+JED: Fico meio tímido, mas…\n
+Vamos mostrar o poder do nosso amor!$
+
+[SSTidalRooms_Text_JedDefeat] 7928d3d779
+JED: Ai…$
+
+[SSTidalRooms_Text_JedPostBattle] e96b50f5be
+JED: É a primeira vez que o poder do\n
+nosso amor não venceu!\l
+Você deve ser um TREINADOR incrível!$
+
+[SSTidalRooms_Text_JedNotEnoughMons] 192fe70573
+JED: Você só tem um POKéMON?\n
+Não é solitário demais?$
+
+[SSTidalRooms_Text_LeaIntro] c8737b03ba
+LEA: Me sinto meio boba, mas…\n
+Vamos mostrar o poder do nosso amor!$
+
+[SSTidalRooms_Text_LeaDefeat] 70fa1f3eaf
+LEA: Ah, poxa!$
+
+[SSTidalRooms_Text_LeaPostBattle] a4488ab721
+LEA: Não acredito!\n
+O poder do nosso amor falhou…\l
+Você deve ser um TREINADOR incrível!$
+
+[SSTidalRooms_Text_LeaNotEnoughMons] 0af4b7b376
+LEA: Eu queria batalhar…\n
+Mas você nem tem dois POKéMON…$
+
+[SSTidalRooms_Text_GarretIntro] 8edb8c89cd
+Ah, chegou na hora certa.\p
+Estou entediado, sabe.\n
+Você pode me divertir.$
+
+[SSTidalRooms_Text_GarretDefeat] e85965a7f1
+…Está bom assim.$
+
+[SSTidalRooms_Text_GarretPostBattle] ac7ae32a19
+Talvez eu peça pro papai comprar um\n
+iate pra mim.\l
+Um iate pra mim e pros POKéMON!$
+
+[SSTidalRooms_Text_NaomiIntro] 62bfe504d5
+Ah, que TREINADOR adorável.\n
+Aceita um chá?\l
+Ou prefere batalhar?$
+
+[SSTidalRooms_Text_NaomiDefeat] b2e318914a
+Entendo.\n
+Você gosta de agito.$
+
+[SSTidalRooms_Text_NaomiPostBattle] 184275b948
+Um cruzeiro pelo mundo num navio de\n
+luxo tem os seus encantos, devo dizer…\p
+Mas admito que viajar por HOENN de\n
+balsa tem lá o seu charme.$
+
+[SSTidalRooms_Text_NotSuspiciousTakeThis] 2c65822ca4
+Hã… Oi! E-eu não estou suspeito!\n
+Hã… Pode ficar com isto! De graça!\p
+É… Juro que não ROUBEI de ninguém!\n
+Eu nunca faria isso!\l
+Está limpo! Pode usar!$
+
+[SSTidalRooms_Text_ExplainSnatch] 330aade75b
+ARREBATADOR rouba os efeitos bons de\n
+certos golpes antes que o oponente\l
+ou o aliado possa usá-los.$

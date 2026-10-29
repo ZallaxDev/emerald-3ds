@@ -1,0 +1,12 @@
+# ESTALEIRO DO STERN, 1º andar.
+
+[SlateportCity_SternsShipyard_2F_Text_ShipDesignMoreLikeBuilding] 859eb90158
+Projetar um navio grande é mais como\n
+fazer um prédio grande do que montar\l
+um meio de transporte.$
+
+[SlateportCity_SternsShipyard_2F_Text_FloatsBecauseBuoyancy] f6832372a8
+Não acha estranho que um navio\n
+feito de ferro pesado flutue?\p
+Ele flutua por causa de um princípio\n
+chamado empuxo.$

@@ -1,0 +1,37 @@
+# NOTÍCIAS POKéMON: GURU DA ENERGIA, SALÃO DE JOGOS, liquidação de LILYCOVE e MESTRE DO LIQUIDIFICADOR.
+
+[gPokeNewsTextSlateport_Upcoming] fe89add630
+Saudações!\nÉ hora das NOTÍCIAS POKéMON.\pO cara mais popular de SLATEPORT,\no GURU DA ENERGIA, é notícia de novo!\pEle promete “se jogar com tudo\ndaqui a estes dias: {STR_VAR_1}!”\pEle não quis dizer com o que vai\nse jogar, mas o GURU DA ENERGIA\laconselhou: “Junte dinheiro. Vai valer…”\pParece que vale a pena ir a\nSLATEPORT nesse dia.\pEssas foram as NOTÍCIAS POKéMON.$
+
+[gPokeNewsTextSlateport_Ongoing] 42998892ba
+Saudações!\nÉ hora das NOTÍCIAS POKéMON.\pÉ a notícia que todo mundo\nesperava!\pO GURU DA ENERGIA de SLATEPORT está\nse jogando com tudo no MERCADO!\pEle promete preços imbatíveis\nde CÁLCIO e PROTEÍNA!\pVale a pena ir à CIDADE DE SLATEPORT.\nQue tal visitar e comprar\là vontade?\pEssas foram as NOTÍCIAS POKéMON.$
+
+[gPokeNewsTextSlateport_Ending] 0f37248a6c
+Saudações!\nÉ hora das NOTÍCIAS POKéMON.\pÉ a notícia que todo mundo\nesperava!\pO GURU DA ENERGIA de SLATEPORT está\nse jogando com tudo no MERCADO!\pEle promete preços imbatíveis\nde CÁLCIO e PROTEÍNA!\pSegundo o GURU DA ENERGIA, ainda\ntem muita mercadoria.\pQue tal visitar a CIDADE DE SLATEPORT\npra umas compras bem divertidas?\pEssas foram as NOTÍCIAS POKéMON.$
+
+[gPokeNewsTextGameCorner_Upcoming] 4240b5a9cd
+Saudações!\nÉ hora das NOTÍCIAS POKéMON.\pEstá chegando!\nFinalmente está chegando!\pO dia especial do SALÃO DE JOGOS\nchega daqui a estes dias: {STR_VAR_1}!\pAté quem não costuma ter sorte\npode ter sorte nesse dia!\pEssas foram as NOTÍCIAS POKéMON.$
+
+[gPokeNewsTextGameCorner_Ongoing] 1a92f32237
+Saudações!\nÉ hora das NOTÍCIAS POKéMON.\pChegou!\nFinalmente chegou!\pO dia especial do SALÃO DE JOGOS\nfinalmente chegou!\pSerá que você tem sorte no\nCAÇA-NÍQUEIS e na ROLETA?\pO lugar é a CIDADE DE MAUVILLE.\nÉ lá!\pEssas foram as NOTÍCIAS POKéMON.$
+
+[gPokeNewsTextGameCorner_Ending] d593a813a0
+Saudações!\nÉ hora das NOTÍCIAS POKéMON.\pChegou!\nFinalmente chegou!\pO dia especial do SALÃO DE JOGOS\nfinalmente chegou!\pSerá que você tem sorte no\nCAÇA-NÍQUEIS e na ROLETA?\pO tempo é curto e está acabando.\nO lugar é a CIDADE DE MAUVILLE.\pEssas foram as NOTÍCIAS POKéMON.$
+
+[gPokeNewsTextLilycove_Upcoming] a93f6bc7a2
+Saudações!\nÉ hora das NOTÍCIAS POKéMON.\pAcabamos de receber uma ótima notícia\nda LOJA DE DEPARTAMENTOS de LILYCOVE.\pA liquidação da LOJA DE DEPARTAMENTOS\nserá daqui a estes dias: {STR_VAR_1}!\pAquele treco ou aquela coisinha\nque você sempre quis pode ser seu!\pEssas foram as NOTÍCIAS POKéMON.$
+
+[gPokeNewsTextLilycove_Ongoing] cd40beefe0
+Saudações!\nÉ hora das NOTÍCIAS POKéMON.\pÉ a notícia que todo mundo\nesperava!\pA liquidação da LOJA DE DEPARTAMENTOS\nde LILYCOVE finalmente chegou!\pTodos os trecos e coisinhas\ncom que você sempre sonhou…\pVocê pode ter encontros\nfatídicos com todos eles!\pEssas foram as NOTÍCIAS POKéMON.$
+
+[gPokeNewsTextLilycove_Ending] cd40beefe0
+Saudações!\nÉ hora das NOTÍCIAS POKéMON.\pÉ a notícia que todo mundo\nesperava!\pA liquidação da LOJA DE DEPARTAMENTOS\nde LILYCOVE finalmente chegou!\pTodos os trecos e coisinhas\ncom que você sempre sonhou…\pVocê pode ter encontros\nfatídicos com todos eles!\pEssas foram as NOTÍCIAS POKéMON.$
+
+[gPokeNewsTextBlendMaster_Upcoming] c5955e272b
+Saudações!\nÉ hora das NOTÍCIAS POKéMON.\pTemos uma grande notícia pra quem\nfaz {POKEBLOCK}S.\pO lendário MESTRE DO LIQUIDIFICADOR\nvai aparecer na CIDADE DE LILYCOVE\ldaqui a só {STR_VAR_1} dia(s)!\pDizem que o MESTRE DO LIQUIDIFICADOR\né o melhor de HOENN em girar\lum LIQUIDIFICADOR DE FRUTAS.\pQuem quer fazer ótimos {POKEBLOCK}S\nou ver o MESTRE em ação deve\lguardar suas FRUTAS.\pEssas foram as NOTÍCIAS POKéMON.$
+
+[gPokeNewsTextBlendMaster_Ongoing] f99fa4cc27
+Saudações!\nÉ hora das NOTÍCIAS POKéMON.\pTemos uma grande notícia pra quem\nfaz {POKEBLOCK}S.\pO lendário MESTRE DO LIQUIDIFICADOR\nfinalmente apareceu!\pO MESTRE DO LIQUIDIFICADOR está\ngirando o LIQUIDIFICADOR no SALÃO\lDE CONCURSOS de LILYCOVE.\pQuem quer fazer ótimos {POKEBLOCK}S\nou ver o MESTRE em ação deve\lcorrer pra LILYCOVE.\pEssas foram as NOTÍCIAS POKéMON.$
+
+[gPokeNewsTextBlendMaster_Ending] a1d4ed4453
+Saudações!\nÉ hora das NOTÍCIAS POKéMON.\pÉ incrível!\nIncrível até demais!\pO LIQUIDIFICADOR DE FRUTAS gira\nnuma velocidade de dar tontura!\pO MESTRE DO LIQUIDIFICADOR fez jus\nà fama!\pO MESTRE DO LIQUIDIFICADOR logo vai\nsair de LILYCOVE.\pSe ainda não viu o MESTRE em ação,\nnão perca esta chance!\lVá pra LILYCOVE agora mesmo!\pEssas foram as NOTÍCIAS POKéMON.$

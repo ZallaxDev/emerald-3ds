@@ -72,8 +72,10 @@ static double Seconds(void)
 #endif
 #define STATICS 32u
 
-/* voxel_tree.c compares a map's secondary tileset against its address */
-const char gTileset_Dewford[1];
+/* voxel_tree.c compares a map's secondary tileset against their addresses */
+const char gTileset_Dewford[1], gTileset_Fortree[1], gTileset_Mauville[1], gTileset_Lavaridge[1],
+    gTileset_Rustboro[1], gTileset_Lilycove[1], gTileset_EverGrande[1],
+    gTileset_BattleFrontierOutsideWest[1], gTileset_Mossdeep[1], gTileset_Fallarbor[1];
 static const char sGeneral[1], sOther[1];
 
 static VoxelMapInstance sMap;
@@ -158,7 +160,17 @@ int main(int argc, char **argv)
     sMap.height = head[2];
     sMap.indoor = (head[3] & 1) != 0;
     sMap.primaryTileset = (head[3] & 2) ? sGeneral : sOther;
-    sMap.secondaryTileset = (head[3] & 4) ? gTileset_Dewford : sOther;
+    /* bits 2-5: the secondary tileset voxel_tree.c tells apart */
+    {
+        static const char *const kSecondary[] = {
+            sOther, gTileset_Dewford, gTileset_Fortree, gTileset_Mauville, gTileset_Lavaridge,
+            gTileset_Rustboro, gTileset_Lilycove, gTileset_EverGrande,
+            gTileset_BattleFrontierOutsideWest, gTileset_Mossdeep, gTileset_Fallarbor,
+        };
+        unsigned secondary = (head[3] >> 2) & 15u;
+        sMap.secondaryTileset = secondary < sizeof(kSecondary) / sizeof(kSecondary[0])
+                              ? kSecondary[secondary] : sOther;
+    }
     sCells = malloc((size_t)head[1] * head[2] * 2);
     sShapes = malloc((size_t)head[1] * head[2]);
     if (fread(sCells, 2, (size_t)head[1] * head[2], in) != (size_t)head[1] * head[2]

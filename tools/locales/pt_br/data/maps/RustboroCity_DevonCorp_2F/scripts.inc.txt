@@ -1,0 +1,112 @@
+# CORPORAÇÃO DEVON, 2º andar: os pesquisadores e o REGENERADOR DE FÓSSEIS.
+
+[RustboroCity_DevonCorp_2F_Text_DeviceForTalkingToPokemon] 3035ca7794
+Estamos criando um aparelho pra\n
+conversar com os POKéMON.\p
+Mas não tivemos muito sucesso…$
+
+[RustboroCity_DevonCorp_2F_Text_DevelopingNewBalls] 608726446d
+Estou criando novos tipos de\n
+POKé BOLAS…\p
+Mas não avancei muito…$
+
+[RustboroCity_DevonCorp_2F_Text_WeFinallyMadeNewBalls] 468a241792
+Finalmente fizemos novos tipos de\n
+POKé BOLAS!\p
+A BOLA REPETIÇÃO facilita pegar\n
+POKéMON que você já pegou antes.\p
+A BOLA TEMPO fica melhor quanto\n
+mais a batalha demora.\p
+As duas foram criadas com orgulho\n
+pela CORPORAÇÃO DEVON.\p
+Experimente!$
+
+[RustboroCity_DevonCorp_2F_Text_IMadePokenav] d733153d5d
+Fui eu que fiz o POKéNAV!\p
+Como engenheiro, me sinto abençoado\n
+por ter feito algo tão bom!$
+
+[RustboroCity_DevonCorp_2F_Text_WowThatsAPokenav] 0eb4351535
+Nossa!\n
+É um POKéNAV!\p
+Ele nasceu da vontade do nosso\n
+PRESIDENTE de entender os\l
+sentimentos dos POKéMON.\p
+Quer que eu explique as funções\n
+em detalhe?\p
+Não, não. Acho que você descobre\n
+só usando o POKéNAV.$
+
+[RustboroCity_DevonCorp_2F_Text_DeviceToVisualizePokemonDreams] 2e5ace2ccf
+Estou tentando criar um aparelho\n
+que mostre em imagens os sonhos\l
+dos POKéMON…\p
+Mas não está indo bem.$
+
+[RustboroCity_DevonCorp_2F_Text_DevelopDeviceToResurrectFossils] e7c139792c
+Estou tentando criar um aparelho que\n
+traz POKéMON de volta dos fósseis…\p
+E está funcionando!$
+
+[RustboroCity_DevonCorp_2F_Text_WantToBringFossilBackToLife] f75799daf0
+Espera! Essa coisa que você tem aí…\n
+É um fóssil de POKéMON?\p
+Quer trazer esse POKéMON de\n
+volta à vida?\p
+Eu consigo, com o meu novíssimo\n
+REGENERADOR DE FÓSSEIS.$
+
+[RustboroCity_DevonCorp_2F_Text_OhIsThatSo] 36352a1a09
+Ah, é mesmo?\p
+A tecnologia da DEVON é\n
+excepcional, pode acreditar.$
+
+[RustboroCity_DevonCorp_2F_Text_TwoFossilsPickOne] fbc9703155
+Ora, que surpresa!\n
+Você tem não um, mas dois fósseis?\p
+Infelizmente, a minha máquina só\n
+regenera um POKéMON de cada vez.\p
+Quer escolher um dos seus\n
+fósseis para regenerar?$
+
+[RustboroCity_DevonCorp_2F_Text_HandedFossilToResearcher] 6c4287532b
+Excelente!\n
+Vamos fazer isso agora mesmo.\p
+{PLAYER} entregou o {STR_VAR_1} ao\n
+PESQUISADOR DA DEVON.$
+
+[RustboroCity_DevonCorp_2F_Text_FossilRegeneratorTakesTime] 029f6e8b63
+O REGENERADOR DE FÓSSEIS, que eu fiz,\n
+é incrível.\p
+Mas tem um defeito: demora\n
+bastante pra funcionar.\p
+Então, hã… Que tal dar uma volta\n
+e passear um pouco?$
+
+[RustboroCity_DevonCorp_2F_Text_FossilizedMonBroughtBackToLife] dea62b9ae6
+Obrigado por esperar!\p
+O seu POKéMON fossilizado voltou\n
+à vida!\p
+O fóssil era de um POKéMON antigo.\n
+Era um {STR_VAR_2}!$
+
+[RustboroCity_DevonCorp_2F_Text_ReceivedMonFromResearcher] b4d6b9e68c
+{PLAYER} recebeu {STR_VAR_2} do\n
+PESQUISADOR DA DEVON.$
+
+[RustboroCity_DevonCorp_2F_Text_TooManyPokemon] e4ec51c246
+Ih, você tem POKéMON demais.\n
+Não tem espaço pra este.$
+
+[RustboroCity_DevonCorp_2F_Text_DevelopNewPokenavFeature] a4e7beb72c
+Estou tentando criar uma função\n
+nova pro POKéNAV…\p
+Mas não está indo bem.$
+
+[RustboroCity_DevonCorp_2F_Text_WhatToWorkOnNext] 0678d59055
+Bom, e agora, no que vou\n
+trabalhar em seguida?\p
+A nossa empresa deixa a gente\n
+transformar ideias em realidade.\p
+Não dá pra pedir um ambiente\n
+melhor para um engenheiro.$

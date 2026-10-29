@@ -1,0 +1,122 @@
+# CIDADE DE MOSSDEEP: a rua, a PEDRA DO REI, o SCOTT e as placas.
+
+[MossdeepCity_Text_WantKingsRockStevenGaveMe] 8bfce38487
+Ganhei isto do STEVEN, mas não sei\n
+pra que serve.\p
+Acho que se chama PEDRA DO REI.\n
+Você quer?$
+
+[MossdeepCity_Text_YouCanKeepIt] 058e93c8d7
+Pra que você quer isso?\n
+Que esquisitice.\p
+Pode ficar, mas não conte pro\n
+STEVEN.$
+
+[MossdeepCity_Text_StevensHouseOverThere] 9a3ff41ad5
+A casa do STEVEN é logo ali!$
+
+[MossdeepCity_Text_WhatToDoWithWeirdRock] 2c74aa45e2
+É, você também acha! O que alguém\n
+vai fazer com uma pedra esquisita?$
+
+[MossdeepCity_Text_WailmerWatching] 1c1a850c95
+Perto de MOSSDEEP dá pra ver\n
+WAILMER selvagens.\p
+Isso se chama, hã…\n
+Como era mesmo…\p
+WAI, WAI, WAI…\p
+Observação de WAILMER!$
+
+[MossdeepCity_Text_SpaceCenterReceivedLetter] ce60928c4b
+O CENTRO ESPACIAL da ilha anda\n
+lançando foguetes enormes.\p
+Deu um alvoroço por causa de uma\n
+carta que eles receberam há pouco.$
+
+[MossdeepCity_Text_SpaceCenterLaunchingRockets] e320092dca
+O CENTRO ESPACIAL da ilha anda\n
+lançando foguetes enormes.$
+
+[MossdeepCity_Text_MossdeepTargetedByMagma] a095043288
+Um colega MARINHEIRO me contou que a\n
+EQUIPE AQUA se instalou em LILYCOVE.\p
+E também que alguém apareceu e\n
+acabou com eles!\p
+Mas aqui em MOSSDEEP o alvo é\n
+aquela EQUIPE MAGMA.\p
+Se quiser saber o que eles tramam,\n
+vá ao CENTRO ESPACIAL.$
+
+[MossdeepCity_Text_FeelReliefOnLand] ef840c4620
+Sou MARINHEIRO, então o mar é mais\n
+importante pra mim, claro.\p
+Mas sabe? Quando volto pra terra\n
+depois de uma viagem longa, que alívio!$
+
+[MossdeepCity_Text_NiceIfWorldCoveredByFlowers] e631cd15d1
+Não seria bom?\p
+Se o mundo todo fosse coberto de\n
+plantas e flores como esta ilha?$
+
+[MossdeepCity_Text_LifeNeedsSeaToLive] 1eed6c0f48
+Toda vida precisa do mar pra viver,\n
+mesmo morando em terra.\p
+A vida, quando chega ao fim, vira\n
+solo e volta pra terra.\p
+E o mar está sempre ligado à terra.\p
+Sim, como esta praia aqui.$
+
+[MossdeepCity_Text_SurfExhilarating] 92e33d4c23
+Uma viagem de navio é boa.\p
+Mas atravessar o mar com POKéMON\n
+usando SURFAR…\p
+Isso sim é uma viagem empolgante!\n
+Não concorda, jovem?$
+
+[MossdeepCity_Text_SpecialSpaceCenterRock] f1c16ba9ac
+Esta pedra é especial pro pessoal\n
+do CENTRO ESPACIAL.\p
+Eles botaram aqui como um pedido\n
+pra que os foguetes voem em segurança.\p
+Quando você faz um pedido, o que usa?\n
+Pede pra uma estrela?\p
+Eu uso uma fitinha da sorte.\n
+É assim que eu faço.$
+
+[MossdeepCity_Text_ItsAWhiteRock] 23acb82f0d
+É uma pedra branca.$
+
+[MossdeepCity_Text_GymSign] 8000cf1254
+GINÁSIO POKéMON DE MOSSDEEP\n
+LÍDERES: LIZA & TATE\p
+“A combinação mística!”$
+
+[MossdeepCity_Text_CitySign] 92ac66a3af
+CIDADE DE MOSSDEEP\n
+“O nosso lema: valorize os POKéMON!”$
+
+[MossdeepCity_Text_SpaceCenterSign] 4e7119ba59
+CENTRO ESPACIAL DE MOSSDEEP\n
+“O lugar mais perto do espaço.”$
+
+[MossdeepCity_Text_ScottSomethingWrongWithTown] 3a239ab4d8
+SCOTT: {PLAYER}{KUN}, tudo bem?\n
+Eu estou ótimo!\p
+Ouvi dizer que o LÍDER do GINÁSIO\n
+de MOSSDEEP é bem forte, então\l
+vim dar uma olhada.\p
+Mas tem algo estranho nesta cidade.\p
+O pessoal só fala de uma carta de\n
+aviso e do CENTRO ESPACIAL…\p
+Mas acho que isso não tem nada a\n
+ver comigo.$
+
+[MossdeepCity_Text_SootopolisNewGymLeader] b1c68146f0
+Ahh… Que delícia deixar as ondas\n
+baterem nos pés…\p
+Falando em ondas, conhece aquela\n
+cidade-ilha, SOOTOPOLIS?\p
+Acho que o GINÁSIO de lá ganhou\n
+um LÍDER novo.\p
+Dizem que o novo LÍDER já foi\n
+mestre do WALLACE.$

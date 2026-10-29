@@ -1,0 +1,25 @@
+# CIDADE DE EVER GRANDE: o CENTRO POKéMON, com o SCOTT.
+
+[EverGrandeCity_PokemonCenter_1F_Text_LeagueAfterVictoryRoad] 169af823a9
+A LIGA POKéMON fica a pouca distância\n
+depois da ESTRADA DA VITÓRIA.\p
+Se chegou até aqui, que escolha você\n
+tem além de seguir em frente?$
+
+[EverGrandeCity_PokemonCenter_1F_Text_BelieveInYourPokemon] a7441358a7
+A longa e penosa ESTRADA DA VITÓRIA…\p
+É como reviver o caminho que a gente\n
+percorreu na vida…\p
+Acredite nos seus POKéMON e dê o\n
+seu melhor!$
+
+[EverGrandeCity_PokemonCenter_1F_Text_ScottHappyForYou] 624a3d50ef
+SCOTT: {PLAYER}{KUN}, você lutou até\n
+chegar à LIGA POKéMON!\p
+Fico feliz por você!\n
+Valeu a pena torcer por você!\p
+{PLAYER}{KUN}, se você chegar ao topo\n
+da LIGA POKéMON…\p
+Eu entro em contato.\p
+Certo, {PLAYER}{KUN}.\n
+Vá atrás da glória!$

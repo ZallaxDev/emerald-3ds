@@ -17,4 +17,10 @@
 
 #define SetVBlankCallback CtrBattle_SetVBlankCallback
 
+/* How the battle's sandstorm picture is shown (3ds_video.c). */
+#define CTR_SANDSTORM_NONE 0
+#define CTR_SANDSTORM_STILL 1
+#define CTR_SANDSTORM_BLOWN 2
+unsigned char CtrBattle_Sandstorm(void);
+
 #endif

@@ -1,0 +1,80 @@
+# CASA DE PRAIA da ROTA 109: o SR. MAR e o REFRIGERANTE.
+
+[Route109_SeashoreHouse_Text_SeashoreHouseIntro] f09c0855fd
+Eu sou o dono da CASA DE PRAIA.\n
+Mas pode me chamar de SR. MAR!\p
+O que eu mais amo é ver batalhas\n
+POKéMON pegando fogo.\p
+Mostre que o seu coração ferve!\p
+Se vencer todos os TREINADORES\n
+daqui, vou recompensar o seu esforço.$
+
+[Route109_SeashoreHouse_Text_ShowMeSomeHotMatches] 7efde5f7bb
+Me mostre umas batalhas quentes!\p
+É só por isso que eu tenho esta\n
+CASA DE PRAIA!$
+
+[Route109_SeashoreHouse_Text_TakeTheseSodaPopBottles] a7783ad500
+Você está pegando fogo!\n
+Que batalhas ardentes!\l
+Estou mais que satisfeito!\p
+Pra agradecer por essa sequência\n
+quente, quero que fique com isto.\p
+São seis garrafas de REFRIGERANTE!$
+
+[Route109_SeashoreHouse_Text_BagFull] 7261e659e3
+Ah, mas a sua BOLSA está lotada.\n
+Vou guardar isto pra você.$
+
+[Route109_SeashoreHouse_Text_WantToBuySodaPop] 8adbad7391
+Quer comprar REFRIGERANTE?\n
+Os POKéMON adoram!\p
+Só ¥300 a garrafa!\n
+Compre!$
+
+[Route109_SeashoreHouse_Text_HereYouGo] 68d044bdb3
+Aqui está!$
+
+[Route109_SeashoreHouse_Text_NotEnoughMoney] 9284b6eb64
+Você não tem dinheiro.$
+
+[Route109_SeashoreHouse_Text_ThatsTooBad] 15bb718574
+Não?\n
+Que pena.$
+
+[Route109_SeashoreHouse_Text_DwayneIntro] ab98b27f80
+Se quer batalha na CASA DE PRAIA,\n
+não vai achar TREINADOR mais\l
+quente que eu, marujo!$
+
+[Route109_SeashoreHouse_Text_DwayneDefeated] f9e7dc3d3b
+Que batalha quente!\n
+Aceito essa derrota, marujo!$
+
+[Route109_SeashoreHouse_Text_DwaynePostBattle] dcc705ba6f
+Sempre que estou em SLATEPORT, curto\n
+batalha quente e REFRIGERANTE gelado!$
+
+[Route109_SeashoreHouse_Text_JohannaIntro] d140aab0f6
+Batalha chata não vale o esforço.\p
+São as batalhas pegando fogo que\n
+fortalecem TREINADORES e POKéMON!$
+
+[Route109_SeashoreHouse_Text_JohannaDefeated] 9bc4884eec
+Que quente!$
+
+[Route109_SeashoreHouse_Text_JohannaPostBattle] 876084c034
+Ufa, estou com sede.\n
+Acho que vou tomar um REFRIGERANTE.$
+
+[Route109_SeashoreHouse_Text_SimonIntro] d6cbdf582f
+Vou te mostrar como os meus POKéMON\n
+são incríveis, mas não chora!$
+
+[Route109_SeashoreHouse_Text_SimonDefeated] 7ea16cb38d
+…Perdi, mas não vou chorar…$
+
+[Route109_SeashoreHouse_Text_SimonPostBattle] f106560fee
+Se um POKéMON meu soubesse o golpe\n
+de me levar na água nas costas, eu\l
+podia largar esta boia.$

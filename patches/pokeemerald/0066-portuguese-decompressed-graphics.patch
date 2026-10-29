@@ -1,0 +1,64 @@
+Pokémon Emerald 3Ds Dual Screen changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: the decompressed graphics passed to the port, to redraw their English words in Portuguese
+Applies after 0065-portuguese-credits-page.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/platform/bios.c b/src/platform/bios.c
+--- a/src/platform/bios.c
++++ b/src/platform/bios.c
+@@ -257,6 +257,9 @@
+ void LZ77UnCompVram(const u32 *src_, void *dest_)
+ {
+     int destSize = 0;
++#if CTR_LANG_PT_BR
++    const void *compressed = src_;
++#endif
+ #ifdef PORT_BRIDGE
+     u8 *assetBuf = NULL;
+     u32 assetSize = 0;
+@@ -312,6 +315,10 @@
+                     *out++ = *src++;
+                 }
+                 if (out == end) {
++#if CTR_LANG_PT_BR
++                    /* The graphics with English words, redrawn in Portuguese. */
++                    Port_TransformDecompressed(compressed, dest_, destSize);
++#endif
+ #ifdef PORT_BRIDGE
+                     if (assetBuf != NULL)
+                         free(assetBuf);
+@@ -336,6 +343,9 @@
+ 
+ void LZ77UnCompWram(const u32 *src, void *dst)
+ {
++#if CTR_LANG_PT_BR
++    const void *compressed = src;
++#endif
+ #ifdef PORT_BRIDGE
+     u8 *assetBuf = NULL;
+     u32 assetSize = 0;
+@@ -382,6 +392,10 @@
+         }
+     }
+ 
++#if CTR_LANG_PT_BR
++    /* The graphics with English words, redrawn in Portuguese. */
++    Port_TransformDecompressed(compressed, dst, header >> 8);
++#endif
+ #ifdef PORT_BRIDGE
+     if (assetBuf != NULL)
+         free(assetBuf);
+diff --git a/src/menu.c b/src/menu.c
+--- a/src/menu.c
++++ b/src/menu.c
+@@ -1934,6 +1934,12 @@
+ #endif
+     if (ptr)
+         LZ77UnCompWram(src, ptr);
++#if CTR_LANG_PT_BR
++    /* Decompressed from a copy, which the port cannot name: named here by
++     * the asset it was copied from (bios.c does it for the rest). */
++    if (ptr != NULL && compressed != NULL)
++        Port_TransformDecompressed(asset, ptr, *size);
++#endif
+ #ifdef PORT_BRIDGE
+     Free(compressed);
+     if (assetPath != NULL && strstr(assetPath, "data/tilesets/") != NULL)

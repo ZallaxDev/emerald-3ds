@@ -1,0 +1,36 @@
+# ROTA 114: o túnel do MANÍACO POR FÓSSEIS.
+
+[Route114_FossilManiacsTunnel_Text_LookInDesertForFossils] 82541aee74
+Eu sou o MANÍACO POR FÓSSEIS…\n
+Um cara legal que ama FÓSSEIS…\p
+Quer um FÓSSIL?\p
+Mas os FÓSSEIS daqui são todos\n
+meus… Nenhum pra você…\p
+Se não aguentar ficar sem um FÓSSIL,\n
+procure num deserto com pedras\l
+e areia que podem esconder\l
+FÓSSEIS…$
+
+[Route114_FossilManiacsTunnel_Text_DevonCorpRevivingFossils] 50fb616705
+Você achou um FÓSSIL, não achou?\n
+Que legal… Que sonho…\p
+O que vai fazer com esse FÓSSIL?\p
+Pelo que ouvi, a DEVON está\n
+pesquisando como reviver POKéMON\l
+de FÓSSEIS…\p
+Eu amo os meus FÓSSEIS, então\n
+nunca faria uma coisa dessas…$
+
+[Route114_FossilManiacsTunnel_Text_FossilsAreWonderful] ac0ec1a1da
+FÓSSEIS são tão… Maravilhosos…\n
+Que sonho…$
+
+[Route114_FossilManiacsTunnel_Text_NotSafeThatWay] b7b5ee796c
+Ah…\n
+Por ali não é seguro…\p
+Eu estava cavando, sabe…\n
+Quando a parede inteira desabou…\p
+Acho que agora tem uma caverna\n
+enorme lá embaixo…\p
+Mas deixei quieto, porque acho que\n
+não tem FÓSSIL nenhum lá…$

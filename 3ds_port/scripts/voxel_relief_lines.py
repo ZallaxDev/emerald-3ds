@@ -49,7 +49,7 @@ from PIL import Image  # noqa: E402
 
 GRID = 64                      # tests/voxel_mesh_dump.c: the virtual atlas
 METATILE_REAL = 1024           # voxel_atlas.h
-VARIANTS = 128
+VARIANTS = 160
 CUT_FIRST = METATILE_REAL + VARIANTS
 DUMP = os.path.join(PORT, "build", "voxel_mesh_dump.exe")
 RELIEF = os.path.join(PORT, "romfs", "voxel", "relief.bin")
@@ -107,10 +107,10 @@ def relief_cuts():
 def building_variants():
     """[(layout, metatile, quarters)] of buildings.bin's ground variants."""
     b = open(os.path.join(PORT, "romfs", "voxel", "buildings.bin"), "rb").read()
-    assert b[:4] == b"VXB8"
+    assert b[:4] in (b"VXB8", b"VXB9")
     pages, models, pmodels, places, hbytes, masks = struct.unpack_from("<6H", b, 4)
     nverts, nvar = struct.unpack_from("<IH", b, 16)
-    o = 24 + pages * 8 + models * 16 + pmodels * 8 + places * 16
+    o = (28 if b[:4] == b"VXB9" else 24) + pages * 8 + models * 16 + pmodels * 8 + places * 16
     o += hbytes
     o += o & 1
     o += hbytes * 2 + masks * 32 + hbytes

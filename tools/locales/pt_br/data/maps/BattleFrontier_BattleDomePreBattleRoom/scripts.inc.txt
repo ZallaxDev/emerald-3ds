@@ -1,0 +1,110 @@
+# FRONTEIRA DE BATALHA: a sala de espera da CÚPULA.
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_ReadyForRound1] 6e759df98f
+A sua batalha da 1ª fase é a próxima.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_ReadyForRound2] f7675308c7
+A sua batalha da 2ª fase é a próxima.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_ReadyForSemifinals] 67eae69ad7
+A sua semifinal é a próxima.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_ReadyForFinals] da6b1b48e4
+A sua final é a próxima.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_ChooseTwoMons] a2a1112963
+Escolha os dois POKéMON que vão\n
+entrar na batalha, por favor.$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_RightThisWay] b6e823d11a
+Por aqui, por favor.$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_RestoreMonsToFullHealth] 217ac34b2b
+Obrigado por competir!\p
+Vou recuperar totalmente os\n
+seus POKéMON.$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_Round1Complete] 3dcc6f546f
+Todas as batalhas da 1ª fase\n
+terminaram.\p
+Estas são as equipes que avançaram!$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_Round2Complete] a558dcffcc
+Todas as batalhas da 2ª fase\n
+terminaram.\p
+Estas são as equipes que avançaram!$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_SemifinalsComplete] 0e7499d1c0
+Todas as semifinais terminaram.\p
+Estas são as equipes que avançaram!$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_CongratsReadyForRound2] 7c8836e038
+Parabéns por passar da 1ª fase.\p
+A 2ª fase é a próxima.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_CongratsReadyForSemifinals] ad1d70ec45
+Parabéns por chegar às semifinais.\p
+As quatro melhores equipes se\n
+enfrentam nesta fase.\l
+Está tudo pronto?$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_CongratsReadyForFinals] 6fed55e914
+Parabéns por chegar à final.\p
+Falta uma vitória pro título.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_PlayersNextOpponentIsTrainer] 40e0704ef1
+O próximo oponente de {PLAYER}\n
+é este TREINADOR.$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_TourneyInRound1] 3afd2b868c
+O torneio está na 1ª fase.$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_TourneyInRound2] a7f86bc2fb
+O torneio está na 2ª fase.$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_TourneyInSemifinals] d65108bdcc
+O torneio está nas semifinais.$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_TourneyInFinals] 0a0d95083d
+O torneio chegou à final.$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_SaveAndQuitGame] d6632fe4e1
+Quer salvar e sair do jogo?$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_RetireYourChallenge] 935469fdf7
+Quer desistir do desafio do\n
+Torneio de Batalha?$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_SavingDataPleaseWait] 09cd7629b1
+Estou salvando os seus dados.\n
+Aguarde, por favor.$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_RecordLastMatch] e19ca571cf
+Quer gravar a sua última batalha\n
+no PASSE DA FRONTEIRA?$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_ReadyForTuckerSilver] ed30d35af7
+Parabéns por chegar à final.\p
+Na final, você vai desafiar o\n
+ÁS DA CÚPULA, TUCKER.\p
+Está tudo pronto?$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_ReadyForTuckerGold] ed30d35af7
+Parabéns por chegar à final.\p
+Na final, você vai desafiar o\n
+ÁS DA CÚPULA, TUCKER.\p
+Está tudo pronto?$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_ReadyForTuckerSilverShort] 91f58e3ce2
+A sua final contra o TUCKER é a\n
+próxima. Está tudo pronto?$
+
+[BattleFrontier_BattleDomePreBattleRoom_Text_ReadyForTuckerGoldShort] 91f58e3ce2
+A sua final contra o TUCKER é a\n
+próxima. Está tudo pronto?$

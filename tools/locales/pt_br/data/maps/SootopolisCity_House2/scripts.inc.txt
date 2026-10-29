@@ -1,0 +1,15 @@
+# CIDADE DE SOOTOPOLIS: a casa dos ORBES.
+
+[SootopolisCity_House2_Text_DidYouKnowAboutMtPyreOrbs] 1691cac292
+O MONTE PYRE…\p
+No topo, há dois orbes lado a lado.\n
+Você sabia?$
+
+[SootopolisCity_House2_Text_YesTwoOrbsSideBySide] 02383b91d1
+Sim, dois orbes lado a lado…\p
+Ver os dois juntos…\n
+De algum jeito, acalma…$
+
+[SootopolisCity_House2_Text_OughtToVisitAndSee] 68d1e3f9ab
+É mesmo?\n
+Talvez devesse ir lá ver…$

@@ -1,0 +1,37 @@
+# CIDADE DE PACIFIDLOG: a troca do BAGON.
+
+[PacifidlogTown_House3_Text_WillingToTradeIt] 259d90aeae
+Olha só este {STR_VAR_2}!\p
+É o {STR_VAR_2} que peguei ontem pra\n
+comemorar o meu aniversário!\p
+Ah, já vi que você quer!\n
+Afinal, ele não tem preço!\p
+Vou te dizer uma coisa. Talvez eu\n
+troque ele por um {STR_VAR_1}.$
+
+[PacifidlogTown_House3_Text_ItsSubtlyDifferentThankYou] 2d0f745115
+Ah, então isto é um {STR_VAR_1}?\p
+Parece um {STR_VAR_2}, mas é\n
+sutilmente diferente.\p
+Obrigado!$
+
+[PacifidlogTown_House3_Text_WontAcceptAnyLessThanRealMon] 7792b82b3e
+Não, não, não! Só aceito um\n
+{STR_VAR_1} de verdade!$
+
+[PacifidlogTown_House3_Text_NotDesperateOrAnything] 9297b6cfc4
+Ah, então você não vai trocar?\p
+Tudo bem. Não estou desesperado\n
+pra trocar nem nada.$
+
+[PacifidlogTown_House3_Text_ReallyWantedToGetBagon] a8eddb996d
+Sei que podia procurar um sozinho,\n
+mas…\p
+Mas eu queria muito um BAGON que\n
+outro TREINADOR pegou…$
+
+[PacifidlogTown_House3_Text_IsThatAPokedex] de009a8667
+Isso é uma POKéDEX?\p
+Você conheceu um monte de POKéMON\n
+diferentes?\p
+Queria ser como você.$

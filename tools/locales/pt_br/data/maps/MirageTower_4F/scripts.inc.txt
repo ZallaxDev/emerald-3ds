@@ -1,0 +1,21 @@
+# TORRE MIRAGEM: o topo e os fósseis.
+
+[MirageTower_4F_Text_TakeRootFossil] f192db18fa
+Você achou o FÓSSIL RAIZ.\p
+Se tirar este FÓSSIL, o chão em volta\n
+provavelmente vai desmoronar…\p
+Pegar o FÓSSIL RAIZ mesmo assim?$
+
+[MirageTower_4F_Text_LeftRootFossilAlone] 794b87e6dd
+{PLAYER} deixou o FÓSSIL RAIZ onde\n
+estava.$
+
+[MirageTower_4F_Text_TakeClawFossil] 5f15d56815
+Você achou o FÓSSIL GARRA.\p
+Se tirar este FÓSSIL, o chão em volta\n
+provavelmente vai desmoronar…\p
+Pegar o FÓSSIL GARRA mesmo assim?$
+
+[MirageTower_4F_Text_LeaveClawFossilAlone] 279fb4c5da
+{PLAYER} deixou o FÓSSIL GARRA onde\n
+estava.$

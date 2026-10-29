@@ -1,0 +1,30 @@
+# CATARATA DOS METEOROS: a caverna do STEVEN (pós-jogo).
+
+[MeteorFalls_StevensCave_Text_ShouldKnowHowGoodIAmExpectWorst] 4fe1efd46e
+STEVEN: Nossa, {PLAYER}{KUN}.\n
+Estou impressionado que me achou.\p
+Você, hã… me acha só um maníaco\n
+por pedras?\p
+Não, não pode ser.\p
+Lutamos lado a lado no CENTRO\n
+ESPACIAL de SOOTOPOLIS.\p
+Você deve saber muito bem o quanto\n
+eu sou bom.\p
+Certo, {PLAYER}{KUN}, se vai me desafiar\n
+pra valer, espere o pior!$
+
+[MeteorFalls_StevensCave_Text_StevenDefeat] 2a324c2e7d
+Você…\n
+Não imaginava que tinha tanta força…$
+
+[MeteorFalls_StevensCave_Text_MyPredictionCameTrue] a94ca14839
+STEVEN: Pensando bem, desde que nos\n
+vimos na CAVERNA GRANITO, em DEWFORD,\l
+tive esse pressentimento.\p
+Achei que um dia você ia chegar\n
+ao topo da LIGA.\p
+Costumo acertar as minhas previsões.\p
+E pra onde você vai agora?\p
+… … … … … …\n
+… … … … … …\p
+Fufufu, nem eu sei te dizer.$

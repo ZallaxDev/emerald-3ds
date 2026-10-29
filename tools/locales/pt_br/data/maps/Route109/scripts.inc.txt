@@ -1,0 +1,90 @@
+# ROTA 109: a praia de SLATEPORT, o SR. BRINEY e os banhistas.
+
+[DewfordTown_Text_BrineyLandedInSlateportDeliverGoods] dda70f0a9b
+SR. BRINEY: Ahoy!\n
+Chegamos a SLATEPORT!\p
+Imagino que você vai visitar o CAP.\n
+STERN e entregar as PEÇAS DEVON?$
+
+[Route109_Text_BrineySailToDewfordQuestion] 44a2181f72
+SR. BRINEY: Achei que você ia\n
+entregar as PEÇAS DEVON.\p
+Quer voltar navegando\n
+para DEWFORD, então?$
+
+[Route109_Text_BrineyDewfordItIs] 23a7c02289
+SR. BRINEY: Então é DEWFORD!\p
+Levantar âncora!\n
+PEEKO, minha querida, vamos zarpar!$
+
+[Route109_Text_BrineyDeliverDevonGoods] e2636db108
+SR. BRINEY: Então vá entregar as\n
+PEÇAS DEVON. Eu fico esperando.$
+
+[DewfordTown_Text_BrineyLandedInSlateport] 0f234c36db
+SR. BRINEY: Ahoy! Chegamos a\n
+SLATEPORT!\p
+É só me avisar quando quiser\n
+zarpar de novo!$
+
+[Route109_Text_BrineyWhereAreWeBound] c0039783b1
+SR. BRINEY: Ahoy!\n
+Por você, eu vou pro mar quando for!\p
+Agora, meu amigo, para onde vamos?$
+
+[Route109_Text_BrineyTellMeWhenYouNeedToSail] 29f54d80de
+SR. BRINEY: É só me avisar quando\n
+precisar zarpar de novo!$
+
+[Route109_Text_ChillAtMyPapasSpot] 9ace4c38d5
+Ô, TREINADORES!\n
+Se a batalha está quente,\l
+ou se tá de boa a gente,\l
+vem curtir no meu pai, que é demais!$
+
+[Route109_Text_LittleKidsDartAround] 1c5d75a60b
+Criança pequena corre pra todo lado\n
+tão rápido…\p
+Não dá pra tirar os olhos nem por um\n
+instante. É muito cansativo.\p
+As minhas estão com os meus POKéMON,\n
+então devem estar bem, mas…$
+
+[Route109_Text_SandCastleTakingLongTime] 81895f3db1
+O nosso castelo de areia está\n
+demorando pra ficar pronto.$
+
+[Route109_Text_YouCanHaveThis] 3af7c26e15
+Pode ficar com isto!$
+
+[Route109_Text_WereGoingToMakeBigCastle] 6d85dff8c1
+A gente vai pegar toda a areia da\n
+praia e fazer um castelo enorme!\p
+E aí a gente vai ser rei e\n
+rainha.\p
+E você pode trabalhar pra gente.$
+
+[Route109_Text_ZigzagoonPicksUpLitter] 2324a11550
+A água por aqui é limpa.\p
+Mas, às vezes, peço pro ZIGZAGOON\n
+catar o lixo da beira da praia.\p
+A água suja vira chuva e cai nos\n
+nossos rios, que a gente bebe…\p
+Se a gente polui o mar, um dia isso\n
+volta pra gente.$
+
+[Route109_Text_ZigzagoonCry] f65b743bde
+ZIGZAGOON: Guguu?$
+
+[Route109_Text_SeashoreHouseSign] b6188759f1
+CASA DE PRAIA\p
+“Batalhas quentes na areia quente!\n
+O lugar dos TREINADORES fervendo!”$
+
+[Route109_Text_TrainerTipsSign] b89b232c0b
+DICAS DE TREINADOR\p
+POKéMON do mesmo nível nem sempre\n
+têm os mesmos atributos.\p
+Dizem que POKéMON criados por\n
+TREINADORES ficam mais fortes que\l
+os selvagens.$

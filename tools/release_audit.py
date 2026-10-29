@@ -11,7 +11,8 @@ Run it on the public repository, on an export directory or on a release ZIP:
 What fails the audit:
 
 * ROMs, saves, dumps, console executables of other platforms, logs, Python
-  bytecode, editor/agent state, session transcripts, generated data packs;
+  bytecode, editor/agent state (project skills under .claude/skills/ are
+  documents and pass), session transcripts, generated data packs;
 * files under a validation/ directory or generated RomFS content;
 * files larger than 1 MiB that are not listed in the allowlist;
 * media files (images, audio, tile data) with no provenance entry;
@@ -193,6 +194,14 @@ def zip_files(archive: Path) -> list[tuple[str, callable]]:
     return [(i.filename, (lambda i=i: zf.read(i))) for i in zf.infolist() if not i.is_dir()]
 
 
+def agent_skill(parts: list[str], suffix: str) -> bool:
+    """A project skill (.claude/skills/<name>/*.md at the root): written
+    instructions for coding agents, like any other document. Everything else
+    under .claude (settings, sessions, worktrees) stays forbidden."""
+    return (len(parts) >= 4 and parts[0] == ".claude" and parts[1] == "skills"
+            and suffix == ".md" and not any(p in FORBIDDEN_DIRS for p in parts[2:-1]))
+
+
 def audit(entries, allow: Allow, denylist, rom_index: RomIndex | None,
           context: str) -> list[Finding]:
     findings: list[Finding] = []
@@ -208,7 +217,7 @@ def audit(entries, allow: Allow, denylist, rom_index: RomIndex | None,
 
         if suffix in FORBIDDEN_SUFFIXES:
             findings.append(Finding(name, "forbidden-type", suffix))
-        if any(p in FORBIDDEN_DIRS for p in parts[:-1]):
+        if any(p in FORBIDDEN_DIRS for p in parts[:-1]) and not agent_skill(parts, suffix):
             findings.append(Finding(name, "forbidden-dir"))
         if any(rx.match(path.name) for rx in FORBIDDEN_NAMES):
             findings.append(Finding(name, "forbidden-name"))
@@ -251,6 +260,8 @@ def audit(entries, allow: Allow, denylist, rom_index: RomIndex | None,
             if rx.search(data) or rx.search(name.encode("utf-8")):
                 findings.append(Finding(name, "denylist", "(local pattern)"))
                 break
+        if data[:8] == b"EM3DRCP1":
+            findings += audit_programs(name, data)
         if rom_index is not None:
             scanned = data
             if data[:8] == b"EM3DRCP1":
@@ -270,6 +281,43 @@ def audit(entries, allow: Allow, denylist, rom_index: RomIndex | None,
         if not has_license:
             findings.append(Finding(tp, "third-party-without-license"))
     return findings
+
+
+def audit_programs(name: str, data: bytes) -> list[Finding]:
+    """A recipe's precompiled voxel files (builder/emerald3ds_builder/
+    precompiled.py): their texels must all be references into the ROM. A
+    texel written literally is a picture the release would carry."""
+    sys.path.insert(0, str(HERE.parent / "builder"))
+    from emerald3ds_builder import precompiled
+    from emerald3ds_builder.recipe import Recipe
+    from emerald3ds_builder.recipe import RecipeError
+    found = []
+    try:
+        recipe = Recipe.from_bytes(data)
+    except RecipeError as exc:
+        return [Finding(name, "precompiled", "unreadable recipe: %s" % exc)]
+    for entry in recipe.generated:
+        for op in entry.get("ops", ()):
+            if op[0] != "V" or len(op) != 3:
+                found.append(Finding(name, "precompiled", "%s: operation %r" % (entry["path"], op[0])))
+                continue
+            try:
+                info = precompiled.summary(recipe.literals[op[1]:op[1] + op[2]])
+            except precompiled.ProgramError as exc:
+                found.append(Finding(name, "precompiled", "%s: %s" % (entry["path"], exc)))
+                continue
+            if info["own texels"]:
+                found.append(Finding(name, "precompiled-texels", "%s: %d texels written literally"
+                                     % (entry["path"], info["own texels"])))
+            stray = sorted(info["own glass values"] - precompiled.OWN_GLASS)
+            if stray:
+                found.append(Finding(name, "precompiled-texels", "%s: window glass written literally "
+                                     "(levels %s)" % (entry["path"], stray[:8])))
+            print("release_audit: note: %s %s: %d own bytes, %d texels and %d pixels from the ROM"
+                  % (name, entry["path"], info["literal"] + info["zero"] + info["copy"],
+                     info["tile texels"] + info["palette texels"] + info["colours"] + info["glass texels"],
+                     info["pixels"]))
+    return found
 
 
 WEB_PAYLOAD_DIRS = ("payload/", "python/", "licenses/")

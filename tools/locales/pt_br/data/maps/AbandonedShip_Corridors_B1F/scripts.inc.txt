@@ -1,0 +1,32 @@
+# NAVIO ABANDONADO: corredores de baixo e o DEPÓSITO.
+
+[AbandonedShip_Corridors_B1F_Text_DuncanIntro] f21647202c
+Quando vamos pro mar, nós, MARINHEIROS,\n
+sempre levamos os nossos POKéMON.\l
+Que tal uma batalha rápida?$
+
+[AbandonedShip_Corridors_B1F_Text_DuncanDefeat] 969ae41660
+Opa, afundei!$
+
+[AbandonedShip_Corridors_B1F_Text_DuncanPostBattle] f9b40d8458
+O fundo do navio afundou nas\n
+profundezas.\p
+Se um POKéMON soubesse ir pra\n
+debaixo d'água, dava pra avançar…$
+
+[AbandonedShip_Corridors_B1F_Text_YayItsAShip] fde369dc3c
+Oba!\n
+É um navio!$
+
+[AbandonedShip_Corridors_B1F_Text_DoorIsLocked] 34f33b5bcd
+A porta está trancada.\p
+“DEPÓSITO” está pintado na porta.$
+
+[AbandonedShip_Corridors_B1F_Text_InsertedStorageKey] e0b2dc26ee
+{PLAYER} colocou e girou a\n
+CHAVE DO DEPÓSITO.\p
+A CHAVE ficou presa, mas a\n
+porta abriu.$
+
+[AbandonedShip_Text_TheDoorIsOpen] f4f785ca71
+A porta está aberta.$

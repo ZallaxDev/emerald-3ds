@@ -1,0 +1,237 @@
+# As palavras da FALA FÁCIL, grupo actions (src/data/easy_chat/easy_chat_group_actions.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_Meets] 348c29f9cb width=72
+ENCONTRA
+
+[gEasyChatWord_Concede] a45a9e2c7a width=72
+CEDE
+
+[gEasyChatWord_Give] a5fae5b4e2 width=72
+DAR
+
+[gEasyChatWord_Gives] 1a07becab1 width=72
+DÁ
+
+[gEasyChatWord_Played] 03598adb2c width=72
+JOGOU
+
+[gEasyChatWord_Plays] e24caa3345 width=72
+JOGA
+
+[gEasyChatWord_Collect] 88b53a3018 width=72
+JUNTAR
+
+[gEasyChatWord_Walking] a7473727c5 width=72
+ANDANDO
+
+[gEasyChatWord_Walks] 93065bd1a9 width=72
+ANDA
+
+[gEasyChatWord_Says] d9ee397507 width=72
+DIZ
+
+[gEasyChatWord_Went] f64d6d1608 width=72
+FOI
+
+[gEasyChatWord_Said] b40daa8a8b width=72
+DISSE
+
+[gEasyChatWord_WakeUp] 0e07674988 width=72
+ACORDAR
+
+[gEasyChatWord_WakesUp] 19f5fc1803 width=72
+ACORDA
+
+[gEasyChatWord_Angers] 4a9dbf9e61 width=72
+IRRITA
+
+[gEasyChatWord_Teach] 02c534f2f9 width=72
+ENSINAR
+
+[gEasyChatWord_Teaches] a620a44bbe width=72
+ENSINA
+
+[gEasyChatWord_Please] 03657eb5a2 width=72
+POR FAVOR
+
+[gEasyChatWord_Learn] 9345269c1a width=72
+APRENDER
+
+[gEasyChatWord_Change] 07b1468122 width=72
+MUDAR
+
+[gEasyChatWord_Story] 64ed8dd185 width=72
+HISTÓRIA
+
+[gEasyChatWord_Trust] 7e826f7af3 width=72
+CONFIAR
+
+[gEasyChatWord_Lavish] aceb8fbb40 width=72
+ESBANJAR
+
+[gEasyChatWord_Listens] b267c903c4 width=72
+ESCUTA
+
+[gEasyChatWord_Hearing] 066e3aeecc width=72
+OUVINDO
+
+[gEasyChatWord_Trains] d6be0c4966 width=72
+TREINA
+
+[gEasyChatWord_Choose] 9fd8325fca width=72
+ESCOLHER
+
+[gEasyChatWord_Come] 27edce01a5 width=72
+VIR
+
+[gEasyChatWord_Came] 75f5f5633f width=72
+VEIO
+
+[gEasyChatWord_Search] a62a7a3d23 width=72
+PROCURAR
+
+[gEasyChatWord_Make] 5f4395a75c width=72
+FAZER
+
+[gEasyChatWord_Cause] 5b4f5ac2ca width=72
+CAUSAR
+
+[gEasyChatWord_Know] 36d7bfbbb6 width=72
+SABER
+
+[gEasyChatWord_Knows] 6c52a9f35e width=72
+SABE
+
+[gEasyChatWord_Refuse] cfe7187ddd width=72
+RECUSAR
+
+[gEasyChatWord_Stores] 8406f68746 width=72
+GUARDA
+
+[gEasyChatWord_Brag] 526d008b8a width=72
+GABAR
+
+[gEasyChatWord_Ignorant] 36a84c31d4 width=72
+IGNORANTE
+
+[gEasyChatWord_Thinks] c9fb6d4b97 width=72
+ACHA
+
+[gEasyChatWord_Believe] f970be348c width=72
+ACREDITAR
+
+[gEasyChatWord_Slide] f0a6df9ec7 width=72
+DESLIZAR
+
+[gEasyChatWord_Eats] d2ac4fe694 width=72
+COME
+
+[gEasyChatWord_Use] 7dcf46a0ef width=72
+USAR
+
+[gEasyChatWord_Uses] b4cd077d7d width=72
+USA
+
+[gEasyChatWord_Using] b0138e4f9d width=72
+USANDO
+
+[gEasyChatWord_Couldnt] f94c813993 width=72
+NÃO PÔDE
+
+[gEasyChatWord_Capable] 0b994acb9f width=72
+CAPAZ
+
+[gEasyChatWord_Disappear] 03690b8db1 width=72
+SUMIR
+
+[gEasyChatWord_Appear] 0ec30b68ca width=72
+APARECER
+
+[gEasyChatWord_Throw] bb85491176 width=72
+JOGAR
+
+[gEasyChatWord_Worry] 4383a6b2a6 width=72
+PREOCUPAR
+
+[gEasyChatWord_Slept] d954494ffb width=72
+DORMIU
+
+[gEasyChatWord_Sleep] 76995f08e2 width=72
+DORMIR
+
+[gEasyChatWord_Release] f73b278fda width=72
+SOLTAR
+
+[gEasyChatWord_Drinks] a5f798ed8e width=72
+BEBE
+
+[gEasyChatWord_Runs] 0558cf1f34 width=72
+CORRE
+
+[gEasyChatWord_Run] ad173e04d8 width=72
+CORRER
+
+[gEasyChatWord_Works] e576403823 width=72
+TRABALHA
+
+[gEasyChatWord_Working] 92263e0878 width=72
+TRABALHANDO
+
+[gEasyChatWord_Talking] d38164301c width=72
+FALANDO
+
+[gEasyChatWord_Talk] 911e4cb35f width=72
+FALAR
+
+[gEasyChatWord_Sink] 70616ea46c width=72
+AFUNDAR
+
+[gEasyChatWord_Smack] 422e445dd2 width=72
+PANCADA
+
+[gEasyChatWord_Pretend] 8da8a9b8b8 width=72
+FINGIR
+
+[gEasyChatWord_Praise] 7bc7cd9bad width=72
+ELOGIAR
+
+[gEasyChatWord_Overdo] 543f16ed7a width=72
+EXAGERAR
+
+[gEasyChatWord_Show] 40ae6fd23e width=72
+MOSTRAR
+
+[gEasyChatWord_Looks] 61c4487d7c width=72
+PARECE
+
+[gEasyChatWord_Sees] 6fed7a760a width=72
+VÊ
+
+[gEasyChatWord_Seek] f2bfda8167 width=72
+BUSCAR
+
+[gEasyChatWord_Own] 3f5bd9a4b9 width=72
+TER
+
+[gEasyChatWord_Take] 06614e39f2 width=72
+PEGAR
+
+[gEasyChatWord_Allow] 2b95120ccb width=72
+DEIXAR
+
+[gEasyChatWord_Forget] 7b025f3e0b width=72
+ESQUECER
+
+[gEasyChatWord_Forgets] 67f6b8b829 width=72
+ESQUECE
+
+[gEasyChatWord_Appears] eea9ed4fd7 width=72
+APARECE
+
+[gEasyChatWord_Faint] 0b752a4240 width=72
+DESMAIAR
+
+[gEasyChatWord_Fainted] e87dd0aec8 width=72
+DESMAIOU

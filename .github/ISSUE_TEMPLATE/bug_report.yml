@@ -20,7 +20,7 @@ body:
     id: version
     attributes:
       label: Project version
-      placeholder: e.g. 0.4.0
+      placeholder: e.g. 0.5.0
     validations:
       required: true
   - type: dropdown

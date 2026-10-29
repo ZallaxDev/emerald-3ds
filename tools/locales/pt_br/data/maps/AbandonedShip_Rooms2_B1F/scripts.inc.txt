@@ -1,0 +1,7 @@
+# NAVIO ABANDONADO: cabines de baixo.
+
+[AbandonedShip_Rooms2_B1F_Text_PerfectPlaceToGoExploring] 7bcdedc973
+Lugar perfeito pra explorar!\n
+Que emoção!\p
+Aposto que tem tesouros incríveis\n
+a bordo.$

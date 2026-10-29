@@ -1,0 +1,5 @@
+# O rótulo CATEGORY da janela de golpes (divisão físico/especial), abreviado
+# como o espanhol e o francês: CATEGORIA não cabe na coluna.
+
+[sText_Category] 762258cf78 width=48
+CATEG.

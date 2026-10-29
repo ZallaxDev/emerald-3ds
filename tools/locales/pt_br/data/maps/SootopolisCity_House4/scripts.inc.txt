@@ -1,0 +1,19 @@
+# CIDADE DE SOOTOPOLIS: a casa das ruínas do fundo do mar.
+
+[SootopolisCity_House4_Text_AncientTreasuresWaitingInSea] 5e6c0c9626
+Escuta, que vou te contar uma coisa\n
+boa.\p
+Dizem que tem uma ruína antiga no\n
+mar aqui perto.\p
+Pode ter tesouros lá embaixo\n
+esperando pra serem achados.$
+
+[SootopolisCity_House4_Text_StrollUnderwaterWithPokemon] 0d329fc649
+Tesouros antigos…\p
+Seria bom se existissem, mas, mesmo\n
+que não, seria tão lindo dar um\l
+passeio debaixo d'água com os\l
+meus POKéMON.$
+
+[SootopolisCity_House4_Text_Azumarill] 1ad1c1d471
+AZUMARILL: Maruriii.$

@@ -1,7 +1,7 @@
 """Recognise the player's ROM.
 
-Clean English (BPEE), Spanish (BPES), French (BPEF) and Italian (BPEI) Pokémon
-Emerald dumps are recognised (16 MiB, by SHA-1). Building still requires a recipe and
+Clean English (BPEE), Spanish (BPES), French (BPEF), Italian (BPEI), German (BPED) and
+Japanese (BPEJ) Pokémon Emerald dumps are recognised (16 MiB, by SHA-1). Building still requires a recipe and
 executable made for the same ROM. A trimmed dump (trailing 0xFF removed) is padded back before it is checked; a .zip holding a single .gba is
 opened directly. The ROM is only ever read into memory: it is never copied,
 written or sent anywhere.
@@ -21,9 +21,11 @@ SUPPORTED_SHA1 = "f3ae088181bf583e55daf962a92bb46f4f1d07b7"
 SPANISH_SHA1 = "fe1558a3dcb0360ab558969e09b690888b846dd9"
 FRENCH_SHA1 = "ca666651374d89ca439007bed54d839eb7bd14d0"
 ITALIAN_SHA1 = "1692db322400c3141c5de2db38469913ceb1f4d4"
+GERMAN_SHA1 = "61c2eb2b380b1a75f0c94b767a2d4c26cd7ce4e3"
+JAPANESE_SHA1 = "d7cf8f156ba9c455d164e1ea780a6bf1945465c2"
 # Fingerprints: libretro-database/metadat/no-intro/Nintendo - Game Boy Advance.dat
 ROM_PROFILES = {"BPEE": SUPPORTED_SHA1, "BPES": SPANISH_SHA1, "BPEF": FRENCH_SHA1,
-                "BPEI": ITALIAN_SHA1}
+                "BPEI": ITALIAN_SHA1, "BPED": GERMAN_SHA1, "BPEJ": JAPANESE_SHA1}
 ROM_SIZE = 16 * 1024 * 1024
 KNOWN_CODES = {
     "BPEE": "Pokemon Emerald (USA, Europe)",
@@ -33,9 +35,29 @@ KNOWN_CODES = {
     "BPEF": "Pokemon Emerald (France)",
     "BPEI": "Pokemon Emerald (Italy)",
     "AXVE": "Pokemon Ruby",
+    "AXVJ": "Pokemon Ruby (Japan)",
+    "AXVS": "Pokemon Ruby (Spain)",
+    "AXVD": "Pokemon Ruby (Germany)",
+    "AXVF": "Pokemon Ruby (France)",
+    "AXVI": "Pokemon Ruby (Italy)",
     "AXPE": "Pokemon Sapphire",
+    "AXPJ": "Pokemon Sapphire (Japan)",
+    "AXPS": "Pokemon Sapphire (Spain)",
+    "AXPD": "Pokemon Sapphire (Germany)",
+    "AXPF": "Pokemon Sapphire (France)",
+    "AXPI": "Pokemon Sapphire (Italy)",
     "BPRE": "Pokemon FireRed",
+    "BPRJ": "Pokemon FireRed (Japan)",
+    "BPRS": "Pokemon FireRed (Spain)",
+    "BPRD": "Pokemon FireRed (Germany)",
+    "BPRF": "Pokemon FireRed (France)",
+    "BPRI": "Pokemon FireRed (Italy)",
     "BPGE": "Pokemon LeafGreen",
+    "BPGJ": "Pokemon LeafGreen (Japan)",
+    "BPGS": "Pokemon LeafGreen (Spain)",
+    "BPGD": "Pokemon LeafGreen (Germany)",
+    "BPGF": "Pokemon LeafGreen (France)",
+    "BPGI": "Pokemon LeafGreen (Italy)",
 }
 
 

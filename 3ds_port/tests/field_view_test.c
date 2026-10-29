@@ -66,6 +66,39 @@ int main(void)
     CHECK(CtrFieldView_Outside(&view, 0, -30) > CtrFieldView_Outside(&view, 0, -20));
     CHECK(CtrFieldView_Outside(&view, 30, -5) > CtrFieldView_Outside(&view, 20, -5));
 
+    /* The camera stopped at an edge: the view, and the window round it, move
+     * with it. */
+    {
+        int west, east, north, south;
+
+        CtrFieldView_Flat(&view);
+        view.shiftX = 5;
+        view.shiftY = -3;
+        CHECK(CtrFieldView_Outside(&view, 17, 0) == 0.0f);
+        CHECK(CtrFieldView_Outside(&view, -12, 0) > 0.0f);
+        CHECK(CtrFieldView_Outside(&view, 0, -9) == 0.0f);
+        CHECK(CtrFieldView_Outside(&view, 0, 8) > 0.0f);
+        CtrFieldView_Window(&view, 2, &west, &east, &north, &south);
+        CHECK(west == 10 && east == 20 && north == 11 && south == 8);
+    }
+
+    /* The edge of the map: a 400px view over a map from 112 to 432 (20
+     * metatiles). Closed at both ends it is centred; at one, it stops there;
+     * open, it goes where the camera does. */
+    CHECK(CtrFieldView_Limit(0.0f, 0.0f, 400.0f, 112.0f, 432.0f, CTR_FIELD_EDGE_LOW | CTR_FIELD_EDGE_HIGH) == 72.0f);
+    CHECK(CtrFieldView_Limit(0.0f, 0.0f, 400.0f, 112.0f, 432.0f, CTR_FIELD_EDGE_LOW) == 112.0f);
+    CHECK(CtrFieldView_Limit(200.0f, 0.0f, 400.0f, 112.0f, 432.0f, CTR_FIELD_EDGE_LOW) == 200.0f);
+    CHECK(CtrFieldView_Limit(200.0f, 0.0f, 400.0f, 112.0f, 432.0f, CTR_FIELD_EDGE_HIGH) == 32.0f);
+    CHECK(CtrFieldView_Limit(-50.0f, 0.0f, 400.0f, 112.0f, 432.0f, 0) == -50.0f);
+    /* A wide map: the view moves freely between its ends. */
+    CHECK(CtrFieldView_Limit(500.0f, 0.0f, 400.0f, 112.0f, 1712.0f, 3) == 500.0f);
+    CHECK(CtrFieldView_Limit(1400.0f, 0.0f, 400.0f, 112.0f, 1712.0f, 3) == 1312.0f);
+    /* A view centred on its point, seeing further one way (the voxel camera,
+     * north): centred on a small map, the point is off its middle. */
+    CHECK(CtrFieldView_Limit(5.0f, 15.0f, 6.0f, 0.0f, 9.0f, 3) == 9.0f);
+    CHECK(CtrFieldView_Limit(5.0f, 15.0f, 6.0f, 0.0f, 40.0f, 3) == 15.0f);
+    CHECK(CtrFieldView_Limit(38.0f, 15.0f, 6.0f, 0.0f, 40.0f, 3) == 34.0f);
+
     if (sFailures == 0)
         printf("field view: all checks passed\n");
     return sFailures != 0;

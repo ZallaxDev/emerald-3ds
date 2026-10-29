@@ -1,0 +1,204 @@
+# CIDADE DE MAUVILLE: o WALLY e o TIO, o WATTSON e a NOVA MAUVILLE, o SCOTT e as placas.
+
+[MauvilleCity_Text_UncleHesTooPeppy] afae7fcbe1
+TIO: Acho que foi por causa dos POKéMON\n
+que este menino ficou tão animado…\l
+Mas ele está animado até demais…$
+
+[MauvilleCity_Text_WallyWantToChallengeGym] 9d45a2343f
+WALLY: Ah, TIO, por favor?\p
+Quero desafiar este GINÁSIO e ver\n
+o quanto eu melhorei.\p
+Por favor? Posso, por favor?$
+
+[MauvilleCity_Text_UncleYourePushingIt] 844babd5a0
+TIO: Calma aí, WALLY.\p
+Desde que começou a viver com POKéMON,\n
+você ficou bem mais forte.\p
+Mas não acha que é exagero desafiar\n
+um GINÁSIO assim, de repente?$
+
+[MauvilleCity_Text_WallyWeCanBeatAnyone] 2c769a306f
+WALLY: Não é exagero.\p
+Se eu juntar forças com o RALTS,\n
+a gente vence qualquer um!$
+
+[MauvilleCity_Text_WallyWillYouBattleMe] 1fa3eb476d
+WALLY: Ah! Oi, {PLAYER}!\p
+Fiquei muito mais forte desde que\n
+a gente se conheceu.\p
+{PLAYER}, quero que você e o meu TIO\n
+entendam isso.\p
+{PLAYER}, por favor, você batalha\n
+comigo?$
+
+[MauvilleCity_Text_WallyMyUncleWontKnowImStrong] e94b121611
+WALLY: Ah… Se você não batalhar comigo,\n
+{PLAYER}, o meu TIO não vai saber que\l
+eu fiquei forte de verdade.$
+
+[MauvilleCity_Text_UncleCanYouBattleWally] a68f976c87
+TIO: {PLAYER}{KUN}, não é?\n
+Pelo WALLY, posso te pedir pra\l
+batalhar com ele só desta vez?\p
+Do jeito que ele está, acho que não\n
+vai ouvir razão nenhuma.$
+
+[MauvilleCity_Text_WallyPleaseBattleMe] 358f7b2bdf
+WALLY: {PLAYER}, por favor!\n
+Batalha comigo, por favor.$
+
+[MauvilleCity_Text_WallyHereICome] e1a7440ee6
+WALLY: {PLAYER}, obrigado.\p
+Certo… Lá vou eu!$
+
+[MauvilleCity_Text_WallyDefeat] 8f3c2b7422
+WALLY: … … … … … … …\p
+… … … … … … … …\p
+Perdi…$
+
+[MauvilleCity_Text_WallyIllGoBackToVerdanturf] dc6e937354
+WALLY: TIO…\n
+Vou voltar pra VERDANTURF…$
+
+[MauvilleCity_Text_ThankYouNotEnoughToBattle] d1ff3540fe
+{PLAYER}, obrigado.\n
+Treinar POKéMON é difícil, né?\p
+Não basta ter POKéMON e fazer eles\n
+batalharem. Não é isso que é\l
+ser TREINADOR de verdade.$
+
+[MauvilleCity_Text_UncleNoNeedToBeDown] 6b8c29b9f9
+TIO: WALLY, não precisa ficar tão\n
+pra baixo.\p
+Ora, o que te impede de ficar\n
+cada vez mais forte?\p
+Vamos, vamos pra casa.\n
+Todo mundo está te esperando.$
+
+[MauvilleCity_Text_UncleVisitUsSometime] 100ae876f8
+TIO: {PLAYER}{KUN}, só agora me caiu a ficha:\n
+foi você que ficou de olho no WALLY\l
+quando ele pegou o\l
+POKéMON dele.\p
+Por que não nos visita em VERDANTURF\n
+qualquer dia?\l
+Tenho certeza de que o WALLY ia adorar.$
+
+[MauvilleCity_Text_WallyPokenavCall] 7a7b2dffcb
+… … … … … …\n
+… … … … … Bipe!\p
+WALLY: Ah, oi, {PLAYER}!\p
+Só queria te contar que o meu tio\n
+me deu um POKéNAV!\p
+Agora posso falar com você a\n
+qualquer hora, {PLAYER}!\p
+… … … … … …\n
+… … … … … Clique!$
+
+[MauvilleCity_Text_RegisteredWally] 12a8565ffe
+O WALLY foi registrado\n
+no POKéNAV.$
+
+[MauvilleCity_Text_ScottYouDidntHoldBack] df0bfd0dd9
+SCOTT: Hehe…\n
+Eu vi essa batalha!\p
+Você e aquele garoto, o WALLY,\n
+são amigos, né?\p
+Mas não pegou leve e venceu ele\n
+de um jeito impressionante.\p
+Isso! Isso é que é batalha\n
+POKéMON de verdade!\p
+Eu sou fã de quem batalha assim!\p
+… … … … … …\n
+Vou torcer por você!$
+
+[MauvilleCity_Text_WattsonNeedFavorTakeKey] 7cfa5261cf
+WATTSON: Ah, {PLAYER}{KUN}!\n
+Você tem energia de sobra!\l
+Isso é ótimo, uahahahaha!\p
+Pronto! Decidi!\n
+Preciso de um favor, {PLAYER}{KUN}!\p
+A CIDADE DE MAUVILLE tem uma área\n
+subterrânea chamada NOVA MAUVILLE.\p
+{PLAYER}{KUN}, quero que você vá lá e\n
+desligue o GERADOR.\p
+O GERADOR anda meio descontrolado.\n
+Está ficando perigoso.\p
+Tome, esta é a CHAVE pra entrar na\n
+NOVA MAUVILLE.$
+
+[MauvilleCity_Text_WattsonWontBeChallenge] efdaafdc5c
+WATTSON: Não se preocupe com isso.\n
+Pra você vai ser moleza.\p
+A entrada da NOVA MAUVILLE fica a\n
+uma surfada da ROTA 110.\p
+Então é isso, confio em você!\n
+Uahahahaha!$
+
+[MauvilleCity_Text_WattsonThanksTakeTM] d11b0ced31
+WATTSON: Uahahahaha!\p
+Eu sabia, {PLAYER}{KUN}! Sabia que tinha\n
+escolhido bem ao te pedir!\p
+É o meu agradecimento: uma MT com\n
+RELÂMPAGO!\p
+Vai, você mereceu!$
+
+[MauvilleCity_Text_WattsonYoungTakeCharge] d94ff05e9b
+WATTSON: Uahahahaha!\p
+Me deixa muito feliz ver os jovens\n
+assumindo a frente!$
+
+[MauvilleCity_Text_NurseHurtMonBackToHealth] d4271e9406
+Sabe, é legal ter batalhas POKéMON\n
+e tal…\p
+Mas, se o seu POKéMON se machuca,\n
+você tem que cuidar dele até sarar.$
+
+[MauvilleCity_Text_AllSortsOfPeopleComeThrough] dbac688f52
+As ruas desta cidade vão pro norte\n
+e pro sul, pro leste e pro oeste.\p
+Por isso, passa todo tipo de\n
+gente por aqui.$
+
+[MauvilleCity_Text_RydelVeryGenerous] e4d1702ba0
+Você já foi à BICICLETARIA DO RYDEL?\p
+O RYDEL, o dono, é um homem muito\n
+generoso.$
+
+[MauvilleCity_Text_PokemonCanJumpYouOnBike] 51026aa4b3
+Mesmo andando de BICICLETA, um\n
+POKéMON selvagem pode te atacar.$
+
+[MauvilleCity_Text_CitySign] 2ce3d187a4
+CIDADE DE MAUVILLE\n
+“A cidade brilhante e divertida!”$
+
+[MauvilleCity_Text_GymSign] e47214343a
+GINÁSIO POKéMON DE MAUVILLE\n
+LÍDER: WATTSON\l
+“O homem alegremente eletrizante!”$
+
+[MauvilleCity_Text_BikeShopSign] 7f2f5c6520
+“Pedale no cascalho e sacuda a\n
+sua alma!”\l
+BICICLETARIA DO RYDEL$
+
+[MauvilleCity_Text_GameCornerSign] 8bda694ec3
+“O lugar de diversão pra todos!”\n
+SALÃO DE JOGOS DE MAUVILLE$
+
+[MauvilleCity_Text_ExplainTV] bd3c2f940a
+Oi, você costuma ver TV?\p
+Puseram um monte de programas novos\n
+e legais há pouco tempo.\p
+TV é demais. Já vi os meus amigos\n
+na TV do nada.\p
+E, às vezes, até põem você na TV\n
+sem avisar.\p
+Queria aparecer na TV um dia.\p
+Por isso acho que você devia dar\n
+uma olhada na TV sempre que puder.$
+
+[MauvilleCity_Text_BeenCheckingOutTV] 17d857425f
+Oi, você tem visto TV?$

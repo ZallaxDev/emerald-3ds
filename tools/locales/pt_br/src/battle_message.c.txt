@@ -1,0 +1,1907 @@
+# As mensagens de batalha (src/battle_message.c). A caixa de mensagem tem
+# 208 px; os textos de outras janelas (menus, a caixa de nível) levam width=.
+# O nome de um POKéMON do oponente vem com " selvagem" ou " inimigo" depois
+# (patch 0041), e os POKéMON são tratados no masculino (o POKéMON).
+
+[sText_PkmnGainedEXP] 7eebc21503
+{B_BUFF1} ganhou{B_BUFF2}\n
+{B_BUFF3} pontos de EXP.!\p
+
+[sText_PkmnTeamGainedEXP] 46886c0b27
+O resto da sua equipe ganhou\n
+pontos de EXP.!\p
+
+[sText_ABoosted] 9017f978d4
+ um bônus de
+
+[sText_PkmnGrewToLv] ffe48fccd8
+{B_BUFF1} subiu para o\n
+NV. {B_BUFF2}!{WAIT_SE}\p
+
+[sText_PkmnLearnedMove] f852978d19
+{B_BUFF1} aprendeu\n
+{B_BUFF2}!{WAIT_SE}\p
+
+[sText_TryToLearnMove1] 92d731fa64
+{B_BUFF1} quer aprender\n
+{B_BUFF2}.\p
+
+[sText_TryToLearnMove2] 9c296eb5e1
+Mas {B_BUFF1} não pode saber\n
+mais de quatro golpes.\p
+
+[sText_TryToLearnMove3] 7cca053df5
+Esquecer um golpe para dar\n
+lugar a {B_BUFF2}?
+
+[sText_PkmnForgotMove] 8e321f5ed5
+{B_BUFF1} esqueceu\n
+{B_BUFF2}.\p
+
+[sText_StopLearningMove] b746747bee
+{PAUSE 32}Desistir de aprender\n
+{B_BUFF2}?
+
+[sText_DidNotLearnMove] 4dcbbb13e2
+{B_BUFF1} não aprendeu\n
+{B_BUFF2}.\p
+
+[sText_UseNextPkmn] a44f6946ef
+Usar outro POKéMON?
+
+[sText_AttackMissed] 10a8ad6dc8
+{B_ATK_NAME_WITH_PREFIX}\n
+errou o ataque!
+
+[sText_PkmnProtectedItself] d5450e64e2
+{B_DEF_NAME_WITH_PREFIX}\n
+se protegeu!
+
+[sText_AvoidedDamage] 7f2f7e823d
+{B_DEF_NAME_WITH_PREFIX} evitou o\n
+dano com {B_DEF_ABILITY}!
+
+[sText_PkmnMakesGroundMiss] 30800e5c2b
+{B_DEF_NAME_WITH_PREFIX} se livra de\n
+golpes TERRESTRES com {B_DEF_ABILITY}!
+
+[sText_PkmnAvoidedAttack] ddf5c18211
+{B_DEF_NAME_WITH_PREFIX}\n
+escapou do ataque!
+
+[sText_ItDoesntAffect] f5c3a1cda5
+Não afeta\n
+{B_DEF_NAME_WITH_PREFIX}…
+
+[sText_AttackerFainted] 54de4b06fb
+{B_ATK_NAME_WITH_PREFIX}\n
+desmaiou!\p
+
+[sText_TargetFainted] 07b694d881
+{B_DEF_NAME_WITH_PREFIX}\n
+desmaiou!\p
+
+[sText_PlayerGotMoney] 295816950e
+{B_PLAYER_NAME} ganhou ¥{B_BUFF1}\n
+pela vitória!\p
+
+[sText_PlayerWhiteout] a297fd343f
+{B_PLAYER_NAME} não tem mais\n
+POKéMON em condições de lutar!\p
+
+[sText_PlayerWhiteout2] 5e2113b8d5
+{B_PLAYER_NAME} apagou!{PAUSE_UNTIL_PRESS}
+
+[sText_PreventsEscape] 06ff8f6512
+{B_SCR_ACTIVE_NAME_WITH_PREFIX} impede a\n
+fuga com {B_SCR_ACTIVE_ABILITY}!\p
+
+[sText_CantEscape2] 0f43e469e7
+Não dá pra fugir!\p
+
+[sText_AttackerCantEscape] 0e86f59c58
+{B_ATK_NAME_WITH_PREFIX} não consegue fugir!
+
+[sText_HitXTimes] a3b375c109
+Acertou {B_BUFF1} vez(es)!
+
+[sText_PkmnFellAsleep] 9541235a99
+{B_EFF_NAME_WITH_PREFIX}\n
+caiu no sono!
+
+[sText_PkmnMadeSleep] 2cdc9a5dfd
+{B_SCR_ACTIVE_ABILITY} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+fez {B_EFF_NAME_WITH_PREFIX} dormir!
+
+[sText_PkmnAlreadyAsleep] ef91f0ea34
+{B_DEF_NAME_WITH_PREFIX}\n
+já está dormindo!
+
+[sText_PkmnAlreadyAsleep2] 754b65dded
+{B_ATK_NAME_WITH_PREFIX}\n
+já está dormindo!
+
+[sText_PkmnWasntAffected] 0d242267d1
+{B_DEF_NAME_WITH_PREFIX}\n
+não foi afetado!
+
+[sText_PkmnWasPoisoned] 8d1fe83656
+{B_EFF_NAME_WITH_PREFIX}\n
+foi envenenado!
+
+[sText_PkmnPoisonedBy] b303104a90
+{B_SCR_ACTIVE_ABILITY} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+envenenou {B_EFF_NAME_WITH_PREFIX}!
+
+[sText_PkmnHurtByPoison] c64be8a79a
+{B_ATK_NAME_WITH_PREFIX} sofre\n
+com o veneno!
+
+[sText_PkmnAlreadyPoisoned] 1f4dc3595e
+{B_DEF_NAME_WITH_PREFIX} já está\n
+envenenado.
+
+[sText_PkmnBadlyPoisoned] 6dbff5c5e4
+{B_EFF_NAME_WITH_PREFIX} foi\n
+gravemente envenenado!
+
+[sText_PkmnEnergyDrained] 124eb45357
+{B_DEF_NAME_WITH_PREFIX} teve a\n
+energia drenada!
+
+[sText_PkmnWasBurned] b87a4ab1e7
+{B_EFF_NAME_WITH_PREFIX} se queimou!
+
+[sText_PkmnBurnedBy] 96fe5fdaaa
+{B_SCR_ACTIVE_ABILITY} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+queimou {B_EFF_NAME_WITH_PREFIX}!
+
+[sText_PkmnHurtByBurn] 06d1d9ba79
+{B_ATK_NAME_WITH_PREFIX} sofre\n
+com a queimadura!
+
+[sText_PkmnAlreadyHasBurn] c67236a960
+{B_DEF_NAME_WITH_PREFIX} já\n
+está queimado.
+
+[sText_PkmnWasFrozen] 8ba18c0a5b
+{B_EFF_NAME_WITH_PREFIX} ficou\n
+congelado!
+
+[sText_PkmnFrozenBy] 23195eb9ba
+{B_SCR_ACTIVE_ABILITY} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+congelou {B_EFF_NAME_WITH_PREFIX}!
+
+[sText_PkmnIsFrozen] 739dbc77dc
+{B_ATK_NAME_WITH_PREFIX} está\n
+congelado!
+
+[sText_PkmnWasDefrosted] 01922566d3
+{B_DEF_NAME_WITH_PREFIX}\n
+descongelou!
+
+[sText_PkmnWasDefrosted2] dbf4a70719
+{B_ATK_NAME_WITH_PREFIX}\n
+descongelou!
+
+[sText_PkmnWasDefrostedBy] 8d3e0a9844
+{B_ATK_NAME_WITH_PREFIX} foi\n
+descongelado por {B_CURRENT_MOVE}!
+
+[sText_PkmnWasParalyzed] bfca82a390
+{B_EFF_NAME_WITH_PREFIX} está paralisado!\n
+Pode não conseguir se mexer!
+
+[sText_PkmnWasParalyzedBy] 6762fa1172
+{B_SCR_ACTIVE_ABILITY} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+paralisou {B_EFF_NAME_WITH_PREFIX}!\lPode não conseguir se mexer!
+
+[sText_PkmnIsParalyzed] 6965887baf
+{B_ATK_NAME_WITH_PREFIX} está paralisado!\n
+Não consegue se mexer!
+
+[sText_PkmnIsAlreadyParalyzed] dc557d33ea
+{B_DEF_NAME_WITH_PREFIX} já\n
+está paralisado!
+
+[sText_PkmnHealedParalysis] d316702e6d
+{B_DEF_NAME_WITH_PREFIX} se\n
+curou da paralisia!
+
+[sText_PkmnDreamEaten] 44f0f29a72
+O sonho de {B_DEF_NAME_WITH_PREFIX}\n
+foi devorado!
+
+[sText_StatsWontIncrease] de2e0ce405
+{B_BUFF1} de {B_ATK_NAME_WITH_PREFIX}\n
+não sobe mais!
+
+[sText_StatsWontDecrease] 817cfff3ea
+{B_BUFF1} de {B_DEF_NAME_WITH_PREFIX}\n
+não desce mais!
+
+[sText_TeamStoppedWorking] a22bc5098c
+{B_BUFF1} da sua equipe\n
+parou de funcionar!
+
+[sText_FoeStoppedWorking] d295ed3b20
+{B_BUFF1} do oponente\n
+parou de funcionar!
+
+[sText_PkmnIsConfused] a873eef10f
+{B_ATK_NAME_WITH_PREFIX} está\n
+confuso!
+
+[sText_PkmnHealedConfusion] 2bb0739560
+{B_ATK_NAME_WITH_PREFIX} saiu\n
+da confusão!
+
+[sText_PkmnWasConfused] 626837c55a
+{B_EFF_NAME_WITH_PREFIX} ficou\n
+confuso!
+
+[sText_PkmnAlreadyConfused] ced4c9fb88
+{B_DEF_NAME_WITH_PREFIX} já\n
+está confuso!
+
+[sText_PkmnFellInLove] 9697812e0c
+{B_DEF_NAME_WITH_PREFIX}\n
+se apaixonou!
+
+[sText_PkmnInLove] 230f72919b
+{B_ATK_NAME_WITH_PREFIX} está apaixonado\n
+por {B_SCR_ACTIVE_NAME_WITH_PREFIX}!
+
+[sText_PkmnImmobilizedByLove] 1de8527323
+{B_ATK_NAME_WITH_PREFIX} está\n
+paralisado de amor!
+
+[sText_PkmnBlownAway] aa12d63d5b
+{B_DEF_NAME_WITH_PREFIX} foi\n
+lançado para longe!
+
+[sText_PkmnChangedType] 8c037c080f
+{B_ATK_NAME_WITH_PREFIX} virou\n
+do tipo {B_BUFF1}!
+
+[sText_PkmnFlinched] a9ee5c16f9
+{B_ATK_NAME_WITH_PREFIX} recuou!
+
+[sText_PkmnRegainedHealth] 9bd71d28ca
+{B_DEF_NAME_WITH_PREFIX} recuperou\n
+saúde!
+
+[sText_PkmnHPFull] e1a8d1a4dd
+Os PS de {B_DEF_NAME_WITH_PREFIX}\n
+já estão cheios!
+
+[sText_PkmnRaisedSpDef] 63439616e0
+{B_CURRENT_MOVE} da equipe {B_ATK_PREFIX2}\n
+aumentou a DEF. ESP.!
+
+[sText_PkmnRaisedSpDefALittle] 8cc9310a14
+{B_CURRENT_MOVE} da equipe {B_ATK_PREFIX2}\n
+aumentou um pouco a DEF. ESP.!
+
+[sText_PkmnRaisedDef] 9577a95048
+{B_CURRENT_MOVE} da equipe {B_ATK_PREFIX2}\n
+aumentou a DEFESA!
+
+[sText_PkmnRaisedDefALittle] bd4de9d6ec
+{B_CURRENT_MOVE} da equipe {B_ATK_PREFIX2}\n
+aumentou um pouco a DEFESA!
+
+[sText_PkmnCoveredByVeil] b1d4223826
+A equipe {B_ATK_PREFIX2} está\n
+protegida por um véu!
+
+[sText_PkmnUsedSafeguard] c5cf6a35bf
+A equipe de {B_DEF_NAME_WITH_PREFIX}\n
+está protegida pela SALVAGUARDA!
+
+[sText_PkmnSafeguardExpired] 8cb0a2c3e0
+A equipe {B_ATK_PREFIX3} perdeu a\n
+proteção da SALVAGUARDA!
+
+[sText_PkmnWentToSleep] 0782b48b11
+{B_ATK_NAME_WITH_PREFIX} foi\n
+dormir!
+
+[sText_PkmnSleptHealthy] 2979a21dd7
+{B_ATK_NAME_WITH_PREFIX} dormiu e\n
+ficou novinho em folha!
+
+[sText_PkmnWhippedWhirlwind] 19a570f0c0
+{B_ATK_NAME_WITH_PREFIX} levantou\n
+um redemoinho!
+
+[sText_PkmnTookSunlight] 14452297c6
+{B_ATK_NAME_WITH_PREFIX} absorveu\n
+a luz do sol!
+
+[sText_PkmnLoweredHead] 7be25a5250
+{B_ATK_NAME_WITH_PREFIX} abaixou\n
+a cabeça!
+
+[sText_PkmnIsGlowing] 8b238d780d
+{B_ATK_NAME_WITH_PREFIX} está brilhando!
+
+[sText_PkmnFlewHigh] 21fcce79fc
+{B_ATK_NAME_WITH_PREFIX} voou\n
+bem alto!
+
+[sText_PkmnDugHole] f5748fefff
+{B_ATK_NAME_WITH_PREFIX} cavou um buraco!
+
+[sText_PkmnHidUnderwater] 64acee28d8
+{B_ATK_NAME_WITH_PREFIX} se escondeu\n
+debaixo d'água!
+
+[sText_PkmnSprangUp] c9317a44b1
+{B_ATK_NAME_WITH_PREFIX} deu um salto!
+
+[sText_PkmnSqueezedByBind] 4dcd62d489
+{B_DEF_NAME_WITH_PREFIX} foi apertado pelo\n
+AGARRAMENTO de {B_ATK_NAME_WITH_PREFIX}!
+
+[sText_PkmnTrappedInVortex] a19e2b0b95
+{B_DEF_NAME_WITH_PREFIX} ficou preso\n
+no redemoinho!
+
+[sText_PkmnTrappedBySandTomb] 5c72709001
+{B_DEF_NAME_WITH_PREFIX} ficou preso\n
+no FOSSO AREIA!
+
+[sText_PkmnWrappedBy] 6ff71ee67a
+{B_DEF_NAME_WITH_PREFIX} foi enrolado\n
+por {B_ATK_NAME_WITH_PREFIX}!
+
+[sText_PkmnClamped] db422dd54a
+{B_ATK_NAME_WITH_PREFIX} prendeu\n
+{B_DEF_NAME_WITH_PREFIX}!
+
+[sText_PkmnHurtBy] 875ca6b815
+{B_ATK_NAME_WITH_PREFIX} sofre\n
+com {B_BUFF1}!
+
+[sText_PkmnFreedFrom] 148c986e10
+{B_ATK_NAME_WITH_PREFIX} se livrou\n
+de {B_BUFF1}!
+
+[sText_PkmnCrashed] ac879a94ab
+{B_ATK_NAME_WITH_PREFIX} passou\n
+direto e se estatelou!
+
+[gText_PkmnShroudedInMist] 6461a13eaf
+A equipe {B_ATK_PREFIX2} ficou\n
+envolta em NÉVOA!
+
+[sText_PkmnProtectedByMist] a3397e20a4
+{B_SCR_ACTIVE_NAME_WITH_PREFIX} está\n
+protegido pela NÉVOA!
+
+[gText_PkmnGettingPumped] a2b3f58cf3
+{B_ATK_NAME_WITH_PREFIX} está\n
+pegando fogo!
+
+[sText_PkmnHitWithRecoil] 30d0d287fc
+{B_ATK_NAME_WITH_PREFIX} sofreu\n
+o dano de recuo!
+
+[sText_PkmnProtectedItself2] b2f846d14a
+{B_ATK_NAME_WITH_PREFIX} se\n
+protegeu!
+
+[sText_PkmnBuffetedBySandstorm] adddc31883
+{B_ATK_NAME_WITH_PREFIX} é castigado\n
+pela tempestade de areia!
+
+[sText_PkmnPeltedByHail] 4b17496623
+{B_ATK_NAME_WITH_PREFIX} é atingido\n
+pelo GRANIZO!
+
+[sText_PkmnsXWoreOff] 8a6b28ba24
+{B_BUFF1} da equipe\n
+{B_ATK_PREFIX1} acabou!
+
+[sText_PkmnSeeded] bbe337afef
+{B_DEF_NAME_WITH_PREFIX} foi semeado!
+
+[sText_PkmnEvadedAttack] 53c7ba1dbb
+{B_DEF_NAME_WITH_PREFIX} se esquivou\n
+do ataque!
+
+[sText_PkmnSappedByLeechSeed] 2135ce99c5
+A SANGUESSUGA suga a\n
+saúde de {B_ATK_NAME_WITH_PREFIX}!
+
+[sText_PkmnFastAsleep] 5a409269a9
+{B_ATK_NAME_WITH_PREFIX} está\n
+em sono profundo.
+
+[sText_PkmnWokeUp] fadd2873eb
+{B_ATK_NAME_WITH_PREFIX} acordou!
+
+[sText_PkmnUproarKeptAwake] da02d9e79f
+Mas o TUMULTO de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+não deixa ele dormir!
+
+[sText_PkmnWokeUpInUproar] ab506b1d97
+{B_ATK_NAME_WITH_PREFIX} acordou\n
+com o TUMULTO!
+
+[sText_PkmnCausedUproar] f30765172b
+{B_ATK_NAME_WITH_PREFIX} começou\n
+um TUMULTO!
+
+[sText_PkmnMakingUproar] e111b53468
+{B_ATK_NAME_WITH_PREFIX} está\n
+fazendo um TUMULTO!
+
+[sText_PkmnCalmedDown] 6209d05bd5
+{B_ATK_NAME_WITH_PREFIX} se acalmou.
+
+[sText_PkmnCantSleepInUproar] c5876e0185
+Mas {B_DEF_NAME_WITH_PREFIX} não\n
+consegue dormir no TUMULTO!
+
+[sText_PkmnStockpiled] 966662f1b5
+{B_ATK_NAME_WITH_PREFIX} estocou\n
+{B_BUFF1}!
+
+[sText_PkmnCantStockpile] 0bfb3b376a
+{B_ATK_NAME_WITH_PREFIX} não consegue\n
+estocar mais nada!
+
+[sText_PkmnCantSleepInUproar2] c5876e0185
+Mas {B_DEF_NAME_WITH_PREFIX} não\n
+consegue dormir no TUMULTO!
+
+[sText_UproarKeptPkmnAwake] ab359cf6cd
+Mas o TUMULTO manteve\n
+{B_DEF_NAME_WITH_PREFIX} acordado!
+
+[sText_PkmnStayedAwakeUsing] 970f4ac0d8
+{B_DEF_NAME_WITH_PREFIX} ficou acordado\n
+graças a {B_DEF_ABILITY}!
+
+[sText_PkmnStoringEnergy] f3e060e23c
+{B_ATK_NAME_WITH_PREFIX} está\n
+acumulando energia!
+
+[sText_PkmnUnleashedEnergy] cdc64819cc
+{B_ATK_NAME_WITH_PREFIX} liberou\n
+a energia!
+
+[sText_PkmnFatigueConfusion] 58248a77a1
+{B_ATK_NAME_WITH_PREFIX} ficou\n
+confuso de cansaço!
+
+[sText_PlayerPickedUpMoney] bb8a0b12a4
+{B_PLAYER_NAME} pegou\n
+¥{B_BUFF1}!\p
+
+[sText_PkmnUnaffected] 05680e236c
+{B_DEF_NAME_WITH_PREFIX} não\n
+foi afetado!
+
+[sText_PkmnTransformedInto] b6ddcf6bca
+{B_ATK_NAME_WITH_PREFIX} se\n
+transformou em {B_BUFF1}!
+
+[sText_PkmnMadeSubstitute] c6f04d7fb5
+{B_ATK_NAME_WITH_PREFIX} criou\n
+um SUBSTITUTO!
+
+[sText_PkmnHasSubstitute] 0118f25a72
+{B_ATK_NAME_WITH_PREFIX} já\n
+tem um SUBSTITUTO!
+
+[sText_SubstituteDamaged] 5022e4e849
+O SUBSTITUTO levou o dano\n
+no lugar de {B_DEF_NAME_WITH_PREFIX}!\p
+
+[sText_PkmnSubstituteFaded] 82e2ca2d88
+O SUBSTITUTO de\n
+{B_DEF_NAME_WITH_PREFIX} sumiu!\p
+
+[sText_PkmnMustRecharge] ff6fa027ca
+{B_ATK_NAME_WITH_PREFIX} precisa\n
+recarregar!
+
+[sText_PkmnRageBuilding] 632f6f83ad
+A IRA de {B_DEF_NAME_WITH_PREFIX}\n
+está crescendo!
+
+[sText_PkmnMoveWasDisabled] 5d37f87ce5
+{B_BUFF1} de {B_DEF_NAME_WITH_PREFIX}\n
+foi desabilitado!
+
+[sText_PkmnMoveDisabledNoMore] b64e79b3bf
+{B_ATK_NAME_WITH_PREFIX} não está\n
+mais desabilitado!
+
+[sText_PkmnGotEncore] c75ad75d51
+{B_DEF_NAME_WITH_PREFIX} caiu\n
+no BIS!
+
+[sText_PkmnEncoreEnded] 071ecbec2f
+O BIS de {B_ATK_NAME_WITH_PREFIX}\n
+acabou!
+
+[sText_PkmnTookAim] 27e54c60c7
+{B_ATK_NAME_WITH_PREFIX} mirou em\n
+{B_DEF_NAME_WITH_PREFIX}!
+
+[sText_PkmnSketchedMove] 7002e0700e
+{B_ATK_NAME_WITH_PREFIX} copiou\n
+{B_BUFF1} com RASCUNHO!
+
+[sText_PkmnTryingToTakeFoe] a231b3be26
+{B_ATK_NAME_WITH_PREFIX} quer levar\n
+o oponente junto!
+
+[sText_PkmnTookFoe] 2065860201
+{B_DEF_NAME_WITH_PREFIX} levou\n
+{B_ATK_NAME_WITH_PREFIX} junto!
+
+[sText_PkmnReducedPP] 3d4a9d677c
+{B_BUFF1} de {B_DEF_NAME_WITH_PREFIX}\n
+perdeu {B_BUFF2} PP!
+
+[sText_PkmnStoleItem] 0a10607ef0
+{B_ATK_NAME_WITH_PREFIX} roubou\n
+{B_LAST_ITEM} de {B_DEF_NAME_WITH_PREFIX}!
+
+[sText_TargetCantEscapeNow] 8f27151bc1
+{B_DEF_NAME_WITH_PREFIX} não\n
+pode mais fugir!
+
+[sText_PkmnFellIntoNightmare] 9b0b1c699c
+{B_DEF_NAME_WITH_PREFIX} caiu\n
+num PESADELO!
+
+[sText_PkmnLockedInNightmare] fff7b53031
+{B_ATK_NAME_WITH_PREFIX} está\n
+preso num PESADELO!
+
+[sText_PkmnLaidCurse] 70b45c605f
+{B_ATK_NAME_WITH_PREFIX} gastou PS e lançou\n
+uma MALDIÇÃO em {B_DEF_NAME_WITH_PREFIX}!
+
+[sText_PkmnAfflictedByCurse] 4918e44e50
+{B_ATK_NAME_WITH_PREFIX} sofre\n
+com a MALDIÇÃO!
+
+[sText_SpikesScattered] 8f50cf0675
+TACHINHAS se espalharam\n
+pelo lado do oponente!
+
+[sText_PkmnHurtBySpikes] ce1390c286
+{B_SCR_ACTIVE_NAME_WITH_PREFIX} se\n
+feriu nas TACHINHAS!
+
+[sText_PkmnIdentified] fcfffc4c4f
+{B_ATK_NAME_WITH_PREFIX} identificou\n
+{B_DEF_NAME_WITH_PREFIX}!
+
+[sText_PkmnPerishCountFell] 9e6c2b0814
+Contagem de PERECER de\n
+{B_ATK_NAME_WITH_PREFIX}: {B_BUFF1}!
+
+[sText_PkmnBracedItself] f640a8731b
+{B_ATK_NAME_WITH_PREFIX} se\n
+preparou!
+
+[sText_PkmnEnduredHit] a80b8d2e86
+{B_DEF_NAME_WITH_PREFIX}\n
+aguentou o golpe!
+
+[sText_MagnitudeStrength] 1830c579f9
+MAGNITUDE {B_BUFF1}!
+
+[sText_PkmnCutHPMaxedAttack] b3dd8b3a3d
+{B_ATK_NAME_WITH_PREFIX} gastou PS\n
+e maximizou o ATAQUE!
+
+[sText_PkmnCopiedStatChanges] bb1afa5300
+{B_ATK_NAME_WITH_PREFIX} copiou os\n
+atributos de {B_DEF_NAME_WITH_PREFIX}!
+
+[sText_PkmnGotFree] 521d2c8181
+{B_ATK_NAME_WITH_PREFIX} se soltou\n
+de {B_BUFF1} de {B_DEF_NAME_WITH_PREFIX}!
+
+[sText_PkmnShedLeechSeed] a3d3d2603b
+{B_ATK_NAME_WITH_PREFIX} se livrou\n
+da SANGUESSUGA!
+
+[sText_PkmnBlewAwaySpikes] c42237ea2b
+{B_ATK_NAME_WITH_PREFIX} varreu\n
+as TACHINHAS!
+
+[sText_PkmnFledFromBattle] de43d2a232
+{B_ATK_NAME_WITH_PREFIX} fugiu\n
+da batalha!
+
+[sText_PkmnForesawAttack] 630cc1ee32
+{B_ATK_NAME_WITH_PREFIX} previu\n
+um ataque!
+
+[sText_PkmnTookAttack] d51fce7712
+{B_DEF_NAME_WITH_PREFIX} levou o\n
+ataque de {B_BUFF1}!
+
+[sText_PkmnChoseXAsDestiny] 8690e774c6
+{B_ATK_NAME_WITH_PREFIX} escolheu\n
+{B_CURRENT_MOVE} como destino!
+
+[sText_PkmnAttack] 63b30c2667
+Ataque de {B_BUFF1}!
+
+[sText_PkmnCenterAttention] 5d2f5e7b0f
+{B_ATK_NAME_WITH_PREFIX} virou o\n
+centro das atenções!
+
+[sText_PkmnChargingPower] 1f9c59ee92
+{B_ATK_NAME_WITH_PREFIX} começou\n
+a carregar energia!
+
+[sText_NaturePowerTurnedInto] 45adba240d
+PODER NATUR. virou\n
+{B_CURRENT_MOVE}!
+
+[sText_PkmnStatusNormal] 58d64e76b4
+{B_ATK_NAME_WITH_PREFIX} voltou\n
+ao normal!
+
+[sText_PkmnSubjectedToTorment] 83a3105937
+{B_DEF_NAME_WITH_PREFIX} está\n
+sendo ATORMENTADO!
+
+[sText_PkmnTighteningFocus] 119ce4f835
+{B_ATK_NAME_WITH_PREFIX} está\n
+se concentrando!
+
+[sText_PkmnFellForTaunt] d25a0817d7
+{B_DEF_NAME_WITH_PREFIX} caiu\n
+no INSULTO!
+
+[sText_PkmnReadyToHelp] a3ad27ad5e
+{B_ATK_NAME_WITH_PREFIX} está pronto\n
+para ajudar {B_DEF_NAME_WITH_PREFIX}!
+
+[sText_PkmnSwitchedItems] a5131f1356
+{B_ATK_NAME_WITH_PREFIX} trocou\n
+de item com o oponente!
+
+[sText_PkmnObtainedX] 25328c2dcf
+{B_ATK_NAME_WITH_PREFIX} recebeu\n
+{B_BUFF1}.
+
+[sText_PkmnObtainedX2] 2182dc15fe
+{B_DEF_NAME_WITH_PREFIX} recebeu\n
+{B_BUFF2}.
+
+[sText_PkmnObtainedXYObtainedZ] 62dfd38709
+{B_ATK_NAME_WITH_PREFIX} recebeu\n
+{B_BUFF1}.\p{B_DEF_NAME_WITH_PREFIX} recebeu\n
+{B_BUFF2}.
+
+[sText_PkmnCopiedFoe] dd65165b97
+{B_ATK_NAME_WITH_PREFIX} copiou\n
+{B_DEF_ABILITY} de {B_DEF_NAME_WITH_PREFIX}!
+
+[sText_PkmnMadeWish] 1dad732ca7
+{B_ATK_NAME_WITH_PREFIX} fez um DESEJO!
+
+[sText_PkmnWishCameTrue] 42c89f5893
+O DESEJO de {B_BUFF1}\n
+se realizou!
+
+[sText_PkmnPlantedRoots] 7a08dc8835
+{B_ATK_NAME_WITH_PREFIX} criou raízes!
+
+[sText_PkmnAbsorbedNutrients] 3063e116fb
+{B_ATK_NAME_WITH_PREFIX} absorveu\n
+nutrientes pelas raízes!
+
+[sText_PkmnAnchoredItself] 206437405b
+{B_DEF_NAME_WITH_PREFIX} se firmou\n
+pelas raízes!
+
+[sText_PkmnWasMadeDrowsy] 5a57e8724e
+{B_ATK_NAME_WITH_PREFIX} deixou\n
+{B_DEF_NAME_WITH_PREFIX} com sono!
+
+[sText_PkmnKnockedOff] 7be8b8e569
+{B_ATK_NAME_WITH_PREFIX} derrubou\n
+{B_LAST_ITEM} de {B_DEF_NAME_WITH_PREFIX}!
+
+[sText_PkmnSwappedAbilities] 0d2f5f3b63
+{B_ATK_NAME_WITH_PREFIX} trocou de\n
+habilidade com o oponente!
+
+[sText_PkmnSealedOpponentMove] 53e1214340
+{B_ATK_NAME_WITH_PREFIX} bloqueou os\n
+golpes do oponente!
+
+[sText_PkmnWantsGrudge] ade6c77671
+{B_ATK_NAME_WITH_PREFIX} quer que o\n
+oponente guarde RANCOR!
+
+[sText_PkmnLostPPGrudge] ad58c7b757
+{B_BUFF1} de {B_ATK_NAME_WITH_PREFIX}\n
+perdeu todo o PP pelo RANCOR!
+
+[sText_PkmnShroudedItself] 25bbfc5447
+{B_ATK_NAME_WITH_PREFIX} se cobriu\n
+com {B_CURRENT_MOVE}!
+
+[sText_PkmnMoveBounced] c2912e1fea
+{B_CURRENT_MOVE} de {B_ATK_NAME_WITH_PREFIX}\n
+foi rebatido pela CAPA MÁGICA!
+
+[sText_PkmnWaitsForTarget] 0378c78f9a
+{B_ATK_NAME_WITH_PREFIX} espera o\n
+alvo fazer um movimento!
+
+[sText_PkmnSnatchedMove] 7101f145c9
+{B_DEF_NAME_WITH_PREFIX} roubou o golpe\n
+de {B_SCR_ACTIVE_NAME_WITH_PREFIX}!
+
+[sText_ElectricityWeakened] 2f7d14446a
+A eletricidade perdeu\n
+força!
+
+[sText_FireWeakened] 7560950e97
+O fogo perdeu\n
+força!
+
+[sText_XFoundOneY] 2f29b90637
+{B_ATK_NAME_WITH_PREFIX} achou\n
+um(a) {B_LAST_ITEM}!
+
+[sText_SoothingAroma] ec3abeefcf
+Um aroma calmante se\n
+espalhou pelo ar!
+
+[sText_ItemsCantBeUsedNow] 39ee009792
+Não dá pra usar itens agora.{PAUSE 64}
+
+[sText_ForXCommaYZ] 5382cb2701
+Para {B_SCR_ACTIVE_NAME_WITH_PREFIX},\n
+{B_LAST_ITEM} {B_BUFF1}
+
+[sText_PkmnUsedXToGetPumped] 2d646cb70a
+{B_SCR_ACTIVE_NAME_WITH_PREFIX} usou\n
+{B_LAST_ITEM} e ficou animado!
+
+[sText_PkmnLostFocus] 48972cd377
+{B_ATK_NAME_WITH_PREFIX} perdeu a\n
+concentração e não se mexeu!
+
+[sText_PkmnWasDraggedOut] ceec3835c7
+{B_DEF_NAME_WITH_PREFIX} foi\n
+arrastado pra batalha!\p
+
+[sText_TheWallShattered] e20c547d12
+A barreira se despedaçou!
+
+[sText_ButNoEffect] 231b5b5328
+Mas não teve efeito!
+
+[sText_PkmnHasNoMovesLeft] 864df63d75
+{B_ACTIVE_NAME_WITH_PREFIX} não\n
+tem mais golpes!\p
+
+[sText_PkmnMoveIsDisabled] 9f0a5c9f6f
+{B_CURRENT_MOVE} de {B_ACTIVE_NAME_WITH_PREFIX}\n
+está desabilitado!\p
+
+[sText_PkmnCantUseMoveTorment] 47368564f7
+{B_ACTIVE_NAME_WITH_PREFIX} não pode repetir\n
+o golpe por causa do ATORMENTAR!\p
+
+[sText_PkmnCantUseMoveTaunt] ca4c54cb1a
+{B_ACTIVE_NAME_WITH_PREFIX} não pode usar\n
+{B_CURRENT_MOVE} depois do INSULTO!\p
+
+[sText_PkmnCantUseMoveSealed] 2ab17746a2
+{B_ACTIVE_NAME_WITH_PREFIX} não pode usar\n
+{B_CURRENT_MOVE}, que foi bloqueado!\p
+
+[sText_PkmnMadeItRain] 22cd9635be
+{B_SCR_ACTIVE_ABILITY} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+fez chover!
+
+[sText_PkmnRaisedSpeed] d816a8f65c
+{B_SCR_ACTIVE_ABILITY} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+aumentou a VELOCIDADE!
+
+[sText_PkmnProtectedBy] 4c8f69102f
+{B_DEF_NAME_WITH_PREFIX} foi protegido\n
+por {B_DEF_ABILITY}!
+
+[sText_PkmnPreventsUsage] 10be4a9721
+{B_DEF_ABILITY} de {B_DEF_NAME_WITH_PREFIX}\n
+impede {B_ATK_NAME_WITH_PREFIX}\lde usar {B_CURRENT_MOVE}!
+
+[sText_PkmnRestoredHPUsing] 22cb2701dc
+{B_DEF_NAME_WITH_PREFIX} recuperou PS\n
+com {B_DEF_ABILITY}!
+
+[sText_PkmnsXMadeYUseless] a5d4861ccd
+{B_DEF_ABILITY} de {B_DEF_NAME_WITH_PREFIX}\n
+deixou {B_CURRENT_MOVE} inútil!
+
+[sText_PkmnChangedTypeWith] 7230d62981
+{B_DEF_ABILITY} de {B_DEF_NAME_WITH_PREFIX}\n
+mudou o tipo para {B_BUFF1}!
+
+[sText_PkmnPreventsParalysisWith] ebf6337229
+{B_DEF_ABILITY} de {B_EFF_NAME_WITH_PREFIX}\n
+impede a paralisia!
+
+[sText_PkmnPreventsRomanceWith] 82aaedb49a
+{B_DEF_ABILITY} de {B_DEF_NAME_WITH_PREFIX}\n
+impede a paixão!
+
+[sText_PkmnPreventsPoisoningWith] 4b4ef7f0e5
+{B_DEF_ABILITY} de {B_EFF_NAME_WITH_PREFIX}\n
+impede o envenenamento!
+
+[sText_PkmnPreventsConfusionWith] 98d5703967
+{B_DEF_ABILITY} de {B_DEF_NAME_WITH_PREFIX}\n
+impede a confusão!
+
+[sText_PkmnRaisedFirePowerWith] ffbad7280a
+{B_DEF_ABILITY} de {B_DEF_NAME_WITH_PREFIX}\n
+fortaleceu os golpes de FOGO!
+
+[sText_PkmnAnchorsItselfWith] e8271db8f5
+{B_DEF_NAME_WITH_PREFIX} se firma\n
+com {B_DEF_ABILITY}!
+
+[sText_PkmnCutsAttackWith] 604327676a
+{B_SCR_ACTIVE_ABILITY} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+baixa o ATAQUE de {B_DEF_NAME_WITH_PREFIX}!
+
+[sText_PkmnPreventsStatLossWith] 7124b41d01
+{B_SCR_ACTIVE_ABILITY} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+impede a perda de atributos!
+
+[sText_PkmnHurtsWith] 2047b500a7
+{B_DEF_ABILITY} de {B_DEF_NAME_WITH_PREFIX}\n
+feriu {B_ATK_NAME_WITH_PREFIX}!
+
+[sText_PkmnTraced] 463e6087d7
+{B_SCR_ACTIVE_NAME_WITH_PREFIX} copiou\n
+{B_BUFF2} de {B_BUFF1}!
+
+[sText_PkmnsXPreventsBurns] a2b470569f
+{B_EFF_ABILITY} de {B_EFF_NAME_WITH_PREFIX}\n
+impede queimaduras!
+
+[sText_PkmnsXBlocksY] 49f9fe4a99
+{B_DEF_ABILITY} de {B_DEF_NAME_WITH_PREFIX}\n
+bloqueia {B_CURRENT_MOVE}!
+
+[sText_PkmnsXBlocksY2] b13659cd27
+{B_SCR_ACTIVE_ABILITY} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+bloqueia {B_CURRENT_MOVE}!
+
+[sText_PkmnsXRestoredHPALittle2] 825054243d
+{B_ATK_ABILITY} de {B_ATK_NAME_WITH_PREFIX}\n
+recuperou um pouco de PS!
+
+[sText_PkmnsXWhippedUpSandstorm] 6f525c1d7b
+{B_SCR_ACTIVE_ABILITY} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+levantou uma tempestade de areia!
+
+[sText_PkmnsXIntensifiedSun] f24c61f155
+{B_SCR_ACTIVE_ABILITY} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+intensificou o sol!
+
+[sText_PkmnsXPreventsYLoss] 56151b50a0
+{B_SCR_ACTIVE_ABILITY} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+impede a perda de {B_BUFF1}!
+
+[sText_PkmnsXInfatuatedY] a20a55ce08
+{B_DEF_ABILITY} de {B_DEF_NAME_WITH_PREFIX}\n
+encantou {B_ATK_NAME_WITH_PREFIX}!
+
+[sText_PkmnsXMadeYIneffective] d1ef16b9be
+{B_DEF_ABILITY} de {B_DEF_NAME_WITH_PREFIX}\n
+anulou {B_CURRENT_MOVE}!
+
+[sText_PkmnsXCuredYProblem] c360659fee
+{B_SCR_ACTIVE_ABILITY} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+curou {B_BUFF1}!
+
+[sText_ItSuckedLiquidOoze] 39a9e71a71
+Sugou o LODO LÍQUIDO!
+
+[sText_PkmnTransformed] 63460b92e8
+{B_SCR_ACTIVE_NAME_WITH_PREFIX} se transformou!
+
+[sText_PkmnsXTookAttack] f9fa7aa693
+{B_DEF_ABILITY} de {B_DEF_NAME_WITH_PREFIX}\n
+atraiu o ataque!
+
+[gText_PkmnsXPreventsSwitching] bf13c69775
+{B_LAST_ABILITY} de {B_BUFF1}\n
+impede a troca!\p
+
+[sText_PreventedFromWorking] 6e437cde20
+{B_DEF_ABILITY} de {B_DEF_NAME_WITH_PREFIX}\n
+anulou {B_BUFF1} de\l{B_SCR_ACTIVE_NAME_WITH_PREFIX}!
+
+[sText_PkmnsXMadeItIneffective] 71a62c5ccd
+{B_SCR_ACTIVE_ABILITY} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+anulou o efeito!
+
+[sText_PkmnsXPreventsFlinching] e989a661a4
+{B_EFF_ABILITY} de {B_EFF_NAME_WITH_PREFIX}\n
+impede o recuo!
+
+[sText_PkmnsXPreventsYsZ] 17bd77a87c
+{B_ATK_ABILITY} de {B_ATK_NAME_WITH_PREFIX}\n
+anula {B_DEF_ABILITY} de\l{B_DEF_NAME_WITH_PREFIX}!
+
+[sText_PkmnsXCuredItsYProblem] c360659fee
+{B_SCR_ACTIVE_ABILITY} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+curou {B_BUFF1}!
+
+[sText_PkmnsXHadNoEffectOnY] aaf9992a5c
+{B_SCR_ACTIVE_ABILITY} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+não afetou {B_EFF_NAME_WITH_PREFIX}!
+
+[sText_StatSharply] 9656b5d37d
+muito 
+
+[gText_StatRose] c6bb746eee
+subiu!
+
+[sText_StatHarshly] abd2e5bb71
+muito 
+
+[sText_StatFell] 6678a1d6bc
+caiu!
+
+[sText_StatSharplyRose] 00ce86ade4
+subiu muito!
+
+[sText_StatHarshlyFell] f8fa5372aa
+caiu muito!
+
+[sText_AttackersStatRose] 4327d2cb91
+{B_BUFF1} de {B_ATK_NAME_WITH_PREFIX}\n
+{B_BUFF2}
+
+[gText_DefendersStatRose] aa8979b818
+{B_BUFF1} de {B_DEF_NAME_WITH_PREFIX}\n
+{B_BUFF2}
+
+[sText_UsingItemTheStatOfPkmnRose] b5da465e90
+Com {B_LAST_ITEM}, {B_BUFF1}\n
+de {B_SCR_ACTIVE_NAME_WITH_PREFIX} {B_BUFF2}
+
+[sText_AttackersStatFell] 4327d2cb91
+{B_BUFF1} de {B_ATK_NAME_WITH_PREFIX}\n
+{B_BUFF2}
+
+[sText_DefendersStatFell] aa8979b818
+{B_BUFF1} de {B_DEF_NAME_WITH_PREFIX}\n
+{B_BUFF2}
+
+[sText_StatsWontIncrease2] 60f0a26e4a
+Os atributos de {B_ATK_NAME_WITH_PREFIX}\n
+não sobem mais!
+
+[sText_StatsWontDecrease2] 8d681f6cae
+Os atributos de {B_DEF_NAME_WITH_PREFIX}\n
+não descem mais!
+
+[sText_CriticalHit] d609cad97d
+Acerto crítico!
+
+[sText_OneHitKO] b0780131a3
+Nocaute num golpe só!
+
+[sText_123Poof] 4fb2f4cea3
+{PAUSE 32}1, {PAUSE 15}2 e{PAUSE 15}… {PAUSE 15}… {PAUSE 15}… {PAUSE 15}{PLAY_SE SE_BALL_BOUNCE_1}Puf!\p
+
+[sText_AndEllipsis] ea8021758c
+E…\p
+
+[sText_HMMovesCantBeForgotten] 146dcebe39
+Golpes de MO não podem ser\n
+esquecidos agora.\p
+
+[sText_NotVeryEffective] bdc5b098a8
+Não é muito efetivo…
+
+[sText_SuperEffective] c5e970af61
+É super efetivo!
+
+[sText_GotAwaySafely] e2a218a26e
+{PLAY_SE SE_FLEE}Você fugiu sem problemas!\p
+
+[sText_PkmnFledUsingIts] d335e2a07a
+{PLAY_SE SE_FLEE}{B_ATK_NAME_WITH_PREFIX} fugiu\n
+usando {B_LAST_ITEM}!\p
+
+[sText_PkmnFledUsing] 18c208b746
+{PLAY_SE SE_FLEE}{B_ATK_NAME_WITH_PREFIX} fugiu\n
+com {B_ATK_ABILITY}!\p
+
+[sText_WildPkmnFled] ef8d4d9db5
+{PLAY_SE SE_FLEE}{B_BUFF1} selvagem fugiu!
+
+[sText_PlayerDefeatedLinkTrainer] 64a91ff853
+Você derrotou\n
+{B_LINK_OPPONENT1_NAME}!
+
+[sText_TwoLinkTrainersDefeated] bfe7072e9d
+Você derrotou {B_LINK_OPPONENT1_NAME}\n
+e {B_LINK_OPPONENT2_NAME}!
+
+[sText_PlayerLostAgainstLinkTrainer] 7ceec729e5
+Você perdeu para\n
+{B_LINK_OPPONENT1_NAME}!
+
+[sText_PlayerLostToTwo] 7223f5473e
+Você perdeu para {B_LINK_OPPONENT1_NAME}\n
+e {B_LINK_OPPONENT2_NAME}!
+
+[sText_PlayerBattledToDrawLinkTrainer] bf8aee3ffe
+Você empatou com\n
+{B_LINK_OPPONENT1_NAME}!
+
+[sText_PlayerBattledToDrawVsTwo] 58b5b8884c
+Você empatou com\n
+{B_LINK_OPPONENT1_NAME} e {B_LINK_OPPONENT2_NAME}!
+
+[sText_WildFled] 05c785115d
+{PLAY_SE SE_FLEE}{B_LINK_OPPONENT1_NAME} fugiu!
+
+[sText_TwoWildFled] 4607e8c685
+{PLAY_SE SE_FLEE}{B_LINK_OPPONENT1_NAME} e\n
+{B_LINK_OPPONENT2_NAME} fugiram!
+
+[sText_NoRunningFromTrainers] ed2de8b344
+Não! Não dá pra fugir de uma\n
+batalha contra um TREINADOR!\p
+
+[sText_CantEscape] 0f43e469e7
+Não dá pra fugir!\p
+
+[sText_DontLeaveBirch] cc31a6ad6d
+PROF. BIRCH: Não me deixa aqui assim!\p
+
+[sText_ButNothingHappened] 8b5d051a0d
+Mas nada aconteceu!
+
+[sText_ButItFailed] b8956614ab
+Mas falhou!
+
+[sText_ItHurtConfusion] fec0d70817
+Ele se feriu na\n
+confusão!
+
+[sText_MirrorMoveFailed] 1b2caf4f88
+O ATQ. ESPELHO falhou!
+
+[sText_StartedToRain] d16a89ddc1
+Começou a chover!
+
+[sText_DownpourStarted] 949cc2c012
+Caiu um temporal!
+
+[sText_RainContinues] fcdb36e86a
+A chuva continua.
+
+[sText_DownpourContinues] 854ca879f4
+O temporal continua.
+
+[sText_RainStopped] 52ea9a69be
+A chuva parou.
+
+[sText_SandstormBrewed] 098655b5a6
+Começou uma tempestade de areia!
+
+[sText_SandstormRages] 1c66643d10
+A tempestade de areia continua.
+
+[sText_SandstormSubsided] c9881214cf
+A tempestade de areia passou.
+
+[sText_SunlightGotBright] 2ad50f95e7
+O sol ficou forte!
+
+[sText_SunlightStrong] 1f4d355df1
+O sol está forte.
+
+[sText_SunlightFaded] 446428c044
+O sol enfraqueceu.
+
+[sText_StartedHail] 23577a1179
+Começou a cair granizo!
+
+[sText_HailContinues] eae52a0ff7
+O granizo continua.
+
+[sText_HailStopped] 728cc70b5a
+O granizo parou.
+
+[sText_FailedToSpitUp] 147637da6f
+Mas não tinha nada pra\n
+CUSPIR!
+
+[sText_FailedToSwallow] a29cab6165
+Mas não tinha nada pra\n
+ENGOLIR!
+
+[sText_WindBecameHeatWave] 846a83bbfd
+O vento virou uma\n
+ONDA CALOR!
+
+[sText_StatChangesGone] 6dd6d4aaa5
+Todas as mudanças de\n
+atributo foram anuladas!
+
+[sText_CoinsScattered] b667b79290
+Moedas para todo lado!
+
+[sText_TooWeakForSubstitute] ae9273c1e2
+Está fraco demais para\n
+criar um SUBSTITUTO!
+
+[sText_SharedPain] cc15b8d3b2
+Os POKéMON dividiram\n
+a dor!
+
+[sText_BellChimed] 0799c19e70
+Um sino tocou!
+
+[sText_FaintInThree] c172e51a96
+Os POKéMON afetados vão\n
+desmaiar em três turnos!
+
+[sText_NoPPLeft] 4660e07ba4
+Este golpe não tem\n
+mais PP!\p
+
+[sText_ButNoPPLeft] 7d3969fe62
+Mas o golpe não tinha\n
+mais PP!
+
+[sText_PkmnIgnoresAsleep] fcee8853fa
+{B_ATK_NAME_WITH_PREFIX} ignorou as\n
+ordens enquanto dormia!
+
+[sText_PkmnIgnoredOrders] aac101db7b
+{B_ATK_NAME_WITH_PREFIX} ignorou\n
+as ordens!
+
+[sText_PkmnBeganToNap] bc85e83eaf
+{B_ATK_NAME_WITH_PREFIX} tirou um cochilo!
+
+[sText_PkmnLoafing] a2c782d5ac
+{B_ATK_NAME_WITH_PREFIX} está\n
+de moleza!
+
+[sText_PkmnWontObey] d3b9949d7c
+{B_ATK_NAME_WITH_PREFIX} não\n
+obedece!
+
+[sText_PkmnTurnedAway] dd9de52062
+{B_ATK_NAME_WITH_PREFIX} virou a cara!
+
+[sText_PkmnPretendNotNotice] 34026456e5
+{B_ATK_NAME_WITH_PREFIX} fingiu\n
+que não ouviu!
+
+[sText_EnemyAboutToSwitchPkmn] 4b3f68ba17
+{B_TRAINER1_CLASS} {B_TRAINER1_NAME} vai\n
+mandar {B_BUFF2}.\p{B_PLAYER_NAME}, quer trocar\n
+de POKéMON?
+
+[sText_PkmnLearnedMove2] e8dcf9ea42
+{B_ATK_NAME_WITH_PREFIX} aprendeu\n
+{B_BUFF1}!
+
+[sText_PlayerDefeatedLinkTrainerTrainer1] 5ddb5fd5d5
+Você derrotou\n
+{B_TRAINER1_CLASS} {B_TRAINER1_NAME}!\p
+
+[sText_CreptCloser] 79ad24eb60
+{B_PLAYER_NAME} chegou mais perto\n
+de {B_OPPONENT_MON1_NAME}!
+
+[sText_CantGetCloser] 2cba13bd89
+{B_PLAYER_NAME} não pode chegar mais perto!
+
+[sText_PkmnWatchingCarefully] b6ae9a5246
+{B_OPPONENT_MON1_NAME} está\n
+de olho!
+
+[sText_PkmnCuriousAboutX] 28738fd49b
+{B_OPPONENT_MON1_NAME} ficou curioso\n
+com o {B_BUFF1}!
+
+[sText_PkmnEnthralledByX] d31fb43f02
+{B_OPPONENT_MON1_NAME} ficou encantado\n
+com o {B_BUFF1}!
+
+[sText_PkmnIgnoredX] ee94bfa716
+{B_OPPONENT_MON1_NAME} ignorou\n
+totalmente o {B_BUFF1}!
+
+[sText_ThrewPokeblockAtPkmn] 5e8b870583
+{B_PLAYER_NAME} jogou um {POKEBLOCK}\n
+em {B_OPPONENT_MON1_NAME}!
+
+[sText_OutOfSafariBalls] 61468eec2a
+{PLAY_SE SE_DING_DONG}LOCUTOR: Acabaram suas\n
+BOLAS SAFÁRI! Fim de jogo!\p
+
+[sText_OpponentMon1Appeared] 3998dbf73d
+{B_OPPONENT_MON1_NAME} apareceu!\p
+
+[sText_WildPkmnAppeared] dc2e984522
+Um {B_OPPONENT_MON1_NAME} selvagem apareceu!\p
+
+[sText_LegendaryPkmnAppeared] dc2e984522
+Um {B_OPPONENT_MON1_NAME} selvagem apareceu!\p
+
+[sText_WildPkmnAppearedPause] b98a308b26
+Um {B_OPPONENT_MON1_NAME} selvagem apareceu!{PAUSE 127}
+
+[sText_TwoWildPkmnAppeared] 5b41575958
+{B_OPPONENT_MON1_NAME} e {B_OPPONENT_MON2_NAME}\n
+selvagens apareceram!\p
+
+[sText_Trainer1WantsToBattle] b89456c08b
+{B_TRAINER1_CLASS} {B_TRAINER1_NAME}\n
+quer batalhar!\p
+
+[sText_LinkTrainerWantsToBattle] e40b32a820
+{B_LINK_OPPONENT1_NAME}\n
+quer batalhar!
+
+[sText_TwoLinkTrainersWantToBattle] 96b555f7be
+{B_LINK_OPPONENT1_NAME} e {B_LINK_OPPONENT2_NAME}\n
+querem batalhar!
+
+[sText_Trainer1SentOutPkmn] 9449da08a1
+{B_TRAINER1_CLASS} {B_TRAINER1_NAME}\n
+mandou {B_OPPONENT_MON1_NAME}!
+
+[sText_Trainer1SentOutTwoPkmn] a5ff311bd1
+{B_TRAINER1_CLASS} {B_TRAINER1_NAME} mandou\n
+{B_OPPONENT_MON1_NAME} e {B_OPPONENT_MON2_NAME}!
+
+[sText_Trainer1SentOutPkmn2] 9bdc6c67a2
+{B_TRAINER1_CLASS} {B_TRAINER1_NAME}\n
+mandou {B_BUFF1}!
+
+[sText_LinkTrainerSentOutPkmn] 1f384f54c7
+{B_LINK_OPPONENT1_NAME} mandou\n
+{B_OPPONENT_MON1_NAME}!
+
+[sText_LinkTrainerSentOutTwoPkmn] 8620445079
+{B_LINK_OPPONENT1_NAME} mandou\n
+{B_OPPONENT_MON1_NAME} e {B_OPPONENT_MON2_NAME}!
+
+[sText_TwoLinkTrainersSentOutPkmn] 7a725059e0
+{B_LINK_OPPONENT1_NAME} mandou {B_LINK_OPPONENT_MON1_NAME}!\n
+{B_LINK_OPPONENT2_NAME} mandou {B_LINK_OPPONENT_MON2_NAME}!
+
+[sText_LinkTrainerSentOutPkmn2] d3b737088b
+{B_LINK_OPPONENT1_NAME} mandou\n
+{B_BUFF1}!
+
+[sText_LinkTrainerMultiSentOutPkmn] 07739c6a80
+{B_LINK_SCR_TRAINER_NAME} mandou\n
+{B_BUFF1}!
+
+[sText_GoPkmn] eaeccc9f4c
+Vai, {B_PLAYER_MON1_NAME}!
+
+[sText_GoTwoPkmn] db80bf4f2d
+Vai, {B_PLAYER_MON1_NAME}!\n
+Vai, {B_PLAYER_MON2_NAME}!
+
+[sText_GoPkmn2] 74ad0cb1cf
+Vai, {B_BUFF1}!
+
+[sText_DoItPkmn] 5f66da6625
+Manda ver, {B_BUFF1}!
+
+[sText_GoForItPkmn] aa87cf848e
+Vamos nessa, {B_BUFF1}!
+
+[sText_YourFoesWeakGetEmPkmn] 1f6026b16e
+O oponente está fraco!\n
+Acaba com ele, {B_BUFF1}!
+
+[sText_LinkPartnerSentOutPkmnGoPkmn] 89b2dce9bf
+{B_LINK_PARTNER_NAME} mandou {B_LINK_PLAYER_MON2_NAME}!\n
+Vai, {B_LINK_PLAYER_MON1_NAME}!
+
+[sText_PkmnThatsEnough] f5928afbe5
+{B_BUFF1}, já chega!\n
+Volta!
+
+[sText_PkmnComeBack] 73e78c7996
+{B_BUFF1}, volta!
+
+[sText_PkmnOkComeBack] f355df9b80
+{B_BUFF1}, valeu!\n
+Volta!
+
+[sText_PkmnGoodComeBack] 9de938f1dd
+{B_BUFF1}, mandou bem!\n
+Volta!
+
+[sText_Trainer1WithdrewPkmn] ebd063e155
+{B_TRAINER1_CLASS} {B_TRAINER1_NAME}\n
+recolheu {B_BUFF1}!
+
+[sText_LinkTrainer1WithdrewPkmn] da0b05ef09
+{B_LINK_OPPONENT1_NAME} recolheu\n
+{B_BUFF1}!
+
+[sText_LinkTrainer2WithdrewPkmn] 3406795b27
+{B_LINK_SCR_TRAINER_NAME} recolheu\n
+{B_BUFF1}!
+
+[sText_WildPkmnPrefix] d17dfa7cc7
+
+
+[sText_FoePkmnPrefix] 85c7d7a736
+
+
+[sText_WildPkmnSuffix] da39a3ee5e
+ selvagem
+
+[sText_FoePkmnSuffix] da39a3ee5e
+ inimigo
+
+[sText_FoePkmnPrefix2] 81ffe989e5
+inimiga
+
+[sText_AllyPkmnPrefix] c4c29e7aed
+aliada
+
+[sText_FoePkmnPrefix3] 81ffe989e5
+inimiga
+
+[sText_AllyPkmnPrefix2] c4c29e7aed
+aliada
+
+[sText_FoePkmnPrefix4] 81ffe989e5
+inimiga
+
+[sText_AllyPkmnPrefix3] c4c29e7aed
+aliada
+
+[sText_AttackerUsedX] 1443e8e99a
+{B_ATK_NAME_WITH_PREFIX} usou\n
+{B_BUFF2}
+
+[sText_HP2] 5200bdfc01
+PS
+
+[sText_Attack2] df86d4b6db
+ATAQUE
+
+[sText_Defense2] d4f6d85456
+DEFESA
+
+[sText_Speed] 265ffc5673
+VELOC.
+
+[sText_SpAtk2] 4881ee79a1
+AT. ESP.
+
+[sText_SpDef2] 3b0727a5ad
+DEF. ESP.
+
+[sText_Accuracy] 26de05a44d
+PRECISÃO
+
+[sText_Evasiveness] f2185a1d3f
+EVASÃO
+
+[sText_PokeblockWasTooSpicy] beeab99051
+estava picante demais!
+
+[sText_PokeblockWasTooDry] cf1cceab48
+estava seco demais!
+
+[sText_PokeblockWasTooSweet] a53ee5fbd1
+estava doce demais!
+
+[sText_PokeblockWasTooBitter] 3fdd7a4b97
+estava amargo demais!
+
+[sText_PokeblockWasTooSour] 38105460b9
+estava azedo demais!
+
+[sText_PlayerUsedItem] 3793493cf9
+{B_PLAYER_NAME} usou\n
+{B_LAST_ITEM}!
+
+[sText_WallyUsedItem] 2872131b76
+WALLY usou\n
+{B_LAST_ITEM}!
+
+[sText_Trainer1UsedItem] 436e47f6ca
+{B_TRAINER1_CLASS} {B_TRAINER1_NAME}\n
+usou {B_LAST_ITEM}!
+
+[sText_TrainerBlockedBall] 92bc4924cb
+O TREINADOR bloqueou a BOLA!
+
+[sText_DontBeAThief] 3a71e71c62
+Não seja ladrão!
+
+[sText_ItDodgedBall] c6e43cf9a7
+Ele desviou da BOLA!\n
+Não dá pra capturar esse POKéMON!
+
+[sText_YouMissedPkmn] 9a64b82fd9
+Você errou o POKéMON!
+
+[sText_PkmnBrokeFree] 98ee51c6ee
+Ah, não!\n
+O POKéMON escapou!
+
+[sText_ItAppearedCaught] 8150a1064b
+Aaah!\n
+Parecia que tinha pegado!
+
+[sText_AarghAlmostHadIt] d407020216
+Argh!\n
+Foi por pouco!
+
+[sText_ShootSoClose] 5258c61fd4
+Droga!\n
+Estava quase!
+
+[sText_GotchaPkmnCaughtPlayer] 73e371cd8b
+Peguei!\n
+{B_OPPONENT_MON1_NAME} foi capturado!{WAIT_SE}{PLAY_BGM MUS_CAUGHT}\p
+
+[sText_GotchaPkmnCaughtWally] 3853575ec8
+Peguei!\n
+{B_OPPONENT_MON1_NAME} foi capturado!{WAIT_SE}{PLAY_BGM MUS_CAUGHT}{PAUSE 127}
+
+[sText_GiveNicknameCaptured] fd0d1aa9a9
+Dar um apelido ao\n
+{B_OPPONENT_MON1_NAME} capturado?
+
+[sText_PkmnSentToPC] ea5913d092
+{B_OPPONENT_MON1_NAME} foi enviado\n
+para o PC {B_PC_CREATOR_NAME}.
+
+[sText_Someones] 0a9d6f9185
+de alguém
+
+[sText_Lanettes] abc77eae00
+da LANETTE
+
+[sText_PkmnDataAddedToDex] c485db84d8
+Os dados de {B_OPPONENT_MON1_NAME} foram\n
+registrados na POKéDEX.\p
+
+[sText_ItIsRaining] d518425808
+Está chovendo.
+
+[sText_SandstormIsRaging] 415b203085
+Há uma tempestade de areia.
+
+[sText_BoxIsFull] 4ea07be4e0
+A CAIXA está cheia!\n
+Você não pode capturar mais nada!\p
+
+[sText_EnigmaBerry] b5401132af
+FRUTA ENIGMA
+
+[sText_PkmnsItemCuredParalysis] 38e7de425e
+{B_LAST_ITEM} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+curou a paralisia!
+
+[sText_PkmnsItemCuredPoison] 53c0e8f394
+{B_LAST_ITEM} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+curou o envenenamento!
+
+[sText_PkmnsItemHealedBurn] 493b4f8f27
+{B_LAST_ITEM} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+curou a queimadura!
+
+[sText_PkmnsItemDefrostedIt] 48dcb31517
+{B_LAST_ITEM} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+o descongelou!
+
+[sText_PkmnsItemWokeIt] 920b1a4f7f
+{B_LAST_ITEM} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+o acordou!
+
+[sText_PkmnsItemSnappedOut] 603276f707
+{B_LAST_ITEM} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+o tirou da confusão!
+
+[sText_PkmnsItemCuredProblem] f90a79e9a8
+{B_LAST_ITEM} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+curou {B_BUFF1}!
+
+[sText_PkmnsItemNormalizedStatus] cebc23ac17
+{B_LAST_ITEM} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+normalizou seu status!
+
+[sText_PkmnsItemRestoredHealth] 5d27b86e6f
+{B_LAST_ITEM} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+recuperou a saúde!
+
+[sText_PkmnsItemRestoredPP] 44306013a8
+{B_LAST_ITEM} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+recuperou o PP de {B_BUFF1}!
+
+[sText_PkmnsItemRestoredStatus] 30d6ffad40
+{B_LAST_ITEM} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+restaurou seu status!
+
+[sText_PkmnsItemRestoredHPALittle] 5d8569b76d
+{B_LAST_ITEM} de {B_SCR_ACTIVE_NAME_WITH_PREFIX}\n
+recuperou um pouco de PS!
+
+[sText_ItemAllowsOnlyYMove] c90d570594
+{B_LAST_ITEM} só deixa\n
+usar {B_CURRENT_MOVE}!\p
+
+[sText_PkmnHungOnWithX] 7277e50676
+{B_DEF_NAME_WITH_PREFIX} aguentou\n
+firme com {B_LAST_ITEM}!
+
+[sText_YouThrowABallNowRight] f47e7d6e86
+Você joga uma BOLA agora, né?\n
+Eu… Eu vou dar o meu melhor!
+
+[gText_PkmnIsEvolving] a56eaa116c
+O quê?\n
+{STR_VAR_1} está evoluindo!
+
+[gText_CongratsPkmnEvolved] 2192e39474
+Parabéns! Seu {STR_VAR_1}\n
+evoluiu para {STR_VAR_2}!{WAIT_SE}\p
+
+[gText_PkmnStoppedEvolving] 07c7c48704
+Hã? {STR_VAR_1}\n
+parou de evoluir!\p
+
+[gText_WhatWillPkmnDo] 249d9ec285 width=130
+O que {B_ACTIVE_NAME_WITH_PREFIX}\n
+vai fazer?
+
+[gText_WhatWillPkmnDo2] d68c3ac181 width=112
+O que {B_PLAYER_NAME}\n
+vai fazer?
+
+[gText_WhatWillWallyDo] d7f6f490d9 width=112
+O que WALLY\n
+vai fazer?
+
+[gText_LinkStandby] 2dd76b6229
+{PAUSE 16}Aguardando conexão…
+
+[gText_BattleMenu] f4c1ddc159 width=96
+LUTAR{CLEAR_TO 56}BOLSA\n
+POKéMON{CLEAR_TO 56}FUGIR
+
+[gText_SafariZoneMenu] 841ec73650 width=96
+BOLA{CLEAR_TO 56}{POKEBLOCK}\n
+CHEGAR{CLEAR_TO 56}FUGIR
+
+[gText_MoveInterfaceType] 23b582f48e
+
+
+[gText_MoveInterfacePpType] 2fb76952e2 width=30
+{PALETTE 5}{COLOR_HIGHLIGHT_SHADOW DYNAMIC_COLOR4 DYNAMIC_COLOR5 DYNAMIC_COLOR6}PP\n
+TIPO/
+
+[gText_WhichMoveToForget4] c3b50cfc06 width=92
+{PALETTE 5}{COLOR_HIGHLIGHT_SHADOW DYNAMIC_COLOR4 DYNAMIC_COLOR5 DYNAMIC_COLOR6}Qual golpe vai\n
+ser esquecido?
+
+[gText_BattleYesNoChoice] 05f6787e5c width=18
+{PALETTE 5}{COLOR_HIGHLIGHT_SHADOW DYNAMIC_COLOR4 DYNAMIC_COLOR5 DYNAMIC_COLOR6}Sim\n
+Não
+
+[gText_BattleSwitchWhich] 5af71228bc width=34
+{PALETTE 5}{COLOR_HIGHLIGHT_SHADOW DYNAMIC_COLOR4 DYNAMIC_COLOR5 DYNAMIC_COLOR6}Trocar\n
+qual?
+
+[sText_HP] 5200bdfc01 width=42
+PS
+
+[sText_Attack] df86d4b6db width=42
+ATAQUE
+
+[sText_Defense] d4f6d85456 width=42
+DEFESA
+
+[sText_SpAtk] 4881ee79a1 width=42
+AT.ESP.
+
+[sText_SpDef] 3b0727a5ad width=42
+DEF.ESP.
+
+[gText_SafariBalls] b8d442f537 width=69
+{HIGHLIGHT DARK_GRAY}BOLAS SAFÁRI
+
+[gText_SafariBallLeft] 4b4b4a5114 width=36
+{HIGHLIGHT DARK_GRAY}Resta: ${HIGHLIGHT DARK_GRAY}
+
+[gText_Sleep] c3ca5f7873
+o sono
+
+[gText_Poison] e6aa09fd40
+o veneno
+
+[gText_Burn] 03b5db720e
+a queimadura
+
+[gText_Paralysis] 67ef38a8a1
+a paralisia
+
+[gText_Ice] d53b257ba8
+o congelamento
+
+[gText_Confusion] cfc8b23ab1
+a confusão
+
+[gText_Love] 9f2feb0f1e
+a paixão
+
+# Montam "OVOS e MEW são proibidos." na FRONTEIRA (frontier_util.c).
+[gText_SpaceAndSpace] 4f413364b4
+ e 
+
+[gText_Are] 5f9e5802bb
+são
+
+[gText_Are2] 5f9e5802bb
+são
+
+[gText_BadEgg] 048d4bbc1b
+OVO Ruim
+
+[gText_Win] f665be0a7a width=56
+{HIGHLIGHT TRANSPARENT}Vitória
+
+[gText_Loss] 558333f616 width=56
+{HIGHLIGHT TRANSPARENT}Derrota
+
+[gText_Draw] 0b1bbfe66b width=56
+{HIGHLIGHT TRANSPARENT}Empate
+
+[TYPE_NORMAL] 925aa86942
+um golpe NORMAL
+
+[TYPE_FIGHTING] 374a949727
+um golpe LUTADOR
+
+[TYPE_FLYING] 0087b488d4
+um golpe VOADOR
+
+[TYPE_POISON] c392e1d62c
+um golpe VENENOSO
+
+[TYPE_GROUND] 9e394e4c01
+um golpe TERRESTRE
+
+[TYPE_ROCK] 879da38f40
+um golpe de PEDRA
+
+[TYPE_BUG] ccb11ef143
+um golpe INSETO
+
+[TYPE_GHOST] 1e0dc56361
+um golpe FANTASMA
+
+[TYPE_STEEL] d5019d7f03
+um golpe de AÇO
+
+[TYPE_MYSTERY] d0353346d1
+um golpe ???
+
+[TYPE_FIRE] 118631db0b
+um golpe de FOGO
+
+[TYPE_WATER] 9efaa0576c
+um golpe de ÁGUA
+
+[TYPE_GRASS] b996e8f185
+um golpe PLANTA
+
+[TYPE_ELECTRIC] 06bfcaeacc
+um golpe ELÉTRICO
+
+[TYPE_PSYCHIC] 1f2b2958fb
+um golpe PSÍQUICO
+
+[TYPE_ICE] ffbdce3b1a
+um golpe de GELO
+
+[TYPE_DRAGON] ab7595149b
+um golpe DRAGÃO
+
+[TYPE_DARK] ac53cd5136
+um golpe SOMBRIO
+
+[gText_BattleTourney] b4cc60a52f width=81
+TORNEIO
+
+[sText_Round1] f7648d3834 width=39
+Fase 1
+
+[sText_Round2] fa2b87ffe2 width=39
+Fase 2
+
+[sText_Semifinal] 7d79eec396 width=48
+Semifinal
+
+[sText_Final] 672b22cc51 width=26
+Final
+
+[gText_TheGreatNewHope] 1a97dae0f7
+A grande promessa!\p
+
+[gText_WillChampionshipDreamComeTrue] 52b77b8bbe
+O sonho do título vai se realizar?!\p
+
+[gText_AFormerChampion] 9f3a4211d5
+Um ex-CAMPEÃO!\p
+
+[gText_ThePreviousChampion] 6d36b6987b
+O último CAMPEÃO!\p
+
+[gText_TheUnbeatenChampion] 110f481d2a
+O CAMPEÃO invicto!\p
+
+[gText_Mind] 59e63f7eaa width=48
+Mente
+
+[gText_Skill] ec9f630c86 width=48
+Técnica
+
+[gText_Body] 718a7e8a58 width=48
+Físico
+
+[gText_Judgment] 82e4f13c5c width=168
+{B_BUFF1}{CLEAR 13}Juízo{CLEAR 13}{B_BUFF2}
+
+[sText_TwoTrainersSentPkmn] 118927257b
+{B_TRAINER1_CLASS} {B_TRAINER1_NAME}\n
+mandou {B_OPPONENT_MON1_NAME}!\p{B_TRAINER2_CLASS} {B_TRAINER2_NAME}\n
+mandou {B_OPPONENT_MON2_NAME}!
+
+[sText_Trainer2SentOutPkmn] 3678f86691
+{B_TRAINER2_CLASS} {B_TRAINER2_NAME}\n
+mandou {B_BUFF1}!
+
+[sText_TwoTrainersWantToBattle] 901e3aa844
+{B_TRAINER1_CLASS} {B_TRAINER1_NAME} e\n
+{B_TRAINER2_CLASS} {B_TRAINER2_NAME}\lquerem batalhar!\p
+
+[sText_InGamePartnerSentOutZGoN] 0d90e95d79
+{B_PARTNER_CLASS} {B_PARTNER_NAME}\n
+mandou {B_PLAYER_MON2_NAME}!\lVai, {B_PLAYER_MON1_NAME}!
+
+[sText_TwoInGameTrainersDefeated] 5932404bee
+{B_TRAINER1_CLASS} {B_TRAINER1_NAME} e\n
+{B_TRAINER2_CLASS} {B_TRAINER2_NAME}\lforam derrotados!\p
+
+[sText_PkmnIncapableOfPower] f126799f9b
+{B_ATK_NAME_WITH_PREFIX} parece não\n
+conseguir usar seu poder!
+
+[sText_GlintAppearsInEye] f5fa3bcb11
+Um brilho surge nos olhos\n
+de {B_SCR_ACTIVE_NAME_WITH_PREFIX}!
+
+[sText_PkmnGettingIntoPosition] 6d992b1241
+{B_SCR_ACTIVE_NAME_WITH_PREFIX} está\n
+se posicionando!
+
+[sText_PkmnBeganGrowlingDeeply] 1a5be154dc
+{B_SCR_ACTIVE_NAME_WITH_PREFIX} rosna fundo!
+
+[sText_PkmnEagerForMore] fbb9149e1f
+{B_SCR_ACTIVE_NAME_WITH_PREFIX} quer mais!
+
+[sText_RefIfNothingIsDecided] 7684ca5d75
+JUIZ: Se nada se decidir em\n
+3 turnos, vamos ao julgamento!
+
+[sText_RefThatsIt] 137be05ffc
+JUIZ: Acabou! Vamos ao julgamento\n
+para decidir o vencedor!
+
+[sText_RefJudgeMind] 837383d83d
+JUIZ: Critério 1, Mente!\n
+O POKéMON com mais garra!\p
+
+[sText_RefJudgeSkill] 292b8733a6
+JUIZ: Critério 2, Técnica!\n
+O POKéMON que usou melhor os golpes!\p
+
+[sText_RefJudgeBody] 4d2ef4c213
+JUIZ: Critério 3, Físico!\n
+O POKéMON com mais vitalidade!\p
+
+[sText_RefPlayerWon] a4d408bac4
+JUIZ: Resultado: {B_BUFF1} a {B_BUFF2}!\n
+Vence {B_PLAYER_MON1_NAME} de {B_PLAYER_NAME}!\p
+
+[sText_RefOpponentWon] cd0f62b90f
+JUIZ: Resultado: {B_BUFF1} a {B_BUFF2}!\n
+Vence {B_OPPONENT_MON1_NAME} de {B_TRAINER1_NAME}!\p
+
+[sText_RefDraw] 91fc2854da
+JUIZ: Resultado: 3 a 3!\n
+Deu empate!\p
+
+[sText_DefeatedOpponentByReferee] 4f2f783d12
+{B_PLAYER_MON1_NAME} venceu {B_OPPONENT_MON1_NAME}\n
+pela decisão do JUIZ!
+
+[sText_LostToOpponentByReferee] 0132a4450d
+{B_PLAYER_MON1_NAME} perdeu para {B_OPPONENT_MON1_NAME}\n
+pela decisão do JUIZ!
+
+[sText_TiedOpponentByReferee] ccc2ef873e
+{B_PLAYER_MON1_NAME} empatou com {B_OPPONENT_MON1_NAME}\n
+pela decisão do JUIZ!
+
+[sText_RefCommenceBattle] f3323a6d00
+JUIZ: {B_PLAYER_MON1_NAME} VS {B_OPPONENT_MON1_NAME}!\n
+Começou a batalha!
+
+[sText_QuestionForfeitMatch] e7e938e31d
+Quer desistir da partida\n
+e sair agora?
+
+[sText_ForfeitedMatch] ade005bcd9
+{B_PLAYER_NAME} desistiu da partida!
+
+[sText_Trainer1Fled] 16f63959c3
+{PLAY_SE SE_FLEE}{B_TRAINER1_CLASS} {B_TRAINER1_NAME} fugiu!
+
+[sText_PlayerLostAgainstTrainer1] bd8ffeeaad
+Você perdeu para\n
+{B_TRAINER1_CLASS} {B_TRAINER1_NAME}!
+
+[sText_PlayerBattledToDrawTrainer1] 99f6cb2115
+Você empatou com\n
+{B_TRAINER1_CLASS} {B_TRAINER1_NAME}!
+
+[gText_RecordBattleToPass] f4561d9342
+Quer gravar a batalha\n
+no seu PASSE DA FRONTEIRA?
+
+[gText_BattleRecordedOnPass] 4a64cb8d2d
+O resultado de {B_PLAYER_NAME} foi\n
+gravado no PASSE DA FRONTEIRA.
+
+[sText_LinkTrainerWantsToBattlePause] 4a78e0e11b
+{B_LINK_OPPONENT1_NAME}\n
+quer batalhar!{PAUSE 49}
+
+[sText_TwoLinkTrainersWantToBattlePause] 6dfe46fc9b
+{B_LINK_OPPONENT1_NAME} e {B_LINK_OPPONENT2_NAME}\n
+querem batalhar!{PAUSE 49}

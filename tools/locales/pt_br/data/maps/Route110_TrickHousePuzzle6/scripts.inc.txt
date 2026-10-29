@@ -1,0 +1,44 @@
+# CASA DOS TRUQUES, sala 6.
+
+[Route110_TrickHousePuzzle6_Text_WroteSecretCodeLockOpened] 6332d3d34d
+{PLAYER} escreveu a senha secreta\n
+na porta.\p
+“O MESTRE DOS TRUQUES é a minha vida.”\n
+… … … … … … … …\p
+A fechadura abriu com um clique!$
+
+[Route110_TrickHousePuzzle6_Text_SophiaIntro] 913bbe29d6
+Quando soube que tinha uma casa\n
+esquisita, tive que vir conferir.$
+
+[Route110_TrickHousePuzzle6_Text_SophiaDefeat] 17cc482366
+Descobri alguém que treina muito bem!$
+
+[Route110_TrickHousePuzzle6_Text_SophiaPostBattle] 3585cc6e6e
+Estou me divertindo muito explorando\n
+este lugar.\p
+É um desafio que vale a pena\n
+repetir!$
+
+[Route110_TrickHousePuzzle6_Text_BennyIntro] 4da67be36f
+Talvez o meu POKéMON PÁSSARO\n
+consiga voar por cima do muro…$
+
+[Route110_TrickHousePuzzle6_Text_BennyDefeat] 8937ab5e35
+Gwaaah! Estraguei tudo!$
+
+[Route110_TrickHousePuzzle6_Text_BennyPostBattle] 7000e8b45f
+Hehehe… Acho que perdi porque\n
+estava tentando trapacear.$
+
+[Route110_TrickHousePuzzle6_Text_SebastianIntro] d9de53e109
+Estou ficando tonto com essas portas\n
+giratórias…$
+
+[Route110_TrickHousePuzzle6_Text_SebastianDefeat] 6bcd37f809
+Está tudo girando e girando.\n
+Não aguento mais…$
+
+[Route110_TrickHousePuzzle6_Text_SebastianPostBattle] 8a1ad2316c
+Você parece nem ligar.\n
+Ou está fazendo cara de paisagem?$

@@ -65,8 +65,12 @@ typedef struct
      */
     float lift, shift;
     /* The base of the map being built (VoxelRelief_Base): everything emitted
-     * is raised by it, straight up. */
+     * is raised by it and drawn as far south (VoxelBuilder_StretchZ). */
     float base;
+    /* Its south seam's ease (VoxelRelief_Stretch): world z from stretchFrom
+     * to stretchTo drawn longer, past it moved stretchAdd south. stretchAdd
+     * zero: none. */
+    float stretchFrom, stretchTo, stretchAdd;
     bool lighting; /* opt-in for outdoor chunks and border receivers */
     bool artShaded; /* relief: its drawing is its own; lit like any face */
     bool lightingRefine; /* ground subdivision; disabled for the fixed-size belt */
@@ -87,6 +91,13 @@ void VoxelBuilder_Init(VoxelBuilder *builder, VoxelVertex *storage, unsigned cap
 void VoxelBuilder_SetAtlas(VoxelBuilder *builder, const struct VoxelAtlasMap *atlas);
 /* World tile the emitted coordinates are measured from. Zero is world space. */
 void VoxelBuilder_SetOrigin(VoxelBuilder *builder, int originX, int originZ);
+/* The map being built's ease, if it has one (VoxelRelief_Stretch). */
+void VoxelBuilder_SetStretch(VoxelBuilder *builder, const VoxelMapInstance *inst);
+/* A world z (after the shift) where the builder's map draws it: on its
+ * eased rows, and as far south as its base is high - a point stands as far
+ * south as it is high in the world, (u, h, v + h), so two maps meeting at one
+ * height meet in the same row whatever their bases. */
+float VoxelBuilder_StretchZ(const VoxelBuilder *builder, float z);
 void VoxelBuilder_Tri(VoxelBuilder *builder, const VoxelVertex *a,
                       const VoxelVertex *b, const VoxelVertex *c);
 /* A B C / A C D, the winding the reference quads already use. */
@@ -118,6 +129,12 @@ void VoxelMesh_BeginWindow(int x0, int y0, int x1, int y1);
  */
 void VoxelMesh_Top(VoxelBuilder *b, float wx, float wz, float h, float inset,
                    float u0, float v0, float u1, float v1, float shade);
+/* The cell's relief drawn with u0..v1 (a tree's trunk on a slope). */
+void VoxelMesh_ReliefGround(VoxelBuilder *b, const VoxelMapInstance *inst, int x, int y,
+                            float u0, float v0, float u1, float v1);
+/* A tree's cell drawn as the rock under it: the ground pass's, not the tree
+ * pass's. */
+bool VoxelMesh_TreeOnRock(const VoxelMapInstance *inst, int x, int y);
 void VoxelMesh_South(VoxelBuilder *b, float wx, float wz, float yBottom, float yTop,
                      float inset, float u0, float v0, float u1, float v1);
 void VoxelMesh_North(VoxelBuilder *b, float wx, float wz, float yBottom, float yTop,
@@ -180,5 +197,13 @@ void VoxelMesh_DraftCell(VoxelBuilder *b, const VoxelMapInstance *inst, int x, i
  * that belongs to no map, so the view does not end in the clear colour.
  * Instance 0 only, and nothing indoors, where the filler is the clear colour. */
 void VoxelMesh_EmitBorder(VoxelBuilder *builder, int x0, int y0, int x1, int y1);
+
+/* The level a cell of the belt of land stands at, in tiles over instance 0's
+ * base, and its depth: its map edge's (false, both 0: at the base). */
+bool VoxelMesh_BorderLevel(int x, int y, float *level, float *shift);
+
+/* settings.txt voxel_border_edge: the belt at its edge's level (default) or
+ * at the base, as it was. */
+void VoxelMesh_SetBorderFollowsEdge(bool on);
 
 #endif

@@ -1,0 +1,55 @@
+# ROTA 124: o CAÇADOR DE TESOUROS SUBMARINOS e a troca dos CACOS.
+
+[Route124_DivingTreasureHuntersHouse_Text_Greeting] 61e30a39b4
+Sou o CAÇADOR DE TESOUROS SUBMARINOS!\p
+Sou o cara incrível que mergulha\n
+fundo no mar pra juntar os tesouros\l
+que descansam lá embaixo.$
+
+[Route124_DivingTreasureHuntersHouse_Text_HaveYouSeenAnyShards] 5f23d0ee61
+Me diga, você viu algum CACO de\n
+ferramentas dos tempos antigos?$
+
+[Route124_DivingTreasureHuntersHouse_Text_YouHaventGotAnyShards] e51399386b
+Você não tem nenhum tesouro\n
+pra mim…\p
+Se vir algum CACO, como o CACO\n
+VERMELHO, tem que trocar comigo!$
+
+[Route124_DivingTreasureHuntersHouse_Text_ThatsAShardIllTradeYou] 270bf7d421
+Ei! Isso…\n
+Isso é um CACO! Estou procurando!\p
+Cara, você tem que trocar isso\n
+comigo! Te dou uma coisa boa!$
+
+[Route124_DivingTreasureHuntersHouse_Text_WhatDoYouWantToTrade] 5ec6fd2a6d
+O que você quer trocar?$
+
+[Route124_DivingTreasureHuntersHouse_Text_YoullTradeShardForStone] 275e2627c6
+Então você troca o seu {STR_VAR_1}\n
+pela minha {STR_VAR_2}?$
+
+[Route124_DivingTreasureHuntersHouse_Text_ItsADeal] ec975f6a82
+Negócio fechado!\n
+Use com sabedoria!$
+
+[Route124_DivingTreasureHuntersHouse_Text_TradeSomethingElse] db849c237b
+Quer trocar mais alguma coisa?$
+
+[Route124_DivingTreasureHuntersHouse_Text_BagFull] 9b5893d284
+Opa, a sua BOLSA está cheia.\n
+Se livre de uns itens, amigo!$
+
+[Route124_DivingTreasureHuntersHouse_Text_ComeBackIfYouChangeMind] e234045aa7
+Não? Que balde de água fria.\n
+Se mudar de ideia, volte.$
+
+[Route124_DivingTreasureHuntersHouse_Text_ShardTradeBoard] f56dd0a78e
+{CLEAR_TO 0x0a}Procuro{CLEAR_TO 0x7c}Dou em troca\n
+{CLEAR_TO 0x0f}CACO VERMELHO{CLEAR_TO 0x59}{LEFT_ARROW}{RIGHT_ARROW}{CLEAR_TO 0x7b}PEDRA DE FOGO{CLEAR_TO 0xc8}\p
+{CLEAR_TO 0x0a}Procuro{CLEAR_TO 0x7c}Dou em troca\n
+{CLEAR_TO 0x06}CACO AMARELO{CLEAR_TO 0x59}{LEFT_ARROW}{RIGHT_ARROW}{CLEAR_TO 0x73}PEDRA TROVÃO{CLEAR_TO 0xc8}\p
+{CLEAR_TO 0x0a}Procuro{CLEAR_TO 0x7c}Dou em troca\n
+{CLEAR_TO 0x0c}CACO AZUL{CLEAR_TO 0x59}{LEFT_ARROW}{RIGHT_ARROW}{CLEAR_TO 0x79}PEDRA D'ÁGUA{CLEAR_TO 0xc8}\p
+{CLEAR_TO 0x0a}Procuro{CLEAR_TO 0x7c}Dou em troca\n
+{CLEAR_TO 0x08}CACO VERDE{CLEAR_TO 0x59}{LEFT_ARROW}{RIGHT_ARROW}{CLEAR_TO 0x7b}PEDRA FOLHA$

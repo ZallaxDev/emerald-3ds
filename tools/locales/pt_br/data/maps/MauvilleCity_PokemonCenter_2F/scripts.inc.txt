@@ -1,0 +1,9 @@
+# CENTRO POKéMON de MAUVILLE, andar de cima.
+
+[MauvilleCity_PokemonCenter_2F_Text_Youngster] c3af73bf94
+Sabia que dá pra fazer batalha por link\n
+no COLISEU daqui?\p
+Eles põem o seu recorde na parede\n
+pra todo mundo ver.\p
+É vergonhoso se você perde mais\n
+do que ganha…$

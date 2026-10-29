@@ -1,0 +1,41 @@
+# MONTE PYRE: 6º andar.
+
+[MtPyre_6F_Text_ValerieIntro] 3307e74374
+Quando estou aqui…\n
+Um poder estranho flui em mim…$
+
+[MtPyre_6F_Text_ValerieDefeat] daab8984a8
+O poder está se esvaindo…$
+
+[MtPyre_6F_Text_ValeriePostBattle] a818925755
+Talvez o poder venha dos espíritos\n
+dos POKéMON que dormem inquietos aqui…$
+
+[MtPyre_6F_Text_ValerieRegister] 0d2d425267
+Fufufu… Perdi a batalha, mas…\n
+Tenho esta pequena habilidade…\p
+Sem nem encostar no seu POKéNAV…\n
+Hiá!$
+
+[MtPyre_6F_Text_ValerieRematchIntro] c9e173ce96
+Atrás de você…\n
+O que é aquilo…$
+
+[MtPyre_6F_Text_ValerieRematchDefeat] 354a647769
+Alguma coisa sumiu…$
+
+[MtPyre_6F_Text_ValeriePostRematch] 74d4957b39
+Os POKéMON que descansam aqui…\n
+Às vezes, eles brincam…$
+
+[MtPyre_6F_Text_CedricIntro] d81d3d8245
+Você se perdeu?\n
+Não tema, pois eu estou aqui!$
+
+[MtPyre_6F_Text_CedricDefeat] 16bc160242
+Você não tinha se perdido?$
+
+[MtPyre_6F_Text_CedricPostBattle] 6472dc2946
+Achei que um TREINADOR perdido ia\n
+entrar em pânico e ser fácil de vencer.\p
+Isso é sujo, e não vou tentar de novo…$

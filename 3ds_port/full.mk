@@ -69,15 +69,22 @@ FULL_DATA_OBJS += build/root/3ds_song_blob.o
 BACKEND_SRCS := src/3ds_assets.c src/3ds_map_loader.c src/3ds_compat.c
 BACKEND_SRCS += src/3ds_game_full.c src/3ds_game_bridge.c src/3ds_script_loader.c
 BACKEND_SRCS += src/3ds_bottom_ui.c
+# The Pokédex on the top screen: which Pokémon, its picture and terrain.
+BACKEND_SRCS += src/3ds_dex_top_game.c
 # The battle's info boxes at the screen's resolution (3ds_battle_hud.h).
 BACKEND_SRCS += src/3ds_battle_hud.c
 build/bridge/3ds_bottom_ui.o: FULLCFLAGS += -DCTR_APP_VERSION='"$(APP_VERSION)"'
 # The ENHANCEMENTS and CHEATS pages of OPTIONS (include/3ds_extras.h).
 BACKEND_SRCS += src/3ds_extras.c
+# The optional Nuzlocke tracker's game side: save hooks and its OPTIONS cells
+# (include/3ds_nuzlocke.h, include/3ds_nuzlocke_ui.h).
+BACKEND_SRCS += src/3ds_nuzlocke_game.c
 # Local wireless play: the emulated Wireless Adapter the game's link code
 # talks to (its radio is src/3ds_local.c).
 BACKEND_SRCS += src/3ds_rfu_adapter.c
 BACKEND_SRCS += src/3ds_encounter_tables.c
+# The seeded species randomizer, off by default (include/3ds_randomizer.h).
+BACKEND_SRCS += src/3ds_randomizer.c src/3ds_randomizer_core.c
 # The frame profiler times the engine's own routines through linker wrappers.
 BACKEND_SRCS += src/3ds_prof_wrap.c
 PROF_WRAPPED := RunTasks AnimateSprites BuildOamBuffer ProcessDma3Requests \
@@ -112,12 +119,12 @@ BACKEND_OBJS := $(patsubst src/%.c,build/bridge/%.o,$(BACKEND_SRCS))
 # port: the map, camera, atlas and geometry modules are game translation units
 # (they read gMapHeader and resolve RomFS payloads, and never see libctru),
 # while ctr_voxel.c is native and owns the Citro3D objects.
-ifeq ($(VOXEL),1)
 VOXEL_GAME_SRCS := src/voxel/voxel_world.c src/voxel/voxel_camera.c \
 	src/voxel/voxel_atlas.c src/voxel/voxel_mesh_builder.c src/voxel/voxel_entities.c \
 	src/voxel/voxel_regions.c src/voxel/voxel_tree.c src/voxel/voxel_sign.c \
 	src/voxel/voxel_building.c src/voxel/voxel_relief.c \
-	src/voxel/voxel_arena.c src/voxel/voxel_grade.c src/voxel/voxel_battle.c
+	src/voxel/voxel_arena.c src/voxel/voxel_grade.c src/voxel/voxel_battle.c \
+	src/voxel/voxel_sprite_slots.c src/voxel/voxel_swoop.c
 ifeq ($(VOXEL_LIGHTING),1)
 VOXEL_GAME_SRCS += src/voxel/voxel_lighting.c
 endif
@@ -128,11 +135,12 @@ ROMFS_SHADER_OUTS += romfs/voxel/trees.rgba5551
 ROMFS_SHADER_OUTS += romfs/voxel/signposts.bin
 ROMFS_SHADER_OUTS += romfs/voxel/buildings.bin
 ROMFS_SHADER_OUTS += romfs/voxel/relief.bin
-endif
 # New art around the intro's leaves scene (scripts/gen_intro_margins.py).
 ROMFS_SHADER_OUTS += romfs/stage/leaves.bin
 # The bottom screen's battle menus: the port's own art (scripts/gen_battle_art.py).
 ROMFS_SHADER_OUTS += romfs/bottom/battle.bin
+# The bottom screen's menu backdrop: the port's own art (scripts/gen_menu_art.py).
+ROMFS_SHADER_OUTS += romfs/bottom/menu.bin
 # The battle's info boxes and text box: the port's own art (scripts/gen_battle_hud.py).
 ROMFS_SHADER_OUTS += romfs/battle/hud.bin
 
@@ -177,12 +185,15 @@ $(CTR_GBA_STAGE_OBJS): FULLCFLAGS += -DCTR_GBA_STAGE -include $(abspath compat/c
 $(CTR_GBA_STAGE_OBJS): compat/ctr_gba_stage.h $(ROOT)/include/gba/defines.h
 # GBA screens shown centred, margins only from layers that wrap on the GBA
 # (compat/ctr_gba_centred.h).
-CTR_GBA_CENTRED_SRCS := region_map field_region_map main_menu naming_screen wallclock \
+CTR_GBA_CENTRED_SRCS := region_map field_region_map main_menu option_menu naming_screen wallclock \
 	pokemon_summary_screen starter_choose shop link berry_blender pokemon_jump dodrio_berry_picking \
-	contest contest_util
+	contest contest_util slot_machine roulette
 CTR_GBA_CENTRED_OBJS := $(patsubst %,build/root/src/%.o,$(CTR_GBA_CENTRED_SRCS))
 $(CTR_GBA_CENTRED_OBJS): FULLCFLAGS += -DCTR_GBA_STAGE -include $(abspath compat/ctr_gba_centred.h)
 $(CTR_GBA_CENTRED_OBJS): compat/ctr_gba_centred.h $(ROOT)/include/gba/defines.h
+# option_menu.c: the game's OPTION screen, from the title menu (and from the
+# start menu where the bottom screen does not replace it). Built wide it was
+# drawn in the top-left corner, between two centred title menus.
 # link.c: the communication error screen, whose text windows are as wide as
 # the screen (wider than its layer at 400 pixels: they wrapped and overlapped).
 # berry_blender.c: the Berry Blender, its bowl turned about the middle of the
@@ -191,6 +202,15 @@ $(CTR_GBA_CENTRED_OBJS): compat/ctr_gba_centred.h $(ROOT)/include/gba/defines.h
 # drawn in the top left corner of the wide one.
 # contest.c, contest_util.c: a contest and its results, the same; the
 # contest also slid its panels off by DISPLAY_WIDTH and DISPLAY_HEIGHT.
+# slot_machine.c: the Game Corner's slot machine, the same: its four 32x32
+# maps and its sprites placed for 240x160 were drawn in the top left corner,
+# the rows under the machine showing below it, and its ReelTime machine
+# started at x=368 (off the GBA screen, on the wide one) and slid to
+# DISPLAY_WIDTH - 32; the digital display's window closed from DISPLAY_WIDTH
+# and stopped at 348 instead of 208.
+# roulette.c: the Game Corner's roulette, the same: its wheel, grid and
+# sprites placed for 240x160 were drawn in the top left corner, over the
+# table's colour (the backdrop) on the whole screen.
 # Which centred screen each of those is, for how its margins are filled.
 build/root/src/main_menu.o: FULLCFLAGS += -DCTR_CENTRED_MAIN_MENU
 build/root/src/naming_screen.o: FULLCFLAGS += -DCTR_CENTRED_NAMING
@@ -198,6 +218,8 @@ build/root/src/wallclock.o: FULLCFLAGS += -DCTR_CENTRED_CLOCK
 build/root/src/starter_choose.o: FULLCFLAGS += -DCTR_CENTRED_STARTER
 build/root/src/shop.o: FULLCFLAGS += -DCTR_CENTRED_SHOP
 build/root/src/berry_blender.o: FULLCFLAGS += -DCTR_CENTRED_BLENDER
+build/root/src/roulette.o: FULLCFLAGS += -DCTR_CENTRED_ROULETTE
+build/root/src/slot_machine.o: FULLCFLAGS += -DCTR_CENTRED_SLOTS
 # On the bottom screen, as the PC's boxes it is mostly opened from.
 build/root/src/pokemon_summary_screen.o: FULLCFLAGS += -DCTR_CENTRED_SUMMARY
 # The PokéNav: every screen of it laid out for the GBA screen, shown whole on
@@ -228,6 +250,11 @@ build/root/src/trade.o: compat/ctr_gba_centred.h $(ROOT)/include/gba/defines.h
 build/root/src/party_menu.o: FULLCFLAGS += -DCTR_GBA_STAGE -DCTR_CENTRED_PARTY \
 	-include $(abspath compat/ctr_gba_centred.h)
 build/root/src/party_menu.o: compat/ctr_gba_centred.h $(ROOT)/include/gba/defines.h
+# The trainer card, laid out for the GBA screen: with the classic menus the
+# field's is in the bottom screen's window, a link partner's centred on top.
+build/root/src/trainer_card.o: FULLCFLAGS += -DCTR_GBA_STAGE -DCTR_CENTRED_CARD \
+	-include $(abspath compat/ctr_gba_centred.h)
+build/root/src/trainer_card.o: compat/ctr_gba_centred.h $(ROOT)/include/gba/defines.h
 # The Pokédex as the game draws it, left of the column: its list, search,
 # entries, area, cry and size screens. pokedex.c installs their VBlank
 # callbacks.
@@ -268,11 +295,15 @@ build/root/src/field_camera.o: $(ROOT)/src/field_camera.c Makefile full.mk
 	@mkdir -p $(dir $@)
 	"$(CC)" $(FULLFLAGS) $(FULLCFLAGS) -MMD -MP -c $< -o $@
 
+# Asm data units go through cpp with PORT_BRIDGE, like the C units (FULLFLAGS).
+# sound_data.s includes direct_sound_data.inc: Japanese patch 0062 drops the
+# English bard phonemes only when PORT_BRIDGE is set. With no sample overlay,
+# sound_data.o uses the generic data/%.o rule below.
 build/root/data/maps.o: build/maps.s build/map_layouts.inc $(ROOT)/data/layouts/layouts_table.inc \
 		$(ROOT)/data/maps/headers.inc $(ROOT)/data/maps/groups.inc $(ROOT)/data/maps/connections.inc
 	@mkdir -p $(dir $@)
 	@$(call scan_data_deps,3ds_port/build/maps.s)
-	cd $(ROOT) && "$(PREPROC)" 3ds_port/build/maps.s charmap.txt | "$(CPPTOOL)" -Iinclude -I. - \
+	cd $(ROOT) && "$(PREPROC)" 3ds_port/build/maps.s charmap.txt | "$(CPPTOOL)" -Iinclude -I. $(BRIDGE_FLAGS) - \
 		| "$(PREPROC)" -ie 3ds_port/build/maps.s charmap.txt | $(ASM_PSEUDO_OP_CONV) \
 		| "$(AS)" $(ASFLAGS) -o $(CURDIR)/$@
 
@@ -287,7 +318,7 @@ scan_data_deps = cd $(ROOT) && "$(SCANINC)" -I include -I "" $(1) \
 build/root/data/%.o: $(ROOT)/data/%.s Makefile full.mk
 	@mkdir -p $(dir $@)
 	@$(call scan_data_deps,data/$*.s)
-	cd $(ROOT) && "$(PREPROC)" data/$*.s charmap.txt | "$(CPPTOOL)" -Iinclude -I. - \
+	cd $(ROOT) && "$(PREPROC)" data/$*.s charmap.txt | "$(CPPTOOL)" -Iinclude -I. $(BRIDGE_FLAGS) - \
 		| "$(PREPROC)" -ie data/$*.s charmap.txt | $(ASM_PSEUDO_OP_CONV) \
 		| "$(AS)" $(ASFLAGS) -o $(CURDIR)/$@
 
@@ -301,7 +332,7 @@ SAMPLE_OVERLAY_SED := $(foreach f,$(SAMPLE_OVERLAY),-e 's\#"sound/direct_sound_s
 build/root/data/sound_data.o: $(ROOT)/data/sound_data.s $(ROOT_SOUND_BIN_SRCS) $(SAMPLE_OVERLAY) Makefile full.mk
 	@mkdir -p $(dir $@)
 	@$(call scan_data_deps,data/sound_data.s)
-	cd $(ROOT) && "$(PREPROC)" data/sound_data.s charmap.txt | "$(CPPTOOL)" -Iinclude -I. - 		| "$(PREPROC)" -ie data/sound_data.s charmap.txt | $(ASM_PSEUDO_OP_CONV) 		| sed $(SAMPLE_OVERLAY_SED) | "$(AS)" $(ASFLAGS) -o $(CURDIR)/$@
+	cd $(ROOT) && "$(PREPROC)" data/sound_data.s charmap.txt | "$(CPPTOOL)" -Iinclude -I. $(BRIDGE_FLAGS) - 		| "$(PREPROC)" -ie data/sound_data.s charmap.txt | $(ASM_PSEUDO_OP_CONV) 		| sed $(SAMPLE_OVERLAY_SED) | "$(AS)" $(ASFLAGS) -o $(CURDIR)/$@
 endif
 
 build/root/sound/songs/%.o: $(ROOT)/sound/songs/%.s
@@ -360,9 +391,10 @@ build/ctr_voxel.o: src/voxel/ctr_voxel.c Makefile full.mk
 	@mkdir -p $(dir $@)
 	"$(CC)" $(CPPFLAGS) $(CFLAGS) -Isrc/voxel -MMD -MP -c $< -o $@
 
-romfs/shaders/voxel.shbin: src/voxel/voxel.v.pica
+# The world's program first, the weather particles' second (DVLE 0 and 1).
+romfs/shaders/voxel.shbin: src/voxel/voxel.v.pica src/voxel/voxel_weather.v.pica
 	@mkdir -p $(dir $@)
-	$(DEVKITPRO)/tools/bin/picasso -o $@ $<
+	$(DEVKITPRO)/tools/bin/picasso -o $@ $^
 
 build/maps.s build/map_layouts.inc $(ROMFS_MAP_OUT) &: $(SCRIPTS)/gen_map_data.py \
 		$(ROOT)/data/maps.s $(ROOT)/data/layouts/layouts.inc
@@ -436,8 +468,9 @@ VOXEL_GFX_SOURCES := $(wildcard $(ROOT)/data/tilesets/primary/*/tiles.png $(ROOT
 VOXEL_GFX_SOURCES += $(wildcard $(ROOT)/data/tilesets/primary/*/palettes/*.pal $(ROOT)/data/tilesets/secondary/*/palettes/*.pal)
 VOXEL_GFX_SOURCES += $(wildcard $(ROOT)/graphics/intro/scene_1/bg.png)
 # The tileset animations a model's texels follow (voxel_building_specs.py
-# FOUNTAIN_ANIM: Rustboro's fountain).
+# FOUNTAIN_ANIM: Rustboro's fountain; MAUVILLE_GYM_GATES: the gym's barriers).
 VOXEL_GFX_SOURCES += $(wildcard $(ROOT)/data/tilesets/secondary/rustboro/anim/fountain/*.png)
+VOXEL_GFX_SOURCES += $(wildcard $(ROOT)/data/tilesets/secondary/mauville_gym/anim/electric_gates/*.png)
 VOXEL_GFX_OUTPUTS := $(patsubst %.png,%.4bpp,$(filter %.png,$(VOXEL_GFX_SOURCES)))
 VOXEL_GFX_OUTPUTS += $(patsubst %.pal,%.gbapal,$(filter %.pal,$(VOXEL_GFX_SOURCES)))
 ifneq ($(strip $(VOXEL_GFX_OUTPUTS)),)
@@ -446,7 +479,6 @@ $(VOXEL_GFX_OUTPUTS) &: $(VOXEL_GFX_SOURCES)
 romfs/voxel/regions.bin romfs/voxel/signposts.bin romfs/voxel/buildings.bin romfs/voxel/relief.bin romfs/stage/leaves.bin: $(VOXEL_GFX_OUTPUTS)
 endif
 
-ifeq ($(VOXEL),1)
 # What every cell of every layout IS (the console reads its signposts).
 # Solved on the host because it needs the map's warps, its neighbours and a
 # look at every metatile's own pixels, and none of that fits in a frame.
@@ -465,7 +497,12 @@ romfs/voxel/signposts.bin: scripts/gen_voxel_sign_masks.py scripts/voxel_sign_ma
 
 romfs/voxel/trees.rgba5551: scripts/gen_voxel_trees.py \
 		assets/voxel/trees/tree_crown.png assets/voxel/trees/tree_trunk.png \
-		assets/voxel/trees/tree_small_crown.png assets/voxel/trees/tree_small_trunk.png 		assets/voxel/trees/tree_2_small_crown.png assets/voxel/trees/tree_2_small_trunk.png
+		assets/voxel/trees/tree_small_crown.png assets/voxel/trees/tree_small_trunk.png 		assets/voxel/trees/tree_2_small_crown.png assets/voxel/trees/tree_2_small_trunk.png 		assets/voxel/trees/tree_small_trunk_jungle.png assets/voxel/trees/tree_small_trunk_grass_road.png 		assets/voxel/trees/tree_small_trunk_volcan.png assets/voxel/trees/tree_crown_base_floor.png 		assets/voxel/trees/tree_crown_base.png assets/voxel/trees/tree_crown_base_open.png \
+		assets/voxel/trees/tree_crown_mossdeep.png assets/voxel/trees/tree_base_mossdeep.png \
+		assets/voxel/trees/tree_base_water_mossdeep.png assets/voxel/trees/tree_north_crown.png \
+		assets/voxel/trees/tree_north_base_rock.png assets/voxel/trees/tree_north_base_ash.png \
+		assets/voxel/trees/tall_grass.png assets/voxel/trees/tall_grass_floor.png \
+		assets/voxel/trees/tree_small_trunk_access.png
 	@mkdir -p $(@D)
 	"$(PYTHON)" scripts/gen_voxel_trees.py --output $@
 
@@ -480,8 +517,9 @@ romfs/voxel/trees.rgba5551: scripts/gen_voxel_trees.py \
 # verify-voxel-buildings runs the proofs alone, even when the file is
 # up to date: the release build asks for it.
 romfs/voxel/buildings.bin: scripts/gen_voxel_buildings.py scripts/voxel_building.py scripts/voxel_night.py \
-		scripts/voxel_building_specs.py scripts/voxel_bridge.py scripts/dump_region_art.py scripts/voxel_props.py \
+		scripts/voxel_building_specs.py scripts/voxel_bridge.py scripts/voxel_fence.py scripts/voxel_fortree.py scripts/dump_region_art.py scripts/voxel_props.py \
 		scripts/voxel_relief_fixes.py assets/voxel/relief_fixes.json \
+		scripts/gen_voxel_relief.py \
 		scripts/voxel_defect_scan.py assets/voxel/interior_lint_allow.toml \
 		$(ROOT)/data/layouts/layouts.json
 	@mkdir -p $(@D)
@@ -492,9 +530,13 @@ verify-voxel-buildings:
 	"$(PYTHON)" scripts/gen_voxel_buildings.py --verify
 
 # Terrain relief read off the drawing: gen_voxel_relief.py explains it.
+# It leaves a building's cells to its model and reads which cells those are
+# from buildings.bin (voxel_terraces.modelled), so it comes after it: made
+# beside it, the relief depended on which of the two finished first.
 romfs/voxel/relief.bin: scripts/gen_voxel_relief.py scripts/voxel_cells.py scripts/voxel_props.py \
 		scripts/voxel_art.py scripts/voxel_building.py scripts/dump_region_art.py \
 		scripts/voxel_relief_fixes.py scripts/voxel_terraces.py assets/voxel/relief_fixes.json \
+		scripts/voxel_engine_view.py romfs/voxel/buildings.bin \
 		$(ROOT)/data/layouts/layouts.json
 	@mkdir -p $(@D)
 	"$(PYTHON)" scripts/gen_voxel_relief.py --output $@
@@ -502,6 +544,10 @@ romfs/voxel/relief.bin: scripts/gen_voxel_relief.py scripts/voxel_cells.py scrip
 romfs/bottom/battle.bin: scripts/gen_battle_art.py
 	@mkdir -p $(@D)
 	"$(PYTHON)" scripts/gen_battle_art.py --output $@
+
+romfs/bottom/menu.bin: scripts/gen_menu_art.py scripts/gen_battle_art.py
+	@mkdir -p $(@D)
+	"$(PYTHON)" scripts/gen_menu_art.py --output $@
 
 romfs/battle/hud.bin: scripts/gen_battle_hud.py
 	@mkdir -p $(@D)
@@ -523,6 +569,30 @@ build/voxel_world_hash_test.exe: tests/voxel_world_hash_test.c src/voxel/voxel_w
 	@mkdir -p $(@D)
 	$(HOSTCC) -std=gnu99 -O2 -DPORTABLE -DMODERN=1 -D__INTELLISENSE__ \
 		-iquote compat -iquote ../include -Isrc/voxel tests/voxel_world_hash_test.c -o $@
+
+# The field's banks of other tilesets in 2D (3ds_tile_banks.h).
+verify: verify-tile-banks
+.PHONY: verify-tile-banks
+verify-tile-banks: build/tile_banks_test.exe
+	./build/tile_banks_test.exe
+
+build/tile_banks_test.exe: tests/tile_banks_test.c include/3ds_tile_banks.h
+	@mkdir -p $(@D)
+	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/tile_banks_test.c -o $@
+
+# What stands on the current map follows the live grid (voxel_building.h,
+# VoxelBuildings_SetDrawings), on a fixture of its own.
+verify: verify-voxel-building-live
+.PHONY: verify-voxel-building-live
+verify-voxel-building-live: build/voxel_building_live_test.exe
+	./build/voxel_building_live_test.exe
+
+build/voxel_building_live_test.exe: tests/voxel_building_live_test.c src/voxel/voxel_building.c \
+		src/voxel/voxel_building.h src/voxel/voxel_world.h src/voxel/voxel_mesh_builder.h
+	@mkdir -p $(@D)
+	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude -Isrc/voxel -iquote ../include \
+		$(HOST_VOXEL_DEFS) -DVOXEL_BUILDINGS_PATH=\"build/voxel_building_live.bin\" \
+		tests/voxel_building_live_test.c src/voxel/voxel_building.c -lm -o $@
 
 verify: verify-voxel-arena
 .PHONY: verify-voxel-arena
@@ -615,14 +685,13 @@ check-voxel-relief:
 .PHONY: verify-voxel-relief
 verify: verify-voxel-relief
 verify-voxel-relief: build/voxel_relief_test.exe romfs/voxel/relief.bin
-	./build/voxel_relief_test.exe $$("$(PYTHON)" -c "import json; l = json.load(open('$(ROOT)/data/layouts/layouts.json'))['layouts']; ids = [e['id'] for e in l]; print(ids.index('LAYOUT_ROUTE101') + 1, ids.index('LAYOUT_ROUTE116') + 1, ids.index('LAYOUT_RUSTURF_TUNNEL') + 1, ids.index('LAYOUT_ROUTE108') + 1)")
+	./build/voxel_relief_test.exe $$("$(PYTHON)" -c "import json; l = json.load(open('$(ROOT)/data/layouts/layouts.json'))['layouts']; ids = [e['id'] for e in l]; print(ids.index('LAYOUT_ROUTE101') + 1, ids.index('LAYOUT_ROUTE116') + 1, ids.index('LAYOUT_RUSTURF_TUNNEL') + 1, ids.index('LAYOUT_ROUTE108') + 1, ids.index('LAYOUT_LILYCOVE_CITY') + 1, ids.index('LAYOUT_ROUTE124') + 1, ids.index('LAYOUT_ROUTE126') + 1)")
 
 build/voxel_relief_test.exe: tests/voxel_relief_test.c src/voxel/voxel_relief.c src/voxel/voxel_relief.h
 	@mkdir -p $(@D)
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude -Isrc/voxel $(HOST_VOXEL_DEFS) \
 		-DVOXEL_RELIEF_PATH='"romfs/voxel/relief.bin"' \
 		tests/voxel_relief_test.c src/voxel/voxel_relief.c -lm -o $@
-endif
 
 .PHONY: verify-settings
 verify: verify-settings
@@ -671,6 +740,14 @@ verify: verify-voxel-building-anim
 verify-voxel-building-anim: romfs/voxel/buildings.bin
 	"$(PYTHON)" -B tests/voxel_building_anim_test.py --cc "$(HOSTCC)"
 
+# The placements a script switches (VXB9's conditions: Mauville's beams),
+# loaded by voxel_building.c: each stands only while its cell holds its
+# metatile; a VXB8 file still loads, every placement standing always.
+.PHONY: verify-voxel-building-when
+verify: verify-voxel-building-when
+verify-voxel-building-when:
+	"$(PYTHON)" -B tests/voxel_building_when_test.py --cc "$(HOSTCC)"
+
 # A room's pieces judged by what the 45-degree proof cannot see
 # (scripts/voxel_defect_scan.py on gen_voxel_buildings' room facts): every
 # fault found in Littleroot's rooms, made on purpose on synthetic pieces, is
@@ -691,6 +768,32 @@ verify-voxel-interior-lint:
 	"$(PYTHON)" -B tests/voxel_interior_parts_test.py
 	"$(PYTHON)" -B tests/voxel_building_crop_test.py
 
+# The fences built post by post (scripts/voxel_fence.py): every metatile a
+# map draws a fence post's cap or a log's cut face with is a posts spec's,
+# the posts and logs stand as tall as their drawing, every block of every
+# run is exact at 45 degrees, and the Battle Pyramid and Dome leave their
+# fences to them.
+.PHONY: verify-voxel-fences
+verify: verify-voxel-fences
+verify-voxel-fences:
+	"$(PYTHON)" -B tests/voxel_fence_test.py
+
+# The Battle Frontier's outside (voxel_building_specs.py, voxel_props.py):
+# every flag a card whose cloth plays the game's animation, the East's houses,
+# the halls, arches and flowerbeds, the Pike's tail apart, all exact at 45
+# degrees.
+.PHONY: verify-voxel-frontier
+verify: verify-voxel-frontier
+verify-voxel-frontier:
+	"$(PYTHON)" -B tests/voxel_frontier_test.py
+
+# The hand marks over the terraces (voxel_terraces.py "7. hand marks", the
+# editor's mountain page): the piece a level gives, the runs, the ledges.
+.PHONY: verify-voxel-terrace-marks
+verify: verify-voxel-terrace-marks
+verify-voxel-terrace-marks:
+	"$(PYTHON)" -B tests/voxel_terrace_marks_test.py
+
 .PHONY: verify-pokedex-capture verify-voxel-dewford
 verify: verify-pokedex-capture verify-voxel-dewford
 verify-pokedex-capture:
@@ -707,3 +810,12 @@ all: build/voxel_check.report
 build/voxel_check.report: romfs/voxel/buildings.bin romfs/voxel/relief.bin romfs/voxel/regions.bin 		romfs/voxel/signposts.bin scripts/voxel_engine_view.py tests/voxel_scene_dump.c 		$(wildcard src/voxel/voxel_*.c) $(wildcard src/voxel/voxel_*.h)
 	@mkdir -p $(@D)
 	@"$(PYTHON)" scripts/voxel_engine_view.py check > $@ 2>&1 		&& echo "voxel check: ok" 		|| { echo "voxel check: WARNING, see $@"; grep -E "DROPS|OVER|failed" $@ || true; }
+
+.PHONY: verify-voxel-sprite-slots
+verify: verify-voxel-sprite-slots
+verify-voxel-sprite-slots: build/voxel_sprite_slots_test.exe
+	./build/voxel_sprite_slots_test.exe
+
+build/voxel_sprite_slots_test.exe: tests/voxel_sprite_slots_test.c src/voxel/voxel_sprite_slots.c src/voxel/voxel_sprite_slots.h
+	@mkdir -p $(@D)
+	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Isrc/voxel tests/voxel_sprite_slots_test.c src/voxel/voxel_sprite_slots.c -o $@

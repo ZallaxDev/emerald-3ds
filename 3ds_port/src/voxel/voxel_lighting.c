@@ -25,10 +25,25 @@ typedef struct
     int16_t x, z;
     float top;        /* over the base */
     float base;       /* the base of the map the cell is on (VoxelRelief_Base) */
+    /* On a drawn map, how high over the base what stands on the cell is
+     * drawn (VoxelRelief_CellShift): a tree on ground two levels under the
+     * base stands two levels down. */
+    float lift;
+    /* And how far south: as far as it stands high in the world, its lift and
+     * its map's base (VoxelBuilder_StretchZ) - that tree two rows north of
+     * its cell on a map at the world's level. */
+    float shift;
+    /* A drawn map's relief: the lowest of its surface over the cell. A point
+     * under it is under the surface wherever in the cell it is. */
+    float bottom;
+    /* A shifted cell (shift not 0): the height past which nothing
+     * ObjectAt tests in it can stop a ray (ShiftedClear), once known. */
+    float clear;
     uint32_t generation;
     int8_t crownPart; /* VoxelTree_Part when the cell is a crown, else -1 */
     bool surface;     /* a drawn map's relief: tested as a height field */
     bool sign;        /* a sign or a lamp: tested against its drawing */
+    bool clearKnown;  /* `clear` worked out (ShiftedClear) */
     const uint16_t *mask; /* a model over part of the cell: its footprint */
 } LightCell;
 static LightCell sCells[CELL_CACHE_SIZE];
@@ -55,6 +70,8 @@ VoxelSun gVoxelSun = {0.85f, 0.55f, 1.0f, 0};
 static float sAmbient = VOXEL_AMBIENT;
 static float sStepInverseX = 4.0f / 0.85f, sStepInverseZ = 4.0f / 0.55f;
 static unsigned sRays;
+/* Lit without the blocks' bound (VoxelLighting_SampleAlone). */
+static bool sAlone;
 
 /*
  * No caster anywhere on screen is taller than this, so a ray that has climbed
@@ -106,6 +123,21 @@ static LightBlock sBlocks[BLOCK_CACHE_SIZE];
  * whose entries it would otherwise evict.
  */
 #define REACH_BLOCKS 2
+/* How far a block's ceiling looks north and south for what is drawn into it
+ * from another cell (ObjectAt): a tree four levels up a drawn mountain. */
+#define SHIFT_ROWS 4
+/* How far north of a row past every map's cells Cell looks for the map whose
+ * drawing reaches it: a map stands as far south as it is high in the world. */
+#define DRAWN_PAST_ROWS 16
+
+/* How far a map's drawing reaches past its cells, north or south, rows: its
+ * base and, on a drawn map, SHIFT_ROWS of relief over it. */
+static int DrawnReach(const VoxelMapInstance *inst)
+{
+    float reach = fabsf(VoxelRelief_Base(inst));
+
+    return (int)ceilf(reach) + (VoxelRelief_IsDrawn(inst) ? SHIFT_ROWS : 0);
+}
 static LightBlock sReach[BLOCK_CACHE_SIZE];
 /* Read for a ray with more than this left to climb to the map's bound. */
 #define BLOCK_CLIMB 1.0f
@@ -118,6 +150,73 @@ static int Tile(float n)
 {
     int i = (int)n;
     return n < (float)i ? i - 1 : i;
+}
+
+/*
+ * A map's eased rows (VoxelRelief_Stretch) are drawn longer than its cells
+ * stand: the rays run where things are drawn - a point on the eased ground,
+ * on the map south of it - and what may stop them is looked up where it
+ * stands, each point taken back through the stretch of the map drawn there.
+ * Else the casters of Route 111's last rows shaded Mauville from two rows
+ * north of where they are drawn: a cut along the seam, shadows of nothing.
+ */
+typedef struct
+{
+    float x0, x1, from, to, add;
+} LightStretch;
+static LightStretch sStretches[MAX_VOXEL_MAP_INSTANCES];
+static unsigned sStretchCount, sStretchMaps = ~0u;
+
+static void ReadStretches(void)
+{
+    sStretchCount = 0;
+    sStretchMaps = VoxelWorld_InstanceCount();
+    for (unsigned i = 0; i < sStretchMaps && i < MAX_VOXEL_MAP_INSTANCES; ++i)
+    {
+        const VoxelMapInstance *inst = VoxelWorld_Instance(i);
+        LightStretch *s = &sStretches[sStretchCount];
+
+        if (inst != NULL && VoxelRelief_Stretch(inst, &s->from, &s->to, &s->add))
+        {
+            s->x0 = (float)inst->originX;
+            s->x1 = (float)(inst->originX + inst->width);
+            ++sStretchCount;
+        }
+    }
+}
+
+/* Where what is drawn at (x, z) stands. */
+static float Standing(float x, float z)
+{
+    if (sStretchMaps != VoxelWorld_InstanceCount())
+        ReadStretches();
+    for (unsigned i = 0; i < sStretchCount; ++i)
+    {
+        const LightStretch *s = &sStretches[i];
+
+        if (x >= s->x0 && x < s->x1 && z > s->from && z < s->to + s->add)
+            return s->from + (z - s->from) * (s->to - s->from) / (s->to - s->from + s->add);
+    }
+    return z;
+}
+
+/* Does a ray from (x, z) cross a map's eased rows? */
+static bool RayStretched(float x, float z)
+{
+    float endX = x - VOXEL_SUN_DX * VOXEL_LIGHT_REACH;
+    float endZ = z - VOXEL_SUN_DZ * VOXEL_LIGHT_REACH;
+
+    if (sStretchMaps != VoxelWorld_InstanceCount())
+        ReadStretches();
+    for (unsigned i = 0; i < sStretchCount; ++i)
+    {
+        const LightStretch *s = &sStretches[i];
+
+        if (fmaxf(x, endX) + 1.0f > s->x0 && fminf(x, endX) - 1.0f < s->x1
+         && fmaxf(z, endZ) + 1.0f > s->from && fminf(z, endZ) - 1.0f < s->to + s->add)
+            return true;
+    }
+    return false;
 }
 
 static float CasterCeiling(void)
@@ -144,6 +243,7 @@ static float CasterCeiling(void)
 
 static void MapCeilings(void)
 {
+    ReadStretches();
     sMapCeilings = 0;
     for (unsigned i = 0; i < VoxelWorld_InstanceCount() && i < MAX_VOXEL_MAP_INSTANCES; ++i)
     {
@@ -252,15 +352,59 @@ static const LightCell *Cell(int x, int z)
     cell->crownPart = -1;
     cell->surface = false;
     cell->sign = false;
+    cell->clearKnown = false;
     cell->mask = NULL;
     inst = VoxelWorld_GetInstanceAt(x, z);
     cell->base = VoxelRelief_Base(inst);
-    if (inst == NULL || inst->indoor)
+    cell->lift = 0.0f;
+    cell->shift = 0.0f;
+    if (inst == NULL)
+    {
+        /* Past every map's cells: what is drawn here is the map north of it,
+         * as far south as it stands high (Fortree's last rows, on its base,
+         * past its south edge). Looked for there, as ObjectAt looks for what
+         * is drawn across a shifted cell, from the depth of that map's edge. */
+        for (int k = 1; k <= DRAWN_PAST_ROWS; ++k)
+        {
+            const VoxelMapInstance *north = VoxelWorld_GetInstanceAt(x, z - k);
+            float reach;
+
+            if (north == NULL)
+                continue;
+            reach = VoxelRelief_Base(north)
+                  + (VoxelRelief_IsDrawn(north) ? VoxelRelief_CellShift(north, x, z - k) : 0.0f);
+            if (!north->indoor && reach > (float)k - 1.0f)
+            {
+                cell->base = VoxelRelief_Base(north);
+                cell->shift = reach;
+            }
+            break;
+        }
         return cell;
+    }
+    if (inst->indoor)
+        return cell;
+    if (VoxelRelief_IsDrawn(inst))
+        cell->lift = VoxelRelief_CellShift(inst, x, z);
+    cell->shift = cell->lift + cell->base;
     metatile = VoxelWorld_GetMetatileId(x, z);
     if (VoxelWorld_UsesTreeSprites(inst))
     {
         int part = VoxelTree_Part(inst->secondaryTileset, metatile);
+        float over;
+
+        /* Long grass is low: no crown to cast, the ground it is */
+        if (part == VOXEL_TREE_GRASS)
+            part = -1;
+
+        /* A wood under a deck (Fortree's tree houses): the deck casts,
+         * standing over the crowns. */
+        if (part >= 0 && VoxelBuildings_CellAt(inst, x, z, NULL, &over) && over > CROWN_TOP)
+        {
+            cell->top = over;
+            cell->mask = VoxelBuildings_Footprint(inst, x, z);
+            return cell;
+        }
         if (part >= 0)
         {
             /* A rounded crown proxy, rather than the opaque rectangular card.
@@ -291,7 +435,7 @@ static const LightCell *Cell(int x, int z)
      * field, so a slope facing the sun is not shadowed by its own cell. */
     if (VoxelRelief_IsDrawn(inst))
     {
-        cell->top = VoxelRelief_SurfaceTop(inst, x, z);
+        cell->top = VoxelRelief_SurfaceTop(inst, x, z, &cell->bottom);
         cell->surface = cell->top > 0.05f;
         return cell;
     }
@@ -317,27 +461,42 @@ static float BlockCeiling(int bx, int bz)
     int x0 = bx * (1 << BLOCK_SHIFT), z0 = bz * (1 << BLOCK_SHIFT);
     int x1 = x0 + (1 << BLOCK_SHIFT), z1 = z0 + (1 << BLOCK_SHIFT);
     bool onMap = false;
+    int margin = 0;
 
     if (block->generation == sGeneration && block->bx == bx && block->bz == bz)
         return block->ceiling;
-    /* Off every map no cell casts (Cell): not worth classifying sixteen
-     * cells, each evicting one rays do test. */
-    for (unsigned i = 0; i < VoxelWorld_InstanceCount() && !onMap; ++i)
+    /* Off every map's drawing no cell casts (Cell): not worth classifying
+     * sixteen cells, each evicting one rays do test. A map's drawing is its
+     * cells and the rows round them it reaches (DrawnReach): what stands on
+     * its cells is drawn as far south as it stands high, ObjectAt. */
+    for (unsigned i = 0; i < VoxelWorld_InstanceCount(); ++i)
     {
         const VoxelMapInstance *inst = VoxelWorld_Instance(i);
+        int reach;
 
-        onMap = inst != NULL && inst->originX < x1 && inst->originX + inst->width > x0
-             && inst->originY < z1 && inst->originY + inst->height > z0;
+        if (inst == NULL || inst->originX >= x1 || inst->originX + inst->width <= x0)
+            continue;
+        reach = DrawnReach(inst);
+        if (inst->originY < z1 + reach && inst->originY + inst->height > z0 - reach)
+        {
+            onMap = true;
+            if (reach > margin)
+                margin = reach;
+        }
     }
-    for (int z = z0; onMap && z < z1; ++z)
+    for (int z = z0 - margin; onMap && z < z1 + margin; ++z)
         for (int x = x0; x < x1; ++x)
         {
             const LightCell *cell = Cell(x, z);
+            float lift = cell->surface ? 0.0f : cell->lift;
+            int at = cell->surface ? z : Tile((float)z + 0.5f + cell->shift);
 
             /* CellOccludes: nothing under its top, and nothing at all from a
              * cell whose top is not above its base (a surface's always is). */
-            if (cell->top > 0.0f && cell->top + cell->base + BLOCK_MARGIN > ceiling)
-                ceiling = cell->top + cell->base + BLOCK_MARGIN;
+            if (at < z0 || at >= z1)
+                continue;
+            if (cell->top > 0.0f && cell->top + cell->base + lift + BLOCK_MARGIN > ceiling)
+                ceiling = cell->top + cell->base + lift + BLOCK_MARGIN;
         }
     block->generation = sGeneration;
     block->bx = (int16_t)bx;
@@ -408,6 +567,10 @@ static bool CellOccludes(const LightCell *cell, float x, float y, float z)
         return false;
     if (cell->surface)
     {
+        /* Under the lowest of it: inside the rock, with no need to read
+         * where (a ray into a mountain, a corner's contact against a wall). */
+        if (y < cell->bottom - SURFACE_BIAS)
+            return true;
         ++sSurfaceTests;
         return y < VoxelRelief_SurfaceAt(x, z) - SURFACE_BIAS;
     }
@@ -445,9 +608,69 @@ static bool CellOccludes(const LightCell *cell, float x, float y, float z)
     return true;
 }
 
+/*
+ * Is the world point (x, y, z) inside a caster? A drawn map's relief stands in
+ * the world as it is; a tree, a model or a sign on one of its cells is drawn
+ * as far south and as high as the cell is lifted (VoxelRelief_CellShift), and
+ * is looked for there - else a wood on Route 111's low ground, two levels
+ * under its base, cast its shadows two rows south of its trees, onto open
+ * paths. `seen` gets the cell the point is in, for the march.
+ */
+static bool ObjectAt(int tx, float x, float y, float z, const LightCell **seen)
+{
+    const LightCell *cell = Cell(tx, Tile(z)), *o;
+
+    *seen = cell;
+    /* (a cell drawn in its own row: lifted all the same, if its relief is
+     * as far under its base as the base is high) */
+    if (cell->shift == 0.0f)
+        return CellOccludes(cell, x, y - cell->lift, z);
+    if (cell->surface && CellOccludes(cell, x, y, z))
+        return true;
+    o = Cell(tx, Tile(z - cell->shift));
+    if (o->surface || o->shift == 0.0f)
+        return false;
+    return CellOccludes(o, x, y - o->lift, z - o->shift);
+}
+
+/*
+ * A cell drawn shifted (cell->shift, on a drawn map's raised ground): the
+ * height past which nothing ObjectAt tests in it can stop a ray. That is the
+ * cell's own relief and what is drawn into it from the cells whose drawing
+ * lies across it - one or two rows, as a point runs down the cell - and the
+ * ray only climbs, so past all of them none can. Worked out once a cell, as
+ * rays first need it, and kept with it.
+ */
+static float ShiftedClear(int tx, int tz)
+{
+    LightCell *cell = (LightCell *)Cell(tx, tz);
+    float clear, shift;
+
+    if (cell->clearKnown)
+        return cell->clear;
+    clear = cell->surface ? cell->top + cell->base : -1000.0f;
+    shift = cell->shift;
+    for (int oz = Tile((float)tz - shift); oz <= Tile((float)(tz + 1) - shift); ++oz)
+    {
+        const LightCell *o = Cell(tx, oz);
+
+        if (!o->surface && o->shift != 0.0f && o->top > 0.0f
+         && o->top + o->base + o->lift > clear)
+            clear = o->top + o->base + o->lift;
+    }
+    /* (the lookups may have reused its bucket: found again) */
+    cell = (LightCell *)Cell(tx, tz);
+    cell->clear = clear;
+    cell->clearKnown = true;
+    return clear;
+}
+
 static bool Occludes(float x, float y, float z)
 {
-    return CellOccludes(Cell(Tile(x), Tile(z)), x, y, z);
+    const LightCell *cell;
+
+    z = Standing(x, z);
+    return ObjectAt(Tile(x), x, y, z, &cell);
 }
 
 /*
@@ -486,13 +709,15 @@ static bool Lit(float x, float y, float z)
     /* The blocks' bound is only valid for the maps it was read from: with
      * maps put on screen since the last reset, the map bound alone. */
     bool blocks;
+    bool stretched;
 
     if (gVoxelSun.strength == 0.0f)
         return true;
     if (sGeneration == 0)
         VoxelLighting_Reset();
     ceiling = RayCeiling(x, z);
-    blocks = VoxelWorld_InstanceCount() == sMapCeilings;
+    stretched = RayStretched(x, z);
+    blocks = !sAlone && VoxelWorld_InstanceCount() == sMapCeilings;
     for (int step = 1; step <= VOXEL_LIGHT_REACH * 4;)
     {
         float rx, ry, rz;
@@ -502,6 +727,8 @@ static bool Lit(float x, float y, float z)
         RayPoint(x, y, z, step, &rx, &ry, &rz);
         if (ry >= ceiling)
             break;
+        if (stretched)
+            rz = Standing(rx, rz);
         tx = Tile(rx);
         tz = Tile(rz);
         /* The blocks' bound, read once, at the first point the map bound
@@ -522,17 +749,31 @@ static bool Lit(float x, float y, float z)
             if (ry >= ceiling)
                 break;
         }
-        cell = Cell(tx, tz);
         ++sSteps;
-        if (CellOccludes(cell, rx, ry, rz))
+        if (ObjectAt(tx, rx, ry, rz, &cell))
             return false;
         ++step;
 #ifdef VOXEL_LIGHTING_TESTS
         if (gVoxelLightingStepEveryPoint)
             continue;
 #endif
-        if ((cell->crownPart >= 0 || cell->surface || cell->sign || cell->mask != NULL)
-         && cell->top + cell->base > ry)
+        /* (the cells' edges are where they stand, not along the ray) */
+        if (stretched)
+            continue;
+        /* (ObjectAt's lookup across a shifted cell may have reused its
+         * bucket: found again, or the skip reads the other cell) */
+        if (cell->x != tx || cell->z != tz)
+            cell = Cell(tx, tz);
+        if (cell->shift != 0.0f)
+        {
+            /* What is drawn across a shifted cell comes from the rows its
+             * drawing lies over: point by point until the ray is over it
+             * all, then past the cell at once. */
+            if (ShiftedClear(tx, tz) > ry)
+                continue;
+        }
+        else if ((cell->crownPart >= 0 || cell->surface || cell->sign || cell->mask != NULL)
+              && cell->top + cell->base > ry)
             continue;  /* not a box: point by point while it is above the ray */
         /* Leave the cell along the current sun direction. The estimate starts a step short
          * of the crossing and the exact points settle it. */
@@ -562,13 +803,84 @@ static bool Lit(float x, float y, float z)
     return true;
 }
 
+/*
+ * The blocks' bounds the rays from the ground of cells x0..x1, z0..z1 read
+ * (Lit's ReachCeiling), worked out ahead, `budget` new blocks a call: the
+ * first ray into blocks not yet read classified some four hundred cells, and
+ * the first cell of a chunk took 6-8 ms on an Old 3DS where its neighbours
+ * took under one - a dropped frame from one slice the build had counted as a
+ * millisecond (port.log, 2026-10-26: "slice ground ... 8.37ms remaining=1.43").
+ * Read from each corner of the cells as Lit reads them; a ray from higher up a
+ * drawn mountain may read blocks further south, which it reads itself. The
+ * same bounds as the rays' own: only when they are read changes.
+ */
+bool VoxelLighting_Warm(int x0, int z0, int x1, int z1, unsigned *cursor, unsigned budget)
+{
+    enum { REGION = 64 };
+    const int across = x1 - x0 + 1, points = across * (z1 - z0 + 1);
+    unsigned read = 0;
+
+    if (gVoxelSun.strength == 0.0f)
+        return true;
+    if (sGeneration == 0)
+        VoxelLighting_Reset();
+    if (sAlone || VoxelWorld_InstanceCount() != sMapCeilings)
+        return true;
+    for (unsigned point = *cursor / REGION, first = *cursor % REGION; point < (unsigned)points; ++point, first = 0)
+    {
+        float x = (float)(x0 + (int)point % across), z = (float)(z0 + (int)point / across);
+        const LightCell *ground = Cell(Tile(x), Tile(z));
+        /* where its ground is drawn, which is where its rays start */
+        float y = ground->base + ground->lift, sx, sy, sz, fx, fy, fz;
+        int bx0, bz0, bx1, bz1, w;
+
+        z += ground->shift;
+        RayPoint(x, y, z, 1, &sx, &sy, &sz);
+        /* a ray with little to climb never reads them */
+        if (RayCeiling(x, z) - sy <= BLOCK_CLIMB)
+            continue;
+        RayPoint(x, y, z, VOXEL_LIGHT_REACH * 4, &fx, &fy, &fz);
+        bx0 = BlockOf(Tile(fx));
+        bz0 = BlockOf(Tile(fz));
+        bx1 = BlockOf(Tile(sx));
+        bz1 = BlockOf(Tile(sz));
+        if (bx0 > bx1) { int t = bx0; bx0 = bx1; bx1 = t; }
+        if (bz0 > bz1) { int t = bz0; bz0 = bz1; bz1 = t; }
+        /* as ReachCeiling reads them */
+        if (bx1 - bx0 <= REACH_BLOCKS && bz1 - bz0 <= REACH_BLOCKS)
+        {
+            bx0 = bx1 - REACH_BLOCKS;
+            bz0 = bz1 - REACH_BLOCKS;
+        }
+        w = bx1 - bx0 + 1;
+        for (unsigned k = first; k < (unsigned)(w * (bz1 - bz0 + 1)) && k < REGION; ++k)
+        {
+            int bx = bx0 + (int)k % w, bz = bz0 + (int)k / w;
+            const LightBlock *block = &sBlocks[((uint32_t)bx * 73856093u ^ (uint32_t)bz * 19349663u)
+                                               & (BLOCK_CACHE_SIZE - 1)];
+
+            if (block->generation == sGeneration && block->bx == bx && block->bz == bz)
+                continue;
+            if (read == budget)
+            {
+                *cursor = point * REGION + k;
+                return false;
+            }
+            BlockCeiling(bx, bz);
+            ++read;
+        }
+    }
+    *cursor = (unsigned)points * REGION;
+    return true;
+}
+
 /* Small contact AO at the bases of solid neighbours; leave roof/crown art
  * alone. Ambient light keeps the original pixel art legible in shadow. */
 static float Contact(float x, float y, float z)
 {
     unsigned covered = 0;
 
-    if (y - Cell(Tile(x), Tile(z))->base > 0.41f)
+    if (y - Cell(Tile(x), Tile(Standing(x, z)))->base > 0.41f)
         return 1.0f;
     covered += Occludes(x - 0.28f, y + 0.3f, z);
     covered += Occludes(x + 0.28f, y + 0.3f, z);
@@ -647,7 +959,7 @@ static float CachedContact(float x, float y, float z)
 {
     /* Contact's own first test: too cheap to cache, and caching it would
      * only evict samples whose rays were cast. */
-    if (y - Cell(Tile(x), Tile(z))->base > 0.41f)
+    if (y - Cell(Tile(x), Tile(Standing(x, z)))->base > 0.41f)
         return 1.0f;
     return FindSample(x, y, z)->contact;
 }
@@ -672,6 +984,16 @@ float VoxelLighting_Sample(float x, float y, float z)
     const LightSample *sample = CachedSample(x, y, z);
 
     return (sample->lit ? 1.0f : sAmbient) * sample->contact;
+}
+
+float VoxelLighting_SampleAlone(float x, float y, float z)
+{
+    float shade;
+
+    sAlone = true;
+    shade = VoxelLighting_Sample(x, y, z);
+    sAlone = false;
+    return shade;
 }
 
 uint32_t VoxelLighting_Hash(int x0, int z0, int x1, int z1)
@@ -730,6 +1052,24 @@ static void RawQuad(VoxelBuilder *builder, const VoxelVertex *a,
         builder->dropped += 2;
         return;
     }
+    /* Cut along the diagonal whose ends are lit most alike: a shadow's edge
+     * crossing the quad the other way then runs straight along it, where the
+     * fixed cut drew it as a zigzag of half triangles. The same corners and
+     * the same samples, and the same winding either way. Only on a flat
+     * parallelogram, its texture one too, where either cut is the same
+     * surface and the same picture: on a relief's bent quad the diagonal is
+     * part of the shape (a ledge's berm). */
+    if (fabsf(a->shade - c->shade) > fabsf(b->shade - d->shade)
+     && fabsf(a->x + c->x - b->x - d->x) < 0.001f
+     && fabsf(a->y + c->y - b->y - d->y) < 0.001f
+     && fabsf(a->z + c->z - b->z - d->z) < 0.001f
+     && fabsf(a->u + c->u - b->u - d->u) < 0.0001f
+     && fabsf(a->v + c->v - b->v - d->v) < 0.0001f)
+    {
+        VoxelBuilder_Tri(builder, a, b, d);
+        VoxelBuilder_Tri(builder, b, c, d);
+        return;
+    }
     VoxelBuilder_Tri(builder, a, b, c);
     VoxelBuilder_Tri(builder, a, c, d);
 }
@@ -757,7 +1097,8 @@ static void WorldPoint(const VoxelBuilder *builder, const VoxelVertex *v,
 {
     *x = v->x;
     *y = v->y + builder->lift + builder->base;
-    *z = v->z + builder->shift;
+    /* where it is drawn (VoxelBuilder_StretchZ): the rays start there */
+    *z = VoxelBuilder_StretchZ(builder, v->z + builder->shift);
 }
 
 /* ── Faces ──────────────────────────────────────────────────────────────── */
@@ -830,6 +1171,116 @@ static void LightVertexFaces(VoxelBuilder *builder, const VoxelVertex *const *v,
         }
     }
     EmitPolygon(builder, out, count);
+}
+
+/*
+ * What a lattice point (a, c) off the half-tile points gets from them: the
+ * answer the two along its row or column (or the four round it, diagonally)
+ * agree on, if it lies on their line (their plane) - else -1. A bend there
+ * (a step's foot, a crease) can hide a shadow of its own.
+ */
+static int LatticeInfer(const float *wy, const float *wz, const int8_t *lit, int a, int c)
+{
+    enum { SIDE = VOXEL_RELIEF_SIDE };
+    int k = c * SIDE + a, from[4], count = 0;
+    float my = 0.0f, mz = 0.0f;
+
+    if ((a & 1) && (c & 1))
+    {
+        from[count++] = k - SIDE - 1;
+        from[count++] = k - SIDE + 1;
+        from[count++] = k + SIDE - 1;
+        from[count++] = k + SIDE + 1;
+    }
+    else if (a & 1)
+    {
+        from[count++] = k - 1;
+        from[count++] = k + 1;
+    }
+    else
+    {
+        from[count++] = k - SIDE;
+        from[count++] = k + SIDE;
+    }
+    for (int i = 0; i < count; ++i)
+    {
+        if (lit[from[i]] < 0 || lit[from[i]] != lit[from[0]])
+            return -1;
+        my += wy[from[i]];
+        mz += wz[from[i]];
+    }
+    if (fabsf(my / count - wy[k]) > 0.02f || fabsf(mz / count - wz[k]) > 0.02f)
+        return -1;
+    return lit[from[0]];
+}
+
+/*
+ * A relief cell's lattice (VOXEL_RELIEF_SIDE points a side, a quarter tile
+ * apart), its shadows read ahead of its quads: rays at the half-tile points,
+ * as level ground is sampled, and each point between them takes their answer
+ * where LatticeInfer gives one - else the ray its quads cast when they are
+ * lit. A drawn mountain's cell cast sixteen rays of its own: on an Old 3DS
+ * its chunks took twice a town's (Route 112, 33 ms, port.log 2026-10-26).
+ * The same shadows: one level coarser (rays at the corners alone) lost a
+ * shadow's tip on one vertex in a thousand.
+ */
+void VoxelLighting_Lattice(VoxelBuilder *builder, const VoxelVertex *lattice)
+{
+    enum { SIDE = VOXEL_RELIEF_SIDE, LAST = VOXEL_RELIEF_SIDE - 1 };
+    float wx[SIDE * SIDE], wy[SIDE * SIDE], wz[SIDE * SIDE];
+    int8_t lit[SIDE * SIDE]; /* -1: unknown, or turned from the sun (no ray) */
+
+    if (gVoxelSun.strength == 0.0f)
+        return;
+    for (int k = 0; k < SIDE * SIDE; ++k)
+    {
+        WorldPoint(builder, &lattice[k], &wx[k], &wy[k], &wz[k]);
+        lit[k] = -1;
+    }
+    for (int c = 0; c <= LAST; c += 2)
+        for (int a = 0; a <= LAST; a += 2)
+        {
+            int k = c * SIDE + a;
+
+            if (lattice[k].shade > sAmbient + 0.001f)
+                lit[k] = CachedSample(wx[k], wy[k], wz[k])->lit;
+        }
+    for (int c = 0; c <= LAST; ++c)
+        for (int a = 0; a <= LAST; ++a)
+        {
+            int k = c * SIDE + a, v;
+            LightSample *sample;
+
+            if (((a | c) & 1) == 0 || lattice[k].shade <= sAmbient + 0.001f
+             || (v = LatticeInfer(wy, wz, lit, a, c)) < 0)
+                continue;
+            sample = FindSample(wx[k], wy[k], wz[k]);
+            if (!sample->rayCast)
+            {
+                sample->lit = v != 0;
+                sample->rayCast = true;
+            }
+        }
+}
+
+/* The light each lattice point gets, as LightVertexFaces gives it to the
+ * corners of the lattice's quads: the same samples, from the same caches. */
+void VoxelLighting_LatticeShades(VoxelBuilder *builder, const VoxelVertex *lattice, float *shade)
+{
+    for (int k = 0; k < VOXEL_RELIEF_SIDE * VOXEL_RELIEF_SIDE; ++k)
+    {
+        float face = lattice[k].shade, px, py, pz;
+
+        WorldPoint(builder, &lattice[k], &px, &py, &pz);
+        if (face <= sAmbient + 0.001f)
+            shade[k] = sAmbient * CachedContact(px, py, pz);
+        else
+        {
+            const LightSample *sample = CachedSample(px, py, pz);
+
+            shade[k] = (sample->lit ? face : sAmbient) * sample->contact;
+        }
+    }
 }
 
 /* A quad, or with `count` 3 the triangle a b c (d is c): lit alike, the

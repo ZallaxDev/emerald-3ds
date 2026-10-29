@@ -10,7 +10,7 @@ index c92efe5e0d8dd1bda81ec827f64fc15ec04a7005..8a6cca291081954e11134899c6a707e6
  void CtrBattleMenu_TargetInput(void);
  void CtrBattleMenu_ShowPrompt(void);
 +bool8 CtrBattleMenu_TakeQuickBall(void);
-+// The ball R or the bottom screen's ball button would throw now, or ITEM_NONE.
++// The ball X or the bottom screen's ball button would throw now, or ITEM_NONE.
 +u16 CtrBattle_QuickBallItem(void);
 +bool8 CtrBattle_QuickBallCycle(s8 direction);
  #endif
@@ -31,13 +31,13 @@ index 11095bc7ac57e3688f84e03f8e836897eb0e8e2a..26b61682d54d25c45113d91e3e89cf0e
  
  static void PlayerHandleGetMonData(void);
  static void PlayerHandleSetMonData(void);
-@@ -230,6 +234,137 @@ static void CompleteOnBankSpritePosX_0(void)
+@@ -230,6 +234,134 @@ static void CompleteOnBankSpritePosX_0(void)
          PlayerBufferExecCompleted();
  }
  
 +#ifdef PLATFORM_3DS
 +/*
-+ * Quick ball: R, or the ball button on the bottom screen, throws the selected
++ * Quick ball: X, or the ball button on the bottom screen, throws the selected
 + * ball without opening the bag. The last ball is kept in an unused save var,
 + * so it survives a restart. Wild single battles only.
 + */
@@ -141,16 +141,13 @@ index 11095bc7ac57e3688f84e03f8e836897eb0e8e2a..26b61682d54d25c45113d91e3e89cf0e
 +    return FALSE;
 +}
 +
-+/* R or the bottom-screen button: TRUE if a ball is on its way. */
++/* X or the bottom-screen button (R and L are the battle speed's): TRUE if a
++ * ball is on its way. */
 +static bool8 TryQuickBall(void)
 +{
-+    /* Buttons are u16: R (0x100) would truncate to 0 in a bool8. */
-+    bool8 asked = JOY_NEW(R_BUTTON) != 0;
 +    u16 ball;
 +
-+    if (CtrBattleMenu_TakeQuickBall())
-+        asked = TRUE;
-+    if (!asked)
++    if (!CtrBattleMenu_TakeQuickBall())
 +        return FALSE;
 +    ball = CtrBattle_QuickBallItem();
 +    if (ball == ITEM_NONE)
@@ -169,7 +166,7 @@ index 11095bc7ac57e3688f84e03f8e836897eb0e8e2a..26b61682d54d25c45113d91e3e89cf0e
  static void HandleInputChooseAction(void)
  {
      u16 itemId = gBattleBufferA[gActiveBattler][2] | (gBattleBufferA[gActiveBattler][3] << 8);
-@@ -245,6 +380,10 @@ static void HandleInputChooseAction(void)
+@@ -245,6 +377,10 @@ static void HandleInputChooseAction(void)
  #ifdef PLATFORM_3DS
      if (CtrBattleMenu_Active())
          CtrBattleMenu_ActionInput(&gActionSelectionCursor[gActiveBattler], FALSE);
@@ -180,7 +177,7 @@ index 11095bc7ac57e3688f84e03f8e836897eb0e8e2a..26b61682d54d25c45113d91e3e89cf0e
  #endif
      if (JOY_NEW(A_BUTTON))
      {
-@@ -1399,6 +1538,12 @@ static void CompleteWhenChoseItem(void)
+@@ -1399,6 +1535,12 @@ static void CompleteWhenChoseItem(void)
  {
      if (gMain.callback2 == BattleMainCB2 && !gPaletteFade.active)
      {
@@ -193,7 +190,7 @@ index 11095bc7ac57e3688f84e03f8e836897eb0e8e2a..26b61682d54d25c45113d91e3e89cf0e
          BtlController_EmitOneReturnValue(B_COMM_TO_ENGINE, gSpecialVar_ItemId);
          PlayerBufferExecCompleted();
      }
-@@ -2595,6 +2740,9 @@ static void PlayerHandleChooseAction(void)
+@@ -2595,6 +2737,9 @@ static void PlayerHandleChooseAction(void)
  
      gBattlerControllerFuncs[gActiveBattler] = HandleChooseActionAfterDma3;
      BattleTv_ClearExplosionFaintCause();
@@ -203,7 +200,7 @@ index 11095bc7ac57e3688f84e03f8e836897eb0e8e2a..26b61682d54d25c45113d91e3e89cf0e
  #ifdef PLATFORM_3DS
      if (CtrBattleMenu_Active())
      {
-@@ -2700,6 +2848,27 @@ static void PlayerHandleChooseItem(void)
+@@ -2700,6 +2845,27 @@ static void PlayerHandleChooseItem(void)
  {
      s32 i;
  

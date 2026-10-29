@@ -1,0 +1,207 @@
+# FRONTEIRA DE BATALHA: o portão de recepção, com os guias.
+
+[BattleFrontier_ReceptionGate_Text_FirstTimeHereThisWay] 029fb5f2f0
+É a sua primeira vez aqui?\n
+Por aqui, por favor!$
+
+[BattleFrontier_ReceptionGate_Text_WelcomeToBattleFrontier] a289a7fee3
+A linha de frente das batalhas POKéMON!\n
+Boas-vindas à FRONTEIRA DE BATALHA!$
+
+[BattleFrontier_ReceptionGate_Text_IssueFrontierPass] 9877ebab7e
+Pra quem vem pela primeira vez,\n
+entregamos o PASSE DA FRONTEIRA.\p
+Ele serve em todas as instalações\n
+da FRONTEIRA DE BATALHA.\p
+Aqui está!$
+
+[BattleFrontier_ReceptionGate_Text_ObtainedFrontierPass] 306c6f8a07
+{PLAYER} recebeu\n
+o PASSE DA FRONTEIRA.$
+
+[BattleFrontier_ReceptionGate_Text_PlacedTrainerCardInFrontierPass] 0c3b0a41cb
+{PLAYER} colocou o CARTÃO DE TREINADOR\n
+no PASSE DA FRONTEIRA.$
+
+[BattleFrontier_ReceptionGate_Text_EnjoyBattleFrontier] 46b55636d9
+Aproveite tudo o que a FRONTEIRA\n
+DE BATALHA tem a oferecer!$
+
+[BattleFrontier_ReceptionGate_Text_IfItIsntPlayerYouCame] 19fdb5d47b
+???: Ora, se não é {PLAYER}{KUN}!\n
+Você veio!$
+
+[BattleFrontier_ReceptionGate_Text_OhMrScottGoodDay] 13d8dcf36c
+GUIA: Oh! SR. SCOTT!\n
+Bom dia, senhor!$
+
+[BattleFrontier_ReceptionGate_Text_ScottGreatToSeeYouHere] c5229d937d
+SCOTT: Que ótimo te ver aqui,\n
+de verdade!\p
+Espero que explore tudo com calma.\p
+E, claro, espero que você sinta a\n
+essência pura da batalha.\p
+Também tenho os meus aposentos\n
+aqui, então apareça se tiver tempo.$
+
+[BattleFrontier_ReceptionGate_Text_YourGuideToFacilities] ceafbf7f46
+Sou o guia das instalações da\n
+FRONTEIRA DE BATALHA.$
+
+[BattleFrontier_ReceptionGate_Text_LearnAboutWhich2] fbeaad940f
+Sobre qual você quer saber?$
+
+[BattleFrontier_ReceptionGate_Text_BattleTowerInfo] af9280ed2c
+É a torre gigante, considerada o\n
+símbolo da FRONTEIRA DE BATALHA.\p
+Há quatro tipos de SALAS DE BATALHA\n
+na torre: BATALHAS SIMPLES, DUPLAS,\l
+MÚLTIPLAS e MÚLTIPLAS POR LINK.$
+
+[BattleFrontier_ReceptionGate_Text_BattleDomeInfo] 00422dd45b
+A CÚPULA DE BATALHA é o prédio\n
+grande em forma de ovo gigante.\p
+Nela acontecem os eventos chamados\n
+Torneios de Batalha.\p
+Os Torneios de Batalha têm duas\n
+modalidades: BATALHAS SIMPLES\l
+e DUPLAS.$
+
+[BattleFrontier_ReceptionGate_Text_BattlePalaceInfo] d20842f6cf
+O PALÁCIO DE BATALHA é o prédio\n
+vermelho à direita da FRONTEIRA.\p
+Há dois tipos de SALÕES DE BATALHA,\n
+para BATALHAS SIMPLES e DUPLAS.$
+
+[BattleFrontier_ReceptionGate_Text_BattleArenaInfo] 28ca811952
+A ARENA DE BATALHA é o prédio estilo\n
+dojô no centro-direita da\l
+FRONTEIRA DE BATALHA.\p
+Nela acontece o evento chamado\n
+Torneio de Nocaute.$
+
+[BattleFrontier_ReceptionGate_Text_BattleFactoryInfo] 1d3244f769
+A FÁBRICA DE BATALHA é o prédio\n
+grande mais perto daqui.\p
+Nela acontece o evento chamado\n
+Troca de Batalha.\p
+A Troca de Batalha tem duas\n
+modalidades: BATALHAS SIMPLES\l
+e DUPLAS.$
+
+[BattleFrontier_ReceptionGate_Text_BattlePikeInfo] 342ed6388d
+O PICO DE BATALHA é o prédio em\n
+forma de POKéMON no centro-esquerda\l
+da FRONTEIRA DE BATALHA.\p
+Nele acontece o evento chamado\n
+Escolha de Batalha.$
+
+[BattleFrontier_ReceptionGate_Text_BattlePyramidInfo] 238b5c95db
+A PIRÂMIDE DE BATALHA é a pirâmide\n
+enorme.\p
+Nela acontece o evento chamado\n
+Missão de Batalha.$
+
+[BattleFrontier_ReceptionGate_Text_RankingHallInfo] ed6cc8fb6c
+O SALÃO DO RANKING fica perto da\n
+TORRE DE BATALHA.\p
+Lá dá pra ver os recordes fantásticos\n
+deixados pelos TREINADORES que\l
+encararam os vários desafios da\l
+FRONTEIRA DE BATALHA.$
+
+[BattleFrontier_ReceptionGate_Text_ExchangeCornerInfo] f7a4c8be0f
+A CENTRAL DE TROCAS fica perto da\n
+TORRE DE BATALHA.\p
+Lá, os Pontos de Batalha ganhos na\n
+FRONTEIRA podem ser trocados por\l
+prêmios fabulosos.$
+
+[BattleFrontier_ReceptionGate_Text_YourGuideToRules] 2a4209fcd9
+Sou o guia das regras básicas comuns\n
+a todos os desafios das instalações\l
+da FRONTEIRA DE BATALHA.$
+
+[BattleFrontier_ReceptionGate_Text_LearnAboutWhat] 6f8d8f1078
+Sobre o que você quer saber?$
+
+[BattleFrontier_ReceptionGate_Text_LevelModeInfo] 9a9a8f75e8
+Todos os desafios das instalações\n
+da FRONTEIRA têm duas modalidades:\l
+Nível 50 e Nível Livre.$
+
+[BattleFrontier_ReceptionGate_Text_Level50Info] cb1a18d20d
+A modalidade Nível 50 aceita POKéMON\n
+até o nível 50, inclusive.\p
+Mas lembre que nenhum TREINADOR que\n
+você enfrentar terá POKéMON abaixo\l
+do nível 50.\p
+Esta é a modalidade de entrada nas\n
+batalhas da FRONTEIRA DE BATALHA.\p
+Pra começar, recomendamos que\n
+encare esta modalidade.$
+
+[BattleFrontier_ReceptionGate_Text_OpenLevelInfo] f46d642085
+A modalidade Nível Livre não tem\n
+limite de nível pros POKéMON que\l
+entram nos desafios.\p
+O nível dos oponentes se ajusta ao\n
+nível dos seus POKéMON.\p
+Mas nenhum TREINADOR que você\n
+enfrentar terá POKéMON abaixo do\l
+nível 60.$
+
+[BattleFrontier_ReceptionGate_Text_MonEntryInfo] b6989b4423
+Quase todo tipo de POKéMON pode\n
+encarar os desafios das instalações.\p
+Mas OVOS e certos tipos de POKéMON\n
+não são permitidos.\p
+O número de POKéMON exigido depende\n
+da instalação.\p
+Em todas as instalações, porém,\n
+não são permitidos dois ou mais\l
+POKéMON da mesma espécie.$
+
+[BattleFrontier_ReceptionGate_Text_HoldItemsInfo] cb6f500b29
+Ao entrar num desafio da FRONTEIRA\n
+DE BATALHA, os POKéMON não podem\l
+segurar o mesmo tipo de item.\p
+Confira se todos os POKéMON do\n
+desafio estão segurando itens\l
+diferentes.$
+
+[BattleFrontier_ReceptionGate_Text_YourGuideToFrontierPass] 2da186958f
+Sou o guia do PASSE DA FRONTEIRA.$
+
+[BattleFrontier_ReceptionGate_Text_LearnAboutWhich1] fbeaad940f
+Sobre qual você quer saber?$
+
+[BattleFrontier_ReceptionGate_Text_SymbolsInfo] fe414a9550
+Há sete instalações na FRONTEIRA\n
+DE BATALHA.\p
+TREINADORES que se destacam podem\n
+ganhar símbolos de cada instalação.\p
+Pra ganhar um símbolo, pode ser\n
+preciso vencer TREINADORES em\l
+sequência ou vencer eventos várias\l
+vezes.\p
+Não é nada fácil ganhar símbolos.\n
+Boa sorte!$
+
+[BattleFrontier_ReceptionGate_Text_RecordedBattleInfo] e9aa85c2b5
+Dá pra gravar uma batalha no seu\n
+PASSE DA FRONTEIRA.\p
+Pode ser uma batalha com um ou\n
+mais amigos.\p
+Ou uma batalha feita na FRONTEIRA DE\n
+BATALHA, menos as do PICO DE BATALHA\l
+e da PIRÂMIDE DE BATALHA.\p
+Você escolhe gravar a batalha no\n
+final dela.$
+
+[BattleFrontier_ReceptionGate_Text_BattlePointsInfo] 7587e37a85
+Os Pontos de Batalha são prêmios\n
+para TREINADORES que se destacaram\l
+nas batalhas da FRONTEIRA.\p
+Dá pra trocar os Pontos de Batalha\n
+por prêmios na CENTRAL DE TROCAS.$

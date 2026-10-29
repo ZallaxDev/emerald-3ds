@@ -1,0 +1,57 @@
+# ROTA 114: a casa da LANETTE.
+
+[Route114_LanettesHouse_Text_EverythingClutteredKeepThis] 3e09114e39
+LANETTE: Oh! {PLAYER}{KUN}!\p
+Desculpa a bagunça…\n
+Quando me empolgo com a pesquisa,\l
+fica tudo assim…\p
+Que vergonha… Por favor, guarde\n
+segredo em troca disto.$
+
+[Route114_LanettesHouse_Text_OrganizeYourBoxes] ec93e03d5c
+Posso dar uma dica sobre o meu\n
+Sistema de Armazenamento POKéMON?\p
+Organize as suas CAIXAS pra saber\n
+que POKéMON estão em cada uma.$
+
+[Route114_LanettesHouse_Text_ResearchNotesPage1] edccd8d715
+São as anotações de pesquisa da\n
+LANETTE. Falam sobre as CAIXAS.\p
+Cada CAIXA deve guardar 30 POKéMON.\p
+Cada TREINADOR deve poder guardar\n
+420 POKéMON no sistema do PC.\p
+Continuar lendo?$
+
+[Route114_LanettesHouse_Text_ResearchNotesPage2] 32fc8153e3
+Adicionar um sistema de marcas pra\n
+facilitar a organização dos POKéMON.\p
+O nome e o papel de parede de cada\n
+CAIXA poderão ser mudados, pra\l
+agradar os POKéMON guardados.\p
+Continuar lendo?$
+
+[Route114_LanettesHouse_Text_ResearchNotesPage3] 0692326157
+Ao guardar um POKéMON, ele deve ir\n
+pra última CAIXA consultada.\p
+Se essa CAIXA estiver cheia, o\n
+POKéMON vai pra CAIXA seguinte.\p
+Ou seja, quando uma CAIXA é aberta,\n
+ela vira automaticamente a CAIXA\l
+que recebe os POKéMON.$
+
+[Route114_LanettesHouse_Text_ClosedTheNotebook] 7908141e32
+{PLAYER} fechou o caderno.$
+
+[Route114_LanettesHouse_Text_EmailFromBill] d5a0f67659
+Tem um e-mail de alguém no PC.\p
+“… … … … … … …\p
+“O seu Sistema de Armazenamento é\n
+mais prático que o meu.\p
+“Tem muitas funções fáceis de usar\n
+que deixam ele divertido e útil.\p
+“Tenho orgulho de ter participado\n
+do desenvolvimento dele.\p
+“Espero que você continue pesquisando\n
+Sistemas de Armazenamento.\p
+“Do BILL\n
+… … … … … … … …”$

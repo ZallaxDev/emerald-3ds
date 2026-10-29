@@ -1,0 +1,210 @@
+# As palavras da FALA FÁCIL, grupo conditions (src/data/easy_chat/easy_chat_group_conditions.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_Hot] 06833bde6c width=72
+QUENTE
+
+[gEasyChatWord_Exists] 644b5806e1 width=72
+EXISTE
+
+[gEasyChatWord_Excess] ddc189fcd5 width=72
+EXCESSO
+
+[gEasyChatWord_Approved] a0cff1049b width=72
+APROVADO
+
+[gEasyChatWord_Has] cebedfebdd width=72
+TEM
+
+[gEasyChatWord_Good] 7763d377b9 width=72
+BOM
+
+[gEasyChatWord_Less] a90cfaa442 width=72
+MENOS
+
+[gEasyChatWord_Momentum] afee163b3f width=72
+EMBALO
+
+[gEasyChatWord_Going] f83baa1815 width=72
+INDO
+
+[gEasyChatWord_Weird] 45f0c6fbfd width=72
+ESQUISITO
+
+[gEasyChatWord_Busy] 83d1db321f width=72
+OCUPADO
+
+[gEasyChatWord_Together] fe7b0bc37f width=72
+JUNTOS
+
+[gEasyChatWord_Full] cc0a745dcf width=72
+CHEIO
+
+[gEasyChatWord_Absent] 86f38e71b3 width=72
+AUSENTE
+
+[gEasyChatWord_Being] de7b2d0434 width=72
+SENDO
+
+[gEasyChatWord_Need] d9365df58b width=72
+PRECISA
+
+[gEasyChatWord_Tasty] 50ef2cccbc width=72
+GOSTOSO
+
+[gEasyChatWord_Skilled] 29bb1ef99f width=72
+HÁBIL
+
+[gEasyChatWord_Noisy] a4875dccc3 width=72
+BARULHENTO
+
+[gEasyChatWord_Big] dc01deceac width=72
+GRANDE
+
+[gEasyChatWord_Late] 00c1edb77c width=72
+ATRASADO
+
+[gEasyChatWord_Close] dbc8742034 width=72
+PERTO
+
+[gEasyChatWord_Docile] 226a1c1202 width=72
+DÓCIL
+
+[gEasyChatWord_Amusing] c189264cf7 width=72
+ENGRAÇADO
+
+[gEasyChatWord_Entertaining] 9168b17fd4 width=72
+DIVERTIDO
+
+[gEasyChatWord_Perfection] d075641a18 width=72
+PERFEIÇÃO
+
+[gEasyChatWord_Pretty] f9ea4f53c5 width=72
+BONITO
+
+[gEasyChatWord_Healthy] 2535af614a width=72
+SAUDÁVEL
+
+[gEasyChatWord_Excellent] 01ddc06f1f width=72
+EXCELENTE
+
+[gEasyChatWord_UpsideDown] 86d23cbb82 width=72
+INVERTIDO
+
+[gEasyChatWord_Cold] 19701eb75d width=72
+FRIO
+
+[gEasyChatWord_Refreshing] 4eaced511c width=72
+REFRESCANTE
+
+[gEasyChatWord_Unavoidable] 1e89d1a46e width=72
+INEVITÁVEL
+
+[gEasyChatWord_Much] 82a9446d99 width=72
+MUITO
+
+[gEasyChatWord_Overwhelming] eb1d474194 width=72
+ESMAGADOR
+
+[gEasyChatWord_Fabulous] 7d71bfd746 width=72
+FABULOSO
+
+[gEasyChatWord_Else] bf4cc46f7f width=72
+OUTRO MAIS
+
+[gEasyChatWord_Expensive] 81e680cea4 width=72
+CARO
+
+[gEasyChatWord_Correct] 6aea7ebed9 width=72
+CERTO
+
+[gEasyChatWord_Impossible] 0109e7127b width=72
+IMPOSSÍVEL
+
+[gEasyChatWord_Small] cc21f742bc width=72
+PEQUENO
+
+[gEasyChatWord_Different] 63187a8240 width=72
+DIFERENTE
+
+[gEasyChatWord_Tired] 5e270f9f81 width=72
+CANSADO
+
+[gEasyChatWord_Skill] 2a756f6395 width=72
+HABILIDADE
+
+[gEasyChatWord_Top] b48813fa0a width=72
+TOPO
+
+[gEasyChatWord_NonStop] 72fa6758df width=72
+SEM PARAR
+
+[gEasyChatWord_Preposterous] b3c076fdf4 width=72
+ABSURDO
+
+[gEasyChatWord_None] 0654a028e5 width=72
+NENHUM
+
+[gEasyChatWord_Nothing] c462e8fc3e width=72
+NADA
+
+[gEasyChatWord_Natural] 7b0c42d6ea width=72
+NATURAL
+
+[gEasyChatWord_Becomes] ab1b247436 width=72
+FICA
+
+[gEasyChatWord_Lukewarm] 5312311d3e width=72
+MORNO
+
+[gEasyChatWord_Fast] 536a08d31b width=72
+RÁPIDO
+
+[gEasyChatWord_Low] d8b9679fad width=72
+BAIXO
+
+[gEasyChatWord_Awful] e7acb9cc45 width=72
+HORRÍVEL
+
+[gEasyChatWord_Alone] 0d8f384f52 width=72
+SOZINHO
+
+[gEasyChatWord_Bored] 1979698f1a width=72
+ENTEDIADO
+
+[gEasyChatWord_Secret] 3c3b274d11 width=72
+SEGREDO
+
+[gEasyChatWord_Mystery] 455f23ed81 width=72
+MISTÉRIO
+
+[gEasyChatWord_Lacks] d088a0ff05 width=72
+FALTA
+
+[gEasyChatWord_Best] 7c1120a8a8 width=72
+MELHOR
+
+[gEasyChatWord_Lousy] f9cc30a467 width=72
+PÉSSIMO
+
+[gEasyChatWord_Mistake] ab781df36f width=72
+ERRO
+
+[gEasyChatWord_Kind] 780cf6f262 width=72
+GENTIL
+
+[gEasyChatWord_Well] c3be5eaeda width=72
+BEM
+
+[gEasyChatWord_Weakened] 34f8b5dc2e width=72
+ENFRAQUECIDO
+
+[gEasyChatWord_Simple] 1c34a90a63 width=72
+SIMPLES
+
+[gEasyChatWord_Seems] 4711e30ecc width=72
+PARECE QUE
+
+[gEasyChatWord_Badly] 0f8e13cb5a width=72
+MAL

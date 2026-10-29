@@ -1,0 +1,92 @@
+# A casa do rival, térreo (os textos RivalsHouse_ servem às duas casas).
+# {STR_VAR_1} é "nosso filho" ou "nossa filha" (gText_Son e gText_Daughter
+# em src/strings.c.txt): fica sempre no meio da frase.
+# As falas de MAY só aparecem a um jogador; as de BRENDAN, a uma jogadora.
+
+[RivalsHouse_1F_Text_OhYoureTheNewNeighbor] 87d028d510
+Oh, olá. E você é…?\p
+… … … … … … … … …\n
+… … … … … … … … …\p
+Ah, você é {PLAYER}{KUN}, que se mudou\n
+aqui para o lado! Oi!\p
+Sabe, {STR_VAR_1} tem mais ou\n
+menos a sua idade.\p
+Hoje cedo, {STR_VAR_1} estava\n
+contando as horas para te conhecer.\p
+Acho que {STR_VAR_1} está lá em cima.$
+
+[RivalsHouse_1F_Text_LikeChildLikeFather] 53ce3ec5e5
+Tal pai, tal filho… ou ao contrário!\p
+Aqui em casa, todo mundo é louco por\n
+POKéMON, a começar pelo meu marido.\p
+Se não está no LABORATÓRIO, deve estar\n
+fuçando em algum matagal por aí.$
+
+[RivalsHouse_1F_Text_TooBusyToNoticeVisit] c762629eda
+Ah, {RIVAL}!\p
+Parece que, com tantos POKéMON, nem\n
+deu para perceber que você veio\l
+fazer uma visita, {PLAYER}{KUN}.$
+
+[RivalsHouse_1F_Text_WentOutToRoute103] 28454e81ab
+Oh, {RIVAL} saiu para a ROTA 103\n
+há pouquinho tempo.\p
+Tal pai, tal filho.\n
+{RIVAL} não consegue ficar em casa.$
+
+[RivalsHouse_1F_Text_ShouldGoHomeEverySoOften] 67e3e66d47
+Acho maravilhoso as pessoas\n
+viajarem com POKéMON.\p
+Mas volte para casa de vez em quando\n
+para a sua mãe saber que está tudo bem.\p
+Ela pode não dizer, mas tenho certeza\n
+de que se preocupa com você, {PLAYER}{KUN}.$
+
+[RivalsHouse_1F_Text_MayWhoAreYou] 27ee5986dc
+Hã?\n
+Quem… Quem é você?\p
+… … … … … … … …\n
+… … … … … … … …\p
+Ah, você é {PLAYER}{KUN}.\n
+Então a sua mudança foi hoje.\p
+Hum… Eu sou a MAY.\n
+Prazer em te conhecer!\p
+Eu…\n
+Eu sonho em fazer amizade com\l
+POKéMON do mundo inteiro.\p
+Eu… Eu ouvi falar de você, {PLAYER}{KUN},\n
+pelo meu pai, o PROF. BIRCH.\p
+Eu esperava que você fosse legal,\n
+{PLAYER}{KUN}, e que fôssemos amigos.\p
+Ai, que bobagem, não é?\n
+Eu… Eu acabei de te conhecer, {PLAYER}{KUN}.\p
+Hehehe…\p
+Ah, não! Eu esqueci!\p
+Eu ia ajudar o papai a capturar\n
+alguns POKéMON selvagens!\p
+{PLAYER}{KUN}, a gente se vê!$
+
+[RivalsHouse_1F_Text_BrendanWhoAreYou] 5a77bb58ee
+Ei!\n
+Você…\p
+Quem é você?\p
+Ah, você é {PLAYER}, não é?\n
+Se mudou aqui para o lado, certo?\p
+Eu não sabia que você era menina.\p
+O papai, o PROF. BIRCH, disse que o\n
+novo vizinho era filho de um LÍDER DE\l
+GINÁSIO, então achei que fosse menino.\p
+Meu nome é BRENDAN.\n
+Então, oi, vizinha!\p
+Hã? Ei, {PLAYER}, você não tem\n
+um POKéMON?\p
+Quer que eu vá capturar um para você?\p
+Ah, droga, eu esqueci…\p
+Eu tenho que ajudar o meu pai a\n
+capturar alguns POKéMON selvagens.\p
+Fica para outra vez, tá?$
+
+[RivalsHouse_1F_Text_DoYouHavePokemon] d4bdb805fd
+Oi, oi!\p
+Você já tem o seu\n
+próprio POKéMON?$

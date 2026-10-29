@@ -1,0 +1,446 @@
+# Homem de MAUVILLE (CENTRO POKéMON): o NEGOCIANTE, o CONTADOR DE HISTÓRIAS, GIDDY, o BARDO e o DESCOLADO.
+# As histórias falam de quem jogou em outro cartucho, sem marcar gênero: "Lá vai uma história lendária…" e o nome vem logo depois.
+
+[MauvilleCity_PokemonCenter_1F_Text_WantToTradeDecor] efc6a7bbb1
+Oi, eu sou o NEGOCIANTE.\nQuer trocar decorações comigo?$
+
+[MauvilleCity_PokemonCenter_1F_Text_TraderFeelingTheBlues] 6d33702029
+Ah…\nVocê me deixou na fossa…$
+
+[MauvilleCity_PokemonCenter_1F_Text_WeveAlreadyTraded] b415e5b711
+Mas a gente já trocou decorações,\nvocê e eu.$
+
+[MauvilleCity_PokemonCenter_1F_Text_PickADecorItem] c598a189b9
+Se gostar de alguma decoração\nminha, é só falar.$
+
+[MauvilleCity_PokemonCenter_1F_Text_YouDontWantAnything] 559de5a759
+Não quer nada?\nMe sinto rejeitado…$
+
+[MauvilleCity_PokemonCenter_1F_Text_OnceBelongedToPlayerDoYouWantIt] ef496d45ac
+Essa decoração já foi de\n{STR_VAR_1}.\pVocê quer?$
+
+[MauvilleCity_PokemonCenter_1F_Text_YouDontHaveAnyDecor] 7dcb4a60a4
+Hã… Peraí. Você não tem nem\numa decoração!$
+
+[MauvilleCity_PokemonCenter_1F_Text_PickTheDecorToTrade] 1b6ff3138c
+Certo, escolha a decoração que\nvai trocar comigo.$
+
+[MauvilleCity_PokemonCenter_1F_Text_YouDontWantToTrade] d7cc49d2c9
+Não vai trocar comigo?\nMe sinto rejeitado…$
+
+[MauvilleCity_PokemonCenter_1F_Text_YouveNoRoomForThis] d94fca7b05
+Você já tem o máximo de {STR_VAR_2}S\nque cabe. Não tem espaço pra isto.$
+
+[MauvilleCity_PokemonCenter_1F_Text_SoWellTradeTheseDecor] 1b9fad3082
+Certo, então eu troco {STR_VAR_3}\npor {STR_VAR_2}?$
+
+[MauvilleCity_PokemonCenter_1F_Text_ThatDecorIsInUse] dca93343a1
+Essa decoração tá em uso.\nNão dá pra trocar.$
+
+[MauvilleCity_PokemonCenter_1F_Text_SendDecorToYourPC] 6186c67fad
+Então vamos trocar!\nVou mandar a decoração pro seu PC.$
+
+[MauvilleCity_PokemonCenter_1F_Text_CantTradeThatOne] 699572c154
+Opa! Foi mal! Essa decoração\né raríssima.\lEssa eu não posso trocar!\pQuer alguma outra coisa?$
+
+[MauvilleCity_PokemonCenter_1F_Text_WillYouHearMyTale] f2bd8f7fc1
+Eu sou o CONTADOR DE HISTÓRIAS.\nConto lendas de TREINADORES\llendários.\pQuer ouvir uma história?$
+
+[MauvilleCity_PokemonCenter_1F_Text_StorytellerFeelingTheBlues] 6d33702029
+Ah…\nVocê me deixou na fossa…$
+
+[MauvilleCity_PokemonCenter_1F_Text_WhichTaleToTell] eada295144
+Eu conheço estas lendas.\nQual história você quer ouvir?$
+
+[MauvilleCity_PokemonCenter_1F_Text_IKnowNoTales] 7384d73c4a
+Mas não conheço nenhum TREINADOR\nlendário. Então não tenho histórias.\pOnde será que se encontra alguém\ndigno de uma história lendária?$
+
+[MauvilleCity_PokemonCenter_1F_Text_YouDidStatXTimes] ec3464b607
+O quê?!\nVocê… Você…\p{STR_VAR_2}\n{STR_VAR_1} vez(es)?!\pIsso é mesmo magnífico!\nÉ o nascimento de uma nova lenda!$
+
+[MauvilleCity_PokemonCenter_1F_Text_CouldThereBeOtherLegends] b1a6a6f4a1
+Fico pensando… Será que existem\noutros TREINADORES com lendas\lainda mais incríveis por aí?$
+
+[MauvilleCity_PokemonCenter_1F_Text_HaveYouAnyLegendaryTales] d70db15cdd
+Você treina POKéMON?\pEntão me diga: tem alguma história\nque seja um pouquinho lendária?$
+
+[MauvilleCity_PokemonCenter_1F_Text_HearAnotherLegendaryTale] de73c057da
+Aliás… Quer ouvir outra\nhistória lendária?$
+
+[MauvilleCity_PokemonCenter_1F_Text_NotWorthyOfLegend] 1194b7a2cd
+Hmm…\nNão me convenceu…\pQueria que você me trouxesse algo\ndigno de ser chamado de lenda.$
+
+[MauvilleCity_PokemonCenter_1F_Text_IWishMorePeopleWereInterested] cf60ee19fe
+Queria que mais gente se interessasse\npelas minhas histórias épicas de\lTREINADORES lendários.$
+
+[MauvilleCity_PokemonCenter_1F_Text_SavedGameTitle] 9431f432dc
+Lenda do Jogo Salvo$
+
+[MauvilleCity_PokemonCenter_1F_Text_SavedGameAction] c55128f045
+salvou o jogo$
+
+[MauvilleCity_PokemonCenter_1F_Text_SavedGameStory] c7ac99aeba
+Lá vai uma história lendária…\p{STR_VAR_3} salvou o jogo\n{STR_VAR_1} vezes!\pNinguém no mundo é mais\nprecavido que {STR_VAR_3}!$
+
+[MauvilleCity_PokemonCenter_1F_Text_TrendsStartedTitle] 4efcc2d282
+Lenda das Modas$
+
+[MauvilleCity_PokemonCenter_1F_Text_TrendsStartedAction] 5441a18c72
+lançou modas$
+
+[MauvilleCity_PokemonCenter_1F_Text_TrendsStartedStory] 6b35aee6f1
+Lá vai uma história lendária…\p{STR_VAR_3} lançou novas modas\n{STR_VAR_1} vezes!\p{STR_VAR_3} dita as modas em\ntoda a região de HOENN!$
+
+[MauvilleCity_PokemonCenter_1F_Text_BerriesPlantedTitle] efe3f85e0d
+Lenda das FRUTAS$
+
+[MauvilleCity_PokemonCenter_1F_Text_BerriesPlantedAction] f98b8102d9
+plantou FRUTAS$
+
+[MauvilleCity_PokemonCenter_1F_Text_BerriesPlantedStory] 559d89c6e0
+Lá vai uma história lendária…\p{STR_VAR_3} plantou FRUTAS\n{STR_VAR_1} vezes!\pO amor de {STR_VAR_3} pelas\nFRUTAS é lendário!$
+
+[MauvilleCity_PokemonCenter_1F_Text_BikeTradesTitle] 04c5335c9a
+Lenda das BICICLETAS$
+
+[MauvilleCity_PokemonCenter_1F_Text_BikeTradesAction] cd942f227d
+trocou de BICICLETA$
+
+[MauvilleCity_PokemonCenter_1F_Text_BikeTradesStory] cb0d73c863
+Lá vai uma história lendária…\p{STR_VAR_3} trocou de BICICLETA\n{STR_VAR_1} vezes!\p{STR_VAR_3} deve amar BICICLETAS\nde paixão!$
+
+[MauvilleCity_PokemonCenter_1F_Text_InterviewsTitle] cc2e9cbafc
+Lenda das Entrevistas$
+
+[MauvilleCity_PokemonCenter_1F_Text_InterviewsAction] 20ef1d94e3
+deu entrevistas$
+
+[MauvilleCity_PokemonCenter_1F_Text_InterviewsStory] b8c1dfed14
+Lá vai uma história lendária…\p{STR_VAR_3} deu entrevistas\n{STR_VAR_1} vezes!\p{STR_VAR_3} deve chamar muita\natenção por aí!$
+
+[MauvilleCity_PokemonCenter_1F_Text_TrainerBattlesTitle] 54e0b2bd32
+Lenda das Batalhas$
+
+[MauvilleCity_PokemonCenter_1F_Text_TrainerBattlesAction] bcf053c9de
+batalhou$
+
+[MauvilleCity_PokemonCenter_1F_Text_TrainerBattlesStory] 1f999c025e
+Lá vai uma história lendária…\p{STR_VAR_3} batalhou\n{STR_VAR_1} vezes!\p{STR_VAR_3} nunca recusa uma\nchance de batalhar!$
+
+[MauvilleCity_PokemonCenter_1F_Text_PokemonCaughtTitle] a72b162bb9
+Lenda das Capturas$
+
+[MauvilleCity_PokemonCenter_1F_Text_PokemonCaughtAction] ad44541c4c
+capturou POKéMON$
+
+[MauvilleCity_PokemonCenter_1F_Text_PokemonCaughtStory] 3828868d0b
+Lá vai uma história lendária…\p{STR_VAR_3} capturou\n{STR_VAR_1} POKéMON!\p{STR_VAR_3} é uma lenda na captura\nde POKéMON selvagens!$
+
+[MauvilleCity_PokemonCenter_1F_Text_FishingPokemonCaughtTitle] e535f06bb5
+Lenda da Pescaria$
+
+[MauvilleCity_PokemonCenter_1F_Text_FishingPokemonCaughtAction] a9744e8060
+pescou POKéMON com VARA$
+
+[MauvilleCity_PokemonCenter_1F_Text_FishingPokemonCaughtStory] 5c1ac1f240
+Lá vai uma história lendária…\p{STR_VAR_3} pescou\n{STR_VAR_1} POKéMON!\p{STR_VAR_3} é uma lenda\nda pescaria!$
+
+[MauvilleCity_PokemonCenter_1F_Text_EggsHatchedTitle] 15e9dbe8aa
+Lenda dos OVOS$
+
+[MauvilleCity_PokemonCenter_1F_Text_EggsHatchedAction] b05f648ff1
+chocou OVOS$
+
+[MauvilleCity_PokemonCenter_1F_Text_EggsHatchedStory] d64cc97344
+Lá vai uma história lendária…\p{STR_VAR_3} chocou {STR_VAR_1} POKéMON\nde OVOS!\p{STR_VAR_3} é uma lenda\nem chocar OVOS!$
+
+[MauvilleCity_PokemonCenter_1F_Text_PokemonEvolvedTitle] d4339c9ad6
+Lenda da Evolução$
+
+[MauvilleCity_PokemonCenter_1F_Text_PokemonEvolvedAction] a7a792749a
+evoluiu POKéMON$
+
+[MauvilleCity_PokemonCenter_1F_Text_PokemonEvolvedStory] 2da91144ed
+Lá vai uma história lendária…\p{STR_VAR_3} fez {STR_VAR_1} POKéMON\nevoluírem!\pNinguém faz POKéMON evoluírem\ncomo {STR_VAR_3}!$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedPokemonCenterTitle] 25c2d68359
+Lenda do CENTRO POKéMON$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedPokemonCenterAction] a9ead9d634
+usou o CENTRO POKéMON$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedPokemonCenterStory] 71845d2ae5
+Lá vai uma história lendária…\p{STR_VAR_3} curou POKéMON\n{STR_VAR_1} vezes no CENTRO POKéMON!\pNinguém ama mais os CENTROS\nPOKéMON que {STR_VAR_3}!$
+
+[MauvilleCity_PokemonCenter_1F_Text_RestedAtHomeTitle] 00f5670aac
+Lenda do Sofá$
+
+[MauvilleCity_PokemonCenter_1F_Text_RestedAtHomeAction] 31a734b93c
+descansou POKéMON em casa$
+
+[MauvilleCity_PokemonCenter_1F_Text_RestedAtHomeStory] dc753c2443
+Lá vai uma história lendária…\p{STR_VAR_3} curou POKéMON\n{STR_VAR_1} vezes em casa!\pNinguém é mais caseiro\nque {STR_VAR_3}!$
+
+[MauvilleCity_PokemonCenter_1F_Text_SafariGamesTitle] cacc7eded0
+Lenda do SAFÁRI$
+
+[MauvilleCity_PokemonCenter_1F_Text_SafariGamesAction] c87a3796ce
+entrou na ZONA DE SAFÁRI$
+
+[MauvilleCity_PokemonCenter_1F_Text_SafariGamesStory] e2becba6d6
+Lá vai uma história lendária…\p{STR_VAR_3} entrou na ZONA DE SAFÁRI\n{STR_VAR_1} vezes!\pO lado selvagem de {STR_VAR_3}\naparece na ZONA DE SAFÁRI!$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedCutTitle] 04c45a8a41
+Lenda do CORTE$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedCutAction] 7c1e70d434
+usou CORTE$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedCutStory] 5b073c966b
+Lá vai uma história lendária…\p{STR_VAR_3} usou CORTE\n{STR_VAR_1} vezes!\p{STR_VAR_3} deve adorar\nsair cortando tudo!$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedRockSmashTitle] c5dad6381c
+Lenda das Pedras$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedRockSmashAction] 993da88f82
+quebrou pedras$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedRockSmashStory] 19214d8367
+Lá vai uma história lendária…\p{STR_VAR_3} usou ESMAGA PEDRA\n{STR_VAR_1} vezes!\p{STR_VAR_3} não deixa pedra\nsobre pedra!$
+
+[MauvilleCity_PokemonCenter_1F_Text_MovedBasesTitle] 07c0f54617
+Lenda das Mudanças$
+
+[MauvilleCity_PokemonCenter_1F_Text_MovedBasesAction] c934b0a9a5
+mudou a BASE SECRETA$
+
+[MauvilleCity_PokemonCenter_1F_Text_MovedBasesStory] dea9d30e2b
+Lá vai uma história lendária…\p{STR_VAR_3} mudou a BASE SECRETA\n{STR_VAR_1} vezes!\p{STR_VAR_3} adora viver\nde mudança!$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedSplashTitle] 16a728c3f8
+Lenda da BORRIFADA$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedSplashAction] f532aae7d4
+usou BORRIFADA$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedSplashStory] bf0e5ea524
+Lá vai uma história lendária…\p{STR_VAR_3} usou BORRIFADA\n{STR_VAR_1} vezes!\p{STR_VAR_3} deve adorar\nsair borrifando por aí!$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedStruggleTitle] 0231bc2000
+Lenda da Insistência$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedStruggleAction] e5eaeb7f18
+apelou pra INSISTÊNCIA$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedStruggleStory] 0e12605ef0
+Lá vai uma história lendária…\p{STR_VAR_3} precisou de INSISTÊNCIA\n{STR_VAR_1} vezes!\p{STR_VAR_3} nunca se rende,\nnem diante das adversidades!$
+
+[MauvilleCity_PokemonCenter_1F_Text_SlotJackpotsTitle] e699fe9485
+Lenda do CAÇA-NÍQUEIS$
+
+[MauvilleCity_PokemonCenter_1F_Text_SlotJackpotsAction] 9e32bea777
+tirou a bolada no CAÇA-NÍQUEIS$
+
+[MauvilleCity_PokemonCenter_1F_Text_SlotJackpotsStory] d65a554abe
+Lá vai uma história lendária…\p{STR_VAR_3} tirou a bolada no\nCAÇA-NÍQUEIS {STR_VAR_1} vezes.\p{STR_VAR_3} teve muita sorte\nno CAÇA-NÍQUEIS!$
+
+[MauvilleCity_PokemonCenter_1F_Text_RouletteWinsTitle] ce87c9ae68
+Lenda da ROLETA$
+
+[MauvilleCity_PokemonCenter_1F_Text_RouletteWinsAction] 6554253145
+ganhou seguidas na ROLETA$
+
+[MauvilleCity_PokemonCenter_1F_Text_RouletteWinsStory] 468686dfec
+Lá vai uma história lendária…\p{STR_VAR_3} ganhou na ROLETA\n{STR_VAR_1} vezes seguidas.\p{STR_VAR_3} teve sorte quando\na bola quicou na ROLETA!$
+
+[MauvilleCity_PokemonCenter_1F_Text_BattleTowerChallengesTitle] ee1694d554
+Lenda da TORRE$
+
+[MauvilleCity_PokemonCenter_1F_Text_BattleTowerChallengesAction] bd31a92a10
+desafiou a TORRE DE BATALHA$
+
+[MauvilleCity_PokemonCenter_1F_Text_BattleTowerChallengesStory] 852c788a39
+Lá vai uma história lendária…\p{STR_VAR_3} desafiou a TORRE DE\nBATALHA {STR_VAR_1} vezes!\p{STR_VAR_3} busca a excelência\nna TORRE DE BATALHA!$
+
+[MauvilleCity_PokemonCenter_1F_Text_MadePokeblocksTitle] caee4a2388
+Lenda do LIQUIDIFICADOR$
+
+[MauvilleCity_PokemonCenter_1F_Text_MadePokeblocksAction] ef775fd59b
+fez {POKEBLOCK}S$
+
+[MauvilleCity_PokemonCenter_1F_Text_MadePokeblocksStory] a4f83c6074
+Lá vai uma história lendária…\p{STR_VAR_3} fez {POKEBLOCK}S\n{STR_VAR_1} vezes!\pNinguém usa o LIQUIDIFICADOR\nmelhor que {STR_VAR_3}!$
+
+[MauvilleCity_PokemonCenter_1F_Text_EnteredContestsTitle] 155299d008
+Lenda dos CONCURSOS$
+
+[MauvilleCity_PokemonCenter_1F_Text_EnteredContestsAction] 74b472f59b
+entrou em CONCURSOS$
+
+[MauvilleCity_PokemonCenter_1F_Text_EnteredContestsStory] 1769c4bc0d
+Lá vai uma história lendária…\p{STR_VAR_3} entrou em CONCURSOS\n{STR_VAR_1} vezes!\p{STR_VAR_3} deve adorar exibir\nPOKéMON por aí!$
+
+[MauvilleCity_PokemonCenter_1F_Text_WonContestsTitle] 2f1d165a3e
+Mestre dos CONCURSOS$
+
+[MauvilleCity_PokemonCenter_1F_Text_WonContestsAction] 5dda9c26b1
+venceu CONCURSOS$
+
+[MauvilleCity_PokemonCenter_1F_Text_WonContestsStory] d1715fc9aa
+Lá vai uma história lendária…\p{STR_VAR_3} venceu CONCURSOS\n{STR_VAR_1} vezes!\p{STR_VAR_3} deve ser fera\nnos CONCURSOS!$
+
+[MauvilleCity_PokemonCenter_1F_Text_TimesShoppedTitle] 619aea9839
+Lenda das Compras$
+
+[MauvilleCity_PokemonCenter_1F_Text_TimesShoppedAction] 4de404147f
+fez compras$
+
+[MauvilleCity_PokemonCenter_1F_Text_TimesShoppedStory] 3beed5dc29
+Lá vai uma história lendária…\p{STR_VAR_3} comprou nas lojas\n{STR_VAR_1} vezes!\p{STR_VAR_3} deve ter nascido\npra fazer compras.$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedItemFinderTitle] 1781e4e95c
+Lenda dos Achados$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedItemFinderAction] 46caf2d7f1
+usou o ACHADOR DE ITENS$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedItemFinderStory] 98f7a51f2f
+Lá vai uma história lendária…\p{STR_VAR_3} usou o ACHADOR DE\nITENS {STR_VAR_1} vezes!\p{STR_VAR_3} deve adorar vasculhar\no chão atrás de itens!$
+
+[MauvilleCity_PokemonCenter_1F_Text_TimesRainedTitle] 7a09000259
+Lenda da Chuva$
+
+[MauvilleCity_PokemonCenter_1F_Text_TimesRainedAction] dfac9b5fa2
+tomou chuva$
+
+[MauvilleCity_PokemonCenter_1F_Text_TimesRainedStory] f0e3305a78
+Lá vai uma história lendária…\p{STR_VAR_3} tomou chuva\n{STR_VAR_1} vezes!\pO carisma de {STR_VAR_3} deve\natrair até a chuva!$
+
+[MauvilleCity_PokemonCenter_1F_Text_CheckedPokedexTitle] 2ce20ddaba
+Lenda da POKéDEX$
+
+[MauvilleCity_PokemonCenter_1F_Text_CheckedPokedexAction] 11fd3c8280
+consultou a POKéDEX$
+
+[MauvilleCity_PokemonCenter_1F_Text_CheckedPokedexStory] 44d14c41ec
+Lá vai uma história lendária…\p{STR_VAR_3} consultou a POKéDEX\n{STR_VAR_1} vezes!\p{STR_VAR_3} deve adorar estudar\nPOKéMON na POKéDEX!$
+
+[MauvilleCity_PokemonCenter_1F_Text_ReceivedRibbonsTitle] 432e28ba9d
+Lenda das FITAS$
+
+[MauvilleCity_PokemonCenter_1F_Text_ReceivedRibbonsAction] 5e37ff5fb1
+recebeu FITAS$
+
+[MauvilleCity_PokemonCenter_1F_Text_ReceivedRibbonsStory] 8383c2ccf2
+Lá vai uma história lendária…\p{STR_VAR_3} recebeu FITAS\n{STR_VAR_1} vezes!\p{STR_VAR_3} deve adorar\ncolecionar FITAS!$
+
+[MauvilleCity_PokemonCenter_1F_Text_LedgesJumpedTitle] c03c0e7aad
+Lenda dos Saltos$
+
+[MauvilleCity_PokemonCenter_1F_Text_LedgesJumpedAction] 9042c008d4
+pulou de barrancos$
+
+[MauvilleCity_PokemonCenter_1F_Text_LedgesJumpedStory] eace1b65c5
+Lá vai uma história lendária…\p{STR_VAR_3} pulou de barrancos\n{STR_VAR_1} vezes!\pSe tem um barranco pra pular,\n{STR_VAR_3} não resiste!$
+
+[MauvilleCity_PokemonCenter_1F_Text_TVWatchedTitle] daef0e412e
+Lenda da TV$
+
+[MauvilleCity_PokemonCenter_1F_Text_TVWatchedAction] 6dde457979
+assistiu TV$
+
+[MauvilleCity_PokemonCenter_1F_Text_TVWatchedStory] 754706957e
+Lá vai uma história lendária…\p{STR_VAR_3} assistiu TV\n{STR_VAR_1} vezes!\p{STR_VAR_3} deve adorar ver TV!$
+
+[MauvilleCity_PokemonCenter_1F_Text_CheckedClockTitle] cd49347d56
+Lenda do Relógio$
+
+[MauvilleCity_PokemonCenter_1F_Text_CheckedClockAction] 197d0a463d
+olhou as horas$
+
+[MauvilleCity_PokemonCenter_1F_Text_CheckedClockStory] 31a13a5e1b
+Lá vai uma história lendária…\p{STR_VAR_3} olhou as horas\n{STR_VAR_1} vezes!\p{STR_VAR_3} deve ser super\npontual!$
+
+[MauvilleCity_PokemonCenter_1F_Text_WonLotteryTitle] 69a9ba4575
+Lenda da LOTERIA$
+
+[MauvilleCity_PokemonCenter_1F_Text_WonLotteryAction] f665dab652
+ganhou na LOTERIA POKéMON$
+
+[MauvilleCity_PokemonCenter_1F_Text_WonLotteryStory] 417b0f755e
+Lá vai uma história lendária…\p{STR_VAR_3} ganhou na LOTERIA\nPOKéMON {STR_VAR_1} vezes!\p{STR_VAR_3} deve ter muitos amigos\npra trocar POKéMON!$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedDaycareTitle] 0f7934ece7
+Lenda do CENTRO DE CUIDADOS$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedDaycareAction] 1e77586ff0
+deixou POKéMON no CENTRO DE CUIDADOS$
+
+[MauvilleCity_PokemonCenter_1F_Text_UsedDaycareStory] c91348e5a8
+Lá vai uma história lendária…\p{STR_VAR_3} deixou POKéMON no CENTRO\nDE CUIDADOS {STR_VAR_1} vezes!\p{STR_VAR_3} deve levar muito a\nsério a criação de POKéMON!$
+
+[MauvilleCity_PokemonCenter_1F_Text_RodeCableCarTitle] e2de92de9f
+Lenda do TELEFÉRICO$
+
+[MauvilleCity_PokemonCenter_1F_Text_RodeCableCarAction] 00e39a14e2
+andou de TELEFÉRICO$
+
+[MauvilleCity_PokemonCenter_1F_Text_RodeCableCarStory] 4a933385e0
+Lá vai uma história lendária…\p{STR_VAR_3} andou de TELEFÉRICO\n{STR_VAR_1} vezes!\p{STR_VAR_3} vive num sobe\ne desce sem fim!$
+
+[MauvilleCity_PokemonCenter_1F_Text_HotSpringsTitle] 7dbc28216c
+Lenda das Termas$
+
+[MauvilleCity_PokemonCenter_1F_Text_HotSpringsAction] 743c4212d8
+se banhou nas termas$
+
+[MauvilleCity_PokemonCenter_1F_Text_HotSpringsStory] 622267dce8
+Lá vai uma história lendária…\p{STR_VAR_3} se banhou nas termas\n{STR_VAR_1} vezes!\p{STR_VAR_3} deve ter a pele\nlisinha feito bebê!$
+
+[MauvilleCity_PokemonCenter_1F_Text_HearMyStory] 8596ed8e28
+Eu sou GIDDY!\nTenho uma história incrível pra você!\pQuer ouvir?$
+
+[MauvilleCity_PokemonCenter_1F_Text_GiddyFeelingTheBlues] 6d33702029
+Ah…\nVocê me deixou na fossa…$
+
+[MauvilleCity_PokemonCenter_1F_Text_AlsoIWasThinking] 00f70cf48f
+E também, eu tava pensando…$
+
+[MauvilleCity_PokemonCenter_1F_Text_WeShouldChatAgain] 27c3305d8c
+Acho que é isso…\pVamos conversar de novo!\nTchauzinho!$
+
+[MauvilleCity_PokemonCenter_1F_Text_WouldYouLikeToHearMySong] 0c211c5ad1
+Oi, eu sou o BARDO.\nQuer ouvir a minha canção?$
+
+[MauvilleCity_PokemonCenter_1F_Text_BardFeelingTheBlues1] 6d33702029
+Ah…\nVocê me deixou na fossa…$
+
+[MauvilleCity_PokemonCenter_1F_Text_WishICouldPlaySongForOthers] 6206fbf407
+Ah, que canção comovente…\nQueria tocar ela pra mais gente…$
+
+[MauvilleCity_PokemonCenter_1F_Text_WouldYouLikeToWriteSomeLyrics] 921cb60864
+E aí?\nGostou da minha canção?\pMas não tô muito feliz com\na letra.\pQue tal escrever uma letra\nnova pra mim?$
+
+[MauvilleCity_PokemonCenter_1F_Text_BardFeelingTheBlues2] 6d33702029
+Ah…\nVocê me deixou na fossa…$
+
+[MauvilleCity_PokemonCenter_1F_Text_LetMeSingItForYou] 3a213edc8d
+Muito obrigado!\nVou cantar pra você.$
+
+[MauvilleCity_PokemonCenter_1F_Text_ThatHowYouWantedSongToGo] bb1859de8d
+Era assim que você queria\na canção?$
+
+[MauvilleCity_PokemonCenter_1F_Text_IllSingThisSongForAWhile] 0814558f24
+Beleza! Então é isso.\nVou cantar esta por um tempo.$
+
+[MauvilleCity_PokemonCenter_1F_Text_TeachWhatsHipAndHappening] 2005c80b50
+E aí! Me chamam de DESCOLADO.\nVou te ensinar o que tá na moda.$
+
+[MauvilleCity_PokemonCenter_1F_Text_IAlreadyTaughtYou] 8aa28d27e0
+Mas, ó, eu já te ensinei o que\ntá na moda.\pQuero espalhar a novidade\npra outras pessoas.$
+
+[MauvilleCity_PokemonCenter_1F_Text_IveGotNothingNewToTeach] 149c8a8a58
+Mas, ó, você já sabe muito sobre\no que tá na moda.\pNão tenho nada novo pra te ensinar!$
+
+[MauvilleCity_PokemonCenter_1F_Text_HaveYouHeardOfWord] 7d44f2672c
+Ei, já ouviu falar de\n“{STR_VAR_1}”?\pO que quer dizer? Bom…\nPergunta pro seu pai ou sua mãe!$

@@ -1,0 +1,228 @@
+# As palavras da FALA FÁCIL, grupo people (src/data/easy_chat/easy_chat_group_people.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_Opponent] 9749741ff0 width=72
+OPONENTE
+
+[gEasyChatWord_I] ca73ab6556 width=72
+EU
+
+[gEasyChatWord_You] af319eaa7d width=72
+VOCÊ
+
+[gEasyChatWord_Yours] 25b8673c57 width=72
+SEU
+
+[gEasyChatWord_Son] e01927c1e5 width=72
+FILHO
+
+[gEasyChatWord_Your] 44f8ed00b3 width=72
+TEU
+
+[gEasyChatWord_Youre] 2655b4a3c4 width=72
+VOCÊ É
+
+[gEasyChatWord_Youve] d758a8e5cc width=72
+VOCÊ TEM
+
+[gEasyChatWord_Mother] e84950a2fd width=72
+MÃE
+
+[gEasyChatWord_Grandfather] 6c0d6831f5 width=72
+AVÔ
+
+[gEasyChatWord_Uncle] bb2f5307be width=72
+TIO
+
+[gEasyChatWord_Father] 0128860a58 width=72
+PAI
+
+[gEasyChatWord_Boy] 0858b75d3b width=72
+GAROTO
+
+[gEasyChatWord_Adult] e48969c468 width=72
+ADULTO
+
+[gEasyChatWord_Brother] bde0dc2907 width=72
+IRMÃO
+
+[gEasyChatWord_Sister] d14baf2654 width=72
+IRMÃ
+
+[gEasyChatWord_Grandmother] 778aef8293 width=72
+AVÓ
+
+[gEasyChatWord_Aunt] 6f24627ca6 width=72
+TIA
+
+[gEasyChatWord_Parent] f14bb8d473 width=72
+PAIS
+
+[gEasyChatWord_Man] 56ceb16862 width=72
+HOMEM
+
+[gEasyChatWord_Me] b4d362cfcf width=72
+MIM
+
+[gEasyChatWord_Girl] 333d234676 width=72
+GAROTA
+
+[gEasyChatWord_Babe] 53110bf724 width=72
+GATINHA
+
+[gEasyChatWord_Family] d77ba39cee width=72
+FAMÍLIA
+
+[gEasyChatWord_Her] 0fb91ddda3 width=72
+ELA
+
+[gEasyChatWord_Him] e91e1b3075 width=72
+ELE
+
+[gEasyChatWord_He] f089f13a04 width=72
+ELE
+
+[gEasyChatWord_Place] 1127ccbfa2 width=72
+LUGAR
+
+[gEasyChatWord_Daughter] 8426078482 width=72
+FILHA
+
+[gEasyChatWord_His] 9cd673a96e width=72
+DELE
+
+[gEasyChatWord_Hes] f92cd7e199 width=72
+ELE É
+
+[gEasyChatWord_Arent] 85c642038f width=72
+NÃO SÃO
+
+[gEasyChatWord_Siblings] 22d61b8ddc width=72
+IRMÃOS
+
+[gEasyChatWord_Kid] 1c5040a41d width=72
+CRIANÇA
+
+[gEasyChatWord_Children] 5d5bd101ec width=72
+CRIANÇAS
+
+[gEasyChatWord_Mr] c55fb312c6 width=72
+SR.
+
+[gEasyChatWord_Mrs] 7c20675f03 width=72
+SRA.
+
+[gEasyChatWord_Myself] 0083d0a825 width=72
+EU MESMO
+
+[gEasyChatWord_IWas] 64eb7e190a width=72
+EU ERA
+
+[gEasyChatWord_ToMe] 9c1b85fc23 width=72
+PARA MIM
+
+[gEasyChatWord_My] 83b07b919d width=72
+MEU
+
+[gEasyChatWord_IAm] f1c5def963 width=72
+EU SOU
+
+[gEasyChatWord_Ive] f74bf76b33 width=72
+EU TENHO
+
+[gEasyChatWord_Who] 66be473b78 width=72
+QUEM
+
+[gEasyChatWord_Someone] ba303ef75f width=72
+ALGUÉM
+
+[gEasyChatWord_WhoWas] cd138323db width=72
+QUEM ERA
+
+[gEasyChatWord_ToWhom] 7c36154249 width=72
+PARA QUEM
+
+[gEasyChatWord_Whose] bb9781f09e width=72
+DE QUEM
+
+[gEasyChatWord_WhoIs] dfd972853a width=72
+QUEM É
+
+[gEasyChatWord_Its] b2c8c78bbb width=72
+É
+
+[gEasyChatWord_Lady] 4ad5b57870 width=72
+MOÇA
+
+[gEasyChatWord_Friend] 1ea03fc165 width=72
+AMIGO
+
+[gEasyChatWord_Ally] f5802d0c76 width=72
+ALIADO
+
+[gEasyChatWord_Person] 1a25d6db02 width=72
+PESSOA
+
+[gEasyChatWord_Dude] 71352f97dc width=72
+CARA
+
+[gEasyChatWord_They] 723524b052 width=72
+ELES
+
+[gEasyChatWord_TheyWere] 9a816cfde3 width=72
+ELES ERAM
+
+[gEasyChatWord_ToThem] 8e80bdf536 width=72
+PARA ELES
+
+[gEasyChatWord_Their] bcdc44c286 width=72
+DELES
+
+[gEasyChatWord_Theyre] 467f8f8385 width=72
+ELES SÃO
+
+[gEasyChatWord_Theyve] 1f72576cfc width=72
+ELES TÊM
+
+[gEasyChatWord_We] 114aef5274 width=72
+NÓS
+
+[gEasyChatWord_Been] f90466bbf0 width=72
+ESTIVE
+
+[gEasyChatWord_ToUs] c711572874 width=72
+PARA NÓS
+
+[gEasyChatWord_Our] ff57d6a9d0 width=72
+NOSSO
+
+[gEasyChatWord_WeRe] 9bd5e5144f width=72
+NÓS SOMOS
+
+[gEasyChatWord_Rival] fc89e199b4 width=72
+RIVAL
+
+[gEasyChatWord_Weve] e8f0dd4eb0 width=72
+NÓS TEMOS
+
+[gEasyChatWord_Woman] 4de964a1b9 width=72
+MULHER
+
+[gEasyChatWord_She] 71ec162334 width=72
+ELA
+
+[gEasyChatWord_SheWas] d7dbe9852d width=72
+ELA ERA
+
+[gEasyChatWord_ToHer] 8c3c8ce3e4 width=72
+PARA ELA
+
+[gEasyChatWord_Hers] 6d40e13103 width=72
+DELA
+
+[gEasyChatWord_SheIs] 600ea2ab6c width=72
+ELA É
+
+[gEasyChatWord_Some] 9313a4b219 width=72
+ALGUNS

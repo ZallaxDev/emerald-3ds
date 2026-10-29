@@ -1,0 +1,25 @@
+# CIDADE DE PACIFIDLOG: a casa do POKéMON do céu.
+
+[PacifidlogTown_House4_Text_PeopleSawHighFlyingPokemon] e0cf848d71
+O pessoal disse que viu um POKéMON\n
+voando bem alto sobre HOENN.\p
+Ele voa o tempo todo?\n
+Não precisa descansar em algum lugar?$
+
+[PacifidlogTown_House4_Text_SkyPokemon] 4bfea4e8eb
+Um POKéMON do céu!\n
+Um POKéMON do céu!$
+
+[PacifidlogTown_House4_Text_WhereDidYouComeFrom] cf22ec82c8
+De onde você veio?$
+
+[PacifidlogTown_House4_Text_YesTown] e46cac2691
+Sim?\n
+CIDADE DO SIM?\p
+Nunca ouvi falar de um lugar assim.$
+
+[PacifidlogTown_House4_Text_YouHaveToComeFromSomewhere] 1b8a2a88e7
+Não? Isso não faz sentido.\n
+Você tem que ter vindo de algum lugar.\p
+Ah! Espera! Não vai me dizer que\n
+nasceu no fundo do mar?$

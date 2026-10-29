@@ -1,0 +1,468 @@
+# As habilidades (src/data/text/abilities.h): o nome oficial brasileiro
+# (Bulbapedia, pt_br), em até 12 bytes, e a descrição de uma linha.
+# Quando várias habilidades dividem um texto em inglês, cada uma tem o seu.
+
+[ABILITY_STENCH] b4780b244e
+FEDOR
+
+[ABILITY_DRIZZLE] 361a3e6619
+CHUVISCO
+
+[ABILITY_SPEED_BOOST] 6d21ad5e06
+IMPULSO VEL.
+
+[ABILITY_BATTLE_ARMOR] 02381d34c3
+ARM. BATALHA
+
+[ABILITY_STURDY] 55bbbb9b5a
+ROBUSTEZ
+
+[ABILITY_DAMP] 007da5ba32
+ENSOPADO
+
+[ABILITY_LIMBER] f8745286d3
+ELASTICIDADE
+
+[ABILITY_SAND_VEIL] b21862ac95
+VÉU DE AREIA
+
+[ABILITY_STATIC] bfead412ae
+ESTÁTICA
+
+[ABILITY_VOLT_ABSORB] 38c281f835
+ABS.VOLTAICA
+
+[ABILITY_WATER_ABSORB] 1c2f9cb2eb
+ABS.AQUÁTICA
+
+[ABILITY_OBLIVIOUS] 2bc702a341
+INSENSÍVEL
+
+[ABILITY_CLOUD_NINE] ad2a345c77
+ACLIMATAÇÃO
+
+[ABILITY_COMPOUND_EYES] 6654e13087
+OLHOS COMP.
+
+[ABILITY_INSOMNIA] b5814858c8
+INSÔNIA
+
+[ABILITY_COLOR_CHANGE] 06c31dba97
+TROCA DE COR
+
+[ABILITY_IMMUNITY] d1343bfd33
+IMUNIDADE
+
+[ABILITY_FLASH_FIRE] ddb458531e
+FOGO BRILH.
+
+[ABILITY_SHIELD_DUST] 7def04513b
+PÓ ESCUDO
+
+[ABILITY_OWN_TEMPO] 23a27fb563
+RITMO PRÓPR.
+
+[ABILITY_SUCTION_CUPS] 3079f8aedd
+VENTOSAS
+
+[ABILITY_INTIMIDATE] 4327310e2b
+INTIMIDAÇÃO
+
+[ABILITY_SHADOW_TAG] d8e4581b30
+TOQUE SOMBR.
+
+[ABILITY_ROUGH_SKIN] dd466e319a
+PELE ÁSPERA
+
+[ABILITY_WONDER_GUARD] 40135006f6
+DEF. MISTER.
+
+[ABILITY_LEVITATE] eb245603ec
+LEVITAÇÃO
+
+[ABILITY_EFFECT_SPORE] 3da5ef96fd
+ESP. EFEITO
+
+[ABILITY_SYNCHRONIZE] 76dd117a27
+SINCRONIA
+
+[ABILITY_CLEAR_BODY] b9612dcfdc
+CORPO PURO
+
+[ABILITY_NATURAL_CURE] 3f4d215937
+CURA NATURAL
+
+[ABILITY_LIGHTNING_ROD] 1344642e8f
+PARA-RAIOS
+
+[ABILITY_SERENE_GRACE] 28abec83a3
+INDULG. SER.
+
+[ABILITY_SWIFT_SWIM] bbd2aa2c5d
+NADO RÁPIDO
+
+[ABILITY_CHLOROPHYLL] 36346d53c6
+CLOROFILA
+
+[ABILITY_ILLUMINATE] c50a91ac09
+ILUMINAÇÃO
+
+[ABILITY_TRACE] ddf8a55c68
+TRAÇAR
+
+[ABILITY_HUGE_POWER] 34f346b852
+PODERZÃO
+
+[ABILITY_POISON_POINT] ad14c311a3
+PONTO VENEN.
+
+[ABILITY_INNER_FOCUS] 642a5f3ce9
+FORÇA INTER.
+
+[ABILITY_MAGMA_ARMOR] 7703485ca4
+ARM. MAGMA
+
+[ABILITY_WATER_VEIL] 7f1a151db7
+VÉU DE ÁGUA
+
+[ABILITY_MAGNET_PULL] 485afec024
+MAGNETISMO
+
+[ABILITY_SOUNDPROOF] 8787fc1beb
+ISOL. ACÚST.
+
+[ABILITY_RAIN_DISH] 62e61237e9
+PRATO CHUVA
+
+[ABILITY_SAND_STREAM] 004712edde
+FLUXO AREIA
+
+[ABILITY_PRESSURE] 3be14e228b
+PRESSÃO
+
+[ABILITY_THICK_FAT] 4635864623
+GORDURA ESP.
+
+[ABILITY_EARLY_BIRD] a90ee4ec38
+MADRUGAR
+
+[ABILITY_FLAME_BODY] c9650cb4a6
+CORPO CHAMAS
+
+[ABILITY_RUN_AWAY] d63e941270
+DAR NO PÉ
+
+[ABILITY_KEEN_EYE] d77db38c6b
+OLHAR AGUÇ.
+
+[ABILITY_HYPER_CUTTER] 6bffdea92e
+HIPERCORTE
+
+[ABILITY_PICKUP] 9478ed024b
+PEGAR
+
+[ABILITY_TRUANT] 95bd71e828
+MOLENGA
+
+[ABILITY_HUSTLE] 2f66200974
+TRANCO
+
+[ABILITY_CUTE_CHARM] 200773d44b
+CHARME FOFO
+
+[ABILITY_PLUS] c1ff976fc2
+MAIS
+
+[ABILITY_MINUS] 73ed84efb9
+MENOS
+
+[ABILITY_FORECAST] 1c77ffc092
+PREV. TEMPO
+
+[ABILITY_STICKY_HOLD] 52f396d6e5
+VISCOSIDADE
+
+[ABILITY_SHED_SKIN] d600bbd62b
+PELE VERTEN.
+
+[ABILITY_GUTS] 65f937109d
+TENACIDADE
+
+[ABILITY_MARVEL_SCALE] 90fd75002a
+ESC. MARAVIL
+
+[ABILITY_LIQUID_OOZE] 3c5f50cc1e
+LODO LÍQUIDO
+
+[ABILITY_OVERGROW] 441f5a1373
+SUPERCRESC.
+
+[ABILITY_BLAZE] 5f693375f9
+INCÊNDIO
+
+[ABILITY_TORRENT] 23264a4269
+DILÚVIO
+
+[ABILITY_SWARM] 88d69174bb
+ENXAME
+
+[ABILITY_ROCK_HEAD] 2eda95ecfb
+CABEÇA PEDRA
+
+[ABILITY_DROUGHT] d39c56e602
+SECA
+
+[ABILITY_ARENA_TRAP] 530285ee91
+ARMAD. ARENA
+
+[ABILITY_VITAL_SPIRIT] 2df08999d1
+ESPÍR. VITAL
+
+[ABILITY_WHITE_SMOKE] 5359c5b305
+FUM. BRANCA
+
+[ABILITY_PURE_POWER] b3c0c42ef3
+PODER PURO
+
+[ABILITY_SHELL_ARMOR] 9a8d3602a8
+ARM. CONCHA
+
+[ABILITY_CACOPHONY] 1f4d164f7e
+CACOFONIA
+
+[ABILITY_AIR_LOCK] 2311877388
+ECLUSA DE AR
+
+[sNoneDescription] dd85959536
+Sem habilidade especial.
+
+[sStenchDescription] b7e3cfbd60
+Ajuda a afastar POKéMON.
+
+[sDrizzleDescription] 343480f38f
+Traz chuva para a batalha.
+
+[sSpeedBoostDescription] 8d7b359989
+Ganha VELOC. aos poucos.
+
+[sBattleArmorDescription] e2c9f18b73
+Bloqueia golpes críticos.
+
+[sSturdyDescription] be2afe9715
+Anula golpes de nocaute.
+
+[sDampDescription] 8db783959d
+Impede autodestruição.
+
+[sLimberDescription] c2181c828a
+Impede a paralisia.
+
+[sSandVeilDescription] dd2fe727da
+Esquiva mais na areia.
+
+[sStaticDescription] 78866a0892
+Paralisa no contato.
+
+[sVoltAbsorbDescription] e175072962
+Ganha PS com eletricidade.
+
+[sWaterAbsorbDescription] 5ac30f416c
+Ganha PS com água.
+
+[sObliviousDescription] 4b133c8a03
+Impede a atração.
+
+[sCloudNineDescription] b7e8a2b701
+Anula os efeitos do clima.
+
+[sCompoundEyesDescription] 482b88ff77
+Aumenta a PRECISÃO.
+
+[sInsomniaDescription] 315a592f99
+Impede o sono.
+
+[sColorChangeDescription] 5900e4150f
+Assume o tipo do golpe.
+
+[sImmunityDescription] 49f6057130
+Impede o envenenamento.
+
+[sFlashFireDescription] bf6b08d3dd
+Fica mais forte com fogo.
+
+[sShieldDustDescription] 69c14d123e
+Bloqueia efeitos extras.
+
+[sOwnTempoDescription] 8b2c3e4fb8
+Impede a confusão.
+
+[sSuctionCupsDescription] c09060968e
+Fica bem preso ao chão.
+
+[sIntimidateDescription] 6849c34446
+Intimida e baixa o ATAQUE.
+
+[sShadowTagDescription] b9d2875a6b
+Impede a fuga do oponente.
+
+[sRoughSkinDescription] b3032308c7
+Machuca quem o toca.
+
+[sWonderGuardDescription] 4141a82ffb
+Só “super efetivo” acerta.
+
+[sLevitateDescription] 6cbb94b1c9
+Imune a golpes TERRESTRES.
+
+[sEffectSporeDescription] 86a53f34b2
+Solta esporos no contato.
+
+[sSynchronizeDescription] 97cc53f288
+Passa adiante seus status.
+
+[sClearBodyDescription] 7eeada55d4
+Impede perda de atributos.
+
+[sNaturalCureDescription] aaecf2cf7d
+Cura-se ao sair da batalha.
+
+[sLightningRodDescription] bed51bb40d
+Atrai golpes elétricos.
+
+[sSereneGraceDescription] e9d6821b88
+Favorece efeitos extras.
+
+[sSwiftSwimDescription] 22c68bf7c1
+Aumenta a VELOC. na chuva.
+
+[sChlorophyllDescription] 158578d8a9
+Aumenta a VELOC. no sol.
+
+[sIlluminateDescription] f23df33650
+Atrai mais encontros.
+
+[sTraceDescription] be4a435394
+Copia a habilidade do outro.
+
+[sHugePowerDescription] e39892bba3
+Aumenta o ATAQUE.
+
+[sPoisonPointDescription] b7180ceb67
+Envenena no contato.
+
+[sInnerFocusDescription] 8bced0c8e6
+Impede o recuo.
+
+[sMagmaArmorDescription] 494c0e503b
+Impede o congelamento.
+
+[sWaterVeilDescription] 5605ae1c1c
+Impede queimaduras.
+
+[sMagnetPullDescription] b64b654c5c
+Prende POKéMON de AÇO.
+
+[sSoundproofDescription] dba4d65b72
+Imune a golpes sonoros.
+
+[sRainDishDescription] 3a2173dc85
+Recupera um pouco de PS.
+
+[sSandStreamDescription] 76313a260e
+Traz tempestade de areia.
+
+[sPressureDescription] e79db60803
+Gasta mais PP do oponente.
+
+[sThickFatDescription] 5c8e56d4a7
+Protege do calor e do frio.
+
+[sEarlyBirdDescription] cabe981c9b
+Acorda rápido do sono.
+
+[sFlameBodyDescription] 36ed8a7cbb
+Queima no contato.
+
+[sRunAwayDescription] 62504d35fb
+Facilita a fuga.
+
+[sKeenEyeDescription] f6b8162502
+Impede perda de PRECISÃO.
+
+[sHyperCutterDescription] 6fb9efddd1
+Impede perda de ATAQUE.
+
+[sPickupDescription] 67fd230053
+Pode achar itens.
+
+[sTruantDescription] 63eda52541
+Só age a cada dois turnos.
+
+[sHustleDescription] 72de02b2f1
+Troca PRECISÃO por força.
+
+[sCuteCharmDescription] f63fe800aa
+Atrai no contato.
+
+[sPlusDescription] b19ab7c00b
+Fica mais forte com MENOS.
+
+[sMinusDescription] 21c81e0122
+Fica mais forte com MAIS.
+
+[sForecastDescription] 0502ffbc63
+Muda conforme o clima.
+
+[sStickyHoldDescription] ef969aa0ce
+Impede o roubo de itens.
+
+[sShedSkinDescription] 6baa1bbc6f
+Troca de pele e se cura.
+
+[sGutsDescription] 0e62db249e
+Mais ATAQUE com status.
+
+[sMarvelScaleDescription] 10fc8e3436
+Mais DEFESA com status.
+
+[sLiquidOozeDescription] 88d2ce0997
+Drenar seus PS machuca.
+
+[sOvergrowDescription] 63bb6b7a64
+Turbina PLANTA no aperto.
+
+[sBlazeDescription] fbf461e956
+Turbina FOGO no aperto.
+
+[sTorrentDescription] 2cb0646a30
+Turbina ÁGUA no aperto.
+
+[sSwarmDescription] 27f9b69b98
+Turbina INSETO no aperto.
+
+[sRockHeadDescription] 7db58cfa81
+Impede o dano de recuo.
+
+[sDroughtDescription] 9666d81d4e
+Traz sol para a batalha.
+
+[sArenaTrapDescription] 33c44974da
+Impede a fuga.
+
+[sVitalSpiritDescription] 315a592f99
+Impede o sono.
+
+[sWhiteSmokeDescription] 7eeada55d4
+Impede perda de atributos.
+
+[sPurePowerDescription] e39892bba3
+Aumenta o ATAQUE.
+
+[sShellArmorDescription] e2c9f18b73
+Bloqueia golpes críticos.
+
+[sCacophonyDescription] dba4d65b72
+Imune a golpes sonoros.
+
+[sAirLockDescription] b7e8a2b701
+Anula os efeitos do clima.

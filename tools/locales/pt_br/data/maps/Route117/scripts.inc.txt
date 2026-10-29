@@ -1,0 +1,28 @@
+# ROTA 117: o CENTRO DE CUIDADOS, as flores e as placas.
+
+[Route117_Text_DayCarePokemonHadNewMove] a4c531e374
+Deixei o meu POKéMON no CENTRO DE\n
+CUIDADOS POKéMON.\p
+Quando peguei de volta, ele sabia um\n
+golpe novo que eu não ensinei.\l
+Fiquei muito, muito surpreso.$
+
+[Route117_Text_ArentTheseFlowersPretty] 3c015fdd7b
+O que acha?\n
+Essas flores não são lindas?\p
+Fui eu que plantei todas!$
+
+[Route117_Text_AirIsTastyHere] 9b6f40c323
+O ar aqui é uma delícia!$
+
+[Route117_Text_RouteSignVerdanturf] 6c6fa951bd
+ROTA 117\n
+{LEFT_ARROW} CIDADE DE VERDANTURF$
+
+[Route117_Text_RouteSignMauville] 014f4f5db1
+ROTA 117\n
+{RIGHT_ARROW} CIDADE DE MAUVILLE$
+
+[Route117_Text_DayCareSign] 0f72cec9ae
+CENTRO DE CUIDADOS POKéMON\n
+“Deixe a gente criar o seu POKéMON.”$

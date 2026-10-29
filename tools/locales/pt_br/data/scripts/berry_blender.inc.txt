@@ -1,0 +1,142 @@
+# LIQUIDIFICADOR DE FRUTAS: o velhinho, os grupos e a conexão.
+
+[BerryBlender_Text_WantToMakePokeblocks] acb29b9c62
+Opa? Quer fazer uns {POKEBLOCK}S\ncom este velhinho aqui?$
+
+[BerryBlender_Text_Excellent] 14bb7d2f50
+Excelente!$
+
+[BerryBlender_Text_MadeOldTimerSad] d6d910f35d
+Ah…\nVocê deixou este velhinho triste…$
+
+[BerryBlender_Text_KnowHowToMakePokeblocks] 9497472662
+Sabe fazer {POKEBLOCK}?$
+
+[BerryBlender_Text_LetsBerryBlender] ef128a5850
+Então vamos começar!\pBora bater FRUTAS!$
+
+[BerryBlender_Text_ExplainBerryBlending] eb4214f326
+Certo, vou explicar rapidinho.\pAh, não se preocupe, é bem simples.\pQuando a seta do LIQUIDIFICADOR\npassar pela sua marca, aperte A.\pÉ só isso.\nVai ver como é fácil quando tentar.$
+
+[BerryBlender_Text_DontHaveAnyBerries] 0b2772998c
+Ué?\nVocê não tem nenhuma FRUTA?\pSem FRUTAS, não dá pra\nfazer {POKEBLOCK}S.$
+
+[BerryBlender_Text_CanHaveOneOfMyBerries] ad50c29b66
+Assim não dá, né?\pSe não ligar pra sobras, pode\nficar com uma das minhas FRUTAS.\pAí a gente faz uns {POKEBLOCK}S\njuntos no LIQUIDIFICADOR.$
+
+[BerryBlender_Text_DontHaveAnyBerriesToSpare] ec4ccf946c
+Se me sobrasse alguma FRUTA,\neu te dava uma com prazer…\pMas hoje não tenho nenhuma sobrando.\nFica pra outra vez.$
+
+[BerryBlender_Text_PokeblockCaseIsFull] 5e8aac64ed
+Mas o seu ESTOJO {POKEBLOCK} tá cheio.\pUse uns {POKEBLOCK}S antes de\nvoltar aqui.$
+
+[BerryBlender_Text_DontHavePokeblockCase] bb910389ea
+Mas você não tem ESTOJO {POKEBLOCK}.\pArranje um ESTOJO {POKEBLOCK} e\ndepois volte aqui.$
+
+[BerryBlender_Text_LetsGetBlendingAlready] 0d4f3b230b
+Bora logo bater essas FRUTAS!$
+
+[BerryBlender_Text_WhatKindOfPokeblockWillIGet] 0e07489466
+Que {POKEBLOCK} será que vai sair?\nQue emoção!$
+
+[BerryBlender_Text_WantToBlendPokeblocksWithUs] 72cf287841
+Oi! Quer fazer uns {POKEBLOCK}S\ncom a gente?$
+
+[BerryBlender_Text_Okay] a2e1cc8ef7
+Beleza!$
+
+[BerryBlender_Text_ThatsTooBad] 135fd37fb4
+Que pena…\pMas a gente tá sempre aqui quando\nbater a vontade de misturar!$
+
+[BerryBlender_Text_KnowHowToMakePokeblocks2] c6fa3ff25f
+Você sabe fazer {POKEBLOCK}S,\nné?$
+
+[BerryBlender_Text_LetsBerryBlender2] ef128a5850
+Então vamos começar!\pBora bater FRUTAS!$
+
+[BerryBlender_Text_ExplainBerryBlending2] 6e7da9e72f
+Beleza!\nDeixa eu te explicar!\pQuando a seta do LIQUIDIFICADOR\nchegar na sua marca, é só\lapertar A.\pSó isso.\nFácil, né?$
+
+[BerryBlender_Text_DontHaveAnyBerries2] 6eb050ad62
+Opa, peraí…\nVocê não tem nenhuma FRUTA.\pSem FRUTAS não dá pra fazer\n{POKEBLOCK}S…\pA gente tá sempre aqui quando você\ntiver FRUTAS pra misturar.$
+
+[BerryBlender_Text_PokeblockCaseIsFull2] 0467af1bc9
+Opa, peraí…\nSeu ESTOJO {POKEBLOCK} tá cheio.\pUse uns {POKEBLOCK}S e\ndepois volte.$
+
+[BerryBlender_Text_DontHavePokeblockCase2] 4d88a2b060
+Opa, peraí…\nVocê não tem ESTOJO {POKEBLOCK}.\pArranje um ESTOJO {POKEBLOCK} e\ndepois volte.$
+
+[BerryBlender_Text_MakePokeblocksWithOurGroup] b0fac209f9
+Ah, olá! Quer fazer uns {POKEBLOCK}S\ncom a nossa turminha?$
+
+[BerryBlender_Text_OhDear] 21f383cbae
+Ai, meu bem!$
+
+[BerryBlender_Text_LeftUsInShock] 0492d110f0
+Ai, ai, ai…\pVocê deixou a gente em choque!$
+
+[BerryBlender_Text_KnowHowToMakePokeblocks3] 11e7b7bd17
+Claro que você sabe fazer\n{POKEBLOCK}S, né?$
+
+[BerryBlender_Text_LetsBerryBlender3] 9fdbb079cd
+Certo, meu bem!\nVamos começar!\pBora bater FRUTAS!$
+
+[BerryBlender_Text_ExplainBerryBlending3] 0f6d6db76d
+Ai, meu bem!\pEntão eu explico com calma.\pQuando a seta do LIQUIDIFICADOR\ngirar até a sua marca, aperte A.\pÉ só isso.\nSimples, né?$
+
+[BerryBlender_Text_DontHaveAnyBerries3] d39fd06ac5
+Você não tem nenhuma FRUTA,\nné?\pSem FRUTAS, não dá pra\nfazer {POKEBLOCK}S.\pA gente vive fazendo {POKEBLOCK}S aqui,\nentão volte quando tiver\luma ou duas FRUTAS.$
+
+[BerryBlender_Text_PokeblockCaseIsFull3] d2c1c43400
+Parece que o seu ESTOJO {POKEBLOCK}\ntá cheio.\pUse uns {POKEBLOCK}S e\ndepois volte.$
+
+[BerryBlender_Text_DontHavePokeblockCase3] e8b11f8bd0
+Parece que você ainda não tem\num ESTOJO {POKEBLOCK}.\pArranje um ESTOJO {POKEBLOCK} antes\nde voltar.$
+
+[BerryBlender_Text_SetNewBlenderRecord] d19ca0904a
+Beleza! Hoje é o dia em que eu bato\no recorde de velocidade!$
+
+[BerryBlender_Text_LookGoodAtBlendingJoinUs] be956e6cba
+Ai, meu bem!\nVocê parece mandar bem nisso.\lQuer se juntar a nós?$
+
+[BerryBlender_Text_MakeDeliciousPokeblocks] 736ea07015
+Vou fazer {POKEBLOCK}S deliciosos\npra deixar meus POKéMON mais fofos.$
+
+[BerryBlender_Text_SaveGameBeforeBerryBlenderLink] ac32687ce8
+Você e seus amigos vão fazer\n{POKEBLOCK}S no LIQUIDIFICADOR.\pPosso salvar o jogo antes de\nconectar com seus amigos?$
+
+[BerryBlender_Text_SearchingForFriends] 1e00aa5fa5
+Procurando seus amigos…\n… … Botão B: Cancelar$
+
+[BerryBlender_Text_Player1Arrived] 1d4e375e65
+{STR_VAR_1} chegou.$
+
+[BerryBlender_Text_Player1And2Arrived] af1f226412
+{STR_VAR_1} e {STR_VAR_2} chegaram.$
+
+[BerryBlender_Text_AllPlayersArrived] 13798d66cf
+{STR_VAR_1}, {STR_VAR_2} e\n{STR_VAR_3} chegaram.$
+
+[BerryBlender_Text_NoBerriesLink] 734bfa3ba9
+Você não tem FRUTAS.\nNão dá pra usar o LIQUIDIFICADOR.$
+
+[BerryBlender_Text_PokeblockCaseIsFullLink] 1705a47c72
+Seu ESTOJO {POKEBLOCK} tá cheio.\nNão dá pra usar o LIQUIDIFICADOR.$
+
+[BerryBlender_Text_DontHavePokeblockCaseLink] da64b0fbd5
+Você não tem ESTOJO {POKEBLOCK}.\nNão dá pra usar o LIQUIDIFICADOR.$
+
+[BerryBlender_Text_LoveMakingPokeblocks] 7282cb789d
+Eu adoro fazer {POKEBLOCK}S.\pSempre ando com umas FRUTAS.$
+
+[BerryBlender_Text_MakePokeblocksUsingBerryBlender] ed7eeffbc3
+Se quiser, a gente pode fazer\nuns {POKEBLOCK}S juntos no\lLIQUIDIFICADOR DE FRUTAS.$
+
+[BerryBlender_Text_DontHaveAnyBerriesHaveOne] b5cf3e69d9
+Ué?\nVocê não tem nenhuma FRUTA?\pAssim não dá, né?\pSe não ligar pra sobras, pode\nficar com uma das minhas FRUTAS.$
+
+[BerryBlender_Text_UseItToMakePokeblocksTogether] 6b697257cd
+Vamos usar ela pra fazer {POKEBLOCK}S\njuntos no LIQUIDIFICADOR.$
+
+[BerryBlender_Text_DontHaveAnyBerriesNoneToSpare] 7681d410f3
+Ué?\nVocê não tem nenhuma FRUTA?\pSe me sobrasse alguma, eu te\ndava uma com prazer…\pMas hoje não tenho nenhuma sobrando.\nFoi mal.$

@@ -1,0 +1,26 @@
+# CIDADE DE SOOTOPOLIS: o CENTRO POKéMON.
+
+[SootopolisCity_PokemonCenter_1F_Text_WallaceToughestInHoenn] 43a17e7e7e
+Dizem que o WALLACE é o TREINADOR\n
+mais forte de toda a região de HOENN.\p
+O GINÁSIO desta cidade é comandado\n
+pelo TREINADOR que ensinou o WALLACE.\p
+Mas a ELITE DOS QUATRO… Dizem que é\n
+ainda mais forte que o mestre dele.\p
+Quão fortes eles podem ser?$
+
+[SootopolisCity_PokemonCenter_1F_Text_EveryoneTakenRefuge] 36666b74ca
+Todo mundo na cidade se abrigou e\n
+não sai de casa.\p
+Até eu prefiro não me arriscar lá\n
+fora.$
+
+[SootopolisCity_PokemonCenter_1F_Text_AlwaysBeFriendsWithPokemon] 641fd1e855
+Aconteça o que acontecer, quando e\n
+onde for, sempre vou ser amigo dos\l
+POKéMON.\p
+Porque é divertido estar com eles!$
+
+[SootopolisCity_PokemonCenter_1F_Text_ArentPokemonOurFriends] 4b846d178b
+Os POKéMON não são nossos amigos?\p
+Por que estão descontrolados assim?$

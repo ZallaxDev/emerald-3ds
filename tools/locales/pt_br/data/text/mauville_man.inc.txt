@@ -1,0 +1,55 @@
+# GIDDY (homem de MAUVILLE): pedaços que se juntam a uma palavra da FALA FÁCIL ("X é uma beleza!").
+
+[GiddyText_SoPretty] d5fb1431a2
+ uma beleza!$
+
+[GiddyText_SoDarling] 729c313cc9
+ um amor!$
+
+[GiddyText_SoRelaxed] 8230d1849c
+ pura calmaria!$
+
+[GiddyText_SoSunny] ae54bf84a7
+ puro sol!$
+
+[GiddyText_SoDesirable] 651b7fdf50
+ um sonho de consumo!$
+
+[GiddyText_SoExciting] 42a36e0259
+ pura emoção!$
+
+[GiddyText_SoAmusing] 423538ad22
+ uma diversão!$
+
+[GiddyText_SoMagical] 8ceaffbb37
+ pura magia!$
+
+[GiddyText_Is] 515f89ea7a
+ é$
+
+[GiddyText_DontYouAgree] 166f51bbf7
+\nNão acha?$
+
+[GiddyText_ISoWantToGoOnAVacation] e4ab7ed222
+Tô com tanta vontade de tirar férias.\nVocê conhece um lugar legal?$
+
+[GiddyText_IBoughtCrayonsWith120Colors] f2978cec45
+Comprei giz de cera com 120 cores!\nNão acha legal?$
+
+[GiddyText_WouldntItBeNiceIfWeCouldFloat] aaf5393fba
+Não seria bom se a gente pudesse\nflutuar numa nuvem de bolhas?$
+
+[GiddyText_WhenYouWriteOnASandyBeach] 1ea39e026d
+Quando você escreve na areia da praia,\no mar apaga. Isso me deixa triste.$
+
+[GiddyText_WhatsTheBottomOfTheSeaLike] cf4aaaf633
+Como será o fundo do mar?\nQueria tanto ir lá uma vez!$
+
+[GiddyText_WhenYouSeeTheSettingSunDoesIt] 72b2204936
+Quando você vê o pôr do sol, dá\nvontade de voltar pra casa?$
+
+[GiddyText_LyingBackInTheGreenGrass] 53184b609b
+Deitar na grama verdinha…\nAh, é tão, tão bom!$
+
+[GiddyText_SecretBasesAreSoWonderful] 3e8d2b3e07
+As BASES SECRETAS são maravilhosas!\nNão sente a empolgação?$

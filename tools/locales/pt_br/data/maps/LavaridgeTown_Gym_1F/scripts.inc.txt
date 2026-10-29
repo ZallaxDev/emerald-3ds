@@ -1,0 +1,215 @@
+# CIDADE DE LAVARIDGE: o GINÁSIO da FLANNERY.
+
+[LavaridgeTown_Gym_1F_Text_GymGuideAdvice] ab8bf3f2fd
+E aí, como vai, {PLAYER},\n
+futura estrela da LIGA?\p
+FLANNERY, a LÍDER do GINÁSIO de\n
+LAVARIDGE, usa POKéMON de FOGO.\p
+A paixão dela pelos POKéMON queima\n
+mais forte que um vulcão.\p
+Não chegue perto demais: você vai\n
+se queimar! Jogue água nela e\l
+manda ver!$
+
+[LavaridgeTown_Gym_1F_Text_GymGuidePostVictory] 93e47d5c50
+Uau! Que batalha escaldante!$
+
+[LavaridgeTown_Gym_1F_Text_ColeIntro] 6ad5d451b8
+Aiaiaiaiai!\n
+Nossa, como é quente!$
+
+[LavaridgeTown_Gym_1F_Text_ColeDefeat] a117d22357
+O suor está caindo nos meus olhos…$
+
+[LavaridgeTown_Gym_1F_Text_ColePostBattle] fde6290271
+Ficar enterrado na areia quente\n
+melhora a circulação.\p
+Faz bem pra dor nas juntas.$
+
+[LavaridgeTown_Gym_1F_Text_AxleIntro] 25eacd2276
+Estou tentando relaxar.\n
+Não venha me estressar!$
+
+[LavaridgeTown_Gym_1F_Text_AxleDefeat] 0852ddeedb
+Tomara que a FLANNERY te torre!$
+
+[LavaridgeTown_Gym_1F_Text_AxlePostBattle] 5046158508
+Aaah… Ufa…\p
+Ficar muito tempo enterrado na areia\n
+quente cansa a gente…$
+
+[LavaridgeTown_Gym_B1F_Text_KeeganIntro] 6fe701dd71
+Você já deve estar sem fôlego.\n
+Quer descansar na areia quente,\l
+não quer?\p
+Mas saiba que manter a força de\n
+vontade é uma habilidade importante\l
+pra todo TREINADOR.$
+
+[LavaridgeTown_Gym_B1F_Text_KeeganDefeat] 8b01ec5d0e
+Quem brinca com fogo se queima…$
+
+[LavaridgeTown_Gym_B1F_Text_KeeganPostBattle] 40045981e9
+A sua habilidade é real…\n
+Mas a nossa LÍDER FLANNERY é forte.\p
+Se não tomar cuidado, você vai\n
+se queimar feio.$
+
+[LavaridgeTown_Gym_1F_Text_GeraldIntro] ebf85e7db5
+Os seus POKéMON aguentam\n
+200 graus de calor?$
+
+[LavaridgeTown_Gym_1F_Text_GeraldDefeat] d242c9a326
+Não queimou o bastante…$
+
+[LavaridgeTown_Gym_1F_Text_GeraldPostBattle] 4202ae5894
+A temperatura do magma é de\n
+200 graus.\p
+Os seus POKéMON me venceram, então\n
+sobrevivem fácil no magma.$
+
+[LavaridgeTown_Gym_1F_Text_DanielleIntro] 2bfea4cb84
+Hã…\n
+Tá bom, vou batalhar com você.$
+
+[LavaridgeTown_Gym_1F_Text_DanielleDefeat] 5e6247d784
+Ah, mas você é forte demais.$
+
+[LavaridgeTown_Gym_1F_Text_DaniellePostBattle] 44ea4b55b8
+Vou ser uma TREINADORA linda e forte\n
+que nem a FLANNERY.$
+
+[LavaridgeTown_Gym_B1F_Text_JaceIntro] 9524dd7b20
+Vamos, anda logo!\n
+Antes que o meu ânimo esfrie!$
+
+[LavaridgeTown_Gym_B1F_Text_JaceDefeat] 8bde16835c
+Está tão quente, mas o meu coração\n
+ficou gelado…$
+
+[LavaridgeTown_Gym_B1F_Text_JacePostBattle] d9aeb04c1a
+Com esse espírito de luta queimando\n
+aí dentro, você pode ter chance\l
+contra a nossa LÍDER.$
+
+[LavaridgeTown_Gym_B1F_Text_JeffIntro] 27787a3c22
+Está vendo como as chamas ardem?\n
+É que elas já sentem a minha vitória!$
+
+[LavaridgeTown_Gym_B1F_Text_JeffDefeat] 9257e18e41
+Alguma coisa deu errado.$
+
+[LavaridgeTown_Gym_B1F_Text_JeffPostBattle] 3dc24515cc
+E daí? E daí, hein?\n
+Eu ando descalço em brasa!\p
+…Nem pense em tentar isso!$
+
+[LavaridgeTown_Gym_B1F_Text_EliIntro] 6eafc61304
+Adoro montanhas, mas adoro\n
+principalmente vulcões.$
+
+[LavaridgeTown_Gym_B1F_Text_EliDefeat] 518a02ec9a
+Bom, parece que perdi sem nunca\n
+ter o controle.$
+
+[LavaridgeTown_Gym_B1F_Text_EliPostBattle] 9b6149024a
+Fico aqui porque virei fã do poder\n
+da FLANNERY.\p
+Hehehehe.$
+
+[LavaridgeTown_Gym_1F_Text_FlanneryIntro] 2228129d3d
+Boas-vindas… Não, espera.\p
+TREINADOR insignificante, que bom\n
+que chegou até aqui!\p
+Fui encarregada de… Não, espera.\p
+Eu sou a FLANNERY, a LÍDER deste\n
+GINÁSIO!\p
+Hã…\n
+Não me subestime, mesmo que eu\l
+seja LÍDER há pouco tempo!\p
+Com as técnicas herdadas do meu avô,\n
+vou, hã… mostrar os golpes quentes\l
+que aperfeiçoamos nesta terra!$
+
+[LavaridgeTown_Gym_1F_Text_FlanneryDefeat] 4466f30db5
+Ah…\n
+Acho que me esforcei demais…\p
+Eu… Virei LÍDER de GINÁSIO há\n
+pouco tempo.\p
+Tentei ser alguém que eu não sou.\p
+Tenho que agir do meu jeito. Senão,\n
+os meus POKéMON ficam confusos.\p
+Obrigada por me ensinar isso.\n
+Por isso, você merece isto.$
+
+[LavaridgeTown_Gym_1F_Text_ReceivedHeatBadge] 90924ce8f0
+{PLAYER} recebeu a INSÍGNIA DO CALOR\n
+da FLANNERY.$
+
+[LavaridgeTown_Gym_1F_Text_ExplainHeatBadgeTakeThis] f3ba202cf2
+Com a INSÍGNIA DO CALOR, todos os\n
+POKéMON até o NV. 50, mesmo os\l
+recebidos em trocas, vão te\l
+obedecer direitinho.\p
+E os POKéMON podem usar o golpe\n
+de MO FORÇA fora da batalha.\p
+Isto é um sinal da minha gratidão.\n
+Pode pegar sem vergonha!$
+
+[LavaridgeTown_Gym_1F_Text_ExplainOverheat] a6f240ce42
+Essa MT50 contém SUPERAQUECER.\p
+Esse golpe causa um dano enorme\n
+no oponente.\p
+Mas também reduz muito o AT. ESP.\n
+de quem usa. Talvez não seja bom\l
+pra batalhas longas.$
+
+[LavaridgeTown_Gym_1F_Text_RegisteredFlannery] 7747fd43f3
+A LÍDER FLANNERY foi registrada\n
+no POKéNAV.$
+
+[LavaridgeTown_Gym_1F_Text_FlanneryPostBattle] bcd065515a
+A sua força me lembra alguém…\p
+Ah! Já sei! Você luta igual ao NORMAN,\n
+o LÍDER do GINÁSIO de PETALBURG.$
+
+[LavaridgeTown_Gym_1F_Text_GymStatue] b7027ccd59
+GINÁSIO POKéMON DE LAVARIDGE$
+
+[LavaridgeTown_Gym_1F_Text_GymStatueCertified] 76393c830d
+GINÁSIO POKéMON DE LAVARIDGE\p
+TREINADORES APROVADOS POR FLANNERY:\n
+{PLAYER}$
+
+[LavaridgeTown_Gym_1F_Text_FlanneryPreRematch] f3dfddc5e9
+FLANNERY: Perder uma batalha não\n
+vai me desanimar.\p
+Eu amo os POKéMON.\n
+Amo batalhar.\l
+E… amo este GINÁSIO!\p
+Vamos trocar golpes superquentes\n
+em outra batalha!$
+
+[LavaridgeTown_Gym_1F_Text_FlanneryRematchDefeat] 8a5d0f987e
+Ufa!\n
+Quase entrei em erupção!$
+
+[LavaridgeTown_Gym_1F_Text_FlanneryPostRematch] 830bec4188
+FLANNERY: Perdi, mas fiquei\n
+completamente satisfeita.\p
+Não é sempre que tenho uma\n
+batalha tão quente assim.\p
+Vamos ter outra dessas um dia!$
+
+[LavaridgeTown_Gym_1F_Text_FlanneryRematchNeedTwoMons] d67ce14251
+FLANNERY: Perder uma batalha não\n
+vai me desanimar.\p
+Eu amo os POKéMON.\n
+Amo batalhar.\l
+E… amo este GINÁSIO!\p
+Vamos trocar golpes superquentes\n
+em outra batalha!\p
+Opa, espera. Você só tem um POKéMON\n
+que pode batalhar?\p
+Desculpa, mas, quando vier me ver,\n
+traga pelo menos dois POKéMON.$

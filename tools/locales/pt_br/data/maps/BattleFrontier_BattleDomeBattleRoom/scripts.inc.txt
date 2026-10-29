@@ -1,0 +1,253 @@
+# FRONTEIRA DE BATALHA: a arena da CÚPULA, com o narrador e o TUCKER.
+
+[BattleFrontier_BattleDomeBattleRoom_Text_PlayerHasEnteredDome] fe664fabb7
+{PLAYER} entrou na CÚPULA DE BATALHA!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_PlayerVersusTrainer] f6e660dc91
+Batalha da\n
+{STR_VAR_1}!\p
+{PLAYER} contra {STR_VAR_2}!\p
+Que comece a batalha!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_PlayerIsWinner] 9cce077811
+Vitória de {PLAYER}!\n
+Parabéns!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_TrainerIsWinner] aede514ebc
+Vitória de {STR_VAR_2}!\n
+Parabéns!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_PlayerIsLv50Champ] d56d21cbe7
+{PLAYER} venceu o Torneio de\n
+Batalha Nível 50!\p
+Parabéns!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_PlayerIsLvOpenChamp] 30af48c246
+{PLAYER} venceu o Torneio de\n
+Batalha Nível Livre!\p
+Parabéns!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_RefereeDecisionPleaseWait] eae07e6923
+Que final inacreditável!\n
+Temos um nocaute duplo!\p
+Nesse caso, as regras do Torneio\n
+pedem a decisão dos JUÍZES.\p
+Aguardem enquanto a decisão\n
+é tomada.$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_RefereesDecidedWinnerTrainer] 4eb59c6ed7
+Os JUÍZES chegaram a uma\n
+decisão!\p
+A vitória é de…\n
+Minha nossa!\l
+A vitória é de {STR_VAR_1}!\l
+Parabéns!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_RefereesDecidedWinnerPlayer] c3d8eb9aaf
+Os JUÍZES chegaram a uma\n
+decisão!\p
+A vitória é de…\n
+Minha nossa!\l
+A vitória é de {PLAYER}!\l
+Parabéns!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_BrightNewHope] 644a763a31
+A nova grande esperança!\p
+$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_RisingStar] 8ddcfe8244
+A estrela em ascensão!\p
+$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_WillTheyRaceToChampionship] fc89a06362
+Será que vai disparar rumo\n
+ao título?\p
+$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_CanAchieveChampionFirstTry] 6b6d74ec54
+Será que vem o título logo\n
+na primeira tentativa?\p
+$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_CanLossBeAvenged] 526afebb5f
+Será que a derrota da última\n
+batalha vai ser vingada?\p
+$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_OnFireForChampionship] 461edf6115
+Pegando fogo atrás do\n
+primeiro título!\p
+$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_WinHereAdvancesToFinal] 3873c49abe
+Uma vitória aqui garante\n
+a vaga na final!\p
+$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_WillLongHeldDreamComeTrue] 0a83089f81
+Será que o sonho antigo do\n
+título enfim vai se realizar?\p
+$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_TheInvincibleChampion] abc1855270
+A lenda invencível!\p
+$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_CanAnyoneHopeToBeatTrainer] ac5927377a
+Alguém ainda tem esperança de\n
+vencer essa fera?\p
+$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_DoBattlesExistSolelyForTrainer] 6d55180a19
+As batalhas existem só pra\n
+essa fera brilhar?\p
+$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_CurrentChampAimingToRetainTitle] 86affa1bff
+Quem tem o título busca\n
+mantê-lo!\p
+$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_FormerChampHasReturned] 69a677eb15
+Quem já teve o título voltou!\p
+$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_FormerToughnessReturned] b5ae93a266
+A força de antes está de volta!\p
+$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_WillDoExpectedAdvanceToFinals] 55d7ef3a77
+Será que vai fazer o esperado\n
+e chegar à final?\p
+$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_WillFormerChampRegainGlory] 90503d3db0
+Será que a glória perdida\n
+vai ser recuperada?\p
+$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_FeelGlowOfTrueMaster] c758d3d734
+Sintam o brilho de um verdadeiro mestre!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_MakeWayForDomeAceTucker] 21611dc21c
+E agora… Quem está no caminho\n
+recordista de {PLAYER}…\p
+Sim! O único e inigualável!\n
+O COMISSÁRIO da CÚPULA DE BATALHA!\l
+O nosso ÁS DA CÚPULA!\l
+Abram alas pro TUCKER!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_SpectatorTuckerChant] 5dca6799e0
+Plateia: TUCKER! TUCKER!\n
+TUCKER! TUCKER! TUCKER!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_TuckerSilverIntro] 2c9fbdd3d0
+TUCKER: Ahahah!\p
+Está ouvindo? Esta plateia!\n
+Estão loucos pra ver a nossa batalha!\p
+Ahahah!\p
+Aposto que o nervoso de batalhar\n
+comigo está te fazendo tremer!\p
+Mas não se preocupe com nada!\p
+Sou a estrela nº 1 da CÚPULA!\n
+Eu, TUCKER, o ÁS DA CÚPULA, vou te\l
+banhar no meu brilho!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_LetsSeeYourStrategy] 724036ece8
+A sua estratégia!\n
+Vamos ver!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_IncredibleVictorIsPlayer] e2dafee9c4
+Inacreditável! Incrível!\n
+A vitória é de {PLAYER}!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_WinnerIsTucker] 1718a67316
+A vitória é do TUCKER!\n
+O ÁS DA CÚPULA prevaleceu!\p
+Parabéns, TUCKER!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_SeeYourFrontierPass] 8630f50822
+TUCKER: Regras são regras!\n
+Deixa eu ver o seu PASSE DA FRONTEIRA.$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_ReceivedTacticsSymbol] c7e1698239
+O Símbolo da Tática foi gravado no\n
+PASSE DA FRONTEIRA!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_WontUnderestimateYouNextTime] d00ae4dc68
+… … … … … …\p
+Eu te subestimei feio. Não vou\n
+cometer o mesmo erro da próxima vez…$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_CanWinStreakBeStretched] 27cf76a292
+Será que a sequência continua?\n
+Confiança não falta!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_LegendHasReturnedDomeAceTucker] 0c8687d57f
+Senhoras e senhores!\n
+Meninos, meninas e POKéMON!\p
+Finalmente!\n
+Finalmente, a lenda voltou!\p
+Sim, o nome dessa lenda!\n
+O nosso ÁS DA CÚPULA!\l
+Ninguém menos que o TUCKER!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_TuckerGoldIntro] 815daf384c
+TUCKER: Ah…\n
+O rugido estrondoso da plateia…\l
+O calor de fornalha da emoção…\l
+Que lugar maravilhoso…\p
+Pra plateia, eu sou o ÁS DA CÚPULA…\n
+Represento as esperanças e sonhos…\l
+Nunca posso sumir das vistas deles…\p
+Tenho que arder!\n
+Mais forte e mais brilhante!\l
+Tenho que iluminar todos aqui!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_UnleashAllPowerIPossess] 259d573f55
+Vou liberar todo o poder que\n
+tenho! Aqui e agora!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_NeverLostWhenPowerUnleashed] 2b9562fdd7
+TUCKER: Que coisa fantástica!\p
+Nunca antes! Eu nunca tinha perdido\n
+quando liberei o meu poder.\p
+É, muito fantástico!\n
+O seu PASSE DA FRONTEIRA, por favor?$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_TacticsSymbolTookGoldenShine] 51c4e31c15
+O Símbolo da Tática ganhou um\n
+brilho dourado!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_LookForwardToNextEncounter] 6720973c42
+Você é forte, mas, acima de tudo,\n
+tem um charme único!\p
+Vejo em você o potencial de uma\n
+superestrela como eu.\p
+Vou esperar ansioso pelo nosso\n
+próximo encontro!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_PlayerIsLv50Champ2] d56d21cbe7
+{PLAYER} venceu o Torneio de\n
+Batalha Nível 50!\p
+Parabéns!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_PlayerIsLvOpenChamp2] 30af48c246
+{PLAYER} venceu o Torneio de\n
+Batalha Nível Livre!\p
+Parabéns!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_PlayerVersusTucker] 98c613e800
+A grande final!\p
+{PLAYER} contra o ÁS DA CÚPULA, TUCKER!\p
+Que comece a batalha!$
+
+[BattleFrontier_BattleDomeBattleRoom_Text_RefereesDecidedWinnerTucker] bbed14f72b
+Os JUÍZES chegaram a uma\n
+decisão!\p
+A vitória é de…\n
+Minha nossa!\l
+A vitória é do nosso ÁS DA CÚPULA!\l
+É o TUCKER!\p
+Parabéns! E obrigado!\n
+Palmas pro ÁS DA CÚPULA, TUCKER!$

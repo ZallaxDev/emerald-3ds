@@ -3,7 +3,6 @@ param(
     [switch]$Clean,
     [int]$Jobs = 4,
     [switch]$Verify,
-    [switch]$NoVoxel,
     [switch]$NoLighting,
     [switch]$NoFps
 )
@@ -15,10 +14,14 @@ $port = $PSScriptRoot.Replace('\', '/')
 if ($port.Contains("'")) { throw 'The path must not contain single quotes.' }
 $python = (& python -c 'import sys; print(sys.executable)').Replace('\', '/')
 if ($LASTEXITCODE -ne 0) { throw 'Python 3 is required by the build.' }
-$voxel = if ($NoVoxel) { 0 } else { 1 }
 $lighting = if ($NoLighting) { 0 } else { 1 }
 $fps = if ($NoFps) { 0 } else { 1 }
-$command = "make -C '$port' VOXEL=$voxel VOXEL_LIGHTING=$lighting SHOW_FPS=$fps PYTHON='$python'"
+$command = "make -C '$port' VOXEL_LIGHTING=$lighting SHOW_FPS=$fps PYTHON='$python'"
+# The login shell drops APPDATA, where a per-user Pillow (pip install --user) lives.
+if ($env:APPDATA) {
+    $appdata = $env:APPDATA.Replace('\', '/')
+    $command = "export APPDATA='$appdata'; $command"
+}
 # A native host compiler (for the host tests and the decomp tools) and its
 # runtime DLLs must be on PATH; MSYS2's MinGW64 is the usual one.
 $hostDirs = @()

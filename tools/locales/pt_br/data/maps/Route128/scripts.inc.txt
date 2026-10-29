@@ -1,0 +1,59 @@
+# ROTA 128: MAXIE, ARCHIE e STEVEN depois do despertar do KYOGRE.
+
+[Route128_Text_ArchieWhatHappened] 00b15ecb26
+ARCHIE: O que aconteceu…\n
+Que cena terrível é esta…\p
+Eu… cometi um erro horrível?$
+
+[Route128_Text_ArchieIOnlyWanted] ef6e633124
+Eu…\n
+Eu só queria…$
+
+[Route128_Text_MaxieDoYouUnderstandNow] 248dd42966
+MAXIE: Entende agora, ARCHIE?\p
+Vê finalmente como o seu sonho\n
+terminou em desastre?\p
+Temos que correr! Temos que fazer\n
+alguma coisa antes que a situação\l
+saia totalmente do controle!$
+
+[Route128_Text_MaxieResposibilityFallsToArchieAndMe] c573fdea67
+MAXIE: {PLAYER}, não diga nada.\p
+Sei que não tenho o direito de\n
+criticar o ARCHIE…\p
+Mas, do jeito que as coisas estão,\n
+duvido que nós, humanos, consigamos\l
+fazer alguma coisa.\p
+Mas também não podemos ficar só\n
+olhando, sem fazer nada.\p
+A responsabilidade de pôr fim a isso\n
+é minha e do ARCHIE…$
+
+[Route128_Text_MaxieThisDefiesBelief] d0b02e61b6
+MAXIE: Isso é inacreditável…\p
+Aqueles POKéMON superantigos…\p
+O poder deles é inacreditável.\n
+Desequilibraram a natureza…$
+
+[Route128_Text_StevenWhatIsHappening] 1b007ab7c3
+STEVEN: {PLAYER}{KUN}!\n
+O que está acontecendo?$
+
+[Route128_Text_StevenWholeWorldWillDrown] 5621076194
+Que terrível…\p
+Depois que a onda de calor acabou,\n
+começou este dilúvio.\p
+Se não parar, toda HOENN…\n
+Não, o mundo inteiro vai se afogar.\p
+Esta nuvem de chuva enorme se\n
+espalha a partir de SOOTOPOLIS…\p
+O que será que está acontecendo lá?\p
+Não adianta discutir aqui…\n
+SOOTOPOLIS pode ter as respostas…$
+
+[Route128_Text_StevenImGoingToSootopolis] 6401e022f6
+{PLAYER}{KUN}…\n
+Não sei o que você pretende fazer,\l
+mas não faça nenhuma loucura.\p
+Certo.\n
+Vou pra SOOTOPOLIS.$

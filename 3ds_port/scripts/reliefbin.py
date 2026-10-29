@@ -12,11 +12,14 @@ def load(path):
     for k in range(n):
         lid, cells, w, h, off, base = struct.unpack_from("<HHHHIh", b, 8 + 14 * k)
         unit = 2 if h & 0x4000 else 1
+        wide = bool(w & 0x4000)         # s16 pixels a height (past 16 levels)
+        if wide:
+            unit = 1
         grids = {}
         for c in range(cells):
-            o = off + c * (2 + G)
+            o = off + c * (2 + G * (2 if wide else 1))
             x, y = b[o], b[o + 1]
-            vals = struct.unpack_from("<%db" % G, b, o + 2)
+            vals = struct.unpack_from("<%d%s" % (G, "h" if wide else "b"), b, o + 2)
             grids[(x, y)] = [[vals[j * side + i] * unit for i in range(side)] for j in range(side)]
         out[lid] = dict(base=base, w=w & 0x03FF, h=h & 0x03FF, level=bool(w & 0x8000), grids=grids)
     at = struct.unpack_from("<I", b, len(b) - 8)[0]

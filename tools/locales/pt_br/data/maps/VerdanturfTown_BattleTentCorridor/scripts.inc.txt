@@ -1,0 +1,28 @@
+# Textos dos CONCURSOS guardados no corredor da TENDA DE BATALHA de VERDANTURF.
+
+[VerdanturfTown_ContestHall_Text_WhichContestYouEntering] f5858b1ec5
+Em qual CONCURSO você vai entrar?\n
+Quer um conselho?\p
+Em qualquer CONCURSO, por exemplo um\n
+CONCURSO DE FOFURA, acho que não\l
+julgam só a fofura na primeira etapa.\p
+Você precisa achar jeitos de criar\n
+os POKéMON cada vez melhor.$
+
+[VerdanturfTown_ContestHall_Text_RaisedMonToBeCute] 2323bf4f5b
+Criei o meu POKéMON pra ser fofo.\p
+Descobri que dá pra pôr POKéMON\n
+num CONCURSO de fofura!\p
+Que bom que criei o meu POKéMON\n
+com tanto carinho…$
+
+[VerdanturfTown_ContestHall_Text_MyMonRules] 2c279e392e
+O meu POKéMON é o máximo!\p
+É estiloso, forte e ainda bonito,\n
+fofo e esperto. É completo!\p
+Bem que eu podia ganhar em todos\n
+os CONCURSOS.$
+
+[VerdanturfTown_ContestHall_Text_NormalRankStage] 8da97c476f
+CONCURSOS POKéMON\n
+PALCO DO NÍVEL NORMAL!$

@@ -1,0 +1,111 @@
+# As palavras da FALA FÁCIL, grupo adjectives (src/data/easy_chat/easy_chat_group_adjectives.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_Wandering] a80c47c790 width=72
+ERRANTE
+
+[gEasyChatWord_Rickety] df10120a21 width=72
+FRÁGIL
+
+[gEasyChatWord_RockSolid] 69978fa126 width=72
+SÓLIDO
+
+[gEasyChatWord_Hungry] 131948262a width=72
+FAMINTO
+
+[gEasyChatWord_Tight] 4bccdb1a23 width=72
+APERTADO
+
+[gEasyChatWord_Ticklish] 541a1badad width=72
+COCEGUENTO
+
+[gEasyChatWord_Twirling] e76991ac05 width=72
+GIRANDO
+
+[gEasyChatWord_Spiraling] 127c7a2682 width=72
+ESPIRAL
+
+[gEasyChatWord_Thirsty] b8d872c164 width=72
+SEDENTO
+
+[gEasyChatWord_Lolling] 09078ea1a8 width=72
+À TOA
+
+[gEasyChatWord_Silky] ba58d92b0d width=72
+SEDOSO
+
+[gEasyChatWord_Sadly] 2ce6b21641 width=72
+TRISTEMENTE
+
+[gEasyChatWord_Hopeless] 5fd7d371a1 width=72
+SEM SAÍDA
+
+[gEasyChatWord_Useless] e1379d432c width=72
+INÚTIL
+
+[gEasyChatWord_Drooling] 2dbf70c8e7 width=72
+BABANDO
+
+[gEasyChatWord_Exciting] a276932590 width=72
+EMOCIONANTE
+
+[gEasyChatWord_Thick] 37d6bc8483 width=72
+GROSSO
+
+[gEasyChatWord_Smooth] 2b083f1998 width=72
+LISO
+
+[gEasyChatWord_Slimy] 75c49c3a16 width=72
+GOSMENTO
+
+[gEasyChatWord_Thin] 05bb65f17b width=72
+FINO
+
+[gEasyChatWord_Break] 66f163318e width=72
+QUEBRAR
+
+[gEasyChatWord_Voracious] 40a8146979 width=72
+VORAZ
+
+[gEasyChatWord_Scatter] 7ca33139a7 width=72
+ESPALHAR
+
+[gEasyChatWord_Awesome] cd2fd91a21 width=72
+INCRÍVEL
+
+[gEasyChatWord_Wimpy] 798ab311ef width=72
+FRACOTE
+
+[gEasyChatWord_Wobbly] 5d9d753335 width=72
+BAMBO
+
+[gEasyChatWord_Shaky] 6d52eb091e width=72
+TRÊMULO
+
+[gEasyChatWord_Ripped] 9e8c84ac3f width=72
+MUSCULOSO
+
+[gEasyChatWord_Shredded] d072c97f74 width=72
+RASGADO
+
+[gEasyChatWord_Increasing] a8b03ca75e width=72
+CRESCENTE
+
+[gEasyChatWord_Yet] 3e3da06feb width=72
+AINDA
+
+[gEasyChatWord_Destroyed] 73afb71bde width=72
+DESTRUÍDO
+
+[gEasyChatWord_Fiery] c0850b51d0 width=72
+ARDENTE
+
+[gEasyChatWord_LoveyDovey] 8344f449b3 width=72
+MELOSO
+
+[gEasyChatWord_Happily] c652847dc9 width=72
+FELIZMENTE
+
+[gEasyChatWord_Anticipation] f6d120531a width=72
+EXPECTATIVA

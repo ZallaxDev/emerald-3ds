@@ -1,0 +1,136 @@
+# CASA DOS TRUQUES: as respostas dos bonecos mecânicos.
+
+[gTrickHouse_Mechadoll_Oddish] 67f88ad6b4
+ODDISH$
+
+[gTrickHouse_Mechadoll_Poochyena] c265065fb2
+POOCHYENA$
+
+[gTrickHouse_Mechadoll_Taillow] 66d070755e
+TAILLOW$
+
+[gTrickHouse_Mechadoll_Azurill] 521d1108d0
+AZURILL$
+
+[gTrickHouse_Mechadoll_Lotad] cf0b0715cb
+LOTAD$
+
+[gTrickHouse_Mechadoll_Wingull] 0154404661
+WINGULL$
+
+[gTrickHouse_Mechadoll_Dustox] 3ff06f05ab
+DUSTOX$
+
+[gTrickHouse_Mechadoll_Zubat] 5dbe9b312f
+ZUBAT$
+
+[gTrickHouse_Mechadoll_Nincada] eed6baac03
+NINCADA$
+
+[gTrickHouse_Mechadoll_Ralts] 9916e7c018
+RALTS$
+
+[gTrickHouse_Mechadoll_Zigzagoon] b6587ddcd8
+ZIGZAGOON$
+
+[gTrickHouse_Mechadoll_Slakoth] 20554d7d59
+SLAKOTH$
+
+[gTrickHouse_Mechadoll_Poochyena2] c265065fb2
+POOCHYENA$
+
+[gTrickHouse_Mechadoll_Shroomish] cd3ba3a2c4
+SHROOMISH$
+
+[gTrickHouse_Mechadoll_Zigzagoon2] b6587ddcd8
+ZIGZAGOON$
+
+[gTrickHouse_Mechadoll_Poochyena3] c265065fb2
+POOCHYENA$
+
+[gTrickHouse_Mechadoll_Zubat2] 5dbe9b312f
+ZUBAT$
+
+[gTrickHouse_Mechadoll_Carvanha] 3841fc2ba7
+CARVANHA$
+
+[gTrickHouse_Mechadoll_BurnHeal] f24cde0083
+ANTIQUEIMADURA$
+
+[gTrickHouse_Mechadoll_HarborMail] 150e120b26
+CARTA PORTO$
+
+[gTrickHouse_Mechadoll_SamePrice] 228b032d5b
+Mesmo preço$
+
+[gTrickHouse_Mechadoll_60Yen] df19279925
+¥60$
+
+[gTrickHouse_Mechadoll_55Yen] 4faef8b560
+¥55$
+
+[gTrickHouse_Mechadoll_Nothing] 5e09e844eb
+Nada$
+
+[gTrickHouse_Mechadoll_CostMore] 8a3d13f8ce
+Vão custar mais.$
+
+[gTrickHouse_Mechadoll_CostLess] f3761a0dc8
+Vão custar menos.$
+
+[gTrickHouse_Mechadoll_SamePrice2] 228b032d5b
+Mesmo preço$
+
+[gTrickHouse_Mechadoll_Male] 4e0529239c
+Macho$
+
+[gTrickHouse_Mechadoll_Female] 39f309962f
+Fêmea$
+
+[gTrickHouse_Mechadoll_Neither] 684ee78eec
+Nenhum$
+
+[gTrickHouse_Mechadoll_ElderlyMen] c9d5e7488f
+Senhores idosos$
+
+[gTrickHouse_Mechadoll_ElderlyLadies] c33881a825
+Senhoras idosas$
+
+[gTrickHouse_Mechadoll_SameNumber] 3caa474ef1
+Mesmo número$
+
+[gTrickHouse_Mechadoll_None] e980d81336
+Nenhum$
+
+[gTrickHouse_Mechadoll_One] 433c7e770b
+1$
+
+[gTrickHouse_Mechadoll_Two] 8d4fd74a74
+2$
+
+[gTrickHouse_Mechadoll_Two2] 8d4fd74a74
+2$
+
+[gTrickHouse_Mechadoll_Three] a473a4cbe4
+3$
+
+[gTrickHouse_Mechadoll_Four] 7782f6db03
+4$
+
+[gTrickHouse_Mechadoll_Six] 8c15ed4d3a
+6$
+
+[gTrickHouse_Mechadoll_Seven] 8a8f135daa
+7$
+
+[gTrickHouse_Mechadoll_Eight] a798b5cda7
+8$
+
+[gTrickHouse_Mechadoll_Six2] 8c15ed4d3a
+6$
+
+[gTrickHouse_Mechadoll_Seven2] 8a8f135daa
+7$
+
+[gTrickHouse_Mechadoll_Eight2] a798b5cda7
+8$

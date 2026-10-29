@@ -1,0 +1,210 @@
+# As palavras da FALA FÁCIL, grupo endings (src/data/easy_chat/easy_chat_group_endings.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_Will] 7389d63e2f width=72
+VAI
+
+[gEasyChatWord_WillBeHere] 8dbe7d0ac2 width=72
+ESTARÁ AQUI
+
+[gEasyChatWord_Or] f579c52396 width=72
+OU
+
+[gEasyChatWord_Times] 098fa67dec width=72
+VEZES
+
+[gEasyChatWord_Wonder] 336a115f4d width=72
+SERÁ
+
+[gEasyChatWord_IsItQues] ce824fed0f width=72
+É MESMO?
+
+[gEasyChatWord_Be] 3472ff5765 width=72
+SER
+
+[gEasyChatWord_Gimme] d11f4a1809 width=72
+ME DÁ
+
+[gEasyChatWord_Could] 7c8bc842f5 width=72
+PODERIA
+
+[gEasyChatWord_LikelyTo] 9f8ff14a76 width=72
+DEVE
+
+[gEasyChatWord_Would] a6c8aa671e width=72
+IRIA
+
+[gEasyChatWord_Is] ec4a2a5056 width=72
+É
+
+[gEasyChatWord_IsntItQues] 8231b99b19 width=72
+NÃO É?
+
+[gEasyChatWord_Lets] d3a071cb2e width=72
+VAMOS
+
+[gEasyChatWord_Other] 957c024b38 width=72
+OUTRO
+
+[gEasyChatWord_Are] c75343feaa width=72
+SÃO
+
+[gEasyChatWord_Was] fca8e05c6f width=72
+ERA
+
+[gEasyChatWord_Were] 2a5a5bd58d width=72
+ERAM
+
+[gEasyChatWord_Those] 7b280dd23f width=72
+AQUELES
+
+[gEasyChatWord_Isnt] 42f4299ad4 width=72
+NÃO É
+
+[gEasyChatWord_Wont] db75d1b430 width=72
+NÃO VAI
+
+[gEasyChatWord_Cant] 0a426506fe width=72
+NÃO PODE
+
+[gEasyChatWord_Can] aa884ac537 width=72
+PODE
+
+[gEasyChatWord_Dont] fc92a7267e width=72
+NÃO
+
+[gEasyChatWord_Do] 8feb29077a width=72
+FAZ
+
+[gEasyChatWord_Does] 02f41a4450 width=72
+FAZEM
+
+[gEasyChatWord_Whom] b3e329f0b9 width=72
+QUEM
+
+[gEasyChatWord_Which] ab31531272 width=72
+QUAL
+
+[gEasyChatWord_Wasnt] 54b14d221e width=72
+NÃO ERA
+
+[gEasyChatWord_Werent] a26e9fad8c width=72
+NÃO ERAM
+
+[gEasyChatWord_Have] 3eeb2596cd width=72
+TEMOS
+
+[gEasyChatWord_Havent] b9ca9edb72 width=72
+NÃO TEMOS
+
+[gEasyChatWord_A] 6dcd4ce23d width=72
+UM
+
+[gEasyChatWord_An] bce92920ac width=72
+UMA
+
+[gEasyChatWord_Not] 969e7d8dee width=72
+NEM
+
+[gEasyChatWord_There] 76a80340f8 width=72
+LÁ
+
+[gEasyChatWord_OkQues] 8fa4a19cbd width=72
+OK?
+
+[gEasyChatWord_So] 2290cf6ba4 width=72
+ENTÃO
+
+[gEasyChatWord_Maybe] f6fdca81ca width=72
+TALVEZ
+
+[gEasyChatWord_About] 4012d26e8e width=72
+SOBRE
+
+[gEasyChatWord_Over] cc11826689 width=72
+ACABOU
+
+[gEasyChatWord_It] 5422031a52 width=72
+ISSO
+
+[gEasyChatWord_All] 6b42874e3c width=72
+TODOS
+
+[gEasyChatWord_For] cffc20d5a5 width=72
+PARA
+
+[gEasyChatWord_On] 387d7a59db width=72
+EM CIMA
+
+[gEasyChatWord_Off] ad50489054 width=72
+DESLIGADO
+
+[gEasyChatWord_As] d00bb3f3b7 width=72
+COMO
+
+[gEasyChatWord_To] 15f51444be width=72
+A
+
+[gEasyChatWord_With] 7913945997 width=72
+COM
+
+[gEasyChatWord_Better] 3bb9cdac38 width=72
+MAIS
+
+[gEasyChatWord_Ever] f7561734ae width=72
+JÁ
+
+[gEasyChatWord_Since] 61fbacff67 width=72
+DESDE
+
+[gEasyChatWord_Of] 0cf81c47ab width=72
+DE
+
+[gEasyChatWord_BelongsTo] 0e2f69ba57 width=72
+É DE
+
+[gEasyChatWord_At] 031fd11ba8 width=72
+NO
+
+[gEasyChatWord_In] 6fca55ca3c width=72
+DENTRO
+
+[gEasyChatWord_Out] 5d84eb9e92 width=72
+FORA
+
+[gEasyChatWord_Too] c05d52a37f width=72
+TAMBÉM
+
+[gEasyChatWord_Like] 5ddf6f0473 width=72
+TIPO
+
+[gEasyChatWord_Did] f182818856 width=72
+FEZ
+
+[gEasyChatWord_Didnt] eca4c44c96 width=72
+NÃO FEZ
+
+[gEasyChatWord_Doesnt] ed338753c0 width=72
+NÃO FAZ
+
+[gEasyChatWord_Without] 56fbadc8d9 width=72
+SEM
+
+[gEasyChatWord_After] aedfd73052 width=72
+DEPOIS
+
+[gEasyChatWord_Before] 90a72ea1d2 width=72
+ANTES
+
+[gEasyChatWord_While] 9916238294 width=72
+ENQUANTO
+
+[gEasyChatWord_Than] a89df9b6ec width=72
+DO QUE
+
+[gEasyChatWord_Once] adef8c4522 width=72
+UMA VEZ
+
+[gEasyChatWord_Anywhere] e25b3b0064 width=72
+ONDE FOR

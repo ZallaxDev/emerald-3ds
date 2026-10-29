@@ -1,0 +1,64 @@
+# ESTRADA DA VITÓRIA: subsolo 1.
+
+[VictoryRoad_B1F_Text_SamuelIntro] d73b7a443c
+Só de pensar que estou chegando\n
+perto da LIGA POKéMON…\p
+Me dá um frio na barriga…$
+
+[VictoryRoad_B1F_Text_SamuelDefeat] 02e578231f
+Não consegui fazer nada…$
+
+[VictoryRoad_B1F_Text_SamuelPostBattle] 5f60d5c625
+A LIGA POKéMON ficou longe de\n
+novo… Que decepção…$
+
+[VictoryRoad_B1F_Text_ShannonIntro] 8d9cab5cf0
+Pra vencer a LIGA POKéMON, você\n
+precisa da confiança dos seus\l
+POKéMON.$
+
+[VictoryRoad_B1F_Text_ShannonDefeat] 0497b41c14
+A relação de vocês se baseia numa\n
+confiança sólida.$
+
+[VictoryRoad_B1F_Text_ShannonPostBattle] 6a85d1fcb6
+Ficando juntos o tempo todo, a\n
+confiança cresce entre POKéMON e\l
+TREINADORES.$
+
+[VictoryRoad_B1F_Text_MichelleIntro] 47f53fe43b
+Aqui não é a chegada. É só um ponto\n
+no caminho pra LIGA POKéMON.$
+
+[VictoryRoad_B1F_Text_MichelleDefeat] 87ebf95c2a
+É assim que se faz!$
+
+[VictoryRoad_B1F_Text_MichellePostBattle] 086de5edf2
+Você vai se sair bem, com certeza!\n
+Os seus POKéMON estão loucos pra ir!$
+
+[VictoryRoad_B1F_Text_MitchellIntro] ddc1bec156
+Os meus POKéMON são cosmicamente\n
+impressionantes!$
+
+[VictoryRoad_B1F_Text_MitchellDefeat] 6e5f649e83
+Nunca conheci ninguém como você.$
+
+[VictoryRoad_B1F_Text_MitchellPostBattle] 8ffef094ea
+Mesmo fora da batalha, sinto um poder\n
+incrível vindo de você e dos seus\l
+POKéMON.$
+
+[VictoryRoad_B1F_Text_HalleIntro] cd5f0a2add
+Calma, não precisa se irritar!\n
+Relaxa, vamos com calma!$
+
+[VictoryRoad_B1F_Text_HalleDefeat] 092088d518
+Uau!\n
+Maravilha!$
+
+[VictoryRoad_B1F_Text_HallePostBattle] 84df7d1160
+Claro, esta é a ESTRADA DA VITÓRIA.\p
+Mas não é tão diferente do caminho\n
+que você fez até agora.\p
+Tente curtir o resto do caminho!$

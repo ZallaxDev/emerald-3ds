@@ -1,0 +1,129 @@
+# As palavras da FALA FÁCIL, grupo misc (src/data/easy_chat/easy_chat_group_misc.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_Highs] 513f344fe3 width=72
+ALTOS
+
+[gEasyChatWord_Lows] 39ae210117 width=72
+BAIXOS
+
+[gEasyChatWord_Um] d8d9cfd36f width=72
+HUM
+
+[gEasyChatWord_Rear] 5c131756af width=72
+TRASEIRA
+
+[gEasyChatWord_Things] a039574349 width=72
+COISAS
+
+[gEasyChatWord_Thing] 472f09c674 width=72
+COISA
+
+[gEasyChatWord_Below] 98e36bbede width=72
+ABAIXO
+
+[gEasyChatWord_Above] 7510135eae width=72
+ACIMA
+
+[gEasyChatWord_Back] 587eac1112 width=72
+ATRÁS
+
+[gEasyChatWord_High] d77d0b2795 width=72
+ALTO
+
+[gEasyChatWord_Here] c00e02ca1e width=72
+AQUI
+
+[gEasyChatWord_Inside] 918c6bc1d4 width=72
+DENTRO DE
+
+[gEasyChatWord_Outside] cbbef8ce7e width=72
+LÁ FORA
+
+[gEasyChatWord_Beside] 420818279c width=72
+AO LADO
+
+[gEasyChatWord_ThisIsItExcl] df26a9a55c width=72
+É ISSO AÍ!
+
+[gEasyChatWord_This] b8d962f5bb width=72
+ESTE
+
+[gEasyChatWord_Every] 0e47f08f11 width=72
+CADA
+
+[gEasyChatWord_These] bb87c34c31 width=72
+ESTES
+
+[gEasyChatWord_TheseWere] 082e62de47 width=72
+ESTES ERAM
+
+[gEasyChatWord_Down] 30e504c829 width=72
+PRA BAIXO
+
+[gEasyChatWord_That] 61a26854ee width=72
+AQUILO
+
+[gEasyChatWord_ThoseAre] 6d82b5ea75 width=72
+AQUELES SÃO
+
+[gEasyChatWord_ThoseWere] 00ab02c34a width=72
+AQUELES ERAM
+
+[gEasyChatWord_ThatsItExcl] 02bdae84b0 width=72
+É ISSO!
+
+[gEasyChatWord_Am] 80d305c58f width=72
+SOU
+
+[gEasyChatWord_ThatWas] 256fe11cb7 width=72
+AQUILO ERA
+
+[gEasyChatWord_Front] bf753d1d75 width=72
+FRENTE
+
+[gEasyChatWord_Up] 11a66854c0 width=72
+PRA CIMA
+
+[gEasyChatWord_Choice] 20d9bcdb36 width=72
+ESCOLHA
+
+[gEasyChatWord_Far] dca1e7382d width=72
+LONGE
+
+[gEasyChatWord_Away] da4fee0a59 width=72
+EMBORA
+
+[gEasyChatWord_Near] 58a3022f7f width=72
+PERTO DE
+
+[gEasyChatWord_Where] 1c255b91e7 width=72
+ONDE
+
+[gEasyChatWord_When] e3eafa40a0 width=72
+QUANDO
+
+[gEasyChatWord_What] 943f25cc8d width=72
+O QUÊ
+
+[gEasyChatWord_Deep] 5c787a1912 width=72
+FUNDO
+
+[gEasyChatWord_Shallow] bde039c5b7 width=72
+RASO
+
+[gEasyChatWord_Why] 2b7b6b871b width=72
+POR QUÊ
+
+[gEasyChatWord_Confused] 2e95c4b670 width=72
+CONFUSO
+
+[gEasyChatWord_Opposite] 42882b0312 width=72
+OPOSTO
+
+[gEasyChatWord_Left] 969e2cc476 width=72
+ESQUERDA
+
+[gEasyChatWord_Right] 95253203f7 width=72
+DIREITA

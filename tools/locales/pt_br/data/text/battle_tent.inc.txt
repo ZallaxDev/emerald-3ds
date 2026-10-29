@@ -1,0 +1,199 @@
+# TENDAS DE BATALHA de FALLARBOR (Torneio de Nocaute), VERDANTURF (confiança) e SLATEPORT (Troca de Batalha).
+
+[FallarborTown_BattleTentLobby_Text_WelcomeToBattleTent] 024358fdef
+Boas-vindas à TENDA DE BATALHA\nde FALLARBOR!\pEu sou o guia do Torneio de Nocaute!$
+
+[FallarborTown_BattleTentLobby_Text_TakeChallenge] 580bd87b8b
+E então, quer encarar o desafio\ndo Torneio de Nocaute?$
+
+[FallarborTown_BattleTentLobby_Text_AwaitAnotherChallenge] 2fc893949e
+Esperamos o seu desafio\nnuma próxima vez!$
+
+[FallarborTown_BattleTentLobby_Text_ExplainFallarborTent] 07d1fe2953
+Na TENDA DE BATALHA de FALLARBOR,\nfazemos o Torneio de Nocaute.\pCada participante entra com uma\nequipe de três POKéMON.\pOs três POKéMON ficam na ordem\nem que vão entrar na batalha.\pNa batalha, eles entram um de cada\nvez, na ordem escolhida.\pQuem entra na batalha fica em campo\naté a luta ser decidida.\pSe a luta não for decidida em\ntrês turnos, vai pros juízes.\pSe quiser interromper o desafio,\nsalve o jogo.\pSe não salvar, não vai dar pra\ncontinuar o desafio.\pSe conseguir vencer três\nTREINADORES seguidos,\lvocê ganha um belo prêmio.$
+
+[FallarborTown_BattleTentLobby_Text_SaveBeforeChallenge] 01916acfbf
+Antes de te levar pra TENDA\nDE BATALHA, preciso salvar. Pode ser?$
+
+[FallarborTown_BattleTentLobby_Text_WhichLevelMode] fb7470964d
+Temos dois níveis de desafio:\nNível 50 e Nível Livre.\lQual você escolhe?$
+
+[FallarborTown_BattleTentLobby_Text_SelectThreeMons] 4944b81f5b
+Muito bem, agora escolha os seus\ntrês POKéMON.$
+
+[FallarborTown_BattleTentLobby_Text_NotEnoughValidMonsLv50] ae0ebebe3f
+Ah, que pena!\pVocê não tem os três POKéMON\nexigidos pra entrar.\pEles também não podem segurar\nitens iguais.\pOVOS{STR_VAR_1} proibidos.\pQuando estiver tudo pronto,\nvolte aqui.$
+
+[FallarborTown_BattleTentLobby_Text_NotEnoughValidMonsLvOpen] a05a7eb110
+Ah, que pena!\pVocê não tem os três POKéMON\nexigidos pra entrar.\pÉ preciso trazer três espécies\ndiferentes de POKéMON.\pEles também não podem segurar\nitens iguais.\pOVOS{STR_VAR_1} proibidos.\pQuando estiver tudo pronto,\nvolte aqui.$
+
+[FallarborTown_BattleTentLobby_Text_GuideYouToBattleTent] 983bcb70e1
+Agora vou te levar pra\nTENDA DE BATALHA.$
+
+[FallarborTown_BattleTentLobby_Text_DidntSaveBeforeQuitting] 26dc4307a0
+Ah, que pena!\pVocê não salvou o jogo antes de\ndesligar, né?\pInfelizmente, por isso o seu\ndesafio foi anulado.\pMas é claro que pode começar\num desafio novo.$
+
+[FallarborTown_BattleTentLobby_Text_BeatThreeTrainers] 671c0d1579
+Esplêndido! Você venceu três\nTREINADORES seguidos!$
+
+[FallarborTown_BattleTentLobby_Text_WaitWhileSaveGame] 5ceb27ea17
+Aguarde enquanto eu salvo o jogo.$
+
+[FallarborTown_BattleTentLobby_Text_PresentYouWithPrize] 210425353f
+Pela sequência de 3 vitórias,\nentregamos este prêmio.$
+
+[FallarborTown_BattleTentLobby_Text_ReceivedPrize] 1b34ee42d5
+{PLAYER} recebeu o prêmio:\n{STR_VAR_1}.$
+
+[FallarborTown_BattleTentLobby_Text_BagFullReturnForPrize] 9c713cca83
+Hã?\nSua BOLSA parece cheia.\pAbra espaço e volte pra\nbuscar o seu prêmio.$
+
+[FallarborTown_BattleTentLobby_Text_ThankYouWaitWhileSaving] 3d7057aeb6
+Muito obrigado por participar!\pAguarde enquanto eu salvo o jogo.$
+
+[FallarborTown_BattleTentLobby_Text_AwaitAnotherChallenge2] 2fc893949e
+Esperamos o seu desafio\nnuma próxima vez!$
+
+[FallarborTown_BattleTentLobby_Text_LookingForwardToArrival] df70632336
+Estávamos esperando por você.\pAntes de te levar pra TENDA DE\nBATALHA, preciso salvar. Aguarde.$
+
+[VerdanturfTown_BattleTentLobby_Text_WelcomeToBattleTent] 47bab0abb4
+Boas-vindas à TENDA DE BATALHA\nde VERDANTURF!\pAqui se testa a confiança do\nTREINADOR nos seus POKéMON.$
+
+[VerdanturfTown_BattleTentLobby_Text_TakeChallenge] 0481bf398e
+Quer encarar o desafio da TENDA\nDE BATALHA de VERDANTURF?$
+
+[VerdanturfTown_BattleTentLobby_Text_ExplainVerdanturfTent] 01f4953d92
+Na TENDA DE BATALHA de VERDANTURF,\ntem uma regra essencial que precisa\lser seguida.\pOs TREINADORES só podem trocar\nos POKéMON em campo.\pFora isso, é proibido dar ordens\naos POKéMON.\pOs POKéMON agem conforme a sua\nnatureza e batalham sozinhos.\pVocê precisa confiar nos seus\nPOKéMON e torcer por eles.\pSe tiver a honra de vencer três\nTREINADORES seguidos,\lvocê ganha um prêmio.\pSe quiser interromper o desafio,\nsalve o jogo.\pSe interromper sem salvar,\nvai ser desclassificação.$
+
+[VerdanturfTown_BattleTentLobby_Text_ReturnFortified] 9f6c41d309
+Quando o seu coração e os seus\nPOKéMON estiverem fortes, volte.$
+
+[VerdanturfTown_BattleTentLobby_Text_WhichLevelMode] bcaa015ef7
+Temos dois níveis de dificuldade:\nNível 50 e Nível Livre.\lQual desafio você escolhe?$
+
+[VerdanturfTown_BattleTentLobby_Text_NotEnoughValidMonsLv50] a157c2c033
+Ai, ai…\pVocê não tem os três POKéMON\nexigidos pro desafio.\pPra entrar, é preciso trazer três\nespécies diferentes de POKéMON.\pEles também não podem segurar\nitens iguais.\pOVOS{STR_VAR_1} proibidos.\pVolte quando estiver tudo\npronto.$
+
+[VerdanturfTown_BattleTentLobby_Text_NotEnoughValidMonsLvOpen] a157c2c033
+Ai, ai…\pVocê não tem os três POKéMON\nexigidos pro desafio.\pPra entrar, é preciso trazer três\nespécies diferentes de POKéMON.\pEles também não podem segurar\nitens iguais.\pOVOS{STR_VAR_1} proibidos.\pVolte quando estiver tudo\npronto.$
+
+[VerdanturfTown_BattleTentLobby_Text_SelectThreeMons] d5d457b163
+Ótimo. Agora escolha os seus\ntrês POKéMON.$
+
+[VerdanturfTown_BattleTentLobby_Text_SaveBeforeChallenge] 1b4403a239
+Preciso salvar antes de te levar pra\nTENDA DE BATALHA. Pode ser?$
+
+[VerdanturfTown_BattleTentLobby_Text_NowFollowMe] 4fa392952d
+Ótimo.\nAgora me acompanhe.$
+
+[VerdanturfTown_BattleTentLobby_Text_ResultsWillBeRecorded] 8c92c0463e
+Foi uma honra ver as façanhas\ndos seus POKéMON.\pOs resultados vão ser registrados.\nAguarde um pouquinho.$
+
+[VerdanturfTown_BattleTentLobby_Text_AchievedThreeWinStreak] 1e6485f590
+Uma sequência de 3 vitórias…\pOs laços entre você e os seus\nPOKéMON parecem firmes e sinceros.$
+
+[VerdanturfTown_BattleTentLobby_Text_FeatWillBeRecorded] 15c569d360
+A sua façanha vai ser registrada.\nAguarde um pouquinho.$
+
+[VerdanturfTown_BattleTentLobby_Text_PresentYouWithPrize] 79ebb0b966
+Pela façanha das 3 vitórias seguidas,\nentregamos este prêmio.$
+
+[SlateportCity_BattleTentLobby_Text_WelcomeToBattleTent] 79ba05beb0
+Boas-vindas à TENDA DE BATALHA\nde SLATEPORT!\pEu sou o guia do torneio da\nTroca de Batalha.$
+
+[SlateportCity_BattleTentLobby_Text_TakeChallenge] fb0be503d1
+Quer encarar o desafio da\nTroca de Batalha?$
+
+[SlateportCity_BattleTentLobby_Text_ExplainSlateportTent] 3640aa0b17
+Aqui na TENDA DE BATALHA de SLATEPORT,\nfazemos eventos de Troca de Batalha\lcom POKéMON alugados.\pPrimeiro, você recebe emprestados\ntrês POKéMON só pra este evento.\pCom esses POKéMON alugados, você\nfaz uma BATALHA INDIVIDUAL.\pSe vencer, pode trocar um dos\nseus POKéMON alugados.\pRepita esse ciclo de batalhar e\ntrocar: se vencer três vezes\lseguidas, ganha um belo prêmio.\pSe quiser interromper o desafio,\nsalve o jogo.\pSe interromper sem salvar,\nvai ser desclassificação.$
+
+[SlateportCity_BattleTentLobby_Text_LookForwardToNextVisit] 59da4764c7
+Esperamos a sua próxima visita.$
+
+[SlateportCity_BattleTentLobby_Text_WhichLevelMode] 6ac2f7204b
+Que nível você quer desafiar?\nNível 50 ou Nível 100?$
+
+[SlateportCity_BattleTentLobby_Text_SaveBeforeChallenge] cc1204a3fd
+Antes de começar o desafio,\npreciso salvar. Pode ser?$
+
+[SlateportCity_BattleTentLobby_Text_HoldMonsForSafekeeping] eb4e5fa61e
+Certo, vou guardar os seus POKéMON\nenquanto você compete.$
+
+[SlateportCity_BattleTentLobby_Text_StepThisWay] fb68724fa9
+Por aqui, por favor.$
+
+[SlateportCity_BattleTentLobby_Text_ReturnRentalMonsSaveResults] 96f426292a
+Obrigado por participar!\pVou devolver os seus POKéMON em\ntroca dos POKéMON alugados.\pTambém preciso salvar os resultados.\nAguarde.$
+
+[SlateportCity_BattleTentLobby_Text_ReturnMonsExchangeRentals] 60e9cf9060
+Vou devolver os seus POKéMON em\ntroca dos POKéMON alugados.$
+
+[SlateportCity_BattleTentLobby_Text_WonThreeMatchesReturnMons] 5b5e75e96f
+Parabéns!\nVocê venceu três lutas seguidas!\pVou devolver os seus POKéMON em\ntroca dos POKéMON alugados.\pTambém preciso salvar os resultados.\nAguarde.$
+
+[SlateportCity_BattleTentLobby_Text_AwardYouThisPrize] 5341484b40
+Pela sequência de 3 vitórias,\nentregamos este prêmio.$
+
+[SlateportCity_BattleTentLobby_Text_NoRoomInBagMakeRoom] 87f9cbdde0
+Hã?\nParece que não cabe na BOLSA.\pAbra espaço na BOLSA e\nme avise.$
+
+[SlateportCity_BattleTentLobby_Text_BeenWaitingForYou] 4fa290411f
+Estávamos esperando por você!\pAntes de retomar o desafio,\npreciso salvar o jogo.$
+
+[SlateportCity_BattleTentLobby_Text_DidntSaveBeforeQuitting] 3e902579e6
+Sinto dizer, mas você não salvou\nantes de parar de jogar da última vez.\pPor isso, o seu desafio\nfoi desclassificado.$
+
+[SlateportCity_BattleTentLobby_Text_ReturnPersonalMons] 42571e055a
+Vamos devolver os seus POKéMON.$
+
+[SlateportCity_BattleTentLobby_Text_ReceivedPrize] 1b34ee42d5
+{PLAYER} recebeu o prêmio:\n{STR_VAR_1}.$
+
+[SlateportCity_BattleTentLobby_Text_RulesAreListed] 8154fa9726
+Aqui estão as regras da\nTroca de Batalha.$
+
+[SlateportCity_BattleTentLobby_Text_ReadWhichHeading] d059e37e85
+Qual item você quer ler?$
+
+[SlateportCity_BattleTentLobby_Text_ExplainBasicRules] af36d64123
+Na Troca de Batalha, você só pode\nusar três POKéMON.\pAlugando ou trocando, a sua equipe\nnão pode ter dois ou mais\lPOKéMON iguais.$
+
+[SlateportCity_BattleTentLobby_Text_ExplainSwapPartnerRules] 073fabce81
+Você só pode trocar POKéMON com o\nTREINADOR que acabou de derrotar.\pE só pelos POKéMON que esse\nTREINADOR usou.$
+
+[SlateportCity_BattleTentLobby_Text_ExplainSwapNumberRules] 2e8c252966
+A cada vitória, você pode trocar\npor um dos POKéMON do\ladversário derrotado.\pNão dá pra trocar POKéMON com o\nterceiro TREINADOR do evento.$
+
+[SlateportCity_BattleTentLobby_Text_ExplainSwapNotes] 9d53790fc8
+Tem dois pontos importantes pra\nlembrar na hora de trocar.\pPrimeiro: ao trocar, você não pode\nver os atributos do POKéMON\lque vai receber.\pSegundo: os POKéMON da equipe ficam\nna ordem em que você\los alugou.\pEssa ordem não muda, nem\nquando você troca.$
+
+[SlateportCity_BattleTentLobby_Text_ExplainMonRules] 35bffa400f
+Os POKéMON da TENDA DE BATALHA\nde SLATEPORT são todos alugados.\pTodos os POKéMON alugados ficam\nno Nível 30.$
+
+[VerdanturfTown_BattleTentLobby_Text_RulesAreListed2] b516a4ac2f
+Aqui estão as regras da TENDA\nDE BATALHA de VERDANTURF.$
+
+[VerdanturfTown_BattleTentLobby_Text_ReadWhichHeading] d059e37e85
+Qual item você quer ler?$
+
+[VerdanturfTown_BattleTentLobby_Text_ExplainBasicRules] f4096c7288
+Na TENDA DE BATALHA de VERDANTURF,\nos POKéMON precisam pensar e\lbatalhar sozinhos.\pDiferente dos selvagens, os POKéMON\nque vivem com pessoas agem\lconforme a sua natureza.$
+
+[VerdanturfTown_BattleTentLobby_Text_ExplainNatureRules] a222d68ff9
+Conforme a natureza, um POKéMON\npode preferir atacar de qualquer jeito.\pOutro pode preferir se proteger\nde qualquer dano.\pE outro pode gostar de irritar\nou confundir os adversários.\pConforme a natureza, o POKéMON\ntem golpes favoritos que\lsabe usar bem.\pTambém pode não gostar de golpes\nque tem dificuldade de usar.$
+
+[VerdanturfTown_BattleTentLobby_Text_ExplainMoveRules] 3ed68d89bb
+Há golpes de ataque, que causam\ndano direto no adversário.\pHá golpes de defesa, usados pra se\npreparar contra ataques ou\lrecuperar PS, entre outras coisas.\pHá também golpes meio estranhos,\nque enfraquecem o adversário com\lproblemas como veneno e\lparalisia.\pOs POKéMON escolhem entre golpes\ndessas três categorias.$
+
+[VerdanturfTown_BattleTentLobby_Text_ExplainUnderpoweredRules] 863779014c
+Sem as ordens do TREINADOR, um\nPOKéMON pode não conseguir usar\lbem certos golpes.\pO POKéMON não é bom em usar\ngolpes de que não gosta.\pSe ele só souber golpes que não\ncombinam com a sua natureza,\lmuitas vezes não vai render tudo.$
+
+[VerdanturfTown_BattleTentLobby_Text_ExplainWhenInDangerRules] 205d315dd2
+Conforme a natureza, um POKéMON\nem apuros pode começar a usar\lgolpes que não combinam com ela.\pSe um POKéMON agir de um jeito\nestranho no aperto, fique de olho.$
+
+[BattleTentLobby_Text_ExplainLevelRules] 397a6df56e
+Nesta TENDA DE BATALHA, o nível dos\nadversários se ajusta ao\lnível dos seus POKéMON.\pMas nenhum TREINADOR que você\nenfrentar terá POKéMON abaixo\ldo Nível 30.$
+
+[VerdanturfTown_BattleTentLobby_Text_RulesAreListed] b516a4ac2f
+Aqui estão as regras da TENDA\nDE BATALHA de VERDANTURF.$

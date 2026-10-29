@@ -1,0 +1,12 @@
+# CIDADE DE LAVARIDGE: o POKé MART.
+
+[LavaridgeTown_Mart_Text_XSpeedFirstStrike] 0f39da9f0a
+Use VELOCIDADE X pra aumentar a\n
+VELOC. de um POKéMON na batalha.\p
+Assim ele ataca primeiro, uma baita\n
+vantagem!$
+
+[LavaridgeTown_Mart_Text_LocalSpecialtyOnMtChimney] 00df11eb77
+No topo do MONTE CHIMNEY, tem uma\n
+especialidade que só se compra lá.\p
+Dê pra um POKéMON: ele vai adorar.$

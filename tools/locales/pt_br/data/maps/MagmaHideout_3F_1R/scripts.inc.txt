@@ -1,0 +1,31 @@
+# ESCONDERIJO MAGMA: 3º andar.
+
+[MagmaHideout_3F_1R_Text_Grunt9Intro] e8ad00bb61
+O que eu fiz pra merecer essa guarda?\p
+A minha orelha esquerda está\n
+pegando fogo!$
+
+[MagmaHideout_3F_1R_Text_Grunt9Defeat] bb0ddf120d
+Estou com insolação…$
+
+[MagmaHideout_3F_1R_Text_Grunt9PostBattle] 4bacc1011e
+Não é estranho usar capuz num\n
+vulcão cheio de magma?$
+
+[MagmaHideout_3F_1R_Text_Grunt16Intro] 16dc12b417
+Entramos pra ajudar o nosso líder a\n
+realizar o sonho fantástico dele.\p
+Não importa se você é da EQUIPE AQUA\n
+ou só uma criança de passagem.\p
+Ninguém atrapalha a gente e sai\n
+impune!$
+
+[MagmaHideout_3F_1R_Text_Grunt16Defeat] 793bf38cce
+Ah, não!\n
+Não dá pra confiar em você!$
+
+[MagmaHideout_3F_1R_Text_Grunt16PostBattle] de47e03e66
+Escute aqui.\n
+A EQUIPE MAGMA está certa!\p
+Não escute a EQUIPE AQUA.\n
+Não acredite nas mentiras deles!$

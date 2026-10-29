@@ -1,0 +1,218 @@
+# FRONTEIRA DE BATALHA: a recepção da ARENA DE BATALHA.
+
+[BattleFrontier_BattleArenaLobby_Text_WelcomeToBattleArena] 66cd978c25
+Onde o espírito de luta dos\n
+TREINADORES é posto à prova!\p
+Boas-vindas à ARENA DE BATALHA!\p
+Sou o guia do Torneio de Nocaute!$
+
+[BattleFrontier_BattleArenaLobby_Text_WishToTakeChallenge] 5f70035f42
+Agora, deseja encarar o desafio da\n
+ARENA DE BATALHA?$
+
+[BattleFrontier_BattleArenaLobby_Text_AwaitAnotherChallenge] 2fc893949e
+Aguardamos o seu desafio em outra\n
+ocasião!$
+
+[BattleFrontier_BattleArenaLobby_Text_ExplainChallenge] dd160b1d3f
+Na ARENA DE BATALHA, fazemos o\n
+Torneio de Nocaute.\p
+Todo participante entra com uma\n
+equipe de três POKéMON.\p
+Os três POKéMON ficam na ordem em\n
+que vão entrar.\p
+Na batalha, os POKéMON entram um\n
+de cada vez, na ordem definida.\p
+Depois que um POKéMON entra, fica\n
+em campo até a disputa se decidir.\p
+Se nada se decidir em três turnos,\n
+vai pra decisão dos juízes.\p
+Se quiser interromper o desafio,\n
+salve o jogo.\p
+Se não salvar, não vai poder\n
+continuar o desafio.\p
+Se vencer sete TREINADORES em\n
+sequência, damos Pontos de Batalha.$
+
+[BattleFrontier_BattleArenaLobby_Text_OkayToSave] 1aaaa2af9a
+Antes de te levar à ARENA DE\n
+BATALHA, preciso salvar. Tudo bem?$
+
+[BattleFrontier_BattleArenaLobby_Text_WhichLevelMode] aa1652f7b8
+A ARENA DE BATALHA tem duas\n
+modalidades, Nível 50 e Nível Livre.\l
+Qual você escolhe?$
+
+[BattleFrontier_BattleArenaLobby_Text_SelectThreeMons] 4944b81f5b
+Muito bem, agora escolha os seus\n
+três POKéMON, por favor.$
+
+[BattleFrontier_BattleArenaLobby_Text_NotEnoughValidMonsLvOpen] a05a7eb110
+Ilustre desafiante!\p
+Você não tem os três POKéMON\n
+exigidos pra inscrição.\p
+Pra participar, precisa de três\n
+POKéMON de espécies diferentes.\p
+Também não podem segurar o mesmo\n
+tipo de item.\p
+OVOS{STR_VAR_1} proibidos.\p
+Quando estiver tudo pronto, volte,\n
+por favor.$
+
+[BattleFrontier_BattleArenaLobby_Text_NotEnoughValidMonsLv50] e8a9c2c3eb
+Ilustre desafiante!\p
+Você não tem os três POKéMON\n
+exigidos pra inscrição.\p
+Pra participar, precisa de três\n
+POKéMON de espécies diferentes.\p
+Os três precisam ser de nível\n
+50 ou menos.\p
+Também não podem segurar o mesmo\n
+tipo de item.\p
+OVOS{STR_VAR_1} proibidos.\p
+Quando estiver tudo pronto, volte,\n
+por favor.$
+
+[BattleFrontier_BattleArenaLobby_Text_GuideYouToArena] e28f166275
+Agora vou te levar à\n
+ARENA DE BATALHA.$
+
+[BattleFrontier_BattleArenaLobby_Text_DidntSaveBeforeShuttingDown] 26dc4307a0
+Ilustre desafiante!\p
+Você não salvou antes de desligar,\n
+não foi?\p
+É uma pena, mas isso anulou o\n
+seu desafio.\p
+Claro, você pode começar um\n
+desafio novo.$
+
+[BattleFrontier_BattleArenaLobby_Text_CongratsOnSevenWins] 0e5a7509c3
+Parabéns pela esplêndida sequência\n
+de vitórias sobre sete TREINADORES!$
+
+[BattleFrontier_BattleArenaLobby_Text_RecordAchievement] 3c7e533b6c
+A sua conquista será registrada.\n
+Aguarde enquanto salvo o jogo.$
+
+[BattleFrontier_BattleArenaLobby_Text_PresentYouWithPrize] 25eeb106f1
+Pra comemorar as 7 vitórias seguidas,\n
+aqui está este prêmio.$
+
+[BattleFrontier_BattleArenaLobby_Text_ReceivedPrize] 1b34ee42d5
+{PLAYER} recebeu o prêmio:\n
+{STR_VAR_1}.$
+
+[BattleFrontier_BattleArenaLobby_Text_BagFullReturnForPrize] 9c713cca83
+Opa?\n
+A sua BOLSA parece cheia.\p
+Abra espaço e volte pra pegar o\n
+seu prêmio.$
+
+[BattleFrontier_BattleArenaLobby_Text_ThankYouWaitWhileSave] 3d7057aeb6
+Muito obrigado por participar!\p
+Aguarde enquanto salvo o jogo.$
+
+[BattleFrontier_BattleArenaLobby_Text_AwaitAnotherChallenge2] 2fc893949e
+Aguardamos o seu desafio em outra\n
+ocasião!$
+
+[BattleFrontier_BattleArenaLobby_Text_LookingForwardToArrivalSaveGame] b9dbf18fe1
+Estávamos esperando a sua chegada.\p
+Antes de te levar à ARENA DE\n
+BATALHA, preciso salvar o jogo.\l
+Aguarde, por favor.$
+
+[BattleFrontier_BattleArenaLobby_Text_RecordLastMatch] 49b43b00d4
+Quer gravar a sua última batalha da\n
+ARENA no PASSE DA FRONTEIRA?$
+
+[BattleFrontier_BattleArenaLobby_Text_BadIdeaToNotAttack] c06514d52f
+Perdi na decisão do JUIZ…\p
+Acho que não foi boa ideia usar só\n
+golpes de defesa e não atacar…$
+
+[BattleFrontier_BattleArenaLobby_Text_LandingHitsWorked] 9e48418ca3
+Ganhei na decisão!\p
+Acertar golpes sem parar nos POKéMON\n
+do oponente funcionou!$
+
+[BattleFrontier_BattleArenaLobby_Text_MatchWasDeclaredDraw] dede4776eb
+A nossa batalha deu empate.\p
+Quando o tempo acabou, o meu POKéMON\n
+e o do oponente tinham quase a\l
+mesma quantidade de PS.$
+
+[BattleFrontier_BattleArenaLobby_Text_OrderOfMonsImportant] 630dc2669e
+Na ARENA DE BATALHA, a ordem dos\n
+POKéMON é importantíssima.\p
+Por exemplo, se o seu primeiro\n
+POKéMON tem desvantagens de tipo,\l
+faça o segundo ter golpes\l
+superefetivos contra o que vence\l
+o primeiro.\p
+Acho que é um bom jeito de montar\n
+uma equipe eficiente.$
+
+[BattleFrontier_BattleArenaLobby_Text_RulesAreListed] 24acd37071
+Aqui estão as regras do Torneio de\n
+Nocaute.$
+
+[BattleFrontier_BattleArenaLobby_Text_ReadWhichHeading] d059e37e85
+Qual tópico você quer ler?$
+
+[BattleFrontier_BattleArenaLobby_Text_ExplainBattleRules] 24d4d1e069
+O Torneio de Nocaute tem regras\n
+especiais, diferentes das batalhas\l
+comuns.\p
+Primeiro, cada batalha dura só\n
+três turnos.\p
+Se não se decidir em três turnos,\n
+vai pra decisão dos juízes.\p
+O JUIZ escolhe o vencedor pelo\n
+jeito como os POKéMON batalharam.\p
+E um POKéMON não pode ser trocado\n
+até a disputa dele se decidir.$
+
+[BattleFrontier_BattleArenaLobby_Text_ExplainMindRules] 24b243ecef
+O primeiro critério é “Mente”.\n
+Avalia o quanto os POKéMON foram\l
+agressivos.\p
+A nota se baseia em quantas vezes\n
+os TREINADORES mandaram usar\l
+golpes ofensivos.$
+
+[BattleFrontier_BattleArenaLobby_Text_ExplainSkillRules] 59fcbc7621
+O segundo critério é “Técnica”.\n
+Avalia o quanto os golpes foram\l
+bem usados.\p
+Se um golpe funcionou, a nota de\n
+Técnica sobe.\p
+Se um golpe falhou, a nota de\n
+Técnica desce.\p
+Num golpe ofensivo, a nota sobe se\n
+foi “superefetivo” e desce se foi\l
+“pouco efetivo”.\p
+A nota de Técnica não sobe com\n
+golpes como PROTEÇÃO e DETECTAR.\p
+Se o oponente usou PROTEÇÃO ou\n
+DETECTAR e o seu POKéMON errou o\l
+golpe, a nota de Técnica não desce.$
+
+[BattleFrontier_BattleArenaLobby_Text_ExplainBodyRules] dcae0e4939
+O terceiro critério é “Físico”.\n
+Se baseia em quantos PS sobraram\l
+no fim da batalha.\p
+A nota leva em conta os PS do POKéMON\n
+no começo da batalha e o que\l
+sobrou no fim.$
+
+[BattleFrontier_BattleArenaLobby_Text_CongratsOnDefeatingTycoon] 6e6ae94422
+Uma vitória arrancada da MAGNATA DA\n
+ARENA e sete TREINADORES vencidos!\p
+Parabéns por um desafio\n
+esplêndido!$
+
+[BattleFrontier_BattleArenaLobby_Text_PleaseAcceptBattlePoints] b2c554f52f
+Ilustre desafiante, pelo seu espírito\n
+incansável, aceite estes Pontos\l
+de Batalha.$

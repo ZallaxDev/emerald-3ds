@@ -1,0 +1,7 @@
+# NAVIO ABANDONADO: cabine de baixo.
+
+[AbandonedShip_Rooms_B1F_Text_GettingQueasy] 04738be455
+Uuurgh…\p
+Só de estar a bordo deste navio já\n
+fico enjoado…\p
+E ele nem está se mexendo…$

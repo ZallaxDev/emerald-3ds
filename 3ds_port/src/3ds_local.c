@@ -1341,17 +1341,3 @@ uint8_t LocalLink_InSession(void)
 
     return state == LOCAL_SESSION_IN || state == LOCAL_SESSION_SEARCHING;
 }
-
-uint8_t LocalLink_SessionSize(void)
-{
-    uint8_t n = 0;
-
-    if (!sL.ready)
-        return 0;
-    LightLock_Lock(&sL.lock);
-    if (sL.state == LOCAL_SESSION_IN)
-        for (uint16_t id = 1; id < NODE_SLOTS; id++)
-            n += sL.nodes[id].present;
-    LightLock_Unlock(&sL.lock);
-    return n;
-}

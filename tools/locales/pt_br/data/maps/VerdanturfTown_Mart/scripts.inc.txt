@@ -1,0 +1,19 @@
+# POKé MART de VERDANTURF.
+
+[VerdanturfTown_Mart_Text_XSpecialIsCrucial] 0542c0c2e5
+Em qualquer batalha POKéMON, o\n
+ESPECIAL X é fundamental.\p
+Aumenta a força de alguns golpes,\n
+mesmo que só por uma batalha.$
+
+[VerdanturfTown_Mart_Text_NoStrategyGuidesForBattleTent] 7a42fae405
+Parece que não vendem guias de\n
+estratégia pra TENDA DE BATALHA…\p
+Acho que cada um tem que contar\n
+com a própria cabeça, afinal…$
+
+[VerdanturfTown_Mart_Text_NestBallOnWeakenedPokemon] d26dddb4ef
+A BOLA DE NINHO funciona melhor em\n
+POKéMON enfraquecidos.\p
+Só dá pra comprar em\n
+VERDANTURF.$

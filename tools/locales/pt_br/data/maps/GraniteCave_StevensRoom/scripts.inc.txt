@@ -1,0 +1,39 @@
+# CAVERNA GRANITO, a sala do STEVEN: a CARTA entregue.
+
+[GraniteCave_StevensRoom_Text_ImStevenLetterForMe] 76261ba60e
+Meu nome é STEVEN.\p
+Eu me interesso por pedras raras,\n
+então viajo por aí.\p
+Hã?\n
+Uma CARTA pra mim?$
+
+[GraniteCave_StevensRoom_Text_ThankYouTakeThis] bcb9369d87
+STEVEN: Certo, obrigado.\p
+Você teve todo esse trabalho pra\n
+entregar. Preciso agradecer.\p
+Deixa eu ver…\n
+Vou te dar esta MT.\p
+Ela tem o meu golpe favorito,\n
+ASA DE AÇO.$
+
+[GraniteCave_StevensRoom_Text_CouldBecomeChampionLetsRegister] 5440b19cd6
+STEVEN: Os seus POKéMON parecem bem\n
+capazes.\p
+Se continuar treinando, você pode até\n
+ganhar o título de CAMPEÃO da LIGA\l
+POKéMON um dia. É o que eu acho.\p
+Já sei, como a gente se conheceu,\n
+vamos registrar um ao outro\l
+no POKéNAV.\p
+… … … … … …$
+
+[GraniteCave_StevensRoom_Text_RegisteredSteven] be7939502a
+O STEVEN foi registrado\n
+no POKéNAV.$
+
+[GraniteCave_StevensRoom_Text_IveGotToHurryAlong] 9bedb8f5a0
+Bom, agora preciso me apressar.$
+
+[GraniteCave_StevensRoom_Text_OhBagIsFull] b435e4d919
+Ah, a sua BOLSA está cheia…\n
+Que pena, então.$

@@ -1,0 +1,41 @@
+# ROTA 101: o PROF. BIRCH em apuros e a placa.
+
+[Route101_Text_HelpMe] 1efa8c91e1
+S-socorro!$
+
+[Route101_Text_PleaseHelp] 4aac48044b
+Olá! Você aí!\n
+Por favor! Socorro!\p
+Na minha BOLSA!\n
+Tem uma POKé BOLA!$
+
+[Route101_Text_DontLeaveMe] 3ea3e91ea6
+A-Aonde você vai?!\n
+Não me deixe assim!$
+
+[Route101_Text_YouSavedMe] 188c1baa41
+PROF. BIRCH: Ufa…\p
+Eu estava no mato alto estudando os\n
+POKéMON selvagens quando fui atacado.\p
+Você me salvou.\n
+Muito obrigado!\p
+Oh?\p
+Ora, você é {PLAYER}{KUN}!\p
+Aqui não é lugar para conversar, então\n
+venha ao meu LABORATÓRIO depois, ok?$
+
+[Route101_Text_TakeTiredPokemonToPokeCenter] ae94e6e204
+Se os POKéMON cansarem, leve-os a\n
+um CENTRO POKéMON.\p
+Tem um CENTRO POKéMON bem pertinho,\n
+na CIDADE DE OLDALE.$
+
+[Route101_Text_WildPokemonInTallGrass] 1544e0445a
+No mato alto, POKéMON selvagens\n
+aparecem de repente.\p
+Se quiser capturar POKéMON, tem que\n
+entrar no mato alto e procurar.$
+
+[Route101_Text_RouteSign] 16b383f5fe
+ROTA 101\n
+{UP_ARROW} CIDADE DE OLDALE$

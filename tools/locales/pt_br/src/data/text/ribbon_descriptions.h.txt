@@ -1,0 +1,59 @@
+# As descrições das FITAS (src/data/text/ribbon_descriptions.h), duas linhas na tela
+# de FITAS do POKéNAV, até 126 px como o inglês.
+
+[gRibbonDescriptionPart1_Champion] 448cd9618c width=126
+Venceu o CAMPEÃO e é
+
+[gRibbonDescriptionPart2_Champion] 8d06f57867 width=126
+do HALL DA FAMA: FITA
+
+[gRibbonDescriptionPart1_CoolContest] 2d6517f7f7 width=126
+CONCURSO DE ESTILO
+
+[gRibbonDescriptionPart1_BeautyContest] 5549cf9c36 width=126
+CONCURSO DE BELEZA
+
+[gRibbonDescriptionPart1_CuteContest] ab70631f27 width=126
+CONCURSO DE FOFURA
+
+[gRibbonDescriptionPart1_SmartContest] 4fa538371e width=126
+CONCURSO ESPERTEZA
+
+[gRibbonDescriptionPart1_ToughContest] 2a94fc5982 width=126
+CONCURSO DE FORÇA
+
+[gRibbonDescriptionPart2_NormalRank] dcdd57ed09 width=126
+Vencedor: Nível Normal!
+
+[gRibbonDescriptionPart2_SuperRank] 13e149c89c width=126
+Vencedor: Nível Super!
+
+[gRibbonDescriptionPart2_HyperRank] b4fc34cc7f width=126
+Vencedor: Nível Hiper!
+
+[gRibbonDescriptionPart2_MasterRank] e971f40104 width=126
+Vencedor: Nível Mestre!
+
+[gRibbonDescriptionPart1_Winning] b37a142ebd width=126
+Por vencer o NV. 50
+
+[gRibbonDescriptionPart2_Winning] e6508ad74e width=126
+da TORRE DE BATALHA.
+
+[gRibbonDescriptionPart1_Victory] 535211be74 width=126
+Por vencer o Nível Livre
+
+[gRibbonDescriptionPart2_Victory] e6508ad74e width=126
+da TORRE DE BATALHA.
+
+[gRibbonDescriptionPart1_Artist] 2015d8c144 width=126
+FITA por ser escolhido
+
+[gRibbonDescriptionPart2_Artist] 156586abd9 width=126
+como modelo de retrato.
+
+[gRibbonDescriptionPart1_Effort] 919cba1572 width=126
+FITA dada por ser
+
+[gRibbonDescriptionPart2_Effort] 358897898c width=126
+muito esforçado.

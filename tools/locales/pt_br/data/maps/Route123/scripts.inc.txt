@@ -1,0 +1,27 @@
+# ROTA 123: a moça dos POKéMON de PLANTA e as placas.
+
+[Route123_Text_LoveGrassMonsHaveAny] dd706c6e4f
+Eu amo POKéMON de PLANTA!\p
+Você tem algum POKéMON de PLANTA?$
+
+[Route123_Text_YouLikeGrassMonsTooHaveThis] c851492fe1
+Ah?\p
+Você também gosta de POKéMON de\n
+PLANTA, né?\p
+Fiquei tão feliz que pode ficar com\n
+isto! É um sinal da nossa amizade.$
+
+[Route123_Text_CheckTreesWithMyGrassMon] bf50b23441
+Examino árvores com o meu POKéMON\n
+de PLANTA. Sou tipo médica de árvore.$
+
+[Route123_Text_RouteSign] 48168447b9
+{RIGHT_ARROW} ROTA 123\n
+{LEFT_ARROW} ROTA 118$
+
+[Route123_Text_RouteSignMtPyre] 1471208a0a
+{UP_ARROW} MONTE PYRE\n
+“Proibido pros fracos de coração.”$
+
+[Route123_Text_BerryMastersHouse] 2e19bf8174
+CASA DO MESTRE DAS FRUTAS$

@@ -1,0 +1,16 @@
+# MONTE PYRE: 5º andar (os textos da TASHA, do 4º andar, ficam neste arquivo).
+
+[MtPyre_4F_Text_TashaIntro] ee157c3f1d
+Eu adoro tudo o que é horripilante…\n
+É como uma doença…\p
+Quando estou aqui…\n
+Tremo de medo…$
+
+[MtPyre_4F_Text_TashaDefeat] 79d238bbb4
+Perder, eu não gosto…$
+
+[MtPyre_4F_Text_TashaPostBattle] 124790a978
+Quero ver coisas medonhas…\n
+Não consigo ir embora…\p
+Fique…\n
+Não quer ficar comigo?$

@@ -1,0 +1,25 @@
+# Bilhetes de evento: o PASSE para a ILHA DO SUL.
+
+[EventTicket_Text_ShowOldSeaMap] 52f6680f6b
+A balsa pra SLATEPORT é…\pComo é?\nDá pra navegar até esse lugar do mapa?\pConheço alguém que pode te ajudar\nmelhor. Espere um pouco.$
+
+[EventTicket_Text_ThatPass] c96e2c1944
+A balsa pra SLATEPORT é…\pHã?\nEsse PASSE…$
+
+[EventTicket_Text_ShowEonTicket] 7423c68f7a
+Ô, marujo, foi você que trouxe\nesse PASSE muito esquisito?\pOlha, você quer chegar numa ilhota\nminúscula lá no extremo sul.\pNinguém sabe o que a gente vai\nencontrar quando chegar lá.\lÉ de arrepiar o casco!\pTodos a bordo!$
+
+[EventTicket_Text_SouthernIslandSailBack] 93058b2485
+Ô, marujo, não tem nada pra ver\nnem fazer nesta ilha sem graça.\pQue tal voltar pra LILYCOVE?$
+
+[EventTicket_Text_SailHome] 0bb0af0db5
+Isso aí, então!\nVamos voltar pra casa!$
+
+[EventTicket_Text_AsYouLike] d415416ecf
+Tá certo, como quiser.$
+
+[SouthernIsland_Interior_Text_Sign] 3e32c3fc7d
+“Todo sonho é só outra realidade.\nNunca se esqueça…”$
+
+[SouthernIsland_Exterior_Text_Sign] 586bbaeff7
+“Quem vê as lembranças sumindo\nquer gravá-las no coração…”$

@@ -1,0 +1,11 @@
+# NOVA MAUVILLE: a entrada.
+
+[NewMauville_Entrance_Text_DoorIsLocked] 8841c18308
+A porta está trancada.$
+
+[NewMauville_Entrance_Text_UseBasementKey] 6f2470ad6d
+Usar a CHAVE DO PORÃO?$
+
+[NewMauville_Entrance_Text_UsedBasementKey] 02802a5727
+{PLAYER} usou a CHAVE DO PORÃO.\p
+A porta abriu!$

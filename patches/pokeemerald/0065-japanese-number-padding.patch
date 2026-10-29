@@ -1,0 +1,20 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: Japanese numbers are padded with the space
+Applies after 0005-port-hooks.patch; apply with tools/bootstrap.py.
+
+diff --git a/include/constants/characters.h b/include/constants/characters.h
+--- a/include/constants/characters.h
++++ b/include/constants/characters.h
+@@ -71,7 +71,13 @@
+ //
+ #define CHAR_i_ACUTE           0x6F
+ //
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_JAPANESE
++// 0x77 is a kana in the Japanese charmap: the Japanese game pads its numbers
++// with the space (ConvertIntToDecimalStringN).
++#define CHAR_SPACER            CHAR_SPACE
++#else
+ #define CHAR_SPACER            0x77 // Empty space
++#endif
+ //
+ #define CHAR_UP_ARROW          0x79
+ #define CHAR_DOWN_ARROW        0x7A

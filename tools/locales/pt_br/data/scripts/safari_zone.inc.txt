@@ -1,0 +1,135 @@
+# A ZONA DE SAFÁRI (data/scripts/safari_zone.inc): a entrada na ROTA 121,
+# os avisos do jogo do SAFÁRI, o COMEDOURO DE {POKEBLOCK} e as pessoas das
+# áreas do parque.
+
+[SafariZone_Text_WouldYouLikeToExit] c15e7ffa73
+Quer sair da ZONA DE SAFÁRI\nagora mesmo?$
+
+[SafariZone_Text_TimesUp] 8110370278
+Dim-dom! Acabou o tempo!\nO seu Jogo do SAFÁRI terminou.$
+
+[SafariZone_Text_OutOfBalls] d148ab2a69
+Acabaram as suas BOLAS SAFÁRI.\nO seu Jogo do SAFÁRI terminou.$
+
+[SafariZone_Text_PlacePokeblockOnFeeder] d803973940
+Quer pôr um {POKEBLOCK} no\nCOMEDOURO DE {POKEBLOCK}?$
+
+[SafariZone_Text_PokeblockStillHere] 9ec4ec8cf1
+O {STR_VAR_1} que você deixou\nantes ainda está aqui.$
+
+[SafariZone_Text_PokeblockWasPlaced] 9a912609db
+O {STR_VAR_1} foi colocado\nno COMEDOURO DE {POKEBLOCK}.$
+
+[Route121_SafariZoneEntrance_Text_WelcomeToSafariZone] 7a4aab9544
+Boas-vindas à ZONA DE SAFÁRI!\pAqui você vê muitos tipos de POKéMON\nque quase não aparecem em HOENN.\pE vê todos eles selvagens, livres,\nno seu habitat natural.\pE mais: abrimos os portões para os\nTREINADORES POKéMON.\pVocê pode pegar POKéMON pra ficar\ncom eles!\pEntre e aproveite a ZONA DE SAFÁRI!$
+
+[Route121_SafariZoneEntrance_Text_WelcomeFirstTime] f55bfe3d1f
+Boas-vindas à ZONA DE SAFÁRI!\nÉ a sua primeira vez aqui?$
+
+[Route121_SafariZoneEntrance_Text_ComeInAndEnjoy] a468b44201
+Entre e aproveite a ZONA DE SAFÁRI!$
+
+[Route121_SafariZoneEntrance_Text_FirstTimeInfo] ec7f234636
+Ao entrar na ZONA DE SAFÁRI, você\nrecebe 30 BOLAS SAFÁRI pra pegar\lPOKéMON.\pO Jogo do SAFÁRI termina quando as\nBOLAS SAFÁRI acabam ou quando você\landa 500 passos.\pEntre e aproveite a ZONA DE SAFÁRI!$
+
+[Route121_SafariZoneEntrance_Text_WouldYouLikeToPlay] a0e7001d28
+Boas-vindas à ZONA DE SAFÁRI!\pPegue quantos quiser por só ¥500!\nQuer jogar o Jogo do SAFÁRI?$
+
+[Route121_SafariZoneEntrance_Text_PlayAnotherTime] 2a09795736
+Certo.\nVenha jogar outra hora!$
+
+[Route121_SafariZoneEntrance_Text_NotEnoughMoney] 58b35deef9
+Você não tem dinheiro suficiente.\nDesculpe.$
+
+[Route121_SafariZoneEntrance_Text_ThatWillBe500Please] 848a891677
+São ¥500, por favor.$
+
+[Route121_SafariZoneEntrance_Text_HereAreYourSafariBalls] ebe7821740
+Aqui estão as suas BOLAS SAFÁRI.$
+
+[Route121_SafariZoneEntrance_Text_Received30SafariBalls] ccf5b9ab50
+{PLAYER} recebeu 30 BOLAS SAFÁRI.$
+
+[Route121_SafariZoneEntrance_Text_PleaseEnjoyYourself] 51d98837cc
+Vamos avisar quando o jogo acabar.\pAté lá, divirta-se, por favor!\nBoa expedição pela natureza!$
+
+[Route121_SafariZoneEntrance_Text_PCIsFull] b263689612
+Com licença!\nA sua CAIXA do PC está cheia.$
+
+[Route121_SafariZoneEntrance_Text_YouNeedPokeblockCase] 4126e5df8a
+Com licença!\nParece que você está sem um ESTOJO\l{POKEBLOCK}.\pO seu Jogo do SAFÁRI rende muito mais\nse você usar {POKEBLOCK}S.\pVolte com um ESTOJO {POKEBLOCK},\npor favor.\pVocê pode conseguir um ESTOJO\n{POKEBLOCK} no SALÃO DE CONCURSOS\lde LILYCOVE.$
+
+[SafariZone_South_Text_StillHaveTimeExit] 7687755868
+Você ainda tem tempo. Quer sair\nda ZONA DE SAFÁRI agora?$
+
+[SafariZone_South_Text_EnjoyTheRestOfYourAdventure] 34a6e102d2
+Aproveite o resto da sua aventura\npela natureza!$
+
+[SafariZone_South_Text_ExitEarlyThankYouForPlaying] ec5c1cf1f9
+Certo.\pVou pegar de volta as BOLAS SAFÁRI\nque sobraram.\pObrigado por jogar.\nEsperamos ver você de novo.$
+
+[SafariZone_South_Text_GoodLuck] 9f31c7dfb7
+Boa sorte!\pSe precisar de alguma coisa, é só\nme falar!$
+
+[SafariZone_South_Text_Boy] 594029ef0d
+Sabia?\pSe você puser um {POKEBLOCK} naquela\ncaixa quadrada, os POKéMON se juntam.$
+
+[SafariZone_South_Text_Man] 8de1cc5fb3
+Quero ir mais pro fundo, mas esqueci\nde trazer a BICICLETA.\pAlguma coisa me diz que POKéMON\nraros vivem nas áreas mais afastadas.$
+
+[SafariZone_Southwest_Text_Woman] f38e49f523
+Às vezes, quando jogo um {POKEBLOCK}\nnum POKéMON, ele nem liga.\pSerá que os POKéMON têm gostos pra\ncomida?$
+
+[SafariZone_Northwest_Text_Man] b48850e3f4
+Uf… Uf…\nCheguei… até aqui… mas…\pEstou exausto… Não tenho energia\npra pegar POKéMON…$
+
+[SafariZone_North_Text_Fisherman] ef43cf26a9
+A minha missão é achar POKéMON de\nÁGUA que não aparecem em HOENN.\pSabe onde fica o lago?$
+
+[SafariZone_North_Text_Man] 6971f32094
+Vou pegar um monte de POKéMON raros\naqui e trocar com os meus amigos!$
+
+[SafariZone_South_Text_Youngster] 8d74ad4c4a
+Pus um {POKEBLOCK} no COMEDOURO\nDE {POKEBLOCK}. Mas parece que sumiu.\pAcho que algum POKéMON comeu sem\neu perceber.$
+
+[Route121_SafariZoneEntrance_Text_TrainerTip] 011ea13456
+DICA DE TREINADOR DA ZONA DE SAFÁRI!\pJogue {POKEBLOCK}S nos POKéMON selvagens\npra eles fugirem menos.$
+
+[SafariZone_Southwest_Text_RestHouseSign] 4a553ea09f
+“Descanse os pés cansados.”\nCASA DE DESCANSO$
+
+[SafariZone_RestHouse_Text_Youngster] 3bdf38c162
+Não tenho {POKEBLOCK}S, mas peguei\num bom tanto de POKéMON.\pVocê aumenta a chance de pegar se\nchegar mais perto antes de jogar\la BOLA SAFÁRI.$
+
+[SafariZone_RestHouse_Text_PsychicM] 912810c0e9
+Com {POKEBLOCK}S, os POKéMON selvagens\nnão fogem tão rápido.\pNão adianta muito dar {POKEBLOCK}S pra\nPOKéMON que não fogem fácil.$
+
+[SafariZone_RestHouse_Text_FatMan] abe560ac3d
+Se você puser um {POKEBLOCK} no COMEDOURO,\nos POKéMON são atraídos.\pAcho que POKéMON de natureza parecida\nsão atraídos por um certo {POKEBLOCK}.$
+
+[SafariZone_South_Text_AreaOffLimits1] a599356c24
+Esta área ainda está em obras.\nA entrada é proibida, desculpe!$
+
+[SafariZone_Southeast_Text_ExpansionIsFinished] def91bd6f8
+A expansão da ZONA DE SAFÁRI\nterminou.\pEsperamos que goste da área nova.$
+
+[SafariZone_South_Text_AreaOffLimits2] a599356c24
+Esta área ainda está em obras.\nA entrada é proibida, desculpe!$
+
+[SafariZone_Southeast_Text_LittleGirl] eb4543d065
+Uau! Oba! Nunca vi nenhum desses\nPOKéMON antes!$
+
+[SafariZone_Southeast_Text_FatMan] 8bcffce1a6
+Os POKéMON desta área são todos\nnovos pra mim.\pE ainda posso pegar esses POKéMON\nraros! Que demais!$
+
+[SafariZone_Southeast_Text_RichBoy] ef2e61ea99
+Os POKéMON daqui parecem ser de\nalgum lugar fora de HOENN.$
+
+[SafariZone_Northeast_Text_Boy] 1db58b89ca
+Só me sobraram umas BOLAS SAFÁRI.\pEstou com dificuldade pra decidir\no que pegar.$
+
+[SafariZone_Northeast_Text_Woman] a4f3f6632d
+Ouvi dizer que dá pra ver PIKACHU\naqui. Onde será que tem um?$
+
+[SafariZone_Northeast_Text_Girl] 8e97defe20
+Ai, que droga!\nNão consigo pegar nada!\pVou ter desperdiçado a entrada se\nnão pegar alguma coisa!$

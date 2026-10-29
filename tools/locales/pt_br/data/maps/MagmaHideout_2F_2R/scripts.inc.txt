@@ -1,0 +1,56 @@
+# ESCONDERIJO MAGMA: 2º andar, outra sala.
+
+[MagmaHideout_2F_2R_Text_Grunt15Intro] 616571e8ab
+Não tenho nada contra você.\n
+Só estou cumprindo ordens!$
+
+[MagmaHideout_2F_2R_Text_Grunt15Defeat] 29a90ce9f6
+Posso ter perdido, mas…$
+
+[MagmaHideout_2F_2R_Text_Grunt15PostBattle] 6e102260a0
+Desenterramos uma coisa inacreditável!\n
+E pegamos o ORBE AZUL!\p
+Agora só falta o nosso líder…\n
+Fufufu… Fwahahaha!$
+
+[MagmaHideout_2F_2R_Text_Grunt6Intro] bb1f525169
+Não aguento calor. Talvez eu devesse\n
+ter entrado na EQUIPE AQUA…$
+
+[MagmaHideout_2F_2R_Text_Grunt6Defeat] 9d2c6689b0
+É, acho que não nasci pra\n
+EQUIPE MAGMA…$
+
+[MagmaHideout_2F_2R_Text_Grunt6PostBattle] 4672cc2e44
+Num lugar desses, você não sente\n
+saudade do mar?$
+
+[MagmaHideout_2F_2R_Text_Grunt7Intro] 4542593412
+Às vezes dá pra sentir tremores aqui.\p
+Será o vulcão sacudindo?\n
+Ou será o GROU…\p
+Opa!\n
+Não, não, esquece!$
+
+[MagmaHideout_2F_2R_Text_Grunt7Defeat] a400ca382f
+Você batalha com fogo.\n
+Igual a um vulcão!$
+
+[MagmaHideout_2F_2R_Text_Grunt7PostBattle] f800e29a5b
+Você ganhou por sorte desta vez,\n
+mas isso não importa.\p
+O objetivo da EQUIPE MAGMA está\n
+quase cumprido!$
+
+[MagmaHideout_2F_2R_Text_Grunt8Intro] 3a887a74cd
+Um dos nossos estava surtando porque\n
+perdeu o EMBLEMA MAGMA…\p
+Pera aí!\n
+Foi você que achou?$
+
+[MagmaHideout_2F_2R_Text_Grunt8Defeat] 195926fbf3
+Não consigo acreditar nisso…$
+
+[MagmaHideout_2F_2R_Text_Grunt8PostBattle] aa34a3fa1d
+Estou com a sensação de que o nosso\n
+plano vai fracassar…$

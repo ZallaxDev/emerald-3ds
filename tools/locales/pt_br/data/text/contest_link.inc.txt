@@ -1,0 +1,34 @@
+# CONCURSOS por conexão: resultados e o programa de TV.
+
+[gTest_MissedTurn] 8f73bf3161
+Perdeu a vez$
+
+[gText_LinkStandby4] fce3f7dde8
+Aguardando conexão!$
+
+[gText_WinnerIsPlayersMonCongrats] 5a7ab6eb10
+Venceu: {STR_VAR_2} de {STR_VAR_1}!\nParabéns!$
+
+[gText_WinnerIsPlayersMon] 19ada00cc4
+Venceu: {STR_VAR_2} de {STR_VAR_1}!{PAUSE_UNTIL_PRESS}$
+
+[gText_PrimaryJudgingNumX] 077414b5d1
+1ª fase: Nº {STR_VAR_1}{PAUSE_UNTIL_PRESS}$
+
+[gText_SecondaryJudgingNumX] cf53a5fcc9
+2ª fase: Nº {STR_VAR_1}{PAUSE_UNTIL_PRESS}$
+
+[gText_SetEventNumX] 6d63e5ed0a
+Evento: Nº {STR_VAR_1}{PAUSE_UNTIL_PRESS}$
+
+[gText_MoveUsedMostOften] cb8fb79e1b
+O golpe mais usado:\n{STR_VAR_1}{PAUSE_UNTIL_PRESS}$
+
+[gText_MostImpressiveMon] 4bd8cc02cf
+O POKéMON mais marcante:\n{STR_VAR_2} de {STR_VAR_1}{PAUSE_UNTIL_PRESS}$
+
+[gText_SetEventNumX2] 6d63e5ed0a
+Evento: Nº {STR_VAR_1}{PAUSE_UNTIL_PRESS}$
+
+[gText_LinkTVProgramWillNotBeMadeTrainerLost] e7ada8b160
+Não vai ter programa de TV da conexão,\nporque o TREINADOR perdeu.{PAUSE_UNTIL_PRESS}$

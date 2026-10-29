@@ -1,0 +1,192 @@
+# As palavras da FALA FÁCIL, grupo voices (src/data/easy_chat/easy_chat_group_voices.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_Excl] 0ab8318aca width=72
+!
+
+[gEasyChatWord_ExclExcl] b4613f8681 width=72
+!!
+
+[gEasyChatWord_QuesExcl] 59c2264cdb width=72
+?!
+
+[gEasyChatWord_Ques] 5bab61eb53 width=72
+?
+
+[gEasyChatWord_Ellipsis] df316e17de width=72
+…
+
+[gEasyChatWord_EllipsisExcl] 3d3204eaa2 width=72
+…!
+
+[gEasyChatWord_EllipsisEllipsisEllipsis] 82bdff36e1 width=72
+………
+
+[gEasyChatWord_Dash] 3bc15c8aae width=72
+-
+
+[gEasyChatWord_DashDashDash] 775dcaa356 width=72
+- - -
+
+[gEasyChatWord_UhOh] d2cfaa1761 width=72
+IH, NÃO
+
+[gEasyChatWord_Waaah] a9d33427b8 width=72
+BUÁÁÁ
+
+[gEasyChatWord_Ahaha] a1fc74370c width=72
+AHAHA
+
+[gEasyChatWord_OhQues] cd963294e1 width=72
+HÃ?
+
+[gEasyChatWord_Nope] 0bf3c3d382 width=72
+NÃÃO
+
+[gEasyChatWord_Urgh] be4c4992c3 width=72
+ARGH
+
+[gEasyChatWord_Hmm] a4a616525a width=72
+HUMM
+
+[gEasyChatWord_Whoah] 52a2100150 width=72
+UAU!
+
+[gEasyChatWord_WroooaarExcl] cd4b063beb width=72
+GRRRAAAR!
+
+[gEasyChatWord_Wow] eef81420a3 width=72
+UAU
+
+[gEasyChatWord_Giggle] f1f7affb14 width=72
+RISADINHA
+
+[gEasyChatWord_Sigh] bdedbbabc6 width=72
+SUSPIRO
+
+[gEasyChatWord_Unbelievable] b8829ce170 width=72
+SURREAL
+
+[gEasyChatWord_Cries] 341f1ea3c5 width=72
+CHORA
+
+[gEasyChatWord_Agree] 2fb7c47c43 width=72
+CONCORDO
+
+[gEasyChatWord_EhQues] 5831b746ea width=72
+HEIN?
+
+[gEasyChatWord_Cry] 2d82e9c303 width=72
+CHORAR
+
+[gEasyChatWord_Ehehe] 5aa4bc0fe7 width=72
+EHEHE
+
+[gEasyChatWord_OiOiOi] d056df8693 width=72
+EI, EI, EI
+
+[gEasyChatWord_OhYeah] 14dfd9af43 width=72
+AH, SIM
+
+[gEasyChatWord_Oh] 184460b947 width=72
+OH
+
+[gEasyChatWord_Oops] 6ad21d0a20 width=72
+OPS
+
+[gEasyChatWord_Shocked] 5382bb9b85 width=72
+CHOCADO
+
+[gEasyChatWord_Eek] 1ac80603d8 width=72
+IIH
+
+[gEasyChatWord_Graaah] 42c3e9451f width=72
+GRAAAH
+
+[gEasyChatWord_Gwahahaha] 58a7db81d0 width=72
+GUAHAHAHA
+
+[gEasyChatWord_Way] 2ad160e3d5 width=72
+JEITO
+
+[gEasyChatWord_Tch] 58e7d51438 width=72
+TSC
+
+[gEasyChatWord_Hehe] 8427fc76f0 width=72
+HEHE
+
+[gEasyChatWord_Hah] eaad9c4b96 width=72
+HÁ
+
+[gEasyChatWord_Yup] 03ebe81611 width=72
+UHUM
+
+[gEasyChatWord_Hahaha] 92e9fd1a04 width=72
+HAHAHA
+
+[gEasyChatWord_Aiyeeh] 7cde0b22ed width=72
+AIIIÊ
+
+[gEasyChatWord_Hiyah] d54832b3de width=72
+RIÁÁ
+
+[gEasyChatWord_Fufufu] 1f38054264 width=72
+FUFUFU
+
+[gEasyChatWord_Lol] 8a30407962 width=72
+KKK
+
+[gEasyChatWord_Snort] 27512a5c43 width=72
+BUFO
+
+[gEasyChatWord_Humph] 7946c5716e width=72
+HUMF
+
+[gEasyChatWord_Hehehe] f3f665443e width=72
+HEHEHE
+
+[gEasyChatWord_Heh] 2ad74d51d6 width=72
+HEH
+
+[gEasyChatWord_Hohoho] acc72f6222 width=72
+HOHOHO
+
+[gEasyChatWord_UhHuh] 917424f4b6 width=72
+AHÃ
+
+[gEasyChatWord_OhDear] 995752b5e5 width=72
+AI, AI
+
+[gEasyChatWord_Arrgh] ca0ff33da9 width=72
+ARRGH
+
+[gEasyChatWord_Mufufu] b5cd52599d width=72
+MUFUFU
+
+[gEasyChatWord_Mmm] 251f18d4e6 width=72
+HMMM
+
+[gEasyChatWord_OhKay] a38a6203f3 width=72
+TÁ BOM
+
+[gEasyChatWord_Okay] 7ae4a90c64 width=72
+OKAY
+
+[gEasyChatWord_Lalala] e0f0d17d40 width=72
+LALALÁ
+
+[gEasyChatWord_Yay] 09c150cda7 width=72
+ÊÊ
+
+[gEasyChatWord_Aww] b3c5450036 width=72
+OWN
+
+[gEasyChatWord_Wowee] 9cd3f51d1a width=72
+NOSSA
+
+[gEasyChatWord_Gwah] a63091a507 width=72
+GUAH
+
+[gEasyChatWord_Wahahaha] 4b71322cad width=72
+UAHAHAHA

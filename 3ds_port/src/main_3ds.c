@@ -88,7 +88,6 @@ int main(void)
         CtrPlatform_Fatal("platform initialization failed");
     CtrPlatformHooks hooks = {0};
     hooks.vblank = CtrGame_VBlank;
-    hooks.reset = CtrGame_SoftReset;
     hooks.videoPresent = CtrVideo_Present;
     CtrPlatform_SetHooks(&hooks);
     /* The game owns the loop: CtrGame_Init enters AgbMain and

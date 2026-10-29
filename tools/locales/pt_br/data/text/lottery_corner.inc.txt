@@ -1,0 +1,46 @@
+# LOJA DE DEPARTAMENTOS de LILYCOVE: o CANTO DA LOTERIA POKéMON.
+
+[LilycoveCity_DepartmentStore_1F_Text_LotteryCornerDrawTicket] 5878e021dc
+Este é o CANTO DA LOTERIA POKéMON.\pTodo cliente da LOJA DE DEPARTAMENTOS\npode tirar um BILHETE DA LOTERIA.\pSe o número do BILHETE for igual ao\nnúmero de ID de um dos seus POKéMON,\lvocê ganha um presente incrível.\pQuer tirar um BILHETE DA\nLOTERIA POKéMON?$
+
+[LilycoveCity_DepartmentStore_1F_Text_ComeBackTomorrow] 004e7478d6
+Volte amanhã, por favor.$
+
+[LilycoveCity_DepartmentStore_1F_Text_PleaseVisitAgain] dca5d477be
+Volte sempre.$
+
+[LilycoveCity_DepartmentStore_1F_Text_PleasePickTicket] 508060a7b4
+Tire um BILHETE, por favor.\n…{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}…{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}…{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$
+
+[LilycoveCity_DepartmentStore_1F_Text_TicketNumberIsXPleaseWait] 92feccdb60
+O número do BILHETE é {STR_VAR_1}.\pVou conferir se ele bate com\no número de ID de algum dos\lseus POKéMON. Aguarde.$
+
+[LilycoveCity_DepartmentStore_1F_Text_TicketMatchesPartyMon] 88eaa9dbea
+Parabéns!\pO número de ID do {STR_VAR_1}\nda sua equipe bate com o\lnúmero do seu BILHETE!$
+
+[LilycoveCity_DepartmentStore_1F_Text_TicketMatchesPCMon] 1f4ddc60ed
+Parabéns!\pO número de ID do {STR_VAR_1}\nguardado no PC bate com o\lnúmero do seu BILHETE!$
+
+[LilycoveCity_DepartmentStore_1F_Text_NoNumbersMatched] a442bb33e3
+Sinto muito.\nNenhum número bateu.$
+
+[LilycoveCity_DepartmentStore_1F_Text_TwoDigitsMatched] f1cf10beb8
+Dois dígitos bateram, então você\nganhou o terceiro prêmio!\lVocê ganhou {STR_VAR_1}!$
+
+[LilycoveCity_DepartmentStore_1F_Text_ThreeDigitsMatched] 28719cd112
+Três dígitos bateram, então você\nganhou o segundo prêmio!\lVocê ganhou {STR_VAR_1}!$
+
+[LilycoveCity_DepartmentStore_1F_Text_FourDigitsMatched] b23d39b166
+Quatro dígitos bateram, então você\nganhou o primeiro prêmio!\lVocê ganhou {STR_VAR_1}!$
+
+[LilycoveCity_DepartmentStore_1F_Text_AllFiveDigitsMatched] 73bac6b32e
+Minha nossa, os cinco dígitos\nbateram!\pVocê ganhou o prêmio máximo!\nVocê ganhou {STR_VAR_1}!$
+
+[LilycoveCity_DepartmentStore_1F_Text_NoRoomForThis] 87f9cbdde0
+Hã?\nParece que não cabe na BOLSA.\pAbra espaço na BOLSA e\nme avise.$
+
+[LilycoveCity_DepartmentStore_1F_Text_PrizeWeveBeenHolding] 5fda4a1ea7
+{PLAYER}?\nSim, estávamos te esperando.\pEste é o prêmio que guardamos\npra você.$
+
+[LilycoveCity_DepartmentStore_1F_Text_PleaseVisitAgain2] dca5d477be
+Volte sempre.$

@@ -1,0 +1,149 @@
+# SALÃO DE JOGOS de MAUVILLE: as FICHAS, os prêmios, a ROLETA e o CAÇA-NÍQUEIS.
+
+[MauvilleCity_GameCorner_Text_ThisIsMauvilleGameCorner] b2ca55c023
+Este é o SALÃO DE JOGOS de MAUVILLE.$
+
+[MauvilleCity_GameCorner_Text_NeedCoinCaseForCoins] 0b8d330df2
+Certo, você quer FICHAS pros\n
+jogos?\p
+Mas você não tem uma SACOLA DE MOEDAS\n
+pra guardar as FICHAS.$
+
+[MauvilleCity_GameCorner_Text_WereYouLookingForCoins] 786535f33b
+Procurando FICHAS?\p
+São ¥1000 por 50 FICHAS.\n
+Quer algumas?$
+
+[MauvilleCity_GameCorner_Text_ThankYouHereAreYourCoins] 55f1219917
+Muito obrigado!\n
+Aqui estão as suas FICHAS!$
+
+[MauvilleCity_GameCorner_Text_DontHaveEnoughMoney] c88b0a1349
+Hã… Parece que você não tem\n
+dinheiro suficiente…$
+
+[MauvilleCity_GameCorner_Text_CoinCaseIsFull] 6b7654e96c
+Hã?\n
+A sua SACOLA DE MOEDAS está cheia.$
+
+[MauvilleCity_GameCorner_Text_DontNeedCoinsThen] 4d64943361
+Ah… Então não precisa de FICHAS?\n
+Boa sorte na sua aventura!$
+
+[MauvilleCity_GameCorner_Text_ExchangeCoinsForPrizes] 9a713ea838
+Boas-vindas.\p
+Aqui você troca as suas FICHAS\n
+por prêmios.$
+
+[MauvilleCity_GameCorner_Text_WhichPrize] 37c2a0c641
+Qual prêmio você quer?$
+
+[MauvilleCity_GameCorner_Text_SoYourChoiceIsTheTMX] c8078956b4
+Então você escolheu\n
+a {STR_VAR_1} {STR_VAR_2}?$
+
+[MauvilleCity_GameCorner_Text_SendToYourHomePC] 0952776d30
+Obrigado!\n
+Vamos mandar pro PC da sua casa.$
+
+[MauvilleCity_GameCorner_Text_NotEnoughCoins] 9a2bafdaf7
+Você não tem FICHAS suficientes.$
+
+[MauvilleCity_GameCorner_Text_NoRoomForPlacingDecor] 4ca8652e2d
+Não tem espaço disponível pra\n
+guardar {STR_VAR_1}.$
+
+[MauvilleCity_GameCorner_Text_OhIsThatSo] fc47e82e2a
+Ah, é mesmo?\n
+Junte mais FICHAS antes de\l
+voltar aqui.$
+
+[MauvilleCity_GameCorner_Text_SoYourChoiceIsX] e8df32b718
+Então você escolheu {STR_VAR_1}?$
+
+[MauvilleCity_GameCorner_Text_HereYouGo] 68d044bdb3
+Aqui está!$
+
+[MauvilleCity_GameCorner_Text_CantCarryAnyMore] 8721895e78
+Ah, você não carrega mais que isso.$
+
+[MauvilleCity_GameCorner_Text_GotTwoOfSameDollWantOne] e3f3a01b37
+Me enganei e ganhei dois BONECOS\n
+iguais.\p
+Quer um deles?$
+
+[MauvilleCity_GameCorner_Text_HereYouGo2] 68d044bdb3
+Aqui está!$
+
+[MauvilleCity_GameCorner_Text_YouWantItButNotNow] 89f8ede840
+Hã?\n
+Você quer, mas não agora?$
+
+[MauvilleCity_GameCorner_Text_DontBeNegative] 49dfac65be
+Ah, não seja tão do contra!\n
+Pode ficar com isto!$
+
+[MauvilleCity_GameCorner_Text_CantWinJackpot] b8cdce6d53
+Tem um prêmio que eu quero, mas não\n
+consigo tirar a sorte grande.$
+
+[MauvilleCity_GameCorner_Text_NeedCoinCaseGoNextDoor] 546ecee0e1
+Ei, garotada, se quiser jogar aqui,\n
+precisa de uma SACOLA DE MOEDAS.\p
+Acho que a moça da casa ao lado\n
+tinha uma. Vai falar com ela!$
+
+[MauvilleCity_GameCorner_Text_LuckOnlyLastSoLongTakeCoins] 2320c73944
+A minha sorte não dura pra sempre.\n
+Isto é demais pra mim.\l
+Tome, pegue umas FICHAS!$
+
+[MauvilleCity_GameCorner_Text_MauvilleSomethingForEveryone] d35459de04
+MAUVILLE tem alguma coisa pra\n
+todo mundo.\p
+Pra mim, é o SALÃO DE JOGOS.$
+
+[MauvilleCity_GameCorner_Text_RouletteTablesDifferentRates] e09783bd05
+As mesas de ROLETA têm apostas\n
+diferentes.\p
+Confira as suas FICHAS antes de\n
+escolher uma mesa.$
+
+[MauvilleCity_GameCorner_Text_EasyToLoseTrackOfTime] a410919796
+Aqui é fácil perder a noção do tempo.\n
+Preciso voltar ao trabalho.$
+
+[MauvilleCity_GameCorner_Text_CoinsAreNeededToPlay] 2acef0869c
+Precisa de FICHAS pra jogar aqui\n
+no SALÃO DE JOGOS.$
+
+[MauvilleCity_GameCorner_Text_RouletteOnlyLuck] 8daca3afdf
+Essa tal de ROLETA…\n
+É bem exigente.\p
+Ganhar ou perder é só questão de sorte.$
+
+[MauvilleCity_GameCorner_Text_UpTo3CoinsCanBeUsed] 5b58ebe44d
+Dá pra usar até três FICHAS pra jogar\n
+no CAÇA-NÍQUEIS.$
+
+[MauvilleCity_GameCorner_Text_DifficultToStopOn7] 8dee5a9ed4
+É muito difícil fazer parar\n
+bem no “7”.\p
+Se parar no “7” durante o bônus\n
+REEL TIME, você ganha FICHAS extras.$
+
+[MauvilleCity_GameCorner_Text_HeresSomeSlotsInfo] c66c058409
+Aqui vai uma informação\n
+sobre o CAÇA-NÍQUEIS.\p
+Quanto mais raios você acumula,\n
+mais chances de REEL TIME você tem.\p
+Num jogo com o máximo de cinco\n
+chances de REEL TIME…\p
+Dá pra ganhar quatro bônus normais\n
+e depois um bônus grande.\p
+Isso daria 660 FICHAS, mas é\n
+muito difícil de conseguir.$
+
+[MauvilleCity_GameCorner_Text_CantPlayWithNoCoinCase] dda062e1d6
+Não dá pra jogar sem uma\n
+SACOLA DE MOEDAS.$

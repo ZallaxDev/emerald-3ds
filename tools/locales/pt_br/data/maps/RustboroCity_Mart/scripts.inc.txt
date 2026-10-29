@@ -1,0 +1,19 @@
+# POKé MART de RUSTBORO: os clientes.
+
+[RustboroCity_Mart_Text_BuyingHealsInCaseOfShroomish] e35448ae6f
+Estou comprando CURA PARALISIA e\n
+ANTÍDOTOS.\p
+Caso eu encontre SHROOMISH no\n
+BOSQUE DE PETALBURG.$
+
+[RustboroCity_Mart_Text_ShouldBuySuperPotionsInstead] 6389e30466
+Meu POKéMON evoluiu.\n
+Agora ele tem muitos PS.\p
+Devia comprar SUPERPOÇÕES pra ele\n
+em vez de POÇÕES comuns.$
+
+[RustboroCity_Mart_Text_GettingEscapeRopeJustInCase] 5da6e4c039
+Vou levar uma CORDA DE FUGA, caso\n
+eu me perca numa caverna.\p
+É só usar pra voltar até\n
+a entrada.$

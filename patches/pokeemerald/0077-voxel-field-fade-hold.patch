@@ -1,0 +1,63 @@
+--- a/include/palette.h
++++ b/include/palette.h
+@@ -119,6 +119,12 @@
+ void TintPalette_GrayScale2(u16 *palette, u16 count);
+ void TintPalette_SepiaTone(u16 *palette, u16 count);
+ void TintPalette_CustomTone(u16 *palette, u16 count, u16 rTone, u16 gTone, u16 bTone);
++#ifdef PORT_BRIDGE
++// Port: TRUE while a normal fade must wait, as on one of its delay frames,
++// for a picture the port has not shown yet (the 3DS voxel field's warm-up:
++// 3ds_port/src/3ds_game_full.c). A weak FALSE in palette.c otherwise.
++bool8 Port_HoldPaletteFade(void);
++#endif
+
+ static inline void SetBackdropFromColor(u16 color)
+ {
+--- a/src/palette.c
++++ b/src/palette.c
+@@ -76,6 +76,17 @@
+ static EWRAM_DATA u32 sFiller = 0;
+ static EWRAM_DATA u32 sPlttBufferTransferPending = 0;
+ EWRAM_DATA u8 ALIGNED(2) gPaletteDecompressionBuffer[PLTT_BUFFER_ALLOC_BYTES] = {0};
++#ifdef PORT_BRIDGE
++// Port: inside BeginNormalPaletteFade's own first step, which the port's
++// hold never delays: that step blends the start of the fade, which goes to
++// PLTT at once.
++static bool8 sPortFadeStarting = FALSE;
++
++bool8 __attribute__((weak)) Port_HoldPaletteFade(void)
++{
++    return FALSE;
++}
++#endif
+
+ static const struct PaletteStructTemplate sDummyPaletteStructTemplate = {
+     .id = 0xFFFF,
+@@ -321,7 +332,13 @@
+         else
+             gPaletteFade.yDec = 1;
+
++#ifdef PORT_BRIDGE
++        sPortFadeStarting = TRUE;
+         UpdatePaletteFade();
++        sPortFadeStarting = FALSE;
++#else
++        UpdatePaletteFade();
++#endif
+
+         temp = gPaletteFade.bufferTransferDisabled;
+         gPaletteFade.bufferTransferDisabled = FALSE;
+@@ -557,6 +574,13 @@
+     {
+         if (!gPaletteFade.objPaletteToggle)
+         {
++#ifdef PORT_BRIDGE
++            // Port: held as a delay frame, between two whole steps (BG and
++            // OBJ blended alike). Under PORT_BRIDGE UpdatePaletteFade does
++            // not wait for the last step's transfer, so this is the gate.
++            if (!sPortFadeStarting && Port_HoldPaletteFade())
++                return PALETTE_FADE_STATUS_DELAY;
++#endif
+             if (gPaletteFade.delayCounter < gPaletteFade_delay)
+             {
+                 gPaletteFade.delayCounter++;

@@ -1,0 +1,134 @@
+# ROTA 119: a MAY ou o BRENDAN com VOAR, o SCOTT e as placas.
+
+[Route119_Text_MayIntro] 66560c2118
+MAY: {PLAYER}{KUN}!\n
+Cadê você? Eu estava te procurando!\p
+Quanto você ficou mais forte?\n
+Deixa eu conferir!\p
+POKéMON prontos?\n
+Claro que sim! Vai!$
+
+[Route119_Text_MayDefeat] de94e59b91
+Aiai!\n
+{PLAYER}{KUN}, você é forte!\p
+Fiquei preocupada que você estivesse\n
+penando no treino.$
+
+[Route119_Text_MayPresentForYou] c825295d60
+MAY: Mas eu não tinha nada com que\n
+me preocupar! Continue assim!\p
+E tome! Tenho um presente pra você.$
+
+[Route119_Text_MayExplainFly] f2ded53e24
+MAY: Com VOAR, o seu POKéMON te leva\n
+na hora pra qualquer cidade que\l
+você já visitou.\p
+Mas, pra usar VOAR, você precisa da\n
+INSÍGNIA da CIDADE DE FORTREE.\l
+É importante, não esqueça.\p
+Você devia VOAR pra casa e visitar\n
+LITTLEROOT, pra variar.\p
+Aposto que a sua mãe está\n
+preocupada, {PLAYER}{KUN}.\p
+Bom, a gente se vê por aí!$
+
+[Route119_Text_BrendanIntro] 34dc0012a8
+BRENDAN: {PLAYER}! Então é aqui que\n
+você procura POKéMON?\p
+Deixa eu ver o quanto você melhorou.\n
+Vou te testar!\p
+Agora!\n
+É batalha, então batalhe!$
+
+[Route119_Text_BrendanDefeat] 13debbda65
+Hmm…\n
+Você ficou bem boa, hein.$
+
+[Route119_Text_BrendanIllGiveYouThis] d547ee7d3e
+BRENDAN: Acho que você já pode\n
+procurar POKéMON em qualquer lugar.\p
+Tome, vou te dar isto.\n
+Experimenta.$
+
+[Route119_Text_BrendanExplainFly] 108959ba09
+BRENDAN: Com VOAR, o seu POKéMON te\n
+leva na hora pra qualquer cidade\l
+que você já visitou.\p
+Mas precisa da INSÍGNIA de FORTREE\n
+pra isso.\p
+Enfim, tenho que ir.$
+
+[Route119_Text_ScottWayToGoBeSeeingYou] 77e5c728a5
+SCOTT: Hahahah!\n
+Mandou bem, {PLAYER}{KUN}!\p
+Acabei de cruzar com alguém numa\n
+BICICLETA.\p
+Você acabou de vencer essa pessoa,\n
+não foi? Ficou bem na cara.\p
+Estava toda chateada, com o rosto\n
+vermelho de raiva.\p
+A gente se esbarra bastante, né?\n
+Vai pro GINÁSIO de FORTREE agora?\p
+Aposto que vai se dar bem lá.\n
+Bom, até mais!$
+
+[Route119_Text_ScottYouWonAtFortreeGym] 06f07511b9
+… … … … … …\n
+… … … … … Bipe!\p
+SCOTT: Oi, {PLAYER}{KUN}, sou eu!\p
+Como eu pensei, você venceu no\n
+GINÁSIO de FORTREE.\p
+A sua força…\n
+Talvez você seja mesmo o TREINADOR\l
+que eu procuro.\p
+Lembre: você tem um fã aqui.\n
+Vou torcer de longe.\l
+Continue assim!\p
+… … … … … …\n
+… … … … … Clique!$
+
+[Route119_Text_StayAwayFromWeatherInstitute] e56b59cbb2
+Estamos de vigia aqui.\p
+Ei, você! Fique longe do INSTITUTO\n
+DO CLIMA. Não é seguro.$
+
+[Route119_Text_DontGoNearWeatherInstitute] ff851c88c9
+Ficar de vigia é chato demais.\p
+Ei, você! Por favor, não chegue perto\n
+do INSTITUTO DO CLIMA.$
+
+[Route119_Text_ThoughtFlyByCatchingBirdMons] d10fb73950
+Eu achava que pra VOAR era preciso\n
+pegar um bando de POKéMON PÁSSAROS\l
+e se pendurar neles de algum jeito.\p
+Mas existe um golpe de MO chamado\n
+VOAR!\p
+Queria ter sabido disso há\n
+muito tempo…$
+
+[Route119_Text_TallGrassSnaresBikeTires] a7d8c8cf31
+Tsc…\n
+Não dá…\p
+O mato alto prende os pneus da\n
+BICICLETA. Não dá pra pedalar aqui.$
+
+[Route119_Text_CanYourMonMakeSecretBase] f15110addd
+O seu POKéMON consegue usar PODER\n
+SECRETO num monte de mato e fazer\l
+uma BASE SECRETA?$
+
+[Route119_Text_RouteSignFortree] b4c95d2200
+ROTA 119\n
+{RIGHT_ARROW} CIDADE DE FORTREE$
+
+[Route119_Text_WeatherInstitute] f69ce00ceb
+INSTITUTO DO CLIMA$
+
+[Route119_Text_TrainerTipsDecoration] 6351deecaa
+DICAS DE TREINADOR\p
+Dá pra colocar até dezesseis\n
+decorações e móveis numa\l
+BASE SECRETA.\p
+Escolha os seus itens favoritos e\n
+monte a sua própria BASE SECRETA\l
+do jeitinho que você quiser.$

@@ -1,0 +1,274 @@
+# CLUBE DO CABO e CLUBE SEM FIO POKéMON (SALA UNIÃO, CANTO DIRETO), e os jogos sem fio de MOSSDEEP.
+
+[CableClub_Text_WelcomeWhichCableClubService] 10ded92965
+Boas-vindas ao CLUBE DO CABO\nPOKéMON.\pQual dos nossos serviços você\nquer usar?$
+
+[CableClub_Text_WhichService] ce7f8638f4
+Qual dos nossos serviços você\nquer usar?$
+
+[CableClub_Text_TradeUsingLinkCable] 94e04c8fa7
+Troque POKéMON com outro jogador\nusando um cabo Game Link do GBA.$
+
+[CableClub_Text_BattleUsingLinkCable] a89c69f446
+Dá pra batalhar com outro TREINADOR\nusando um cabo Game Link do GBA.$
+
+[CableClub_Text_RecordCornerUsingLinkCable] 7bfa89918d
+Você pode usar o CANTO DOS RECORDES\ncom outros, com um cabo Game Link.$
+
+[CableClub_Text_CloseThisMenu] 2cd886ef51
+Fecha este menu.$
+
+[CableClub_Text_NeedTwoMonsForDoubleBattle] 8a7ef095e5
+Pra BATALHA DUPLA, você precisa\nter pelo menos dois POKéMON.$
+
+[CableClub_Text_NeedTwoMonsToTrade] 47b1df1a54
+Pra trocar, você precisa ter pelo\nmenos dois POKéMON com você.$
+
+[CableClub_Text_CantTradeEnigmaBerry] 417fb59248
+Um POKéMON segurando a FRUTA\n{STR_VAR_1} não pode ser trocado.$
+
+[gText_PleaseWaitForLink] d7862dfbb3
+Aguarde.\n… … Botão B: Cancelar$
+
+[gText_ConfirmLinkWhenPlayersReady] 35d786a6ae
+Quando todos estiverem prontos…\nBotão A: Confirmar\lBotão B: Cancelar$
+
+[gText_ConfirmStartLinkWithXPlayers] 777a8a3bcb
+Conectar com {STR_VAR_1} jogadores.\nBotão A: Confirmar\lBotão B: Cancelar$
+
+[gText_AwaitingLinkup] 8276d5b5c1
+Aguardando conexão…\n… … Botão B: Cancelar$
+
+[CableClub_Text_OkayToSaveProgress] 428756ddc0
+O seu progresso precisa ser salvo\nantes de conectar. Pode salvar?$
+
+[CableClub_Text_PleaseEnter] 6710d6ec43
+Pode entrar.$
+
+[CableClub_Text_DirectYouToYourRoom] f2cf687248
+Vou te levar até a sua sala agora.$
+
+[Text_SomeoneIsNotReadyToLink] b0ac585bd0
+Alguém não está pronto pra conectar.\pVolte depois que todos\nestiverem prontos.$
+
+[Text_LinkErrorPleaseReset] d3f2645065
+Desculpe, houve um erro de conexão…\nReinicie e tente de novo.$
+
+[Text_PlayersMadeDifferentSelections] f44ebfc996
+Parece que os parceiros de conexão\nescolheram opções diferentes.$
+
+[CableClub_Text_PleaseVisitAgain] dca5d477be
+Volte sempre.$
+
+[CableClub_Text_IncorrectNumberOfParticipants] ebb9f01c75
+O número de participantes está\nerrado.$
+
+[CableClub_Text_CantSingleBattleWithXPlayers] 9b6798a6bf
+O modo BATALHA INDIVIDUAL não pode\nser jogado por {STR_VAR_1} jogadores.$
+
+[CableClub_Text_CantDoubleBattleWithXPlayers] 417af37dd4
+O modo BATALHA DUPLA não pode\nser jogado por {STR_VAR_1} jogadores.$
+
+[CableClub_Text_NeedFourPlayers] e75442f3ef
+Este modo de batalha precisa\nde quatro jogadores.$
+
+[CableClub_Text_PleaseConfirmNumberAndRestart] abac3eaca4
+Confira o número de jogadores\ne comece de novo.$
+
+[Text_TerminateLinkConfirmation] 95a116a189
+A conexão vai ser encerrada se você\nsair da sala. Tudo bem?$
+
+[Text_TerminateLinkPleaseWait] e80c802cfd
+Encerrando a conexão…\nVamos te acompanhar até a saída.\lAguarde.$
+
+[CableClub_Text_TooBusyToNotice] cae0b90a38
+Esse TREINADOR está ocupado demais\npra notar…$
+
+[CableClub_Text_GotToLookAtTrainerCard] 00c5c0086f
+Oba! Deu pra ver o CARTÃO DE\nTREINADOR de {STR_VAR_1}!$
+
+[CableClub_Text_GotToLookAtColoredTrainerCard] da2e4a473e
+Oba! Deu pra ver o CARTÃO DE\nTREINADOR de {STR_VAR_1}!\pÉ um cartão {STR_VAR_2}!$
+
+[BattleColosseum_2P_Text_TakePlaceStartBattle] 8f02649ee5
+Tome o seu lugar e comece\na batalha.$
+
+[TradeCenter_Text_TakeSeatStartTrade] 1db1b8702b
+Sente-se e comece\na troca.$
+
+[RecordCorner_Text_ThanksForComing] c784f9b6bd
+Obrigado pela visita.$
+
+[CableClub_Text_TrainerCardDataOverwritten] cf7d061df7
+Os dados do CARTÃO DE TREINADOR\nvão ser substituídos.$
+
+[CableClub_Text_HopeToSeeYouAgain] 013831f0c2
+Espero te ver de novo!$
+
+[CableClub_Text_NotSetUpForFarAwayRegion] 51d4f787d3
+Sinto muitíssimo.\pAinda não estamos preparados pra\ntrocas com TREINADORES de outra\lregião distante…$
+
+[CableClub_Text_OtherTrainerNotReady] 65687457df
+O outro TREINADOR não está pronto.$
+
+[CableClub_Text_YouHaveAMonThatCantBeTaken] e4ba442817
+Você tem pelo menos um POKéMON\nque não pode ser levado.$
+
+[RecordCorner_Text_TakeSeatAndWait] 9718c9362e
+Sente-se e aguarde.$
+
+[RecordCorner_Text_PlayerSentOverOneX] e953f6de90
+{STR_VAR_1} mandou\n{STR_VAR_2}.$
+
+[CableClub_Text_CantMixWithJapaneseGame] 88fb2c8e7a
+Desculpe, houve um erro de transmissão.\pNão dá pra misturar registros com\njogos Ruby ou Sapphire japoneses.\pTambém não dá pra misturar registros\ncom o Emerald japonês e Ruby ou\lSapphire de fora ao mesmo tempo.$
+
+[CableClub_Text_AdapterNotConnected] 702f99735a
+O Adaptador Sem Fio não está\nconectado direito.$
+
+[CableClub_Text_ParticipantsStepUpToCounter] 5959f79326
+Pedimos aos participantes que\nvenham até o balcão.$
+
+[CableClub_Text_Hello] 202ab164fd
+Olá!$
+
+[CableClub_Text_PleaseWait] 29d26b0269
+Aguarde.$
+
+[CableClub_Text_YouMayTradeHere] 4252712074
+Aqui você pode trocar POKéMON\ncom outro TREINADOR.$
+
+[CableClub_Text_YouMayBattleHere] 11312fffc1
+Aqui você pode batalhar com os\nseus amigos.$
+
+[CableClub_Text_CanMakeBerryPowder] 236495d946
+De dois a cinco TREINADORES podem\nfazer PÓ DE FRUTA juntos.$
+
+[CableClub_Text_CanMixRecords] 867c44773c
+Os registros de dois a quatro\njogadores podem ser misturados.$
+
+[CableClub_Text_GuideToVariousServices] 7d5d1ec6f8
+Um guia dos vários serviços do\nCLUBE SEM FIO.$
+
+[CableClub_Text_CancelSelectedItem] d1b38e71e6
+Cancela a opção escolhida do MENU.$
+
+[CableClub_Text_WhichBattleMode] 95fa03ff50
+Qual modo de batalha você quer?$
+
+[CableClub_Text_ReturnsToPreviousStep] f73fed552b
+Volta à etapa anterior.$
+
+[CableClub_Text_NeedBerryForBerryCrush] 41ebf21b59
+Pra usar o TRITURA FRUTAS, você\nprecisa ter pelo menos uma FRUTA.$
+
+[CableClub_Text_NeedTwoMonsForUnionRoom] 2edccaa8c1
+Pra entrar na SALA UNIÃO, você\nprecisa ter pelo menos dois POKéMON.$
+
+[CableClub_Text_NoEnigmaBerryInUnionRoom] 5f89adb5bf
+Nenhum POKéMON segurando a FRUTA\n{STR_VAR_1} entra na SALA UNIÃO.$
+
+[CableClub_Text_UnionRoomAdapterNotConnected] a93b21f1f9
+Esta é a SALA UNIÃO do CLUBE\nSEM FIO POKéMON.\pInfelizmente, o seu Adaptador\nSem Fio não está conectado direito.\pVolte outra hora.$
+
+[CableClub_Text_OhExcuseMe] 301536debf
+Ah…\nCom licença!$
+
+[CableClub_Text_PlayerIsWaiting] fc0b8d1bba
+Parece que {STR_VAR_1} está jogando\nagora mesmo.\lVai lá!$
+
+[MossdeepCity_GameCorner_1F_Text_DescribeWhichGame] f88cc047f8
+Posso explicar as regras dos jogos,\nse você quiser.\pQual jogo eu explico?$
+
+[MossdeepCity_GameCorner_1F_Text_PokemonJumpInfo] d5630000c3
+“PULO POKéMON”\pFaça o seu POKéMON pular a corda de\nCHICOTE DE VINHA com o botão A.\pSó POKéMON pequenos, de uns\n70 cm ou menos, podem participar.\pPOKéMON que só nadam, cavam\nou voam não sabem pular.\pPor isso, esses POKéMON não\npodem participar.\pCoisas boas acontecem se todos\npularem no ritmo.$
+
+[MossdeepCity_GameCorner_1F_Text_DodrioBerryPickingInfo] fd9a41b9e3
+“COLHEITA DO DODRIO”\pComande as três cabeças do DODRIO\npra pegar as FRUTAS que caem.\pAperte direita, cima ou esquerda no\ndirecional {PLUS} pra mexer as cabeças.\pPra jogar, você precisa ter\num DODRIO.$
+
+[MossdeepCity_GameCorner_1F_Text_TalkToOldManToPlay] 8bbde7c2f7
+Se quiser jogar, fale com o\nsenhor do meu lado.$
+
+[MossdeepCity_GameCorner_1F_Text_WelcomeCanYouWait] b06877a66e
+Oi, boas-vindas!\nVeio jogar usando a\lComunicação Sem Fio?\pPode esperar só um pouquinho?$
+
+[MossdeepCity_GameCorner_1F_Text_ComeAgain] 26c1d2e029
+Beleza, volte sempre!$
+
+[MossdeepCity_GameCorner_1F_Text_AdapterNotConnected] 8601ea1c92
+O Adaptador Sem Fio não tá conectado.\nVolte quando estiver ligado!$
+
+[MossdeepCity_GameCorner_1F_Text_PlayWhichGame] 466fc3cbf0
+Beleza, qual jogo você quer\njogar?$
+
+[MossdeepCity_GameCorner_1F_Text_EnterWhichPokemon] 2c7c24da29
+Qual POKéMON você quer\ninscrever?$
+
+[MossdeepCity_GameCorner_1F_Text_AllGoodToGo] 8b01a99d98
+Certo, tudo pronto.\nNão deixe os outros te vencerem!$
+
+[MossdeepCity_GameCorner_1F_Text_LeavingDoComeAgain] a8870dec4b
+Já vai?\nVolte sempre!$
+
+[MossdeepCity_GameCorner_1F_Text_ExplainRequiredMon] 43505af198
+Parece que você não tem nenhum\nPOKéMON que possa participar…\pQuer que eu explique que tipo\nde POKéMON pode participar?$
+
+[MossdeepCity_GameCorner_1F_Text_ShortJumpingPokemonAllowed] 1590119657
+O “PULO POKéMON” é aberto a POKéMON\nde uns 70 cm ou menos.\pNão podem entrar os POKéMON\nque não pulam.\pSabe, tipo os POKéMON que só\nnadam, cavam ou voam.\pÉ só isso que você precisa saber.$
+
+[MossdeepCity_GameCorner_1F_Text_OnlyDodrioAllowed] 4e981a2821
+A COLHEITA DO DODRIO é um jogo\nem que só DODRIO pode entrar.$
+
+[MossdeepCity_GameCorner_1F_Text_RetryPlease] bb227aca5c
+Pode tentar de novo desde\no começo, por favor?$
+
+[CableClub_Text_WelcomeWhichDirectCornerRoom] 67782d6e56
+Boas-vindas ao CANTO DIRETO do\nCLUBE SEM FIO POKéMON.\pAqui você pode interagir direto\ncom os seus amigos.\pEm qual sala você quer\nentrar?$
+
+[CableClub_Text_TradePokemon] 51416fc9a5
+Quer trocar POKéMON?$
+
+[CableClub_Text_PlayWhichBattleMode] 435b2c816e
+Qual modo de batalha você quer\njogar?$
+
+[CableClub_Text_AccessRecordCorner] 73ab0b50c2
+Quer acessar o\nCANTO DOS RECORDES?$
+
+[CableClub_Text_UseBerryCrush] 2e56ce53e1
+Quer usar o sistema\nTRITURA FRUTAS?$
+
+[CableClub_Text_ExplainBattleModes] ff19652122
+Há três modos de batalha.\pA BATALHA INDIVIDUAL é pra dois\nTREINADORES com um ou mais POKéMON.\pCada TREINADOR tem um POKéMON\nem campo por vez.\pA BATALHA DUPLA é pra dois\nTREINADORES com dois ou mais POKéMON.\pCada TREINADOR manda dois\nPOKéMON pra batalha por vez.\pA BATALHA MÚLTIPLA é pra quatro\nTREINADORES com um ou mais POKéMON.\pCada TREINADOR tem um POKéMON\nem campo por vez.$
+
+[CableClub_Text_ChooseGroupLeaderOfTwo] f2ec546f29
+Decidam qual de vocês dois\nvai ser o LÍDER.\pO outro jogador deve então\nescolher “ENTRAR NO GRUPO”.$
+
+[CableClub_Text_ChooseGroupLeaderOfFour] c44e2ca71d
+Decidam qual de vocês quatro\nvai ser o LÍDER DO GRUPO.\pOs outros jogadores devem então\nescolher “ENTRAR NO GRUPO”.$
+
+[CableClub_Text_ChooseGroupLeader] 8160cd76d1
+Decidam qual de vocês vai ser\no LÍDER DO GRUPO.\pOs outros jogadores devem então\nescolher “ENTRAR NO GRUPO”.$
+
+[CableClub_Text_WelcomeUnionRoomEnter] 9277fc773d
+Boas-vindas à SALA UNIÃO do\nCLUBE SEM FIO POKéMON.\pAqui você pode interagir direto\ncom outros TREINADORES, até\lcom quem você nem conhece.\pQuer entrar na SALA?$
+
+[CableClub_Text_UnionRoomInfo] 556f0640b8
+Os TREINADORES da SALA UNIÃO\nsão os jogadores perto de você\lque também entraram na SALA.\pAqui você pode fazer de tudo,\ncomo trocar cumprimentos.\pPode inscrever dois POKéMON de até\nNv. 30 pra uma batalha um contra um.\pPode participar de um bate-papo\ncom duas a cinco pessoas.\pOu pode registrar um POKéMON\npra troca.\pQuer entrar na SALA?$
+
+[CableClub_Text_EnjoyUnionRoom] e782149d84
+Espero que você curta o seu tempo\nna SALA UNIÃO.$
+
+[CableClub_Text_FirstTimeRightThisWay] c09bd165d7
+Olá!\nMeu nome é TEALA.\pDeve ser a sua primeira vez\naqui em cima.\pVou te mostrar como funciona o\nSistema de Comunicação Sem Fio.\pPrimeiro, preciso te mostrar este\nandar do nosso CENTRO POKéMON.\pPor aqui, por favor.$
+
+[CableClub_Text_ExplainWirelessClubFirstTime] 69497383ba
+No último andar, há duas\nsalas.\pPrimeiro, a sala da esquerda.\nÉ a SALA UNIÃO.\pVocê pode se conectar com TREINADORES\nperto de você que também entraram\lna SALA UNIÃO.\pCom eles, dá pra fazer coisas como\nconversar, batalhar e trocar.\pSegundo, a sala da direita é\no CANTO DIRETO.\pNesta sala, você pode trocar ou\nbatalhar POKéMON com os seus amigos.\pSe o Adaptador Sem Fio não estiver\nconectado, ainda dá pra se conectar\lcom um cabo Game Link do GBA.\pNesse caso, você precisa ir ao\nCANTO DIRETO.\pEspero que você curta o Sistema\nde Comunicação Sem Fio.$
+
+[CableClub_Text_AskAboutLinking] faf59b82ad
+Olá, {PLAYER}!\pSou eu, TEALA, a atendente do\n2º andar do CENTRO POKéMON.\pPrecisa me perguntar alguma\ncoisa sobre conexão?$
+
+[CableClub_Text_ExplainWirelessClub] 40ed9bd1f8
+Vou explicar como funciona o\nCLUBE SEM FIO POKéMON.\pNeste último andar, há\nduas salas.\pPrimeiro, a sala da esquerda.\nÉ a SALA UNIÃO.\pVocê pode se conectar com TREINADORES\nperto de você que também entraram\lna SALA UNIÃO.\pCom eles, dá pra fazer coisas como\nconversar, batalhar e trocar.\pSegundo, a sala da direita é\no CANTO DIRETO.\pNesta sala, você pode trocar ou\nbatalhar POKéMON com os seus amigos.\pÀs vezes, você pode não achar os\nseus amigos na SALA UNIÃO\lou no CANTO DIRETO.\pNesse caso, chegue mais perto\ndos seus amigos.\pSe o Adaptador Sem Fio não estiver\nconectado, ainda dá pra se conectar\lcom um cabo Game Link do GBA.\pNesse caso, você precisa ir ao\nCANTO DIRETO.\pEspero que você curta o Sistema\nde Comunicação Sem Fio.$
+
+[CableClub_Text_HopeYouEnjoyWirelessSystem] bc895cfbb6
+Espero que você curta o Sistema\nde Comunicação Sem Fio.$

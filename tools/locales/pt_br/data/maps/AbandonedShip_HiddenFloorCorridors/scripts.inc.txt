@@ -1,0 +1,23 @@
+# NAVIO ABANDONADO: o andar escondido.
+
+[AbandonedShip_HiddenFloorCorridors_Text_Rm1DoorIsLocked] a3ae6fdc87
+A porta está trancada.\p
+“QTO. 1” está pintado na porta.$
+
+[AbandonedShip_HiddenFloorCorridors_Text_Rm2DoorIsLocked] 1a5857d8d1
+A porta está trancada.\p
+“QTO. 2” está pintado na porta.$
+
+[AbandonedShip_HiddenFloorCorridors_Text_Rm4DoorIsLocked] 99b6d36baf
+A porta está trancada.\p
+“QTO. 4” está pintado na porta.$
+
+[AbandonedShip_HiddenFloorCorridors_Text_Rm6DoorIsLocked] 43cf5eefdb
+A porta está trancada.\p
+“QTO. 6” está pintado na porta.$
+
+[AbandonedShip_HiddenFloorCorridors_Text_InsertedKey] e96238a8be
+{PLAYER} colocou e girou a\n
+CHAVE.\p
+A CHAVE ficou presa, mas a\n
+porta abriu.$

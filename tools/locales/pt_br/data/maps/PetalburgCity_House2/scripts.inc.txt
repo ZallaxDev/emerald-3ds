@@ -1,0 +1,14 @@
+# CIDADE DE PETALBURG, casa 2: os vizinhos falam do NORMAN.
+
+[PetalburgCity_House2_Text_NormanBecameGymLeader] d7baa64817
+O NORMAN virou o novo LÍDER DE\n
+GINÁSIO da nossa cidade.\p
+Acho que ele trouxe a família de\n
+algum lugar bem longe.$
+
+[PetalburgCity_House2_Text_BattledNormanOnce] 9dac3aedcd
+Batalhei com o NORMAN uma vez, mas,\n
+nossa, ele era forte demais.\p
+Como eu posso dizer?\p
+Deu a impressão de que ele\n
+vive pelos POKéMON.$

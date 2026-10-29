@@ -1,0 +1,25 @@
+# LIGA POKéMON: a sala da PHOEBE.
+
+[EverGrandeCity_PhoebesRoom_Text_IntroSpeech] b4c2c01931
+Ahahaha!\p
+Sou a PHOEBE, da ELITE DOS QUATRO.\n
+Treinei no MONTE PYRE.\p
+Enquanto treinava, ganhei o dom de\n
+me comunicar com POKéMON FANTASMA.\p
+É, o laço que criei com os POKéMON\n
+é fortíssimo.\p
+Então vem, tenta só ver se consegue\n
+até causar dano nos meus POKéMON!$
+
+[EverGrandeCity_PhoebesRoom_Text_Defeat] ca4ac344c1
+Ah, droga.\n
+Acabei perdendo.$
+
+[EverGrandeCity_PhoebesRoom_Text_PostBattleSpeech] 3ad2a78031
+Também tem um laço forte entre você\n
+e os seus POKéMON.\p
+Eu não percebi, então é natural\n
+que eu tenha perdido.\p
+É, quero ver até onde esse laço\n
+vai te levar.\p
+Vai, pode seguir pra próxima sala.$

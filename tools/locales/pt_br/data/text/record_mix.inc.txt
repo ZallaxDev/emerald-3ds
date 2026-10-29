@@ -1,0 +1,7 @@
+# Mistura de registros.
+
+[Text_WouldYouLikeToMixRecords] 3df8110e5f
+Quer misturar registros com\noutros TREINADORES?$
+
+[Text_WeHopeToSeeYouAgain] 407712edb8
+Esperamos te ver de novo!$

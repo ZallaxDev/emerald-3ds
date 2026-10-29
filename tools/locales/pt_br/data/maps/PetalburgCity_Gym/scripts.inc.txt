@@ -1,0 +1,454 @@
+# GINÁSIO de PETALBURG: o PAPAI (NORMAN), o WALLY, as salas e os
+# TREINADORES. O jogador pode ser menino ou menina: quem fala dele evita o
+# gênero ("alguém da família do LÍDER", "quem eu criei").
+
+[PetalburgCity_Gym_Text_DadYoureHereWithYourPokemon] 640dc79163
+PAPAI: Hm?\p
+Olha só, se não é {PLAYER}!\n
+Já terminou a mudança?\p
+Estou surpreso que você conseguiu\n
+chegar aqui sem ajuda.\p
+Ah, entendi.\n
+Você está com o seu POKéMON.\p
+Hm… Então acho que você também vai\n
+treinar POKéMON, como eu, {PLAYER}.\p
+Que notícia boa!\n
+Vou ficar na torcida!$
+
+[PetalburgCity_Gym_Text_WallyIdLikeAPokemon] 106b69996e
+Hum… Eu…\n
+Eu queria um POKéMON, por favor…$
+
+[PetalburgCity_Gym_Text_DadOhYoureWallyRight] cbf4cc61f4
+PAPAI: Hm? Você é… Hã… Ah, claro.\n
+Você é o WALLY, né?$
+
+[PetalburgCity_Gym_Text_WallyIveNeverCaughtAPokemon] 75e9934147
+WALLY: Eu vou ficar com uns parentes\n
+na CIDADE DE VERDANTURF.\p
+Achei que ia ficar sozinho e triste,\n
+então queria levar um POKéMON.\p
+Mas eu nunca peguei um POKéMON.\n
+Não sei como…$
+
+[PetalburgCity_Gym_Text_DadHmISee] be184e10ad
+PAPAI: Hm. Entendi.$
+
+[PetalburgCity_Gym_Text_DadPlayerGoWithWally] beec0a8d9f
+PAPAI: {PLAYER}, você ouviu,\n
+né?\p
+Vai com o WALLY e garante que ele\n
+pegue um POKéMON em segurança.$
+
+[PetalburgCity_Gym_Text_IllLoanYouMyZigzagoon] feba1e3e1d
+WALLY, tome, vou emprestar meu POKéMON.\p
+WALLY recebeu um ZIGZAGOON!$
+
+[PetalburgCity_Gym_Text_WallyThankYouAndDadGivesPokeBall] 587b1b752a
+WALLY: Nossa!\n
+Um POKéMON!\p
+PAPAI: Hm. Tome também uma POKé BOLA.\n
+Vai fundo!\p
+WALLY recebeu uma POKé BOLA!$
+
+[PetalburgCity_Gym_Text_WallyOhWowThankYou] 795e7c6567
+WALLY: Nossa!\n
+Obrigado!$
+
+[PetalburgCity_Gym_Text_WouldYouReallyComeWithMe] 6f90af50f1
+{PLAYER}… Você vem mesmo\n
+comigo?$
+
+[PetalburgCity_Gym_Text_DadSoDidItWorkOut] 07265527d6
+PAPAI: E aí, deu certo?$
+
+[PetalburgCity_Gym_Text_WallyThankYouBye] e72c3532df
+WALLY: Deu sim, obrigado.\n
+Aqui está o seu POKéMON de volta.\p
+{PLAYER}, obrigado por ir\n
+comigo.\p
+Foi graças a vocês dois que eu\n
+consegui pegar o meu POKéMON.\p
+Prometo que vou cuidar muito bem\n
+dele.\p
+Ah! Minha mãe está me esperando,\n
+tenho que ir!\p
+Tchau, {PLAYER}!$
+
+[PetalburgCity_Gym_Text_DadGoCollectBadges] 06229e3a78
+PAPAI: Agora…\p
+{PLAYER}, se você quer ficar forte\n
+treinando, aqui vai um conselho.\p
+Siga para a CIDADE DE RUSTBORO,\n
+depois desta cidade.\p
+Lá, desafie a LÍDER DE GINÁSIO,\n
+ROXANNE.\p
+Depois dela, vá a outros GINÁSIOS\n
+POKéMON e derrote os LÍDERES.\p
+Junte as INSÍGNIAS deles,\n
+entendeu?\p
+Claro, eu também sou LÍDER DE GINÁSIO.\n
+Um dia vamos batalhar, {PLAYER}.\p
+Mas só depois que você ficar\n
+mais forte.$
+
+[PetalburgCity_Gym_Text_NormanGoToRustboro] 2a2c890792
+PAPAI: Hm? Você não vai para o\n
+GINÁSIO POKéMON de RUSTBORO?\p
+Não tem graça batalhar com quem\n
+está começando agora.\p
+{PLAYER}, quero que você me desafie\n
+quando ficar muito mais forte.\p
+Eu batalho com você, {PLAYER}, quando\n
+tiver quatro INSÍGNIAS, combinado?$
+
+[PetalburgCity_Gym_Text_NormanGoToDewford] 85bc35d503
+PAPAI: Entendi… Então você venceu\n
+a LÍDER DE GINÁSIO de RUSTBORO.\p
+Mas ainda tem muito TREINADOR\n
+mais forte que você, {PLAYER}.\p
+Do outro lado do mar, em DEWFORD,\n
+tem um LÍDER chamado BRAWLY.\p
+Vá desafiá-lo.$
+
+[PetalburgCity_Gym_Text_YouHaveGottenStronger] 5a50e8d3a7
+PAPAI: Hm… {PLAYER}, você ficou\n
+mais forte.\p
+Dá para ver pelo número de INSÍGNIAS\n
+que você conquistou.$
+
+[PetalburgCity_Gym_Text_NormanIntro] b52d9eba5d
+PAPAI: Hm…\n
+Você conseguiu quatro INSÍGNIAS.\p
+Muito bem, como prometi, vamos ter\n
+uma batalha POKéMON.\p
+{PLAYER}…\p
+Fico tão feliz de ter uma batalha de\n
+verdade com quem eu mesmo criei.\p
+Mas batalha é batalha!\p
+Vou fazer tudo o que puder como\n
+LÍDER DE GINÁSIO para vencer.\p
+{PLAYER}, é bom você dar\n
+o seu melhor também!$
+
+[PetalburgCity_Gym_Text_NormanDefeat] bbf8c7c4f6
+…\p
+Eu… Não posso…\p
+Não acredito. {PLAYER}…\p
+Perdi para {PLAYER}?\p
+Mas regra é regra!\n
+Tome, isto é seu.$
+
+[PetalburgCity_Gym_Text_ReceivedBalanceBadge] 298e73d87b
+{PLAYER} recebeu a INSÍGNIA DO\n
+EQUILÍBRIO do PAPAI!$
+
+[PetalburgCity_Gym_Text_ExplainBalanceBadgeTakeThis] 06678dcd83
+PAPAI: Com essa INSÍGNIA, a DEFESA\n
+de todos os seus POKéMON aumenta.\p
+Os POKéMON que sabem a MO SURFAR\n
+vão poder andar sobre a água.\p
+Este é meu presente. {PLAYER}, tenho\n
+certeza de que você vai usar bem.$
+
+[PetalburgCity_Gym_Text_ExplainFacade] 3e9205092f
+PAPAI: A MT42 tem FACHADA.\p
+Ela dobra a força do golpe se o\n
+POKéMON estiver envenenado, paralisado\l
+ou queimado.\p
+Pode virar uma situação ruim a\n
+seu favor.$
+
+[PetalburgCity_Gym_Text_DadHappyAndSad] 761362b47c
+PAPAI: Como LÍDER DE GINÁSIO, nem sei\n
+dizer o quanto estou chateado…\p
+Mas, como pai, fico feliz e um pouco\n
+triste ao mesmo tempo. É estranho…$
+
+[PetalburgCity_Gym_Text_PleaseComeWithMe] f736851d8e
+Ah, aí está você, {PLAYER}{KUN}!\p
+Venha comigo, por favor.\n
+Tenho uma coisa para você.$
+
+[PetalburgCity_Gym_Text_LetMeBorrowPlayer] 0687b5466b
+NORMAN, você não se importa, né?\p
+Vou pegar {PLAYER}{KUN} emprestado\n
+por um ou dois minutinhos.$
+
+[PetalburgCity_Gym_Text_DadGoingToKeepTraining] 72d5283e9c
+PAPAI: {PLAYER}, vá visitar a sua\n
+mãe de vez em quando.\p
+Eu vou ficar aqui e treinar\n
+em dobro.\p
+Como TREINADOR, não sossego enquanto\n
+não me vingar dessa derrota, {PLAYER}!$
+
+[PetalburgCity_Gym_Text_DadNoAmountOfTrainingIsEnough] fa1c231a1e
+PAPAI: {PLAYER}, como vão as coisas?\p
+O mundo dos POKéMON é profundo.\p
+Sinceramente, acho que nenhum treino\n
+nunca vai ser suficiente.$
+
+[PetalburgCity_Gym_Text_GymGuideAdvice] 4ac3e887d7
+E aí, tudo certo, {PLAYER}, rumo\n
+ao título de CAMPEÃO?\p
+As portas deste GINÁSIO abrem quando\n
+você vence os TREINADORES daqui.\p
+Opa! As portas desta sala já estão\n
+abertas, então não me ataque!\p
+Os TREINADORES deste GINÁSIO\n
+usam tudo quanto é item.\p
+A porta da esquerda leva à\n
+SALA DA VELOCIDADE.\p
+A porta da direita leva à\n
+SALA DA PRECISÃO.\p
+O nome da sala fica na porta,\n
+então escolha com cuidado.\p
+Depois de escolher a porta…\n
+Bom, vai fundo!$
+
+[PetalburgCity_Gym_Text_GymGuidePostVictory] da9210a7fe
+{PLAYER}! Nossa! Você superou até\n
+o próprio pai!\p
+Tipo, nossa!\n
+Que reviravolta incrível!$
+
+[PetalburgCity_Gym_Text_RandallIntro] 6e544c0a9c
+Poder atacar antes do\n
+oponente…\p
+Só isso já me dá uma baita\n
+vantagem, não acha?$
+
+[PetalburgCity_Gym_Text_RandallDefeat] 2f8358564d
+Que batalha magnífica!$
+
+[PetalburgCity_Gym_Text_RandallPostBattle] 661457b7a3
+Siga para a próxima sala, onde um novo\n
+desafio espera você.\p
+À esquerda fica a SALA DA CONFUSÃO.\p
+A porta da direita leva à SALA DA\n
+DEFESA.$
+
+[PetalburgCity_Gym_Text_RandallPostBadge] a40eb7e1bc
+Vencendo ou perdendo, pra quem for,\n
+nunca deixar de treinar você\l
+mesmo e os seus POKéMON.\p
+É isso que eu acho que é ser\n
+LÍDER DE GINÁSIO.$
+
+[PetalburgCity_Gym_Text_ParkerIntro] bd069f4581
+Esta é a SALA DA CONFUSÃO.\p
+Vamos ver como é a sua ligação\n
+com os seus POKéMON!$
+
+[PetalburgCity_Gym_Text_ParkerDefeat] 7417e37ee9
+Não consegui confundir sua equipe…\n
+Vocês têm uma ligação forte.$
+
+[PetalburgCity_Gym_Text_ParkerPostBattle] aabd3f75cb
+A próxima é a SALA DA FORÇA.\n
+Você aguenta força bruta?$
+
+[PetalburgCity_Gym_Text_ParkerPostBadge] 2124d27ad7
+Depois que você venceu nosso LÍDER,\n
+o treino ficou muito mais puxado.$
+
+[PetalburgCity_Gym_Text_GeorgeIntro] eac3a14bf9
+Bem quando você acha que vai vencer,\n
+o oponente recupera PS…\p
+Já imaginou como deve ser\n
+horrível?\p
+Vou mostrar exatamente como é\n
+horrível!$
+
+[PetalburgCity_Gym_Text_GeorgeDefeat] e8aa0f7c1f
+Não consegui recuperar PS o bastante…\n
+Que ATAQUE…$
+
+[PetalburgCity_Gym_Text_GeorgePostBattle] f1d4e60fcd
+Eu devia esperar isso de alguém\n
+da família do nosso LÍDER.\p
+Não, espera! As habilidades de quem\n
+treina só vêm com esforço.\p
+Perdi porque o meu esforço\n
+não foi suficiente.\p
+Vai! A próxima é a SALA DO NOCAUTE.$
+
+[PetalburgCity_Gym_Text_GeorgePostBadge] dbd6bac0a5
+Vou continuar treinando em GINÁSIOS.\n
+Um dia, vou virar LÍDER.$
+
+[PetalburgCity_Gym_Text_BerkeIntro] 8a550f8bea
+Não vou pegar leve só porque\n
+o LÍDER é da sua família.\p
+Vou mostrar como é horrível para\n
+um POKéMON levar um golpe crítico!$
+
+[PetalburgCity_Gym_Text_BerkeDefeat] ddf271f361
+Essa força…\n
+Você é fera de verdade.$
+
+[PetalburgCity_Gym_Text_BerkePostBattle] 6aaf421dfc
+Seu pai é forte mesmo.\n
+É um TREINADOR que eu respeito.\p
+E sinto o mesmo brilho vindo\n
+de você e do seu pai.\p
+Espero que vocês façam uma batalha\n
+incrível!$
+
+[PetalburgCity_Gym_Text_BerkePostBadge] a50011430e
+Desde que seu pai virou LÍDER,\n
+os TREINADORES de PETALBURG ficaram\l
+muito mais duros na queda.$
+
+[PetalburgCity_Gym_Text_MaryIntro] 4be117ac2a
+Hihi…\n
+Esta é a SALA DA PRECISÃO.\p
+É bem chato quando todo ataque\n
+acerta sem falhar.$
+
+[PetalburgCity_Gym_Text_MaryDefeat] 6a42f407c9
+Você estava um nível acima de mim…$
+
+[PetalburgCity_Gym_Text_MaryPostBattle] 193b6270ba
+Tem TREINADORES ainda mais fortes\n
+esperando por você.\p
+À esquerda, a SALA DA DEFESA, e à\n
+direita, a SALA DA RECUPERAÇÃO.\p
+O ATAQUE dos seus POKéMON vai ser\n
+testado de qualquer jeito.$
+
+[PetalburgCity_Gym_Text_MaryPostBadge] 5830a45284
+Sabe o que a gente quer alcançar\n
+treinando POKéMON?\p
+A gente quer virar alma gêmea\n
+dos nossos POKéMON.$
+
+[PetalburgCity_Gym_Text_AlexiaIntro] 66ae84b3b4
+Quanto maior a DEFESA, mais eu posso\n
+atacar sem medo.$
+
+[PetalburgCity_Gym_Text_AlexiaDefeat] 54d89597f1
+Nossa defesa não foi suficiente…$
+
+[PetalburgCity_Gym_Text_AlexiaPostBattle] 0d2ef699b4
+Acho que você me ensinou uma lição\n
+valiosa.\p
+Agora, vai! A porta da esquerda vai\n
+para a SALA DA FORÇA.\p
+A porta da direita abre para\n
+a SALA DO NOCAUTE.\p
+As duas têm TREINADORES que são\n
+bons de ataque.$
+
+[PetalburgCity_Gym_Text_AlexiaPostBadge] ab1f665287
+Oi! Já experimentou usar SURFAR?$
+
+[PetalburgCity_Gym_Text_JodyIntro] a63ff9e642
+Nosso LÍDER DE GINÁSIO mandou a gente\n
+dar tudo e vencer você.\p
+Mesmo que você seja da família\n
+do LÍDER!$
+
+[PetalburgCity_Gym_Text_JodyDefeat] fb90d4e5f7
+Mas… Eu dei tudo!$
+
+[PetalburgCity_Gym_Text_JodyPostBattle] 64cd0d6a91
+O jeito que você usa os POKéMON…\n
+Parece o estilo do seu pai.\p
+Pode passar! O LÍDER DE GINÁSIO, seu\n
+pai, está esperando!$
+
+[PetalburgCity_Gym_Text_JodyPostBadge] 27121d2db0
+Claro, é bom deixar os seus POKéMON\n
+mais fortes.\p
+Mas o que decide quem vence?\p
+Ora, é o carinho de quem treina\n
+pelos seus POKéMON.$
+
+[PetalburgCity_Gym_Text_DoorAppearsLocked] 937d26aa26
+Esta porta parece estar trancada\n
+agora…$
+
+[PetalburgCity_Gym_Text_EnterSpeedRoom] 19fe528329
+“SALA DA VELOCIDADE”, diz a placa.\p
+Quer entrar?$
+
+[PetalburgCity_Gym_Text_DoorAppearsLocked2] 937d26aa26
+Esta porta parece estar trancada\n
+agora…$
+
+[PetalburgCity_Gym_Text_EnterAccuracyRoom] 80d3bf1ed1
+“SALA DA PRECISÃO”, diz a placa.\p
+Quer entrar?$
+
+[PetalburgCity_Gym_Text_EnterConfusionRoom] 86d6d9971c
+“SALA DA CONFUSÃO”, diz a placa.\p
+Quer entrar?$
+
+[PetalburgCity_Gym_Text_EnterDefenseRoom] e4a13eba08
+“SALA DA DEFESA”, diz a placa.\p
+Quer entrar?$
+
+[PetalburgCity_Gym_Text_EnterRecoveryRoom] 14f3122b68
+“SALA DA RECUPERAÇÃO”, diz a placa.\p
+Quer entrar?$
+
+[PetalburgCity_Gym_Text_EnterStrengthRoom] 56f973fdc3
+“SALA DA FORÇA”, diz a placa.\p
+Quer entrar?$
+
+[PetalburgCity_Gym_Text_EnterOHKORoom] 5f6521d6db
+“SALA DO NOCAUTE”, diz a placa.\p
+Quer entrar?$
+
+[PetalburgCity_Gym_Text_EnterGymLeadersRoom] 5e1f36346a
+“SALA DO LÍDER DE GINÁSIO\p
+“Veja com os seus olhos que POKéMON\n
+esperam você!”, diz a placa.\p
+Quer entrar?$
+
+[PetalburgCity_Gym_Text_GymStatue] 1fbb0c7acb
+GINÁSIO POKéMON DE PETALBURG$
+
+[PetalburgCity_Gym_Text_GymStatueCertified] 677ca03b0d
+GINÁSIO POKéMON DE PETALBURG\p
+TREINADORES APROVADOS POR NORMAN:\n
+{PLAYER}$
+
+[PetalburgCity_Gym_Text_NormanPreRematch] edd00ec0c3
+PAPAI: {PLAYER}…\n
+Eu sabia que você ia vir.\p
+Eu nunca recusaria um desafio\n
+seu.\p
+Você entende, não entende?\p
+Dentro de um GINÁSIO, não importa\n
+que somos da mesma família.\p
+…Não, é justamente por sermos família\n
+que devemos dar o nosso melhor\l
+um ao outro. Não é, {PLAYER}?$
+
+[PetalburgCity_Gym_Text_NormanRematchDefeat] 96ca18f855
+Ah… Haha…\n
+Acho que peguei pesado demais…$
+
+[PetalburgCity_Gym_Text_NormanPostRematch] 1035e4c764
+PAPAI: {PLAYER}…\n
+Qual é o seu sonho?\p
+O meu sonho…\n
+Hahaha…\l
+Na verdade, ele já se realizou.$
+
+[PetalburgCity_Gym_Text_NormanRematchNeedTwoMons] 1846ea3f79
+PAPAI: {PLAYER}…\n
+Eu sabia que você ia vir.\p
+Eu nunca recusaria um desafio\n
+seu.\p
+Você entende, não entende?\p
+Dentro de um GINÁSIO, não importa\n
+que somos da mesma família.\p
+Hm? Espere um pouco, {PLAYER}.\p
+Você só tem um POKéMON em\n
+condições de lutar?\p
+Desculpe, mas você vai ter que voltar\n
+com pelo menos dois POKéMON.$

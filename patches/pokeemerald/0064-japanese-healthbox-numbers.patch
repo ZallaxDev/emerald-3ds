@@ -1,0 +1,150 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: The Japanese healthbox numbers and nickname in the bold font
+Applies after 0005-port-hooks.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/battle_interface.c b/src/battle_interface.c
+--- a/src/battle_interface.c
++++ b/src/battle_interface.c
+@@ -1131,6 +1131,47 @@ void InitBattlerHealthboxCoords(u8 battler)
+     UpdateSpritePos(gHealthboxSpriteIds[battler], x, y);
+ }
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_JAPANESE
++// The Japanese game's healthbox numbers: its glyphs are 8 pixels wide, so it
++// draws them with the bold font in whole tiles (as UpdateHpTextInHealthbox's
++// other branch does), the level as two digits after the box's "Lv" tile.
++#define JAPANESE_HEALTHBOX_NUMBERS
++extern const u8 gText_EmptySpace2[]; // the space after a one-digit level
++static void UpdateLvlInHealthbox(u8 healthboxSpriteId, u8 lvl)
++{
++    u8 text[sizeof(sEmptyWhiteText_GrayHighlight)];
++    u32 tile, numTiles, i;
++    u8 battler = gSprites[healthboxSpriteId].hMain_Battler;
++
++    memcpy(text, sEmptyWhiteText_GrayHighlight, sizeof(text));
++#ifdef PLATFORM_3DS
++    CtrBattleHud_SetLevel(healthboxSpriteId, lvl);
++#endif
++    if (!IsDoubleBattle())
++        tile = GetBattlerSide(battler) == B_SIDE_PLAYER ? 0x49 : 0x28;
++    else
++        tile = GetBattlerSide(battler) == B_SIDE_PLAYER ? 0x29 : 0x28;
++    tile += gSprites[healthboxSpriteId].oam.tileNum;
++
++    if (lvl == MAX_LEVEL)
++    {
++        ConvertIntToDecimalStringN(text + 6, lvl, STR_CONV_MODE_LEFT_ALIGN, 3);
++        numTiles = 3;
++    }
++    else
++    {
++        CpuCopy32(GetHealthboxElementGfxPtr(HEALTHBOX_GFX_42), (void *)(OBJ_VRAM0 + tile * TILE_SIZE_4BPP), TILE_SIZE_4BPP);
++        ConvertIntToDecimalStringN(text + 6, lvl, STR_CONV_MODE_LEFT_ALIGN, 2);
++        if (lvl < 10)
++            StringCopy(text + 7, gText_EmptySpace2);
++        numTiles = 2;
++        tile++;
++    }
++    RenderTextHandleBold(gMonSpritesGfxPtr->barFontGfx, FONT_BOLD, text);
++    for (i = 0; i < numTiles; i++)
++        CpuCopy32(&gMonSpritesGfxPtr->barFontGfx[i * 64 + 32], (void *)(OBJ_VRAM0 + (tile + i) * TILE_SIZE_4BPP), TILE_SIZE_4BPP);
++}
++#else
+ static void UpdateLvlInHealthbox(u8 healthboxSpriteId, u8 lvl)
+ {
+     u32 windowId, spriteTileNum;
+@@ -1167,6 +1208,7 @@ static void UpdateLvlInHealthbox(u8 healthboxSpriteId, u8 lvl)
+     TextIntoHealthboxObject(objVram, windowTileData, 3);
+     RemoveWindowOnHealthbox(windowId);
+ }
++#endif
+ 
+ void UpdateHpTextInHealthbox(u8 healthboxSpriteId, s16 value, u8 maxOrCurrent)
+ {
+@@ -1179,7 +1221,11 @@ void UpdateHpTextInHealthbox(u8 healthboxSpriteId, s16 value, u8 maxOrCurrent)
+     CtrBattleHud_SetHp(healthboxSpriteId, value, maxOrCurrent != HP_CURRENT);
+ #endif
+ 
++#ifdef JAPANESE_HEALTHBOX_NUMBERS
++    if (FALSE) // the Japanese game draws them below, with the bold font
++#else
+     if (GetBattlerSide(gSprites[healthboxSpriteId].hMain_Battler) == B_SIDE_PLAYER && !IsDoubleBattle())
++#endif
+     {
+         spriteTileNum = gSprites[healthboxSpriteId].oam.tileNum * TILE_SIZE_4BPP;
+         if (maxOrCurrent != HP_CURRENT) // singles, max
+@@ -1956,6 +2002,67 @@ static void SpriteCB_StatusSummaryBalls_OnSwitchout(struct Sprite *sprite)
+     sprite->y2 = gSprites[barSpriteId].y2;
+ }
+ 
++#ifdef JAPANESE_HEALTHBOX_NUMBERS
++// The Japanese game's nickname: six characters in the bold font, each over the
++// box's top tile (the one with room for its dakuten or handakuten), so the
++// "Lv" that its healthbox graphics carry stays visible.
++static void UpdateNickInHealthbox(u8 healthboxSpriteId, struct Pokemon *mon)
++{
++    u8 nickname[POKEMON_NAME_LENGTH + 1];
++    u8 *ptr, *pixels;
++    u8 gender, battler = gSprites[healthboxSpriteId].hMain_Battler;
++    u16 species;
++    s32 i, len;
++    u32 tile = gSprites[healthboxSpriteId].oam.tileNum, first;
++
++    StringCopy(gDisplayedStringBattle, gText_HealthboxNickname);
++    GetMonData(mon, MON_DATA_NICKNAME, nickname);
++    StringGet_Nickname(nickname);
++    ptr = StringAppend(gDisplayedStringBattle, nickname);
++
++    gender = GetMonGender(mon);
++    species = GetMonData(mon, MON_DATA_SPECIES);
++    if ((species == SPECIES_NIDORAN_F || species == SPECIES_NIDORAN_M) && StringCompare(nickname, gSpeciesNames[species]) == 0)
++        gender = 100;
++#ifdef PLATFORM_3DS
++    CtrBattleHud_SetName(healthboxSpriteId, nickname, gender);
++#endif
++    if (gender == MON_MALE)
++        StringCopy(ptr, gText_HealthboxGender_Male);
++    else if (gender == MON_FEMALE)
++        StringCopy(ptr, gText_HealthboxGender_Female);
++    else
++        StringCopy(ptr, gText_HealthboxGender_None);
++
++    pixels = gMonSpritesGfxPtr->barFontGfx + 0x520 + GetBattlerPosition(battler) * 0x180;
++    len = StringLength(gDisplayedStringBattle);
++    StringFill(gDisplayedStringBattle + len, CHAR_SPACE, 12 - len);
++    len = (u16)(StringLength(gDisplayedStringBattle) - 6);
++    RenderTextHandleBold(pixels, FONT_BOLD, gDisplayedStringBattle);
++    for (i = 0; i < len; i++)
++    {
++        u8 c = gDisplayedStringBattle[3 + i];
++        u32 element;
++
++        if ((u8)(c - 0x37) <= 19 || (u8)(c - 0x87) <= 19)
++            element = HEALTHBOX_GFX_44;
++        else if ((u8)(c - 0x4B) <= 4 || (u8)(c - 0x9B) <= 4)
++            element = HEALTHBOX_GFX_45;
++        else
++            element = HEALTHBOX_GFX_43;
++        CpuCopy32(GetHealthboxElementGfxPtr(element), pixels + i * 64, TILE_SIZE_4BPP);
++    }
++
++    first = GetBattlerSide(battler) == B_SIDE_PLAYER ? 2 : 1;
++    for (i = 0; i < len; i++)
++    {
++        CpuCopy32(pixels, (void *)(OBJ_VRAM0 + (tile + first + i) * TILE_SIZE_4BPP), TILE_SIZE_4BPP);
++        pixels += TILE_SIZE_4BPP;
++        CpuCopy32(pixels, (void *)(OBJ_VRAM0 + (tile + first + 8 + i) * TILE_SIZE_4BPP), TILE_SIZE_4BPP);
++        pixels += TILE_SIZE_4BPP;
++    }
++}
++#else
+ static void UpdateNickInHealthbox(u8 healthboxSpriteId, struct Pokemon *mon)
+ {
+     u8 nickname[POKEMON_NAME_LENGTH + 1];
+@@ -2016,6 +2123,7 @@ static void UpdateNickInHealthbox(u8 healthboxSpriteId, struct Pokemon *mon)
+ 
+     RemoveWindowOnHealthbox(windowId);
+ }
++#endif
+ 
+ static void TryAddPokeballIconToHealthbox(u8 healthboxSpriteId, bool8 noStatus)
+ {

@@ -1,0 +1,6 @@
+# Os teclados (src/text_input_strings.c) são letras, números e símbolos e
+# ficam como estão. Só a tecla "others" do teclado alfabético da FALA FÁCIL
+# muda, na largura do inglês.
+
+[gText_EasyChatKeyboard_ABCDEFothers] fad7cf798e
+{CLEAR 11}A{CLEAR 6}B{CLEAR 6}C{CLEAR 26}D{CLEAR 6}E{CLEAR 6}F{CLEAR 26}outros

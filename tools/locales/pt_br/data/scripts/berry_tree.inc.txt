@@ -1,0 +1,58 @@
+# Árvores de FRUTA: plantar, regar e colher.
+
+[BerryTree_Text_ItsSoftLoamySoil] a13e9980eb
+É uma terra fofa e fértil.$
+
+[BerryTree_Text_WantToPlant] 651bdc0363
+É uma terra fofa e fértil.\nQuer plantar uma FRUTA?$
+
+[BerryTree_Text_PlantedOneBerry] 658fbaea28
+{PLAYER} plantou uma {STR_VAR_1}\nna terra fofa e fértil.$
+
+[BerryTree_Text_BerryGrowthStage1] b0cd4efc40
+Uma {STR_VAR_1} foi plantada aqui.$
+
+[BerryTree_Text_BerryGrowthStage2] 712ecddfd6
+A {STR_VAR_1} brotou.$
+
+[BerryTree_Text_BerryGrowthStage3] feb1514e97
+A planta de {STR_VAR_1} tá crescendo.$
+
+[BerryTree_Text_BerryGrowthStage4] 090c3c2bb1
+As flores de {STR_VAR_1} estão\nflorescendo {STR_VAR_2}.$
+
+[BerryTree_Text_CareAdverbGreat] 840a42a108
+lindamente$
+
+[BerryTree_Text_CareAdverbPoor] 432af45641
+fofinhas$
+
+[BerryTree_Text_CareAdverbGood] 04f2086070
+bonitas$
+
+[BerryTree_Text_WantToPick] a0e8f088f3
+Achou {STR_VAR_2} {STR_VAR_1}!\pQuer colher as\n{STR_VAR_1}?$
+
+[BerryTree_Text_PickedTheBerry] 3bb56eadfe
+{PLAYER} colheu {STR_VAR_2} {STR_VAR_1}.$
+
+[BerryTree_Text_PutAwayBerry] d60632d474
+{PLAYER} guardou {STR_VAR_1}\nno BOLSO DE FRUTAS da BOLSA.\pA terra voltou a ficar\nfofa e fértil.$
+
+[BerryTree_Text_BerryPocketFull] 74a54605e8
+O BOLSO DE FRUTAS da BOLSA\ntá cheio.\pNão deu pra pegar {STR_VAR_1}.$
+
+[BerryTree_Text_BerryLeftUnpicked] e0397e5e64
+{PLAYER} deixou {STR_VAR_1}\nno pé.$
+
+[BerryTree_Text_WantToWater] ee30759398
+Quer regar {STR_VAR_1} com o\nREGADOR?$
+
+[BerryTree_Text_WateredTheBerry] 5c8ba816e4
+{PLAYER} regou {STR_VAR_1}.$
+
+[BerryTree_Text_PlantIsDelighted] 107f5b5cc2
+A planta parece toda feliz.$
+
+[BerryTree_Text_ExclamationPoint] 35d6e21021
+!$

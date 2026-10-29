@@ -1,0 +1,18 @@
+# FRONTEIRA DE BATALHA: o POKé MART.
+
+[BattleFrontier_Mart_Text_ChaperonGrandson] 1287aee35d
+Viemos acompanhar o nosso neto.\p
+Mas, já que estamos aqui, pensamos\n
+em levar umas lembrancinhas.$
+
+[BattleFrontier_Mart_Text_ProteinMakeNiceGift] 49af1afed1
+Querido, o que acha disto?\n
+Não seria um bom presente?\p
+É… PRO-TE-Í-NA?\n
+Parece gostoso, não parece?$
+
+[BattleFrontier_Mart_Text_FacilitiesDontAllowItems] cc96c313a3
+Muitas instalações da FRONTEIRA não\n
+deixam usar itens nas batalhas.\p
+Essa regra deixa tudo ainda mais\n
+difícil!$

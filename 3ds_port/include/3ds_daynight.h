@@ -46,6 +46,9 @@ typedef struct
 
 unsigned CtrDayNight_Speed(int index);
 void CtrDayNight_Advance(CtrDayNightClock *clock, uint64_t nowMs, unsigned localSeconds, int speed);
+/* Pure: credits the time since the last advance at `speed` (berry bonus
+ * included), then puts the clock back on localSeconds, unshifted. */
+void CtrDayNight_Sync(CtrDayNightClock *clock, uint64_t nowMs, unsigned localSeconds, int speed);
 CtrDayNightLight CtrDayNight_At(unsigned timeMs);
 CtrDayNightBlend CtrDayNight_Moonlight(const CtrDayNightLight *light, float fade,
                                      const float fadeRgb[3]);
@@ -59,6 +62,10 @@ bool CtrDayNight_Active(void);
 bool CtrDayNight_BerryDue(void);
 unsigned CtrDayNight_TakeBerryMinutes(void);
 void CtrDayNight_Reset(void);
+/* SYNC CLOCK (OPTIONS): back to the game's local clock and clock_speed 1X,
+ * keeping the pending berry bonus. False, with nothing changed, when the
+ * local time cannot be read. Kept on disk with the next in-game save. */
+bool CtrDayNight_SyncToConsole(void);
 bool CtrDayNight_Snapshot(CtrDayNightSnapshot *snapshot);
 bool CtrDayNight_Restore(const CtrDayNightSnapshot *snapshot);
 

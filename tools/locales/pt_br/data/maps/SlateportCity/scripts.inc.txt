@@ -1,0 +1,437 @@
+# CIDADE DE SLATEPORT: o mercado, a fila do MUSEU, a EQUIPE AQUA, a entrevista do CAP. STERN, a vendedora do PÓ DE FRUTA, o SCOTT e as placas.
+
+[SlateportCity_Text_EnergyGuruSellWhatYouNeed] eb2e3754ec
+Eu sou o GURU DA ENERGIA! Vou com tudo\n
+pra te vender o que você precisa!$
+
+[SlateportCity_Text_OhYourPokemon] 8728c2e727
+Ah?\n
+O seu {STR_VAR_1}…$
+
+[SlateportCity_Text_PleaseGiveItThisEffortRibbon] c2cccc04d5
+Se esforçou demais da conta!\p
+Como prêmio, dê a ele esta\n
+FITA DO ESFORÇO.$
+
+[SlateportCity_Text_ReceivedEffortRibbon] 084f8c52e1
+{PLAYER} recebeu a FITA DO ESFORÇO.$
+
+[SlateportCity_Text_PutEffortRibbonOnMon] 4042aaf463
+{PLAYER} pôs a FITA DO ESFORÇO\n
+em {STR_VAR_1}.$
+
+[SlateportCity_Text_GoForItLittleHarder] 952477333c
+Você tem que se esforçar mais um pouco.\p
+Se fizer isso, dou uma coisa legal\n
+pro seu POKéMON.$
+
+[SlateportCity_Text_EffortRibbonLooksGoodOnIt] 27db1e5116
+Ah! O seu {STR_VAR_1} ficou ótimo com\n
+a FITA DO ESFORÇO!$
+
+[SlateportCity_Text_WonderIfLighthouseStartlesPokemon] 40fce64941
+A luz do farol alcança dezenas de\n
+quilômetros.\p
+Será que não assusta os POKéMON\n
+do mar?$
+
+[SlateportCity_Text_SeaweedFullOfLife] 285b4b9997
+Uuh, olha só isto!\p
+As algas que se pegam por aqui são\n
+fresquinhas e cheias de vida.\p
+Ora, parece até que vão se levantar\n
+e atacar!$
+
+[SlateportCity_Text_HowTownIsBornAndGrows] c66c8b7d59
+Onde a água é limpa, os frutos\n
+de uma boa colheita se juntam.\p
+E onde as pessoas se juntam, logo\n
+nasce um mercado.\p
+É assim que uma cidade nasce e cresce.$
+
+[SlateportCity_Text_SlateportWonderfulPlace] 6f80f33ae5
+Fazer compras sentindo o cheiro\n
+do mar…\p
+SLATEPORT é um lugar maravilhoso!$
+
+[SlateportCity_Text_BuyBricksSoDecorWontGetDirty] 50c5aa2dc6
+Se você põe BONECOS ou ALMOFADAS no\n
+chão, eles ficam sujos.\p
+Vou comprar uns TIJOLOS pra que os\n
+meus BONECOS e ALMOFADAS não sujem\l
+quando eu deixar eles pra fora.$
+
+[SlateportCity_Text_GoingToCompeteInBattleTent] 2a7650243a
+Uaaargh! Eu também vou competir\n
+na TENDA DE BATALHA!\p
+Mas, antes, preciso pegar\n
+uns POKéMON!$
+
+[SlateportCity_Text_BushedHikingFromMauville] 5c2ffda273
+Ufa… Estou morto de cansaço…\p
+Vim a pé da CIDADE DE MAUVILLE.\n
+Mas, puxa, esta cidade é enorme.\p
+Se eu soubesse, teria vindo\n
+de BICICLETA.$
+
+[SlateportCity_Text_EveryoneCallsHimCaptStern] 0b9c1d6fe8
+O STERN, que construiu o MUSEU,\n
+também é o chefe de uma equipe de\l
+exploração submarina.\p
+Por isso todo mundo chama ele\n
+de CAP. STERN.$
+
+[SlateportCity_Text_WhatsLongLineOverThere] b5b037d33e
+O que é aquilo ali?\n
+Aquela fila enorme…$
+
+[SlateportCity_Text_VisitedMuseumOften] d86696ff1d
+Quando eu era criança, ia muito\n
+ao MUSEU.\p
+Depois de ver as exposições, eu sonhava\n
+com os mistérios do mar.$
+
+[SlateportCity_Text_QuitPushing] d7b3f7356a
+Ei, você! Para de empurrar!\n
+Isto aqui é a fila, não está vendo?$
+
+[SlateportCity_Text_AquaHasPolicy] 6737672a38
+A EQUIPE AQUA tem a regra de se\n
+reunir e se dispersar no local\l
+da operação.$
+
+[SlateportCity_Text_BossIsBrilliant] 5565801df2
+O nosso CHEFE é brilhante.\p
+O que ele ia querer com\n
+um MUSEU agora?$
+
+[SlateportCity_Text_WhatsNewSchemeIWonder] 46b53ccacd
+Qual será o novo plano?\p
+O CHEFE dá medo quando fica bravo,\n
+então é melhor eu não fazer besteira…$
+
+[SlateportCity_Text_ShouldTakeItAll] 702f70e073
+Se tem alguma coisa que a gente\n
+precisa no MUSEU, é levar tudo!$
+
+[SlateportCity_Text_DontButtIn] eb13054a1b
+Ei, você aí!\n
+Não fura a fila!$
+
+[SlateportCity_Text_RemindsMeOfLongLineForGames] 184319fb75
+Uma fila enorme, é?\p
+Me lembra quando eu fazia fila\n
+pra comprar jogo de sucesso…$
+
+[SlateportCity_Text_WhyAreWeLiningUp] b15e9daf4a
+Por que a gente está na fila pagando?\n
+A gente devia era entrar de uma vez!$
+
+[SlateportCity_Text_WhatDoYouWant] 790644edef
+Quê?\n
+O que você quer?$
+
+[SlateportCity_Text_IllReadSignForYou] 33b9103d9e
+Quer ler esta placa?\n
+Eu leio pra você!$
+
+[SlateportCity_Text_SaysSomethingLikeSeaIsEndless] 27795ce5d3
+Vejamos…\p
+Hum… Acho que diz algo como\n
+“a vida no mar não tem fim”.\p
+É, tenho quase certeza de que\n
+é isso que diz.$
+
+[SlateportCity_Text_ShouldveBroughtMyGameBoy] ced2c7bcac
+Resmungo…\p
+Devia ter trazido o meu Game Boy\n
+Advance pra não ficar entediado…\p
+Resmungo…$
+
+[SlateportCity_Text_HotSpringsAfterOperation] 7c876e3f8b
+Quando esta operação acabar, levo\n
+vocês a uma fonte termal!\p
+Foi o que o nosso chefe disse.\n
+Mal posso esperar!$
+
+[SlateportCity_Text_SeaIsSoWet] 270f01d6a6
+O mar é tão imenso…\p
+Será que o mar foi feito das lágrimas\n
+que os POKéMON derramaram?$
+
+[SlateportCity_Text_SinkOldBoats] 8cb4907770
+Sabe o que fazem com os navios\n
+velhos demais pra navegar?\p
+Afundam no mar, pra eles virarem\n
+lar de POKéMON.$
+
+[SlateportCity_Text_BuyTooMuch] 981a71c216
+Sempre que venho aqui, me empolgo\n
+e compro demais.$
+
+[SlateportCity_Text_GetNameRaterToHelpYou] 9635858b6b
+Se quiser mudar o apelido do seu\n
+POKéMON, vai ter que pedir ajuda ao\l
+AVALIADOR DE NOMES.$
+
+[SlateportCity_Text_CantChangeTradeMonName] 496eb699c7
+Não dá pra mudar o apelido de um\n
+POKéMON que você ganhou numa troca.\p
+O amor de quem treinou primeiro\n
+está naquele apelido.$
+
+[SlateportCity_Text_BattleTentBuiltRecently] e9d66eb1bc
+Há pouco tempo construíram uma TENDA\n
+DE BATALHA em SLATEPORT.\p
+Os GINÁSIOS são divertidos, mas a TENDA\n
+DE BATALHA é demais do jeito dela.\p
+Vá atrás de POKéMON fortes pra\n
+TENDA DE BATALHA!$
+
+[SlateportCity_Text_CaptSternBeingInterviewed] 15f6adefb6
+Eu esperava que fosse alguma estrela\n
+famosa pra pegar um autógrafo.\p
+Mas quem está dando entrevista?\n
+Não é o CAP. STERN?$
+
+[SlateportCity_Text_InterviewerSoCool] 68fbac73bc
+Aquela repórter é tão legal\n
+e bonita.\p
+Quando eu crescer, vou ser jornalista\n
+internacional!$
+
+[SlateportCity_Text_SternSaysDiscoveredSomething] 50dd05c6c5
+O CAP. STERN diz que descobriram\n
+alguma coisa no fundo do mar.\p
+O que será?\n
+O que pode ser?$
+
+[SlateportCity_Text_CaptainComeBackWithBigFish] 3635a40078
+O que está acontecendo aqui?\p
+O nosso CAPITÃO voltou com um peixão\n
+do fundo do mar?$
+
+[SlateportCity_Text_AmIOnTV] 9835fbf26d
+Ei! Está vendo?\n
+Eu estou na TV?$
+
+[SlateportCity_Text_CaptainsACelebrity] b782b4580b
+Uma entrevista pra TV! Aqui!\n
+O CAPITÃO é uma celebridade!$
+
+[SlateportCity_Text_BigSmileForCamera] 6d035f13f5
+TY: Muito bem, CAP. STERN, um sorrisão\n
+pra câmera!$
+
+[SlateportCity_Text_MostInvaluableExperience] 38165fc990
+GABBY: Sei, sei. O senhor teve uma\n
+experiência valiosíssima…$
+
+[SlateportCity_Text_SternMoveAheadWithExploration] bc1327ac96
+CAP. STERN: Sim, claro. Pretendemos\n
+seguir com a nossa exploração.$
+
+[SlateportCity_Text_GabbyWonderfulThanksForInterview] a99a824d21
+GABBY: Que maravilha, CAP. STERN!\n
+Obrigada por tirar um tempo da sua\l
+agenda cheia pra falar com a gente.\p
+Esperamos entrevistar o senhor de novo\n
+com notícias de mais descobertas!$
+
+[SlateportCity_Text_SternWhewFirstInterview] 352e8760ae
+CAP. STERN: Ufa…\p
+Foi a primeira vez que me filmaram\n
+pra TV. Que nervoso.$
+
+[SlateportCity_Text_OhPlayerWeMadeDiscovery] fea9b399e1
+Ah! {PLAYER}{KUN}!\n
+Você está com ótima cara!\p
+Fizemos uma grande descoberta na\n
+nossa última exploração submarina.\p
+Achamos uma caverna submarina\n
+na ROTA 128.\p
+Achamos que é o lar de um POKéMON que\n
+diziam estar extinto há muito tempo.$
+
+[SlateportCity_Text_AquaWillAssumeControlOfSubmarine] 5cae993ad5
+Hehehe…\n
+CAP. STERN, eu presumo.\p
+Nós, da EQUIPE AQUA, vamos assumir\n
+o controle do seu submarino!\p
+Não adianta reclamar!\n
+Esperamos a sua total cooperação!\p
+Hehehe…\n
+É só ver e aprender o que a EQUIPE\l
+AQUA está planejando!$
+
+[SlateportCity_Text_SternWhatWasAllThat] ad9df20ce3
+CAP. STERN: O que foi aquilo?\p
+Parecia alguém falando\n
+num megafone…\p
+De onde veio isso?$
+
+[SlateportCity_Text_FromHarborTryingToTakeSub] 33e234b2c0
+Veio do PORTO!\p
+O submarino!\n
+Eles estão tentando levar!$
+
+[SlateportCity_Text_PleaseComeWithMe] 85867d3757
+{PLAYER}{KUN}!\n
+Por favor, venha comigo!$
+
+[SlateportCity_Text_BattleTentSign] c4658b1c32
+TENDA DE BATALHA DE SLATEPORT\n
+“Encontre o POKéMON definitivo!”$
+
+[SlateportCity_Text_SternsShipyardWantedSign] c24d1f5c23
+ESTALEIRO DO STERN\p
+“Procura-se: marinheiro capaz de\n
+navegar em qualquer corrente.”$
+
+[SlateportCity_Text_SternsShipyardNearsCompletion] 00b2b84187
+ESTALEIRO DO STERN\p
+“A balsa S.S. TIDAL está quase pronta\n
+para atender os portos de\l
+SLATEPORT e LILYCOVE.”$
+
+[SlateportCity_Text_SternsShipyardFerryComplete] 6ed10d30be
+ESTALEIRO DO STERN\p
+“O embarque na balsa S.S. TIDAL, entre\n
+SLATEPORT e LILYCOVE, é feito\l
+no PORTO.”$
+
+[SlateportCity_Text_PokemonFanClubSign] 14a372700a
+FÃ-CLUBE POKéMON\n
+“Chamando todos os fãs de POKéMON!”$
+
+[SlateportCity_Text_OceanicMuseumSign] bf7f683308
+“O mar sem fim sustenta\n
+toda a vida.”\p
+MUSEU OCEÂNICO$
+
+[SlateportCity_Text_CitySign] 1fdb572900
+CIDADE DE SLATEPORT\p
+“O porto onde pessoas e POKéMON\n
+se encontram.”$
+
+[SlateportCity_Text_MarketSign] 93c564e8f4
+MERCADO DE SLATEPORT\n
+“Itens únicos, só aqui!”$
+
+[SlateportCity_Text_HarborFerryUnderConstruction] 6e75eed133
+PORTO DE SLATEPORT\p
+“A balsa S.S. TIDAL está em\n
+construção no ESTALEIRO.\p
+“O serviço deve começar\n
+em breve.”$
+
+[SlateportCity_Text_HarborSign] a21b2338d2
+PORTO DE SLATEPORT\p
+“Faça um passeio delicioso na\n
+balsa S.S. TIDAL.”$
+
+[SlateportCity_Text_NameRatersHouseSign] 804eb3093d
+CASA DO AVALIADOR DE NOMES\n
+“Avaliamos apelidos de POKéMON.”$
+
+[SlateportCity_Text_ExplainBerries] abbd1b3100
+Se um POKéMON selvagem se machuca, ele\n
+se cura mastigando FRUTAS.\p
+Sabia disso?\p
+Alguém viu isso e teve a ideia de\n
+fazer remédio de FRUTAS.\p
+Sabia disso?\p
+Pra virar remédio, as FRUTAS têm que\n
+ser moídas até virar pó.\p
+Sabia disso?\p
+Você parece se interessar\n
+por FRUTAS!\p
+Tenho uma coisa boa pra alguém\n
+como você.$
+
+[SlateportCity_Text_ExplainBerryPowder] 07c0a44ebe
+Há pouco, mandei instalar máquinas\n
+de moer FRUTAS nos CENTROS POKéMON.\p
+As máquinas TRITURA FRUTAS ficam no\n
+CANTO DIRETO, no andar de cima.\p
+Sabia?\p
+Você pode fazer PÓ DE FRUTA pra mim\n
+usando essas máquinas?\p
+Faço tudo quanto é remédio se você\n
+me trouxer bastante PÓ DE FRUTA.$
+
+[SlateportCity_Text_BroughtMeSomeBerryPowder] 32900150d2
+Você trouxe\n
+PÓ DE FRUTA pra mim?$
+
+[SlateportCity_Text_ExchangeWhatWithIt] fabc095a78
+Quer trocar ele\n
+pelo quê?$
+
+[SlateportCity_Text_ExchangeBerryPowderForItem] 24c1be6dd8
+Certo, quer trocar o seu PÓ DE FRUTA\n
+por um {STR_VAR_1}?$
+
+[SlateportCity_Text_DontHaveEnoughBerryPowder] 2486a1b40c
+Ih, puxa. Você não tem PÓ DE\n
+FRUTA suficiente.$
+
+[SlateportCity_Text_FineBerryPowderTradeSomethingElse] 2b1f2d3c45
+Que PÓ DE FRUTA bom.\n
+Vai virar um remédio excelente.\p
+Quer trocar mais PÓ DE FRUTA\n
+por outra coisa?$
+
+[SlateportCity_Text_WhenYouGetMoreBringItToMe] 5b061bb82a
+Certo! Quando tiver mais\n
+PÓ DE FRUTA, traga pra mim, tá?$
+
+[SlateportCity_Text_ComeBackToTradeBerryPowder] a362c2a404
+Volte se quiser trocar o seu\n
+PÓ DE FRUTA por remédio.\p
+Eu sempre tenho uma banca aqui.\p
+Sabia?$
+
+[SlateportCity_Text_YouDroveTeamAquaAway] 8bfe61f6d0
+SCOTT: Hã?\n
+Tenho certeza de que já te vi antes.\p
+Eu já me apresentei? Se não,\n
+meu nome é SCOTT.\p
+Acabei de ver a EQUIPE AQUA fugindo\n
+daqui como se tivesse levado um susto.\p
+Deixa eu adivinhar: foi você que\n
+espantou eles?$
+
+[SlateportCity_Text_MaybeThisTrainer] 1d9f0850ff
+SCOTT: Hmm…\n
+Talvez, só talvez, essa pessoa…$
+
+[SlateportCity_Text_LetsRegisterEachOther] 3e9c86ca3c
+SCOTT: Muito bem! Acho que a gente\n
+vai ser bons amigos.\p
+Então, vamos registrar um ao outro\n
+no POKéNAV.\p
+… … … … … …$
+
+[SlateportCity_Text_RegisteredScott] 1ff4c07ff8
+Esse tal de SCOTT foi registrado\n
+no POKéNAV.$
+
+[SlateportCity_Text_KeepEyeOnTrainersBeSeeingYou] a7b7765afb
+SCOTT: Eu bem que queria ir junto com\n
+você, mas também quero ficar de olho\l
+no talento de outras pessoas.\p
+Então, vou rodar por outras cidades\n
+mais um pouco.\p
+Até mais, {PLAYER}{KUN}!$
+
+[SlateportCity_Text_TakingBattleTentChallenge] f6fab2d20d
+SCOTT: Ah, olha só!\n
+Se não é {PLAYER}{KUN}!\p
+{PLAYER}{KUN}, deixa eu adivinhar: você vai\n
+encarar o desafio da TENDA DE BATALHA?\p
+Isso! É uma boa ideia!\n
+É uma ótima ideia!\p
+Afinal, quem treina com garra combina\n
+perfeitamente com a TENDA DE BATALHA!\p
+Dê o seu melhor!$

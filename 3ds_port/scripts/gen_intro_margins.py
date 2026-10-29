@@ -65,6 +65,20 @@ def load_scene():
 
 TILES, MAPS = None, None
 PICS = {}
+# With PROVENANCE (tools/voxel_precompile.py), every pixel read off the
+# picture is a Pixel: the same (bank, index), and where in the tiles it was
+# read (tile, pixel). New art is plain tuples. The release stores the
+# picture's pixels as those places, not as colours.
+PROVENANCE = False
+
+
+class Pixel(tuple):
+    """(bank, index), carrying the tile and pixel (row * 8 + column) it was read from."""
+
+    def __new__(cls, bank, index, tile, pixel):
+        self = tuple.__new__(cls, (bank, index))
+        self.tile_pixel = (tile, pixel)
+        return self
 
 
 def pic(L):
@@ -85,7 +99,9 @@ def pic(L):
                         v = (b >> ((x & 1) * 4)) & 15
                         sx = 7 - x if e & 0x400 else x
                         sy = 7 - y if e & 0x800 else y
-                        if v:
+                        if v and PROVENANCE:
+                            out[r * 8 + sy][c * 8 + sx] = Pixel(bank, v, e & 1023, y * 8 + x)
+                        elif v:
                             out[r * 8 + sy][c * 8 + sx] = (bank, v)
         PICS[L] = out
     return PICS[L]

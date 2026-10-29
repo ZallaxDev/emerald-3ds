@@ -3,8 +3,9 @@
  * scripts/gen_voxel_buildings.py writes the file and documents the models.
  *
  * Layout (little endian):
- *   "VXB8", u16 pages, models, pageModels, placements, heightBytes, masks,
- *   u32 vertices, u16 variants, u16 decks
+ *   "VXB9", u16 pages, models, pageModels, placements, heightBytes, masks,
+ *   u32 vertices, u16 variants, u16 decks, u16 conditions, u16 0 ("VXB8":
+ *   no conditions, and neither field)
  *   pages       x 8:  u16 w, h; u32 file offset of its RGBA5551 texels (h
  *                     the rows it holds, whole tiles of 8: see TakePage;
  *                     h's bit 15: w*h L8 window-glass mask bytes follow
@@ -27,6 +28,10 @@
  *   decks x 8:        u16 layout; u8 x, y, top, bottom, elevation, 0 - a
  *                     bridge's deck over a cell (VoxelBuildings_DeckAt),
  *                     sorted by layout, y, x
+ *   conditions x 6:   u16 placement, metatile; u8 x, y - that placement
+ *                     stands only while the cell (x, y) of its rectangle
+ *                     holds that metatile: a beam a script switches on and
+ *                     off (setmetatile), a switch it presses
  *   padding to 4, vertices x 24: float x, y, z, u, v, shade (tiles, relative
  *                     to the top-left cell; u, v in pixels of the model's own
  *                     drawing, or of its page for a placement's ground patches)
@@ -90,7 +95,13 @@ typedef struct
 {
     uint16_t layout, pageModel, x, y, ground, extraCount;
     uint32_t extraFirst;
+    /* It stands only while its cell (whenX, whenY) holds metatile `when`
+     * (NO_CONDITION: always). */
+    uint16_t when;
+    uint8_t whenX, whenY;
 } BuildingPlacement;
+
+#define NO_CONDITION 0xFFFFu
 
 static BuildingPage *sPages;
 static unsigned sPageCount;
@@ -126,6 +137,28 @@ static FILE *sPageFile;
  * cell it touches, nearly always of the layout it asked about last. */
 static int sLastLayout = -1;
 static unsigned sLastFirst, sLastCount;
+
+/*
+ * The current map as it stands. Its placements were found in its layout's
+ * drawing, but a script that swapped another layout in may draw the first
+ * one's models back (setmetatile): the Mirage Tower is painted on Route 111
+ * without it for the moments before it crumbles, and painted out again
+ * after. Where the live grid shows more of the header layout's own models
+ * than of the swapped-in one's, the map's buildings are the header layout's
+ * (sLive.chosen). A model whose cells a script rewrites otherwise stands:
+ * the game animates some that way (the Department Store's elevator lights,
+ * the lottery's computer). Worked out again only when the grid has changed
+ * (VoxelBuildings_WorldChanged), and only on a map whose layout was swapped.
+ */
+#define LIVE_METATILE_MASK 0x3FFu
+static const uint16_t *(*sDrawingOf)(int layoutId, int *width, int *height);
+static struct
+{
+    bool valid;
+    int layout, header, originX, originY;
+    int chosen;
+    uint32_t signature;
+} sLive;
 
 /* An upright face looking south: its span in world x and its z (FrontAt). */
 typedef struct
@@ -288,6 +321,7 @@ static bool TakePlacement(unsigned i, const uint8_t *r)
     p->ground = (uint16_t)U16(r + 8);
     p->extraCount = (uint16_t)U16(r + 10);
     p->extraFirst = U32(r + 12);
+    p->when = NO_CONDITION;
     return p->pageModel < sPageModelCount
         && p->extraCount <= sVertexCount && p->extraFirst <= sVertexCount - p->extraCount;
 }
@@ -384,7 +418,9 @@ static void FreeAnims(void)
 
 bool VoxelBuildings_Init(void)
 {
-    uint8_t header[24], row[16];
+    uint8_t header[28], row[16];
+    unsigned conditions = 0;
+    bool conditioned;
     long offset;
     FILE *file;
     bool ok = false;
@@ -397,9 +433,17 @@ bool VoxelBuildings_Init(void)
                 VOXEL_BUILDINGS_PATH);
         return false;
     }
-    if (fread(header, 1, sizeof(header), file) != sizeof(header)
-     || memcmp(header, "VXB8", 4) != 0)
+    if (fread(header, 1, 24, file) != 24)
         goto done;
+    conditioned = memcmp(header, "VXB9", 4) == 0;
+    if (!conditioned && memcmp(header, "VXB8", 4) != 0)
+        goto done;
+    if (conditioned)
+    {
+        if (fread(header + 24, 1, 4, file) != 4)
+            goto done;
+        conditions = U16(header + 24);
+    }
     sPageCount = U16(header + 4);
     sModelCount = U16(header + 6);
     sPageModelCount = U16(header + 8);
@@ -444,6 +488,17 @@ bool VoxelBuildings_Init(void)
      || fread(sVariants, 6, sVariantCount, file) != sVariantCount
      || fread(sDecks, 8, sDeckCount, file) != sDeckCount)
         goto done;
+    for (unsigned i = 0; i < conditions; ++i)
+    {
+        BuildingPlacement *p;
+
+        if (fread(row, 1, 6, file) != 6 || U16(row) >= sPlacementCount)
+            goto done;
+        p = &sPlacements[U16(row)];
+        p->when = (uint16_t)U16(row + 2);
+        p->whenX = row[4];
+        p->whenY = row[5];
+    }
     for (unsigned i = 0; i < sHeightBytes; ++i)
         if (sFootprints[i] != 0xFFFF && sFootprints[i] >= sMaskCount)
             goto done;
@@ -497,6 +552,7 @@ void VoxelBuildings_Shutdown(void)
     free(sVertices);
     free(sQuarters);
     free(sVariants);
+    sLive.valid = false;
     FreeAnims();
     free(sDecks);
     sQuarters = NULL;
@@ -640,32 +696,164 @@ bool VoxelBuildings_ReadGlow(unsigned page, unsigned first, unsigned count, uint
 }
 
 /* The placements of one layout, which the generator sorted by layout. */
-static const BuildingPlacement *LayoutPlacements(const VoxelMapInstance *inst, unsigned *count)
+static const BuildingPlacement *PlacementsOf(int layout, unsigned *count)
 {
     unsigned lo = 0, hi = sPlacementCount, n = 0;
 
     *count = 0;
-    if (inst == NULL || sPlacementCount == 0)
+    if (sPlacementCount == 0)
         return NULL;
-    if (inst->layoutId != sLastLayout)
+    if (layout != sLastLayout)
     {
         while (lo < hi)
         {
             unsigned mid = (lo + hi) / 2;
 
-            if (sPlacements[mid].layout < (unsigned)inst->layoutId)
+            if ((int)sPlacements[mid].layout < layout)
                 lo = mid + 1;
             else
                 hi = mid;
         }
-        while (lo + n < sPlacementCount && sPlacements[lo + n].layout == (unsigned)inst->layoutId)
+        while (lo + n < sPlacementCount && (int)sPlacements[lo + n].layout == layout)
             ++n;
-        sLastLayout = inst->layoutId;
+        sLastLayout = layout;
         sLastFirst = lo;
         sLastCount = n;
     }
     *count = sLastCount;
     return sLastCount ? &sPlacements[sLastFirst] : NULL;
+}
+
+void VoxelBuildings_SetDrawings(const uint16_t *(*drawing)(int layoutId, int *width, int *height))
+{
+    if (drawing != sDrawingOf)
+        sLive.valid = false;
+    sDrawingOf = drawing;
+}
+
+void VoxelBuildings_WorldChanged(void)
+{
+    sLive.valid = false;
+}
+
+/*
+ * Of the cells within the map that placement `p`'s model stands on
+ * (`covered`), those the live grid draws as `drawing` does (`live`), and
+ * those `other` - a drawing of the same size, or NULL - draws the same
+ * (`twin`).
+ */
+static void Tally(const VoxelMapInstance *inst, const BuildingPlacement *p,
+                  const uint16_t *drawing, const uint16_t *other, int width, int height,
+                  unsigned *covered, unsigned *live, unsigned *twin)
+{
+    const BuildingModel *m = &sModels[sPageModels[p->pageModel].model];
+
+    *covered = *live = *twin = 0;
+    for (int cy = 0; cy < m->h; ++cy)
+        for (int cx = 0; cx < m->w; ++cx)
+        {
+            int x = p->x + cx, y = p->y + cy;
+            unsigned own;
+
+            if (x >= width || y >= height
+             || sHeights[m->heights + (unsigned)cy * m->w + (unsigned)cx] == 0xFF)
+                continue;
+            own = drawing[(size_t)y * width + x] & LIVE_METATILE_MASK;
+            ++*covered;
+            if ((unsigned)VoxelWorld_GetMetatileId(inst->originX + x, inst->originY + y) == own)
+                ++*live;
+            if (other != NULL && (other[(size_t)y * width + x] & LIVE_METATILE_MASK) == own)
+                ++*twin;
+        }
+}
+
+/* How many of `layout`'s placements the live grid shows (most of their
+ * cells drawn as `drawing` draws them) where `other` draws something else. */
+static unsigned ShownAlone(const VoxelMapInstance *inst, int layout, const uint16_t *drawing,
+                           const uint16_t *other, int width, int height)
+{
+    unsigned count, shown = 0;
+    const BuildingPlacement *p = PlacementsOf(layout, &count);
+
+    for (unsigned i = 0; p != NULL && i < count; ++i)
+    {
+        unsigned covered, live, twin;
+
+        Tally(inst, &p[i], drawing, other, width, height, &covered, &live, &twin);
+        if (covered != 0 && 2u * live > covered && 2u * twin <= covered)
+            ++shown;
+    }
+    return shown;
+}
+
+static void RefreshLive(const VoxelMapInstance *inst)
+{
+    const uint16_t *own, *other;
+    int width = 0, height = 0, otherWidth = 0, otherHeight = 0;
+
+    sLive.valid = true;
+    sLive.layout = inst->layoutId;
+    sLive.header = inst->headerLayoutId;
+    sLive.originX = inst->originX;
+    sLive.originY = inst->originY;
+    sLive.chosen = inst->layoutId;
+    sLive.signature = 0;
+    if (inst->headerLayoutId == inst->layoutId)
+        return;
+    own = sDrawingOf(inst->layoutId, &width, &height);
+    other = sDrawingOf(inst->headerLayoutId, &otherWidth, &otherHeight);
+    if (own == NULL || other == NULL || otherWidth != width || otherHeight != height)
+        return;
+    if (ShownAlone(inst, inst->headerLayoutId, other, own, width, height)
+        > ShownAlone(inst, inst->layoutId, own, other, width, height))
+    {
+        /* 0 while the map stands as it was entered: its chunks, built as a
+         * neighbour's before the crossing, stay as they are */
+        sLive.chosen = inst->headerLayoutId;
+        sLive.signature = (2166136261u ^ (uint32_t)sLive.chosen) * 16777619u;
+    }
+}
+
+/* The layout whose placements `inst` stands: its own, or for the current
+ * map the drawing the live grid shows (sLive). */
+static int BuildingLayout(const VoxelMapInstance *inst)
+{
+    if (!inst->live || sDrawingOf == NULL || sModels == NULL)
+        return inst->layoutId;
+    if (!sLive.valid || sLive.layout != inst->layoutId || sLive.header != inst->headerLayoutId
+     || sLive.originX != inst->originX || sLive.originY != inst->originY)
+        RefreshLive(inst);
+    return sLive.chosen;
+}
+
+static const BuildingPlacement *LayoutPlacements(const VoxelMapInstance *inst, unsigned *count)
+{
+    *count = 0;
+    if (inst == NULL || sPlacementCount == 0)
+        return NULL;
+    return PlacementsOf(BuildingLayout(inst), count);
+}
+
+int VoxelBuildings_LayoutOf(const VoxelMapInstance *inst)
+{
+    return inst == NULL ? -1 : BuildingLayout(inst);
+}
+
+uint32_t VoxelBuildings_LiveSignature(const VoxelMapInstance *inst)
+{
+    if (inst == NULL || !inst->live || sDrawingOf == NULL || sModels == NULL)
+        return 0;
+    BuildingLayout(inst);
+    return sLive.signature;
+}
+
+/* Whether a placement stands as the map is now: one a script switches
+ * (setmetatile) only while its cell holds the metatile it was built for. */
+static bool PlacementLive(const VoxelMapInstance *inst, const BuildingPlacement *p)
+{
+    return p->when == NO_CONDITION
+        || VoxelWorld_GetMetatileId(inst->originX + p->x + p->whenX,
+                                    inst->originY + p->y + p->whenY) == (int)p->when;
 }
 
 /* A few layouts' answers kept: the lighting asks once per map on screen at
@@ -681,12 +869,15 @@ float VoxelBuildings_LayoutTop(const VoxelMapInstance *inst)
     const BuildingPlacement *p;
     float top = 0.0f;
 
+    int layout;
+
     if (inst == NULL || sModels == NULL)
         return 0.0f;
+    layout = BuildingLayout(inst);
     for (unsigned i = 0; i < LAYOUT_TOPS; ++i)
-        if (sTopLayout[i] == inst->layoutId + 1)
+        if (sTopLayout[i] == layout + 1)
             return sTop[i];
-    p = LayoutPlacements(inst, &count);
+    p = PlacementsOf(layout, &count);
     for (unsigned i = 0; i < count; ++i)
     {
         const BuildingModel *m = &sModels[sPageModels[p[i].pageModel].model];
@@ -695,7 +886,7 @@ float VoxelBuildings_LayoutTop(const VoxelMapInstance *inst)
             if (sHeights[m->heights + k] != 0xFF && sHeights[m->heights + k] / 16.0f > top)
                 top = sHeights[m->heights + k] / 16.0f;
     }
-    sTopLayout[sTopNext] = inst->layoutId + 1;
+    sTopLayout[sTopNext] = layout + 1;
     sTop[sTopNext] = top;
     sTopNext = (sTopNext + 1) % LAYOUT_TOPS;
     return top;
@@ -715,13 +906,13 @@ static const PlacementBands *LayoutBands(const VoxelMapInstance *inst,
                                          const BuildingPlacement *p, unsigned count)
 {
     PlacementBands *b = &sBands[0];
-    int rows = 0;
+    int rows = 0, layout = BuildingLayout(inst);
 
     if (count > BAND_WORDS * 32u)
         return NULL;
     for (unsigned s = 0; s < BAND_SLOTS; ++s)
     {
-        if (sBands[s].layout == inst->layoutId + 1)
+        if (sBands[s].layout == layout + 1)
         {
             sBands[s].age = ++sBandClock;
             return &sBands[s];
@@ -736,7 +927,7 @@ static const PlacementBands *LayoutBands(const VoxelMapInstance *inst,
         if (end > rows)
             rows = end;
     }
-    b->layout = inst->layoutId + 1;
+    b->layout = layout + 1;
     b->age = ++sBandClock;
     b->rows = rows;
     b->shift = 0;
@@ -773,6 +964,36 @@ typedef struct
 static CellGrid sCellGrids[CELL_GRIDS];
 static unsigned sCellGridNext;
 
+/*
+ * The placements whose rectangle reaches each row of a layout, in placement
+ * order, for a few layouts at a time: the faces of a cell (CollectFronts) are
+ * looked for among those alone. Walked whole, Route 110's thousand placements
+ * were read for every cell under a walker the front cache had not seen - all
+ * of them after a crossing (VoxelBuildings_MapChanged): sprites=4-5 ms on an
+ * Old 3DS on the crossing frame (port.log, 2026-10-25).
+ */
+#define ROW_INDEXES 3u
+
+typedef struct
+{
+    int layout;          /* layout id + 1; 0: empty */
+    int rows;            /* past the last row any placement covers */
+    uint32_t *start;     /* rows + 1 offsets into `placements` */
+    uint16_t *placements;
+} RowIndex;
+
+static RowIndex sRowIndexes[ROW_INDEXES];
+static unsigned sRowIndexNext;
+
+static void FreeRowIndex(RowIndex *r)
+{
+    free(r->start);
+    free(r->placements);
+    r->start = NULL;
+    r->placements = NULL;
+    r->layout = 0;
+}
+
 static void FreeCellGrids(void)
 {
     for (unsigned i = 0; i < CELL_GRIDS; ++i)
@@ -782,20 +1003,88 @@ static void FreeCellGrids(void)
         sCellGrids[i].layout = -1;
     }
     sCellGridNext = 0;
+    for (unsigned i = 0; i < ROW_INDEXES; ++i)
+        FreeRowIndex(&sRowIndexes[i]);
+    sRowIndexNext = 0;
+}
+
+/* The row index of the layout `p` and `count` are the placements of; NULL
+ * when it cannot be had (the placements are then walked whole). */
+static const RowIndex *RowIndexOf(const VoxelMapInstance *inst, const BuildingPlacement *p,
+                                  unsigned count)
+{
+    int layout = BuildingLayout(inst);
+    RowIndex *r;
+    uint32_t total = 0;
+    int rows = 0;
+
+    for (unsigned i = 0; i < ROW_INDEXES; ++i)
+        if (sRowIndexes[i].layout == layout + 1)
+            return &sRowIndexes[i];
+    if (count >= NO_CELL)
+        return NULL;
+    for (unsigned i = 0; i < count; ++i)
+    {
+        int h = sModels[sPageModels[p[i].pageModel].model].h;
+
+        if ((int)p[i].y + h > rows)
+            rows = (int)p[i].y + h;
+        total += (uint32_t)h;
+    }
+    r = &sRowIndexes[sRowIndexNext];
+    sRowIndexNext = (sRowIndexNext + 1) % ROW_INDEXES;
+    FreeRowIndex(r);
+    r->start = calloc((size_t)rows + 1u, sizeof(uint32_t));
+    r->placements = malloc((total ? total : 1u) * sizeof(uint16_t));
+    if (r->start == NULL || r->placements == NULL)
+    {
+        FreeRowIndex(r);
+        return NULL;
+    }
+    /* counted per row, offsets, then filled in placement order */
+    for (unsigned i = 0; i < count; ++i)
+        for (int y = p[i].y; y < (int)p[i].y + sModels[sPageModels[p[i].pageModel].model].h; ++y)
+            ++r->start[y + 1];
+    for (int y = 0; y < rows; ++y)
+        r->start[y + 1] += r->start[y];
+    {
+        uint32_t *fill = malloc((size_t)rows * sizeof(uint32_t));
+
+        if (fill == NULL)
+        {
+            FreeRowIndex(r);
+            return NULL;
+        }
+        memcpy(fill, r->start, (size_t)rows * sizeof(uint32_t));
+        for (unsigned i = 0; i < count; ++i)
+            for (int y = p[i].y; y < (int)p[i].y + sModels[sPageModels[p[i].pageModel].model].h; ++y)
+                r->placements[fill[y]++] = (uint16_t)i;
+        free(fill);
+    }
+    r->rows = rows;
+    r->layout = layout + 1;
+    return r;
 }
 
 static const CellGrid *CellGridOf(const VoxelMapInstance *inst, const BuildingPlacement *p,
                                   unsigned count)
 {
     size_t size = (size_t)inst->width * inst->height;
+    int layout = BuildingLayout(inst);
     CellGrid *g;
 
     if (count >= NO_CELL)
         return NULL;
+    /* Looked up first: this runs for every cell the lighting reads, and a
+     * layout has a grid only if none of its placements comes and goes. */
     for (unsigned i = 0; i < CELL_GRIDS; ++i)
-        if (sCellGrids[i].cells != NULL && sCellGrids[i].layout == inst->layoutId
+        if (sCellGrids[i].cells != NULL && sCellGrids[i].layout == layout
          && sCellGrids[i].width == inst->width && sCellGrids[i].height == inst->height)
             return &sCellGrids[i];
+    /* a grid worked out once cannot follow a placement that comes and goes */
+    for (unsigned i = 0; i < count; ++i)
+        if (p[i].when != NO_CONDITION)
+            return NULL;
     g = &sCellGrids[sCellGridNext];
     sCellGridNext = (sCellGridNext + 1) % CELL_GRIDS;
     free(g->cells);
@@ -823,7 +1112,7 @@ static const CellGrid *CellGridOf(const VoxelMapInstance *inst, const BuildingPl
                     *cell = (uint16_t)i;
             }
     }
-    g->layout = inst->layoutId;
+    g->layout = layout;
     g->width = inst->width;
     g->height = inst->height;
     return g;
@@ -863,7 +1152,7 @@ static long ModelCell(const VoxelMapInstance *inst, int x, int y, unsigned *plac
                 if (cx < 0 || cy < 0 || cx >= m->w || cy >= m->h)
                     continue;
                 k = m->heights + (unsigned)cy * m->w + (unsigned)cx;
-                if (sHeights[k] == 0xFF)
+                if (sHeights[k] == 0xFF || !PlacementLive(inst, &p[i]))
                     continue;
                 if (placement != NULL)
                     *placement = i;
@@ -895,7 +1184,7 @@ static long ModelCell(const VoxelMapInstance *inst, int x, int y, unsigned *plac
             continue;
         /* A hedge's rectangle holds the house it runs round. */
         k = m->heights + (unsigned)cy * m->w + (unsigned)cx;
-        if (sHeights[k] == 0xFF)
+        if (sHeights[k] == 0xFF || !PlacementLive(inst, &p[i]))
             continue;
         if (placement != NULL)
             *placement = i;
@@ -939,6 +1228,27 @@ bool VoxelBuildings_CellAt(const VoxelMapInstance *inst, int x, int y,
     return true;
 }
 
+bool VoxelBuildings_BareVariant(const VoxelMapInstance *inst, int x, int y, int *metatile)
+{
+    unsigned i;
+    long k = ModelCell(inst, x, y, &i);
+    unsigned own;
+
+    /* a cell of the model it stands over nothing of, with quarters to
+     * leave out: a relief_bare house's roof drawn over the terrace face */
+    if (k < 0 || sHeights[k] != 0 || sQuarters[k] == 0)
+        return false;
+    own = (unsigned)VoxelWorld_GetMetatileId(x, y);
+    for (unsigned v = 0; v < sVariantCount && v < VOXEL_VARIANTS; ++v)
+        if (U16(sVariants + 6u * v + 2) == own && sVariants[6u * v + 4] == sQuarters[k]
+         && (sVariantFits == NULL || sVariantFits(inst, U16(sVariants + 6u * v), own)))
+        {
+            *metatile = (int)(VOXEL_METATILE_REAL + v);
+            return true;
+        }
+    return false;
+}
+
 bool VoxelBuildings_DeckAt(const VoxelMapInstance *inst, float worldX, float worldZ,
                            unsigned elevation, float *lift)
 {
@@ -951,7 +1261,7 @@ bool VoxelBuildings_DeckAt(const VoxelMapInstance *inst, float worldX, float wor
     y = (int)floorf(worldZ) - inst->originY;
     if (x < 0 || y < 0 || x > 255 || y > 255)
         return false;
-    key = ((unsigned)inst->layoutId << 16) | ((unsigned)y << 8) | (unsigned)x;
+    key = ((unsigned)BuildingLayout(inst) << 16) | ((unsigned)y << 8) | (unsigned)x;
     while (lo < hi)
     {
         unsigned mid = (lo + hi) / 2;
@@ -1014,16 +1324,28 @@ static unsigned CollectFronts(const VoxelMapInstance *inst, int x, int y, float 
 {
     unsigned count;
     const BuildingPlacement *p = LayoutPlacements(inst, &count);
+    const RowIndex *rows = p != NULL ? RowIndexOf(inst, p, count) : NULL;
+    int row = y - inst->originY;
+    uint32_t n = count, first = 0;
     unsigned found = 0;
 
-    for (unsigned i = 0; p != NULL && i < count; ++i)
+    /* Only the placements that reach the cell's row, in the same order. */
+    if (rows != NULL)
     {
+        if (row < 0 || row >= rows->rows)
+            return 0;
+        first = rows->start[row];
+        n = rows->start[row + 1] - first;
+    }
+    for (uint32_t t = 0; p != NULL && t < n; ++t)
+    {
+        unsigned i = rows != NULL ? rows->placements[first + t] : t;
         const BuildingModel *m = &sModels[sPageModels[p[i].pageModel].model];
         const VoxelVertex *v = &sVertices[m->firstVertex];
         int lx = x - inst->originX - p[i].x, ly = y - inst->originY - p[i].y;
         float left = (float)(inst->originX + p[i].x), north = (float)ly;
 
-        if (lx < 0 || ly < 0 || lx >= m->w || ly >= m->h)
+        if (lx < 0 || ly < 0 || lx >= m->w || ly >= m->h || !PlacementLive(inst, &p[i]))
             continue;
         for (uint32_t k = 0; k + 2 < m->vertexCount; k += 3)
         {
@@ -1067,17 +1389,24 @@ static unsigned CollectFronts(const VoxelMapInstance *inst, int x, int y, float 
     return found;
 }
 
+void VoxelBuildings_MapChanged(void)
+{
+    /* a placement a script switched comes or goes with its faces */
+    memset(sFrontCells, 0, sizeof(sFrontCells));
+}
+
 static const FrontCell *FrontCellAt(const VoxelMapInstance *inst, int x, int y, float height)
 {
+    int layout = BuildingLayout(inst);
     uint32_t hash = (uint32_t)x * 73856093u ^ (uint32_t)y * 19349663u
-                  ^ (uint32_t)inst->layoutId * 83492791u;
+                  ^ (uint32_t)layout * 83492791u;
     FrontCell *cell = &sFrontCells[(hash ^ (hash >> 16)) & (FRONT_SETS - 1u)];
 
-    if (!cell->valid || cell->layout != inst->layoutId || cell->originX != inst->originX
+    if (!cell->valid || cell->layout != layout || cell->originX != inst->originX
      || cell->originY != inst->originY || cell->x != x || cell->y != y || cell->height != height)
     {
         cell->valid = true;
-        cell->layout = inst->layoutId;
+        cell->layout = layout;
         cell->originX = inst->originX;
         cell->originY = inst->originY;
         cell->x = x;
@@ -1172,7 +1501,8 @@ bool VoxelBuildings_EmitSome(VoxelBuilder *builder, const VoxelMapInstance *inst
         const float ox[2] = { (float)pm->ox, 0.0f }, oy[2] = { (float)pm->oy, 0.0f };
 
         if (inst->originX + p[i].x < x0 || inst->originX + p[i].x >= x1
-         || inst->originY + p[i].y < y0 || inst->originY + p[i].y >= y1)
+         || inst->originY + p[i].y < y0 || inst->originY + p[i].y >= y1
+         || !PlacementLive(inst, &p[i]))
             continue;
         /* On a lifted plateau the building stands on it: the lift of the
          * cell under its door, the bottom-left of its rectangle. */
@@ -1182,7 +1512,10 @@ bool VoxelBuildings_EmitSome(VoxelBuilder *builder, const VoxelMapInstance *inst
                                              inst->originY + p[i].y + m->h - 1);
         /* A static model is drawn from its own mesh: the chunk only notes
          * where (in its own frame, as VoxelBuilder_Tri would have put it). */
-        if (m->isStatic && builder->statics != NULL && cursor->part == 0)
+        /* (not one on a map's eased rows: only its vertices are drawn
+         * longer with the ground, VoxelRelief_Stretch) */
+        if (m->isStatic && builder->statics != NULL && cursor->part == 0
+         && !(builder->stretchAdd > 0.0f && wz + builder->shift + (float)m->h > builder->stretchFrom))
         {
             if (cursor->vertex == 0 && builder->staticCount < builder->staticCapacity)
             {
@@ -1192,7 +1525,7 @@ bool VoxelBuildings_EmitSome(VoxelBuilder *builder, const VoxelMapInstance *inst
                 s->lit = builder->lighting;
                 s->x = wx - builder->originX;
                 s->y = builder->lift + builder->base;
-                s->z = wz + builder->shift - builder->originZ;
+                s->z = VoxelBuilder_StretchZ(builder, wz + builder->shift) - builder->originZ;
                 s->w = (float)m->w;
                 s->d = (float)m->h;
                 s->top = m->top;

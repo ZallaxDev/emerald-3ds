@@ -1,0 +1,343 @@
+# CÚPULA DE BATALHA: o quadro do torneio (potencial, estilo e atributos de cada equipe).
+
+[BattleDome_Text_Potential1] cca478103e
+O melhor candidato ao título!$
+
+[BattleDome_Text_Potential2] 2ad4c45f1e
+Equipe finalista na certa.$
+
+[BattleDome_Text_Potential3] ded2dbf739
+Deve ficar entre os três.$
+
+[BattleDome_Text_Potential4] ee4ee14040
+Candidata ao primeiro lugar.$
+
+[BattleDome_Text_Potential5] f7f80d743a
+Equipe com potencial de elite.$
+
+[BattleDome_Text_Potential6] 7375258dc9
+A zebra deste torneio.$
+
+[BattleDome_Text_Potential7] 2664506114
+Equipe acima da média.$
+
+[BattleDome_Text_Potential8] 32504f1e2f
+A equipe média do torneio.$
+
+[BattleDome_Text_Potential9] d5062f6a22
+Equipe de potencial médio.$
+
+[BattleDome_Text_Potential10] abf25f6143
+Equipe abaixo da média.$
+
+[BattleDome_Text_Potential11] 4621fbfa5c
+Equipe atrás da 1ª vitória.$
+
+[BattleDome_Text_Potential12] b7624645db
+Uma vitória já seria um orgulho.$
+
+[BattleDome_Text_Potential13] bf5dfa4675
+No geral, uma equipe fraca.$
+
+[BattleDome_Text_Potential14] 1f174a430a
+Equipe de potencial bem baixo.$
+
+[BattleDome_Text_Potential15] a668656b75
+Dificilmente vence o torneio.$
+
+[BattleDome_Text_Potential16] ad5183d626
+A que menos chance tem de vencer.$
+
+[BattleDome_Text_PotentialDomeAceTucker] a245d52577
+O astro perfeito e invencível!$
+
+[BattleDome_Text_StyleRiskDisaster] 766016aa91
+Às vezes arrisca um desastre total.$
+
+[BattleDome_Text_StyleEndureLongBattles] 27462fa0c7
+Aguenta bem batalhas longas.$
+
+[BattleDome_Text_StyleVariesTactics] deb0f02891
+Muda a tática conforme o rival.$
+
+[BattleDome_Text_StyleToughWinningPattern] 72fb0117f5
+Tem um padrão de vitória sólido.$
+
+[BattleDome_Text_StyleUsesVeryRareMove] d2591e3c98
+Às vezes usa um golpe raríssimo.$
+
+[BattleDome_Text_StyleUsesStartlingMoves] c131b9b5a8
+Usa golpes surpreendentes.$
+
+[BattleDome_Text_StyleConstantlyWatchesHP] 4ad6df53a5
+Vigia os PS o tempo todo.$
+
+[BattleDome_Text_StyleStoresAndLoosesPower] a01c9b82dd
+Acumula poder e depois solta.$
+
+[BattleDome_Text_StyleEnfeeblesFoes] 8f595c88ad
+Sabe enfraquecer o adversário.$
+
+[BattleDome_Text_StylePrefersLuckTactics] 3d961a8ef3
+Prefere táticas de sorte.$
+
+[BattleDome_Text_StyleRegalAtmosphere] 51d0c27706
+Ataca com ar majestoso.$
+
+[BattleDome_Text_StylePowerfulLowPPMoves] eef0c7ba69
+Usa golpes fortes de pouco PP.$
+
+[BattleDome_Text_StyleEnfeebleThenAttack] 0d72133f3b
+Enfraquece e depois ataca.$
+
+[BattleDome_Text_StyleBattlesWhileEnduring] 2463533433
+Luta aguentando todo ataque.$
+
+[BattleDome_Text_StyleUpsetsFoesEmotionally] 489136a47b
+Sabe abalar o adversário.$
+
+[BattleDome_Text_StyleStrongAndStraightforward] 9f544d2f74
+Usa golpes fortes e diretos.$
+
+[BattleDome_Text_StyleAggressivelyStrongMoves] e89749d1d8
+Usa golpes fortes com garra.$
+
+[BattleDome_Text_StyleCleverlyDodgesAttacks] f5b88a9a69
+Luta desviando com esperteza.$
+
+[BattleDome_Text_StyleUsesUpsettingMoves] 41710c0298
+Sabe usar golpes irritantes.$
+
+[BattleDome_Text_StyleUsesPopularMoves] 51c53d0f9d
+Usa muitos golpes populares.$
+
+[BattleDome_Text_StyleHasPowerfulComboMoves] 5eaf802aa0
+Tem golpes pra combos fortes.$
+
+[BattleDome_Text_StyleUsesHighProbabilityMoves] e61d576132
+Usa golpes de alta precisão.$
+
+[BattleDome_Text_StyleAggressivelySpectacularMoves] 7b74fd9f3b
+Usa golpes vistosos com garra.$
+
+[BattleDome_Text_StyleEmphasizesOffenseOverDefense] e4b283e429
+Prioriza o ataque à defesa.$
+
+[BattleDome_Text_StyleEmphasizesDefenseOverOffense] 37d400383c
+Prioriza a defesa ao ataque.$
+
+[BattleDome_Text_StyleAttacksQuicklyStrongMoves] 1897015959
+Ataca rápido com golpes fortes.$
+
+[BattleDome_Text_StyleUsesAddedEffectMoves] 6eeaf1d596
+Usa golpes com efeito extra.$
+
+[BattleDome_Text_StyleUsesBalancedMixOfMoves] 4b96aafae6
+Usa golpes bem variados.$
+
+[BattleDome_Text_StyleSampleMessage1] acd5de5824
+Mensagem de exemplo 1.$
+
+[BattleDome_Text_StyleSampleMessage2] cc0bbd9c71
+Mensagem de exemplo 2.$
+
+[BattleDome_Text_StyleSampleMessage3] b5a7ea8818
+Mensagem de exemplo 3.$
+
+[BattleDome_Text_StyleSampleMessage4] 4466a7e62a
+Mensagem de exemplo 4.$
+
+[BattleDome_Text_EmphasizesHPAndAtk] 60231b9c68
+Prioriza PS e ATAQUE.$
+
+[BattleDome_Text_EmphasizesHPAndDef] 49ac5dbd5a
+Prioriza PS e DEFESA.$
+
+[BattleDome_Text_EmphasizesHPAndSpeed] ca957b2558
+Prioriza PS e VELOC..$
+
+[BattleDome_Text_EmphasizesHPAndSpAtk] 07517a9056
+Prioriza PS e AT. ESP..$
+
+[BattleDome_Text_EmphasizesHPAndSpDef] f9fbe005b9
+Prioriza PS e DEF. ESP..$
+
+[BattleDome_Text_EmphasizesAtkAndDef] 8c1809f28b
+Prioriza ATAQUE e DEFESA.$
+
+[BattleDome_Text_EmphasizesAtkAndSpeed] 58dee1a8b8
+Prioriza ATAQUE e VELOC..$
+
+[BattleDome_Text_EmphasizesAtkAndSpAtk] 97cb158c68
+Prioriza ATAQUE e AT. ESP..$
+
+[BattleDome_Text_EmphasizesAtkAndSpDef] 398f0adb53
+Prioriza ATAQUE e DEF. ESP..$
+
+[BattleDome_Text_EmphasizesDefAndSpeed] 6327d439fa
+Prioriza DEFESA e VELOC..$
+
+[BattleDome_Text_EmphasizesDefAndSpAtk] a0b44f0809
+Prioriza DEFESA e AT. ESP..$
+
+[BattleDome_Text_EmphasizesDefAndSpDef] ab03a343e9
+Prioriza DEFESA e DEF. ESP..$
+
+[BattleDome_Text_EmphasizesSpeedAndSpAtk] 27dca75b24
+Prioriza VELOC. e AT. ESP..$
+
+[BattleDome_Text_EmphasizesSpeedAndSpDef] ce791f13e4
+Prioriza VELOC. e DEF. ESP..$
+
+[BattleDome_Text_EmphasizesSpAtkAndSpDef] 4d422ec6b1
+Prioriza AT. ESP. e DEF. ESP..$
+
+[BattleDome_Text_EmphasizesHP] b3dc0d3672
+Prioriza PS.$
+
+[BattleDome_Text_EmphasizesAtk] ba0aeaa7cf
+Prioriza ATAQUE.$
+
+[BattleDome_Text_EmphasizesDef] ab92041b23
+Prioriza DEFESA.$
+
+[BattleDome_Text_EmphasizesSpeed] bcbe137d65
+Prioriza VELOC..$
+
+[BattleDome_Text_EmphasizesSpAtk] fa8c61b940
+Prioriza AT. ESP..$
+
+[BattleDome_Text_EmphasizesSpDef] f0f060b24c
+Prioriza DEF. ESP..$
+
+[BattleDome_Text_NeglectsHPAndAtk] 6bed0ca16e
+Descuida de PS e ATAQUE.$
+
+[BattleDome_Text_NeglectsHPAndDef] 7601024873
+Descuida de PS e DEFESA.$
+
+[BattleDome_Text_NeglectsHPAndSpeed] 33a95b6f69
+Descuida de PS e VELOC..$
+
+[BattleDome_Text_NeglectsHPAndSpAtk] 225fe70869
+Descuida de PS e AT. ESP..$
+
+[BattleDome_Text_NeglectsHPAndSpDef] 0bea551a4a
+Descuida de PS e DEF. ESP..$
+
+[BattleDome_Text_NeglectsAtkAndDef] b6b576f6bb
+Descuida de ATAQUE e DEFESA.$
+
+[BattleDome_Text_NeglectsAtkAndSpeed] 136831226d
+Descuida de ATAQUE e VELOC..$
+
+[BattleDome_Text_NeglectsAtkAndSpAtk] 613ef5e581
+Descuida de ATAQUE e AT. ESP..$
+
+[BattleDome_Text_NeglectsAtkAndSpDef] 29c29e5108
+Descuida de ATAQUE e DEF. ESP..$
+
+[BattleDome_Text_NeglectsDefAndSpeed] ee6767e36a
+Descuida de DEFESA e VELOC..$
+
+[BattleDome_Text_NeglectsDefAndSpAtk] 24506848e5
+Descuida de DEFESA e AT. ESP..$
+
+[BattleDome_Text_NeglectsDefAndSpDef] 776c2bd0ec
+Descuida de DEFESA e DEF. ESP..$
+
+[BattleDome_Text_NeglectsSpeedAndSpAtk] c012bf2042
+Descuida de VELOC. e AT. ESP..$
+
+[BattleDome_Text_NeglectsSpeedAndSpDef] a0bd83fe6d
+Descuida de VELOC. e DEF. ESP..$
+
+[BattleDome_Text_NeglectsSpAtkAndSpDef] e30cea1d32
+Descuida de AT. ESP. e DEF. ESP..$
+
+[BattleDome_Text_NeglectsHP] 3ee83bdc09
+Descuida de PS.$
+
+[BattleDome_Text_NeglectsAtk] 2a65b91477
+Descuida de ATAQUE.$
+
+[BattleDome_Text_NeglectsDef] 1070e8b2f8
+Descuida de DEFESA.$
+
+[BattleDome_Text_NeglectsSpeed] f41819106a
+Descuida de VELOC..$
+
+[BattleDome_Text_NeglectsSpAtk] 87c7be5d47
+Descuida de AT. ESP..$
+
+[BattleDome_Text_NeglectsSpDef] a585203fcb
+Descuida de DEF. ESP..$
+
+[BattleDome_Text_RaisesMonsWellBalanced] 18316b1265
+Cria POKéMON de forma equilibrada.$
+
+[BattleDome_Text_LetTheBattleBegin] 7062a1c1ce
+Que comece a batalha!$
+
+[BattleDome_Text_TrainerWonUsingMove] 143ac2a4e6
+{STR_VAR_1} vence com {STR_VAR_2}!$
+
+[BattleDome_Text_TrainerBecameChamp] 154b6a3cd5
+{STR_VAR_1} ganhou o título!$
+
+[BattleDome_Text_TrainerWonByDefault] efe61d8a88
+{STR_VAR_1} venceu por W.O.!$
+
+[BattleDome_Text_TrainerWonOutrightByDefault] 1eeb2d30d4
+{STR_VAR_1} levou o título por W.O.!$
+
+[BattleDome_Text_TrainerWonNoMoves] 68fd5e8ce2
+{STR_VAR_1} venceu sem usar golpes!$
+
+[BattleDome_Text_TrainerWonOutrightNoMoves] c8ed16da22
+{STR_VAR_1} levou o título sem golpes!$
+
+[BattleDome_Text_Round1Match1] 915ccc4ace
+1ª rodada, luta 1$
+
+[BattleDome_Text_Round1Match2] 58f92f2dc6
+1ª rodada, luta 2$
+
+[BattleDome_Text_Round1Match3] e68cff084b
+1ª rodada, luta 3$
+
+[BattleDome_Text_Round1Match4] ea9a76accc
+1ª rodada, luta 4$
+
+[BattleDome_Text_Round1Match5] 1ef4ed3792
+1ª rodada, luta 5$
+
+[BattleDome_Text_Round1Match6] 20f2362703
+1ª rodada, luta 6$
+
+[BattleDome_Text_Round1Match7] cbd68aa6ea
+1ª rodada, luta 7$
+
+[BattleDome_Text_Round1Match8] c3fd80192a
+1ª rodada, luta 8$
+
+[BattleDome_Text_Round2Match1] be91c6b31d
+2ª rodada, luta 1$
+
+[BattleDome_Text_Round2Match2] cf2b325cc3
+2ª rodada, luta 2$
+
+[BattleDome_Text_Round2Match3] 478db86a7f
+2ª rodada, luta 3$
+
+[BattleDome_Text_Round2Match4] 48b9e0a74c
+2ª rodada, luta 4$
+
+[BattleDome_Text_SemifinalMatch1] f12e28f754
+Semifinal, luta 1$
+
+[BattleDome_Text_SemifinalMatch2] 3cd53c7c4d
+Semifinal, luta 2$
+
+[BattleDome_Text_FinalMatch] e014ae69ca
+Final$

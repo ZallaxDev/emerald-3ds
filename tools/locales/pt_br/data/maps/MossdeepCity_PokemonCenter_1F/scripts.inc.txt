@@ -1,0 +1,12 @@
+# CIDADE DE MOSSDEEP: o CENTRO POKéMON.
+
+[MossdeepCity_PokemonCenter_1F_Text_GymLeaderDuoFormidable] 4fc62bdb44
+Os LÍDERES de GINÁSIO desta cidade\n
+são uma dupla formidável.\p
+Os ataques combinados deles são,\n
+tipo, demais, uau!$
+
+[MossdeepCity_PokemonCenter_1F_Text_AbilitiesMightChangeMoves] 001b90d2fd
+Dependendo da habilidade especial\n
+do POKéMON, alguns golpes mudam ou\l
+nem funcionam.$

@@ -4,9 +4,19 @@ Applies after 0005-port-hooks.patch; apply with tools/bootstrap.py.
 diff --git a/src/main.c b/src/main.c
 --- a/src/main.c
 +++ b/src/main.c
-@@ -184,8 +184,12 @@
+@@ -180,12 +180,22 @@
+         ReadKeys();
+         sMainCallback2JustChanged = FALSE;
+ 
++#ifdef PLATFORM_3DS
++        // L+R+START+SELECT, as in the 3DS games (port_platform.h).
++        if (gSoftResetDisabled == FALSE
++         && JOY_HELD_RAW(CTR_SOFT_RESET_KEYS) == CTR_SOFT_RESET_KEYS)
++#else
+         if (gSoftResetDisabled == FALSE
           && JOY_HELD_RAW(A_BUTTON)
           && JOY_HELD_RAW(B_START_SELECT) == B_START_SELECT)
++#endif
          {
 +#ifndef PORTABLE
 +            // No wireless adapter on the port: rfu_initializeAPI is a stub, and

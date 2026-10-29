@@ -1,0 +1,13 @@
+# POKé MART de SLATEPORT.
+
+[SlateportCity_Mart_Text_SomeItemsOnlyAtMart] a8d92c2a6a
+O MERCADO tem umas mercadorias\n
+interessantes.\p
+Mas tem itens que você só acha\n
+num POKé MART.$
+
+[SlateportCity_Mart_Text_GreatBallIsBetter] cdf0365b03
+A GRANDE BOLA é melhor que a POKé BOLA\n
+pra pegar POKéMON.\p
+Com ela, devo conseguir pegar aquele\n
+POKéMON que sempre escapa…$

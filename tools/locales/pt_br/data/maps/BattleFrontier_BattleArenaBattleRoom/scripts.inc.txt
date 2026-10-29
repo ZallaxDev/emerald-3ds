@@ -1,0 +1,145 @@
+# FRONTEIRA DE BATALHA: o tatame da ARENA, com o JUIZ e a GRETA.
+
+[BattleFrontier_BattleArenaBattleRoom_Text_PlayerStepForward] 3b49e38d22
+JUIZ: TREINADOR {PLAYER}!\n
+Dê um passo à frente, por favor!$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_OpponentStepForward] ada5eabc2d
+JUIZ: TREINADOR {STR_VAR_1}!\n
+Dê um passo à frente, por favor!$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_SetKOTourneyBegin] eb13f3f220
+JUIZ: Torneio de Nocaute!\n
+Comecem!$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_WinnerIsPlayer] d4325d528e
+JUIZ: Vitória de {PLAYER}!$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_WinnerIsOpponent] 6ada7baefa
+JUIZ: Vitória de {STR_VAR_1}!$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_MonsWillBeRestored] 3db90d1eeb
+Os seus POKéMON serão totalmente\n
+recuperados.$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_ReadyFor2ndOpponent] ccc533a546
+A seguir, o seu segundo oponente!\n
+Está tudo pronto pra seguir?$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_ReadyFor3rdOpponent] 217d816236
+A seguir, o seu terceiro oponente!\n
+Está tudo pronto pra seguir?$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_ReadyFor4thOpponent] 3df69ee077
+A seguir, o seu quarto oponente!\n
+Está tudo pronto pra seguir?$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_ReadyFor5thOpponent] 4f44f15cbd
+A seguir, o seu quinto oponente!\n
+Está tudo pronto pra seguir?$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_ReadyFor6thOpponent] 80f41dd400
+A seguir, o seu sexto oponente!\n
+Está tudo pronto pra seguir?$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_ReadyFor7thOpponent] 463158b1b4
+A seguir, o seu sétimo oponente!\n
+Está tudo pronto pra seguir?$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_SaveAndShutDown] 09e35c428d
+Quer salvar o jogo e desligar agora?$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_RetireFromChallenge] f797157ab5
+Quer desistir do desafio do\n
+Torneio de Nocaute?$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_SavingPleaseWait] aeeb021497
+Estou salvando os dados do jogo.\n
+Aguarde, por favor.$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_RecordLastBattle] 4d44e9a16c
+Quer gravar a sua última batalha\n
+no PASSE DA FRONTEIRA?$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_NowFaceTycoon] 0536b85424
+Ilustre desafiante!\p
+O seu nível de habilidade é mesmo\n
+impressionante!\p
+Agora queremos que enfrente a nossa\n
+líder, a MAGNATA DA ARENA!$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_PreparedForTycoon] c69de26c74
+Uma batalha com a MAGNATA DA ARENA!\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_MakeWayForGreta] 9631d3d2b9
+JUIZ: A MAGNATA DA ARENA!\n
+Abram alas pra GRETA!$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_GretaYoureChallenger] 4dfcad078e
+GRETA: Ei!\n
+E aí!\p
+…Pera, é você quem vai me desafiar?$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_IsThatRight] 918cd5e473
+É mesmo? Hum…\n
+Humhum…$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_YouLookWeakTakeThingsEasy] d6d8035c12
+Não sei como dizer, mas…\n
+Falando francamente, você não parece\l
+muito forte. Vai dar conta?\p
+Hum…\p
+Bom, tá bem!\n
+Vamos começar pegando leve!$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_IgniteMyPassionForBattle] 119738a0ea
+Certo! Vamos ver se você acende\n
+a minha paixão por batalhas!$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_GretaYoureToughAfterAll] 5bca61ae65
+GRETA: Ai, pera aí!\n
+Você tem força mesmo!\p
+Gostei de você!\n
+Deixa eu ver o seu PASSE DA FRONTEIRA.$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_ReceivedGutsSymbol] 35ba408aa4
+O Símbolo da Garra foi gravado no\n
+PASSE DA FRONTEIRA!$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_GoingToBeFunNextTime] b8a94b0428
+Hum…\p
+Da próxima vez vai ser divertido!\n
+Estou ansiosa!$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_GretaLookingForwardToSeeingAgain] 7947387fc2
+GRETA: Ei! E aí!\n
+Finalmente você chegou até mim!\p
+Já estava preocupada esperando!\n
+Eu estava louca pra te ver de novo!$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_SoAreYouReady] 788370c5bb
+… … …\n
+Então, tudo pronto?$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_WontAllowHalfheartedEffort] 6d7cc7da19
+Não aceito esforço pela metade!\n
+Prepare-se pra apanhar!$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_LetsGetThisStarted] bc0aa51cab
+Vamos, JUIZ!\n
+Pode começar!$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_GretaBlownAway] a77ed8c209
+GRETA: Aaah! Fui arrasada!\n
+Deixa eu ver o seu PASSE DA FRONTEIRA!$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_GutsSymbolTookGoldenShine] 2be0fb28b2
+O Símbolo da Garra ganhou um\n
+brilho dourado!$
+
+[BattleFrontier_BattleArenaBattleRoom_Text_IfWeBattleAgainWontLose] 8bd8a2480c
+Aaargh!\n
+Que raiva!\p
+Se batalharmos de novo, não perco!\n
+Não esqueça! Tchauzinho!$

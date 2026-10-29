@@ -1,0 +1,40 @@
+# CIDADE DE FALLARBOR: a casa do TUTOR DE GOLPES.
+
+[FallarborTown_MoveRelearnersHouse_Text_ImTheMoveTutor] 1a0e42beb0
+Eu sou o TUTOR DE GOLPES.\p
+Conheço todos os golpes que os\n
+POKéMON aprendem, todinhos, e\l
+posso ensinar esses golpes.\p
+Posso ensinar um golpe a um\n
+POKéMON seu, se quiser.\p
+Em troca de uma ESCAMA CORAÇÃO.\n
+Estou colecionando.$
+
+[FallarborTown_MoveRelearnersHouse_Text_ThatsAHeartScaleWantMeToTeachMove] 41f0509664
+Oh! É isso! Uma ESCAMA CORAÇÃO\n
+de verdade!\p
+Deixa eu adivinhar: quer que eu\n
+ensine um golpe?$
+
+[FallarborTown_MoveRelearnersHouse_Text_TutorWhichMon] af92a75bff
+Qual POKéMON vai ter aula?$
+
+[FallarborTown_MoveRelearnersHouse_Text_TeachWhichMove] d4c4f66972
+Que golpe eu devo ensinar?$
+
+[FallarborTown_MoveRelearnersHouse_Text_DontHaveMoveToTeachPokemon] f61a3992ab
+Desculpa…\p
+Parece que não tenho nenhum golpe\n
+pra ensinar a esse POKéMON.$
+
+[FallarborTown_MoveRelearnersHouse_Text_HandedOverHeartScale] e459074440
+{PLAYER} entregou uma ESCAMA CORAÇÃO\n
+em troca.$
+
+[FallarborTown_MoveRelearnersHouse_Text_ComeBackWithHeartScale] e4764593f2
+Se os seus POKéMON precisarem aprender\n
+um golpe, volte com uma ESCAMA CORAÇÃO.$
+
+[FallarborTown_MoveRelearnersHouse_Text_CantTeachEgg] b13763fb3f
+Hã? Não tem nenhum golpe que eu\n
+consiga ensinar a um OVO.$

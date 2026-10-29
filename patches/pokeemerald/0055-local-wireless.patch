@@ -1155,9 +1155,9 @@ index 8d6ae75..582777c 100644
      InitRFU();
  #endif
      RtcInit();
-@@ -184,9 +184,7 @@ void AgbMain(void)
-          && JOY_HELD_RAW(A_BUTTON)
+@@ -190,9 +190,7 @@ void AgbMain(void)
           && JOY_HELD_RAW(B_START_SELECT) == B_START_SELECT)
+ #endif
          {
 -#ifndef PORTABLE
 -            // No wireless adapter on the port: rfu_initializeAPI is a stub, and

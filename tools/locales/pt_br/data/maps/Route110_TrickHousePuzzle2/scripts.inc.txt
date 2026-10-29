@@ -1,0 +1,41 @@
+# CASA DOS TRUQUES, sala 2.
+
+[Route110_TrickHousePuzzle2_Text_WroteSecretCodeLockOpened] 500cad9580
+{PLAYER} escreveu a senha secreta\n
+na porta.\p
+“O MESTRE DOS TRUQUES é esperto.”\n
+… … … … … … … …\p
+A fechadura abriu com um clique!$
+
+[Route110_TrickHousePuzzle2_Text_TedIntro] 97b6272d6e
+Qual botão fecha qual buraco?$
+
+[Route110_TrickHousePuzzle2_Text_TedDefeat] 5ab15d36f4
+Depois dessa batalha, fiquei ainda\n
+mais confuso!$
+
+[Route110_TrickHousePuzzle2_Text_TedPostBattle] 2681befac7
+Você aperta todos os botões\n
+pra mim?$
+
+[Route110_TrickHousePuzzle2_Text_PaulIntro] 6c8b13ca50
+Ah! Você está no segundo desafio da\n
+CASA DOS TRUQUES!$
+
+[Route110_TrickHousePuzzle2_Text_PaulDefeat] 4b37f2ee8e
+Você também batalha bem?$
+
+[Route110_TrickHousePuzzle2_Text_PaulPostBattle] 954316cb39
+O MESTRE DOS TRUQUES montou todos os\n
+truques desta casa sozinho.$
+
+[Route110_TrickHousePuzzle2_Text_GeorgiaIntro] e22bc9309e
+Quero ter o meu GINÁSIO um dia.\n
+Então estudo como montar armadilhas.$
+
+[Route110_TrickHousePuzzle2_Text_GeorgiaDefeat] c46b67fc87
+Não estudei batalha o suficiente!$
+
+[Route110_TrickHousePuzzle2_Text_GeorgiaPostBattle] 25d2a4d8cc
+Você é forte, né?\n
+Talvez até pra ser LÍDER DE GINÁSIO!$

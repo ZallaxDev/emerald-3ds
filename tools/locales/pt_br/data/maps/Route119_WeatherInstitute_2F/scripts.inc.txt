@@ -1,0 +1,120 @@
+# INSTITUTO DO CLIMA: 2º andar, a SHELLY e o CASTFORM.
+
+[Route119_WeatherInstitute_2F_Text_Grunt2Intro] 8b7c44a06b
+O INSTITUTO criou um tipo de POKéMON\n
+que tem a ver com o clima. Viemos\l
+pegar eles!$
+
+[Route119_WeatherInstitute_2F_Text_Grunt2Defeat] 7769f58121
+Uma criança estragando o nosso plano?$
+
+[Route119_WeatherInstitute_2F_Text_Grunt2PostBattle] 2456e04d31
+Se o POKéMON que fizeram aqui controla\n
+o clima à vontade, a EQUIPE AQUA\l
+precisa dele de qualquer jeito!$
+
+[Route119_WeatherInstitute_2F_Text_Grunt3Intro] e25bec02e8
+Somos a EQUIPE AQUA!\n
+Aparecemos onde tiver coisa rara!$
+
+[Route119_WeatherInstitute_2F_Text_Grunt3Defeat] 116fba1ca0
+Você me pegou!$
+
+[Route119_WeatherInstitute_2F_Text_Grunt3PostBattle] 398349e4e8
+Você não faz ideia do que a EQUIPE\n
+AQUA quer alcançar!\l
+Saia do nosso caminho!$
+
+[Route119_WeatherInstitute_2F_Text_Grunt5Intro] d67afe5b2a
+Não vai me dizer que você também quer\n
+aquele POKéMON do clima?\p
+Nada disso!\n
+A gente chegou primeiro!$
+
+[Route119_WeatherInstitute_2F_Text_Grunt5Defeat] c0b9c8750d
+Ai, olha só o estado dos meus POKéMON!$
+
+[Route119_WeatherInstitute_2F_Text_Grunt5PostBattle] 88075ab5eb
+Hunf, e daí?\n
+O que a gente quer…\p
+O que a gente quer mesmo não está\n
+aqui… Ihihihihi…$
+
+[Route119_WeatherInstitute_2F_Text_ShellyIntro] 98b0c53255
+Ahahahaha!\p
+Vai se meter nos assuntos da\n
+EQUIPE AQUA?\p
+Ou você não tem medo nenhum, ou não\n
+sabe de nada, ou as duas coisas!\p
+É tão fofinho que dá até nojo!\n
+Vou acabar com você, criança!$
+
+[Route119_WeatherInstitute_2F_Text_ShellyDefeat] 4c8b1a961b
+Ahahahaha!\n
+Você é forte que dá nojo!$
+
+[Route119_WeatherInstitute_2F_Text_ShellyPostBattle] 505517d0c9
+Já basta a EQUIPE MAGMA atrapalhando,\n
+e agora vem você!\p
+Afinal, por que quer ficar fuçando\n
+nos nossos assuntos?$
+
+[Route119_WeatherInstitute_2F_Text_TeamMagmaJustPassedBy] a99a086402
+Temos um problema!\p
+Um bando da EQUIPE MAGMA acabou de\n
+passar pelo INSTITUTO DO CLIMA.\p
+Parece que estão indo pro\n
+MONTE PYRE!$
+
+[Route119_WeatherInstitute_2F_Text_WeHaveToHurryToMtPyre] 11ad790b77
+O quê?!\p
+Não dá pra perder mais tempo aqui!\n
+Temos que correr pro MONTE PYRE!\p
+Ahahahaha!\n
+EQUIPE MAGMA, me aguarde!$
+
+[Route119_WeatherInstitute_2F_Text_ThanksPleaseTakePokemon] 158a53502e
+Obrigado!\n
+Graças a você, estamos a salvo!\p
+Pode ser um jeito estranho de\n
+agradecer, mas fique com este POKéMON.$
+
+[Route119_WeatherInstitute_2F_Text_NoRoomForPokemon] 1dd09fd85a
+Hã? Parece que você não tem espaço\n
+pra este POKéMON.$
+
+[Route119_WeatherInstitute_2F_Text_PlayerReceivedCastform] 51d7c82551
+{PLAYER} recebeu CASTFORM!$
+
+[Route119_WeatherInstitute_2F_Text_PokemonChangesWithWeather] 7fbfe34e55
+Esse POKéMON muda de forma conforme\n
+o clima.\p
+Tem vários no INSTITUTO, pode levar\n
+sem problema.$
+
+[Route119_WeatherInstitute_2F_Text_ChangingWeatherRidiculous] 63062e765d
+Pesquiso a chuva há muitos anos, mas\n
+é ridículo achar que os humanos\l
+podem mudar o clima à vontade.$
+
+[Route119_WeatherInstitute_2F_Text_GroudonWeather] 462ee7c0f8
+Acompanho o clima da região de\n
+HOENN.\p
+Neste momento, há uma seca\n
+registrada em {STR_VAR_1}.\p
+Será que, em algum lugar perto de\n
+{STR_VAR_1}…$
+
+[Route119_WeatherInstitute_2F_Text_KyogreWeather] 2e5b2272a4
+Acompanho o clima da região de\n
+HOENN.\p
+Neste momento, há chuvas fortes\n
+registradas em {STR_VAR_1}.\p
+Será que, em algum lugar perto de\n
+{STR_VAR_1}…$
+
+[Route119_WeatherInstitute_2F_Text_NoAbnormalWeather] 9ed04eabc2
+Não há mais registros de clima\n
+anormal.\p
+Uma chuvinha de vez em quando\n
+até que é uma bênção.$

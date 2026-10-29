@@ -1,0 +1,24 @@
+# LIGA POKéMON: a sala da GLACIA.
+
+[EverGrandeCity_GlaciasRoom_Text_IntroSpeech] 075c7db2ba
+Boas-vindas. Meu nome é GLACIA,\n
+da ELITE DOS QUATRO.\p
+Vim de longe até HOENN pra\n
+aperfeiçoar as minhas técnicas de gelo.\p
+Mas só vi desafios de TREINADORES\n
+fracos e dos seus POKéMON.\p
+E você?\p
+Me deixaria muito feliz poder ir\n
+com tudo contra você!$
+
+[EverGrandeCity_GlaciasRoom_Text_Defeat] efdb830be2
+Você e os seus POKéMON…\n
+Como arde o espírito de vocês!\p
+Esse calor devastador é demais.\p
+Não é surpresa as minhas técnicas\n
+de gelo não te ferirem.$
+
+[EverGrandeCity_GlaciasRoom_Text_PostBattleSpeech] 5094929046
+Siga pra próxima sala.\p
+E lá, conheça o lado realmente\n
+temível da LIGA POKéMON.$

@@ -1,0 +1,53 @@
+# CIDADE DE FALLARBOR: a casa do PROF. COZMO.
+
+[FallarborTown_CozmosHouse_Text_MeteoriteWillNeverBeMineNow] 824d7e237d
+PROF. COZMO: Ah…\n
+Nunca devia ter caído na conversa\l
+da EQUIPE MAGMA e contado onde\l
+achar METEORITOS…\p
+Aquele METEORITO da CATARATA DOS\n
+METEOROS… Nunca vai ser meu…$
+
+[FallarborTown_CozmosHouse_Text_IsThatMeteoriteMayIHaveIt] 5b41ce0aab
+Oh!\n
+Hã?\p
+Esse item…\p
+Será que é…\p
+É o METEORITO que a EQUIPE MAGMA\n
+levou da CATARATA DOS METEOROS?\p
+Por favor, pode me dar?\p
+Não estou pedindo de graça.\n
+Que tal em troca desta MT?$
+
+[FallarborTown_CozmosHouse_Text_PleaseUseThisTM] 084075ec71
+PROF. COZMO: Esta MT representa\n
+a minha gratidão.\l
+Por favor, use!$
+
+[FallarborTown_CozmosHouse_Text_ReallyGoingToHelpMyResearch] ed82149a6c
+PROF. COZMO: Ah, não acredito.\n
+Isso é muito, muito bom!\p
+Vai ajudar demais a minha pesquisa!$
+
+[FallarborTown_CozmosHouse_Text_CrushedWithDisappointment] 5808e5a63e
+PROF. COZMO: Ah, mas…\n
+Estou arrasado de decepção…$
+
+[FallarborTown_CozmosHouse_Text_MayIHaveMeteorite] 441161bd6b
+PROF. COZMO: Por favor, pode me dar\n
+esse METEORITO?\p
+Não estou pedindo de graça.\n
+Que tal em troca desta MT?$
+
+[FallarborTown_CozmosHouse_Text_CozmoWentToMeteorFalls] 57354edbe0
+O PROF. COZMO foi pra CATARATA DOS\n
+METEOROS, na ROTA 114, com uns\l
+caras da EQUIPE MAGMA.$
+
+[FallarborTown_CozmosHouse_Text_FeelSorryForCozmo] 822bd15555
+Coitado do PROF. COZMO…\n
+Ele está tão deprimido… Dá dó.$
+
+[FallarborTown_CozmosHouse_Text_CozmoIsSoHappy] cf99df9115
+Olha o PROF. COZMO…\n
+Ele está tão feliz! Que fofo.$

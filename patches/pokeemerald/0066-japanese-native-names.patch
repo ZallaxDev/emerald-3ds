@@ -1,0 +1,37 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: Japanese names are the game's own
+Applies after 0005-port-hooks.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/pokemon.c b/src/pokemon.c
+--- a/src/pokemon.c
++++ b/src/pokemon.c
+@@ -3855,7 +3855,12 @@
+             StringCopy(data, gText_EggNickname);
+             retVal = StringLength(data);
+         }
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_JAPANESE
++        // Japanese is the game's own language: its names are not marked.
++        else if (FALSE)
++#else
+         else if (boxMon->language == LANGUAGE_JAPANESE)
++#endif
+         {
+             data[0] = EXT_CTRL_CODE_BEGIN;
+             data[1] = EXT_CTRL_CODE_JPN;
+diff --git a/src/string_util.c b/src/string_util.c
+--- a/src/string_util.c
++++ b/src/string_util.c
+@@ -807,7 +807,14 @@
+ 
+ void ConvertInternationalString(u8 *s, u8 language)
+ {
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_JAPANESE
++    // Japanese is the game's own language: its names need no marking.
+     if (language == LANGUAGE_JAPANESE)
++        StripExtCtrlCodes(s);
++    if (FALSE)
++#else
++    if (language == LANGUAGE_JAPANESE)
++#endif
+     {
+         u8 i;
+ 

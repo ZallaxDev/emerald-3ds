@@ -1,0 +1,126 @@
+# FRONTEIRA DE BATALHA: a SALA DE BATALHA da TORRE, com a ANABEL.
+
+[BattleFrontier_BattleTowerBattleRoom_Text_RestoreMonsToFullHealth] d9000e5bda
+Vamos recuperar totalmente os\n
+seus POKéMON.$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_ReadyForOpponent] 85eb870c83
+Agora é o oponente nº {STR_VAR_1}.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_ReadyFor2ndOpponent] 8c8a66dfdc
+Você vai enfrentar o oponente nº 2.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_ReadyFor3rdOpponent] 52e997eb18
+Você vai enfrentar o oponente nº 3.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_ReadyFor4thOpponent] aea9acc8b3
+Você vai enfrentar o oponente nº 4.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_ReadyFor5thOpponent] cc0eaa24c4
+Você vai enfrentar o oponente nº 5.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_ReadyFor6thOpponent] 0381379465
+Você vai enfrentar o oponente nº 6.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_ReadyFor7thOpponent] 5641ee1029
+Você vai enfrentar o oponente nº 7.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_RecordYourBattle] 3aead366a1
+Gravar a batalha no\n
+PASSE DA FRONTEIRA?$
+
+[BattleFrontier_BattleTowerLobby_Text_BattleRecordedOnPass] 97ca68d630
+A batalha de {PLAYER} foi gravada\n
+no PASSE DA FRONTEIRA.$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_SaveAndQuitGame] d6632fe4e1
+Quer salvar e sair do jogo?$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_SavingPleaseWait] 10f5098460
+Salvando os dados da batalha.\n
+Aguarde, por favor.$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_CancelYourChallenge] 5ec4856ada
+Quer cancelar o desafio da SALA\n
+DE BATALHA?$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_RecordCouldntBeSaved] d65072437a
+Houve algum erro.\n
+Não foi possível salvar o resultado.$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_SalonMaidenOnHerWay] 5c48a6e956
+Com licença, mas…\p
+A nossa líder, a DAMA DO SALÃO, está\n
+vindo pra cá querendo batalhar.\p
+Ela deve chegar logo.$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_ReadyForSalonMaiden] a9bb25739b
+Você vai enfrentar a DAMA DO SALÃO.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_GreetingsImAnabel] c10b61946d
+Saudações…\n
+Meu nome é ANABEL.\p
+Sou a DAMA DO SALÃO e comando a\n
+TORRE DE BATALHA…\p
+Ouvi vários boatos sobre você…\p
+Sinceramente, o que ouvi não me\n
+parece nada atraente…\p
+O motivo de eu ter vindo te ver…\n
+Bem, só há um motivo…$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_LetMeSeeYourTalent] a67734a08a
+Mostre-me todo o seu talento…$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_AnabelTalentShallBeRecognized] 007ac97642
+ANABEL: Fufufu, muito bem…\p
+O seu PASSE DA FRONTEIRA, por favor…\n
+O seu talento será reconhecido.$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_ReceivedAbilitySymbol] 324e50483d
+O Símbolo do Talento foi gravado no\n
+PASSE DA FRONTEIRA!$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_UntilNextTime] 212c39afd6
+… … … … … …\p
+Você confia no seu talento de\n
+batalha POKéMON, não é?\p
+Peço que continue batalhando e\n
+vencendo.\p
+Vou esperar por você.\n
+Até a próxima…$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_AnabelYouCameBack] 887ced565f
+ANABEL: Você voltou mesmo pra\n
+me ver…\p
+… … … … … …\p
+Venceu batalhas seguidas pra me\n
+ver… Não vou precisar me segurar…\p
+Faz tempo demais…\p
+Tempo demais desde que batalhei\n
+sem pensar em nada…$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_LetsBeginShallWe] 920e4412a6
+Vamos começar?$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_AnabelCongratsYourPassPlease] 11584e1712
+ANABEL: Fufu, parabéns…\n
+O seu PASSE DA FRONTEIRA, por favor…$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_AbilitySymbolTookGoldenShine] 58137a6577
+O Símbolo do Talento ganhou um\n
+brilho dourado!$
+
+[BattleFrontier_BattleTowerBattleRoom_Text_WishICouldBattleYouAgain] b45342ccf5
+Foi divertido…\p
+Nunca tive uma batalha POKéMON tão\n
+agradável…\p
+Queria poder batalhar com você\n
+de novo…$

@@ -1,0 +1,119 @@
+# TRILHA ESCARPADA: os treinadores e o capanga da EQUIPE MAGMA.
+
+[JaggedPass_Text_EricIntro] 62aa8c6392
+A TRILHA ESCARPADA do MONTE CHIMNEY…\p
+Isso é tudo o que eu sempre quis\n
+numa montanha.\p
+Esse chão todo irregular…\n
+Mexe com a minha alma!$
+
+[JaggedPass_Text_EricDefeat] 95cfbed205
+Perder me deixou amargo!$
+
+[JaggedPass_Text_EricPostBattle] 5b4372656b
+É, perdi na batalha POKéMON…\p
+Mas, no amor pelas montanhas,\n
+quem ganha sou eu!$
+
+[JaggedPass_Text_DianaIntro] 78294eb5d9
+Isto aqui não é uma caminhada à toa.\n
+Não serve pra piquenique.$
+
+[JaggedPass_Text_DianaDefeat] 31c8f889b5
+Ah, não!\n
+O chão é irregular demais…$
+
+[JaggedPass_Text_DianaPostBattle] fe7c578674
+Sabia?\p
+Tem gente esperta que sobe esta trilha\n
+horrível de bicicleta.$
+
+[JaggedPass_Text_DianaRegister] 964afcf420
+Você vai voltar por aqui?\n
+Se voltar, quero uma revanche.$
+
+[JaggedPass_Text_DianaRematchIntro] cc32c458e9
+Piquenique é bom em qualquer lugar.\n
+Igualzinho aos POKéMON!$
+
+[JaggedPass_Text_DianaRematchDefeat] f02be625a9
+Só perdi porque o chão é irregular\n
+demais!$
+
+[JaggedPass_Text_DianaPostRematch] 771a16f041
+Vou esquecer a derrota e curtir\n
+esta trilha cheia de buracos.$
+
+[JaggedPass_Text_EthanIntro] 2bd3113d73
+É difícil andar na TRILHA ESCARPADA.\n
+É um bom lugar pra treinar.$
+
+[JaggedPass_Text_EthanDefeat] 748627edf2
+Acabou enquanto a gente ainda\n
+procurava onde pisar…$
+
+[JaggedPass_Text_EthanPostBattle] 9043980f21
+Se eu tivesse uma BICICLETA ACRO,\n
+dava pra pular os degraus.$
+
+[JaggedPass_Text_EthanRegister] b844728e44
+Quando eu me acostumar com esse chão,\n
+vou ganhar com certeza!\p
+Pode me registrar no seu POKéNAV?$
+
+[JaggedPass_Text_EthanRematchIntro] 065b551464
+Já me acostumei com esse chão.\n
+Agora até canto enquanto subo.$
+
+[JaggedPass_Text_EthanRematchDefeat] 180f27403a
+Ainda não é fácil batalhar neste\n
+chão irregular…$
+
+[JaggedPass_Text_EthanPostRematch] 1d420c23aa
+Eu devia pegar uma BICICLETA ACRO\n
+com o RYDEL, em MAUVILLE…$
+
+[JaggedPass_Text_GruntIntro] 15b3e57881
+Uau!\n
+O que você está fazendo aqui?\p
+O que eu estou fazendo num lugar\n
+desses?\p
+E o que você tem a ver com isso?$
+
+[JaggedPass_Text_GruntDefeat] 41e9c1f09f
+Argh…\p
+Eu devia ter me enfiado logo no\n
+nosso ESCONDERIJO…$
+
+[JaggedPass_Text_GoWhereverYouWant] c3bf711626
+Tá bom, tá booom!\n
+Admito: você é forte!\p
+Não se preocupe comigo.\n
+Vá aonde quiser!$
+
+[JaggedPass_Text_BoulderShakingInResponseToEmblem] e603fd3ab3
+Oh! Esta pedra está tremendo por\n
+causa do EMBLEMA MAGMA!$
+
+[JaggedPass_Text_JulioIntro] c5b68dd4e2
+Aiii! Dá muito medo descer a\n
+montanha de uma vez só!$
+
+[JaggedPass_Text_JulioDefeat] 41a159756f
+Parece que estou caindo aos pedaços…$
+
+[JaggedPass_Text_JulioPostBattle] f12bfa7a53
+A bicicleta pulou tanto que estou\n
+com o traseiro doendo…$
+
+[JaggedPass_Text_AutumnIntro] fe90b4e09a
+Subo este morro todo dia.\n
+Confio na minha força!$
+
+[JaggedPass_Text_AutumnDefeat] 9d9adea2bf
+Hmm…\n
+O que deu errado?$
+
+[JaggedPass_Text_AutumnPostBattle] 6935277a1a
+O que é aquela rocha estranha saindo\n
+do chão, um pouco mais pra cima?$

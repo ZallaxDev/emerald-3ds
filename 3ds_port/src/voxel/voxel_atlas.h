@@ -63,7 +63,7 @@ void VoxelAtlas_SolidUV(VoxelSolidColor color, float *u0, float *v0, float *u1, 
  * in the sea, without the rock. Id VOXEL_METATILE_REAL + i is variant i of
  * buildings.bin; it is composed, extended and animated like any other id.
  */
-#define VOXEL_VARIANTS 128u
+#define VOXEL_VARIANTS 160u
 /*
  * Then the cut tiles (voxel_relief.h): a rock's tile with the ground drawn
  * behind it clear, for its relief to stand over the ground drawn flat. Id
@@ -160,32 +160,90 @@ unsigned VoxelAtlas_RefreshAnimatedPageRows(const VoxelMapInstance *inst, const 
 bool VoxelAtlas_IsVoid(const VoxelMapInstance *inst, int metatile);
 
 /*
- * One animated slot, redrawn alone: `pixels` is the 16x16 slot in the PICA's
- * order, which is the slot's two runs of 256 bytes in its page, one after the
- * other (blocks (2c,2r),(2c+1,2r) at block index 128r+2c, then the same one
- * block row down, 64 blocks further; a block is 128 bytes).
+ * The animated tiles (water, flowers) redrawn in every atlas in view at once.
+ * A pass takes the tiles the game wrote since the last one, finds the slots
+ * that show them in each atlas (VoxelAnim_AddAtlas), composes them a block
+ * of 8x8 texels at a time - a block is a quadrant's two layers, and the sea's
+ * hundred-odd metatiles are a few dozen different blocks - against a time
+ * budget over as many frames as it takes (VoxelAnim_Compose), and only then
+ * is written out, run by run (VoxelAnim_Run, VoxelAnim_WriteRun): the slots
+ * of a run lie side by side in one row of a page, so a run is one GPU copy.
+ * Written slot by slot as they were composed, a few a frame, the sea of a
+ * town took longer to redraw than the game took to move it on, its tiles
+ * showed different frames along their edges, and the sea of the route beside
+ * (another atlas) waited its turn behind it.
+ *
+ * Pair i is the atlas the caller numbers i. A pair that is not the current
+ * map's (`shared`) is redrawn only where it is drawn from primary tiles alone
+ * - the sea, the shore, the flowers - as BG VRAM holds the current map's
+ * secondary tiles, not its own.
  */
+#define VOXEL_ANIM_PAIRS 8u
+#define VOXEL_ANIM_TARGETS 1024u
+#define VOXEL_ANIM_BLOCKS 1024u
+#define VOXEL_ANIM_HASH 2048u
+/* The longest run: a row of a page. */
+#define VOXEL_ANIM_RUN_MAX VOXEL_ATLAS_COLUMNS
+
 typedef struct
 {
-    uint16_t pixels[VOXEL_ATLAS_SLOT * VOXEL_ATLAS_SLOT];
-    unsigned slot; /* within the page */
-    unsigned pad[3]; /* the next one starts on 16 bytes, as the GPU copy wants */
-} VoxelAnimSlot;
-unsigned VoxelAtlas_AnimatedSlots(const VoxelMapInstance *inst, const VoxelAtlasMap *map,
-                                  unsigned page, const uint8_t *liveTiles,
-                                  const uint8_t work[128], unsigned *cursor,
-                                  VoxelAnimSlot *out, unsigned max);
+    uint16_t slot;      /* within its page */
+    uint16_t id;        /* atlas id */
+    uint8_t pair, page;
+    uint16_t block[4];  /* its quadrants among the pass's blocks */
+} VoxelAnimTarget;
+
+typedef struct
+{
+    uint16_t lower, upper;  /* the quadrant's entries; a cut slot's id in `lower` */
+    uint8_t pair;           /* the pair it is composed from */
+    uint8_t flags;
+} VoxelAnimBlock;
+
+typedef struct
+{
+    uint8_t work[128];
+    const void *primary[VOXEL_ANIM_PAIRS], *secondary[VOXEL_ANIM_PAIRS];
+    bool shared[VOXEL_ANIM_PAIRS];
+    VoxelAnimTarget target[VOXEL_ANIM_TARGETS];
+    unsigned targets;
+    VoxelAnimBlock block[VOXEL_ANIM_BLOCKS];
+    uint16_t pixels[VOXEL_ANIM_BLOCKS][64];
+    uint16_t (*out)[64];    /* the composed blocks: `pixels`, or a kept state */
+    uint16_t hash[VOXEL_ANIM_HASH];
+    uint32_t key[2];        /* the written tiles' content the pass composes */
+    int state;              /* the kept state it composes into, or -1 */
+    bool kept;              /* taken from a kept state, not composed */
+    unsigned blocks, composed;
+    bool full;              /* slots left out: they wait for the next write */
+} VoxelAnimPass;
+
+/* A new pass over the tiles in `work` (bit t: tile t written). */
+void VoxelAnim_Begin(VoxelAnimPass *pass, const uint8_t work[128]);
+/* The last pass again, for the same tiles in the same atlases: its slots
+ * and blocks kept, composed anew from the tiles as they are now - or taken
+ * whole from a state composed before, when the tiles hold one again. */
+void VoxelAnim_Again(VoxelAnimPass *pass);
+/* The slots of every page of an atlas that show those tiles, as the live
+ * tiles (BG VRAM) are now; false when the pass had no room for all of them.
+ * Targets end sorted by page and slot within each atlas. */
+bool VoxelAnim_AddAtlas(VoxelAnimPass *pass, unsigned pair, const VoxelMapInstance *tilesets,
+                        bool shared, const VoxelAtlasMap *map, const uint8_t *liveTiles);
+/* Composes blocks from the live tiles (BG VRAM) until `stillTime` says no;
+ * true once all of the pass is composed. */
+bool VoxelAnim_Compose(VoxelAnimPass *pass, const uint8_t *liveTiles,
+                       bool (*stillTime)(void));
+/* The run starting at target `first`: how many targets it holds. */
+unsigned VoxelAnim_Run(const VoxelAnimPass *pass, unsigned first);
 /*
- * The same for the atlas of a map beside the current one that shares its
- * primary tileset (Route 107's Dewford pair beside Route 108's Slateport
- * one): BG VRAM holds the current map's secondary tiles, not this pair's, so
- * only the metatiles drawn wholly from primary tiles - the sea, the shore,
- * the flowers - are redrawn, and `work` is read for primary tiles alone.
+ * Writes the run of `count` targets from `first` into `out`, laid out as the
+ * page holds them: the top half of each of its slots, then the bottom halves -
+ * `count` * 512 bytes, which go to the page in two lines of `count` * 256
+ * bytes, VOXEL_ATLAS_W / 8 blocks apart (VoxelAnim_RunOffset).
  */
-unsigned VoxelAtlas_SharedAnimatedSlots(const VoxelMapInstance *inst, const VoxelAtlasMap *map,
-                                        unsigned page, const uint8_t *liveTiles,
-                                        const uint8_t work[128], unsigned *cursor,
-                                        VoxelAnimSlot *out, unsigned max);
+void VoxelAnim_WriteRun(const VoxelAnimPass *pass, unsigned first, unsigned count, uint16_t *out);
+/* Byte offset in its page of the first line of the run starting at `first`. */
+unsigned VoxelAnim_RunOffset(const VoxelAnimPass *pass, unsigned first);
 
 /* Texture coordinates of a packed slot, in the PICA convention where v=1 is
  * the first row in memory. U includes page*2, stripped by the chunk packer. */

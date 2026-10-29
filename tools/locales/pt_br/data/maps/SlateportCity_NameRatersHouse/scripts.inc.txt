@@ -1,0 +1,49 @@
+# CASA DO AVALIADOR DE NOMES, em SLATEPORT.
+
+[SlateportCity_NameRatersHouse_Text_PleasedToRateMonNickname] ed001cbbe6
+Olá, olá! Eu sou o AVALIADOR DE NOMES!\n
+O vidente dos nomes!\p
+Terei o prazer de avaliar o apelido\n
+do seu POKéMON.$
+
+[SlateportCity_NameRatersHouse_Text_CritiqueWhichMonNickname] 8913da8a84
+O apelido de qual POKéMON\n
+eu devo avaliar?$
+
+[SlateportCity_NameRatersHouse_Text_FineNameSuggestBetterOne] 48b161cda6
+Hmmm… {STR_VAR_1}, é? É um nome\n
+bem bonito que você deu.\p
+Mas! E se eu sugerisse um nome\n
+um pouquinho melhor?$
+
+[SlateportCity_NameRatersHouse_Text_WhatShallNewNameBe] 77ece967e3
+Ah, ótimo. Então, qual vai ser\n
+o novo apelido?$
+
+[SlateportCity_NameRatersHouse_Text_MonShallBeKnownAsName] 1ce819e3d3
+Pronto! A partir de agora, este\n
+POKéMON se chamará {STR_VAR_1}!\p
+É um nome melhor que o de antes!\n
+Que sorte a sua!$
+
+[SlateportCity_NameRatersHouse_Text_DoVisitAgain] ca7845aa7e
+Entendo.\n
+Volte sempre.$
+
+[SlateportCity_NameRatersHouse_Text_NameNoDifferentYetSuperior] e7c448526e
+Pronto! A partir de agora, este\n
+POKéMON se chamará {STR_VAR_1}!\p
+Parece igual ao de antes, mas é\n
+muito, muito superior!\p
+Que sorte a sua!$
+
+[SlateportCity_NameRatersHouse_Text_MagnificentName] 70fca19be1
+Hmmm… {STR_VAR_1}, então!\p
+É um apelido magnífico!\n
+Impecável, sem defeito nenhum!\p
+Faça bem em valorizar o seu\n
+{STR_VAR_1} daqui pra frente.$
+
+[SlateportCity_NameRatersHouse_Text_ThatIsMerelyAnEgg] ec500d8c92
+Calma, calma.\n
+Isso é só um OVO!$

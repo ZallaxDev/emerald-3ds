@@ -27,7 +27,9 @@
 #define GRID 64u
 
 /* voxel_tree.c only compares a map's secondary tileset against its address */
-const char gTileset_Dewford[1];
+const char gTileset_Dewford[1], gTileset_Fortree[1], gTileset_Mauville[1], gTileset_Lavaridge[1],
+    gTileset_Rustboro[1], gTileset_Lilycove[1], gTileset_EverGrande[1],
+    gTileset_BattleFrontierOutsideWest[1], gTileset_Mossdeep[1], gTileset_Fallarbor[1];
 
 static VoxelMapInstance sMap;
 static VoxelAtlasMap sAtlas;

@@ -1,0 +1,6 @@
+# O caminhão de mudança, onde o jogo começa.
+
+[InsideOfTruck_Text_BoxPrintedWithMonLogo] a72dc66a9c
+A caixa tem o logotipo dos POKéMON.\p
+É um serviço de mudanças e entregas\n
+da marca POKéMON.$

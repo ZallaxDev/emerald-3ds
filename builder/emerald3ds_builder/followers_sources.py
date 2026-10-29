@@ -45,6 +45,13 @@ SOURCES = {
   },
   {
    "source": "poke-corpus",
+   "path": "corpus/HeartGoldSoulSilver/de_msg.txt",
+   "size": 2730080,
+   "sha256": "fa739ae4712f2795895c9e540cc9f94081f0bf3b75ac04135389c3d307ce1fe8",
+   "language": "de"
+  },
+  {
+   "source": "poke-corpus",
    "path": "corpus/HeartGoldSoulSilver/qid_msg.txt",
    "size": 655562,
    "sha256": "8fbce804bc9f96eff0d659eed972bc5419e238074efe4c722d46d084a9ee71e9",

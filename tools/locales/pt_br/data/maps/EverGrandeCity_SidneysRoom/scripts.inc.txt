@@ -1,0 +1,22 @@
+# LIGA POKéMON: a sala do SIDNEY.
+
+[EverGrandeCity_SidneysRoom_Text_IntroSpeech] e98657a7dc
+Boas-vindas, desafiante!\n
+Sou o SIDNEY, da ELITE DOS QUATRO.\p
+Gostei desse olhar.\n
+Acho que vamos ter uma boa batalha.\l
+Isso aí! Promete!\p
+Certo! Eu e você, vamos curtir uma\n
+batalha que só dá pra ter aqui,\l
+na LIGA POKéMON!$
+
+[EverGrandeCity_SidneysRoom_Text_Defeat] f1aa72edaa
+Olha só! Perdi!\n
+Ah, foi divertido, então tanto faz.$
+
+[EverGrandeCity_SidneysRoom_Text_PostBattleSpeech] edfa79a61c
+Bom, escuta o que este perdedor\n
+tem a dizer.\p
+Você tem o que é preciso pra ir\n
+longe. Agora, vá pra próxima sala\l
+e curta a próxima batalha!$

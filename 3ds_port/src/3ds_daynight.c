@@ -39,6 +39,16 @@ void CtrDayNight_Advance(CtrDayNightClock *clock, uint64_t nowMs, unsigned local
     clock->ready = true;
 }
 
+void CtrDayNight_Sync(CtrDayNightClock *clock, uint64_t nowMs, unsigned localSeconds, int speed)
+{
+    if (clock->ready)
+        CtrDayNight_Advance(clock, nowMs, localSeconds, speed);
+    clock->timeMs = (localSeconds % 86400u) * 1000u;
+    clock->shifted = false;
+    clock->lastMs = nowMs;
+    clock->ready = true;
+}
+
 CtrDayNightLight CtrDayNight_At(unsigned timeMs)
 {
     static const struct
@@ -223,6 +233,36 @@ void CtrDayNight_Reset(void)
     sWallSeconds = 0;
     sLight = (CtrDayNightLight){{1.0f, 1.0f, 1.0f}, 1.0f, 0.0f};
     sSun = (CtrDayNightSun){0.85f, 0.55f, 1.0f, 0};
+}
+
+/* The game's daily events, lastBerryTreeUpdate and the RTC are not touched:
+ * only the port's accelerated phase goes. The berry bonus owed so far stays,
+ * including the time since the last update at the speed that was selected. */
+bool CtrDayNight_SyncToConsole(void)
+{
+    uint64_t now = CtrPlatform_Milliseconds();
+    int speed = CtrSettings_GetInt("clock_speed", 0);
+    unsigned local;
+
+    if (!CtrGame_LocalTimeSeconds(&local))
+        return false;
+    /* Suspended or not yet resampled: that time was owed at 1X, not at speed. */
+    if (sResume)
+        sClock.ready = false;
+    if (sClock.ready)
+        CtrDayNight_Advance(&sClock, now, local, speed);
+    /* The setter updates the clock at the old rate. Clear its shifted phase
+     * afterwards, or that update would immediately undo the sync. */
+    CtrSettings_SetInt("clock_speed", 0);
+    CtrDayNight_Sync(&sClock, now, local, 0);
+    sLocalSeconds = local;
+    sSampleMs = now;
+    sSampled = true;
+    sResume = false;
+    sWallSeconds = CtrPlatform_WallSeconds();
+    /* Light, sun and encounters see the local clock from now. */
+    CtrDayNight_Update();
+    return true;
 }
 
 bool CtrDayNight_Snapshot(CtrDayNightSnapshot *snapshot)

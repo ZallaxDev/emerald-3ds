@@ -1,0 +1,8 @@
+# Usar SURF na água.
+
+[gText_WantToUseSurf] 2f561726ba
+A água é de um azul profundo…\n
+Quer usar SURF?$
+
+[gText_PlayerUsedSurf] f2a259a4d7
+{STR_VAR_1} usou SURF!$

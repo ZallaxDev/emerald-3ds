@@ -1,0 +1,21 @@
+# CIDADE DE LILYCOVE: a LOJA DE DEPARTAMENTOS, 4º andar.
+
+[LilycoveCity_DepartmentStore_5F_Text_PlaceFullOfCuteDolls] 256d6489d6
+Este lugar está cheio de BONECOS\n
+fofos.\p
+Eu devia comprar uns pra mim, e não\n
+só pros meus filhos.$
+
+[LilycoveCity_DepartmentStore_5F_Text_GettingDollInsteadOfPokemon] 1b0db0b333
+Ainda sou pequeno pra treinar\n
+POKéMON, então vou levar um BONECO\l
+fofo no lugar.$
+
+[LilycoveCity_DepartmentStore_5F_Text_SellManyCuteMatsHere] bf4488dfcc
+Vendem muitos TAPETES fofos aqui.\p
+Qual será que eu levo?\n
+Talvez eu compre todos…$
+
+[LilycoveCity_DepartmentStore_5F_Text_ClosedRooftopForWeather] 9a22b92b88
+Acho que fecharam o terraço porque\n
+o tempo está maluco hoje.$

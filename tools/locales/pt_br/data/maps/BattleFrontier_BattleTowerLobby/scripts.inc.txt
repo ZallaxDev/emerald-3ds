@@ -1,0 +1,468 @@
+# FRONTEIRA DE BATALHA: a recepção da TORRE DE BATALHA.
+
+[BattleFrontier_BattleTowerLobby_Text_DirectYouToBattleRoom] efafe2e8d9
+Vou te levar à SALA DE BATALHA agora.$
+
+[BattleFrontier_BattleTowerLobby_Text_DidntSaveBeforeQuitting] 23b819eebf
+Com licença!\p
+Você não salvou antes de sair do\n
+desafio da última vez.\p
+Por isso, o seu desafio até aqui foi\n
+desclassificado. Sinto muito!$
+
+[BattleFrontier_BattleTowerLobby_Text_CongratsBeatenSeven] b663f06e3b
+Parabéns!\n
+Você venceu os sete TREINADORES!\p
+$
+
+[BattleFrontier_BattleTowerLobby_Text_EarnedFabulousPrize] a53f8de6c1
+Por vencer sete TREINADORES seguidos,\n
+você ganhou este prêmio fabuloso!\p
+$
+
+[BattleFrontier_BattleTowerLobby_Text_ReceivedPrize] 1b34ee42d5
+{PLAYER} recebeu o prêmio:\n
+{STR_VAR_1}.$
+
+[BattleFrontier_BattleTowerLobby_Text_BagFullMakeRoom] bc435f03c8
+Ah, parece que a sua BOLSA está cheia.\p
+Abra espaço na BOLSA e venha\n
+falar comigo.$
+
+[BattleFrontier_BattleTowerLobby_Text_ThankYouForPlaying] 2fccd01941
+Obrigado por participar!\p
+$
+
+[BattleFrontier_BattleTowerLobby_Text_RecordWillBeSaved] 6e89c3c9d3
+O seu resultado será salvo.\n
+Aguarde, por favor.$
+
+[BattleFrontier_BattleTowerLobby_Text_WeveBeenWaitingForYou] d155c98484
+Estávamos esperando você!\p
+$
+
+[BattleFrontier_BattleTowerLobby_Text_ProgressWillBeSaved] 03f22479ff
+Antes de entrar na SALA DE BATALHA, o\n
+jogo será salvo. Aguarde, por favor.$
+
+[BattleFrontier_BattleTowerLobby_Text_AboutToFace50thTrainer] 68391b75b5
+Você finalmente vai enfrentar o\n
+50º TREINADOR.\p
+Daqui em diante, a cada sete\n
+TREINADORES vencidos seguidos, os\l
+seus POKéMON ganham uma FITA.\p
+Boa sorte!$
+
+[BattleFrontier_BattleTowerLobby_Text_HereAreSomeRibbons] 5e516043dc
+Aqui estão FITAS por vencer sete\n
+TREINADORES fortes seguidos.\p
+{PLAYER} recebeu FITAS!$
+
+[BattleFrontier_BattleTowerLobby_Text_PutRibbonOnMons] 4dbff9cc8b
+{PLAYER} colocou as FITAS nos\n
+POKéMON do desafio.$
+
+[BattleFrontier_BattleTowerLobby_Text_DescribeFeelingsAboutBattleTower] 677b3b2e56
+Com licença, tem um minutinho?\p
+Pode descrever o que sente quando\n
+vai começar uma batalha da TORRE,\l
+ou quando ganha ou perde uma?$
+
+[BattleFrontier_BattleTowerLobby_Text_FeelWhatWhenYouBegin] 192d025189
+Certo, o que você sente quando vai\n
+começar uma batalha?$
+
+[BattleFrontier_BattleTowerLobby_Text_FeelWhatWhenYouveWon] ea2ec86858
+O que você sente quando ganha\n
+uma batalha?$
+
+[BattleFrontier_BattleTowerLobby_Text_FeelWhatWhenYouveLost] 7c4ff521e2
+Pode me contar o que sente quando\n
+perde uma batalha?$
+
+[BattleFrontier_BattleTowerLobby_Text_DontThinkMuchAboutIt] 7a7bdc89d9
+Ah, então não pensa muito nisso?\n
+Quanta tranquilidade, hein.$
+
+[BattleFrontier_BattleTowerLobby_Text_ChangedYourMind] 36f875b085
+Hã? Mudou de ideia?\n
+Que indecisão!$
+
+[BattleFrontier_BattleTowerLobby_Text_ThatsHowYouFeel] 1f0fe57de0
+Certo, então é isso que você sente?\n
+Que original.\p
+Obrigado!$
+
+[BattleFrontier_BattleTowerLobby_Text_WinsInRowRecorded] d3422c67ba
+O número de vitórias seguidas fica\n
+registrado.\p
+É melhor eu não perder de um jeito\n
+vergonhoso!$
+
+[BattleFrontier_BattleTowerLobby_Text_CanLeaveUntilLossOrSevenWins] f85ae0bf61
+Depois de entrar na TORRE DE BATALHA,\n
+não dá pra sair até perder ou\l
+vencer sete TREINADORES seguidos.\p
+É bom ter certeza de que está à\n
+altura do desafio.$
+
+[BattleFrontier_BattleTowerLobby_Text_DoubleBattleRoomConstruction] 51b57b1863
+Boas-vindas ao BALCÃO DE BATALHA\n
+DUPLA da TORRE DE BATALHA!\p
+Infelizmente, as SALAS DE BATALHA\n
+ainda estão em obras.\p
+Volte quando a obra terminar,\n
+por favor.$
+
+[BattleFrontier_BattleTowerLobby_Text_MultiBattleRoomConstruction] 08d8677dab
+Boas-vindas ao BALCÃO DE BATALHA\n
+MÚLTIPLA da TORRE DE BATALHA!\p
+Infelizmente, as SALAS DE BATALHA\n
+ainda estão em obras.\p
+Volte quando a obra terminar,\n
+por favor.$
+
+[BattleFrontier_BattleTowerLobby_Text_LookForwardToAnotherChallenge] f29ef74c83
+Esperamos ver você em outro desafio!$
+
+[BattleFrontier_BattleTowerLobby_Text_WhichLevelMode] 8bf6065fcc
+A SALA DE BATALHA tem duas\n
+modalidades, Nível 50 e Nível Livre.\l
+Qual você escolhe?$
+
+[BattleFrontier_BattleTowerLobby_Text_PleaseSelectMons] 3730c27d25
+Escolha os POKéMON que vão\n
+participar, por favor.$
+
+[BattleFrontier_BattleTowerLobby_Text_OkayToSaveBeforeEntering] 91f9455318
+Antes de entrar na SALA DE BATALHA,\n
+o jogo precisa ser salvo. Tudo bem?$
+
+[BattleFrontier_BattleTowerLobby_Text_ShowYouToBattleRoom] c56922702a
+Agora vou te levar à SALA DE\n
+BATALHA {STR_VAR_1}.$
+
+[BattleFrontier_BattleTowerLobby_Text_RecordLastMatch] 315bb6dd20
+Quer gravar a sua última batalha da\n
+TORRE no PASSE DA FRONTEIRA?$
+
+[BattleFrontier_BattleTowerLobby_Text_NotEnoughValidMonsLv50] 41ca918d4a
+Com licença!\p
+Você não tem {STR_VAR_2} POKéMON aptos.\p
+Pra entrar, precisa de {STR_VAR_2} POKéMON\n
+diferentes de nível 50 ou menos.\p
+Eles também precisam segurar itens\n
+diferentes.\p
+OVOS{STR_VAR_1} proibidos.\p
+Volte quando estiver tudo pronto.$
+
+[BattleFrontier_BattleTowerLobby_Text_NotEnoughValidMonsLvOpen] 349b4fcf4e
+Com licença!\p
+Você não tem {STR_VAR_2} POKéMON aptos.\p
+Pra entrar, precisa de {STR_VAR_2} POKéMON\n
+diferentes.\p
+Eles também precisam segurar itens\n
+diferentes.\p
+OVOS{STR_VAR_1} proibidos.\p
+Volte quando estiver tudo pronto.$
+
+[BattleFrontier_BattleTowerLobby_Text_NotEnoughValidMonsLv50Singles] 040db04edb
+Com licença!\p
+Você não tem três POKéMON aptos.\p
+Pra entrar, precisa de três POKéMON\n
+diferentes de nível 50 ou menos.\p
+Eles também precisam segurar itens\n
+diferentes.\p
+OVOS{STR_VAR_1} proibidos.\p
+Volte quando estiver tudo pronto.$
+
+[BattleFrontier_BattleTowerLobby_Text_NotEnoughValidMonsLvOpenSingles] c34c4b1ea5
+Com licença!\p
+Você não tem três POKéMON aptos.\p
+Pra entrar, precisa de três POKéMON\n
+diferentes.\p
+Eles também precisam segurar itens\n
+diferentes.\p
+OVOS{STR_VAR_1} proibidos.\p
+Volte quando estiver tudo pronto.$
+
+[BattleFrontier_BattleTowerLobby_Text_NotEnoughValidMonsLv50Doubles] 90cdeaa842
+Com licença!\p
+Você não tem quatro POKéMON aptos.\p
+Pra entrar, precisa de quatro POKéMON\n
+diferentes de nível 50 ou menos.\p
+Eles também precisam segurar itens\n
+diferentes.\p
+OVOS{STR_VAR_1} proibidos.\p
+Volte quando estiver tudo pronto.$
+
+[BattleFrontier_BattleTowerLobby_Text_NotEnoughValidMonsLvOpenDoubles] 7f29ead8e4
+Com licença!\p
+Você não tem quatro POKéMON aptos.\p
+Pra entrar, precisa de quatro POKéMON\n
+diferentes.\p
+Eles também precisam segurar itens\n
+diferentes.\p
+OVOS{STR_VAR_1} proibidos.\p
+Volte quando estiver tudo pronto.$
+
+[BattleFrontier_BattleTowerLobby_Text_NotEnoughValidMonsLv50Multis] 7279f52021
+Com licença!\p
+Você não tem dois POKéMON aptos.\p
+Pra entrar, precisa de dois POKéMON\n
+diferentes de nível 50 ou menos.\p
+Eles também precisam segurar itens\n
+diferentes.\p
+OVOS{STR_VAR_1} proibidos.\p
+Volte quando estiver tudo pronto.$
+
+[BattleFrontier_BattleTowerLobby_Text_NotEnoughValidMonsLvOpenMultis] 5c5bf8b3d6
+Com licença!\p
+Você não tem dois POKéMON aptos.\p
+Pra entrar, precisa de dois POKéMON\n
+diferentes.\p
+Eles também precisam segurar itens\n
+diferentes.\p
+OVOS{STR_VAR_1} proibidos.\p
+Volte quando estiver tudo pronto.$
+
+[BattleFrontier_BattleTowerLobby_Text_WelcomSingleBattle] fd945da23a
+Onde o talento dos TREINADORES\n
+é posto à prova!\p
+Boas-vindas à TORRE DE BATALHA!\p
+Sou o guia das SALAS DE BATALHA\n
+SIMPLES.$
+
+[BattleFrontier_BattleTowerLobby_Text_TakeSinglesChallenge] e4fd4e0f73
+Quer encarar o desafio da SALA DE\n
+BATALHA SIMPLES?$
+
+[BattleFrontier_BattleTowerLobby_Text_ExplainSinglesChallenge] 3686f01f12
+As SALAS DE BATALHA SIMPLES da TORRE\n
+são instalações pra BATALHAS SIMPLES\l
+com três POKéMON.\p
+Há muitas SALAS DE BATALHA SIMPLES\n
+na TORRE DE BATALHA.\p
+Em cada SALA DE BATALHA SIMPLES, sete\n
+TREINADORES esperam o seu desafio.\p
+Se vencer os sete, você ganha\n
+Pontos de Batalha.\p
+Se quiser interromper o desafio,\n
+salve o jogo.\p
+Se não salvar antes de interromper,\n
+o desafio será anulado.$
+
+[BattleFrontier_BattleTowerLobby_Text_SelectThreeMons] 31b1bbd06d
+Agora escolha os três POKéMON\n
+que vão participar.$
+
+[BattleFrontier_BattleTowerLobby_Text_WelcomeDoubleBattle] 4fcfc81bd8
+Onde o talento dos TREINADORES\n
+é posto à prova!\p
+Boas-vindas à TORRE DE BATALHA!\p
+Sou o guia das SALAS DE BATALHA\n
+DUPLA.$
+
+[BattleFrontier_BattleTowerLobby_Text_TakeDoublesChallenge] 325d122898
+Quer encarar o desafio da SALA DE\n
+BATALHA DUPLA?$
+
+[BattleFrontier_BattleTowerLobby_Text_ExplainDoublesChallenge] 8f62d29459
+As SALAS DE BATALHA DUPLA da TORRE\n
+são instalações pra BATALHAS DUPLAS\l
+com quatro POKéMON.\p
+Há muitas SALAS DE BATALHA DUPLA\n
+na TORRE DE BATALHA.\p
+Em cada SALA DE BATALHA DUPLA, sete\n
+TREINADORES esperam o seu desafio.\p
+Se vencer os sete, você ganha\n
+Pontos de Batalha.\p
+Se quiser interromper o desafio,\n
+salve o jogo.\p
+Se não salvar antes de interromper,\n
+o desafio será anulado.$
+
+[BattleFrontier_BattleTowerLobby_Text_PleaseSelectFourMons] e69f58c5f4
+Agora escolha os quatro POKéMON\n
+que vão participar.$
+
+[BattleFrontier_BattleTowerLobby_Text_WelcomeMultiBattle] 2bcda50c42
+Onde o talento dos TREINADORES\n
+é posto à prova!\p
+Boas-vindas à TORRE DE BATALHA!\p
+Sou o guia das SALAS DE BATALHA\n
+MÚLTIPLA.$
+
+[BattleFrontier_BattleTowerLobby_Text_TakeMultisChallenge] f0dd5f0a99
+Quer encarar o desafio da SALA DE\n
+BATALHA MÚLTIPLA?$
+
+[BattleFrontier_BattleTowerLobby_Text_ExplainMultisChallenge] 45e607a5f6
+As SALAS DE BATALHA MÚLTIPLA da TORRE\n
+são instalações pra BATALHAS\l
+MÚLTIPLAS.\p
+Nas BATALHAS MÚLTIPLAS, você faz\n
+dupla com um TREINADOR da TORRE, e\l
+cada um entra com dois POKéMON.\p
+Dentro da TORRE há uma sala, o\n
+SALÃO DE BATALHA, onde você\l
+encontra outros TREINADORES.\p
+Lá, você precisa achar um TREINADOR\n
+pra ser seu parceiro nas BATALHAS\l
+MÚLTIPLAS.\p
+Formada a dupla, você vai pra uma\n
+SALA DE BATALHA MÚLTIPLA.\p
+Na SALA DE BATALHA MÚLTIPLA, sete\n
+duplas esperam o seu desafio.\p
+Se vencer as sete duplas, você\n
+ganha Pontos de Batalha.\p
+Se quiser interromper o desafio,\n
+salve o jogo.\p
+Se não salvar antes de interromper,\n
+o desafio será anulado.$
+
+[BattleFrontier_BattleTowerLobby_Text_PleaseSelectTwoMons] 1b2cd00d06
+Agora escolha os dois POKéMON\n
+que vão participar.$
+
+[BattleFrontier_BattleTowerLobby_Text_WelcomeLinkMultiBattle] 7067c6e384
+Onde o talento dos TREINADORES\n
+é posto à prova!\p
+Boas-vindas à TORRE DE BATALHA!\p
+Sou o guia das SALAS DE BATALHA\n
+MÚLTIPLA POR LINK.$
+
+[BattleFrontier_BattleTowerLobby_Text_TakeLinkMultisChallenge] c71d62fef9
+Quer encarar o desafio da SALA DE\n
+BATALHA MÚLTIPLA POR LINK?$
+
+[BattleFrontier_BattleTowerLobby_Text_ExplainLinkMultisChallenge] 7e653c90f7
+As SALAS DE BATALHA MÚLTIPLA da TORRE\n
+são instalações pra BATALHAS\l
+MÚLTIPLAS com um amigo.\p
+Você precisa se conectar ao amigo\n
+com Adaptadores Sem Fio ou o cabo\l
+Game Link do Game Boy Advance.\p
+Você faz dupla com o amigo, e os\n
+POKéMON precisam ser de espécies\l
+diferentes.\p
+Há muitas SALAS DE BATALHA MÚLTIPLA\n
+na TORRE DE BATALHA.\p
+Na SALA DE BATALHA MÚLTIPLA, sete\n
+duplas esperam você e o seu amigo.\p
+Se vencerem as sete duplas, vocês\n
+ganham Pontos de Batalha.\p
+Atenção: ao contrário das outras\n
+SALAS, este desafio não pode ser\l
+interrompido.\p
+Depois de começar, são sete\n
+BATALHAS MÚLTIPLAS seguidas.$
+
+[BattleFrontier_BattleTowerLobby_Text_PleaseSelectTwoMons2] 1b2cd00d06
+Agora escolha os dois POKéMON\n
+que vão participar.$
+
+[BattleFrontier_BattleTowerLobby_Text_ChoseSameMonAsFriend] dbeca4f94d
+Você escolheu a mesma espécie de\n
+POKéMON que o seu amigo.\p
+Escolha dois POKéMON diferentes dos\n
+do seu amigo, combine a modalidade\l
+e se inscreva de novo.$
+
+[BattleFrontier_BattleTowerLobby_Text_LinkMultiOnlyForTwoPlayers] bf4b12fb21
+O desafio da SALA DE BATALHA MÚLTIPLA\n
+POR LINK é só pra dois jogadores\l
+conectados.$
+
+[BattleFrontier_BattleTowerLobby_Text_FriendAlsoSelectedMon] 4e19c3517c
+O seu amigo também escolheu\n
+o POKéMON {STR_VAR_1}.$
+
+[BattleFrontier_BattleTowerLobby_Text_FriendAlsoSelectedMons] efbd567126
+O seu amigo também escolheu os\n
+POKéMON {STR_VAR_1} e {STR_VAR_2}.$
+
+[BattleFrontier_BattleTowerLobby_Text_FriendChoseDifferentLvlMode] 6c2d03aee3
+O seu amigo escolheu outra\n
+modalidade de nível.$
+
+[BattleFrontier_BattleTowerLobby_Text_FriendChoseDifferentLvlModeSameMon] 00bc42a399
+O seu amigo escolheu outra\n
+modalidade de nível.\p
+O seu amigo também escolheu\n
+o POKéMON {STR_VAR_1}.$
+
+[BattleFrontier_BattleTowerLobby_Text_FriendChoseDifferentLvlModeSameMons] e35f1ad478
+O seu amigo escolheu outra\n
+modalidade de nível.\p
+O seu amigo também escolheu os\n
+POKéMON {STR_VAR_1} e {STR_VAR_2}.$
+
+[BattleFrontier_BattleTowerLobby_Text_ChooseDifferentMonsMatchLvlMode] d9b87cd0d3
+Escolha dois POKéMON diferentes dos\n
+do seu amigo, combine a modalidade\l
+e se inscreva de novo.$
+
+[BattleFrontier_BattleTowerLobby_Text_SaveGameBeforeShowingIn] 348da70872
+Vou salvar o jogo antes de te levar.\n
+Aguarde, por favor.$
+
+[BattleFrontier_BattleTowerLobby_Text_CongratsDefeatedMaiden] 5072367cde
+Parabéns!\n
+Você venceu a DAMA DO SALÃO e\l
+sete TREINADORES em sequência!$
+
+[BattleFrontier_BattleTowerLobby_Text_AwardYouTheseBattlePoints] 8cd55694a9
+Em reconhecimento ao seu talento\n
+infinito, aqui estão Pontos de Batalha.$
+
+[BattleFrontier_Text_ObtainedXBattlePoints] 17327cfa2d
+{PLAYER} recebeu\n
+{STR_VAR_1} Ponto(s) de Batalha.$
+
+[BattleFrontier_BattleTowerLobby_Text_RulesAreListed] 721d177251
+Aqui estão as regras da TORRE DE\n
+BATALHA.$
+
+[BattleFrontier_BattleTowerLobby_Text_ReadWhichHeading] d059e37e85
+Qual tópico você quer ler?$
+
+[BattleFrontier_BattleTowerLobby_Text_ExplainTowerRules] 0beee1fb33
+A TORRE DE BATALHA tem quatro tipos\n
+de batalha: BATALHA SIMPLES, DUPLA,\l
+MÚLTIPLA e MÚLTIPLA POR LINK.\p
+Pra cada tipo, há SALAS DE BATALHA\n
+separadas.\p
+Fale com o guia do tipo de batalha\n
+que você quer encarar.$
+
+[BattleFrontier_BattleTowerLobby_Text_ExplainMonRules] e0356839ec
+Dependendo da SALA DE BATALHA, você\n
+precisa levar um certo número de\l
+POKéMON.\p
+A BATALHA SIMPLES exige três POKéMON.\p
+A BATALHA DUPLA exige quatro, e as\n
+duas MÚLTIPLAS exigem dois.$
+
+[BattleFrontier_BattleTowerLobby_Text_ExplainSalonRules] 9d961e4f8d
+O SALÃO DE BATALHA é onde você acha\n
+um parceiro pra formar dupla no\l
+desafio da SALA DE BATALHA MÚLTIPLA.\p
+Escolha o melhor parceiro olhando\n
+os POKéMON dos outros TREINADORES\l
+e os golpes deles.\p
+Você pode trocar de parceiro depois\n
+de vencer sete batalhas seguidas.$
+
+[BattleFrontier_BattleTowerLobby_Text_ExplainMultiLinkRules] 716158ef1e
+A BATALHA MÚLTIPLA POR LINK é pra dois\n
+amigos encararem o desafio juntos.\p
+Vocês precisam estar conectados com\n
+Adaptadores Sem Fio ou o cabo Game\l
+Link do GBA.\p
+Escolha dois POKéMON no balcão\n
+de inscrição.\p
+Os POKéMON precisam ser diferentes\n
+dos do seu amigo.\p
+Ao contrário das outras modalidades,\n
+este desafio não pode ser interrompido.$

@@ -1,0 +1,67 @@
+# CIDADE DE LILYCOVE: o MOTEL COVE LILY, 1º andar, com a GAME FREAK.
+
+[LilycoveCity_CoveLilyMotel_2F_Text_ShowMeCompletedDex] eb79f068bf
+Eu sou o DESIGNER DO JOGO.\p
+Ah, é mesmo?\n
+Você está montando uma POKéDEX?\p
+É difícil completar, mas não\n
+desista.\p
+Se completar, venha me mostrar.$
+
+[LilycoveCity_CoveLilyMotel_2F_Text_FilledPokedexGiveYouThis] 9f9949671e
+Uau! Que incrível!\n
+É, incrível demais!\p
+Esta POKéDEX está completa!\n
+Você ama mesmo os POKéMON!\p
+Estou muito impressionado!\p
+Deixa eu te dar uma coisa pelo\n
+seu feito!$
+
+[LilycoveCity_CoveLilyMotel_2F_Text_ImTheProgrammer] 5f1ed88a21
+Eu? Está falando comigo?\n
+Sou o PROGRAMADOR.\p
+Como serão os CAÇA-NÍQUEIS daqui?$
+
+[LilycoveCity_CoveLilyMotel_2F_Text_ImTheGraphicArtist] bcb750a9fd
+Sou o ARTISTA GRÁFICO! Os POKéMON\n
+de HOENN não são interessantes?$
+
+[LilycoveCity_CoveLilyMotel_2F_Text_GirlsAreCute] 9d6e83a0fc
+As meninas NADADORAS de boia são\n
+fofas, né? Batalhar com uma delas…\p
+Uhu, que demais!\p
+E as GÊMEAS! Não são fofas?\n
+Uma batalha 2 contra 2 com GÊMEAS…\p
+Uhu, divertido demais!$
+
+[LilycoveCity_CoveLilyMotel_2F_Text_SeaBreezeTicklesHeart] 840ed4e571
+A brisa do mar faz cócegas no\n
+coração. Que delícia aqui!$
+
+[LilycoveCity_CoveLilyMotel_2F_Text_NeverLeaveWithoutGameBoy] 63c8022cba
+Nunca se sabe quando e onde alguém\n
+vai te desafiar.\p
+Por isso nunca saio de casa sem o\n
+meu GAME BOY ADVANCE.$
+
+[LilycoveCity_CoveLilyMotel_2F_Text_SnoozingPreferBattles] 2e13d883d7
+SCOTT: … … … … …\n
+… … … … … Zzz…\p
+… … … … … Hã?!\n
+Ai, desculpa, desculpa! Cochilei!\p
+Vim conferir esse tal de CONCURSO\n
+POKéMON.\p
+Tenho que admitir, parece bem\n
+divertido, mas…\p
+Sou dos tradicionais: prefiro\n
+batalhas e TREINADORES fortes.\p
+Mas isso sou eu.\p
+{PLAYER}{KUN}, espero que você curta\n
+tudo: GINÁSIOS, CONCURSOS, TENDA\l
+DE BATALHA, tudo mesmo!$
+
+[LilycoveCity_CoveLilyMotel_2F_Text_ContestsDoTakeStrategy] 464768dbd3
+SCOTT: Acho que é preciso estratégia\n
+pra ganhar um CONCURSO.\p
+Criar estratégias de CONCURSO é um\n
+jeito de virar um TREINADOR melhor.$

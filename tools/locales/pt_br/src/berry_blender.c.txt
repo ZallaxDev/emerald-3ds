@@ -1,0 +1,85 @@
+# O LIQUIDIFICADOR (src/berry_blender.c). As mensagens vão na caixa de
+# mensagem (208 px); o quadro de resultados tem 21 tiles (168 px), com a
+# FRUTA usada a partir de x=84. Os adversários do LIQUIDIFICADOR viram o
+# nome do jogador, de até 7 letras. Ficam de fora os textos sem uso, os
+# símbolos e o japonês.
+
+[sText_BerryBlenderStart] 0ab2308300 width=208
+Ligando o LIQUIDIFICADOR.\pEscolha uma FRUTA da BOLSA pra\ncolocar no LIQUIDIFICADOR.\p
+
+[sText_WasMade] 1a612aa128 width=120
+ ficou pronto!
+
+[sText_Mister] 5234db4d19
+SENHOR
+
+[sText_Laddie] d235a44020
+GAROTO
+
+[sText_Lassie] ea31655325
+GAROTA
+
+[sText_Master] 74ffc874ad
+MESTRE
+
+[sText_Dude] 71352f97dc
+CARA
+
+[sText_Miss] c3a5a328e1
+MOÇA
+
+[sText_PressAToStart] 1809aed976 width=208
+Aperte o botão A pra começar.
+
+[sText_PleaseWaitAWhile] f091060414 width=208
+Espere um pouco.
+
+[sText_CommunicationStandby] 795a08e0b9 width=208
+Aguardando comunicação…
+
+[sText_WouldLikeToBlendAnotherBerry] 5930e0d99b width=208
+Quer bater outra FRUTA?
+
+[sText_RunOutOfBerriesForBlending] e7228ef334 width=208
+Acabaram as suas FRUTAS pra\nbater no LIQUIDIFICADOR.\p
+
+[sText_YourPokeblockCaseIsFull] ff5f53115e width=208
+O seu ESTOJO {POKEBLOCK} está cheio.\p
+
+[sText_HasNoBerriesToPut] fceaaa6647 width=208
+ não tem FRUTAS pra\ncolocar no LIQUIDIFICADOR.
+
+[sText_ApostropheSPokeblockCaseIsFull] 56d6d45eae width=208
+: o ESTOJO {POKEBLOCK} está cheio.\p
+
+[sText_BlendingResults] 478eb4ced4 width=168
+RESULTADO
+
+[sText_BerryUsed] cfe45dece1 width=84
+FRUTA USADA
+
+# Logo abaixo de FRUTA USADA, o nome basta (CHERI): "CHERI FRUTA" sairia
+# na ordem do inglês.
+[sText_SpaceBerry] a49b15a8bf
+
+
+[sText_Time] 179578fe1b width=40
+Tempo:
+
+[sText_Min] 2e87c2212e
+ min. 
+
+[sText_Sec] e4e78163a6
+ s
+
+[sText_MaximumSpeed] be5233b74c width=84
+VELOC. MÁXIMA
+
+[sText_Ranking] ce40b19371 width=168
+CLASSIFICAÇÃO
+
+[sText_TheLevelIs] 66f45871e0 width=120
+O nível é 
+
+[sText_TheFeelIs] 8a93d4164a width=120
+ e a maciez é 

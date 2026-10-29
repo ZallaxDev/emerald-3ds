@@ -1,0 +1,54 @@
+# ESCONDERIJO AQUA: subsolo 1.
+
+[AquaHideout_B1F_Text_Grunt2Intro] 3aaa7d8df5
+Se quer saber o segredo do nosso\n
+ESCONDERIJO, vai ter que me vencer!$
+
+[AquaHideout_B1F_Text_Grunt2Defeat] ecb6bdc611
+Não consigo ganhar de jeito nenhum…$
+
+[AquaHideout_B1F_Text_Grunt2PostBattle] ee613f5f66
+O segredo do nosso ESCONDERIJO?\p
+Bom, digamos que…\n
+Tem um submarino lá no fundo!\p
+Mas, a esta altura…\n
+Kekekeke…$
+
+[AquaHideout_B1F_Text_Grunt3Intro] d3ac4f9cdc
+Combustível carregado, tudo certo!\n
+Lanchinhos da viagem, tudo certo!\p
+Só falta nocautear um intrometido\n
+chato!$
+
+[AquaHideout_B1F_Text_Grunt3Defeat] 91648a02f2
+Levei uma surra daquelas!$
+
+[AquaHideout_B1F_Text_Grunt3PostBattle] edd43fb0f7
+Hunf!\n
+Era pra ser assim mesmo!\p
+A minha missão era só te atrasar!$
+
+[AquaHideout_B1F_Text_Grunt5Intro] 00cedec6ce
+Uaah… Vigiar o ESCONDERIJO é um\n
+tédio. Vou te enfrentar.$
+
+[AquaHideout_B1F_Text_Grunt5Defeat] 491e6353ce
+Uaah…\n
+Ah, perdi…$
+
+[AquaHideout_B1F_Text_Grunt5PostBattle] 2fd4cec9a0
+Se ficar zanzando demais, outros\n
+membros da EQUIPE AQUA te pegam.$
+
+[AquaHideout_B1F_Text_Grunt7Intro] f55a376421
+Ei!\n
+Você aí!\p
+Qual uniforme é mais legal?\n
+O da EQUIPE AQUA ou o da MAGMA?$
+
+[AquaHideout_B1F_Text_Grunt7Defeat] 41ffc9d690
+Perdi com estilo…$
+
+[AquaHideout_B1F_Text_Grunt7PostBattle] 4995bbb2ba
+Com um uniforme legal, até perdendo\n
+a gente fica bem, não acha?$

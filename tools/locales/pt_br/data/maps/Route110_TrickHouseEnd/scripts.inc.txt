@@ -1,0 +1,108 @@
+# CASA DOS TRUQUES, o fim: o MESTRE DOS TRUQUES e os prêmios.
+
+[Route110_TrickHouseEnd_Text_YouveMadeItToMe] e2ae6e4f6d
+Aak!\n
+Você chegou até mim?\l
+Hmmm… Que esperteza!$
+
+[Route110_TrickHouseEnd_Text_AllNightToPlantTrees] d78532daa0
+Passei a noite toda plantando aquelas\n
+árvores todas…\p
+Você quase chega à minha grandeza, só\n
+faltam um, dois, três, quatro,\l
+cinco, seis!$
+
+[Route110_TrickHouseEnd_Text_AllNightToMakeMaze] b6bf12bbb4
+Passei a noite fazendo o labirinto…\p
+Você quase chega à minha grandeza, só\n
+faltam um, dois, três, quatro, cinco!$
+
+[Route110_TrickHouseEnd_Text_AllNightToPreparePanels] 5672f49bf2
+Passei a noite toda preparando os\n
+painéis das paredes…\p
+Você quase chega à minha grandeza, só\n
+faltam um, dois, três, quatro!$
+
+[Route110_TrickHouseEnd_Text_AllNightToShoveBoulders] 131930ae41
+Passei a noite toda empurrando aquelas\n
+pedras pra dentro…\p
+Você quase chega à minha grandeza, só\n
+faltam um, dois, três!$
+
+[Route110_TrickHouseEnd_Text_AllNightToMakeMechadolls] 5d1acedc5f
+Passei uma noite fazendo os ROBONECOS\n
+e outra pensando no quiz…\p
+Você quase chega à minha grandeza, só\n
+faltam um, dois!$
+
+[Route110_TrickHouseEnd_Text_AllNightToInstallDoors] 7cc9994185
+Passei a noite toda instalando\n
+as portas…\p
+Você quase chega à minha grandeza!$
+
+[Route110_TrickHouseEnd_Text_AllNightSettingUpArrows] d41f034b8a
+Passei a noite toda montando as setas…\p
+Você chegou à minha grandeza!$
+
+[Route110_TrickHouseEnd_Text_AllNightPolishingFloors] fae47e58f0
+Passei a noite toda encerando o chão…\p
+Você está acima da minha grandeza!\n
+Talvez…$
+
+[Route110_TrickHouseEnd_Text_FountainOfIdeasRunDry] 271b2a7b7f
+O-o que eu faço?\n
+A minha fonte de ideias de truques\l
+secou…\p
+Talvez seja hora de rodar o país em\n
+busca de novos truques…$
+
+[Route110_TrickHouseEnd_Text_DefeatedMePreferWhichTent] 73c0240500
+Odeio admitir a derrota, mas você\n
+me superou!\p
+Mesmo assim, o meu carisma deve ter\n
+te fisgado pra você me visitar\l
+de novo e de novo. Só pode!\p
+Mas isso não tem nada a ver com\n
+a minha derrota!\p
+Em honra à amizade entre você, que\n
+não desiste, e o gênio que sou eu,\l
+exijo que fique com esta lembrança!\p
+Na verdade são duas: a TENDA\n
+VERMELHA e a TENDA AZUL.\l
+Qual você prefere?$
+
+[Route110_TrickHouseEnd_Text_NoRoomInPC] 9224ab0274
+O quê? Não tem espaço no seu PC?\n
+O que eu faço com isso?\p
+Bem que eu queria reclamar, mas sou\n
+bonzinho demais, então volte depois!$
+
+[Route110_TrickHouseEnd_Text_LeavingOnJourney] 7598bfc4a3
+… … … … … …\p
+Vou partir numa jornada de descoberta.\n
+Uma busca por novos truques.\p
+Espero que um dia você venha me\n
+divertir de novo.\p
+E agora, adeus!$
+
+[Route110_TrickHouseEnd_Text_YouHaveEarnedThisReward] c8de37be72
+Muito bem!\n
+Você mereceu este prêmio!$
+
+[Route110_TrickHouseEnd_Text_NoRoomForThis] 3d67497f51
+O quê? Não tem espaço pra isto?\n
+Que tipo de itens você carrega?\p
+Mas tudo bem, já que chegou até mim,\n
+o seu prêmio fica comigo até mais tarde.$
+
+[Route110_TrickHouseEnd_Text_MakeNewTricksToStumpYou] 041783ec9e
+Tira esse sorrisinho da cara!\n
+É cedo demais pra achar que ganhou!\p
+Vou criar novos truques pra te\n
+derrubar, ah, se vou.\p
+Volte pro próximo capítulo\n
+emocionante!$
+
+[Route110_TrickHouseEnd_Text_YoureIgnoringMe] cca6b50ee6
+Ora, ora! Agora você me ignora?\n
+Isso, sim, parte o meu coração!$

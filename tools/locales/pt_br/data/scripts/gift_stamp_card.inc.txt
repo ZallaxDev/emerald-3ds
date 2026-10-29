@@ -1,0 +1,4 @@
+# PRESENTE MISTERIOSO: o CARTÃO DE SELOS.
+
+[sText_MysteryGiftStampCard] bdb81b4766
+Obrigado por usar o sistema do\nCARTÃO DE SELOS.\pFaltam {STR_VAR_1} selos pra\ncompletar o seu CARTÃO DE SELOS.$

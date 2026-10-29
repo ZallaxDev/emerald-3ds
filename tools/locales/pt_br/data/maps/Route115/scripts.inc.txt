@@ -1,0 +1,15 @@
+# ROTA 115: o explorador de cavernas e as placas.
+
+[Route115_Text_NeverKnowWhenCavePokemonWillAppear] 3705f4cf4a
+Explorar uma caverna não é como andar\n
+numa estrada.\p
+Nunca se sabe quando um POKéMON\n
+selvagem vai aparecer. Que suspense.$
+
+[Route115_Text_RouteSignRustboro] 4125a6ab7f
+ROTA 115\n
+{DOWN_ARROW} CIDADE DE RUSTBORO$
+
+[Route115_Text_MeteorFallsSign] fd8344201a
+CATARATA DOS METEOROS\n
+POR AQUI PARA A CIDADE DE FALLARBOR$

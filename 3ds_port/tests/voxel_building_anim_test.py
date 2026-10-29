@@ -81,12 +81,19 @@ def drawing(frame):
     return out
 
 
+def header_size(blob):
+    """buildings.bin's header: VXB9 carries its conditions' count after VXB8's."""
+    return 28 if blob[:4] == b"VXB9" else 24
+
+
 def fountain_tris(blob, layout_index):
     """The fountain's triangles: its page and (x, y, z, u, v) in page texels."""
     npages, nmodels, npm, nplaces = struct.unpack_from("<4H", blob, 4)
     hbytes, nmasks = struct.unpack_from("<2H", blob, 12)
     nverts, nvar, ndecks = struct.unpack_from("<IHH", blob, 16)
-    o = 24
+    # VXB9: the placements' conditions, after VXB8's header and the decks
+    nconds = struct.unpack_from("<H", blob, 24)[0] if blob[:4] == b"VXB9" else 0
+    o = header_size(blob)
     # the height's top bit flags a page with window glass
     pages = [(w, h & 0x7FFF, off) for (w, h, off) in
              (struct.unpack_from("<HHI", blob, o + 8 * i) for i in range(npages))]
@@ -100,7 +107,7 @@ def fountain_tris(blob, layout_index):
     o += o & 1
     o += hbytes * 2 + nmasks * 32 + hbytes
     o += o & 1
-    o += nvar * 6 + ndecks * 8
+    o += nvar * 6 + ndecks * 8 + nconds * 6
     o += (-o) & 3
     x, y = specs.FOUNTAIN_RECT
     pm = next(p[1] for p in places if p[0] == layout_index and (p[2], p[3]) == (x, y))
@@ -183,12 +190,19 @@ def main():
     with tempfile.TemporaryDirectory(dir=ROOT / "build", prefix="anim-test-") as tmp:
         tmp = Path(tmp)
         exe = build(a.cc, tmp, path)
-        # the tilesets' own tiles: every run is its page as written
-        still = compose(exe, tmp, vram_of(art, {}))
+        # each map's own tiles, still: every run of that map is its page as
+        # written (the fountain's, Mauville's gym's beams)
+        cut = struct.unpack_from("<I", blob, len(blob) - 8)[0]
+        nruns = struct.unpack_from("<H", blob, cut)[0]
+        run_layout = {k: struct.unpack_from("<HH", blob, cut + 12 + 20 * k)[1] for k in range(nruns)}
+        still = {}
+        for lid in sorted(set(run_layout.values())):
+            mine = compose(exe, tmp, vram_of(vb.LayoutArt(layouts[lid - 1]["id"]), {}))
+            still.update({k: r for k, r in mine.items() if run_layout[k] == lid})
         if not still:
             raise SystemExit("FAIL no animated runs in buildings.bin")
         for run, (pk, offset, data) in still.items():
-            w, h, off = struct.unpack_from("<HHI", blob, 24 + 8 * pk)
+            w, h, off = struct.unpack_from("<HHI", blob, header_size(blob) + 8 * pk)
             if data != blob[off + offset:off + offset + len(data)]:
                 raise SystemExit("FAIL run %d: composed from the still tiles, not its page" % run)
         # each frame: the fountain as drawn, jet and all
@@ -205,7 +219,6 @@ def main():
         if len(set(seen)) != len(frames):
             raise SystemExit("FAIL the frames compose the same texels: nothing would move")
         # without the table: loads, nothing animates; a broken table: no load
-        cut = struct.unpack_from("<I", blob, len(blob) - 8)[0]
         plain = tmp / "plain.bin"
         plain.write_bytes(blob[:cut])
         r = subprocess.run([str(build(a.cc, tmp, plain)), str(tmp / "vram.bin"), str(tmp / "o.bin")],

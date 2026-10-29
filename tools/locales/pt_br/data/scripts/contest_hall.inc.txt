@@ -1,0 +1,229 @@
+# SALÃO DE CONCURSOS: a recepção, o APRESENTADOR e o JUIZ, e os CONCURSOS por conexão.
+
+[LilycoveCity_ContestLobby_Text_ReceptionDontHavePokeblockCase] a338eb902f
+Olá!\pEsta é a recepção dos\nCONCURSOS POKéMON.\pUé? Parece que você ainda não\ntem um ESTOJO {POKEBLOCK}.\pNesse caso, a gente precisa\nte dar isto aqui!$
+
+[LilycoveCity_ContestLobby_Text_NowThatWeveClearedThatUp] 9ff19282ce
+Pronto, agora que isso tá\nresolvido…\pOlá!\pEsta é a recepção dos\nCONCURSOS POKéMON.$
+
+[LilycoveCity_ContestLobby_Text_ContestReception] bd4b9798fe
+Olá!\pEsta é a recepção dos\nCONCURSOS POKéMON.$
+
+[LilycoveCity_ContestLobby_Text_CounterOnlyFor4PlayerContests] fa2646c894
+Olá!\pEsta recepção é só para\nCONCURSOS POKéMON de 4 jogadores.$
+
+[LilycoveCity_ContestLobby_Text_EnterContest1] d285e3a5a2
+Quer inscrever seu POKéMON\nnos nossos CONCURSOS?$
+
+[LilycoveCity_ContestLobby_Text_WhichTopic1] fdd17a3500
+Sobre o que você quer saber?$
+
+[LilycoveCity_ContestLobby_Text_ExplainContests] d6011ec068
+Num CONCURSO POKéMON, quatro\nTREINADORES inscrevem um POKéMON\lcada e são avaliados pelo júri.\pO CONCURSO tem duas fases de\navaliação: a primeira e a segunda.\pA primeira fase é uma votação\nde popularidade com a plateia.\pNa segunda, os POKéMON fazem\napresentações com seus golpes.\pPlaneje bem as apresentações pra\nchamar a atenção do JUIZ e\lempolgar a plateia.\lCapriche pra se destacar.\pNo fim, as notas das duas\nfases são somadas.\pO POKéMON com a maior nota\né o vencedor.$
+
+[LilycoveCity_ContestLobby_Text_ExplainContestTypes] c680164413
+Existem cinco tipos de CONCURSO.\pAs cinco categorias são ESTILO,\nBELEZA, FOFURA, ESPERTEZA e FORÇA.\pEscolha o CONCURSO certo pro\nPOKéMON que você vai inscrever.$
+
+[LilycoveCity_ContestLobby_Text_ExplainContestRanks] ec7d61c9fc
+Os CONCURSOS POKéMON têm\nquatro níveis.\pSão eles: NORMAL, SUPER, HIPER\ne MESTRE.\pNo NÍVEL NORMAL, qualquer\nPOKéMON pode entrar.\pQuem vencer um CONCURSO de NÍVEL\nNORMAL pode subir pro NÍVEL SUPER\lna mesma categoria.\pDo mesmo jeito, quem vence no\nNÍVEL SUPER sobe pro NÍVEL HIPER,\le quem vence no NÍVEL HIPER sobe\lpro NÍVEL MESTRE na mesma categoria.\pQuem vence no NÍVEL MESTRE pode\ncompetir nele quantas vezes\lo TREINADOR quiser.$
+
+[LilycoveCity_ContestLobby_Text_EnterWhichRank] b6c1e20443
+Em qual nível você quer entrar?$
+
+[LilycoveCity_ContestLobby_Text_EnterWhichContest1] 2bdbbbadfd
+Em qual CONCURSO você quer entrar?$
+
+[LilycoveCity_ContestLobby_Text_EnterWhichPokemon1] 8f73d8e9d7
+Qual POKéMON você quer inscrever?$
+
+[LilycoveCity_ContestLobby_Text_MonNotQualifiedForRank] 48ab13575b
+Sinto muito, mas o seu POKéMON\nainda não pode competir\lneste nível…$
+
+[LilycoveCity_ContestLobby_Text_EggCannotTakePart] df53d179fd
+Sinto muito, mas um OVO não pode\nparticipar de CONCURSO POKéMON.$
+
+[LilycoveCity_ContestLobby_Text_MonInNoConditionForContest] 2bb6deed92
+Seu POKéMON não parece estar em\ncondições de entrar num CONCURSO…$
+
+[LilycoveCity_ContestLobby_Text_AlreadyWonEnterAnyway] 7aedc5e640
+Ah, mas essa FITA…\pSeu POKéMON já venceu este\nCONCURSO antes, né?\pQuer inscrever ele neste\nCONCURSO mesmo assim?$
+
+[LilycoveCity_ContestLobby_Text_ConfirmContestMon] 00a8d4ec1e
+Esse é o POKéMON do CONCURSO?$
+
+[LilycoveCity_ContestLobby_Text_YourMonIsEntryNum4] f4fd1f07ad
+Certo, seu POKéMON vai entrar\nneste CONCURSO.\pSeu POKéMON é o Nº 4.\nO CONCURSO já vai começar.$
+
+[LilycoveCity_ContestLobby_Text_ComeThroughHere] 2e622b5e41
+Pode entrar por aqui.\nBoa sorte!$
+
+[LilycoveCity_ContestLobby_Text_PokemonWonWeHavePrize] 35da732fd2
+Parabéns! Seu POKéMON venceu\no CONCURSO!\pSeu prêmio tá aqui mesmo.\nPor aqui, por favor!$
+
+[LilycoveCity_ContestLobby_Text_ComeBackForPrizeLater] 8b8c77daea
+Volte depois pra buscar\no seu prêmio.$
+
+[ContestHall_Text_GettingStartedParticipantsAsFollows] dac73cbebf
+APRESENTADOR: Olá! Vai começar\no {STR_VAR_2} POKéMON\lde NÍVEL {STR_VAR_3}!\pOs TREINADORES e POKéMON\nparticipantes são:$
+
+[ContestHall_Text_GettingStartedParticipantsAsFollowsLink] e962f1c640
+APRESENTADOR: Olá! Vai começar\no {STR_VAR_2} POKéMON\lpor conexão de 4 jogadores!\pOs TREINADORES e POKéMON\nparticipantes são:$
+
+[ContestHall_Text_EntryXTrainersMon] 9bc6a371ed
+APRESENTADOR: Nº {STR_VAR_2}!\n{STR_VAR_3} de {STR_VAR_1}!$
+
+[ContestHall_Text_SeenContestantsAudienceWillVote] db12b61533
+APRESENTADOR: Conhecemos os quatro\nPOKéMON participantes.\pAgora é a primeira fase!\pA plateia vai votar nos seus\nPOKéMON favoritos.\pSem mais delongas, que comece\na votação!$
+
+[ContestHall_Text_VotingUnderWay] 7d8a017048
+Votação em andamento…$
+
+[ContestHall_Text_VotingCompleteLetsAppeal] ff39f8b6da
+A votação terminou!\pEnquanto os votos são contados,\nvamos pra segunda fase!\pA segunda fase é a tão esperada\nhora das apresentações!\pQue os participantes nos encantem\ncom golpes deslumbrantes!\pCadê a empolgação?\nHora das apresentações!$
+
+[ContestHall_Text_ThatsItForJudging] bfde13e2aa
+APRESENTADOR: Fim da avaliação!$
+
+[ContestHall_Text_ThankYouForAppeals] e8a676f260
+Obrigado a todos por apresentações\nde tanta qualidade!\pA avaliação terminou!\nObrigado pelo esforço!$
+
+[ContestHall_Text_JudgeLooksReady] 28c87d9de0
+Agora só falta o anúncio\nemocionante do vencedor.\pO JUIZ parece pronto pra\nanunciar!$
+
+[ContestHall_Text_WeWillNowDeclareWinner] 72a1c350ab
+JUIZ: Vamos anunciar o vencedor!$
+
+[ContestHall_Text_CongratsTrainerXandMon] 160c231f5e
+APRESENTADOR: Nº {STR_VAR_2}!\p{STR_VAR_3} e {STR_VAR_1},\nparabéns!$
+
+[ContestHall_Text_CongratsPleaseCompeteAgain] 55cc82ef45
+APRESENTADOR: Parabéns!\nVolte pra competir de novo!$
+
+[ContestHall_Text_AcceptYourPrize] 080ad244f1
+APRESENTADOR: Aqui está!\nReceba o seu prêmio!$
+
+[ContestHall_Text_ConferRibbonAsPrize] 78a4558676
+Como prêmio, entregamos\nesta FITA!$
+
+[ContestHall_Text_ReceivedRibbon] 4830b688e8
+{PLAYER} recebeu uma FITA.$
+
+[ContestHall_Text_PutRibbonOnMon] 47de684e7a
+{PLAYER} colocou a FITA em\n{STR_VAR_1}.$
+
+[ContestHall_Text_PickUpPrizeAtCounterLater] 67e9df7a2b
+Busque o seu prêmio na\nrecepção mais tarde.\lVolte pra competir de novo!$
+
+[ContestHall_Text_OnlyRegister4Players] a48a5febce
+Aqui eu só inscrevo quatro jogadores\npros CONCURSOS POKéMON.\pSe outros três jogadores se\nconectarem, os quatro entram\lno mesmo CONCURSO.\pQuer participar?$
+
+[LilycoveCity_ContestLobby_Text_ProgressWillBeSaved] 810beb301e
+Antes de entrar num CONCURSO,\no seu progresso vai ser salvo.$
+
+[LilycoveCity_ContestLobby_Text_ParticipateAnotherTime] a9f49cb56f
+Esperamos que você participe\noutra vez.$
+
+[LilycoveCity_ContestLobby_Text_EnterContest2] c97464f453
+Quer entrar num CONCURSO?$
+
+[LilycoveCity_ContestLobby_Text_Explain4PlayerContest] 13ee8aff66
+Quando os quatro jogadores estiverem\nprontos, conectem o cabo Game Link\le se inscrevam comigo.\pEscolha o mesmo CONCURSO\nque os outros participantes.\pO CONCURSO começa assim que\ntodos se inscreverem.\pDepois disso, valem as regras\nde sempre do CONCURSO.$
+
+[LilycoveCity_ContestLobby_Text_EnterWhichContest2] 2bdbbbadfd
+Em qual CONCURSO você quer entrar?$
+
+[LilycoveCity_ContestLobby_Text_EnterWhichPokemon2] 8f73d8e9d7
+Qual POKéMON você quer inscrever?$
+
+[LilycoveCity_ContestLobby_Text_Transmitting] 08da84a9e2
+Transmitindo…$
+
+[LilycoveCity_ContestLobby_Text_TransmissionError] ccd5ab76f6
+Erro de transmissão…$
+
+[LilycoveCity_ContestLobby_Text_PlayersChoseDifferentContest] 6504ea462e
+Talvez você tenha escolhido um\nCONCURSO diferente de outro jogador.$
+
+[LilycoveCity_ContestLobby_Text_PlayersMadeDifferentChoice] 54873abff5
+Talvez você tenha feito uma escolha\ndiferente de outro jogador.$
+
+[LilycoveCity_ContestLobby_Text_PleaseWaitBButtonCancel] d7862dfbb3
+Aguarde.\n… … Botão B: Cancelar$
+
+[LilycoveCity_ContestLobby_Text_ParticipateAnotherTime2] a9f49cb56f
+Esperamos que você participe\noutra vez.$
+
+[LilycoveCity_ContestLobby_Text_TransmissionErrorTryAgain] b11df48d29
+Erro de transmissão.\nTente de novo.$
+
+[LilycoveCity_ContestLobby_Text_YourMonIsEntryNumX] 1a14819842
+Seu POKéMON vai entrar\nno CONCURSO.\pSeu POKéMON é o Nº {STR_VAR_2}.$
+
+[LilycoveCity_ContestLobby_Text_ContestBeginShortly] 12a7fd3608
+O CONCURSO já vai começar.$
+
+[LilycoveCity_ContestLobby_Text_LinkContestReception] 6781ed3c58
+Boas-vindas! Esta é a recepção dos\nCONCURSOS POKéMON por conexão.\pVocê pode entrar nos CONCURSOS\ncom um ou mais amigos.$
+
+[LilycoveCity_ContestLobby_Text_WhichTopic2] fdd17a3500
+Sobre o que você quer saber?$
+
+[LilycoveCity_ContestLobby_Text_EnterContest3] c97464f453
+Quer entrar num CONCURSO?$
+
+[LilycoveCity_ContestLobby_Text_EnterWhichContest3] 2bdbbbadfd
+Em qual CONCURSO você quer entrar?$
+
+[LilycoveCity_ContestLobby_Text_MonInNoCondition2] 2bb6deed92
+Seu POKéMON não parece estar em\ncondições de entrar num CONCURSO…$
+
+[LilycoveCity_ContestLobby_Text_EggCannotTakePart2] df53d179fd
+Sinto muito, mas um OVO não pode\nparticipar de CONCURSO POKéMON.$
+
+[LilycoveCity_ContestLobby_Text_EnterWhichPokemon3] 8f73d8e9d7
+Qual POKéMON você quer inscrever?$
+
+[LilycoveCity_ContestLobby_Text_PleaseDecideLinkLeader] 8160cd76d1
+Decidam quem de vocês vai ser\no LÍDER DO GRUPO.\pOs outros jogadores devem\nescolher “ENTRAR NO GRUPO”.$
+
+[LilycoveCity_ContestLobby_Text_PlayerAt4PCounterUseGMode] 265ed59941
+Pelo menos um jogador entrou pela\nrecepção de 4 jogadores.\pÉ preciso ter quatro jogadores\nconectados com cabo Game Link do GBA.\pQuando os quatro estiverem prontos,\nescolham MODO G (MODO GLOBAL)\le se inscrevam de novo.$
+
+[LilycoveCity_ContestLobby_Text_ExplainLinkContest] 7ee0820d1b
+Este é um CONCURSO pra dois a quatro\njogadores conectados por Adaptador\lSem Fio ou cabo Game Link do GBA.\pPrimeiro, cada participante escolhe\no modo em que quer entrar.\pExistem dois modos.\pO MODO E (MODO EMERALD) é pra\ndois a quatro jogadores, cada um\lcom um cartucho de POKéMON Emerald.\pO MODO G (MODO GLOBAL) é só pra\nquatro jogadores, cada um com\lPOKéMON Emerald, Ruby ou Sapphire.\pOs jogadores devem combinar o\nmodo e escolher o mesmo.\pQuando todos escolherem o mesmo\nCONCURSO no mesmo modo,\la inscrição está feita.\pDepois disso, o CONCURSO\ncomeça do jeito de sempre.$
+
+[LilycoveCity_ContestLobby_Text_ExplainEMode] 0357e05f90
+No MODO E (MODO EMERALD), um\nCONCURSO POR CONEXÃO pode ter\lde dois a quatro jogadores, cada\lum com um cartucho de POKéMON Emerald.\pOs jogadores devem se conectar\ncom Adaptadores Sem Fio ou\lcabos Game Link do GBA.\pSe houver menos de quatro jogadores,\nTREINADORES do salão completam\lo CONCURSO de 4 jogadores.\pAtenção: o MODO E não existe\nem POKéMON Ruby ou Sapphire.$
+
+[LilycoveCity_ContestLobby_Text_ExplainGMode] cc8ea04fd9
+O MODO G (MODO GLOBAL) é só pra\nquatro jogadores conectados com\lcabos Game Link do GBA.\pCada jogador precisa de um cartucho\nde POKéMON Emerald, Ruby ou Sapphire.\pO CONCURSO começa quando todos\nescolhem MODO G (POKéMON Emerald)\lou entram pela recepção de\l4 jogadores (Ruby ou Sapphire).$
+
+[LilycoveCity_ContestLobby_Text_NoWirelessAdapterInGMode] 202b3ef398
+Sinto muito.\pO MODO G não funciona com\nAdaptadores Sem Fio.\pEscolha o MODO E ou tente de novo\ncom um cabo Game Link do GBA.$
+
+[LilycoveCity_ContestLobby_Text_WhichContestMode] c73ffe1b7c
+Em qual MODO DE CONCURSO você\nquer entrar?$
+
+[ContestHall_Text_GettingStartedWireless] 3926a8effb
+APRESENTADOR: Olá! Vai começar\no {STR_VAR_2} POKéMON\lpor conexão de 4 jogadores!$
+
+[ContestHall_Text_ParticipantsAsFollows] 6577aadf8a
+Os TREINADORES e POKéMON\nparticipantes são:$
+
+[ContestHall_Text_WeveSeenContestants] 7499148cf7
+APRESENTADOR: Conhecemos os quatro\nPOKéMON participantes.\pAgora é a primeira fase!$
+
+[ContestHall_Text_AudienceWillVote] 107a08b2d4
+A plateia vai votar nos seus\nPOKéMON favoritos.$
+
+[ContestHall_Text_LetVotingBegin] 1887de6ee1
+Sem mais delongas,\nque comece a votação!$
+
+[ContestHall_Text_VotingComplete] a658e931fc
+A votação terminou!\pEnquanto os votos são contados,\nvamos pra segunda fase!$
+
+[ContestHall_Text_SecondStageOfJudging] 664c69f4ba
+A segunda fase é a tão esperada\nhora das apresentações!\pQue os participantes nos encantem\ncom golpes deslumbrantes!$
+
+[ContestHall_Text_LetsAppeal] 79525143bf
+Cadê a empolgação?\nHora das apresentações!$

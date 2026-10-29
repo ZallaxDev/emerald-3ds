@@ -1,0 +1,69 @@
+# ESCONDERIJO AQUA: térreo.
+
+[AquaHideout_1F_Text_OurBossIsSnatchingSomething] 9b4af4a9ff
+Quê? Quê? O que quer com a\n
+EQUIPE AQUA?\p
+O nosso CHEFE não está! Foi pegar\n
+uma coisa importante!\p
+… …\n
+Aonde ele foi?\p
+Wahaha! Acha mesmo que eu ia contar\n
+uma coisa tão importante?$
+
+[AquaHideout_1F_Text_WhereMightMagmaHideoutBe] 2cedfd0493
+Quê? Quê?\n
+Você é CAPANGA da EQUIPE MAGMA?\p
+Ouvi dizer que a EQUIPE MAGMA quer\n
+despertar um POKéMON incrível no\l
+ESCONDERIJO deles.\p
+Mas onde será o ESCONDERIJO deles?$
+
+[AquaHideout_1F_Text_BossWentToJackASubmarine] 468f06c4da
+Quê? Quê? O que quer com a\n
+EQUIPE AQUA?\p
+O nosso CHEFE não está!\n
+Foi roubar um submarino!\p
+… …\n
+Aonde ele foi?\p
+Wahaha! Acha mesmo que eu ia contar\n
+uma coisa tão importante?$
+
+[AquaHideout_1F_Text_BossIsOnRoute122] 4166b7e4d6
+Quê? Quê? O que quer com a\n
+EQUIPE AQUA?\p
+O nosso CHEFE não está! Foi pro\n
+MONTE PYRE, na ROTA 122!\p
+… …\n
+Por que ele foi?\p
+Wahaha! Acha mesmo que eu ia contar\n
+uma coisa tão importante?$
+
+[AquaHideout_1F_Text_TeamMagmaAtMtChimney] b683fab4b2
+Quê? Quê?\n
+Você é CAPANGA da EQUIPE MAGMA?\p
+Ouvi dizer que a EQUIPE MAGMA está\n
+atrás de um POKéMON incrível no\l
+MONTE CHIMNEY.\p
+Mas como será esse POKéMON?$
+
+[AquaHideout_1F_Text_BossIsInSlateportCity] 1e9696b6b0
+Quê? Quê? O que quer com a\n
+EQUIPE AQUA?\p
+O nosso CHEFE não está!\n
+Foi pra CIDADE DE SLATEPORT!\p
+… …\n
+Por que ele foi?\p
+Wahaha! Acha mesmo que eu ia contar\n
+uma coisa tão importante?$
+
+[AquaHideout_1F_Text_Grunt1Intro] ce1aab5545
+Aiaiai!\n
+Figura suspeita à vista!$
+
+[AquaHideout_1F_Text_Grunt1Defeat] 68344bd56f
+Grrrrr…\n
+Perdi!$
+
+[AquaHideout_1F_Text_Grunt1PostBattle] 2531e095e6
+Perdi pela EQUIPE, mas fiz a minha\n
+parte…$

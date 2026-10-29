@@ -1,0 +1,35 @@
+# ROTA 112: os capangas da EQUIPE MAGMA e as placas do TELEFÉRICO.
+
+[Route112_Text_LeaderGoingToAwakenThing] adb651f65b
+Ei, cara, o nosso líder vai mesmo\n
+despertar aquela coisa?$
+
+[Route112_Text_YeahWeNeedMeteorite] df4f250a32
+Parece que sim. Mas ouvi dizer que\n
+precisa de um METEORITO pra isso.$
+
+[Route112_Text_OhThatsWhyCrewWentToFallarbor] 7c8eb6dcd7
+Ah, saquei. É por isso que o resto\n
+da turma foi pra FALLARBOR.$
+
+[Route112_Text_CantLetAnyonePassUntilTheyreBack] ff3e6d6698
+Isso aí. E até eles voltarem,\n
+ninguém passa, certo?$
+
+[Route112_Text_NotEasyToGetBackToLavaridge] e803aa0d43
+Eu queria ir pra MAUVILLE, mas, se\n
+descer esses degraus, não vai ser\l
+fácil voltar pra LAVARIDGE.$
+
+[Route112_Text_MtChimneyCableCarSign] 900569fccb
+TELEFÉRICO DO MONTE CHIMNEY\n
+“Logo ali {UP_ARROW}!”$
+
+[Route112_Text_MtChimneySign] 7e4239e915
+MONTE CHIMNEY\p
+“Para a CIDADE DE LAVARIDGE ou o topo,\n
+pegue o TELEFÉRICO.”$
+
+[Route112_Text_RouteSignLavaridge] 40debae7ed
+ROTA 112\n
+{LEFT_ARROW} CIDADE DE LAVARIDGE$

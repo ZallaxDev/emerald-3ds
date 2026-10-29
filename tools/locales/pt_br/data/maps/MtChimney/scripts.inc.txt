@@ -1,0 +1,312 @@
+# MONTE CHIMNEY: MAXIE, ARCHIE, as EQUIPES MAGMA e AQUA e os treinadores do topo.
+
+[MtChimney_Text_MeteoriteWillActivateVolcano] 1e21634ecb
+O poder contido no METEORITO…\p
+Amplificado por esta máquina, ele vai\n
+intensificar na hora a atividade\l
+vulcânica do MONTE CHIMNEY…\p
+A energia vai crescer lá no fundo\n
+do vulcão e…\l
+Fufufu…$
+
+[MtChimney_Text_MaxieIntro] 9f6b19f888
+MAXIE: Hum?\n
+Quem é você?\p
+… … … … … …\n
+… … … … … …\p
+Ouvi o ARCHIE reclamando de uma\n
+criança que se mete nos assuntos\l
+da EQUIPE AQUA.\p
+Deve ser você.\p
+Hunf! Então quer atrapalhar a gente,\n
+a EQUIPE MAGMA?\p
+Então escute.\n
+Há muito tempo, os seres vivos\l
+usavam a terra para viver e crescer.\p
+Por isso, a terra é o mais importante!\n
+Ela é o berço de tudo!\p
+Por isso, a EQUIPE MAGMA se dedica\n
+a expandir a terra firme.\p
+Para o progresso da humanidade e\n
+dos POKéMON!\p
+E, para isso, precisamos do poder\n
+do que dorme nesta montanha…\p
+Oh! Você não precisava saber\n
+tanto assim.\p
+Mas não importa!\n
+Vou te mostrar o preço de se meter\l
+nos nossos grandes planos!$
+
+[MtChimney_Text_MaxieDefeat] 04e23e3293
+O quê?!\p
+Eu, MAXIE, fui pego de surpresa?!$
+
+[MtChimney_Text_MaxieYouHaventSeenLastOfMagma] 4f61df3bdf
+MAXIE: Mas chega.\n
+Desta vez, eu recuo.\p
+Só não pense que viu a EQUIPE MAGMA\n
+pela última vez.\p
+Fufufu…\p
+Mesmo sem o METEORITO, se a gente\n
+conseguir aquele ORBE… Fufufu…$
+
+[MtChimney_Text_TabithaIntro] e4a2e83e52
+Hehehe!\p
+Então você veio até aqui!\p
+Mas chegou tarde!\n
+Já entreguei ao CHEFE o METEORITO\l
+da CATARATA DOS METEOROS!$
+
+[MtChimney_Text_TabithaDefeat] 5a2618a30b
+Hehehe…\p
+Perdi, mas, se o nosso líder\n
+despertar aquela coisa…$
+
+[MtChimney_Text_TabithaPostBattle] 70a3f12707
+CHEFE, rápido!\n
+Use a energia do METEORITO!\p
+Hehehe…$
+
+[MtChimney_Text_Grunt2Intro] 988124e364
+A EQUIPE MAGMA trabalha duro pelo\n
+bem de todo mundo.\p
+Tipo, se o poder daquela coisa criar\n
+mais terra, vai ter mais lugar pra\l
+morar.\p
+Todo mundo vai ficar feliz!$
+
+[MtChimney_Text_Grunt2Defeat] e5234939d0
+Hã?\n
+Como assim, eu perdi?$
+
+[MtChimney_Text_Grunt2PostBattle] 160d79edde
+O nosso CHEFE diz: “Isso vai deixar\n
+todo mundo feliz.”\p
+Então por que todo mundo vive\n
+atrapalhando a gente?$
+
+[MtChimney_Text_Grunt1Intro] 440b924e5b
+Com mais terra, eu ia conseguir uma\n
+casa grandona só pra mim!\p
+Vou construir em cima da lava dura!$
+
+[MtChimney_Text_Grunt1Defeat] cd33700753
+O meu sonho da casa grandona…$
+
+[MtChimney_Text_Grunt1PostBattle] 2e7993cab3
+Criança como você devia estar\n
+brincando nas ondas!$
+
+[MtChimney_Text_TeamAquaAlwaysMessingWithPlans] 3fdc9784e4
+Essa EQUIPE AQUA chata…\n
+Sempre estraga os nossos planos!$
+
+[MtChimney_Text_MeteoritesPackAmazingPower] 5809443d7e
+METEORITOS têm um poder incrível!$
+
+[MtChimney_Text_YouBetterNotMessWithUs] 855d81dbe0
+É melhor não mexer com a gente!\p
+Queremos despertar aquela coisa\n
+pro bem de todo mundo!$
+
+[MtChimney_Text_AquasNameSimilar] be0301c845
+Nós somos a EQUIPE MAGMA!\p
+Eles são a EQUIPE AQUA!\p
+Me irrita demais eles usarem um\n
+nome parecido com o nosso!$
+
+[MtChimney_Text_DouseThemInFire] 752e81257d
+É isso aí!\n
+Taca fogo neles!$
+
+[MtChimney_Text_KeepMakingMoreLand] 036912d4c2
+Vamos continuar criando mais terra!$
+
+[MtChimney_Text_Bufoh] 00d577af8b
+Bufoh!$
+
+[MtChimney_Text_ArchieGoStopTeamMagma] 7bdc360a44
+ARCHIE: Grr, {PLAYER}!\n
+Eu devia saber que você ia aparecer!\p
+Veja com os seus olhos o que os\n
+fanáticos da EQUIPE MAGMA aprontam!\p
+Querem injetar no vulcão o poder\n
+do METEORITO roubado!\p
+Uma coisa dessas vai fazer o\n
+vulcão entrar em erupção!$
+
+[MtChimney_Text_ArchieIHaveMyHandsFull] 063c757896
+ARCHIE: Grrr…\p
+Quero parar o MAXIE, mas não\n
+consigo!\p
+Não com três oponentes ao mesmo\n
+tempo pra enfrentar!$
+
+[MtChimney_Text_ArchieThankYou] 6abe80639a
+ARCHIE: {PLAYER}!\n
+Obrigado!\p
+Com a sua ajuda, frustramos o plano\n
+destrutivo da EQUIPE MAGMA!\p
+Mas… Você…\n
+De que lado você está?\p
+Ah, tanto faz.\p
+Vamos ficar de olho e continuar\n
+atrás da EQUIPE MAGMA.\p
+{PLAYER}, a gente se vê de novo!$
+
+[MtChimney_Text_MagmaOutnumbersUs] 355ccb45b6
+Droga… A EQUIPE MAGMA tem mais gente!\n
+Não dá pra segurar!$
+
+[MtChimney_Text_LessHabitatForWaterPokemon] d19f425de2
+Se expandirem a terra, vai ter menos\n
+lugar pros POKéMON de ÁGUA!$
+
+[MtChimney_Text_MagmasNameSimilar] 2199c09d6d
+Nós somos a EQUIPE AQUA!\p
+Eles são a EQUIPE MAGMA!\p
+Me dá raiva eles usarem um nome\n
+tão confuso!$
+
+[MtChimney_Text_Bushaa] 67594c6cc9
+Bushaa!$
+
+[MtChimney_Text_LavaCookiesJust200] 9c238b75dd
+O BISCOITO LAVA é a especialidade\n
+do MONTE CHIMNEY.\p
+Experimente um. Só ¥200.$
+
+[MtChimney_Text_ThankYouDear] cde22e22e6
+Obrigada, querida criança!$
+
+[MtChimney_Text_YouveNotGotTheMoney] 202d8c7e52
+Ai, ai. Sem dinheiro, não dá pra\n
+comprar nada.$
+
+[MtChimney_Text_OhFineThen] 4fe8e82459
+Ah, tudo bem, então.$
+
+[MtChimney_Text_MetoriteFittedOnMachine] 56fdd5b59e
+Um METEORITO está encaixado numa\n
+máquina misteriosa…\p
+Parece que a máquina está guardando\n
+energia no METEORITO.$
+
+[MtChimney_Text_RemoveTheMeteorite] b064c1eb29
+Um METEORITO está encaixado numa\n
+máquina misteriosa…\p
+Quer tirar o METEORITO?$
+
+[MtChimney_Text_PlayerRemovedMeteorite] 28f9d8dfdc
+{PLAYER} tirou o METEORITO da\n
+máquina misteriosa.$
+
+[MtChimney_Text_PlayerLeftMeteorite] 15bca40695
+{PLAYER} deixou o METEORITO onde\n
+estava.$
+
+[MtChimney_Text_MachineMakesNoResponse] 3ddf6ff11e
+Esta máquina misteriosa…\n
+Não responde a nada.$
+
+[MtChimney_Text_RouteSign] c199356537
+{DOWN_ARROW} TRILHA ESCARPADA\n
+CIDADE DE LAVARIDGE À FRENTE$
+
+[MtChimney_Text_ShelbyIntro] fafd62f3fc
+Fui às fontes termais e renovei\n
+esses ossos cansados.\l
+Agora estou me sentindo forte!$
+
+[MtChimney_Text_ShelbyDefeat] 93661865f2
+Minha nossa.\n
+Você é demais!$
+
+[MtChimney_Text_ShelbyPostBattle] 9339d9d4a0
+Ora, ora, perdi. Agora não posso\n
+mais me chamar de ESPECIALISTA, né?$
+
+[MtChimney_Text_ShelbyRegister] 51bf8dc686
+Obrigada, criança. Foi divertido, como\n
+se eu batalhasse com um neto meu.\p
+Volte para uma revanche, por favor.$
+
+[MtChimney_Text_ShelbyRematchIntro] 66168b3779
+Se o seu coração bater junto com o\n
+dos seus POKéMON, você vai\l
+conseguir grandes coisas.$
+
+[MtChimney_Text_ShelbyRematchDefeat] 93661865f2
+Minha nossa.\n
+Você é demais!$
+
+[MtChimney_Text_ShelbyPostRematch] afb69e6912
+Talvez o seu coração já seja um só\n
+com o dos seus POKéMON.$
+
+[MtChimney_Text_MelissaIntro] 07d6bb2c47
+Tô pegando fogo, benzinho.\n
+Não aguento! Preciso batalhar!$
+
+[MtChimney_Text_MelissaDefeat] 0bd4f89162
+Uh, que batalha escaldante!$
+
+[MtChimney_Text_MelissaPostBattle] bf697d8f01
+O calor do MONTE CHIMNEY me\n
+aquece, benzinho!$
+
+[MtChimney_Text_SheilaIntro] 66ec1c6389
+Finalmente cheguei ao MONTE CHIMNEY.\n
+Quero botar meus POKéMON pra lutar!$
+
+[MtChimney_Text_SheilaDefeat] 5bcb6a16fa
+O seu jeito de batalhar…\n
+Parece uma erupção do MONTE CHIMNEY!$
+
+[MtChimney_Text_SheilaPostBattle] abf3031a0e
+Como eu disse, finalmente cheguei ao\n
+MONTE CHIMNEY. Seria uma pena só\l
+fazer um pouco de turismo…\p
+Quero batalhar e comprar BISCOITOS\n
+de lembrança.$
+
+[MtChimney_Text_ShirleyIntro] 7b1acee0ca
+Desde que tomei banho nas fontes\n
+termais, estou ótima!\l
+Com certeza vou ganhar!$
+
+[MtChimney_Text_ShirleyDefeat] 7953b9a5f3
+Ai!\n
+Saí da água e peguei um friozinho.$
+
+[MtChimney_Text_ShirleyPostBattle] 9b2262eacd
+Vou ter que dar outro mergulho nas\n
+fontes termais. Quer vir junto?\p
+Brincadeira!$
+
+[MtChimney_Text_SawyerIntro] 37f3095ae8
+Que montanha boa! Cheia de gente\n
+quente pra fazer companhia!$
+
+[MtChimney_Text_SawyerDefeat] 68e6d5eea2
+Ora, você também é um fogo só!$
+
+[MtChimney_Text_SawyerPostBattle] 7d5c561e71
+Acho que preciso de um mergulho\n
+nas FONTES TERMAIS de LAVARIDGE!$
+
+[MtChimney_Text_SawyerRegister] 6ad909163d
+Gosto de foguinhos como você.\n
+Vou te registrar no meu POKéNAV.$
+
+[MtChimney_Text_SawyerRematchIntro] 6a5bcf0fa4
+Por aqui, só tem gente quente à minha\n
+volta. Não vou perder!$
+
+[MtChimney_Text_SawyerRematchDefeat] 29afb7647b
+Puxa, você continua sendo o\n
+mesmo fogo de antes!$
+
+[MtChimney_Text_SawyerPostRematch] b8a02fa56c
+Na verdade, aqui é quente mesmo.\n
+Estou com roupa demais pra cá.$

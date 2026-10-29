@@ -1,0 +1,138 @@
+# As palavras da FALA FÁCIL, grupo lifestyle (src/data/easy_chat/easy_chat_group_lifestyle.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_Chores] 2263d31542 width=72
+TAREFAS
+
+[gEasyChatWord_Home] 7731962fb1 width=72
+CASA
+
+[gEasyChatWord_Money] 6bfef49ec2 width=72
+DINHEIRO
+
+[gEasyChatWord_Allowance] aef09d0b13 width=72
+MESADA
+
+[gEasyChatWord_Bath] 07cef740c7 width=72
+BANHO
+
+[gEasyChatWord_Conversation] 2897a7efa1 width=72
+CONVERSA
+
+[gEasyChatWord_School] ce10ad44f3 width=72
+ESCOLA
+
+[gEasyChatWord_Commemorate] 9cf18866b0 width=72
+CELEBRAR
+
+[gEasyChatWord_Habit] 9db13b49a0 width=72
+HÁBITO
+
+[gEasyChatWord_Group] ea5a383494 width=72
+GRUPO
+
+[gEasyChatWord_Word] 986b96d045 width=72
+PALAVRA
+
+[gEasyChatWord_Store] a022ae64c8 width=72
+LOJA
+
+[gEasyChatWord_Service] 5f5cdfd63a width=72
+SERVIÇO
+
+[gEasyChatWord_Work] ebc6242725 width=72
+TRABALHO
+
+[gEasyChatWord_System] 29d43743c4 width=72
+SISTEMA
+
+[gEasyChatWord_Train] 0cfd28214c width=72
+TREM
+
+[gEasyChatWord_Class] bb95f17d92 width=72
+AULA
+
+[gEasyChatWord_Lessons] cc12839571 width=72
+LIÇÕES
+
+[gEasyChatWord_Information] b8ff98db93 width=72
+INFORMAÇÃO
+
+[gEasyChatWord_Living] 0e36bc5e95 width=72
+VIVER
+
+[gEasyChatWord_Teacher] a4e8dcd362 width=72
+PROFESSOR
+
+[gEasyChatWord_Tournament] 48860f9260 width=72
+TORNEIO
+
+[gEasyChatWord_Letter] 6dda178917 width=72
+CARTA
+
+[gEasyChatWord_Event] 7c90977a1d width=72
+EVENTO
+
+[gEasyChatWord_Digital] 3260cdea5a width=72
+DIGITAL
+
+[gEasyChatWord_Test] 984816fd32 width=72
+PROVA
+
+[gEasyChatWord_DeptStore] 2deaeecc3c width=72
+MAGAZINE
+
+[gEasyChatWord_Television] 9520661f5d width=72
+TELEVISÃO
+
+[gEasyChatWord_Phone] 34139ab68d width=72
+TELEFONE
+
+[gEasyChatWord_Item] e849c5f964 width=72
+ITEM
+
+[gEasyChatWord_Name] a9d371451b width=72
+NOME
+
+[gEasyChatWord_News] 9f621eb5fd width=72
+NOTÍCIAS
+
+[gEasyChatWord_Popular] 18b9eed74b width=72
+POPULAR
+
+[gEasyChatWord_Party] aa17c13223 width=72
+FESTA
+
+[gEasyChatWord_Study] 8dc71f9da2 width=72
+ESTUDAR
+
+[gEasyChatWord_Machine] 1d6e327716 width=72
+MÁQUINA
+
+[gEasyChatWord_Mail] 0d8e8b084c width=72
+CORREIO
+
+[gEasyChatWord_Message] cfc6df9231 width=72
+MENSAGEM
+
+[gEasyChatWord_Promise] 90630d91cd width=72
+PROMESSA
+
+[gEasyChatWord_Dream] 7765286b20 width=72
+SONHO
+
+[gEasyChatWord_Kindergarten] fb8d481747 width=72
+JARDIM
+
+[gEasyChatWord_Life] 13a0b72ce4 width=72
+VIDA
+
+[gEasyChatWord_Radio] dc282bb7d7 width=72
+RÁDIO
+
+[gEasyChatWord_Rental] 11a17a4910 width=72
+ALUGUEL
+
+[gEasyChatWord_World] 1a5db92679 width=72
+MUNDO

@@ -1,0 +1,7 @@
+# PRESENTE MISTERIOSO: o OVO do CENTRO POKéMON.
+
+[sText_MysteryGiftEgg] d0fe74f8e5
+Obrigado por usar o sistema de\nPRESENTE MISTERIOSO.\pO CENTRO POKéMON tem um\npresente: um OVO de POKéMON!\pCrie ele com muito carinho\ne atenção.$
+
+[sText_FullParty] 872c05e245
+Ih, parece que a sua equipe\ntá cheia.\pGuarde um POKéMON no PC\ne volte aqui.$

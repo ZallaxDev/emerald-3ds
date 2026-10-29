@@ -1,0 +1,31 @@
+# CASA DO CORTADOR em RUSTBORO: a MO CORTAR.
+
+[RustboroCity_CuttersHouse_Text_YouCanPutThisHMToGoodUse] ec8af25e0d
+Essa cara de determinação…\n
+Esse jeito ágil de se mexer…\l
+E os seus POKéMON bem treinados…\p
+Dá pra ver que você treina POKéMON\n
+com talento!\p
+Não, espera, não diga nada.\n
+Só de olhar eu já sei.\p
+Tenho certeza de que você vai saber\n
+usar bem esta MÁQUINA OCULTA.\p
+Nada de modéstia ou vergonha.\n
+Vai, pode pegar!$
+
+[RustboroCity_CuttersHouse_Text_ExplainCut] e7ba0d8cee
+Essa MÁQUINA OCULTA, ou MO, tem\n
+o golpe CORTAR.\p
+Um golpe de MO pode ser usado pelos\n
+POKéMON fora das batalhas.\p
+Qualquer POKéMON que aprendeu CORTAR\n
+derruba árvores finas, se você já\l
+tiver a INSÍGNIA DA PEDRA.\p
+E, diferente de uma MT, uma MO pode\n
+ser usada mais de uma vez.$
+
+[RustboroCity_CuttersHouse_Text_DadHelpedClearLandOfTrees] 87450fdb03
+Quando estavam aumentando a cidade de\n
+RUSTBORO, meu pai ajudou.\p
+Ele fez os POKéMON dele usarem CORTAR\n
+pra limpar as árvores do terreno.$

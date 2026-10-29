@@ -1,0 +1,106 @@
+# TÚNEL RUSTURF: o capanga da EQUIPE AQUA, a PEEKO, o casal e a MO FORÇA.
+
+[RusturfTunnel_Text_ComeAndGetSome] a4adead2ee
+Quê, vai encarar?\n
+Então vem!$
+
+[RusturfTunnel_Text_Peeko] 646c3158bc
+PEEKO: Piii piriu!$
+
+[RusturfTunnel_Text_GruntIntro] d4177e4e09
+Arre, que vá tudo pro fundo do mar!\p
+Esse POKéMON refém não valeu\n
+de nada!\p
+E pensar que eu fugi…\n
+Por este túnel que não dá em nada!\p
+Ei! Você!\n
+Quer batalhar comigo, é?$
+
+[RusturfTunnel_Text_GruntDefeat] aca0d80d53
+Urrrgh! Minha carreira no crime\n
+chegou a um beco sem saída!$
+
+[RusturfTunnel_Text_GruntTakePackage] c2e767a116
+Isso não está certo…\p
+O CHEFE disse que ia ser um serviço\n
+fácil e tranquilo.\p
+Era só roubar um pacote da DEVON.\p
+Tsc!\n
+Se quer tanto de volta, pega!$
+
+[RusturfTunnel_Text_PeekoGladToSeeYouSafe] 8e643939c7
+PEEKO!\n
+Que alegria ver você bem!$
+
+[RusturfTunnel_Text_ThankYouLetsGoHomePeeko] 8971f89561
+A PEEKO deve a vida a você!\p
+Me chamam de SR. BRINEY.\n
+E você, quem é?\p
+… … … … … … … …\n
+… … … … … … … …\p
+Ah, então você é {PLAYER}{KUN}!\n
+Muito obrigado, de coração!\p
+Se algum dia algo te preocupar,\n
+não hesite em me contar!\p
+Você costuma me achar na minha casinha\n
+à beira-mar, perto do BOSQUE.\p
+Vem, PEEKO, vamos pra casa.\p
+PEEKO: Piriu!$
+
+[RusturfTunnel_Text_WhyCantTheyKeepDigging] a253b11703
+… …\p
+Por que eles não continuam cavando?\n
+A rocha é dura demais?\p
+A minha amada me espera na CIDADE DE\n
+VERDANTURF, logo depois daqui…\p
+Se RUSTBORO e VERDANTURF fossem\n
+ligadas por este túnel, eu poderia\l
+visitá-la todo dia…\p
+Mas isso…\n
+O que eu faço?$
+
+[RusturfTunnel_Text_ToGetToVerdanturf] 4bc15bae85
+Pra ir de RUSTBORO a VERDANTURF,\n
+você tem que ir a DEWFORD e depois\l
+passar por SLATEPORT e MAUVILLE…$
+
+[RusturfTunnel_Text_YouShatteredBoulderTakeHM] c015dd3da6
+Uau! Você quebrou aquela pedra\n
+que bloqueava o caminho.\p
+Pra mostrar o quanto eu agradeço,\n
+quero que fique com esta MO.$
+
+[RusturfTunnel_Text_ExplainStrength] 83180dd84f
+Essa MO tem o golpe FORÇA.\p
+Se um POKéMON musculoso aprender,\n
+consegue mover até pedras\l
+enormes.$
+
+[RusturfTunnel_Text_WandaReunion] 0ddf4d077c
+WANDA!\n
+Agora posso te ver quando quiser!\p
+WANDA: Que… maravilha.\p
+Por favor, descanse lá em casa.$
+
+[RusturfTunnel_Text_BoyfriendOnOtherSideOfRock] 21c5f0e5c0
+Do outro lado desta pedra…\n
+O meu namorado está lá.\p
+Ele… Ele não está cavando o túnel\n
+só pra me ver.\p
+Ele machuca as mãos trabalhando\n
+pelo bem de todo mundo.$
+
+[RusturfTunnel_Text_MikeIntro] 38b1bec6b5
+Como se chama um homem selvagem nas\n
+montanhas? Homem da montanha, né?\p
+Então por que não chamam um POKéMON\n
+nas montanhas de POKéMON da montanha?$
+
+[RusturfTunnel_Text_MikeDefeat] d1388a1857
+Meus POKéMON…\n
+Ficaram sem energia…$
+
+[RusturfTunnel_Text_MikePostBattle] ac0da68248
+Pararam a obra aqui pra proteger os\n
+POKéMON, né?\l
+Que história bonita!$

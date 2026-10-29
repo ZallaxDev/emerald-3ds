@@ -1,0 +1,134 @@
+# FRONTEIRA DE BATALHA: o SALÃO DE BATALHA do PALÁCIO, com o SPENSER.
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_LetMeRestoreYourMons] 3c5ef9b451
+Excelente…\n
+Vou recuperar os seus POKéMON.$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_PreparedFor2ndOpponent] eae4239a4c
+O 2º oponente é o próximo.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_PreparedFor3rdOpponent] d90378feec
+O 3º oponente é o próximo.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_PreparedFor4thOpponent] 58d4a9fbbd
+O 4º oponente é o próximo.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_PreparedFor5thOpponent] 2d5b017183
+O 5º oponente é o próximo.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_PreparedFor6thOpponent] d6af92fb36
+O 6º oponente é o próximo.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_PreparedFor7thOpponent] d5b27345ea
+O 7º oponente é o próximo.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_SaveAndQuitGame] 879f49737c
+Quer salvar e sair do jogo?$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_WishToQuitChallenge] f01e09481d
+Deseja abandonar o desafio?$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_SavingData] 6b0c539fb8
+Salvando os dados.\n
+Tenha paciência…$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_RecordLastMatch] bd06f37978
+Deseja gravar a sua última batalha\n
+no PASSE DA FRONTEIRA?$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_ChallengingPalaceMaven] b7379a8859
+E agora…\p
+Pelas vitórias seguidas, você\n
+ganhou o privilégio de desafiar o\l
+nosso mestre, o SÁBIO DO PALÁCIO…$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_ReadyForPalaceMaven] 0ea4245600
+Vou chamar o SÁBIO DO PALÁCIO.\n
+Está tudo pronto?$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_AnnounceArrivalOfSpenser] 4caa6bad16
+Que as fanfarras anunciem a chegada\n
+do SÁBIO DO PALÁCIO, SPENSER!$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_SpenserFirstIntro] 56f9dc834b
+SPENSER: O meu corpo está sempre\n
+com os POKéMON!\p
+O meu coração bate sempre junto\n
+com os POKéMON!\p
+Jovem TREINADOR!\n
+Você acredita nos seus POKéMON?\p
+Consegue acreditar neles de corpo\n
+e alma?\p
+Se os seus laços de confiança forem\n
+frágeis, nunca vai vencer os meus!$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_ProveYourBondWithMons] 5511cb511e
+O laço entre você e os seus POKéMON!\n
+Prove aqui mesmo!$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_SpenserPostSilverBattle] 380bc99e0e
+SPENSER: Gwahahah!\p
+Ha, você não caiu na minha bravata!\n
+Desculpe a encenação!\p
+Aqui!\n
+Me traga aquilo!$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_LetsSeeFrontierPass] c114050527
+Ai, ai, se ao menos você mantivesse\n
+aquela pose de autoridade…\p
+Aqui!\n
+Vamos ver o seu PASSE DA FRONTEIRA!$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_ReceivedSpiritsSymbol] f4cac6e2bc
+O Símbolo do Espírito foi gravado no\n
+PASSE DA FRONTEIRA!$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_SpenserAwaitNextTime] 3005961d58
+SPENSER: Os olhos dos seus POKéMON\n
+são claros e límpidos.\p
+Vou esperar ansioso a próxima\n
+chance de te ver.$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_SpenserThisTimeWontHoldBack] 8e892cae42
+SPENSER: Gwahahah!\n
+Você subiu de novo batalhando?\p
+Deve ter criado um laço formidável\n
+com os seus POKéMON.\p
+Que assim seja!\p
+Desta vez, sem bravata e sem me\n
+segurar. Desta vez, é pra valer.\p
+Pronto?\n
+Prepare-se pra perder!$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_Kaaah] 2b3298fe44
+… … …Kaaah!$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_SpenserYourTeamIsAdmirable] 8ca97895e6
+SPENSER: Que demonstração!\n
+Mesmo soltos de verdade, os meus\l
+não conseguiram te dominar.\p
+O espírito da sua equipe é\n
+admirável!\p
+Aqui!\n
+Me traga aquilo, sim?$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_HurryWithFrontierPass] 2c1b55f06a
+Ai, ai, se ao menos você mantivesse\n
+um pouco de compostura…\p
+Aaah, aqui!\n
+Anda logo com esse PASSE DA FRONTEIRA!$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_SpiritsSymbolTookGoldenShine] e5fd907919
+O Símbolo do Espírito ganhou um\n
+brilho dourado!$
+
+[BattleFrontier_BattlePalaceBattleRoom_Text_SpenserComeSeeMeAgain] 4df17bab35
+SPENSER: Gwahahah!\p
+Venha me ver sempre que quiser!\n
+Eu e os meus vamos estar esperando!$

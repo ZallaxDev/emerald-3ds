@@ -1,0 +1,15 @@
+# POKé MART de MAUVILLE.
+
+[MauvilleCity_Mart_Text_ItemsToTemporarilyElevateStats] b413fbbdcd
+Tem itens que aumentam os atributos\n
+dos POKéMON por um tempo.\p
+Os que eu sei que se usam na batalha\n
+são ATAQUE X e DEFESA X…\p
+Acho que existem outros\n
+parecidos.$
+
+[MauvilleCity_Mart_Text_DecisionsDetermineBattle] 0cb9c50d3a
+Usar um golpe, ou usar um item\n
+no lugar…\p
+Acho que são as decisões de quem treina\n
+que decidem como a batalha termina.$

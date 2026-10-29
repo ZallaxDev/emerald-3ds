@@ -1,0 +1,157 @@
+# Moça de LILYCOVE (CENTRO POKéMON): a MOÇA DOS FAVORES, a MOÇA DO QUIZ e a MOÇA DOS CONCURSOS.
+
+[LilycoveCity_PokemonCenter_1F_Text_ImTheFavorLady] 505ee55612
+Eu sou a MOÇA DOS FAVORES…$
+
+[LilycoveCity_PokemonCenter_1F_Text_ObsessedWithThing] 33f502e4d2
+Ultimamente ando obcecada por\ncoisas {STR_VAR_1}…$
+
+[LilycoveCity_PokemonCenter_1F_Text_ThankYouForLastTime] 5bc49b864d
+Ah…\nObrigada pela outra vez…$
+
+[LilycoveCity_PokemonCenter_1F_Text_PlayerGaveMeBadThing] e0fa318c02
+Outro dia, acho que foi {STR_VAR_3}…\p{STR_VAR_3} me deu {STR_VAR_2},\ndizendo que era {STR_VAR_1}.\pMas não era {STR_VAR_1}.\nNem um pouquinho.$
+
+[LilycoveCity_PokemonCenter_1F_Text_PlayerGaveMeGreatThing] c5999f2c0f
+Outro dia, {STR_VAR_3} me deu\n{STR_VAR_2}, muito {STR_VAR_1}.\pAgora é meu xodó.$
+
+[LilycoveCity_PokemonCenter_1F_Text_WillYouShareThing] 1c31addd1c
+Olha, se você tiver alguma coisa\n{STR_VAR_1}, divide\lcomigo?$
+
+[LilycoveCity_PokemonCenter_1F_Text_WhatWillYouGiveMe] bf74a6a40e
+…Sério?\nO que você vai me dar?$
+
+[LilycoveCity_PokemonCenter_1F_Text_IsThatSoGoodbye] 42c8340ef2
+Ah, é?\nEntão, adeus…$
+
+[LilycoveCity_PokemonCenter_1F_Text_NotWillingToShare] eba0cf5ead
+Ah…\nVocê não quer dividir?$
+
+[LilycoveCity_PokemonCenter_1F_Text_IllTryToCherishIt] 496279324c
+Hã?\n{STR_VAR_2} é {STR_VAR_1}?\p…Ah, é mesmo?\pBom, mesmo assim, obrigada.\nVou tentar dar valor…$
+
+[LilycoveCity_PokemonCenter_1F_Text_IWillCherishThis] b0a7ed8673
+Ah…\p{STR_VAR_2} bem\n{STR_VAR_1}…\pNão é lindo?\nÉ um sonho…\pObrigada…\nVou guardar com carinho…$
+
+[LilycoveCity_PokemonCenter_1F_Text_IWillTreasureThis] 340f5d5e11
+…Ah, ah, ah…\pIsso é incrível!\nÉ {STR_VAR_1} de verdade!\pNunca imaginei que {STR_VAR_2}\npudesse ser tão {STR_VAR_1}!\pObrigada!\pVou guardar isto como um tesouro\npelo resto da vida!$
+
+[LilycoveCity_PokemonCenter_1F_Text_IllGiveYouThisInReturn] f17a2f326b
+Vou te dar este item maravilhoso\nem troca do seu presente fabuloso.\pEspero que você dê valor…$
+
+[LilycoveCity_PokemonCenter_1F_Text_YouDontHaveSpaceForIt] 33e638d1bd
+Ah, sem espaço você não pode\nlevar.\pVolte quando arrumar\na sua BOLSA…$
+
+[LilycoveCity_PokemonCenter_1F_Text_ImTheQuizLady] cafcd66251
+Eu sou a MOÇA DO QUIZ!\nEu amo quizzes!$
+
+[LilycoveCity_PokemonCenter_1F_Text_WaitingToTakeYourQuiz] 7e1a1d1a9a
+Ué?\pTô esperando alguém responder\no quiz que você fez.\pA gente conversa outra hora, tá?$
+
+[LilycoveCity_PokemonCenter_1F_Text_WaitingForChallenger] 75cfbc70a4
+Tô esperando alguém encarar\no quiz que {STR_VAR_1} inventou!$
+
+[LilycoveCity_PokemonCenter_1F_Text_TakeQuizChallenge] e446b89750
+Se acertar, você ganha\nprêmios fabulosos!\pQuer encarar o quiz?$
+
+[LilycoveCity_PokemonCenter_1F_Text_WaitForAnswer] e4bddd8be9
+… … … … … …\n… … … … … …$
+
+[LilycoveCity_PokemonCenter_1F_Text_HowBoringBye] fb8dd69004
+Ai, que sem graça!\nTchauzinho!$
+
+[LilycoveCity_PokemonCenter_1F_Text_YoureGoingToQuit] e1d7f961fb
+Ahhh!\nVai desistir?$
+
+[LilycoveCity_PokemonCenter_1F_Text_TakeTheQuizAnotherTime] b8df433b7a
+Volte outra hora pra\nencarar o quiz!$
+
+[LilycoveCity_PokemonCenter_1F_Text_YouGotItRight] b2da93e6f9
+Incrível! Você acertou!\nQue cabeça boa!$
+
+[LilycoveCity_PokemonCenter_1F_Text_YouGotItRightYouveWonPersonsPrize] 9dca1e4ec7
+Parabéns!\nVocê acertou o quiz!\pVocê ganhou um prêmio dado\npor {STR_VAR_1}!$
+
+[LilycoveCity_PokemonCenter_1F_Text_XReceivedOneY] d6e327acfa
+{STR_VAR_1} recebeu\n{STR_VAR_2}!$
+
+[LilycoveCity_PokemonCenter_1F_Text_YourBagIsFilledUp] 7f97d831af
+Ué? Sua BOLSA tá cheia!\nVolte quando tiver espaço.$
+
+[LilycoveCity_PokemonCenter_1F_Text_WrongTheCorrectAnswerIs] bd1f941b55
+Hmm… Errou!\nA resposta certa é “{STR_VAR_3}”!$
+
+[LilycoveCity_PokemonCenter_1F_Text_IGetToKeepPrize] 4017a0672b
+Que pena!\pAgora o prêmio do quiz,\n{STR_VAR_1}, fica comigo!$
+
+[LilycoveCity_PokemonCenter_1F_Text_MakeYourOwnQuiz] 5d9e7f2fae
+Escuta, escuta!\nQuer fazer o seu próprio quiz?$
+
+[LilycoveCity_PokemonCenter_1F_Text_MaybeNextTime] 95c57588ec
+Ah, entendi…\nFica pra próxima!$
+
+[LilycoveCity_PokemonCenter_1F_Text_PickYourPrize] 4c5e1cc923
+Certo, primeiro você escolhe o\nprêmio pra quem acertar\lo seu quiz.\pMas cuidado: se a pessoa errar\na resposta, o prêmio\lfica comigo!$
+
+[LilycoveCity_PokemonCenter_1F_Text_QuitChoosingPrize] ff747661a1
+Sem escolher um prêmio,\nnão dá pra fazer o quiz.\pVai desistir de fazer\no seu quiz?$
+
+[LilycoveCity_PokemonCenter_1F_Text_WriteYourQuiz] 451c1662c1
+Ai, que legal!\nQue prêmio maravilhoso!\pAgora escreva a pergunta\ndo quiz e a resposta.$
+
+[LilycoveCity_PokemonCenter_1F_Text_QuitWritingQuizQuestion] d78ac7d56d
+Vai desistir de escrever\na pergunta do quiz?$
+
+[LilycoveCity_PokemonCenter_1F_Text_QuitWritingQuizAnswer] 8219addc5c
+Vai desistir de escolher\na resposta do quiz?$
+
+[LilycoveCity_PokemonCenter_1F_Text_IllLookForAChallenger] 0a516fcb93
+Obrigada!\nVocê montou um quiz ótimo.\pVou procurar agora mesmo alguém\npra encarar o seu quiz.$
+
+[LilycoveCity_PokemonCenter_1F_Text_ImTheContestLady] fc8ca14721
+Eu sou a MOÇA DOS CONCURSOS!\nEu adoro CONCURSOS!$
+
+[LilycoveCity_PokemonCenter_1F_Text_ThankForPokeblock] e056550906
+Valeu pelo {POKEBLOCK} da outra vez!$
+
+[LilycoveCity_PokemonCenter_1F_Text_MyFriendDisplaysQuality] be0a322f43
+Este é meu amigo {STR_VAR_1}!\nÉ o máximo em {STR_VAR_2}!\pMas acho que ele ainda pode\nter mais {STR_VAR_2}!$
+
+[LilycoveCity_PokemonCenter_1F_Text_DontHaveAPokeblockCase] 00f30e9210
+Então, preciso da sua ajuda!\pMe dá um {POKEBLOCK}?\nSó um, é tudo que eu peço!\p…Ah, mas…\nVocê não tem ESTOJO {POKEBLOCK}?\lAssim não dá. Fica pra próxima!$
+
+[LilycoveCity_PokemonCenter_1F_Text_AskingForOnePokeblock] f11559ba87
+Então, preciso da sua ajuda!\pMe dá um {POKEBLOCK}?\nSó um, é tudo que eu peço!$
+
+[LilycoveCity_PokemonCenter_1F_Text_ICantHaveOnePokeblock] 450c61e73a
+Ahhh!\nNem um {POKEBLOCK}?!$
+
+[LilycoveCity_PokemonCenter_1F_Text_WhatACheapskate] 8d3e60f033
+Poxa!\nQue mão de vaca!$
+
+[LilycoveCity_PokemonCenter_1F_Text_IllUseYourPokeblock] aa4b8275fd
+Eba!\nObrigada!\pVou dar o seu {POKEBLOCK} pro\nmeu POKéMON agora mesmo.$
+
+[LilycoveCity_PokemonCenter_1F_Text_NoChangeThanks] 4b6632b7f2
+…Parece que não mudou\nnadinha…\pHmm…\pAh, tudo bem!\nMuito obrigada!$
+
+[LilycoveCity_PokemonCenter_1F_Text_ReallyImprovedThanks] 89b2a7ba2d
+Eba!\nEle tá todo feliz!\pAcho que melhorou muito a\n{STR_VAR_2} de {STR_VAR_1} também.\pMuito obrigada!$
+
+[LilycoveCity_PokemonCenter_1F_Text_ReadyToEnterContests] 8313ad4a9e
+Hmm…\pAcho que a gente já tá pronto\npra entrar em CONCURSOS.\pSe vir a gente em algum,\ntorce por nós, tá?$
+
+[LilycoveCity_PokemonCenter_1F_Text_Zigzagoon] 328ae5b127
+{STR_VAR_1}: Guguuh!$
+
+[LilycoveCity_PokemonCenter_1F_Text_Kecleon] 17ca0cbd9d
+{STR_VAR_1}: Igigigiiih!$
+
+[LilycoveCity_PokemonCenter_1F_Text_Poochyena] 21842d8c93
+{STR_VAR_1}: Baaarun…$
+
+[LilycoveCity_PokemonCenter_1F_Text_Pikachu] 24049a11e3
+{STR_VAR_1}: Pikka!$
+
+[LilycoveCity_PokemonCenter_1F_Text_Skitty] da58ce3c87
+{STR_VAR_1}: Umyaaaan!$

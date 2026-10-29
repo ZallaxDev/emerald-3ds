@@ -1,0 +1,222 @@
+# FRONTEIRA DE BATALHA: a recepção da FÁBRICA DE BATALHA.
+
+[BattleFrontier_BattleFactoryLobby_Text_WelcomeForSingleBattle] 8fa9cfffdf
+Onde a inteligência dos TREINADORES\n
+é posta à prova!\p
+Boas-vindas à FÁBRICA DE BATALHA!\p
+Sou o guia da Troca de Batalha\n
+Simples.$
+
+[BattleFrontier_BattleFactoryLobby_Text_TakeSinglesChallenge] c8c3514123
+Quer encarar o desafio da Troca\n
+de Batalha Simples?$
+
+[BattleFrontier_BattleFactoryLobby_Text_ExplainSinglesChallenge] 7904e6f51d
+A Troca de Batalha Simples é uma\n
+competição de BATALHAS SIMPLES só\l
+com POKéMON de aluguel.\p
+Primeiro, você recebe emprestados\n
+três POKéMON só pra este evento.\p
+Com esses POKéMON de aluguel, você\n
+faz uma BATALHA SIMPLES.\p
+Se vencer, pode trocar um dos seus\n
+POKéMON de aluguel.\p
+Repita esse ciclo de batalhar e\n
+trocar: se vencer sete vezes\l
+seguidas, você ganha Pontos de\l
+Batalha.\p
+Se quiser interromper o desafio,\n
+salve o jogo.\p
+Se não salvar, o seu desafio\n
+será anulado.$
+
+[BattleFrontier_BattleFactoryLobby_Text_LookForwardToNextVisit] 59da4764c7
+Esperamos a sua próxima visita.$
+
+[BattleFrontier_BattleFactoryLobby_Text_WhichLevelMode] b20b3f4224
+Que nível você quer desafiar?\n
+Nível 50 ou Nível Livre?$
+
+[BattleFrontier_BattleFactoryLobby_Text_OkayToSaveBeforeChallenge] 992d940e0c
+Antes de começar o desafio, preciso\n
+salvar o jogo. Tudo bem?$
+
+[BattleFrontier_BattleFactoryLobby_Text_WillHoldMonsForSafekeeping] eb4e5fa61e
+Certo, vou guardar os seus POKéMON\n
+enquanto você compete.$
+
+[BattleFrontier_BattleFactoryLobby_Text_StepThisWay] fb68724fa9
+Por aqui, por favor.$
+
+[BattleFrontier_BattleFactoryLobby_Text_ReturnMonsSaveResults] 97cbe4df05
+Obrigado por participar!\p
+Vou devolver os seus POKéMON em troca\n
+dos nossos POKéMON de aluguel.\p
+Também preciso salvar os resultados.\n
+Aguarde, por favor.$
+
+[BattleFrontier_BattleFactoryLobby_Text_ReturnMons] 60e9cf9060
+Vou devolver os seus POKéMON em troca\n
+dos nossos POKéMON de aluguel.$
+
+[BattleFrontier_BattleFactoryLobby_Text_CongratsSevenWins] 392b0294b8
+Parabéns! Você venceu sete batalhas\n
+seguidas na Troca de Batalha!$
+
+[BattleFrontier_BattleFactoryLobby_Text_AwardBattlePointsForStreak] 69bee73736
+Pela sequência de 7 vitórias, aqui\n
+estão os seus Pontos de Batalha.$
+
+[BattleFrontier_BattleFactoryLobby_Text_MaxBattlePoints] 56d30c7929
+Opa, opa, opa!\p
+Os seus Pontos de Batalha estão\n
+no máximo.\p
+Volte depois de usar alguns\n
+Pontos de Batalha.$
+
+[BattleFrontier_BattleFactoryLobby_Text_WaitingForYouToResume] 4fa290411f
+Estávamos esperando você!\p
+Antes de retomar o desafio, preciso\n
+salvar o jogo.$
+
+[BattleFrontier_BattleFactoryLobby_Text_DidntSaveBeforeQuitting] 3e902579e6
+Sinto muito, mas você não salvou antes\n
+de parar de jogar da última vez.\p
+Por isso, o seu desafio foi anulado.$
+
+[BattleFrontier_BattleFactoryLobby_Text_WellReturnMons] 42571e055a
+Vamos devolver os seus POKéMON.$
+
+[BattleFrontier_BattleFactoryLobby_Text_ReceivedPrizeItem] 1b34ee42d5
+{PLAYER} recebeu o prêmio:\n
+{STR_VAR_1}.$
+
+[BattleFrontier_BattleFactoryLobby_Text_WelcomeForDoubleBattle] 3190e57bd2
+Onde a inteligência dos TREINADORES\n
+é posta à prova!\p
+Boas-vindas à FÁBRICA DE BATALHA!\p
+Sou o guia da Troca de Batalha\n
+Dupla.$
+
+[BattleFrontier_BattleFactoryLobby_Text_TakeDoublesChallenge] 2d56f2a0f0
+Quer encarar o desafio da Troca\n
+de Batalha Dupla?$
+
+[BattleFrontier_BattleFactoryLobby_Text_ExplainDoublesChallenge] eea3260f07
+A Troca de Batalha Dupla é uma\n
+competição de BATALHAS DUPLAS só\l
+com POKéMON de aluguel.\p
+Primeiro, você recebe emprestados\n
+três POKéMON só pra este evento.\p
+Com esses POKéMON de aluguel, você\n
+faz uma BATALHA DUPLA.\p
+Se vencer, pode trocar um dos seus\n
+POKéMON de aluguel.\p
+Repita esse ciclo de batalhar e\n
+trocar: se vencer sete vezes\l
+seguidas, você ganha Pontos de\l
+Batalha.\p
+Se quiser interromper o desafio,\n
+salve o jogo.\p
+Se não salvar antes de interromper,\n
+o desafio será anulado.$
+
+[BattleFrontier_BattleFactoryLobby_Text_CongratsForDefeatingHead] 941b199fa8
+Parabéns por vencer o CHEFE DA\n
+FÁBRICA e ganhar sete batalhas\l
+seguidas!$
+
+[BattleFrontier_BattleFactoryLobby_Text_AwardBattlePoints] 6889788c78
+Pelo seu conhecimento vasto e pela\n
+sua inteligência afiada, aqui estão\l
+os seus Pontos de Batalha.$
+
+[BattleFrontier_BattleFactoryLobby_Text_ExchangeMonsAndSave] 5280748e6f
+Deixa eu trocar os seus POKéMON\n
+pelos nossos POKéMON de aluguel.\p
+Preciso salvar os dados da batalha,\n
+então aguarde, por favor.$
+
+[BattleFrontier_BattleFactoryLobby_Text_RecordLastMatch] 2531c2fe18
+Quer gravar a sua última batalha da\n
+FÁBRICA no PASSE DA FRONTEIRA?$
+
+[BattleFrontier_BattleFactoryLobby_Text_NeedKnowledgeOfMonsMoves] 024568d985
+Oi!\n
+Você aí!\p
+Acha que os eventos daqui são fáceis\n
+porque não precisa de uma equipe\l
+de POKéMON treinada?\p
+Eu não teria tanta certeza de que\n
+vai ganhar fácil assim.\p
+Sem conhecer bem os POKéMON e os\n
+golpes, vai ser difícil continuar\l
+vencendo.$
+
+[BattleFrontier_BattleFactoryLobby_Text_SwappedForWeakMon] 2d7966093d
+Troquei por um POKéMON fraco…\n
+Achei que fosse um bom…\p
+Acabaram com a gente…$
+
+[BattleFrontier_BattleFactoryLobby_Text_NeedToCheckOpponentsMons] 169a176ddf
+Nada está dando certo pra mim.\p
+Veja bem os POKéMON do oponente\n
+na batalha pra saber se são bons.$
+
+[BattleFrontier_BattleFactoryLobby_Text_CantFigureOutStaffHints] 96442fbf20
+Sabe que o pessoal daqui dá umas\n
+dicas sobre o próximo oponente?\p
+Pois é, sou um homem feito, mas não\n
+consigo entender as dicas deles.$
+
+[BattleFrontier_BattleFactoryLobby_Text_RentalMonsAreVaried] c16dd5b2f6
+Tipo, eu sou muito forte, mas canso\n
+fácil, então fui trocando e\l
+batalhando sem parar.\p
+Enfim, entrando sempre na Troca de\n
+Batalha, percebi que os POKéMON\l
+de aluguel variam.$
+
+[BattleFrontier_BattleFactoryLobby_Text_RulesAreListed] 8154fa9726
+Aqui estão as regras da Troca\n
+de Batalha.$
+
+[BattleFrontier_BattleFactoryLobby_Text_ReadWhichHeading] d059e37e85
+Qual tópico você quer ler?$
+
+[BattleFrontier_BattleFactoryLobby_Text_ExplainBasicRules] af36d64123
+Na Troca de Batalha, você só pode\n
+usar três POKéMON.\p
+Alugando ou trocando, a sua equipe\n
+não pode ter dois POKéMON da\l
+mesma espécie.$
+
+[BattleFrontier_BattleFactoryLobby_Text_ExplainSwapPartnerRules] 073fabce81
+Você só pode trocar POKéMON com o\n
+TREINADOR que acabou de vencer.\p
+Só dá pra trocar pelos POKéMON que\n
+esse TREINADOR usou.$
+
+[BattleFrontier_BattleFactoryLobby_Text_ExplainSwapNumberRules] 7876a00f56
+A cada vitória, você pode trocar\n
+por um POKéMON do oponente\l
+derrotado.\p
+Não dá pra trocar POKéMON com o\n
+sétimo TREINADOR do evento.$
+
+[BattleFrontier_BattleFactoryLobby_Text_ExplainSwapNotesRules] 9d53790fc8
+Há dois pontos importantes ao trocar\n
+POKéMON.\p
+Primeiro: ao trocar, você não vê os\n
+atributos do POKéMON que vai\l
+receber.\p
+Segundo: os POKéMON da sua equipe\n
+ficam na ordem em que foram\l
+alugados.\p
+Essa ordem não muda, mesmo com\n
+as trocas.$
+
+[BattleFrontier_BattleFactoryLobby_Text_ExplainOpenLvRules] ea2e99f009
+No Nível Livre, os POKéMON de\n
+aluguel e os dos TREINADORES\l
+oponentes são todos nível 100.$

@@ -1,0 +1,16 @@
+# NAVIO ABANDONADO: corredores do convés.
+
+[AbandonedShip_Corridors_1F_Text_CharlieIntro] 7e307e8529
+Qual é a graça de eu trazer a minha\n
+boia pro navio?$
+
+[AbandonedShip_Corridors_1F_Text_CharlieDefeat] f0e831282b
+Uau, você me atropelou!$
+
+[AbandonedShip_Corridors_1F_Text_CharliePostBattle] 407a425b4e
+Não é fácil jogar POKé BOLAS\n
+segurando uma boia!$
+
+[AbandonedShip_Corridors_1F_Text_IsntItFunHere] 6ae42cf853
+Não é divertido aqui?\n
+Só de estar aqui fico empolgado!$

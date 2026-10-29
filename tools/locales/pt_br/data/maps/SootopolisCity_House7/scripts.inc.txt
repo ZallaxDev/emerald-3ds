@@ -1,0 +1,16 @@
+# CIDADE DE SOOTOPOLIS: a casa da história da cidade.
+
+[SootopolisCity_House7_Text_CityFromEruptedVolcano] bde1949b41
+Um vulcão submarino entrou em\n
+erupção e subiu das profundezas.\p
+A cratera saiu do mar e se encheu\n
+de água da chuva.\p
+Foi assim que nasceu a CIDADE DE\n
+SOOTOPOLIS.$
+
+[SootopolisCity_House7_Text_CaveMadeToKeepSomething] ffd70ba2f0
+A caverna que liga SOOTOPOLIS ao\n
+mundo lá fora…\p
+Parece que foi feita pra impedir\n
+que alguma coisa saia.\p
+Ou é só imaginação minha?$

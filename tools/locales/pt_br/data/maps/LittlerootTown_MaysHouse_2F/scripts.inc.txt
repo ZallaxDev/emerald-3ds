@@ -1,0 +1,90 @@
+# O quarto do rival (os textos RivalsHouse_ servem às duas casas).
+# As falas de MAY só aparecem a um jogador; as de BRENDAN, a uma jogadora.
+
+[RivalsHouse_2F_Text_MayWhoAreYou] 27ee5986dc
+Hã?\n
+Quem… Quem é você?\p
+… … … … … … … …\n
+… … … … … … … …\p
+Ah, você é {PLAYER}{KUN}.\n
+Então a sua mudança foi hoje.\p
+Hum… Eu sou a MAY.\n
+Prazer em te conhecer!\p
+Eu…\n
+Eu sonho em fazer amizade com\l
+POKéMON do mundo inteiro.\p
+Eu… Eu ouvi falar de você, {PLAYER}{KUN},\n
+pelo meu pai, o PROF. BIRCH.\p
+Eu esperava que você fosse legal,\n
+{PLAYER}{KUN}, e que fôssemos amigos.\p
+Ai, que bobagem, não é?\n
+Eu… Eu acabei de te conhecer, {PLAYER}{KUN}.\p
+Hehehe…\p
+Ah, não! Eu esqueci!\p
+Eu ia ajudar o papai a capturar\n
+alguns POKéMON selvagens!\p
+{PLAYER}{KUN}, a gente se vê!$
+
+[RivalsHouse_2F_Text_MayGettingReady] 44e1db1915
+POKéMON recuperados!\n
+Itens prontos, e…$
+
+[RivalsHouse_2F_Text_BrendanWhoAreYou] 5a77bb58ee
+Ei!\n
+Você…\p
+Quem é você?\p
+Ah, você é {PLAYER}, não é?\n
+Se mudou aqui para o lado, certo?\p
+Eu não sabia que você era menina.\p
+O papai, o PROF. BIRCH, disse que o\n
+novo vizinho era filho de um LÍDER DE\l
+GINÁSIO, então achei que fosse menino.\p
+Meu nome é BRENDAN.\n
+Então, oi, vizinha!\p
+Hã? Ei, {PLAYER}, você não tem\n
+um POKéMON?\p
+Quer que eu vá capturar um para você?\p
+Ah, droga, eu esqueci…\p
+Eu tenho que ajudar o meu pai a\n
+capturar alguns POKéMON selvagens.\p
+Fica para outra vez, tá?$
+
+[RivalsHouse_2F_Text_BrendanGettingReady] 8072d579e9
+POKéMON recuperados…\n
+Itens na BOLSA, e…$
+
+[RivalsHouse_2F_Text_ItsRivalsPokeBall] 9b9f880b32
+É a POKé BOLA de {RIVAL}!\p
+Melhor deixar onde está.$
+
+[RivalsHouse_2F_Text_MayJustCheckingMyPokedex] 8d46bdb2be
+MAY: {PLAYER}{KUN}!\p
+Eu estava olhando a minha POKéDEX.\p
+Ainda tem muitos POKéMON que eu\n
+já vi, mas não capturei.\p
+E tem muitos outros que eu\n
+acho que vão evoluir.\p
+Aonde será que eu vou capturar\n
+POKéMON agora?$
+
+[RivalsHouse_2F_Text_MayWhereShouldIGoNext] c20c7856ee
+MAY: Aonde será que eu vou capturar\n
+POKéMON agora?\p
+Não seria engraçado se a gente se\n
+encontrasse por aí, {PLAYER}{KUN}?$
+
+[RivalsHouse_2F_Text_BrendanJustCheckingMyPokedex] b5b1e9aec5
+BRENDAN: Ei, é {PLAYER}.\p
+Eu estava conferindo a minha POKéDEX.\p
+Eu sei que ainda falta capturar\n
+muitos POKéMON, mas ela\l
+está ficando bem completa.\p
+Olhar esta POKéDEX me dá vontade\n
+de cair na estrada de novo.$
+
+[RivalsHouse_2F_Text_BrendanWhereShouldIGoNext] 7c3655a074
+BRENDAN: Está difícil decidir onde\n
+vou capturar POKéMON agora.\p
+Ei, {PLAYER}, se eu te encontrar por aí\n
+capturando POKéMON, a gente pode\l
+batalhar, se você quiser.$

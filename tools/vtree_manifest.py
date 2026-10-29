@@ -22,9 +22,12 @@ from pathlib import Path
 CONNECTION_DIRECTIONS = {1: "down", 2: "up", 3: "left", 4: "right", 5: "dive", 6: "emerge"}
 
 # Tileset animation frames a model's texels follow (voxel_building_specs.py
-# FOUNTAIN_ANIM: the jet of Rustboro's fountain), raw 4bpp in the ROM.
+# FOUNTAIN_ANIM: the jet of Rustboro's fountain; MAUVILLE_GYM_GATES: the
+# gym's electric barriers), raw 4bpp in the ROM.
 ANIM_FRAMES = ["data/tilesets/secondary/rustboro/anim/fountain/0.4bpp",
-               "data/tilesets/secondary/rustboro/anim/fountain/1.4bpp"]
+               "data/tilesets/secondary/rustboro/anim/fountain/1.4bpp",
+               "data/tilesets/secondary/mauville_gym/anim/electric_gates/0.4bpp",
+               "data/tilesets/secondary/mauville_gym/anim/electric_gates/1.4bpp"]
 
 
 def gba_symbols(nm_tool: str, elf: Path) -> dict[str, int]:

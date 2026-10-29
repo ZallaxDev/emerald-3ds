@@ -1,0 +1,330 @@
+# As palavras da FALA FÁCIL, grupo status (src/data/easy_chat/easy_chat_group_status.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_Dark] 2924c75b87 width=72
+SOMBRIO
+
+[gEasyChatWord_Stench] b4780b244e width=72
+FEDOR
+
+[gEasyChatWord_ThickFat] 4635864623 width=72
+GORDURA ESP.
+
+[gEasyChatWord_RainDish] 62e61237e9 width=72
+PRATO CHUVA
+
+[gEasyChatWord_Drizzle] 361a3e6619 width=72
+CHUVISCO
+
+[gEasyChatWord_ArenaTrap] 530285ee91 width=72
+ARMAD. ARENA
+
+[gEasyChatWord_Intimidate] 4327310e2b width=72
+INTIMIDAÇÃO
+
+[gEasyChatWord_RockHead] 2eda95ecfb width=72
+CABEÇA PEDRA
+
+[gEasyChatWord_Color] 341716cae6 width=72
+COR
+
+[gEasyChatWord_AltColor] 2e26a36197 width=72
+COR ALT.
+
+[gEasyChatWord_Rock] 8f97f5a81b width=72
+PEDRA
+
+[gEasyChatWord_Beautiful] 7acdadf575 width=72
+BELO
+
+[gEasyChatWord_Beauty] bed48404f8 width=72
+BELEZA
+
+[gEasyChatWord_AirLock] 2311877388 width=72
+ECLUSA DE AR
+
+[gEasyChatWord_Psychic] 65eb456898 width=72
+PSÍQUICO
+
+[gEasyChatWord_HyperCutter] 6bffdea92e width=72
+HIPERCORTE
+
+[gEasyChatWord_Fighting] 1869df58fa width=72
+LUTADOR
+
+[gEasyChatWord_ShadowTag] d8e4581b30 width=72
+TOQUE SOMBR.
+
+[gEasyChatWord_Smart] a4969f2088 width=72
+ESPERTO
+
+[gEasyChatWord_Smartness] a26261ce6b width=72
+ESPERTEZA
+
+[gEasyChatWord_SpeedBoost] 6d21ad5e06 width=72
+IMPULSO VEL.
+
+[gEasyChatWord_Cool] 2991fd24ef width=72
+ESTILOSO
+
+[gEasyChatWord_Coolness] d606ba6779 width=72
+ESTILO
+
+[gEasyChatWord_BattleArmor] 02381d34c3 width=72
+ARM. BATALHA
+
+[gEasyChatWord_Cute] 4b766bb69f width=72
+FOFO
+
+[gEasyChatWord_Cuteness] d28ed5a62e width=72
+FOFURA
+
+[gEasyChatWord_Sturdy] 55bbbb9b5a width=72
+ROBUSTEZ
+
+[gEasyChatWord_SuctionCups] 3079f8aedd width=72
+VENTOSAS
+
+[gEasyChatWord_Grass] edcea1abfc width=72
+PLANTA
+
+[gEasyChatWord_ClearBody] b9612dcfdc width=72
+CORPO PURO
+
+[gEasyChatWord_Torrent] 23264a4269 width=72
+DILÚVIO
+
+[gEasyChatWord_Ghost] a7628d6b02 width=72
+FANTASMA
+
+[gEasyChatWord_Ice] 97e6907b70 width=72
+GELO
+
+[gEasyChatWord_Guts] 65f937109d width=72
+TENACIDADE
+
+[gEasyChatWord_RoughSkin] dd466e319a width=72
+PELE ÁSPERA
+
+[gEasyChatWord_ShellArmor] 9a8d3602a8 width=72
+ARM. CONCHA
+
+[gEasyChatWord_NaturalCure] 3f4d215937 width=72
+CURA NATURAL
+
+[gEasyChatWord_Damp] 007da5ba32 width=72
+ENSOPADO
+
+[gEasyChatWord_Ground] cb9cfdf235 width=72
+TERRESTRE
+
+[gEasyChatWord_Limber] f8745286d3 width=72
+ELASTICIDADE
+
+[gEasyChatWord_MagnetPull] 485afec024 width=72
+MAGNETISMO
+
+[gEasyChatWord_WhiteSmoke] 5359c5b305 width=72
+FUM. BRANCA
+
+[gEasyChatWord_Synchronize] 76dd117a27 width=72
+SINCRONIA
+
+[gEasyChatWord_Overgrow] 441f5a1373 width=72
+SUPERCRESC.
+
+[gEasyChatWord_SwiftSwim] bbd2aa2c5d width=72
+NADO RÁPIDO
+
+[gEasyChatWord_SandStream] 004712edde width=72
+FLUXO AREIA
+
+[gEasyChatWord_SandVeil] b21862ac95 width=72
+VÉU DE AREIA
+
+[gEasyChatWord_KeenEye] d77db38c6b width=72
+OLHAR AGUÇ.
+
+[gEasyChatWord_InnerFocus] 642a5f3ce9 width=72
+FORÇA INTER.
+
+[gEasyChatWord_Static] bfead412ae width=72
+ESTÁTICA
+
+[gEasyChatWord_Type] 6e9816a8e9 width=72
+TIPO
+
+[gEasyChatWord_Tough] 1c4ae12ec4 width=72
+DURÃO
+
+[gEasyChatWord_Toughness] ef87e98d66 width=72
+FORÇA
+
+[gEasyChatWord_ShedSkin] d600bbd62b width=72
+PELE VERTEN.
+
+[gEasyChatWord_HugePower] 34f346b852 width=72
+PODERZÃO
+
+[gEasyChatWord_VoltAbsorb] 38c281f835 width=72
+ABS.VOLTAICA
+
+[gEasyChatWord_WaterAbsorb] 1c2f9cb2eb width=72
+ABS.AQUÁTICA
+
+[gEasyChatWord_Electric] 5cfb076998 width=72
+ELÉTRICO
+
+[gEasyChatWord_Forecast] 1c77ffc092 width=72
+PREV. TEMPO
+
+[gEasyChatWord_SereneGrace] 28abec83a3 width=72
+INDULG. SER.
+
+[gEasyChatWord_Poison] b8eaf34112 width=72
+VENENOSO
+
+[gEasyChatWord_PoisonPoint] ad14c311a3 width=72
+PONTO VENEN.
+
+[gEasyChatWord_Dragon] 2d91366868 width=72
+DRAGÃO
+
+[gEasyChatWord_Trace] ddf8a55c68 width=72
+TRAÇAR
+
+[gEasyChatWord_Oblivious] 2bc702a341 width=72
+INSENSÍVEL
+
+[gEasyChatWord_Truant] 95bd71e828 width=72
+MOLENGA
+
+[gEasyChatWord_RunAway] d63e941270 width=72
+DAR NO PÉ
+
+[gEasyChatWord_StickyHold] 52f396d6e5 width=72
+VISCOSIDADE
+
+[gEasyChatWord_CloudNine] ad2a345c77 width=72
+ACLIMATAÇÃO
+
+[gEasyChatWord_Normal] 21b3708ac8 width=72
+NORMAL
+
+[gEasyChatWord_Steel] f4321597bb width=72
+AÇO
+
+[gEasyChatWord_Illuminate] c50a91ac09 width=72
+ILUMINAÇÃO
+
+[gEasyChatWord_EarlyBird] a90ee4ec38 width=72
+MADRUGAR
+
+[gEasyChatWord_Hustle] 2f66200974 width=72
+TRANCO
+
+[gEasyChatWord_Shine] ffc0a1dba4 width=72
+BRILHO
+
+[gEasyChatWord_Flying] d317505812 width=72
+VOADOR
+
+[gEasyChatWord_Drought] d39c56e602 width=72
+SECA
+
+[gEasyChatWord_Lightningrod] 1344642e8f width=72
+PARA-RAIOS
+
+[gEasyChatWord_Compoundeyes] 6654e13087 width=72
+OLHOS COMP.
+
+[gEasyChatWord_MarvelScale] 90fd75002a width=72
+ESC. MARAVIL
+
+[gEasyChatWord_WonderGuard] 40135006f6 width=72
+DEF. MISTER.
+
+[gEasyChatWord_Insomnia] b5814858c8 width=72
+INSÔNIA
+
+[gEasyChatWord_Levitate] eb245603ec width=72
+LEVITAÇÃO
+
+[gEasyChatWord_Plus] c1ff976fc2 width=72
+MAIS
+
+[gEasyChatWord_Pressure] 3be14e228b width=72
+PRESSÃO
+
+[gEasyChatWord_LiquidOoze] 3c5f50cc1e width=72
+LODO LÍQUIDO
+
+[gEasyChatWord_ColorChange] 06c31dba97 width=72
+TROCA DE COR
+
+[gEasyChatWord_Soundproof] 8787fc1beb width=72
+ISOL. ACÚST.
+
+[gEasyChatWord_EffectSpore] 3da5ef96fd width=72
+ESP. EFEITO
+
+[gEasyChatWord_Pkrs] 04a03d6f66 width=72
+{PK}RS
+
+[gEasyChatWord_Fire] f4a67a4052 width=72
+FOGO
+
+[gEasyChatWord_FlameBody] c9650cb4a6 width=72
+CORPO CHAMAS
+
+[gEasyChatWord_Minus] 73ed84efb9 width=72
+MENOS
+
+[gEasyChatWord_OwnTempo] 23a27fb563 width=72
+RITMO PRÓPR.
+
+[gEasyChatWord_MagmaArmor] 7703485ca4 width=72
+ARM. MAGMA
+
+[gEasyChatWord_Water] f4a1a28697 width=72
+ÁGUA
+
+[gEasyChatWord_WaterVeil] 7f1a151db7 width=72
+VÉU DE ÁGUA
+
+[gEasyChatWord_Bug] 80c6687f13 width=72
+INSETO
+
+[gEasyChatWord_Swarm] 88d69174bb width=72
+ENXAME
+
+[gEasyChatWord_CuteCharm] 200773d44b width=72
+CHARME FOFO
+
+[gEasyChatWord_Immunity] d1343bfd33 width=72
+IMUNIDADE
+
+[gEasyChatWord_Blaze] 5f693375f9 width=72
+INCÊNDIO
+
+[gEasyChatWord_Pickup] 9478ed024b width=72
+PEGAR
+
+[gEasyChatWord_Pattern] 84c16d6a50 width=72
+PADRÃO
+
+[gEasyChatWord_FlashFire] ddb458531e width=72
+FOGO BRILH.
+
+[gEasyChatWord_VitalSpirit] 2df08999d1 width=72
+ESPÍR. VITAL
+
+[gEasyChatWord_Chlorophyll] 36346d53c6 width=72
+CLOROFILA
+
+[gEasyChatWord_PurePower] b3c0c42ef3 width=72
+PODER PURO
+
+[gEasyChatWord_ShieldDust] 7def04513b width=72
+PÓ ESCUDO

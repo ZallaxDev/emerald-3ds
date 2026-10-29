@@ -1,0 +1,130 @@
+# Os pontos de interesse do mapa da POKéNAV (src/landmark.c), na janela de
+# informações: 12 tiles (96 px) na fonte estreita, que comporta 117 px da
+# fonte normal (FOSSIL MANIAC'S HOUSE, o mais largo do inglês). Os nomes
+# seguem o glossário, abreviados quando não cabem.
+
+[LandmarkName_FlowerShop] 994f97b2fd width=117
+FLORICULTURA
+
+[LandmarkName_PetalburgWoods] 637c1852dc width=117
+BOSQUE PETALBURG
+
+[LandmarkName_MrBrineysCottage] 67206dfdbf width=117
+CASA DO SR. BRINEY
+
+[LandmarkName_AbandonedShip] 3d6407afad width=117
+NAVIO ABANDONADO
+
+[LandmarkName_SeashoreHouse] 5880984bd5 width=117
+CASA DE PRAIA
+
+[LandmarkName_SlateportBeach] 7a54463bab width=117
+PRAIA DE SLATEPORT
+
+[LandmarkName_CyclingRoad] 3adb199307 width=117
+ESTRADA DE BICICLETA
+
+[LandmarkName_NewMauville] 6ef562a2f4 width=117
+NOVA MAUVILLE
+
+[LandmarkName_TrickHouse] e13025b3bb width=117
+CASA DOS TRUQUES
+
+[LandmarkName_OldLadysRestShop] bab7ed1dfe width=117
+CANTINHO DA VOVÓ
+
+[LandmarkName_Desert] 8444e9ae2f width=117
+DESERTO
+
+[LandmarkName_WinstrateFamily] 81183a4254 width=117
+FAMÍLIA WINSTRATE
+
+[LandmarkName_CableCar] 33ab0bcdc8 width=117
+TELEFÉRICO
+
+[LandmarkName_GlassWorkshop] 1ad13f2d40 width=117
+OFICINA DE VIDRO
+
+[LandmarkName_WeatherInstitute] 71711cc1dd width=117
+INSTITUTO DO CLIMA
+
+[LandmarkName_MeteorFalls] b2b9b65f79 width=117
+CAT. DOS METEOROS
+
+[LandmarkName_TunnelersRestHouse] 0088471d9d width=117
+CASA DOS ESCAVADORES
+
+[LandmarkName_RusturfTunnel] f1f54b3082 width=117
+TÚNEL RUSTURF
+
+[LandmarkName_PokemonDayCare] f7f5acccd2 width=117
+CENTRO DE CUIDADOS
+
+[LandmarkName_SafariZoneEntrance] 505e7bfa66 width=117
+ENTRADA DO SAFÁRI
+
+[LandmarkName_MtPyre] a7894f88c0 width=117
+MONTE PYRE
+
+[LandmarkName_ShoalCave] 792dccf2fd width=117
+CAV. DO BANCO DE AREIA
+
+[LandmarkName_SeafloorCavern] 467c314328 width=117
+CAMINHO SUBMARINO
+
+[LandmarkName_GraniteCave] e348becb34 width=117
+CAVERNA GRANITO
+
+[LandmarkName_OceanCurrent] d206731031 width=117
+CORRENTE MARINHA
+
+[LandmarkName_LanettesHouse] b20f1dc0b0 width=117
+CASA DA LANETTE
+
+[LandmarkName_FieryPath] 39df5f55b7 width=117
+CAMINHO ARDENTE
+
+[LandmarkName_JaggedPass] 99413136e3 width=117
+TRILHA ESCARPADA
+
+[LandmarkName_SkyPillar] 23b9e5dd45 width=117
+PILAR CELESTE
+
+[LandmarkName_BerryMastersHouse] 20c674eb5a width=117
+CASA DO MESTRE FRUTAS
+
+[LandmarkName_IslandCave] 5b97b40355 width=117
+CAVERNA DA ILHA
+
+[LandmarkName_DesertRuins] 7bff2fc873 width=117
+RUÍNAS DO DESERTO
+
+[LandmarkName_ScorchedSlab] def5b7f768 width=117
+LAJE CHAMUSCADA
+
+[LandmarkName_AncientTomb] 82be77fc48 width=117
+TUMBA ANTIGA
+
+[LandmarkName_SealedChamber] 18e2fd5a4f width=117
+CÂMARA SELADA
+
+[LandmarkName_FossilManiacsHouse] 58766342dc width=117
+CASA DO MAN. FÓSSEIS
+
+[LandmarkName_HuntersHouse] bfdb2e3702 width=117
+CASA DO CAÇADOR
+
+[LandmarkName_MagmaHideout] 27f813f86a width=117
+ESCONDERIJO MAGMA
+
+[LandmarkName_MirageTower] 47c4f4c025 width=117
+TORRE MIRAGEM
+
+[LandmarkName_AlteringCave] a16da11bcf width=117
+CAVERNA MUTANTE
+
+[LandmarkName_DesertUnderpass] 9b5f36fab6 width=117
+PASSAGEM DO DESERTO
+
+[LandmarkName_TrainerHill] 05b3f31a9b width=117
+COL. DOS TREINADORES

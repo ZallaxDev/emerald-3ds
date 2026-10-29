@@ -1,0 +1,192 @@
+# As palavras da FALA FÁCIL, grupo battle (src/data/easy_chat/easy_chat_group_battle.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_MatchUp] b2f336131b width=72
+CONFRONTO
+
+[gEasyChatWord_Go] f63f96efcf width=72
+VAI
+
+[gEasyChatWord_No1] 2bd8d3e7d0 width=72
+Nº 1
+
+[gEasyChatWord_Decide] 02977df2c2 width=72
+DECIDIR
+
+[gEasyChatWord_LetMeWin] e4e4b12302 width=72
+DEIXA GANHAR
+
+[gEasyChatWord_Wins] 725ac89c26 width=72
+VENCE
+
+[gEasyChatWord_Win] 662fae5f62 width=72
+VENCER
+
+[gEasyChatWord_Won] d72fe13093 width=72
+VENCEU
+
+[gEasyChatWord_IfIWin] 622040a7c9 width=72
+SE EU VENCER
+
+[gEasyChatWord_WhenIWin] 250d47a4ab width=72
+AO VENCER
+
+[gEasyChatWord_CantWin] 422be98d79 width=72
+NÃO VENÇO
+
+[gEasyChatWord_CanWin] 89990960ec width=72
+POSSO VENCER
+
+[gEasyChatWord_NoMatch] df02320017 width=72
+SEM CHANCE
+
+[gEasyChatWord_Spirit] 9ee6f5d16c width=72
+ESPÍRITO
+
+[gEasyChatWord_Decided] e51756cf3f width=72
+DECIDIDO
+
+[gEasyChatWord_TrumpCard] 845f6ddb8d width=72
+TRUNFO
+
+[gEasyChatWord_TakeThat] 84ed085000 width=72
+TOMA ESSA
+
+[gEasyChatWord_ComeOn] 0a8665e24c width=72
+VAMOS LÁ
+
+[gEasyChatWord_Attack] df86d4b6db width=72
+ATACAR
+
+[gEasyChatWord_Surrender] 31f550ac3f width=72
+RENDER
+
+[gEasyChatWord_Gutsy] 73c9980780 width=72
+CORAJOSO
+
+[gEasyChatWord_Talent] fcbfa876c2 width=72
+TALENTO
+
+[gEasyChatWord_Strategy] b571d21b72 width=72
+ESTRATÉGIA
+
+[gEasyChatWord_Smite] bae09f13a2 width=72
+GOLPEAR
+
+[gEasyChatWord_Match] ce71241b2a width=72
+PARTIDA
+
+[gEasyChatWord_Victory] 6f5794b900 width=72
+VITÓRIA
+
+[gEasyChatWord_Offensive] bd311e2ff2 width=72
+OFENSIVO
+
+[gEasyChatWord_Sense] 173d63cb15 width=72
+SENTIDO
+
+[gEasyChatWord_Versus] db2cccb472 width=72
+CONTRA
+
+[gEasyChatWord_Fights] 44f17af7e2 width=72
+LUTA
+
+[gEasyChatWord_Power] c2b6b521a7 width=72
+PODER
+
+[gEasyChatWord_Challenge] e9166b5b8a width=72
+DESAFIO
+
+[gEasyChatWord_Strong] f38464c067 width=72
+FORTE
+
+[gEasyChatWord_TooStrong] b0f34480e1 width=72
+FORTE DEMAIS
+
+[gEasyChatWord_GoEasy] 6e99587706 width=72
+PEGA LEVE
+
+[gEasyChatWord_Foe] 7a6f74ccd8 width=72
+OPONENTE
+
+[gEasyChatWord_Genius] 331e71d760 width=72
+GÊNIO
+
+[gEasyChatWord_Legend] b9da8246f5 width=72
+LENDA
+
+[gEasyChatWord_Escape] ac47189c97 width=72
+FUGIR
+
+[gEasyChatWord_Aim] e9a0764143 width=72
+MIRA
+
+[gEasyChatWord_Battle] ce9e1aaf32 width=72
+BATALHA
+
+[gEasyChatWord_Fight] bc62a1966b width=72
+LUTAR
+
+[gEasyChatWord_Resuscitate] 98974c3766 width=72
+REANIMAR
+
+[gEasyChatWord_Points] 4c6c9e97e2 width=72
+PONTOS
+
+[gEasyChatWord_Serious] 41e4df808c width=72
+SÉRIO
+
+[gEasyChatWord_GiveUp] e85153af7a width=72
+DESISTIR
+
+[gEasyChatWord_Loss] 72ab4b12b8 width=72
+DERROTA
+
+[gEasyChatWord_IfILose] 4ec8ec7126 width=72
+SE EU PERDER
+
+[gEasyChatWord_Lost] 29494e88e9 width=72
+PERDEU
+
+[gEasyChatWord_Lose] 8df6be46fc width=72
+PERDER
+
+[gEasyChatWord_Guard] 3174d87eba width=72
+DEFESA
+
+[gEasyChatWord_Partner] b51dab963d width=72
+PARCEIRO
+
+[gEasyChatWord_Reject] 40c5a5dedb width=72
+REJEITAR
+
+[gEasyChatWord_Accept] 514158e803 width=72
+ACEITAR
+
+[gEasyChatWord_Invincible] aaaff748ef width=72
+INVENCÍVEL
+
+[gEasyChatWord_Received] a7503f744a width=72
+RECEBEU
+
+[gEasyChatWord_Easy] 493f11f4dd width=72
+FÁCIL
+
+[gEasyChatWord_Weak] ad3bf419c6 width=72
+FRACO
+
+[gEasyChatWord_TooWeak] fa5f60724e width=72
+FRACO DEMAIS
+
+[gEasyChatWord_Pushover] ea8d216c17 width=72
+MOLEZA
+
+[gEasyChatWord_Leader] b9f1c90aaa width=72
+LÍDER
+
+[gEasyChatWord_Rule] aaa398a28b width=72
+REGRA
+
+[gEasyChatWord_Move] 3bf08a84f1 width=72
+GOLPE

@@ -1,0 +1,10 @@
+# CIDADE DE LAVARIDGE: a casa do OVO.
+
+[LavaridgeTown_House_Text_WifeWarmingEggInHotSprings] 720b026627
+A minha esposa está aquecendo um OVO\n
+nas fontes termais. Foi o que ela disse.\p
+Ela deixou dois POKéMON no CENTRO DE\n
+CUIDADOS. E acharam aquele OVO!$
+
+[LavaridgeTown_House_Text_Zigzagoon] e559b21183
+ZIGZAGOON: Pshoo!$

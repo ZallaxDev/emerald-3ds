@@ -1,0 +1,15 @@
+# CIDADE DE MOSSDEEP: a casa do WINGULL que leva CARTAS.
+
+[MossdeepCity_House2_Text_SisterMailsBoyfriendInFortree] 2dac10d9fc
+A minha irmã mais nova troca CARTAS\n
+com o namorado dela em FORTREE.\p
+Não tenho nem um pingo de inveja.$
+
+[MossdeepCity_House2_Text_PokemonCarriesMailBackAndForth] 8b3ffcc683
+Mesmo sem ver o meu amigo de\n
+FORTREE, o meu POKéMON leva e traz\l
+as CARTAS.\p
+Não me sinto sozinha, mesmo longe.$
+
+[MossdeepCity_House2_Text_Wingull] d6ce32141e
+WINGULL: Pihyoh!$

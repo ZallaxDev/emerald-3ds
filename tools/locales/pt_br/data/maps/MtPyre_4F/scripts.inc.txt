@@ -1,0 +1,13 @@
+# MONTE PYRE: 4º andar (os textos do ATSUSHI, do 5º andar, ficam neste arquivo).
+
+[MtPyre_5F_Text_AtsushiIntro] aa63bacf8f
+Mestre…\n
+Por favor, veja o meu progresso!$
+
+[MtPyre_5F_Text_AtsushiDefeat] 72560bd19b
+Mestre…\n
+Por favor, me perdoe!$
+
+[MtPyre_5F_Text_AtsushiPostBattle] 8dc75fad9b
+Até eu melhorar, o meu mestre, que\n
+descansa aqui, nunca terá paz…$

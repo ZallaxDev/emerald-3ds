@@ -1,0 +1,70 @@
+# CIDADE DE LILYCOVE: a mestra dos {POKEBLOCK}S e os quadrigêmeos.
+
+[LilycoveCity_House3_Text_LearnFromMasterOfPokeblocks] 51ca768490
+Ora, ora! Viajando por conta própria?\n
+Nessa idade! Que bom pra você!\p
+Os meus filhos podiam aprender\n
+uma coisa ou outra com você!\p
+Eu? Sou mestra em {POKEBLOCK}S.\p
+Se eu me esforçar só um pouquinho,\n
+faço {POKEBLOCK}S ótimos.\p
+Quer aprender comigo, uma mestra\n
+em {POKEBLOCK}S?$
+
+[LilycoveCity_House3_Text_OhAreYouSure] 398b54dccd
+Hã? Tem certeza?\p
+Não dá pra fazer tudo sozinho\n
+sempre, meu bem!$
+
+[LilycoveCity_House3_Text_ExplainPokeblocks] 89bc46174f
+Ah, que bom! Que cabeça boa!\n
+É meio longo, então preste atenção!\p
+Pronto?\p
+Olhando os {POKEBLOCK}S, você vê que\n
+eles têm uma nota de textura.\p
+Quanto menor a nota, melhor.\n
+Não esqueça disso!\p
+Um {POKEBLOCK} bom tem nota de\n
+textura baixa e nível alto.\p
+Um POKéMON também come mais\n
+{POKEBLOCK}S bons do que comuns.\p
+E isto é importante.\p
+Pra fazer {POKEBLOCK}S macios, use\n
+FRUTAS de tipos diferentes.\p
+Não seja pão-duro: o tipo de FRUTA\n
+afeta a maciez dos {POKEBLOCK}S.\p
+E mais uma coisa.\p
+Quanto mais gente batendo FRUTAS,\n
+mais macios os {POKEBLOCK}S.\p
+Por isso, converse com outras\n
+pessoas e façam {POKEBLOCK}S juntos.\p
+É basicamente isso que você precisa\n
+pra fazer {POKEBLOCK}S bons.\p
+Se todos tivessem POKéMON queridos,\n
+{POKEBLOCK}S macios e uma família amorosa,\l
+o mundo seria mais feliz.\p
+Não desista, meu bem!$
+
+[LilycoveCity_House3_Text_HappyToHaveQuadruplets] 6897a3db35
+Quando a minha esposa teve\n
+quadrigêmeos, levei um susto e tanto.\p
+Mas agora, vendo eles brincarem\n
+juntos, fico feliz.$
+
+[LilycoveCity_House3_Text_GoingToWinMultiBattles] 1d35b9baaa
+Estamos fazendo BATALHAS MÚLTIPLAS,\n
+mas sei que eu vou ganhar.$
+
+[LilycoveCity_House3_Text_LikeMixingAtRecordCorner] 5e9bb528ab
+A gente gosta de misturar coisas\n
+no CANTO DOS RECORDES.\p
+Mas o que é que se mistura?$
+
+[LilycoveCity_House3_Text_MakePokeblocksWithBerryBlender] c8dcc42b75
+Vamos fazer {POKEBLOCK}S super com um\n
+LIQUIDIFICADOR DE FRUTAS!$
+
+[LilycoveCity_House3_Text_GoingToEnterContest] 20e77ddcbe
+Quero mostrar como o meu POKéMON é\n
+forte, então vamos entrar num\l
+CONCURSO juntos.$

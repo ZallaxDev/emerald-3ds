@@ -1,0 +1,102 @@
+# CIDADE DE LILYCOVE: a recepção do SALÃO DE CONCURSOS e o pintor.
+
+[LilycoveCity_ContestLobby_Text_LadyGaveMePokeblockCase] 140b9de6be
+Oba!\p
+A moça da recepção me deu um\n
+estojo pra {POKEBLOCK}S!$
+
+[LilycoveCity_ContestLobby_Text_MakePokeblocksDifferentBerries] e56d7daa7a
+Faça {POKEBLOCK}S e guarde aí dentro.\p
+Pra fazer um {POKEBLOCK}, cada pessoa\n
+tem que pôr uma FRUTA diferente.$
+
+[LilycoveCity_ContestLobby_Text_YourPokemonSpurredMeToPaint] 12e81faf1e
+Parabéns!\p
+Fiz uma pintura do seu POKéMON\n
+pra celebrar a vitória…\p
+As apresentações dele foram tão\n
+fantásticas que pintei melhor\l
+do que costumo. Olha só!$
+
+[LilycoveCity_ContestLobby_Text_ShouldITakePaintingToMuseum] c7e9dd373e
+O que acha? Estou confiante no que\n
+fiz, mas você gostou?\p
+Uma obra desse nível não ficaria\n
+feia num museu de arte.\p
+Hã? Um museu de arte está mesmo\n
+procurando quadros?\p
+Acha que eu devia levar lá?$
+
+[LilycoveCity_ContestLobby_Text_IllTakePaintingToMuseum] b53103bace
+Sério? Então vou levar esta pintura\n
+lá agora mesmo.\p
+Vou dar um título à altura também.\p
+Espero que gostem e pensem em\n
+expor.\p
+Por favor, confira se aceitaram.\n
+Obrigado!$
+
+[LilycoveCity_ContestLobby_Text_TakeMementoOfPainting] f154aa3e32
+Ah, é mesmo!\p
+De lembrança por eu ter pintado\n
+o seu POKéMON, fique com isto.$
+
+[LilycoveCity_ContestLobby_Text_ReceivedARibbon] 4830b688e8
+{PLAYER} recebeu uma FITA.$
+
+[LilycoveCity_ContestLobby_Text_PutTheRibbonOnMon] 47de684e7a
+{PLAYER} colocou a FITA em\n
+{STR_VAR_1}.$
+
+[LilycoveCity_ContestLobby_Text_OkaySeeYou] 3d5dad5ca8
+Certo, até mais!$
+
+[LilycoveCity_ContestLobby_Text_TakeHomeButIdLikeToTakeToMuseum] 96ba55b964
+Ah… Então acho que vou levar pra\n
+casa…\p
+Mas sabe, eu queria levar pro\n
+museu de arte… Pode ser?$
+
+[LilycoveCity_ContestLobby_Text_FineThatsTheWayItIs] f6559f4618
+Ah, tudo bem, então é assim.\n
+Vou pendurar na minha casa.\p
+Da próxima vez, me esforço mais.\n
+Bom, até mais.$
+
+[LilycoveCity_ContestLobby_Text_MasterRankHereICome] 136cade62a
+Uhuu… CONCURSOS do NÍVEL MESTRE,\n
+lá vou eu.\p
+O mundo vai saber que o meu POKéMON\n
+querido é o ser mais fofo de toda\l
+a existência. Chegou a hora!\l
+Uhehehe.$
+
+[LilycoveCity_ContestLobby_Text_WholeVarietyOfPokemonHere] e32c75d6f0
+Dá pra ver todo tipo de POKéMON\n
+aqui.\p
+Por isso, este lugar faz parte do\n
+meu passeio de todo dia.$
+
+[LilycoveCity_ContestLobby_Text_ContestFeastForEyes] b30231e15d
+Uau, vir a um CONCURSO é um\n
+banquete pros olhos!\p
+Olha só todos esses POKéMON\n
+implorando pra serem pintados!$
+
+[LilycoveCity_ContestLobby_Text_ToughContestIsExtreme] 1104034afc
+O CONCURSO DE FORÇA é tipo\n
+radical, cara!\p
+Aquelas apresentações musculosas…\n
+Aquele suor escorrendo… Desmaio!$
+
+[LilycoveCity_ContestLobby_Text_LavishedCareOnMon] 185768a2ab
+Dia após dia, cuidei deste POKéMON\n
+com todo o carinho.\p
+A condição dele está no auge.\n
+Hoje, a vitória é minha!$
+
+[LilycoveCity_ContestLobby_Text_MadePokeblocksWithFamily] 221b18036f
+Fiz {POKEBLOCK}S com a mamãe, o papai e a\n
+mana. Ficaram ótimos!\p
+Aposto que, com mais gente, os\n
+{POKEBLOCK}S saem melhores e mais macios.$

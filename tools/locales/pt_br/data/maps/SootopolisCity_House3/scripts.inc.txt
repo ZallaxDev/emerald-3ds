@@ -1,0 +1,22 @@
+# CIDADE DE SOOTOPOLIS: a casa dos fãs do JUAN.
+
+[SootopolisCity_House3_Text_JuanHasManyFansDoYou] 65c28ad8d7
+Você é TREINADOR POKéMON, não é?\p
+O JUAN de SOOTOPOLIS tem muitos fãs.\n
+Mais até que o aluno dele, o WALLACE!\p
+Você tem algum?$
+
+[SootopolisCity_House3_Text_YouMustBePrettyStrong] b0358578d4
+Ah, então você deve ser bem forte.$
+
+[SootopolisCity_House3_Text_LonesomeTryWorkingHarder] 3ccb35a9d9
+Ai, ai…\n
+Que solidão.\p
+Se esforce mais um pouco pra ganhar\n
+uns fãs.$
+
+[SootopolisCity_House3_Text_TrainerFanClubWasWild] 4c89e9c32d
+Tem fãs fiéis que vêm até de fora\n
+de HOENN.\p
+Foi uma loucura quando fui ao\n
+FÃ-CLUBE DOS TREINADORES em LILYCOVE.$

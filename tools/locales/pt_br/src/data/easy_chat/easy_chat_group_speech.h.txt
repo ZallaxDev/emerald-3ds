@@ -1,0 +1,183 @@
+# As palavras da FALA FÁCIL, grupo speech (src/data/easy_chat/easy_chat_group_speech.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_Listen] 9c6023564f width=72
+ESCUTA
+
+[gEasyChatWord_NotVery] 6a87582b5d width=72
+NÃO MUITO
+
+[gEasyChatWord_Mean] 340f67415a width=72
+QUERER DIZER
+
+[gEasyChatWord_Lie] bcd0fe1c87 width=72
+MENTIRA
+
+[gEasyChatWord_Lay] 55f45c5348 width=72
+DEITAR
+
+[gEasyChatWord_Recommend] 16bb3355eb width=72
+RECOMENDO
+
+[gEasyChatWord_Nitwit] 56867b129c width=72
+BOBÃO
+
+[gEasyChatWord_Quite] 3638ee08b4 width=72
+BASTANTE
+
+[gEasyChatWord_From] 8e7f00cffd width=72
+DE
+
+[gEasyChatWord_Feeling] aff9ce4f73 width=72
+SENTIMENTO
+
+[gEasyChatWord_But] 8457600636 width=72
+MAS
+
+[gEasyChatWord_However] 29ba2d97b4 width=72
+PORÉM
+
+[gEasyChatWord_Case] 55c417bda0 width=72
+CASO
+
+[gEasyChatWord_The] 7164935b03 width=72
+O
+
+[gEasyChatWord_Miss] c3a5a328e1 width=72
+SAUDADE
+
+[gEasyChatWord_How] ceec1eb27d width=72
+COMO
+
+[gEasyChatWord_Hit] 395ed46c43 width=72
+ACERTO
+
+[gEasyChatWord_Enough] bfd86c4cbd width=72
+CHEGA
+
+[gEasyChatWord_ALot] f23d5a3409 width=72
+MUITO
+
+[gEasyChatWord_ALittle] 35eae64672 width=72
+UM POUCO
+
+[gEasyChatWord_Absolutely] cff12bbb0b width=72
+COM CERTEZA
+
+[gEasyChatWord_And] c2f934cb8c width=72
+E
+
+[gEasyChatWord_Only] b144599df5 width=72
+SÓ
+
+[gEasyChatWord_Around] 15259cd370 width=72
+POR AÍ
+
+[gEasyChatWord_Probably] 0cfb2abcfb width=72
+PROVÁVEL
+
+[gEasyChatWord_If] 7be63e2881 width=72
+SE
+
+[gEasyChatWord_Very] c1ad58ada2 width=72
+BEM
+
+[gEasyChatWord_ATinyBit] 5648e68f74 width=72
+UM POUQUINHO
+
+[gEasyChatWord_Wild] dbee673b17 width=72
+SELVAGEM
+
+[gEasyChatWord_Thats] 486a5e0028 width=72
+ISSO É
+
+[gEasyChatWord_Just] 6a27ab22cf width=72
+APENAS
+
+[gEasyChatWord_EvenSo] 68bca771b8 width=72
+MESMO ASSIM,
+
+[gEasyChatWord_MustBe] b55fc0c200 width=72
+DEVE SER
+
+[gEasyChatWord_Naturally] ca959887cc width=72
+NATURALMENTE
+
+[gEasyChatWord_ForNow] 1f870bb4fb width=72
+POR ORA,
+
+[gEasyChatWord_Understood] 8f03c74733 width=72
+ENTENDIDO
+
+[gEasyChatWord_Joking] d5f2991992 width=72
+BRINCADEIRA
+
+[gEasyChatWord_Ready] fc554d02b8 width=72
+PRONTO
+
+[gEasyChatWord_Something] 0c8c841f7d width=72
+ALGO
+
+[gEasyChatWord_Somehow] 1c8b5cbaf4 width=72
+DE UM JEITO
+
+[gEasyChatWord_Although] 8b4c3d8917 width=72
+EMBORA
+
+[gEasyChatWord_Also] 85325d7bbf width=72
+TAMBÉM
+
+[gEasyChatWord_Perfect] e77da5ea9d width=72
+PERFEITO
+
+[gEasyChatWord_AsMuchAs] d42ea5f034 width=72
+TANTO QUANTO
+
+[gEasyChatWord_Really] 9227274777 width=72
+É SÉRIO
+
+[gEasyChatWord_Truly] b1c2cf1cb4 width=72
+DE VERDADE
+
+[gEasyChatWord_Seriously] 26f227ceb8 width=72
+SERIAMENTE
+
+[gEasyChatWord_Totally] d211bfeb3f width=72
+TOTALMENTE
+
+[gEasyChatWord_Until] 79b599773c width=72
+ATÉ
+
+[gEasyChatWord_AsIf] f0175a2472 width=72
+COMO SE
+
+[gEasyChatWord_Mood] e91ffe548d width=72
+HUMOR
+
+[gEasyChatWord_Rather] 307a15b453 width=72
+MELHOR
+
+[gEasyChatWord_Awfully] 352330b816 width=72
+MUITÍSSIMO
+
+[gEasyChatWord_Mode] 5a5019b690 width=72
+MODO
+
+[gEasyChatWord_More] 2c624e5265 width=72
+MAIS
+
+[gEasyChatWord_TooLate] 09364f556d width=72
+TARDE DEMAIS
+
+[gEasyChatWord_Finally] 94834a39a7 width=72
+FINALMENTE
+
+[gEasyChatWord_Any] 113a97cdab width=72
+QUALQUER
+
+[gEasyChatWord_Instead] aeb597e62b width=72
+EM VEZ DISSO
+
+[gEasyChatWord_Fantastic] bbe6565a2e width=72
+FANTÁSTICO

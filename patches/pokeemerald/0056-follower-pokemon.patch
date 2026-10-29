@@ -11,7 +11,7 @@ diff --git a/include/follower_mon.h b/include/follower_mon.h
 new file mode 100644
 --- /dev/null
 +++ b/include/follower_mon.h
-@@ -0,0 +1,41 @@
+@@ -0,0 +1,43 @@
 +#ifndef GUARD_FOLLOWER_MON_H
 +#define GUARD_FOLLOWER_MON_H
 +
@@ -43,6 +43,8 @@ new file mode 100644
 +/* The visible wild Pokemon (wild_encounter.c) on the same sprites, a slot each:
 + * MAX_SPRITES when there is none for it (they keep their icons then). */
 +u8 FollowerMon_WildSprite(u32 slot, u16 species, u32 personality, bool8 shiny);
++/* A species of the map's tables: its sprite files read ahead, off the frame. */
++void FollowerMon_WildPrefetch(u16 species);
 +void FollowerMon_WildFace(struct Sprite *sprite, s8 dx, s8 dy, bool8 walking);
 +void FollowerMon_WildFree(u32 slot, struct Sprite *sprite);
 +/* No palette fade running: an ext palette loaded now keeps its colours. */
@@ -84,7 +86,7 @@ diff --git a/src/event_object_movement.c b/src/event_object_movement.c
  #include "constants/event_object_movement.h"
  #include "constants/event_objects.h"
  #include "constants/field_effects.h"
-@@ -1466,6 +1470,10 @@ static u8 TrySetupObjectEventSprite(const struct ObjectEventTemplate *objectEven
+@@ -1469,6 +1473,10 @@ static u8 TrySetupObjectEventSprite(const struct ObjectEventTemplate *objectEven
      sprite->x += 8;
      sprite->y += 16 + sprite->centerToCornerVecY;
      sprite->oam.paletteNum = paletteSlot;
@@ -95,7 +97,7 @@ diff --git a/src/event_object_movement.c b/src/event_object_movement.c
      sprite->coordOffsetEnabled = TRUE;
      sprite->sObjEventId = objectEventId;
      objectEvent->spriteId = spriteId;
-@@ -1790,6 +1798,10 @@ static void SpawnObjectEventOnReturnToField(u8 objectEventId, s16 x, s16 y)
+@@ -2024,6 +2032,10 @@ static void SpawnObjectEventOnReturnToField(u8 objectEventId, s16 x, s16 y)
              SetSubspriteTables(sprite, subspriteTables);
  
          sprite->oam.paletteNum = paletteSlot;
@@ -106,7 +108,7 @@ diff --git a/src/event_object_movement.c b/src/event_object_movement.c
          sprite->coordOffsetEnabled = TRUE;
          sprite->sObjEventId = objectEventId;
          objectEvent->spriteId = i;
-@@ -1929,12 +1941,25 @@ const struct ObjectEventGraphicsInfo *GetObjectEventGraphicsInfo(u8 graphicsId)
+@@ -2163,12 +2175,25 @@ const struct ObjectEventGraphicsInfo *GetObjectEventGraphicsInfo(u8 graphicsId)
          return gMauvilleOldManGraphicsInfoPointers[bard];
      }
  
@@ -132,7 +134,7 @@ diff --git a/src/event_object_movement.c b/src/event_object_movement.c
  static void SetObjectEventDynamicGraphicsId(struct ObjectEvent *objectEvent)
  {
      if (objectEvent->graphicsId >= OBJ_EVENT_GFX_VARS)
-@@ -2191,6 +2216,10 @@ void UpdateObjectEventCoordsForCameraUpdate(void)
+@@ -2425,6 +2450,10 @@ void UpdateObjectEventCoordsForCameraUpdate(void)
                  gObjectEvents[i].previousCoords.y -= dy;
              }
          }
@@ -143,7 +145,7 @@ diff --git a/src/event_object_movement.c b/src/event_object_movement.c
      }
  }
  
-@@ -4734,6 +4763,13 @@ static bool8 DoesObjectCollideWithObjectAt(struct ObjectEvent *objectEvent, s16
+@@ -4974,6 +5003,13 @@ static bool8 DoesObjectCollideWithObjectAt(struct ObjectEvent *objectEvent, s16
      for (i = 0; i < OBJECT_EVENTS_COUNT; i++)
      {
          curObject = &gObjectEvents[i];
@@ -263,7 +265,7 @@ diff --git a/src/follower_mon.c b/src/follower_mon.c
 new file mode 100644
 --- /dev/null
 +++ b/src/follower_mon.c
-@@ -0,0 +1,1575 @@
+@@ -0,0 +1,1612 @@
 +#include <stdio.h>
 +#include <stdlib.h>
 +#include <string.h>
@@ -505,6 +507,18 @@ new file mode 100644
 +    }
 +}
 +
++/* A sprite file read ahead (3ds_data.h), for a frame that will want it soon:
++ * read in that frame it is one read of the SD card, 10-30 ms on an Old 3DS. */
++static void PrefetchKey(const char *key)
++{
++    char path[40];
++
++    if (key[0] == ' ')
++        return;
++    snprintf(path, sizeof(path), "followers/mon/%s.bin", key);
++    CtrData_Prefetch(path);
++}
++
 +/* The lead's: empty if none may follow. */
 +static void LeadKey(char *key, u16 *species, bool8 *shiny)
 +{
@@ -723,6 +737,19 @@ new file mode 100644
 +    StartSpriteAnim(&gSprites[spriteId], ANIM_STD_FACE_SOUTH);
 +    sWild[slot].file = file;
 +    return spriteId;
++}
++
++/* The files a species may be shown on (male or female, Unown A), read ahead
++ * for the visible wild ones of a map's tables. */
++void FollowerMon_WildPrefetch(u16 species)
++{
++    char key[8], other[8];
++
++    MonKey(key, species, 0);        /* female where it can be */
++    MonKey(other, species, 0xFC);   /* male where it can be; Unown A either way */
++    PrefetchKey(key);
++    if (strcmp(other, key) != 0)
++        PrefetchKey(other);
 +}
 +
 +/* Which way it looks, walking or standing. */
@@ -1113,6 +1140,17 @@ new file mode 100644
 +        }
 +    }
 +
++    /* Held back by a fade (a save loaded): a new lead's file read meanwhile. */
++    if (follower == NULL && !PalettesSettled())
++    {
++        char key[8];
++        u16 species = SPECIES_NONE;
++        bool8 shiny = FALSE;
++
++        LeadKey(key, &species, &shiny);
++        if (sFollower.file == NULL || strcmp(key, sFollower.key) != 0)
++            PrefetchKey(key);
++    }
 +    /* The lead changed (a swap, an evolution, it fainted): another sprite. */
 +    if (follower == NULL && !PalettesSettled() && ++sFollower.waitLog == 240)
 +        CtrLog_Write(CTR_LOG_GAME, "follower: waiting on the palettes (fade %d, weather state %d)",
@@ -1135,6 +1173,7 @@ new file mode 100644
 +            {
 +                ShowBall(follower, FALSE);
 +                sFollower.swapTimer = BALL_FRAMES;
++                PrefetchKey(key);   /* read while the ball closes */
 +            }
 +            else
 +            {
@@ -2047,11 +2086,11 @@ diff --git a/src/wild_encounter.c b/src/wild_encounter.c
 +            if (!shared)
 +                FreeMonIconPalette(v->species);
 +        }
-+    }
+     }
 +    else if (v->hgss)
 +    {
 +        FollowerMon_WildFree(v - sVisible, NULL);
-     }
++    }
 +    v->spriteId = VW_NONE;
 +    v->matrix = 0xFF;
 +}
@@ -2291,7 +2330,7 @@ diff --git a/src/wild_encounter.c b/src/wild_encounter.c
      {
          x = player->currentCoords.x + (s16)(Random() % (2 * VW_RANGE_X + 1)) - VW_RANGE_X;
          y = player->currentCoords.y + (s16)(Random() % (2 * VW_RANGE_Y + 1)) - VW_RANGE_Y;
-@@ -812,36 +1057,40 @@ static void VisibleTrySpawn(u16 headerId)
+@@ -812,36 +1057,78 @@ static void VisibleTrySpawn(u16 headerId)
          wild = &info->wildPokemon[water ? ChooseWildMonIndex_WaterRock() : ChooseWildMonIndex_Land()];
          v->level = ChooseWildMonLevel(wild);
          if (!IsWildLevelAllowedByRepel(v->level))
@@ -2341,10 +2380,48 @@ diff --git a/src/wild_encounter.c b/src/wild_encounter.c
          return;
      }
 +    VisibleLogFail("no free encounter tile near the player", 0);
++}
++
++/*
++ * The sprites of the species the map's tables may show, read ahead on a
++ * worker (follower_mon.c): read as one appears, its file was 15 ms of that
++ * frame on an Old 3DS, every two seconds. Looked at again each second, as
++ * the tables change with the time of day.
++ */
++static void VisiblePrefetch(u16 headerId)
++{
++    static u16 sHeader = HEADER_NONE;
++    static u32 sSignature, sLastLook;
++    const struct WildPokemonInfo *land, *water;
++    u16 species[LAND_WILD_COUNT + WATER_WILD_COUNT];
++    u32 i, j, count = 0, signature = 0;
++
++    if (headerId == sHeader && sVisibleFrames - sLastLook < 60)
++        return;
++    sLastLook = sVisibleFrames;
++    land = headerId != HEADER_NONE ? GetLandMonsInfo(headerId) : NULL;
++    water = headerId != HEADER_NONE ? gWildMonHeaders[headerId].waterMonsInfo : NULL;
++    for (i = 0; land != NULL && i < LAND_WILD_COUNT; i++)
++        species[count++] = WILD_SPECIES(land->wildPokemon[i].species);
++    for (i = 0; water != NULL && i < WATER_WILD_COUNT; i++)
++        species[count++] = WILD_SPECIES(water->wildPokemon[i].species);
++    for (i = 0; i < count; i++)
++        signature = signature * 31 + species[i];
++    if (headerId == sHeader && signature == sSignature)
++        return;
++    sHeader = headerId;
++    sSignature = signature;
++    for (i = 0; i < count; i++)
++    {
++        for (j = 0; j < i && species[j] != species[i]; j++)
++            ;
++        if (j == i)
++            FollowerMon_WildPrefetch(species[i]);
++    }
  }
  
  /* Touched: the battle with this Pokemon, as a random encounter starts one. */
-@@ -849,6 +1098,7 @@ static void VisibleStartBattle(struct VisibleWild *v)
+@@ -849,6 +1136,7 @@ static void VisibleStartBattle(struct VisibleWild *v)
  {
      ZeroEnemyPartyMons();
      CreateMon(&gEnemyParty[0], v->species, v->level, USE_RANDOM_IVS, TRUE, v->personality, OT_ID_PLAYER_ID, 0);
@@ -2352,7 +2429,7 @@ diff --git a/src/wild_encounter.c b/src/wild_encounter.c
      VisibleRemove(v);
      BattleSetup_StartWildBattle();
  }
-@@ -891,41 +1141,198 @@ static void VisibleMove(struct VisibleWild *v, s16 px, s16 py, bool8 surfing)
+@@ -891,41 +1179,199 @@ static void VisibleMove(struct VisibleWild *v, s16 px, s16 py, bool8 surfing)
          v->idle = 30;
          return;
      }
@@ -2548,23 +2625,24 @@ diff --git a/src/wild_encounter.c b/src/wild_encounter.c
 +    sVisibleShifted = FALSE;
 +
      headerId = GetCurrentMapWildMonHeaderId();
++    VisiblePrefetch(headerId);
      player = &gObjectEvents[gPlayerAvatar.objectEventId];
      surfing = TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_SURFING) != 0;
      idle = !ArePlayerFieldControlsLocked() && !ScriptContext_IsEnabled()
          && gPlayerAvatar.tileTransitionState == T_NOT_MOVING;
 +    settled = FollowerMon_PalettesSettled();
- 
++
 +    /* Fewer wanted now (the setting lowered): the extra ones vanish. */
 +    for (i = VW_MAX; i-- > 0 && VisibleCount() > most;)
 +        if (sVisible[i].active && !sVisible[i].vanishing)
 +            VisibleVanish(&sVisible[i]);
-+
+ 
 +    if (sVisibleRetry)
 +        sVisibleRetry--;
      for (i = 0; i < VW_MAX; i++)
      {
          struct VisibleWild *v = &sVisible[i];
-@@ -937,7 +1344,31 @@ void VisibleWild_Update(void)
+@@ -937,7 +1383,31 @@ void VisibleWild_Update(void)
              VisibleRemove(v);
              continue;
          }
@@ -2597,7 +2675,7 @@ diff --git a/src/wild_encounter.c b/src/wild_encounter.c
          {
              bool8 touched = v->idle == 0xFFFF
                  || (v->x == player->currentCoords.x && v->y == player->currentCoords.y && !v->progress);
-@@ -962,7 +1393,23 @@ void VisibleWild_Update(void)
+@@ -963,7 +1433,23 @@ void VisibleWild_Update(void)
      }
  
      percent = EncounterRatePercent();
@@ -2622,7 +2700,7 @@ diff --git a/src/wild_encounter.c b/src/wild_encounter.c
          return;
      if (sVisibleSpawnTimer)
      {
-@@ -972,14 +1419,8 @@ void VisibleWild_Update(void)
+@@ -973,14 +1459,8 @@ void VisibleWild_Update(void)
      /* One more every two seconds at the NORMAL encounter rate (1/2: every
       * four, 2X: every second), up to the setting's number. */
      sVisibleSpawnTimer = 120 * 100 / percent;
@@ -2639,7 +2717,7 @@ diff --git a/src/wild_encounter.c b/src/wild_encounter.c
  }
  #endif
  
-@@ -1048,7 +1489,7 @@ bool8 StandardWildEncounter(u16 curMetatileBehavior, u16 prevMetatileBehavior)
+@@ -1049,7 +1529,7 @@ bool8 StandardWildEncounter(u16 curMetatileBehavior, u16 prevMetatileBehavior)
              else
              {
  #ifdef PLATFORM_3DS
@@ -2648,7 +2726,7 @@ diff --git a/src/wild_encounter.c b/src/wild_encounter.c
                      return FALSE;
  #endif
                  if (DoMassOutbreakEncounterTest() == TRUE && SetUpMassOutbreakEncounter(WILD_CHECK_REPEL | WILD_CHECK_KEEN_EYE) == TRUE)
-@@ -1091,7 +1532,7 @@ bool8 StandardWildEncounter(u16 curMetatileBehavior, u16 prevMetatileBehavior)
+@@ -1092,7 +1572,7 @@ bool8 StandardWildEncounter(u16 curMetatileBehavior, u16 prevMetatileBehavior)
              else // try a regular surfing encounter
              {
  #ifdef PLATFORM_3DS

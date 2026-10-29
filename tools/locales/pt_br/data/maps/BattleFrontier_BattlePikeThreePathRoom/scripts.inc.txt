@@ -1,0 +1,105 @@
+# FRONTEIRA DE BATALHA: a sala dos três caminhos do PICO.
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_CurrentlyInRoom1] c896e0e591
+Você está agora na\n
+1ª sala…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_CurrentlyInRoom3] fd623ff837
+Você está agora na\n
+3ª sala…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_CurrentlyInRoom5] 783188e668
+Você está agora na\n
+5ª sala…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_CurrentlyInRoom7] e12cb16c2a
+Você está agora na\n
+7ª sala…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_CurrentlyInRoom9] 116a791774
+Você está agora na\n
+9ª sala…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_CurrentlyInRoom11] 3d8dd40eaa
+Você está agora na\n
+11ª sala…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_CurrentlyInRoom13] 0c1d67ac20
+Você está agora na\n
+13ª sala…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_ContinueWithChallenge] 97629b64f0
+Vai continuar o desafio?$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_SaveChallengeAndQuit] 44d0942d4b
+Quer salvar o desafio e sair do\n
+jogo por enquanto?$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_RetireFromChallenge] 260dab4566
+Deseja desistir do desafio da\n
+Escolha de Batalha?$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_AwaitingReturnSaveBeforeResume] 4d0d5f59d6
+Estávamos esperando a sua volta…\p
+Antes de retomar a Escolha de\n
+Batalha, vou salvar o jogo…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_PleaseEnjoyChallenge] 7467a8a75c
+Aproveite o desafio da Escolha\n
+de Batalha…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_SavingYourData] c20bbf7300
+Estou salvando os seus dados…\n
+Um instante, por favor…$
+
+[BattleFrontier_BattlePike_Text_PathBlockedNoTurningBack] 41e1a6e769
+O caminho está bloqueado!\n
+E não dá pra voltar…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_FindingItDifficultToChoose] ca3866f0e6
+Com o seu perdão, mas…\p
+Por acaso está difícil escolher\n
+o caminho?$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_ApologizeForImpertinence] 52d7d8b8de
+Entendo…\n
+Peço desculpas pela intromissão…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_SomethingAboutRightPath] 1aee17187f
+Ah, deixe-me ver… Tem algo no\n
+caminho da direita…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_SomethingAboutCenterPath] b276f21922
+Ah, deixe-me ver… Tem algo no\n
+caminho do meio…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_SomethingAboutLeftPath] 33a5271735
+Ah, deixe-me ver… Tem algo no\n
+caminho da esquerda…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_AromaOfPokemon] 81ee0bd0e3
+Parece que há um cheiro bem claro\n
+de POKéMON por lá…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_PresenceOfPeople] 368593ef99
+Será… um TREINADOR?\n
+Sinto a presença de pessoas…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_HeardWhispering] 98ef1ac71a
+Acho que ouvi alguma coisa…\n
+Pode ter sido um sussurro…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_WaveOfNostaliga] ff5369013d
+Por algum motivo estranho, senti\n
+uma onda de nostalgia vindo de lá…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_TerrifyingEvent] 3d04493c65
+Sinto dizer…\p
+Um acontecimento aterrorizante, sim,\n
+horrível, está pra cair sobre você…\p
+Peço o máximo cuidado e que se\n
+prepare pro pior…$
+
+[BattleFrontier_BattlePikeThreePathRoom_Text_DreadfulPresence] 2eb0c16588
+Sinto uma presença terrível em\n
+todos os caminhos…$

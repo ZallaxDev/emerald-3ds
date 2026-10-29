@@ -1,0 +1,8 @@
+# Prédio 2 de RUSTBORO, térreo.
+
+[RustboroCity_Flat2_1F_Text_DevonWorkersLiveHere] e6b6e81220
+Os funcionários da CORPORAÇÃO DEVON\n
+moram neste prédio.$
+
+[RustboroCity_Flat2_1F_Text_Skitty] 6687b62b00
+SKITTY: Nyaaaah!$

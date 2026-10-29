@@ -178,8 +178,9 @@ static void ReadCell(StageCell *cell, int x, int z, bool indoor)
     {
         int part = VoxelTree_Part(inst->secondaryTileset, metatile);
 
-        /* A tree's trunk, or the cell its crown leans over. */
-        if (part >= 0)
+        /* A tree's trunk, or the cell its crown leans over. Long grass is
+         * the ground a battle stands on. */
+        if (part >= 0 && part != VOXEL_TREE_GRASS)
             top = part == VOXEL_TREE_SMALL ? 1.8f : 2.4f;
         else if (VoxelTree_GroundMetatile(inst->secondaryTileset, metatile) != metatile)
             top = 2.4f;
@@ -207,14 +208,20 @@ static void ReadCell(StageCell *cell, int x, int z, bool indoor)
     cell->slope = relief != NULL && VoxelRelief_IsSlope(relief);
 }
 
-static const StageCell *CellAt(float x, float z)
+/* The cell at world cell x, z. */
+static const StageCell *CellAtCell(int x, int z)
 {
     static const StageCell sPlain = {GROUND_PLAIN, false, false, 0.0f, 0.0f};
-    int gx = (int)floorf(x) - sGridX - GRID_X0, gz = (int)floorf(z) - sGridZ - GRID_Z0;
+    int gx = x - sGridX - GRID_X0, gz = z - sGridZ - GRID_Z0;
 
     if (gx < 0 || gx >= GRID_W || gz < 0 || gz >= GRID_H)
         return &sPlain;
     return &sGrid[gz][gx];
+}
+
+static const StageCell *CellAt(float x, float z)
+{
+    return CellAtCell((int)floorf(x), (int)floorf(z));
 }
 
 /* ── The search ─────────────────────────────────────────────────────────── */
@@ -303,6 +310,10 @@ static float StageScore(const StageSearch *s, float tx, float tz, float distance
     const BattleView *v = &s->view;
     float groundT = CellAt(tx, tz)->lift;
     float score = -0.5f * distance;
+    /* The target's cell, floored once: the cells around it are whole steps
+     * from it, the same cells floorf found for each of them, 1500 calls a
+     * candidate (the search's frames were 4.5 ms on an Old 3DS). */
+    int ix = (int)floorf(tx), iz = (int)floorf(tz);
 
     for (int side = 0; side < 2; ++side)
         score += FeetScore(s, side, tx, tz, groundT);
@@ -315,8 +326,8 @@ static float StageScore(const StageSearch *s, float tx, float tz, float distance
     for (int dz = -3; dz <= 7; ++dz)
         for (int dx = -6; dx <= 6; ++dx)
         {
-            float cx = floorf(tx) + dx, cz = floorf(tz) + dz;
-            const StageCell *cell = CellAt(cx, cz);
+            float cx = (float)(ix + dx), cz = (float)(iz + dz);
+            const StageCell *cell = CellAtCell(ix + dx, iz + dz);
             float x0, y0, x1, y1, h;
 
             if (cell->top <= 0.4f)
@@ -334,9 +345,9 @@ static float StageScore(const StageSearch *s, float tx, float tz, float distance
     for (int dz = -10; dz <= 4; ++dz)
         for (int dx = -10; dx <= 10; ++dx)
         {
-            float cx = floorf(tx) + dx + 0.5f, cz = floorf(tz) + dz + 0.5f, sx, sy;
+            float cx = (float)(ix + dx) + 0.5f, cz = (float)(iz + dz) + 0.5f, sx, sy;
 
-            if (CellAt(cx, cz)->kind != GROUND_VOID)
+            if (CellAtCell(ix + dx, iz + dz)->kind != GROUND_VOID)
                 continue;
             if (!Project(v, cx - tx, 0.0f, cz - tz, &sx, &sy) || sx < 0.0f || sx > CTR_GAME_WIDTH
              || sy < 0.0f || sy > CTR_GAME_HEIGHT - 48)
@@ -470,7 +481,8 @@ bool VoxelBattle_StepStage(unsigned cells, unsigned candidates, float *targetX, 
                      sStage.indoor ? " indoor" : "");
     }
     *targetX = sStage.bestX;
-    *targetZ = sStage.bestZ;
+    /* where its ground is drawn, as the player is (VoxelRelief_ShiftAt) */
+    *targetZ = sStage.bestZ + VoxelRelief_ShiftAt(sStage.bestX, sStage.bestZ);
     *ground = VoxelRelief_LiftAt(sStage.bestX, sStage.bestZ);
     return true;
 }

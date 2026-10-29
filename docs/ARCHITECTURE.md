@@ -46,8 +46,9 @@ function pointers (callbacks, native script commands) are guarded for
    instead, whenever NDSP has fewer than three frames queued, and
    `FrameShown` in `3ds_platform.c` runs a hidden frame when the game has
    fallen a frame behind the display - in the field only: a battle keeps
-   the GBA's timing, and without a DSP the clock mode mixes once per frame
-   as before);
+   the GBA's timing, save under its party menu, summary and bag, where
+   hidden frames keep real time with the engine still on the game's frames;
+   without a DSP the clock mode mixes once per frame as before);
 2. latches the GBA registers, OAM and palettes and presents: the compositor
    decodes changed tiles into an RGBA5551 atlas and draws BG/OBJ layers with
    the PICA200 at native 400x240 on the top screen; the voxel overworld, when
@@ -105,7 +106,15 @@ boxes' scrolling pattern around it); a tap on them acts in the game directly
 from a battle, a shop or the PC it takes the whole screen, its stripes carried
 on around it, and taps act on it directly too. So is the Pokédex
 (`pokedex.c`), left of the column, the tile behind each of its screens carried
-out to its edges. In battle the column gives way
+out to its edges. While it is open the top screen shows the device itself
+(`3ds_dex_top.c`): the red shell, lens and lights around a screen window
+with the Pokémon of the info page, or under the list's cursor, at 2x over
+the battle terrain of the place it is met. The game side
+(`3ds_dex_top_game.c`, patch 0058's `CtrPokedex_InfoDexNum`) decodes the
+front picture and the terrain from the game's own tables into plain buffers;
+the native side writes them into its two textures inside the frame, after
+`C3D_FrameBegin` has waited for the GPU, and gives the textures back when the
+Pokédex closes. In battle the column gives way
 to the action and move menus.
 
 ## Voxel overworld
@@ -117,7 +126,8 @@ capped by the GX queue (32 entries), building textures stream from a worker
 thread, and a fixed sun with baked shade and cast sprite shadows grades the
 scene (`VOXEL_LIGHTING`). Buildings, trees, signposts and drawn terrain relief
 are modelled on the host from each map's own art (`3ds_port/scripts/gen_voxel_*.py`)
-and read at runtime from `voxel/*.bin`.
+and read at runtime from `voxel/*.bin`. How to work on them:
+[VOXEL_GUIDE.md](VOXEL_GUIDE.md).
 
 With the 3D slider up the world is drawn once per eye, each from a camera
 moved half an interocular distance sideways with the asymmetric frustum of a
@@ -128,6 +138,23 @@ composed on it, the same in both eyes. A New 3DS has the frame for the second
 pass; on an Old 3DS the world stays flat unless OPTIONS' 3D WORLD says ON
 (`sVoxelStereo` in `3ds_video.c`), and 3D DEPTH scales the slider. Both are
 extras on the SETTINGS tab's second screen (`3ds_extras.c`).
+
+## The camera at a map's edge
+
+The 400x240 screen shows more of a map than the GBA's, and past a map's edge
+there is only its border tiled over and over. On the edges chosen map by map
+(`sCameraEdgeMaps` in `field_camera.c`; none by default) the camera stops at
+that edge and only the player walks on. In front of a map joined to part of
+such an edge, and in dark caves, whose circle of light is the middle of the
+picture, the camera stays on the player. In 2D (`field_camera.c`) the game's
+camera still follows the player, as the scripts expect of it; the
+picture, backgrounds and sprites alike, is held back from it by a shift, and
+the tilemap's ring follows the picture rather than the camera. A map narrower
+than the screen, stopped at both ends, is centred on it. In voxel
+(`voxel_camera.c`) the point the camera looks at stops short of the player instead, never so far that the
+player walks into the diorama's blur. Both ease to a new place when the edges
+change under them, as on a crossing, and the people spawned move with the
+view (`3ds_field_view.c`).
 
 ## Saves and logs
 

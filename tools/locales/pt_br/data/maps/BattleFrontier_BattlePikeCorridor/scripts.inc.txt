@@ -1,0 +1,5 @@
+# FRONTEIRA DE BATALHA: o corredor do PICO.
+
+[BattleFrontier_BattlePikeCorridor_Text_YourChallengeHasBegun] 382712f4fd
+O seu desafio da Escolha de Batalha\n
+começou…$

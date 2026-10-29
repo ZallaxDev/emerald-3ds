@@ -1,0 +1,55 @@
+# CIDADE DE PACIFIDLOG: o irmão do PRESIDENTE do FÃ-CLUBE e as MT RETORNO e FRUSTRAÇÃO.
+
+[PacifidlogTown_House2_Text_ChairmansYoungerBrotherOnVacation] 93a57c73d9
+Hã-hã!\p
+Sou a pessoa mais importante do\n
+FÃ-CLUBE POKéMON: o irmão mais novo\l
+do PRESIDENTE.\p
+Estou aqui curtindo as férias com\n
+os POKéMON, isso mesmo.$
+
+[PacifidlogTown_House2_Text_AhYourPokemon] 1c2432aee3
+Ah!\n
+O seu POKéMON…$
+
+[PacifidlogTown_House2_Text_AdoringPokemonTakeThis] 9c0946db64
+Dá pra ver que ele gosta muito de você.\p
+Um POKéMON tão carinhoso e adorável\n
+merece uma MT como esta, não?$
+
+[PacifidlogTown_House2_Text_PutInSomeMoreEffort] 1ba22f3487
+Hum…\n
+Não é ruim, mas também não é bom.\p
+Você, como TREINADOR, precisa se\n
+esforçar mais.$
+
+[PacifidlogTown_House2_Text_ViciousPokemonTakeThis] 7222d22d49
+Ele tem um olhar feroz.\p
+Um POKéMON assustador desses\n
+merece uma MT como esta.$
+
+[PacifidlogTown_House2_Text_ExplainReturnFrustration] 27c648330e
+Se um POKéMON gosta muito de você,\n
+o poder de RETORNO aumenta.\p
+Se ele não gosta, o poder de\n
+FRUSTRAÇÃO é que aumenta.$
+
+[PacifidlogTown_House2_Text_GetGoodTMInXDays] de984393df
+Ah, sim. Em uns {STR_VAR_1} dias, devo\n
+receber uma ou duas MT boas.\p
+Venha me ver então. Te dou uma MT\n
+que combine com o seu POKéMON.$
+
+[PacifidlogTown_House2_Text_Rurii] 3fd82a6482
+AZURILL: Rurii.$
+
+[PacifidlogTown_House2_Text_VeryFriendlyWithTrainer] c24a402400
+Parece que ele se dá muito bem com\n
+o TREINADOR.$
+
+[PacifidlogTown_House2_Text_Rururi] f0e692729e
+AZURILL: Rururi!$
+
+[PacifidlogTown_House2_Text_DoesntLikeTrainerVeryMuch] 51bfbec63e
+Parece que ele não gosta muito do\n
+TREINADOR.$

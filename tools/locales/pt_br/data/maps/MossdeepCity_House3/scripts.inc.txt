@@ -1,0 +1,25 @@
+# CIDADE DE MOSSDEEP: o pescador da SUPERVARA.
+
+[MossdeepCity_House3_Text_YouWantSuperRod] f9d7695247
+E aí, TREINADOR!\n
+A SUPERVARA é super mesmo!\p
+Fale o que quiser, mas esta belezinha\n
+pesca POKéMON do fundo do mar!\p
+E aí?\n
+Você quer, não quer?$
+
+[MossdeepCity_House3_Text_SuperRodIsSuper] 4ee923232f
+Isso, isso!\n
+Afinal, a SUPERVARA é super mesmo!$
+
+[MossdeepCity_House3_Text_TryDroppingRodInWater] 0ed297676b
+Onde tiver água, jogue a VARA e veja\n
+o que morde!$
+
+[MossdeepCity_House3_Text_DontYouLikeToFish] efcf05fcc3
+Hã?\n
+Você não gosta de pescar?$
+
+[MossdeepCity_House3_Text_GoAfterSeafloorPokemon] c63b7df73e
+Vá atrás dos POKéMON do fundo do\n
+mar com a sua SUPERVARA.$

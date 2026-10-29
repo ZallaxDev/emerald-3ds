@@ -1,0 +1,41 @@
+# CASA DOS TRUQUES, sala 1.
+
+[Route110_TrickHousePuzzle1_Text_WroteSecretCodeLockOpened] 6667338968
+{PLAYER} escreveu a senha secreta\n
+na porta.\p
+“O MESTRE DOS TRUQUES é fabuloso.”\n
+… … … … … … … …\p
+A fechadura abriu com um clique!$
+
+[Route110_TrickHousePuzzle1_Text_SallyIntro] f0e9210290
+Vou cortar e picar até a vitória\n
+com o CORTAR que acabamos de aprender!$
+
+[Route110_TrickHousePuzzle1_Text_SallyDefeat] d4558efb39
+Por que tanta seriedade?$
+
+[Route110_TrickHousePuzzle1_Text_SallyPostBattle] 9be2fe3d3c
+Nunca me canso de cortar\n
+e picar!$
+
+[Route110_TrickHousePuzzle1_Text_EddieIntro] 6ecc5db7b7
+Entrei nesta casa esquisita\n
+sem querer…$
+
+[Route110_TrickHousePuzzle1_Text_EddieDefeat] 32b048f995
+E agora perdi…$
+
+[Route110_TrickHousePuzzle1_Text_EddiePostBattle] 8478f222fa
+Me perdi, perdi a batalha e agora estou\n
+mais perdido ainda… Não consigo sair…$
+
+[Route110_TrickHousePuzzle1_Text_RobinIntro] 19cf42db00
+Quem é, afinal, o MESTRE DOS TRUQUES?$
+
+[Route110_TrickHousePuzzle1_Text_RobinDefeat] 18bf2a55d5
+Perdi enquanto estava perdida\n
+nos pensamentos!$
+
+[Route110_TrickHousePuzzle1_Text_RobinPostBattle] b640037ae9
+Que força!\n
+Quem é você, afinal?$

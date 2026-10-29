@@ -1,0 +1,35 @@
+# O POKéMON capturado com a equipe cheia vai para o PC, e a pergunta do
+# apelido.
+
+[gText_PkmnTransferredSomeonesPC] 072714d00a
+{STR_VAR_2} foi enviado ao\n
+PC DE ALGUÉM.\p
+Ele foi colocado na\n
+CAIXA “{STR_VAR_1}”.$
+
+[gText_PkmnTransferredLanettesPC] 54646c52d8
+{STR_VAR_2} foi enviado ao\n
+PC de LANETTE.\p
+Ele foi colocado na\n
+CAIXA “{STR_VAR_1}”.$
+
+[gText_PkmnTransferredSomeonesPCBoxFull] 6e0fe6a68a
+A CAIXA “{STR_VAR_3}” do\n
+PC DE ALGUÉM estava cheia.\p
+{STR_VAR_2} foi enviado à\n
+CAIXA “{STR_VAR_1}”.$
+
+[gText_PkmnTransferredLanettesPCBoxFull] 00578b1d99
+A CAIXA “{STR_VAR_3}” do\n
+PC de LANETTE estava cheia.\p
+{STR_VAR_2} foi enviado à\n
+CAIXA “{STR_VAR_1}”.$
+
+[gText_NoMoreRoomForPokemon] 7cd45c50af
+Não há mais espaço para POKéMON!\p
+As CAIXAS de POKéMON estão cheias\n
+e não aceitam mais nenhum!$
+
+[gText_NicknameThisPokemon] 87f0d70ff6
+Quer dar um apelido a\n
+este {STR_VAR_1}?$

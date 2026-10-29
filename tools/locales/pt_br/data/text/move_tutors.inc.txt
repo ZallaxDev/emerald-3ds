@@ -1,0 +1,124 @@
+# Tutores de golpes.
+
+[MoveTutor_Text_ThisMoveCanOnlyBeLearnedOnce] 6e788539a3
+Este golpe só pode ser ensinado\numa vez. Tudo bem?$
+
+[MoveTutor_Text_SwaggerTeach] 409af09b08
+Hehe! Meu POKéMON é o máximo!\nÉ mais legal que qualquer POKéMON!\pEu tava me gabando todo arrogante\nassim quando o PRESIDENTE\lme deu uma bronca.\pAcabou com a minha arrogância.\pSe quiser, ensino o golpe\nARROGÂNCIA pra um POKéMON seu.$
+
+[MoveTutor_Text_SwaggerDeclined] 291ea7b451
+Ué, não? Não entra no clima,\nnão?$
+
+[MoveTutor_Text_SwaggerWhichMon] 6752498f83
+Beleza, qual POKéMON quer aprender\nARROGÂNCIA?$
+
+[MoveTutor_Text_SwaggerTaught] 5183dfe686
+Daqui pra frente, vou elogiar meu\nPOKéMON sem arrogância.$
+
+[MoveTutor_Text_RolloutTeach] 1a94b581ce
+Sabia que dá pra ir daqui até\nbem longe naquela direção\lsem mudar de direção?\pAcho que dava até pra ir\nrolando.\pSerá que o seu POKéMON também\nquer rolar?\pPosso ensinar o golpe ROLAGEM\npra um deles, se quiser.$
+
+[MoveTutor_Text_RolloutDeclined] 67fa6be6e3
+Não precisa ter vergonha.\nBora rolar!$
+
+[MoveTutor_Text_RolloutWhichMon] eb401ccf2c
+Hehe, claro! Ia ser ótimo se o\nPOKéMON ficasse parecido comigo.$
+
+[MoveTutor_Text_RolloutTaught] 7630723fdb
+Rolar na grama me deixa feliz.\nVem, bora rolar!$
+
+[MoveTutor_Text_FuryCutterTeach] 1ee74ac57a
+Tem um golpe que fica mais forte\nquando você usa seguido.\pÉ um golpe do tipo INSETO,\ne é muito irado.\pChama CORTE FÚRIA.\nQuer que eu ensine pra um POKéMON?$
+
+[MoveTutor_Text_FuryCutterDeclined] e42957a909
+A gente não tá na mesma sintonia.$
+
+[MoveTutor_Text_FuryCutterWhichMon] 2c4599b397
+Eba!\nMe mostra qual POKéMON eu ensino.$
+
+[MoveTutor_Text_FuryCutterTaught] 9f493b0e25
+Fico todo empolgado vendo se o golpe\nvai continuar acertando seguido!$
+
+[MoveTutor_MimicTeach] ef1224d249
+Ah, jovem!\pEu também sou jovem, mas imito o\njeito e a fala dos idosos\ldesta cidade.\pQue me diz, jovem?\nAceitaria se eu me oferecesse\lpra ensinar o golpe MÍMICA?$
+
+[MoveTutor_MimicDeclined] 78e698db0a
+Ah, que pena! Eu queria ensinar\nMÍMICA pro seu POKéMON!$
+
+[MoveTutor_Text_MimicWhichMon] 236261fd4e
+Hohoho! Pois assim será!\nMostre-me o POKéMON\lque deseja que eu ensine.$
+
+[MoveTutor_Text_MimicTaught] 1157356cac
+MÍMICA é um golpe muito profundo.\pSerá que você o executa com\na mesma perfeição que eu…?$
+
+[MoveTutor_Text_MetronomeTeach] 8a35c7df99
+Eu quero um monte de coisas!\nMas gastei toda a minha mesada…\pNão seria legal se existisse um\nfeitiço que fizesse aparecer\ldinheiro balançando o dedo?\pSe quiser, posso ensinar ao seu\nPOKéMON o golpe METRÔNOMO.\pNão aparece dinheiro, mas o POKéMON\nbalança o dedo. Topa?$
+
+[MoveTutor_Text_MetronomeDeclined] 7c4b336593
+Tá bom. Fico aqui se você\nmudar de ideia.$
+
+[MoveTutor_Text_MetronomeWhichMon] b16cb91c2d
+Beleza! Vou ensinar!\nQual POKéMON eu ensino?$
+
+[MoveTutor_Text_MetronomeTaught] abd323b10b
+Quando um POKéMON balança o dedo\nfeito um METRÔNOMO, acontece\lum monte de coisa legal.\pNão seria legal se a gente\ntambém pudesse usar?$
+
+[MoveTutor_Text_SleepTalkTeach] 92da884325
+Hunf! Minha esposa usa PODER\nOCULTO pra ficar acordada.\pEla devia tirar um cochilo como eu\ne usar ATAQUE SONÂMBULO.\pPosso ensinar ATAQUE SONÂMBULO\npro seu POKéMON. Interessa?$
+
+[MoveTutor_Text_SleepTalkDeclined] 685cb40495
+Tá bom, tá bom. Você também quer\nfugir do sono com PODER OCULTO…$
+
+[MoveTutor_Text_SleepTalkWhichMon] 20c085eb20
+Ah, que criança sensata!\nQual POKéMON eu ensino?$
+
+[MoveTutor_Text_SleepTalkTaught] 1a22d79795
+Nunca acertei o truque da moeda\nda minha esposa.\pEu ficaria feliz se acertasse\nnem que fosse no ATAQUE SONÂMBULO…$
+
+[MoveTutor_Text_SubstituteTeach] 84a40cacd7
+Quando vejo o mundão aqui de cima\ndo telhado…\pPenso como seria bom se houvesse\nmais de uma de mim, pra eu viver\lum monte de vidas diferentes.\pClaro que não dá.\nHihi…\pJá sei! Quer que um POKéMON\naprenda SUBSTITUIÇÃO?$
+
+[MoveTutor_Text_SubstituteDeclined] d73c8de2fa
+Ah, não?\pCom ele, o POKéMON faz uma cópia\nde si mesmo, sabia?$
+
+[MoveTutor_Text_SubstituteWhichMon] f1750371ef
+Hihi…\nPra qual POKéMON você quer que eu\lensine SUBSTITUIÇÃO?$
+
+[MoveTutor_Text_SubstituteTaught] 52ccea062f
+Nós, seres humanos, temos que\naproveitar a vida ao máximo!\pEspero que você também aproveite!$
+
+[MoveTutor_Text_DynamicPunchTeach] fdbc29aab7
+Eu não aguento mais!\pNão tem jeito!\pEu sou TREINADOR do tipo LUTADOR,\nentão não ganho no GINÁSIO de\lMOSSDEEP por mais que eu tente!\pArgh! Soco! Soco! Soco!\nSoco! Soco! Soco!\pO quê, não me olha assim!\nEu só tô socando o chão!\pOu quer que eu ensine SOCO\nDINÂMICO pro seu POKéMON?$
+
+[MoveTutor_Text_DynamicPunchDeclined] 03112555fe
+Droga! Até você tá rindo de mim?\nSoco! Soco! Soco!$
+
+[MoveTutor_Text_DynamicPunchWhichMon] a35a26277c
+O quê? Quer? Você é gente boa!\nQual POKéMON eu ensino?$
+
+[MoveTutor_Text_DynamicPunchTaught] 230b7d5cdd
+Quero que você vença no GINÁSIO de\nMOSSDEEP com esse SOCO DINÂMICO!$
+
+[MoveTutor_Text_DoubleEdgeTeach] 071cfdf090
+Ai, ai…\pO LÍDER do GINÁSIO de SOOTOPOLIS\né tão adorável e admirável.\pMas isso quer dizer que tenho\nmuitas rivais pela atenção dele.\pO charme dele é de DOIS GUMES.\nNem consegui que ele me notasse.\pPor favor, deixa eu ensinar o golpe\nDOIS GUMES pro seu POKéMON!$
+
+[MoveTutor_Text_DoubleEdgeDeclined] 37df831553
+Ah…\nAté você me rejeitou…$
+
+[MoveTutor_Text_DoubleEdgeWhichMon] 9c16529734
+Certo, pra qual POKéMON eu\nensino DOIS GUMES?$
+
+[MoveTutor_Text_DoubleEdgeTaught] 7eb080912b
+Não vou mais viver por amor!\nVou ficar durona!$
+
+[MoveTutor_Text_ExplosionTeach] bca90df86b
+Não pretendo ficar parado aqui\nno mato pra sempre.\pVocê vai ver, vou pra cidade\ne vou fazer o maior sucesso.\pSério, vou causar uma EXPLOSÃO\nde popularidade!\pJá que você ouviu, ensino EXPLOSÃO\npro seu POKéMON com prazer!$
+
+[MoveTutor_Text_ExplosionDeclined] 98982756b0
+Aaah! Tá me recusando porque\neu moro no interior?$
+
+[MoveTutor_Text_ExplosionWhichMon] 7ead5b5496
+Beleza! EXPLOSÃO então!\nQual POKéMON quer explodir?$
+
+[MoveTutor_Text_ExplosionTaught] 1947094fb5
+Faz tempo que ensino EXPLOSÃO pros\nPOKéMON, mas ainda não acendi\la minha própria EXPLOSÃO…\pTalvez porque, no fundo,\neu prefira ficar aqui…$

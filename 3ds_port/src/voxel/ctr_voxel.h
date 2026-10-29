@@ -36,6 +36,14 @@ void CtrVoxel_NotifyTilesetAnimWrite(unsigned firstTile, unsigned tileCount);
  * eye of the stereo pair (0 left, 1 right; see CtrVoxel_SetStereo). Never
  * opens or closes a frame. */
 void CtrVoxel_Draw(C3D_RenderTarget *target, int eye);
+/* The swoop to and from the 2D field (voxel_swoop.c): how far the camera
+ * stands towards its top-down pose this frame, 0..1, and the world's height
+ * (1 as built, 0 flattened onto the map: the pop-up book), and whether the
+ * sprite cards and their cast shadows are drawn at all. Before Update. */
+void CtrVoxel_SetSwoop(float t, float height, bool cards, bool shadows);
+/* How far the swoop has taken the world's light to neutral, 0..1 (the
+ * grade, haze and bloom gone with it): 3ds_video.c eases its blur the same way. */
+float CtrVoxel_SwoopNeutral(void);
 /* The GBA brightness effect (BLDY) of the frame about to be drawn, as the
  * compositor reads it: on the backgrounds and on the sprites, towards white
  * or black. The palette fade is read by the voxel module itself. */
@@ -46,6 +54,11 @@ float CtrVoxel_Bloom(void);
 /* Whether the world draws the game's fog itself (in the scene, see
  * ctr_voxel.c): the compositor then leaves the fog's flat sprites out. */
 bool CtrVoxel_DrawsFog(void);
+/* Whether the world drew the rain, the sand or the ash itself this frame (in
+ * the scene, see DrawWeather): the compositor then leaves their sprites out. */
+bool CtrVoxel_DrawsWeather(void);
+/* The same for the sandstorm alone (CtrBattle_Sandstorm). */
+bool CtrVoxel_DrawsSand(void);
 /* The dark of a cave over the frame just drawn: an alpha texture to lay in
  * black, centred on (x, y) of the logical surface, size pixels across, at
  * amount. NULL when there is none. */
@@ -61,6 +74,11 @@ const C3D_Tex *CtrVoxel_Gloom(float *x, float *y, float *size, float *amount);
  * eye saw it.
  */
 void CtrVoxel_SetStereo(float slider); /* 0..2: above 1 is deeper than the slider's full travel */
+/* The horizontal shift, in whole pixels of the logical surface, that puts
+ * the game's text windows and prompts over the world in front of the nearest
+ * world the last Draw's eye can see (3ds_video.c, ComposeVoxelOverlay):
+ * 0 from the middle camera or with the slider down. */
+float CtrVoxel_OverlayParallax(void);
 
 typedef struct
 {
@@ -72,6 +90,10 @@ typedef struct
     unsigned meshRebuilds;
     unsigned spriteUpdates;
     unsigned animationUploads, animatedMetatiles;
+    /* Animated tile passes written out, the frames the longest took from its
+     * first write to its last copy, and the frames passes waited, composed,
+     * for the staging buffer or the queue. */
+    unsigned animationPasses, animationKept, animationBegins, animationPeakFrames, animationWaits;
     unsigned reflections;
     unsigned errors;
     /* Vertices the last chunk build could not fit. */
@@ -99,6 +121,10 @@ typedef struct
     /* Spent building after the last FrameEnd (CtrVoxel_AfterSubmit), and the
      * budget it had. */
     float afterMs, afterBudgetMs;
+    /* From the end of those builds to the next FrameBegin (the game, the
+     * audio, the bottom screen, and whatever else ran), and what the budget
+     * expected of it. */
+    float tailMs, tailExpectedMs;
     /* Chunks built this frame, and still waiting for a later one. */
     unsigned frameBuilds, pendingBuilds;
     /* Squares drawn this frame as their draft only, and drafts made in all. */
@@ -112,17 +138,19 @@ typedef struct
 const CtrVoxelStats *CtrVoxel_GetStats(void);
 
 /*
- * Why the last frame did or did not take the voxel path, as a short word for
- * the debug overlay: off, nomap, noatlas, nomesh, on.
- */
-const char *CtrVoxel_Status(void);
-
-/*
  * Gives back the VRAM of atlases the overworld is not using right now - every
  * tileset pair but the current map's. For the 2D compositor, on a frame the
  * overworld does not draw. Returns the bytes released.
  */
 unsigned long CtrVoxel_ReleaseIdleVram(void);
+
+/*
+ * As CtrVoxel_ReleaseIdleVram, for one allocation of `bytes`: the atlases of
+ * maps out of view go first, least recently used first, one at a time until
+ * VRAM has a block that large; with `inView`, the ones in view too if that
+ * was not enough. Returns the bytes released.
+ */
+unsigned long CtrVoxel_ReleaseIdleVramFor(uint32_t bytes, bool inView);
 
 /*
  * All the world's VRAM - arenas, chunks, building pages, atlases - given back

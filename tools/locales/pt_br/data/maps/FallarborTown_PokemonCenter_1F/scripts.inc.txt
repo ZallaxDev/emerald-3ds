@@ -1,0 +1,29 @@
+# CIDADE DE FALLARBOR: o CENTRO POKéMON e a LANETTE.
+
+[FallarborTown_PokemonCenter_1F_Text_LanetteGreeting] 08bd31a4a8
+Ah, olá.\n
+E você é…?\p
+Certo, o seu nome é {PLAYER}{KUN}.\n
+Dá pra ver que é TREINADOR.\p
+Então você usa o Sistema de\n
+Armazenamento POKéMON que eu criei.\p
+Cheguei a essa conclusão com uma\n
+simples dedução.\p
+Você falou comigo porque queria\n
+mexer em alguma coisa neste PC.\p
+Ah, desculpa. Eu sou a LANETTE.\p
+Sério, que bom te conhecer: que legal\n
+que você usa o meu Sistema.\p
+Se puder, me visite em casa.\n
+A minha casa fica na ROTA 114.$
+
+[FallarborTown_PokemonCenter_1F_Text_FossilManiacEdgeOfTown] 578fb96631
+Como será que eram os POKéMON\n
+há muito, muito tempo?\p
+Talvez o MANÍACO POR FÓSSEIS, no\n
+fim da cidade, saiba.$
+
+[FallarborTown_PokemonCenter_1F_Text_PlantHardyTrees] cb896cd883
+Nos campos de FALLARBOR, plantamos\n
+mudas de árvores resistentes que\l
+crescem até na cinza vulcânica.$

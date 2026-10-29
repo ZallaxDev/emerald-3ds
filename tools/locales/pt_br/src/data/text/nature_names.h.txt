@@ -1,0 +1,79 @@
+# As naturezas (src/data/text/nature_names.h): os nomes `pt_br` do
+# Bulbapedia, no feminino ("Natureza TÍMIDA"). Relaxed usa RELAXADA, o
+# alternativo oficial, para não repetir TRANQUILA (Mild); Bashful, que no
+# Brasil também é TÍMIDA, fica ENVERGONHADA.
+
+[sHardyNatureName] 993daed1ef width=80
+ESFORÇADA
+
+[sLonelyNatureName] b7eb61e1fa width=80
+CARENTE
+
+[sBraveNatureName] 693cb59a5c width=80
+VALENTE
+
+[sAdamantNatureName] 6c511451f8 width=80
+FIRME
+
+[sNaughtyNatureName] 38371d79e5 width=80
+SAPECA
+
+[sBoldNatureName] 7f5468283f width=80
+AUDACIOSA
+
+[sDocileNatureName] 226a1c1202 width=80
+DÓCIL
+
+[sRelaxedNatureName] f5edffa209 width=80
+RELAXADA
+
+[sImpishNatureName] 641e3cdc2c width=80
+REBELDE
+
+[sLaxNatureName] 1c78add8d6 width=80
+NEGLIGENTE
+
+[sTimidNatureName] 2ad7f80cde width=80
+TÍMIDA
+
+[sHastyNatureName] da6cfa9990 width=80
+AGITADA
+
+[sSeriousNatureName] 41e4df808c width=80
+SÉRIA
+
+[sJollyNatureName] de216f5b17 width=80
+ALEGRE
+
+[sNaiveNatureName] b0306dc551 width=80
+INGÊNUA
+
+[sModestNatureName] 12a270ad59 width=80
+MODESTA
+
+[sMildNatureName] c503df249d width=80
+TRANQUILA
+
+[sQuietNatureName] 3917a4bff5 width=80
+QUIETA
+
+[sBashfulNatureName] 339e0d3ccb width=80
+ENVERGONHADA
+
+[sRashNatureName] 626c79e3a6 width=80
+RABUGENTA
+
+[sCalmNatureName] 703eaed2de width=80
+CALMA
+
+[sGentleNatureName] bb1bed8321 width=80
+GENTIL
+
+[sSassyNatureName] d1dea07311 width=80
+ATREVIDA
+
+[sCarefulNatureName] 3f7647f8a7 width=80
+CUIDADOSA
+
+[sQuirkyNatureName] 0f913ac272 width=80
+PECULIAR

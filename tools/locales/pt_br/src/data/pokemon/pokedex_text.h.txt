@@ -1,0 +1,2313 @@
+# As descrições da POKéDEX (src/data/pokemon/pokedex_text.h), traduzidas
+# das do Emerald: até 4 linhas e 224 px (a mais larga em inglês). Medidas
+# em unidades métricas, como o jogador brasileiro conhece.
+
+[gDummyPokedexText] 25070b4f39
+Este é um POKéMON recém-descoberto.\n
+Ele ainda está sendo estudado.\n
+Não há informações detalhadas\n
+disponíveis no momento.
+
+[gBulbasaurPokedexText] b7c713f850
+BULBASAUR pode ser visto cochilando sob\n
+o sol forte. Há uma semente nas costas.\n
+Ao absorver os raios do sol, a semente\n
+cresce cada vez mais.
+
+[gIvysaurPokedexText] 76c10e8b16
+Para sustentar o bulbo, as pernas de\n
+IVYSAUR ficam fortes. Se ele passar mais\n
+tempo deitado no sol, o broto logo vai\n
+desabrochar numa flor enorme.
+
+[gVenusaurPokedexText] f646be0749
+Dizem que a flor de VENUSAUR ganha cores\n
+vivas se ele recebe muita nutrição e luz\n
+do sol. O aroma da flor acalma as\n
+emoções das pessoas.
+
+[gCharmanderPokedexText] 73b19c140d
+A chama na ponta da cauda mostra as\n
+emoções dele. A chama tremula quando\n
+CHARMANDER está feliz e arde com força\n
+quando ele fica furioso.
+
+[gCharmeleonPokedexText] c3a502bb78
+Sem piedade, suas garras afiadas destroem\n
+os inimigos. Se encontra um rival forte, ele\n
+fica agitado, e a chama da cauda brilha\n
+num tom branco azulado.
+
+[gCharizardPokedexText] 70ab08c8fd
+CHARIZARD voa por aí em busca de\n
+oponentes fortes. Suas chamas intensas\n
+derretem qualquer material. Mesmo assim,\n
+nunca ataca um inimigo mais fraco.
+
+[gSquirtlePokedexText] 5aded8a01c
+O casco não serve só para proteger.\n
+O formato arredondado e os sulcos na\n
+superfície reduzem o atrito na água,\n
+e SQUIRTLE nada em alta velocidade.
+
+[gWartortlePokedexText] b48b784e2f
+A cauda grande é coberta por um pelo\n
+farto e espesso, que escurece com a idade.\n
+Os arranhões no casco mostram como esse\n
+POKéMON é resistente nas batalhas.
+
+[gBlastoisePokedexText] 11e091c0c9
+Os canhões d'água que saem do casco são\n
+muito precisos. Os jatos d'água acertam\n
+latinhas em cheio a uma distância de\n
+mais de 50 metros.
+
+[gCaterpiePokedexText] d4f6212efc
+O apetite voraz faz CATERPIE devorar\n
+sem hesitar folhas maiores que ele.\n
+Das antenas, ele solta um cheiro\n
+fortíssimo.
+
+[gMetapodPokedexText] dc151052a3
+O casco é duro como uma placa de ferro.\n
+METAPOD quase não se mexe, porque está\n
+preparando o interior macio para a\n
+evolução dentro do casco.
+
+[gButterfreePokedexText] 60ebe323bd
+Tem um talento incrível para achar o mel\n
+gostoso das flores. Consegue encontrar,\n
+extrair e levar o mel de flores que\n
+desabrocham a mais de 10 km de distância.
+
+[gWeedlePokedexText] 6a61129654
+WEEDLE tem um olfato apuradíssimo. Ele\n
+separa as folhas de que gosta das que\n
+não gosta farejando com sua grande\n
+probóscide vermelha (o nariz).
+
+[gKakunaPokedexText] b2bb717781
+Fica praticamente imóvel, agarrado a uma\n
+árvore. Mas, por dentro, está ocupado se\n
+preparando para evoluir. Dá para notar\n
+pelo quanto o casco esquenta.
+
+[gBeedrillPokedexText] 9ef4f79924
+BEEDRILL defende muito seu território.\n
+Por segurança, ninguém deve chegar\n
+perto do ninho. Se ficam bravos,\n
+atacam em enxame.
+
+[gPidgeyPokedexText] e897117be0
+Tem um senso de direção apuradíssimo.\n
+Sempre consegue voltar ao ninho, por\n
+mais longe que esteja do lugar que\n
+conhece.
+
+[gPidgeottoPokedexText] 9ba888490e
+Este POKéMON voa por aí patrulhando seu\n
+grande território. Se alguém invade seu\n
+espaço, castiga o inimigo sem dó com\n
+suas garras afiadas.
+
+[gPidgeotPokedexText] 91c6abb3c2
+Este POKéMON tem penas lindas e lustrosas.\n
+Muitos TREINADORES ficam tão encantados\n
+com as penas da cabeça que escolhem\n
+PIDGEOT como seu POKéMON.
+
+[gRattataPokedexText] 12eab770a2
+RATTATA é cauteloso ao extremo.\n
+Mesmo dormindo, mexe as orelhas o tempo\n
+todo, atento ao perigo. Faz o ninho\n
+em qualquer lugar.
+
+[gRaticatePokedexText] 89cad1a055
+As presas fortes de RATICATE não param\n
+de crescer. Para gastá-las, ele rói\n
+pedras e troncos. Pode até roer as\n
+paredes das casas.
+
+[gSpearowPokedexText] ed5564aa36
+Seu grito alto pode ser ouvido a quase\n
+1 km. Se esse grito agudo ecoa por toda\n
+parte, é sinal de que eles estão\n
+avisando uns aos outros do perigo.
+
+[gFearowPokedexText] b767f8b2f4
+O pescoço comprido e o bico alongado\n
+são ideais para pegar presas na terra ou\n
+na água. Ele move com habilidade esse\n
+bico longo e fino para fisgar a presa.
+
+[gEkansPokedexText] 8f8533b9e4
+EKANS descansa enrolado em espiral.\n
+Nessa posição, consegue reagir rápido a um\n
+inimigo vindo de qualquer direção,\n
+ameaçando com a cabeça erguida.
+
+[gArbokPokedexText] 9bb8e95a31
+Este POKéMON tem uma força de constrição\n
+tremenda. Consegue até amassar barris\n
+de aço. Depois que se enrola no inimigo,\n
+não tem como escapar.
+
+[gPikachuPokedexText] 26eae0e1c9
+Guarda eletricidade nas bolsas elétricas\n
+das bochechas. Quando solta de uma vez\n
+a energia acumulada, a descarga é tão\n
+forte quanto um raio.
+
+[gRaichuPokedexText] e7657c8b48
+Se acumula eletricidade demais, fica\n
+agressivo. Para evitar isso, de vez em\n
+quando descarrega o excesso de energia\n
+e se acalma.
+
+[gSandshrewPokedexText] dcc597cb71
+Quando se enrola como uma bola, faz\n
+qualquer ataque ricochetear sem dano.\n
+Por viver no deserto, seu couro ficou\n
+duro e resistente.
+
+[gSandslashPokedexText] bdac78e5bd
+Enrola-se como uma bola para se proteger\n
+dos ataques inimigos. Também se enrola\n
+para evitar insolação durante o dia,\n
+quando a temperatura sobe muito.
+
+[gNidoranFPokedexText] e668b7b831
+Acredita-se que seus espinhos tóxicos\n
+surgiram para proteger esse POKéMON de\n
+corpo pequeno. Quando fica furioso, solta\n
+uma toxina terrível pelo chifre.
+
+[gNidorinaPokedexText] 762374cad7
+Quando está com os amigos ou a família,\n
+recolhe os espinhos para não machucar\n
+ninguém. Parece ficar nervoso se é\n
+separado dos outros.
+
+[gNidoqueenPokedexText] 14bc17c003
+É craque em lançar os inimigos longe com\n
+investidas do seu corpo duro e escamoso.\n
+Este POKéMON fica mais forte do que nunca\n
+quando está defendendo os filhotes.
+
+[gNidoranMPokedexText] b198c16a19
+O NIDORAN macho desenvolveu músculos que\n
+movem as orelhas livremente para qualquer\n
+lado. Nem o menor som escapa da atenção\n
+deste POKéMON.
+
+[gNidorinoPokedexText] f34d6aee08
+Seu chifre é mais duro que um diamante.\n
+Se sente uma presença hostil, todos os\n
+espinhos das costas se eriçam de uma vez,\n
+e ele enfrenta o inimigo com toda a força.
+
+[gNidokingPokedexText] c6fda8833b
+A cauda grossa de NIDOKING tem um poder\n
+destrutivo enorme, capaz de derrubar uma\n
+torre de transmissão de metal. Quando ele\n
+sai descontrolado, ninguém o segura.
+
+[gClefairyPokedexText] ef2d6b99cc
+Toda noite de lua cheia, eles saem para\n
+brincar. Quando amanhece, os CLEFAIRY\n
+cansados vão dormir encolhidinhos uns nos\n
+outros, no fundo das montanhas quietas.
+
+[gClefablePokedexText] 307a31b76e
+CLEFABLE usa as asas para pular de leve,\n
+como se estivesse voando. Com esse passo\n
+saltitante, consegue até andar na água.\n
+Nas noites calmas de luar, anda nos lagos.
+
+[gVulpixPokedexText] 683ef599a4
+Controla o fogo à vontade, fazendo bolas\n
+de fogo voarem como fogos-fátuos. Pouco\n
+antes de evoluir, suas seis caudas ficam\n
+quentes como se estivessem pegando fogo.
+
+[gNinetalesPokedexText] 0fea7540b1
+Há muito tempo se diz que cada uma das\n
+nove caudas guarda um poder encantado.\n
+Um NINETALES que vive muito tem o pelo\n
+brilhando como ouro.
+
+[gJigglypuffPokedexText] 4d29b59be2
+Ninguém resiste ao sono ouvindo a canção\n
+de JIGGLYPUFF. As ondas sonoras da sua\n
+voz combinam com as ondas cerebrais de\n
+alguém em sono profundo.
+
+[gWigglytuffPokedexText] 6e3450cfc2
+Seu pelo é o máximo do luxo. Dormir\n
+abraçado a um WIGGLYTUFF é simplesmente\n
+divino. Quando ele inspira, o corpo infla\n
+como se não tivesse fim.
+
+[gZubatPokedexText] 867b288161
+De tanto viver em cavernas escuras como\n
+breu, seus olhos foram se fechando até\n
+perderem a visão. Ele usa ondas\n
+ultrassônicas para detectar obstáculos.
+
+[gGolbatPokedexText] 7bdc6607a2
+As presas furam com facilidade até couro\n
+grosso. Adora se banquetear com o sangue\n
+de pessoas e POKéMON. Voa pela escuridão\n
+e ataca pelas costas.
+
+[gOddishPokedexText] 2999bef146
+Este POKéMON cresce absorvendo o luar.\n
+Durante o dia, se enterra no chão,\n
+deixando só as folhas de fora, para não\n
+ser visto pelos inimigos.
+
+[gGloomPokedexText] 92ec78f4f9
+Um mel terrivelmente fedido escorre da\n
+boca. Uma cheirada pode causar perda de\n
+memória. Mesmo assim, dizem que alguns\n
+fãs adoram esse fedor avassalador.
+
+[gVileplumePokedexText] f0019db74d
+Nas épocas em que produz mais pólen, o\n
+ar em volta de VILEPLUME fica amarelo de\n
+pó enquanto ele anda. O pólen é muito\n
+tóxico e causa paralisia.
+
+[gParasPokedexText] ca2281428b
+PARAS tem cogumelos tochukaso parasitas\n
+crescendo nas costas. Eles crescem\n
+tirando nutrientes do hospedeiro e são\n
+valorizados como remédio de longa vida.
+
+[gParasectPokedexText] 1e51491b46
+PARASECT costumam infestar em bando as\n
+raízes de árvores grandes e sugar seus\n
+nutrientes. Quando a árvore morre, todos\n
+mudam juntos para outra árvore.
+
+[gVenonatPokedexText] bc619db556
+Dizem que os pelos finos e duros que\n
+cobrem todo o corpo surgiram para\n
+proteção. Seus olhos grandes nunca\n
+deixam escapar nem a menor presa.
+
+[gVenomothPokedexText] 5d8b40a9da
+VENOMOTH são noturnos: só ficam ativos à\n
+noite. Sua presa favorita são os insetos\n
+que se juntam nos postes de luz, atraídos\n
+pela claridade no meio do escuro.
+
+[gDiglettPokedexText] 0a6d1a90b0
+A maioria das fazendas cria DIGLETT.\n
+O motivo é simples: por onde eles cavam,\n
+a terra fica perfeitamente arada para\n
+plantar colheitas deliciosas.
+
+[gDugtrioPokedexText] 030154e693
+Como os trigêmeos surgiram de um único\n
+corpo, eles pensam exatamente igual.\n
+Trabalham juntos para cavar sem parar\n
+por baixo da terra.
+
+[gMeowthPokedexText] 6c31e50894
+MEOWTH recolhe as garras afiadas nas\n
+patas para andar sem fazer barulho.\n
+Por algum motivo, este POKéMON adora\n
+moedas brilhantes que reluzem na luz.
+
+[gPersianPokedexText] 3b8c7e11ea
+Os seis bigodes imponentes de PERSIAN\n
+sentem o movimento do ar para saber o\n
+que há por perto. Ele fica mansinho se\n
+alguém o segura pelos bigodes.
+
+[gPsyduckPokedexText] 52b2d9f071
+Quando a dor de cabeça piora, começa a\n
+usar poderes estranhos. Mas ele não se\n
+lembra dos próprios poderes, por isso\n
+está sempre com cara de perdido.
+
+[gGolduckPokedexText] 476092f560
+GOLDUCK é um nadador habilidoso.\n
+Às vezes treina junto com nadadores de\n
+competição. Usa poderes psíquicos quando\n
+a testa brilha.
+
+[gMankeyPokedexText] 88008b81e3
+Quando começa a tremer e a respirar forte\n
+pelo nariz, é sinal certo de raiva. Mas,\n
+como isso acontece num instante, não dá\n
+tempo de fugir.
+
+[gPrimeapePokedexText] 9eb624a33e
+Quando fica furioso, a circulação do\n
+sangue acelera e os músculos ficam mais\n
+fortes. Mas ele também fica bem menos\n
+inteligente.
+
+[gGrowlithePokedexText] 0e999457c8
+Graças ao olfato excelente, este POKéMON\n
+nunca esquece um cheiro, aconteça o que\n
+acontecer. Usa o olfato para perceber\n
+as emoções dos outros.
+
+[gArcaninePokedexText] 9a095ea22f
+Dizem que este POKéMON veloz corre mais\n
+de 10.000 km num único dia e noite. O fogo\n
+que arde descontrolado dentro do corpo é\n
+a fonte do seu poder.
+
+[gPoliwagPokedexText] 07dca7a27a
+Dá para ver a espiral das entranhas deste\n
+POKéMON através da pele fina. Mas a pele\n
+também é muito flexível. Até presas\n
+afiadas ricocheteiam nela.
+
+[gPoliwhirlPokedexText] 894a81c263
+A pele está sempre molhada e escorregadia\n
+por causa de um líquido oleoso. Graças a\n
+essa camada, ele escapa fácil das garras\n
+de qualquer inimigo na batalha.
+
+[gPoliwrathPokedexText] c076dc6bf3
+Seus músculos bem desenvolvidos nunca se\n
+cansam, por mais que se exercite.\n
+Este POKéMON atravessa o Oceano Pacífico\n
+nadando, ida e volta, sem esforço.
+
+[gAbraPokedexText] 11e4837717
+Um POKéMON que dorme 18 horas por dia.\n
+Observações mostraram que ele usa\n
+TELEPORTE para mudar de lugar uma vez\n
+por hora.
+
+[gKadabraPokedexText] 8f105c1888
+Há um boato de que um garoto com poderes\n
+psíquicos virou KADABRA de repente\n
+enquanto ajudava numa pesquisa sobre\n
+poderes extrassensoriais.
+
+[gAlakazamPokedexText] 8f5029f51a
+Apesar dos fortes poderes psíquicos e da\n
+grande inteligência, os músculos de\n
+ALAKAZAM são muito fracos. Ele usa o poder\n
+psíquico para mover o corpo.
+
+[gMachopPokedexText] 663b53b925
+Treina pesado sem parar para dominar\n
+todas as artes marciais. Sua força deixa\n
+ele erguer um lutador de sumô nos\n
+ombros com facilidade.
+
+[gMachokePokedexText] b7a3e2ec3f
+MACHOKE usa um cinto para manter sob\n
+controle sua força avassaladora. Como é\n
+perigoso demais, ninguém nunca tirou\n
+esse cinto.
+
+[gMachampPokedexText] a121db91ed
+É impossível se defender dos socos e\n
+golpes dos seus quatro braços. O espírito\n
+de luta pega fogo quando ele enfrenta\n
+um oponente difícil.
+
+[gBellsproutPokedexText] 18be367def
+O corpo fino e flexível de BELLSPROUT se\n
+curva e balança para desviar de qualquer\n
+ataque, por mais forte que seja. Da boca,\n
+escorre um líquido que derrete até ferro.
+
+[gWeepinbellPokedexText] 5f948119c8
+À noite, WEEPINBELL dorme pendurado num\n
+galho pelo gancho da traseira. Se ele se\n
+mexe dormindo, pode acordar e descobrir\n
+que caiu no chão.
+
+[gVictreebelPokedexText] 2ad71a50ca
+Balança o cipó comprido da cabeça como se\n
+fosse um bicho vivo para atrair presas.\n
+Quando uma vítima distraída chega perto,\n
+é engolida inteira.
+
+[gTentacoolPokedexText] 44b567d62f
+Seu corpo é quase todo feito de água.\n
+Prende o inimigo com os dois tentáculos\n
+longos e depois o fura com os ferrões\n
+venenosos das pontas.
+
+[gTentacruelPokedexText] 1abd0b5dac
+Vive entre rochas no fundo do mar e\n
+prende as presas com seus 80 tentáculos.\n
+As esferas vermelhas brilham quando ele\n
+fica empolgado ou agitado.
+
+[gGeodudePokedexText] cb2a36b283
+Sobe as trilhas das montanhas usando só a\n
+força dos braços. Como parece uma pedra\n
+à beira do caminho, os trilheiros podem\n
+pisar nele sem perceber.
+
+[gGravelerPokedexText] 85a703fe88
+Descem das montanhas rolando pelas\n
+encostas íngremes. São tão brutos que\n
+arrebentam árvores e rochas enormes no\n
+caminho com investidas estrondosas.
+
+[gGolemPokedexText] d483d398c6
+Dizem que vive nas crateras de vulcões\n
+no alto das montanhas. Uma vez por ano,\n
+troca de casca e cresce. A casca velha\n
+esfarela e volta para a terra.
+
+[gPonytaPokedexText] 27a628f634
+PONYTA nasce muito fraco. Mal consegue\n
+ficar de pé. As pernas vão ficando fortes\n
+de tanto tropeçar e cair tentando\n
+acompanhar os pais.
+
+[gRapidashPokedexText] 2de98b188d
+Costuma trotar tranquilo pelos campos e\n
+planícies. Mas, se RAPIDASH fica sério,\n
+as crinas de fogo se inflamam e ele galopa\n
+a até 240 km/h.
+
+[gSlowpokePokedexText] 2be8928e0a
+Pega as presas mergulhando a cauda na\n
+água, na beira do rio. Mas vive esquecendo\n
+o que está fazendo e passa dias inteiros\n
+só de moleza na beira da água.
+
+[gSlowbroPokedexText] 5d9cdfcf7c
+Um SHELLDER está preso à cauda por uma\n
+mordida. Por isso, a cauda não serve mais\n
+para pescar, e ele é obrigado a nadar\n
+para pegar presas, de má vontade.
+
+[gMagnemitePokedexText] 21c3c931a5
+As peças dos lados são ímãs poderosos.\n
+Geram magnetismo suficiente para atrair\n
+objetos de ferro a mais de 100 metros\n
+de distância.
+
+[gMagnetonPokedexText] 9f2e275c87
+Na verdade, são três MAGNEMITE ligados\n
+pelo magnetismo. Gera ondas de rádio que\n
+aumentam a temperatura em 2 graus num\n
+raio de 1 km.
+
+[gFarfetchdPokedexText] 53130a880b
+Está sempre com um talo de planta. Pelo\n
+jeito, existem talos bons e talos ruins.\n
+Às vezes, este POKéMON briga com outros\n
+pelos melhores talos.
+
+[gDoduoPokedexText] 93d03f2b91
+Mesmo comendo ou dormindo, uma das\n
+cabeças fica sempre atenta a qualquer\n
+sinal de perigo. Quando ameaçado, foge\n
+a mais de 100 km/h.
+
+[gDodrioPokedexText] 2c3004afa7
+Uma espécie peculiar de POKéMON com três\n
+cabeças. Corre com vigor pelas planícies\n
+de capim, mesmo nas estações secas,\n
+com pouca chuva.
+
+[gSeelPokedexText] 62310e4631
+SEEL caça presas em mares gelados,\n
+cobertos de gelo. Quando precisa\n
+respirar, abre um buraco no gelo com a\n
+ponta afiada da cabeça.
+
+[gDewgongPokedexText] d5351da730
+Adora cochilar no gelo congelante. Há\n
+muito tempo, um marinheiro viu este\n
+POKéMON dormindo numa geleira e o\n
+confundiu com uma sereia.
+
+[gGrimerPokedexText] 1221f4c845
+Nascido do lodo poluído do mar, GRIMER\n
+tem como comida favorita qualquer sujeira.\n
+Eles se alimentam do esgoto despejado\n
+pelas fábricas.
+
+[gMukPokedexText] 4ee57eae98
+Prefere lugares quentes e úmidos.\n
+No verão, as substâncias tóxicas do corpo\n
+ficam mais fortes, e MUK fede como lixo\n
+de cozinha podre.
+
+[gShellderPokedexText] 6caa16f7c5
+À noite, cava um buraco no fundo do mar\n
+com a língua larga para fazer um lugar\n
+para dormir. Dormindo, fecha a concha,\n
+mas deixa a língua para fora.
+
+[gCloysterPokedexText] 69de2acd4f
+Nada no mar engolindo água e soltando\n
+um jato para trás. CLOYSTER dispara\n
+espinhos da concha usando o mesmo\n
+sistema.
+
+[gGastlyPokedexText] 43856892cd
+Exposto a um vento forte, o corpo gasoso\n
+de GASTLY some rapidinho. Eles se juntam\n
+debaixo dos beirais das casas para fugir\n
+da fúria do vento.
+
+[gHaunterPokedexText] 9d086fe5f6
+Se um HAUNTER chamar você enquanto\n
+flutua no escuro, não chegue perto.\n
+Este POKéMON vai tentar lamber você\n
+com a língua e roubar sua vida.
+
+[gGengarPokedexText] beafd835aa
+Tarde da noite, sua sombra sob um poste\n
+pode de repente passar na sua frente.\n
+Na verdade, é um GENGAR correndo por\n
+você, fingindo ser sua sombra.
+
+[gOnixPokedexText] 71ed8af37c
+Há um ímã no cérebro que impede ONIX de\n
+perder o rumo enquanto cava túneis.\n
+Com o tempo, o corpo dele vai ficando\n
+mais redondo e liso.
+
+[gDrowzeePokedexText] bb5e2d831c
+Se o seu nariz coçar enquanto você dorme,\n
+é sinal certo de que um DROWZEE está em\n
+cima do travesseiro, tentando comer seu\n
+sonho pelas narinas.
+
+[gHypnoPokedexText] eff5d08e99
+O balanço e o brilho do pêndulo na mão\n
+de HYPNO deixam o inimigo em hipnose\n
+profunda. Enquanto procura presas, ele\n
+fica polindo o pêndulo.
+
+[gKrabbyPokedexText] 42c5606ac2
+KRABBY vivem em buracos cavados nas\n
+praias. Em areias com pouca comida, dá\n
+para ver eles brigando uns com os outros\n
+por território.
+
+[gKinglerPokedexText] 3e8c7dc237
+Agita no ar a garra enorme para se\n
+comunicar com os outros. Mas, como a\n
+garra é muito pesada, este POKéMON\n
+se cansa rápido.
+
+[gVoltorbPokedexText] 59f9aadef5
+Tem uma semelhança estranha e sem\n
+explicação com a POKé BOLA. Como explode\n
+ao menor choque, até TREINADORES\n
+veteranos o tratam com cuidado.
+
+[gElectrodePokedexText] 9758c41a97
+Aparecem aos montes nas usinas de energia\n
+elétrica. Como se alimentam de\n
+eletricidade, causam apagões enormes e\n
+caóticos nas cidades vizinhas.
+
+[gExeggcutePokedexText] f473bd2859
+São seis ovos que cuidam uns dos outros.\n
+Os ovos se atraem e giram em volta uns\n
+dos outros. Quando aparecem cada vez\n
+mais rachaduras, está perto de evoluir.
+
+[gExeggutorPokedexText] edd5d29b4e
+Vindo dos trópicos, EXEGGUTOR tem as\n
+cabeças crescendo com o sol forte. Dizem\n
+que, quando as cabeças caem, elas se\n
+juntam e formam um EXEGGCUTE.
+
+[gCubonePokedexText] b8104865bd
+Sente falta da mãe que nunca mais vai\n
+ver. Quando vê a imagem dela na lua\n
+cheia, chora. As manchas no crânio que\n
+ele usa são das lágrimas.
+
+[gMarowakPokedexText] c37fcdf23a
+MAROWAK é a forma evoluída de um CUBONE\n
+que ficou forte ao superar a dor de\n
+perder a mãe. Seu espírito endurecido\n
+não se quebra fácil.
+
+[gHitmonleePokedexText] 17d8f408f7
+As pernas esticam e encolhem à vontade.\n
+Com esses membros de mola, derruba os\n
+inimigos com chutes devastadores. Depois\n
+da batalha, massageia as pernas cansadas.
+
+[gHitmonchanPokedexText] da2a9affea
+Dizem que HITMONCHAN tem o espírito de\n
+um boxeador que queria ser campeão\n
+mundial. Com esse espírito indomável,\n
+ele nunca desiste.
+
+[gLickitungPokedexText] 0dd29c296b
+Sempre que vê algo desconhecido, lambe,\n
+porque guarda as coisas na memória pela\n
+textura e pelo gosto. Não curte muito\n
+coisas azedas.
+
+[gKoffingPokedexText] 6fbdc67157
+Chegando perto de um KOFFING, dá para ver,\n
+através da pele fina, os gases tóxicos\n
+girando lá dentro. Ele explode ao menor\n
+estímulo.
+
+[gWeezingPokedexText] e614eaaf8d
+Diluindo os gases tóxicos num processo\n
+especial, dá para extrair o melhor\n
+perfume. Para WEEZING, os gases do lixo\n
+são o banquete supremo.
+
+[gRhyhornPokedexText] 46418d7e8c
+Depois que começa a correr, não para.\n
+O cérebro minúsculo o deixa tão bobo que\n
+ele nem lembra por que começou a\n
+correr.
+
+[gRhydonPokedexText] 7294497f53
+O chifre, que gira como uma broca,\n
+destrói prédios altos com um só golpe.\n
+Fica de pé nas patas traseiras, e o\n
+cérebro é bem desenvolvido.
+
+[gChanseyPokedexText] 9d8fa8a481
+CHANSEY põe todo dia ovos muito\n
+nutritivos. São tão gostosos que até\n
+quem perdeu o apetite devora com\n
+vontade.
+
+[gTangelaPokedexText] 563d1aa19c
+Os cipós se soltam fácil e sem dor se\n
+alguém os agarra, o que ajuda na fuga.\n
+Os cipós perdidos são substituídos por\n
+novos já no dia seguinte.
+
+[gKangaskhanPokedexText] 64c66d969e
+Se você achar um KANGASKHAN filhote\n
+brincando sozinho, nunca tente pegá-lo.\n
+A mãe com certeza está por perto e vai\n
+ficar furiosa.
+
+[gHorseaPokedexText] 8a232cbc4e
+Mexendo com esperteza as nadadeiras das\n
+costas de um lado para o outro, vai em\n
+qualquer direção olhando para a frente.\n
+Cospe tinta para fugir do perigo.
+
+[gSeadraPokedexText] a9f637a47f
+Os espinhos venenosos do corpo todo são\n
+muito valorizados como ingrediente de\n
+remédios tradicionais. Não tem piedade\n
+de quem chega perto do ninho.
+
+[gGoldeenPokedexText] 8b8cf78dbe
+Na primavera, cardumes de GOLDEEN sobem\n
+cachoeiras e rios. O chifre único causa\n
+um dano impressionante.
+
+[gSeakingPokedexText] ae32d6e16a
+Abre buracos nas pedras do leito dos\n
+rios. É uma ideia esperta que protege\n
+os ovos de ataques e da correnteza.
+
+[gStaryuPokedexText] 9fcacb1792
+À noite, se junta com outros e faz o\n
+núcleo vermelho piscar junto com as\n
+estrelas. Regenera os membros se eles\n
+forem cortados do corpo.
+
+[gStarmiePokedexText] f5a58daf95
+Antigamente, as pessoas imaginavam que\n
+os STARMIE vinham do reflexo das\n
+estrelas brilhando nas ondas calmas\n
+da noite.
+
+[gMrMimePokedexText] 4bda99e6b4
+MR. MIME é mestre da pantomima.\n
+Convence os outros de que algo invisível\n
+existe de verdade. Quando acreditam, o\n
+objeto imaginário vira real.
+
+[gScytherPokedexText] a402645ce6
+A velocidade estonteante aumenta o corte\n
+das duas foices dos braços. As foices\n
+cortam troncos grossos com um único\n
+golpe cruel.
+
+[gJynxPokedexText] 80d043a0c0
+JYNX rebola no ritmo como se estivesse\n
+dançando. Seus movimentos são tão\n
+gingados que quem vê começa a mexer\n
+o quadril sem perceber.
+
+[gElectabuzzPokedexText] f56b520961
+Quando vem uma tempestade, disputa com\n
+os outros os lugares altos onde os raios\n
+caem. Algumas cidades usam ELECTABUZZ\n
+no lugar de para-raios.
+
+[gMagmarPokedexText] 1c083be6d8
+Na batalha, solta chamas intensas pelo\n
+corpo todo para intimidar o inimigo.\n
+Essas rajadas criam ondas de calor que\n
+incendeiam a grama e as árvores.
+
+[gPinsirPokedexText] 9ff0800c2c
+Suas pinças são fortes o bastante para\n
+despedaçar troncos grossos. Como não\n
+gostam de frio, PINSIR cavam e dormem\n
+debaixo da terra nas noites frias.
+
+[gTaurosPokedexText] 2c0997e759
+Só fica satisfeito se estiver causando\n
+o tempo todo. Se não tem oponente, TAUROS\n
+investe contra árvores grossas e as\n
+derruba para se acalmar.
+
+[gMagikarpPokedexText] 0f8940380f
+Os músculos de nado são fracos, então a\n
+correnteza o arrasta fácil. Onde a água\n
+se acumula, dá para ver vários MAGIKARP\n
+que foram parar ali levados pelo fluxo.
+
+[gGyaradosPokedexText] cb421e199e
+É um POKéMON extremamente cruel e\n
+violento. Quando os humanos começam a\n
+brigar, ele aparece e queima tudo até o\n
+chão com chamas muito quentes.
+
+[gLaprasPokedexText] c174ca4014
+As pessoas quase levaram LAPRAS à\n
+extinção. Dizem que, ao entardecer, ele\n
+canta com tristeza enquanto procura os\n
+poucos da sua espécie que restam.
+
+[gDittoPokedexText] 4edf614433
+DITTO reorganiza a estrutura das\n
+células para se transformar. Mas, se\n
+tenta mudar de memória, erra os\n
+detalhes.
+
+[gEeveePokedexText] 34352dc029
+EEVEE tem uma genética instável, que\n
+sofre mutações de repente por causa do\n
+ambiente. A radiação de várias PEDRAS\n
+faz este POKéMON evoluir.
+
+[gVaporeonPokedexText] 08b10fcaf2
+VAPOREON sofreu uma mutação espontânea\n
+e ganhou nadadeiras e guelras que o\n
+deixam viver debaixo d'água. Controla\n
+a água à vontade.
+
+[gJolteonPokedexText] c9216bdde5
+As células geram uma energia fraca, que a\n
+eletricidade estática do pelo amplifica\n
+para soltar raios. O pelo eriçado é feito\n
+de agulhas carregadas de eletricidade.
+
+[gFlareonPokedexText] 1ab490c232
+O pelo fofinho de FLAREON solta calor no\n
+ar para o corpo não esquentar demais.\n
+A temperatura do corpo pode chegar a\n
+900 graus.
+
+[gPorygonPokedexText] 9adaa52095
+Consegue se converter inteiro em dados\n
+de programa para entrar no ciberespaço.\n
+PORYGON tem proteção contra cópia, por\n
+isso não pode ser duplicado.
+
+[gOmanytePokedexText] 707ac9970f
+Um dos POKéMON antigos, extintos há muito\n
+tempo, que os humanos regeneraram a\n
+partir de fósseis. Se é atacado, se\n
+esconde na concha dura.
+
+[gOmastarPokedexText] 014db8f203
+OMASTAR usa os tentáculos para capturar\n
+presas. Acredita-se que sumiu porque\n
+a concha cresceu demais, deixando seus\n
+movimentos lentos e pesados.
+
+[gKabutoPokedexText] 7ffbf1f093
+É um POKéMON regenerado de um fóssil.\n
+Mas, em casos raros, foram achados\n
+exemplares vivos. KABUTO não mudou\n
+nada em 300 milhões de anos.
+
+[gKabutopsPokedexText] e26b9d207e
+KABUTOPS nadava sob a água para caçar.\n
+Pelo jeito, estava deixando de viver na\n
+água para viver em terra, como mostram as\n
+mudanças nas guelras e nas pernas.
+
+[gAerodactylPokedexText] 21511457db
+AERODACTYL é um POKéMON da era dos\n
+dinossauros. Foi regenerado a partir do\n
+DNA extraído de âmbar. Imagina-se que\n
+era o rei dos céus.
+
+[gSnorlaxPokedexText] f209359f2e
+O dia típico de SNORLAX é só comer e\n
+dormir. É um POKéMON tão manso que tem\n
+criança que usa a barrigona dele como\n
+lugar para brincar.
+
+[gArticunoPokedexText] 4b86910eaf
+ARTICUNO é um pássaro POKéMON lendário\n
+que controla o gelo. O bater das asas\n
+gela o ar. Por isso, dizem que, quando\n
+este POKéMON voa, começa a nevar.
+
+[gZapdosPokedexText] d77ebe9ffc
+ZAPDOS é um pássaro POKéMON lendário\n
+que controla a eletricidade. Costuma\n
+viver nas nuvens de tempestade. Fica\n
+mais forte quando é atingido por raios.
+
+[gMoltresPokedexText] 2a8352b1ec
+MOLTRES é um pássaro POKéMON lendário\n
+que controla o fogo. Dizem que, se fica\n
+ferido, mergulha o corpo no magma de um\n
+vulcão para se queimar e se curar.
+
+[gDratiniPokedexText] 83f7799159
+DRATINI troca de pele o tempo todo. Faz\n
+isso porque a energia vital dentro do\n
+corpo não para de crescer e chega a\n
+níveis incontroláveis.
+
+[gDragonairPokedexText] 4b5f8db7ad
+DRAGONAIR guarda uma quantidade enorme\n
+de energia no corpo. Dizem que muda o\n
+clima ao redor soltando energia dos\n
+cristais do pescoço e da cauda.
+
+[gDragonitePokedexText] 730ac210f6
+Consegue dar a volta ao mundo em só 16\n
+horas. É um POKéMON bondoso, que guia\n
+para a terra firme os navios perdidos e\n
+afundando nas tempestades.
+
+[gMewtwoPokedexText] f074d4bb3b
+Um POKéMON criado por manipulação\n
+genética. Mas, embora a ciência humana\n
+tenha feito seu corpo, não conseguiu dar\n
+a ele um coração caloroso.
+
+[gMewPokedexText] 3277e185b2
+Dizem que MEW tem os genes de todos os\n
+POKéMON. Consegue ficar invisível quando\n
+quer, então passa despercebido mesmo\n
+chegando perto das pessoas.
+
+[gChikoritaPokedexText] d840a17170
+Balança a folha para manter os inimigos\n
+longe. Mas da folha também sai um cheiro\n
+doce, que cria um clima amigável e\n
+acalma quem está lutando.
+
+[gBayleefPokedexText] b4dee0433f
+O pescoço de BAYLEEF tem um anel de\n
+folhas enroladas. Dentro de cada folha há\n
+um broto de árvore. O cheiro desse broto\n
+deixa as pessoas animadas.
+
+[gMeganiumPokedexText] 801e5bcb38
+O cheiro da flor de MEGANIUM acalma e\n
+tranquiliza as emoções. Na batalha, solta\n
+mais desse aroma calmante para diminuir\n
+o espírito de luta do inimigo.
+
+[gCyndaquilPokedexText] 4dd9e63ef4
+Solta chamas pelas costas para se\n
+proteger. O fogo arde forte se o POKéMON\n
+está bravo. Quando está cansado, solta\n
+só umas faíscas falhadas.
+
+[gQuilavaPokedexText] 772207ba1b
+Intimida os inimigos com rajadas de chamas\n
+e ar superaquecido. Sua agilidade deixa\n
+ele desviar de ataques até enquanto\n
+torra um inimigo.
+
+[gTyphlosionPokedexText] 31667effc2
+Esconde-se atrás de uma névoa de calor\n
+tremulante, criada com suas chamas\n
+intensas. TYPHLOSION solta explosões\n
+ardentes que reduzem tudo a cinzas.
+
+[gTotodilePokedexText] cf092dda72
+Apesar do corpo pequeno, a mandíbula de\n
+TOTODILE é muito forte. Ele pode achar que\n
+só está mordiscando de brincadeira, mas a\n
+mordida é forte o bastante para ferir feio.
+
+[gCroconawPokedexText] b950aa45ea
+Depois que morde o inimigo, não solta de\n
+jeito nenhum. Como as pontas das presas\n
+são curvadas para trás como anzóis, elas\n
+ficam presas e não saem mais.
+
+[gFeraligatrPokedexText] 84a382b163
+Abre a bocarra para intimidar os\n
+inimigos. Na batalha, corre com as patas\n
+traseiras grossas e fortes para investir\n
+contra o inimigo numa velocidade incrível.
+
+[gSentretPokedexText] e3172baef1
+Revezam a vigia na hora de dormir.\n
+O vigia acorda os outros se sente perigo.\n
+Se um deles se separa do grupo, perde\n
+o sono de medo.
+
+[gFurretPokedexText] 53605c80f2
+FURRET é bem magrinho. Quando é atacado,\n
+se espreme por lugares estreitos e foge.\n
+Apesar das patas curtas, é muito ágil e\n
+veloz.
+
+[gHoothootPokedexText] 7d9258bffc
+Tem um órgão interno que sente a rotação\n
+da Terra. Com esse órgão especial,\n
+HOOTHOOT começa a piar exatamente na\n
+mesma hora todo dia.
+
+[gNoctowlPokedexText] 5d2d7bb392
+Nunca deixa de pegar a presa no escuro.\n
+NOCTOWL deve o sucesso à visão superior,\n
+que enxerga com quase nenhuma luz, e às\n
+asas flexíveis e silenciosas.
+
+[gLedybaPokedexText] 3a9dc1c137
+LEDYBA se comunicam com um líquido que\n
+soltam das juntas das pernas. Dizem que\n
+mostram os sentimentos aos outros\n
+mudando o cheiro desse líquido.
+
+[gLedianPokedexText] b0ff23b94c
+Dizem que, nas terras de ar limpo, onde\n
+as estrelas enchem o céu, vivem muitos\n
+LEDIAN. E com razão: eles usam a luz\n
+das estrelas como energia.
+
+[gSpinarakPokedexText] bde6b659da
+A teia que tece pode ser vista como seu\n
+segundo sistema nervoso. Dizem que\n
+SPINARAK identifica a presa pelas\n
+vibrações mínimas que sente na teia.
+
+[gAriadosPokedexText] 8f2d561ed8
+As patas têm garrinhas em gancho, que o\n
+deixam andar rápido pelo teto e por\n
+paredes. Prende o inimigo com uma teia\n
+de seda fina e resistente.
+
+[gCrobatPokedexText] 446d2dcfa8
+Ao longo da evolução, as patas traseiras\n
+viraram asas. Descansando ora as asas\n
+da frente, ora as de trás, consegue voar\n
+o dia todo sem parar.
+
+[gChinchouPokedexText] c46bd8fa62
+Quando sente perigo, solta eletricidade\n
+positiva e negativa pelas duas antenas.\n
+Vive em profundezas aonde a luz do sol\n
+não chega.
+
+[gLanturnPokedexText] 6d54a6b259
+As esferas luminosas das costas brilham\n
+muito. Elas se formam de uma parte da\n
+barbatana dorsal. Este POKéMON ilumina\n
+a escuridão total do fundo do mar.
+
+[gPichuPokedexText] 09744a3e45
+Ainda não sabe segurar a eletricidade.\n
+Quando leva um susto, solta energia sem\n
+querer. Vai aprendendo a guardar a\n
+energia conforme cresce.
+
+[gCleffaPokedexText] 9821f14456
+Nas noites com muitas estrelas cadentes,\n
+dá para ver CLEFFA dançando em roda.\n
+Eles dançam até o amanhecer, quando\n
+matam a sede com o orvalho da manhã.
+
+[gIgglybuffPokedexText] dfc81dd52b
+O corpo macio e flexível é muito elástico.\n
+Quando canta sem parar com toda a força,\n
+o corpo vai ficando de um rosa cada vez\n
+mais forte.
+
+[gTogepiPokedexText] 3dd8447ef0
+Usa como energia os sentimentos de\n
+carinho e alegria que as pessoas e os\n
+POKéMON emanam. Guarda a felicidade na\n
+casca e depois a reparte.
+
+[gTogeticPokedexText] dfa54c88d1
+Dizem que é um POKéMON que traz boa sorte.\n
+Quando vê alguém de coração puro, TOGETIC\n
+aparece e divide sua felicidade com\n
+essa pessoa.
+
+[gNatuPokedexText] 64d2ef20de
+Sobe correndo nas árvores baixas da\n
+savana para bicar os brotos novos.\n
+Os olhos de NATU parecem estar sempre\n
+observando alguma coisa.
+
+[gXatuPokedexText] e63fe542e8
+Tem o poder enigmático de prever o\n
+futuro. Em algumas terras, há muito\n
+tempo se acredita que XATU são\n
+mensageiros de outro mundo.
+
+[gMareepPokedexText] 0a9682f7ec
+A lã fofinha se esfrega e acumula carga\n
+estática. Quanto mais energia carregada,\n
+mais forte brilha a lâmpada na ponta\n
+da cauda.
+
+[gFlaaffyPokedexText] 8f504ad84f
+A qualidade da lã muda para gerar uma\n
+eletricidade estática forte com pouca lã.\n
+As partes lisas e peladas da pele são\n
+protegidas contra eletricidade.
+
+[gAmpharosPokedexText] c894742a32
+Brilha tanto que dá para ver até do\n
+espaço. Antigamente, as pessoas usavam\n
+sua luz para trocar sinais com quem\n
+estava muito longe.
+
+[gBellossomPokedexText] 2608572e13
+As pétalas ficam mais coloridas com a luz\n
+do sol. Quando o tempo fica nublado por\n
+muito tempo, faz uma dança que seria um\n
+ritual para chamar o sol.
+
+[gMarillPokedexText] 4ae4305472
+O corpo é coberto por um pelo que repele\n
+a água. Graças a ele, nada em alta\n
+velocidade sem ser freado pela\n
+resistência da água.
+
+[gAzumarillPokedexText] b980b0ba0e
+Vive na água praticamente o dia todo.\n
+A cor e o padrão do corpo funcionam como\n
+camuflagem, o que dificulta para os\n
+inimigos o verem na água.
+
+[gSudowoodoPokedexText] 693a3830e7
+Imita uma árvore para não ser atacado\n
+pelos inimigos. Mas, como os braços ficam\n
+verdes o ano todo, no inverno é fácil\n
+perceber que é falso.
+
+[gPolitoedPokedexText] 23ec1d1fb4
+O cabelo enrolado na cabeça prova sua\n
+posição de rei. Dizem que, quanto mais\n
+longo e enrolado o cabelo, mais respeito\n
+ele ganha dos outros.
+
+[gHoppipPokedexText] d4d32572e6
+Este POKéMON flutua levado pelo vento.\n
+Se sente que vem um vento forte, HOPPIP\n
+junta as folhas com as dos outros para\n
+não ser levado.
+
+[gSkiploomPokedexText] b446222020
+Floresce quando a temperatura passa de\n
+18 graus. Como a flor abre conforme a\n
+temperatura, às vezes é usado como\n
+termômetro.
+
+[gJumpluffPokedexText] 2e1f389fb9
+JUMPLUFF pegam carona nos ventos quentes\n
+do sul para cruzar o mar e voar para\n
+terras distantes. Este POKéMON pousa\n
+quando encontra ar frio no caminho.
+
+[gAipomPokedexText] 0f6a9ee01b
+A cauda termina num apêndice habilidoso\n
+que parece uma mão. Mas, como usa tanto\n
+a cauda, as mãos de verdade de AIPOM\n
+ficaram meio desajeitadas.
+
+[gSunkernPokedexText] 34b2069a19
+SUNKERN se mexem o mínimo possível para\n
+poupar os nutrientes guardados no corpo\n
+para a evolução. Não comem nada e vivem\n
+só do orvalho da manhã.
+
+[gSunfloraPokedexText] fd8978c0c3
+SUNFLORA transformam a energia do sol em\n
+nutrição. São muito ativos durante o dia\n
+quente, mas param de se mexer de repente\n
+assim que o sol se põe.
+
+[gYanmaPokedexText] ae0760b1de
+Enxerga 360 graus sem mexer os olhos.\n
+É um ótimo voador, capaz de parar de\n
+repente e virar no ar para perseguir\n
+rápido a presa que escolheu.
+
+[gWooperPokedexText] 9bc119a42e
+WOOPER costumam viver na água, mas às\n
+vezes saem para a terra atrás de comida.\n
+Em terra, cobrem o corpo com uma camada\n
+pegajosa e tóxica.
+
+[gQuagsirePokedexText] 3eaf5fd734
+QUAGSIRE caça deixando a boca bem aberta\n
+na água e esperando a presa entrar sem\n
+querer. Como não se mexe, não sente\n
+muita fome.
+
+[gEspeonPokedexText] a4d2d2a846
+ESPEON é extremamente leal ao TREINADOR\n
+que acha digno. Dizem que desenvolveu\n
+poderes de premonição para proteger o\n
+TREINADOR de qualquer mal.
+
+[gUmbreonPokedexText] ec2efe3683
+UMBREON evoluiu exposto às ondas de\n
+energia da lua. Espreita no escuro e\n
+espera os inimigos se mexerem. Os anéis\n
+do corpo brilham quando ele salta.
+
+[gMurkrowPokedexText] ed550ae60c
+MURKROW eram temidos como portadores de\n
+azar. Tem muito interesse por tudo que\n
+brilha. Chega até a tentar roubar anéis\n
+das pessoas.
+
+[gSlowkingPokedexText] dbc7366080
+Pesquisa todo dia para desvendar os\n
+mistérios do mundo. Mas, pelo jeito,\n
+esquece tudo se o SHELLDER da cabeça\n
+se soltar.
+
+[gMisdreavusPokedexText] 3f32ce755f
+MISDREAVUS assusta as pessoas com um\n
+choro arrepiante. Parece que usa as\n
+esferas vermelhas para absorver o medo\n
+dos inimigos como alimento.
+
+[gUnownPokedexText] bb7b52ced9
+Este POKéMON tem a forma de letras\n
+antigas. As pesquisas continuam, mas não\n
+se sabe o que veio primeiro: a escrita\n
+antiga ou os vários UNOWN.
+
+[gWobbuffetPokedexText] c2af79bdba
+Normalmente manso, WOBBUFFET revida com\n
+ferocidade se atacam sua cauda preta.\n
+Faz a toca em cavernas, onde espera\n
+o anoitecer.
+
+[gGirafarigPokedexText] 783607bed2
+GIRAFARIG é herbívoro: come capim e\n
+brotos de árvore. Enquanto come, a cauda\n
+faz movimentos de mastigar e engolir,\n
+como se também estivesse comendo.
+
+[gPinecoPokedexText] a0910dd9b5
+PINECO fica pendurado num galho\n
+esperando presas. Se alguém sacode a\n
+árvore enquanto ele come, cai no chão\n
+e explode de repente.
+
+[gForretressPokedexText] 91c1c5baf8
+Fica guardado dentro da casca de aço.\n
+Abre a casca para pegar presas, mas é\n
+tão rápido que não dá para ver o que\n
+tem lá dentro.
+
+[gDunsparcePokedexText] 949e8a03c4
+Usa a cauda em forma de broca para\n
+cavar a terra de ré. Este POKéMON é\n
+conhecido por fazer ninhos de formas\n
+complexas no fundo da terra.
+
+[gGligarPokedexText] b472b7be99
+Plana sem fazer nenhum barulho. Agarra\n
+o rosto do inimigo com as garras\n
+traseiras e as dianteiras enormes e\n
+depois o fura com o ferrão venenoso.
+
+[gSteelixPokedexText] c968c7735a
+STEELIX vivem ainda mais fundo que ONIX.\n
+Este POKéMON é conhecido por cavar em\n
+direção ao centro da Terra, chegando a\n
+mais de 1 km de profundidade.
+
+[gSnubbullPokedexText] 3b1b83cdb0
+Mostrando as presas e fazendo cara de\n
+mau, faz POKéMON menores fugirem de\n
+medo. Mas SNUBBULL parece ficar meio\n
+triste por espantar os inimigos.
+
+[gGranbullPokedexText] a3f9617745
+A mandíbula de baixo é muito desenvolvida.\n
+As presas enormes são pesadas e o fazem\n
+inclinar a cabeça. Se não levar um susto,\n
+não tenta morder.
+
+[gQwilfishPokedexText] daa978ede1
+QWILFISH usa a pressão da água que\n
+engole para disparar de uma vez espinhos\n
+tóxicos do corpo todo. Nadar é meio\n
+complicado para ele.
+
+[gScizorPokedexText] d1c8831789
+SCIZOR tem o corpo duro como aço.\n
+Ataques comuns não o abalam fácil.\n
+Bate as asas para regular a temperatura\n
+do corpo.
+
+[gShucklePokedexText] 39903e96e7
+SHUCKLE se esconde debaixo das pedras,\n
+com o corpo guardado na casca, comendo\n
+FRUTAS que estocou. As FRUTAS se misturam\n
+com os fluidos do corpo e viram suco.
+
+[gHeracrossPokedexText] 9d4ff3d632
+Eles se juntam nas florestas atrás da\n
+seiva doce das árvores. É todo coberto\n
+por uma casca dura como aço. Tem orgulho\n
+do chifre, que usa para lançar inimigos.
+
+[gSneaselPokedexText] 3f59fd4b5a
+SNEASEL sobe nas árvores cravando as\n
+garras em gancho na casca. Procura\n
+ninhos sem vigia e rouba ovos para comer\n
+enquanto os pais estão fora.
+
+[gTeddiursaPokedexText] d58cba5737
+Lambe as palmas das patas, adoçadas\n
+de tanto ficar no mel. TEDDIURSA faz o\n
+próprio mel misturando frutas e o pólen\n
+coletado por BEEDRILL.
+
+[gUrsaringPokedexText] d8404b8fbb
+Dizem que nas florestas onde URSARING\n
+junta comida há muitos riachos e árvores\n
+altíssimas. Ele anda pela sua floresta\n
+coletando comida todo dia.
+
+[gSlugmaPokedexText] d75da53eff
+É uma espécie de POKéMON que vive em\n
+áreas vulcânicas. Se o corpo esfria, a\n
+pele endurece e ele não se mexe. Para\n
+evitar isso, dorme perto do magma.
+
+[gMagcargoPokedexText] c528e19cbf
+A concha das costas é de magma\n
+endurecido. Dezenas de milhares de anos\n
+vivendo em crateras de vulcões fizeram\n
+o corpo de MAGCARGO virar magma.
+
+[gSwinubPokedexText] 79ecf1cc55
+Fuça atrás de comida esfregando o focinho\n
+no chão. Sua comida favorita é um cogumelo\n
+que cresce sob o capim seco. De vez em\n
+quando, acha fontes termais fuçando.
+
+[gPiloswinePokedexText] 74ac6e9a2c
+PILOSWINE é coberto por uma pelagem\n
+grossa de pelos longos para aguentar o\n
+frio congelante. Usa as presas para\n
+desenterrar comida debaixo do gelo.
+
+[gCorsolaPokedexText] efa50bb528
+CORSOLA vivem nos mares quentes do sul.\n
+Se o mar fica poluído, os lindos galhos\n
+de coral perdem a cor e se desfazem\n
+em pedaços.
+
+[gRemoraidPokedexText] 67b95b4994
+REMORAID usa os músculos da barriga\n
+para expelir com força a água engolida e\n
+derrubar presas voando. Quando está\n
+perto de evoluir, desce os rios.
+
+[gOctilleryPokedexText] 995d451b9b
+Prende o inimigo com os tentáculos de\n
+ventosas antes de dar o golpe final. Se o\n
+inimigo se mostra forte demais, solta\n
+tinta para fugir.
+
+[gDelibirdPokedexText] c49318b6c2
+Carrega comida embrulhada na cauda.\n
+Houve um explorador famoso que conseguiu\n
+escalar o Monte Everest graças a um\n
+DELIBIRD que dividiu a comida com ele.
+
+[gMantinePokedexText] bb69baf1f6
+Nos dias de sol, dá para ver cardumes de\n
+MANTINE saltando elegantes sobre as\n
+ondas. Não se incomoda com os REMORAID\n
+que pegam carona.
+
+[gSkarmoryPokedexText] a9349a2465
+Um POKéMON com corpo e asas de aço.\n
+Antigamente, as pessoas usavam as penas\n
+que caíam de SKARMORY para fazer\n
+espadas e facas.
+
+[gHoundourPokedexText] 32bd9edd7e
+HOUNDOUR se comunicam com vários tipos\n
+de uivo para encurralar a presa.\n
+O trabalho em equipe deste POKéMON\n
+simplesmente não tem igual.
+
+[gHoundoomPokedexText] 2f8be246e4
+Numa matilha de HOUNDOOM, o que tem os\n
+chifres mais inclinados para trás é o\n
+líder. Eles escolhem o líder brigando\n
+entre si.
+
+[gKingdraPokedexText] fcc0bbb17e
+Dorme quietinho no fundo do mar.\n
+Quando sobe para a superfície, cria um\n
+redemoinho enorme que consegue engolir\n
+até navios.
+
+[gPhanpyPokedexText] e0dc4e6634
+As orelhas grandes de PHANPY servem de\n
+leques. Quando faz calor, ele abana as\n
+orelhas sem parar para se refrescar.\n
+Até os filhotes são muito fortes.
+
+[gDonphanPokedexText] 2ded9a7233
+DONPHAN é tão forte que puxa um\n
+caminhão de lixo sem esforço. O couro\n
+ficou duro como pedra. Um ataque comum\n
+nem deixa arranhão.
+
+[gPorygon2PokedexText] 6ea3ae49d9
+Foi criado pelos humanos com o poder da\n
+ciência. Ganhou uma inteligência\n
+artificial que o deixa aprender sozinho\n
+gestos e emoções novos.
+
+[gStantlerPokedexText] 6f3536f1cf
+Os chifres magníficos de STANTLER já\n
+foram vendidos a preços altos como obras\n
+de arte. Por isso, este POKéMON foi\n
+caçado quase até a extinção.
+
+[gSmearglePokedexText] a552158a16
+SMEARGLE marca o território com um\n
+líquido que sai da ponta da cauda.\n
+Já foram achadas umas 5.000 marcas\n
+diferentes deixadas por ele.
+
+[gTyroguePokedexText] 04482c4329
+TYROGUE ficam estressados se não\n
+treinam todo dia. Quem cria este POKéMON\n
+precisa montar uma rotina de treinos\n
+regular.
+
+[gHitmontopPokedexText] 7b2d618851
+Sua técnica de chutar girando mistura\n
+ataque e defesa de um jeito incrível.\n
+HITMONTOP andam mais rápido girando\n
+do que andando.
+
+[gSmoochumPokedexText] 8276b2fa5e
+Corre pra lá e pra cá, mas também cai\n
+muito. Toda vez que cai, confere o\n
+reflexo na água de um lago para ver se\n
+o rosto não ficou sujo.
+
+[gElekidPokedexText] 2fb557e4af
+Se encosta em metal e descarrega a\n
+eletricidade guardada no corpo, ELEKID\n
+começa a girar os braços em círculos\n
+para se recarregar.
+
+[gMagbyPokedexText] e108bdefd3
+Se MAGBY solta chamas amarelas pela\n
+boca, é sinal de boa saúde. Quando está\n
+cansado, as chamas saem misturadas com\n
+fumaça preta.
+
+[gMiltankPokedexText] 90ca91f2d0
+Dá mais de 20 litros de leite por dia.\n
+O leite doce agrada crianças e adultos.\n
+Quem não pode tomar leite faz iogurte\n
+com ele.
+
+[gBlisseyPokedexText] 1e621ba34a
+Se sente tristeza com o pelo fofinho,\n
+BLISSEY corre até a pessoa triste, por\n
+mais longe que esteja, e divide com ela\n
+um ovo da felicidade que faz sorrir.
+
+[gRaikouPokedexText] 576de9d4be
+RAIKOU encarna a velocidade do raio.\n
+Seus rugidos fazem ondas de choque\n
+tremerem o ar e o chão como se raios\n
+estivessem caindo.
+
+[gEnteiPokedexText] 81dd16329b
+ENTEI encarna a paixão do magma.\n
+Acredita-se que nasceu da erupção de um\n
+vulcão. Solta fogo que consome tudo o\n
+que toca.
+
+[gSuicunePokedexText] 41b2fb07b4
+SUICUNE encarna a bondade de uma fonte\n
+de água pura. Corre pela terra com uma\n
+elegância deslizante. Tem o poder de\n
+purificar a água suja.
+
+[gLarvitarPokedexText] 5ab8dc9271
+LARVITAR nasce no fundo da terra. Ele\n
+precisa comer o caminho pelo solo até\n
+chegar à superfície para ver o rosto\n
+dos pais.
+
+[gPupitarPokedexText] bb0a712876
+PUPITAR cria um gás dentro do corpo e\n
+o solta comprimido para se lançar como\n
+um jato. Seu corpo aguenta até uma\n
+batida contra aço maciço.
+
+[gTyranitarPokedexText] d4e78cdcdd
+TYRANITAR é tão forte que derruba uma\n
+montanha inteira para fazer o ninho.\n
+Anda pelas montanhas procurando novos\n
+oponentes para lutar.
+
+[gLugiaPokedexText] 20554bbbfb
+LUGIA é tão poderoso que até um bater\n
+leve de asas pode destruir casas. Por\n
+isso, prefere viver escondido no fundo\n
+do mar.
+
+[gHoOhPokedexText] 354fae5393
+Acredita-se que suas penas, que brilham\n
+em sete cores conforme o ângulo da luz,\n
+trazem alegria. Dizem que vive no pé\n
+do arco-íris.
+
+[gCelebiPokedexText] 13534b8d07
+Este POKéMON veio do futuro atravessando\n
+o tempo. Acredita-se que, enquanto\n
+CELEBI aparecer, um futuro brilhante\n
+espera por nós.
+
+[gTreeckoPokedexText] 94c51cbf5a
+Faz o ninho numa árvore gigante da\n
+floresta. Defende com ferocidade o\n
+território de quem chega perto. Dizem\n
+que é o protetor das árvores da floresta.
+
+[gGrovylePokedexText] 5cb18f74db
+Folhas crescem do corpo deste POKéMON.\n
+Elas ajudam GROVYLE a se esconder dos\n
+olhos dos inimigos quando está numa\n
+floresta fechada.
+
+[gSceptilePokedexText] 96c4fa6f13
+Na selva, seu poder não tem igual.\n
+Este POKéMON cuida com carinho das\n
+árvores e plantas. Regula a temperatura\n
+do corpo tomando sol.
+
+[gTorchicPokedexText] b979dbd379
+Se é atacado, revida cuspindo bolas de\n
+fogo que forma na barriga. TORCHIC não\n
+gosta do escuro, porque não consegue\n
+ver o que tem em volta.
+
+[gCombuskenPokedexText] d15e1bd82f
+Dá 10 chutes por segundo. Seu forte\n
+instinto de luta o faz continuar\n
+atacando até o oponente desistir.
+
+[gBlazikenPokedexText] eb190d1dc1
+Aprende artes marciais de socos e\n
+chutes. De tempos em tempos, as penas\n
+velhas queimam e caem, e penas novas e\n
+macias nascem no lugar.
+
+[gMudkipPokedexText] c549e9ac01
+Em terra, levanta pedras grandes com\n
+força, firmando as quatro patas e\n
+empurrando. Dorme enterrado na lama\n
+na beira da água.
+
+[gMarshtompPokedexText] 30b5d9b50c
+As pernas traseiras fortes o deixam ficar\n
+de pé. Como enfraquece se a pele seca,\n
+repõe a umidade brincando na lama.
+
+[gSwampertPokedexText] 93a67beb47
+Se sente que vem uma tempestade e uma\n
+onda gigante, protege o ninho na beira\n
+do mar empilhando pedras. Nada tão\n
+rápido quanto um jet ski.
+
+[gPoochyenaPokedexText] 2ab9440c00
+Ameaça os inimigos com ferocidade,\n
+mostrando as presas. Persegue sem\n
+desistir quem foge. Mas, se o inimigo\n
+revida, dá meia-volta e corre.
+
+[gMightyenaPokedexText] 70d3cefbfd
+Na natureza, MIGHTYENA vivem em matilha.\n
+Nunca desobedecem às ordens do líder.\n
+Derrotam os inimigos com um trabalho\n
+em equipe perfeito.
+
+[gZigzagoonPokedexText] 019c084ad9
+Esfregando o nariz no chão, vive andando\n
+pra lá e pra cá atrás de alguma coisa.\n
+Dá para reconhecê-lo pelas pegadas em\n
+zigue-zague que deixa.
+
+[gLinoonePokedexText] dd861ad402
+É rapidíssimo quando só precisa correr em\n
+linha reta. Quando vê uma presa debaixo\n
+d'água num lago, pula rápido e a pega\n
+com as garras afiadas.
+
+[gWurmplePokedexText] 1b6953801a
+Gruda nos galhos e come folhas. O fio que\n
+cospe pela boca, que fica pegajoso ao\n
+tocar o ar, deixa os inimigos mais\n
+lentos.
+
+[gSilcoonPokedexText] a390b03c65
+Se prepara para evoluir com a energia\n
+que guardou quando era WURMPLE. Fica\n
+de olho em tudo em volta com os dois\n
+olhos.
+
+[gBeautiflyPokedexText] b73017cc02
+As asas de desenhos coloridos são sua\n
+marca mais famosa. Voa pelos campos\n
+floridos coletando pólen. Ataca com\n
+ferocidade quando fica bravo.
+
+[gCascoonPokedexText] 7a62f83691
+Para não ser visto pelos inimigos, fica\n
+parado escondido debaixo de folhas\n
+grandes e entre os galhos. Também cola\n
+folhas secas no corpo para se camuflar.
+
+[gDustoxPokedexText] 2384d33208
+É um POKéMON noturno que voa dos campos\n
+e montanhas atraído pelos postes de luz\n
+à noite. Solta um pó muito tóxico pelas\n
+asas.
+
+[gLotadPokedexText] 7f1b37c316
+Este POKéMON vive em lagos de água limpa.\n
+É conhecido por levar POKéMON pequenos\n
+de um lado ao outro do lago na folha\n
+larga da cabeça.
+
+[gLombrePokedexText] 4674fe913b
+Ao entardecer, adora pular para fora do\n
+rio e assustar as pessoas. Come o musgo\n
+aquático que cresce nas pedras do leito\n
+do rio.
+
+[gLudicoloPokedexText] ff75544c8e
+Quando ouve música de festa, todas as\n
+células do corpo ficam agitadas, e ele\n
+começa a dançar no ritmo. Não se abala\n
+nem diante de um oponente difícil.
+
+[gSeedotPokedexText] 9114be87f6
+Fica pendurado nos galhos absorvendo\n
+nutrientes. Quando termina de comer,\n
+o corpo fica tão pesado que cai no chão\n
+com um baque.
+
+[gNuzleafPokedexText] d4e8bbc8c0
+Um POKéMON da floresta que sobe em\n
+árvores com habilidade. O nariz longo\n
+e pontudo é seu ponto fraco. Perde a\n
+força se alguém segura o nariz.
+
+[gShiftryPokedexText] baa54d4c19
+Dizem que chega com os ventos frios do\n
+inverno. Temido há muito tempo como o\n
+guardião das florestas, vive no fundo\n
+da mata, onde as pessoas não vão.
+
+[gTaillowPokedexText] a10e657298
+Apesar de pequeno, é muito corajoso.\n
+Enfrenta de igual para igual um SKARMORY\n
+bem maior. Mas a coragem diminui quando\n
+ele fica com fome.
+
+[gSwellowPokedexText] bed9310edb
+SWELLOW mergulha sobre a presa lá do\n
+alto. Nunca erra o alvo. Voa pelos céus\n
+em busca de terras de clima quente.
+
+[gWingullPokedexText] 5aa1a4248a
+Faz o ninho num penhasco à beira-mar.\n
+Tem dificuldade para bater as asas em\n
+voo. Em vez disso, plana nas correntes\n
+de ar que sobem.
+
+[gPelipperPokedexText] 5748d7a603
+Voa rente às ondas. Quando vê uma presa,\n
+usa o bico grande para pegá-la junto\n
+com a água. Protege os ovos dentro do\n
+bico.
+
+[gRaltsPokedexText] 407b4d0b93
+RALTS sente as emoções das pessoas e\n
+dos POKéMON com os chifres da cabeça.\n
+Se esconde se percebe qualquer\n
+hostilidade.
+
+[gKirliaPokedexText] e174a50b42
+KIRLIA tem o poder psíquico de abrir uma\n
+fenda entre as dimensões e ver o futuro.\n
+Dizem que dança de alegria nas manhãs\n
+de sol.
+
+[gGardevoirPokedexText] 7d8e2f5cb5
+Pelo jeito, não sente a gravidade, porque\n
+se sustenta com poder psíquico. Dá a\n
+própria vida para proteger o seu\n
+TREINADOR.
+
+[gSurskitPokedexText] dfd764e198
+Eles se juntam nas poças depois das\n
+chuvas da tarde, deslizando na água como\n
+se patinassem. Da cabeça, solta um mel\n
+de aroma doce.
+
+[gMasquerainPokedexText] 26d5b1d168
+Intimida os inimigos com os desenhos de\n
+olhos nas antenas. Como não voa com as\n
+asas molhadas, se abriga da chuva debaixo\n
+de árvores grandes e dos beirais.
+
+[gShroomishPokedexText] ba7751f658
+Adora comer a terra úmida e adubada das\n
+florestas. Se você entrar numa floresta\n
+depois de uma chuva longa, vai ver vários\n
+SHROOMISH se banqueteando.
+
+[gBreloomPokedexText] fad99d9dc4
+Espalha esporos pelos buracos do chapéu\n
+da cabeça. Adora clima quente e úmido.\n
+Alimenta-se das árvores e plantas dos\n
+campos e florestas.
+
+[gSlakothPokedexText] 8a718d6a16
+Dorme praticamente dia e noite. Nunca\n
+troca de ninho na vida toda, mas às\n
+vezes percorre grandes distâncias\n
+nadando pelos rios.
+
+[gVigorothPokedexText] fb55f1e938
+Não fica quieto, porque o sangue\n
+ferve de energia. Corre pelos campos e\n
+montanhas o dia todo para se acalmar.\n
+Se não fizer isso, não dorme à noite.
+
+[gSlakingPokedexText] d29204184c
+Bandos de SLAKING se juntam em volta das\n
+árvores na época das frutas. Esperam com\n
+paciência as frutas maduras caírem das\n
+árvores.
+
+[gNincadaPokedexText] f7e6c1c026
+Faz o ninho nas raízes de uma árvore\n
+enorme. Com as antenas que parecem\n
+bigodes, explora o que tem em volta na\n
+escuridão total da terra.
+
+[gNinjaskPokedexText] 5573edc922
+Como dispara pra lá e pra cá em alta\n
+velocidade, é muito difícil de ver.\n
+Ouvir seu grito característico por muito\n
+tempo dá dor de cabeça.
+
+[gShedinjaPokedexText] 8f7ebce165
+Um POKéMON peculiar que flutua no ar\n
+mesmo com as asas totalmente paradas.\n
+O interior do corpo é oco e escuro\n
+como breu.
+
+[gWhismurPokedexText] 29c62ad9b8
+Seu grito é tão alto quanto um avião a\n
+jato. Respira pelos ouvidos. Graças a\n
+esse sistema, grita sem parar sem\n
+precisar tomar fôlego.
+
+[gLoudredPokedexText] 7cbb90446f
+Posiciona os alto-falantes redondos da\n
+cabeça para atacar os inimigos com ondas\n
+ultrassônicas no volume máximo. Ganha\n
+força batendo os pés no chão.
+
+[gExploudPokedexText] 91a07c123f
+Tem órgãos que produzem som pelo corpo\n
+todo. Comunica-se com os outros\n
+ajustando o tom e o volume dos gritos\n
+que solta.
+
+[gMakuhitaPokedexText] 0044f3c2ca
+Adora fortalecer o corpo acima de tudo.\n
+Se você ouvir estrondos numa caverna, é o\n
+som de MAKUHITA fazendo um treino\n
+pesado.
+
+[gHariyamaPokedexText] 9e7e1b8dfd
+Tem o costume de desafiar os outros em\n
+provas de força sem hesitar. Já se viu\n
+um parado nos trilhos parando trens com\n
+empurrões dos braços.
+
+[gAzurillPokedexText] 90cbeb9d13
+A cauda, cheia de nutrientes, é elástica\n
+como uma bola de borracha. Nos dias de\n
+sol, eles se juntam na beira da água e\n
+brincam espirrando água.
+
+[gNosepassPokedexText] e3a9c01133
+O corpo emite um magnetismo poderoso.\n
+Come as presas atraídas por essa força.\n
+O magnetismo fica mais forte nas\n
+estações frias.
+
+[gSkittyPokedexText] 10c6a8bd3a
+O jeitinho fofo de SKITTY faz dele um\n
+POKéMON muito popular. Na batalha, deixa\n
+a cauda eriçada. Ameaça os inimigos com\n
+um rosnado afiado.
+
+[gDelcattyPokedexText] 83a3be47e1
+Em vez de ter uma toca fixa, costuma\n
+procurar cantinhos confortáveis e dormir\n
+ali. É noturno e fica ativo ao\n
+anoitecer.
+
+[gSableyePokedexText] f2279f3dba
+Cava túneis ramificados nas cavernas com\n
+as garras afiadas, atrás de comida:\n
+pedras preciosas brutas. SABLEYE espreita\n
+no escuro e quase nunca é visto.
+
+[gMawilePokedexText] 37038003a5
+A bocarra gigante na verdade são chifres\n
+de aço que se transformaram. Engana os\n
+inimigos com seu jeitinho fofo e depois\n
+os abocanha com a mandíbula enorme.
+
+[gAronPokedexText] 9f2194b1a2
+Um POKéMON coberto por uma armadura de\n
+aço. Quando evolui, ganha uma armadura\n
+nova. A velha, descartada, é reciclada\n
+como metal para fazer objetos de ferro.
+
+[gLaironPokedexText] eddcf2a49d
+Quando dois LAIRON se encontram na\n
+natureza, disputam território batendo\n
+os corpos de aço um no outro. O barulho\n
+da trombada se ouve a quilômetros.
+
+[gAggronPokedexText] 2212fabb4d
+Os chifres de ferro crescem um pouco de\n
+cada vez e servem para saber a idade de\n
+AGGRON. Ele exibe com orgulho os riscos\n
+da armadura, lembranças das batalhas.
+
+[gMedititePokedexText] 302c889faa
+Medita sem parar durante horas todo dia.\n
+Graças ao treino de ioga rigoroso e\n
+dedicado, fortaleceu tanto o poder\n
+espiritual que consegue voar.
+
+[gMedichamPokedexText] 299fe84574
+Com um treino de ioga duríssimo, ganhou\n
+o poder de prever as ações do inimigo.\n
+Luta com movimentos elegantes, como\n
+se estivesse dançando.
+
+[gElectrikePokedexText] 7556871a43
+Gera eletricidade com o atrito do ar.\n
+Nas estações de ar muito seco, o corpo\n
+todo arde com chuvas violentas de\n
+faíscas.
+
+[gManectricPokedexText] 0894bd6c89
+Como caem raios perto deles, achavam que\n
+MANECTRIC tinham nascido dos raios.\n
+Na batalha, eles criam nuvens de\n
+tempestade.
+
+[gPluslePokedexText] f1dc1dbaf4
+Tem o costume de torcer pelos POKéMON\n
+companheiros. Fazendo curto-circuito na\n
+eletricidade que solta pelas patas,\n
+cria pompons de torcida.
+
+[gMinunPokedexText] afaa186df9
+Num encontro de estudiosos de POKéMON,\n
+foi anunciado que levar a eletricidade de\n
+PLUSLE e MINUN ao mesmo tempo melhora a\n
+circulação e dá mais disposição.
+
+[gVolbeatPokedexText] 92cb61d254
+Com as caudas acesas, os VOLBEAT voam em\n
+bando, desenhando figuras geométricas no\n
+céu noturno. Mudam o ninho de lugar se a\n
+água do lago fica suja.
+
+[gIllumisePokedexText] 36398bf62e
+Um POKéMON noturno que fica ativo ao\n
+anoitecer. Guia um bando de VOLBEAT para\n
+desenhar no céu noturno. Já foram\n
+confirmados mais de 200 desenhos.
+
+[gRoseliaPokedexText] 7396c14d84
+Um ROSELIA que bebe água de fonte rica\n
+em nutrientes floresce com flores lindas.\n
+O perfume das flores deixa os inimigos\n
+descuidados.
+
+[gGulpinPokedexText] dbf13d8ff1
+O suco gástrico deste POKéMON digere até\n
+sucata de ferro. Consegue engolir de uma\n
+vez algo do tamanho dele.
+
+[gSwalotPokedexText] 356f26cb66
+O ácido forte do estômago digere quase\n
+tudo. A única coisa no mundo que SWALOT\n
+não consegue digerir é o próprio\n
+estômago.
+
+[gCarvanhaPokedexText] 63df389ac3
+CARVANHA atacam navios em cardume e os\n
+afundam. Dizem que é um POKéMON muito\n
+cruel, mas foge com medo assim que se vê\n
+sozinho.
+
+[gSharpedoPokedexText] d801f41bf3
+O bandido cruel e esperto do mar. A pele\n
+tem uma textura especial que reduz o\n
+atrito na água. Chega a mais de\n
+120 km/h.
+
+[gWailmerPokedexText] e27330011b
+Este POKéMON costuma viver no mar, mas\n
+aguenta ficar em terra por pouco tempo.\n
+Perde a vitalidade se o corpo seca.
+
+[gWailordPokedexText] e8942a7d8e
+Respira pelas narinas, que ergue acima\n
+do mar. Enchendo os pulmões ao máximo,\n
+WAILORD mergulha quase 3.000 metros\n
+abaixo das ondas.
+
+[gNumelPokedexText] 011d5ca35e
+NUMEL guarda magma fervente na corcova\n
+das costas. É um POKéMON resistente, que\n
+carrega 100 kg de carga. Trabalha para\n
+os humanos desde muito tempo atrás.
+
+[gCameruptPokedexText] 7161f50a00
+Um POKéMON que vive na cratera de um\n
+vulcão. A cada 10 anos, os vulcões das\n
+costas entram em erupção violenta.\n
+A causa ainda está sendo pesquisada.
+
+[gTorkoalPokedexText] 43ad6eef7e
+Luta com a energia que tira de queimar\n
+carvão. Quando solta fumaça pelas\n
+narinas, faz um som parecido com o\n
+apito de uma locomotiva.
+
+[gSpoinkPokedexText] 3784122879
+Um POKéMON que usa poder psíquico à\n
+vontade. Não para de pular nem dormindo.\n
+Adora comer cogumelos que crescem\n
+debaixo da terra.
+
+[gGrumpigPokedexText] 22392620d6
+Guarda poder nas pérolas pretas da testa.\n
+Quando usa poder psíquico, faz um passo\n
+de dança esquisito. Seu jeito de dançar\n
+virou febre no exterior.
+
+[gSpindaPokedexText] 216888be7d
+Dá para reconhecê-lo pelas manchas, que\n
+nunca são iguais. O andar cambaleante\n
+e trôpego atrapalha a mira do\n
+inimigo.
+
+[gTrapinchPokedexText] ba01c6fbae
+A mandíbula grande tritura pedras.\n
+Como a cabeça é muito grande, tem\n
+dificuldade para se desvirar quando\n
+cai de costas.
+
+[gVibravaPokedexText] 8462535c06
+Solta ondas ultrassônicas esfregando as\n
+asas uma na outra. Como as asas de\n
+VIBRAVA ainda estão crescendo, ele só\n
+consegue voar distâncias curtas.
+
+[gFlygonPokedexText] 79a64880fe
+O bater das asas parece uma canção.\n
+Para não ser visto pelos inimigos, se\n
+esconde levantando uma nuvem de areia\n
+do deserto com as asas.
+
+[gCacneaPokedexText] d0ae8ee2d7
+CACNEA vivem em desertos onde quase não\n
+chove. Luta balançando os braços grossos\n
+e cheios de espinhos. Uma vez por ano,\n
+desabrocha uma flor amarela.
+
+[gCacturnePokedexText] 3151e63536
+Depois de milhares de anos em desertos\n
+inóspitos, o sangue virou a mesma\n
+substância da areia. É noturno, por isso\n
+caça à noite.
+
+[gSwabluPokedexText] a0ef08c9b8
+Um POKéMON de asas que parecem nuvens\n
+de algodão. Depois do inverno, quando há\n
+pouca comida, os bandos de SWABLU\n
+chegam perto das cidades na primavera.
+
+[gAltariaPokedexText] 490ba699d6
+Cantarola com uma linda voz de soprano.\n
+Voa entre as nuvens brancas do céu\n
+azul. Lança bolas de fogo muito quentes\n
+pela boca.
+
+[gZangoosePokedexText] a861ce1d0e
+Na batalha, fica de pé nas patas traseiras\n
+e ataca com as garras afiadas das patas\n
+da frente. O pelo se eriça se ele\n
+encontra um SEVIPER.
+
+[gSeviperPokedexText] ee83e959ae
+SEVIPER e ZANGOOSE são rivais eternos.\n
+Ele enfrenta a agilidade incrível de\n
+ZANGOOSE com a cauda em forma de espada,\n
+que também solta um veneno terrível.
+
+[gLunatonePokedexText] d7c318a9c6
+Fica muito ativo nas noites de lua cheia.\n
+Este POKéMON foi descoberto há 40 anos\n
+no lugar onde caiu um meteoro.
+
+[gSolrockPokedexText] 7ea2ae274d
+A energia solar é a fonte do poder deste\n
+POKéMON. Nos dias de sol, grupos de\n
+SOLROCK se alinham de frente para o sol\n
+e absorvem sua luz.
+
+[gBarboachPokedexText] c206e3d458
+O corpo é coberto por uma película\n
+viscosa. Ela serve de barreira e impede\n
+que os germes da água lamacenta entrem\n
+no corpo de BARBOACH.
+
+[gWhiscashPokedexText] 045b1a84d4
+Misteriosamente, consegue prever\n
+terremotos. Durante o dia, dorme na lama\n
+do fundo do lago. Quando acorda, passa a\n
+noite inteira comendo.
+
+[gCorphishPokedexText] 2259895ce8
+Depois que agarra a presa com as pinças\n
+grandes, não solta de jeito nenhum.\n
+É um POKéMON resistente, que se dá bem\n
+em qualquer ambiente.
+
+[gCrawdauntPokedexText] 8451b5d1f8
+Um POKéMON brigão que adora batalhar.\n
+Um CRAWDAUNT veterano, que venceu\n
+centenas de batalhas, tem as pinças\n
+gigantes cheias de cicatrizes.
+
+[gBaltoyPokedexText] 1337cbfe24
+BALTOY se move girando sobre o único pé.\n
+Aparece em murais que enfeitavam as\n
+paredes de uma cidade movimentada de\n
+uma era antiga.
+
+[gClaydolPokedexText] c492596323
+CLAYDOL dorme flutuando no ar. Os braços\n
+são separados do corpo e ficam\n
+flutuando graças ao poder psíquico\n
+deste POKéMON.
+
+[gLileepPokedexText] c4f0c97c61
+Disfarça-se de alga balançando os\n
+tentáculos. As presas desavisadas que\n
+chegam perto são engolidas inteiras.\n
+Foi extinto há 100 milhões de anos.
+
+[gCradilyPokedexText] 3c751c7206
+Arrasta o corpo pesado pelo fundo do mar.\n
+Faz o ninho nas partes rasas dos mares\n
+quentes. Dá para ver CRADILY nas praias\n
+quando a maré baixa.
+
+[gAnorithPokedexText] 79660a79ae
+Foi ressuscitado de um fóssil com o poder\n
+da ciência. Nada ondulando as oito asas\n
+dos lados, que eram patas que se\n
+adaptaram à vida no mar.
+
+[gArmaldoPokedexText] 96c5c22d1c
+ARMALDO costuma viver em terra. Mas,\n
+quando caça, mergulha no oceano. Nada\n
+usando as duas asas grandes.
+
+[gFeebasPokedexText] 91fbab425d
+FEEBAS vivem em lagos tomados por\n
+plantas aquáticas. Como a aparência é\n
+feia de dar dó, parece que poucos\n
+TREINADORES o criam.
+
+[gMiloticPokedexText] 2074df6fb9
+Dizem que vive no fundo de lagos grandes.\n
+Considerado o mais bonito de todos os\n
+POKéMON, já foi retratado em pinturas e\n
+estátuas.
+
+[gCastformPokedexText] eaf4181d31
+Muda de forma conforme o tempo.\n
+Mudanças no clima, como a temperatura e\n
+a umidade, parecem afetar a estrutura\n
+das suas células.
+
+[gKecleonPokedexText] b737c113c3
+Um POKéMON que muda a cor do corpo para\n
+combinar com o ambiente. KECLEON volta\n
+às cores originais quando leva um\n
+susto.
+
+[gShuppetPokedexText] 1f1c582b22
+Este POKéMON vaga tarde da noite atrás\n
+de emoções negativas, como rancor e\n
+inveja. Volta para o ninho quando o sol\n
+começa a nascer.
+
+[gBanettePokedexText] ede570e003
+Um boneco de pelúcia abandonado virou\n
+este POKéMON. Dizem que vivem em lixões\n
+e vagam procurando as crianças que os\n
+jogaram fora.
+
+[gDuskullPokedexText] 9f80242df2
+Um olhar do seu único olho vermelho deixa\n
+até adultos fortões paralisados de medo.\n
+É um POKéMON noturno que vaga\n
+escondido pelo manto da escuridão.
+
+[gDusclopsPokedexText] d021c4833f
+Acredita-se que o corpo é oco, só com uma\n
+bola de fogo fantasmagórica queimando\n
+dentro. Mas ninguém conseguiu confirmar\n
+essa teoria.
+
+[gTropiusPokedexText] fa62ebd5a2
+Voa batendo as folhas largas. O cacho\n
+de frutas que cresce em volta do pescoço\n
+é docinho. Na primavera, espalha pólen\n
+pelo pescoço.
+
+[gChimechoPokedexText] bf706d82f0
+Voam por aí muito agitados quando chega\n
+a estação quente. Comunicam-se entre si\n
+com sete gritos diferentes e fáceis de\n
+distinguir.
+
+[gAbsolPokedexText] caa0da9eb2
+Percebe até mudanças sutis no céu e na\n
+terra para prever desastres naturais.\n
+É um POKéMON de vida longa, que vive\n
+até 100 anos.
+
+[gWynautPokedexText] 301c34c3c9
+WYNAUT adora comer frutas doces. Colhe\n
+as frutas com esperteza usando os braços\n
+que parecem orelhas. Eles se juntam nos\n
+pomares, atraídos pelo cheiro.
+
+[gSnoruntPokedexText] 0d7da56747
+Costumam andar em grupos de uns cinco\n
+SNORUNT. Nas regiões de neve, dizem que,\n
+quando eles aparecem tarde da noite,\n
+vai nevar até de manhã.
+
+[gGlaliePokedexText] e32f0dfceb
+GLALIE tem o poder de congelar na hora a\n
+umidade do ar. Uma nuvem deslumbrante\n
+de cristais de gelo que parecem\n
+diamantes se forma em volta do corpo.
+
+[gSphealPokedexText] 7cf00be66f
+É todo coberto por um pelo macio. Por\n
+isso, nunca sente frio, nem rolando nos\n
+blocos de gelo, nem mergulhando no mar.
+
+[gSealeoPokedexText] b77e7b96bb
+SEALEO vivem em bandos nos blocos de\n
+gelo. Quebra o gelo com as nadadeiras\n
+fortes. Mergulha no mar para caçar\n
+cinco vezes por dia.
+
+[gWalreinPokedexText] f46bb413e9
+Para proteger o bando, o líder luta com\n
+qualquer um que invade seu território,\n
+mesmo que custe a vida. As presas podem\n
+quebrar na batalha.
+
+[gClamperlPokedexText] 49cfcb2000
+CLAMPERL fecha a concha com tudo sobre\n
+a presa para ela não escapar. Dizem que\n
+a pérola que cria ao evoluir guarda uma\n
+energia misteriosa.
+
+[gHuntailPokedexText] b7716a1565
+Para aguentar a pressão esmagadora da\n
+água no fundo do mar, a espinha é bem\n
+grossa e forte. A cauda, em forma de\n
+peixinho, tem olhos que se acendem.
+
+[gGorebyssPokedexText] d4a147a68e
+GOREBYSS suga os fluidos do corpo da\n
+presa pela boca fina, em forma de tubo.\n
+O corpo rosa-claro fica com uma cor viva\n
+quando termina de comer.
+
+[gRelicanthPokedexText] 35581c057f
+Um POKéMON que já foi considerado extinto.\n
+A espécie não muda de forma há 100\n
+milhões de anos. Anda no fundo do mar\n
+usando as nadadeiras peitorais.
+
+[gLuvdiscPokedexText] dd3161371b
+LUVDISC fazem ninho nos galhos de\n
+CORSOLA. Há um costume antigo de dar\n
+um LUVDISC de presente para mostrar\n
+que se está apaixonado.
+
+[gBagonPokedexText] adc8458340
+Apesar de pequeno, este POKéMON é muito\n
+forte, porque o corpo é um feixe de\n
+músculos. Dá cabeçadas com o crânio\n
+duro como ferro.
+
+[gShelgonPokedexText] 94c16ea68e
+Quase não come enquanto espera evoluir.\n
+Fica mais resistente aguentando a fome.\n
+A casca se solta no instante em que\n
+começa a evoluir.
+
+[gSalamencePokedexText] d956aeba91
+Depois de muitos anos, a estrutura das\n
+células sofreu uma mutação repentina e\n
+criou asas. Quando fica furioso, perde a\n
+razão e sai destruindo tudo.
+
+[gBeldumPokedexText] 8e70073d46
+Quando os BELDUM se juntam em bando, se\n
+movem em perfeita sintonia, como se\n
+fossem um só POKéMON. Comunicam-se\n
+entre si por ondas cerebrais.
+
+[gMetangPokedexText] 44fed8d277
+As garras das pontas dos braços rasgam\n
+chapas grossas de ferro como se fossem\n
+seda. Voa a mais de 100 km/h.
+
+[gMetagrossPokedexText] 0b985df509
+METAGROSS tem quatro cérebros ligados\n
+por uma rede neural complexa. Graças a\n
+essa integração, este POKéMON é mais\n
+inteligente que um supercomputador.
+
+[gRegirockPokedexText] ce5508181c
+Um POKéMON feito inteiro de pedras e\n
+rochas. Se partes do corpo lascam na\n
+batalha, REGIROCK se conserta juntando\n
+pedras novas.
+
+[gRegicePokedexText] 67a87241f1
+O corpo todo é feito de gelo da\n
+Antártida. Depois de muitos estudos, os\n
+pesquisadores acreditam que o gelo se\n
+formou numa era glacial.
+
+[gRegisteelPokedexText] e2617894e5
+O corpo é mais duro que qualquer outro\n
+metal. Esse metal é feito de uma\n
+substância misteriosa. Além de duro,\n
+encolhe e estica com flexibilidade.
+
+[gLatiasPokedexText] 8e8c2063b0
+Vivem em bandos pequenos, de poucos\n
+membros. Raramente têm contato com\n
+pessoas ou outros POKéMON. Somem se\n
+sentem inimigos.
+
+[gLatiosPokedexText] 499b00eb0c
+Mesmo escondido, sabe onde os outros\n
+estão e sente as emoções deles, porque\n
+tem telepatia. Sua inteligência o deixa\n
+entender a língua dos humanos.
+
+[gKyogrePokedexText] 63c5e0e701
+KYOGRE aparece nos mitos como o\n
+criador do mar. Depois de anos de briga\n
+com GROUDON, foi dormir no fundo do\n
+mar.
+
+[gGroudonPokedexText] 8f8529a82e
+GROUDON aparece nos mitos como o\n
+criador da terra. Dorme no magma debaixo\n
+da terra, e dizem que faz os vulcões\n
+entrarem em erupção quando acorda.
+
+[gRayquazaPokedexText] bae4c88524
+Um POKéMON que voa sem parar na camada\n
+de ozônio. Dizem que desceria à terra\n
+se KYOGRE e GROUDON brigassem.
+
+[gJirachiPokedexText] 1ab40c5d9d
+Dizem que JIRACHI realiza desejos.\n
+Enquanto ele dorme, uma casca dura de\n
+cristal envolve o corpo para protegê-lo\n
+dos inimigos.
+
+[gDeoxysPokedexText] b971c7bf34
+Um POKéMON que surgiu da mutação de um\n
+vírus extraterrestre exposto a um raio\n
+laser. O corpo é feito para ter agilidade\n
+e velocidade superiores.

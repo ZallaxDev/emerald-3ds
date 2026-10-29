@@ -1,0 +1,19 @@
+# POKé MART de PETALBURG: os clientes.
+
+[PetalburgCity_Mart_Text_WeakWillGrowStronger] db8ae541bc
+Mesmo que um POKéMON seja fraco agora,\n
+ele vai ficar mais forte.\p
+O mais importante é o amor!\n
+Amor pelos seus POKéMON!$
+
+[PetalburgCity_Mart_Text_RepelIsUseful] 13f58834cf
+Você usa REPELENTE?\n
+Ele afasta os POKéMON, então é\l
+útil quando você está com pressa.$
+
+[PetalburgCity_Mart_Text_TakeSomeAntidotesWithYou] 441e3c4000
+Você tem ANTÍDOTO aí\n
+com você?\p
+Se andar com um POKéMON envenenado,\n
+ele vai perdendo PS até desmaiar.\l
+Leve uns ANTÍDOTOS com você.$

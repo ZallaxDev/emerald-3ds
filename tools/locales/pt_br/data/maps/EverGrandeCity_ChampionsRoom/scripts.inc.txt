@@ -1,0 +1,121 @@
+# LIGA POKéMON: a sala do CAMPEÃO WALLACE.
+
+[EverGrandeCity_ChampionsRoom_Text_IntroSpeech] 4cf7976458
+WALLACE: Boas-vindas, {PLAYER}{KUN}.\p
+Aquele incidente na CIDADE DE\n
+SOOTOPOLIS… Foi um trabalho\l
+soberbo, acabar com a crise sozinho.\p
+Ops!\p
+Não seria justo dizer que você\n
+acabou com a crise sozinho.\p
+Você superou aquela situação difícil\n
+agindo em sintonia com os POKéMON.\p
+Nós, TREINADORES, criamos POKéMON\n
+dando itens e ensinando novas\l
+técnicas de batalha.\p
+Mas nós também aprendemos muito\n
+com os POKéMON.\p
+E é aqui que as suas conquistas são\n
+postas à prova contra as de outros\l
+como você.\p
+Agora!\p
+Quem dança com mais elegância com\n
+os seus POKéMON em HOENN?\p
+Mostre aqui e agora!$
+
+[EverGrandeCity_ChampionsRoom_Text_Defeat] ed45b100ec
+Eu, o CAMPEÃO, caio derrotado…\p
+Foi um trabalho maravilhoso.\n
+Você teve uma elegância irritante.\l
+E, ainda assim, foi glorioso!\p
+Parabéns, {PLAYER}{KUN}!\p
+Você é um TREINADOR POKéMON\n
+de verdadeira nobreza!$
+
+[EverGrandeCity_ChampionsRoom_Text_PostBattleSpeech] 51e4732c15
+WALLACE: Os POKéMON que você mandou\n
+pra batalha…\p
+Às vezes dançavam como a brisa da\n
+primavera, às vezes atacavam como\l
+um raio.\p
+Você conduziu os seus POKéMON com\n
+uma elegância leve, mas firme.\p
+Até eu fiquei deslumbrado com a sua\n
+atuação de mestre!\p
+Você agora está no topo glorioso\n
+da LIGA POKéMON.\p
+E agora proclamo, em toda a região\n
+de HOENN…$
+
+[EverGrandeCity_ChampionsRoom_Text_MayAdvice] 15d1a49a2c
+MAY: {PLAYER}{KUN}!\p
+Aqui vai um conselho antes de você\n
+desafiar o CAMPEÃO…$
+
+[EverGrandeCity_ChampionsRoom_Text_MayItsAlreadyOver] 407a732b0d
+MAY: Hã?\n
+Quê, quê, quê?\p
+{PLAYER}{KUN}…\n
+Será que…\l
+Já acabou?$
+
+[EverGrandeCity_ChampionsRoom_Text_BrendanAdvice] 27580c54cf
+BRENDAN: {PLAYER}!\p
+Que tal um conselho antes de você\n
+desafiar o CAMPEÃO?…$
+
+[EverGrandeCity_ChampionsRoom_Text_BrendanYouveWon] c3ed69e325
+BRENDAN: {PLAYER}…\p
+Quer dizer que…\n
+Você venceu o CAMPEÃO?$
+
+[EverGrandeCity_ChampionsRoom_Text_BirchArriveRatePokedex] 1a3db433a1
+PROF. BIRCH: Viu?\n
+O que eu te disse, {RIVAL}?\p
+Eu não disse que não precisava se\n
+preocupar com {PLAYER}{KUN}?\p
+… … … … … … … …\n
+{PLAYER}{KUN}, você finalmente conseguiu.\p
+Quando soube que você venceu o\n
+próprio pai no GINÁSIO de PETALBURG,\l
+achei que talvez tivesse chance…\p
+Mas chegar mesmo ao topo da LIGA!\p
+Ah, é!\p
+Como está a sua POKéDEX?\n
+Deixa eu ver.$
+
+[EverGrandeCity_ChampionsRoom_Text_BirchCongratulations] 2222e0fff2
+PROF. BIRCH: Enfim,\n
+parabéns!\p
+Agora, entre com orgulho na sala\n
+final!$
+
+[EverGrandeCity_ChampionsRoom_Text_WallaceComeWithMe] bc9c973d38
+WALLACE: {PLAYER}{KUN}…\p
+Não, deixe-me dizer do jeito certo.\p
+Quem agora reina na LIGA!\p
+Venha comigo.$
+
+[EverGrandeCity_ChampionsRoom_Text_WallaceWaitOutside] bfd38e8561
+WALLACE: Sinto muito, mas…\p
+Daqui em diante, só entram os\n
+TREINADORES que chegaram ao topo\l
+da LIGA.\p
+Você vai ter que esperar lá fora\n
+com o PROF. BIRCH.$
+
+[EverGrandeCity_ChampionsRoom_Text_MayCongratulations] 882302a68d
+MAY: Aff…\p
+… … … … … … … …\n
+… … … … … … … …\p
+Brincadeira! Tudo bem!\n
+É a regra!\p
+{PLAYER}{KUN}!\n
+De coração, parabéns!$
+
+[EverGrandeCity_ChampionsRoom_Text_BrendanCongratulations] a70e64f8eb
+BRENDAN: Quêêê?! … … … … …\n
+… … … … … … … …\p
+Se é a regra, não tem jeito.\p
+{PLAYER}, mandou bem!\n
+Parabéns!$

@@ -1,0 +1,31 @@
+# CIDADE DE RUSTBORO, casa 1: a troca de POKéMON.
+
+[RustboroCity_House1_Text_IllTradeIfYouWant] c0cde28d73
+Hã? O meu POKéMON é fofo?\n
+Claro, eu sei.\p
+Mas, se você quer mesmo, eu topo\n
+trocar com você.\p
+Troco o meu {STR_VAR_2} por\n
+um {STR_VAR_1}, se você quiser.$
+
+[RustboroCity_House1_Text_PleaseBeGoodToMyPokemon] d20b9e23bf
+Hehehe…\n
+Cuide bem do meu POKéMON, tá?$
+
+[RustboroCity_House1_Text_DoesntLookLikeMonToMe] 92aa4faa42
+Hã? Isso não parece nem um pouco\n
+com um {STR_VAR_1}.$
+
+[RustboroCity_House1_Text_YouDontWantToThatsOkay] 67eb391c78
+Ah, se não quiser, tudo bem.\n
+Mas o meu POKéMON é fofo, viu…$
+
+[RustboroCity_House1_Text_AnyPokemonCanBeCute] a0a5b38ed6
+Todo POKéMON pode ser fofo, se você\n
+criar com cuidado e carinho.$
+
+[RustboroCity_House1_Text_AllSortsOfPlaces] d15cb9b5e2
+Em tudo quanto é lugar tem tudo\n
+quanto é tipo de POKéMON e de gente.\p
+Acho isso fascinante, então vou\n
+a tudo quanto é lugar.$

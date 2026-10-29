@@ -1,0 +1,64 @@
+# A fala do Prof. Birch no início de um novo jogo.
+
+[gText_Birch_Welcome] 112022075b
+Olá! Desculpe a demora!\p
+Boas-vindas ao mundo dos POKéMON!\p
+Meu nome é BIRCH.\p
+Mas todos me chamam de\n
+PROFESSOR POKéMON.\p
+$
+
+[gText_Birch_Pokemon] 5778e02c01
+Isto é o que chamamos de “POKéMON”.\p
+\n
+$
+
+[gText_Birch_MainSpeech] 2dd85a97f5
+Este mundo é habitado por muitas\n
+criaturas chamadas POKéMON.\p
+Nós, humanos, vivemos ao lado dos\n
+POKéMON, às vezes como amigos de\l
+brincadeiras, às vezes como\l
+companheiros de trabalho.\p
+E, às vezes, nos unimos a eles\n
+para batalhar contra outros.\p
+Mas, apesar de sermos tão próximos,\n
+não sabemos tudo sobre os POKéMON.\p
+Na verdade, ainda existem muitos,\n
+muitos segredos sobre os POKéMON.\p
+Para desvendar esses mistérios,\n
+venho fazendo pesquisas.\l
+É o que eu faço.\p
+$
+
+[gText_Birch_AndYouAre] a27b7d7097
+E você, quem é?$
+
+[gText_Birch_BoyOrGirl] 904f2ae23a
+Você é um menino?\n
+Ou é uma menina?$
+
+[gText_Birch_WhatsYourName] 5c783a8a3c
+Muito bem.\n
+Qual é o seu nome?$
+
+[gText_Birch_SoItsPlayer] cdbf0f59fc
+Então você é {PLAYER}{KUN}?$
+
+[gText_Birch_YourePlayer] 677c021796
+Ah, certo!\p
+Você é {PLAYER}{KUN}, que vai se mudar\n
+para a minha cidade, LITTLEROOT.\l
+Agora entendi!\p
+$
+
+[gText_Birch_AreYouReady] ec15b8e817
+Muito bem, tudo pronto?\p
+A sua própria aventura está\n
+prestes a começar.\p
+Tenha coragem e mergulhe no\n
+mundo dos POKéMON, onde sonhos,\l
+aventuras e amizades aguardam você!\p
+Bem, estarei esperando por você.\n
+Venha me ver no LABORATÓRIO POKéMON.\p
+$

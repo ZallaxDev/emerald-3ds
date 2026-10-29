@@ -1,0 +1,17 @@
+# CIDADE DE LILYCOVE: a LOJA DE DEPARTAMENTOS, 3º andar.
+
+[LilycoveCity_DepartmentStore_4F_Text_AttackOrDefenseTM] e776208c5f
+Hmm…\p
+Um golpe de ataque…\n
+Ou um golpe de defesa…\p
+Não é fácil decidir que golpes de MT\n
+ensinar aos POKéMON…$
+
+[LilycoveCity_DepartmentStore_4F_Text_FiftyDifferentTMs] 459de1b10e
+Tem tantos tipos de golpes de MT.\p
+Um catálogo que li dizia que são\n
+cinquenta tipos diferentes.$
+
+[LilycoveCity_DepartmentStore_4F_Text_PokemonOnlyHaveFourMoves] 13a2aa825a
+Queria ter todas as MT, mas um\n
+POKéMON só aprende quatro golpes.$

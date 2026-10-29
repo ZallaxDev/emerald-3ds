@@ -74,6 +74,20 @@ OBJECTS = {
                  (128, 129, 132, 133),
                  (144, 145, 148, 149)),
     },
+    # The Battle Frontier's flags along its walls: the cloth three tiles
+    # across and two down (its tiles the ones the game animates, 218-223 of
+    # the secondary tileset), the pole two tiles under its west end, each
+    # side's tileset its own copy of them
+    "frontier_flag_east": {"tileset": "gTileset_General",
+                           "secondary": "gTileset_BattleFrontierOutsideEast",
+                           "land": True, "palette": 11,
+                           "grid": ((730, 731, 732), (733, 734, 735), (746, None, None),
+                                    (762, None, None))},
+    "frontier_flag_west": {"tileset": "gTileset_General",
+                           "secondary": "gTileset_BattleFrontierOutsideWest",
+                           "land": True, "palette": 11,
+                           "grid": ((730, 731, 732), (733, 734, 735), (746, None, None),
+                                    (762, None, None))},
     # Slateport market's goods, each a cell of the secondary tileset's
     # upper layer over whatever paving it stands on
     "basket_green": {"tileset": "gTileset_General", "secondary": "gTileset_Slateport",

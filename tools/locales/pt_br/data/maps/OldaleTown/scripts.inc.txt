@@ -1,0 +1,58 @@
+# CIDADE DE OLDALE: os moradores, o POKé MART e a placa.
+# A fala de MAY só aparece a um jogador; a de BRENDAN, a uma jogadora.
+
+[OldaleTown_Text_SavingMyProgress] 4d4b33ace1
+Quero descansar, então vou salvar\n
+o meu progresso.$
+
+[OldaleTown_Text_IWorkAtPokemonMart] c3bc930e68
+Oi!\n
+Eu trabalho num POKé MART.\p
+Pode vir comigo um instante?$
+
+[OldaleTown_Text_ThisIsAPokemonMart] b7154abb10
+Este é um POKé MART.\n
+É só procurar o nosso telhado azul.\p
+Vendemos vários produtos, inclusive\n
+POKé BOLAS para capturar POKéMON.\p
+Tome, quero que fique com isto\n
+como brinde promocional.$
+
+[OldaleTown_Text_PotionExplanation] 612612b655
+A POÇÃO pode ser usada a qualquer hora,\n
+então às vezes é ainda mais útil que\l
+um CENTRO POKéMON.$
+
+[OldaleTown_Text_WaitDontComeInHere] dbd60e9f15
+Aaaaah! Espere!\n
+Por favor, não entre aqui.\p
+Acabei de descobrir as pegadas de\n
+um POKéMON raro!\p
+Espere eu terminar de desenhá-las,\n
+está bem?$
+
+[OldaleTown_Text_DiscoveredFootprints] 09e8eafd5b
+Acabei de descobrir as pegadas de\n
+um POKéMON raro!\p
+Espere eu terminar de desenhá-las,\n
+está bem?$
+
+[OldaleTown_Text_FinishedSketchingFootprints] 8018a598fa
+Terminei de desenhar as pegadas de\n
+um POKéMON raro.\p
+Mas no fim eram só as minhas\n
+próprias pegadas…$
+
+[OldaleTown_Text_MayLetsGoBack] 165034d8e1
+MAY: {PLAYER}{KUN}!\n
+Aqui!\l
+Vamos depressa para casa!$
+
+[OldaleTown_Text_BrendanLetsGoBack] 5a799a30b3
+BRENDAN: Vou voltar para o LABORATÓRIO\n
+do meu pai agora.\l
+{PLAYER}, é melhor você voltar também.$
+
+[OldaleTown_Text_TownSign] c61670e610
+CIDADE DE OLDALE\n
+“Onde tudo começa pequeno.”$

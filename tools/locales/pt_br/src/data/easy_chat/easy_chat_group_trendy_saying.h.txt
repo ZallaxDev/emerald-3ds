@@ -1,0 +1,102 @@
+# As palavras da FALA FÁCIL, grupo trendy_saying (src/data/easy_chat/easy_chat_group_trendy_saying.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_KthxBye] 3b0cca9f36 width=72
+VALEU, TCHAU.
+
+[gEasyChatWord_YesSirExcl] 22f6a2cbed width=72
+SIM, SENHOR!
+
+[gEasyChatWord_AvantGarde] 8942918b70 width=72
+VANGUARDA
+
+[gEasyChatWord_Couple] 2fe454c602 width=72
+CASAL
+
+[gEasyChatWord_MuchObliged] edf7ed80c8 width=72
+MUITO GRATO
+
+[gEasyChatWord_YeehawExcl] 504c0d52a4 width=72
+IIIHAAA!
+
+[gEasyChatWord_Mega] bb17fdb81a width=72
+MEGA
+
+[gEasyChatWord_1HitKOExcl] 63d27c3661 width=72
+KO DIRETO!
+
+[gEasyChatWord_Destiny] 4160c3ce1f width=72
+DESTINO
+
+[gEasyChatWord_Cancel] 1507c40f04 width=72
+CANCELAR
+
+[gEasyChatWord_New] 66aabd91fc width=72
+NOVO
+
+[gEasyChatWord_Flatten] 010ccc372f width=72
+ACHATAR
+
+[gEasyChatWord_Kidding] a6d1569418 width=72
+BRINCADEIRA!
+
+[gEasyChatWord_Loser] 7f133b2b30 width=72
+PERDEDOR
+
+[gEasyChatWord_Losing] f710add0b0 width=72
+PERDENDO
+
+[gEasyChatWord_Happening] 7bb3467e2f width=72
+ROLANDO
+
+[gEasyChatWord_HipAnd] e2c57aece5 width=72
+MANEIRO E
+
+[gEasyChatWord_Shake] 86ade94243 width=72
+AGITAR
+
+[gEasyChatWord_Shady] 1b2231bdce width=72
+SUSPEITO
+
+[gEasyChatWord_Upbeat] d70b85b9fa width=72
+ANIMADO
+
+[gEasyChatWord_Modern] 0fcf4bf29f width=72
+MODERNO
+
+[gEasyChatWord_SmellYa] b1066a0d26 width=72
+FUI!
+
+[gEasyChatWord_Bang] 0a210d7056 width=72
+BUM
+
+[gEasyChatWord_Knockout] c9a7b65527 width=72
+NOCAUTE
+
+[gEasyChatWord_Hassle] 960e48c1bf width=72
+ENCRENCA
+
+[gEasyChatWord_Winner] ad6c671488 width=72
+VENCEDOR
+
+[gEasyChatWord_Fever] 55c5d7774e width=72
+FEBRE
+
+[gEasyChatWord_Wannabe] e456b27cfb width=72
+METIDO
+
+[gEasyChatWord_Baby] 76e7400910 width=72
+BEBÊ
+
+[gEasyChatWord_Heart] 454854292b width=72
+CORAÇÃO
+
+[gEasyChatWord_Old] 5f06208efc width=72
+VELHO
+
+[gEasyChatWord_Young] 05300c0f04 width=72
+JOVEM
+
+[gEasyChatWord_Ugly] 982b0f7f45 width=72
+FEIO

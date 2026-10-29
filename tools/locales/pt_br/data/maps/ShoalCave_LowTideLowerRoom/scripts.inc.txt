@@ -1,0 +1,11 @@
+# CAVERNA DO BANCO DE AREIA: o homem da FAIXA FOCAL.
+
+[ShoalCave_LowTideLowerRoom_Text_CanOvercomeColdWithFocus] ef9c231989
+O frio cortante daqui atrapalha\n
+o treino.\p
+Mas, com foco, dá pra superar!\p
+Com esta FAIXA FOCAL, se concentre e\n
+aguente o frio!$
+
+[ShoalCave_LowTideLowerRoom_Text_EverythingStartsWithFocus] 6e64ec0176
+Tudo começa com o foco!$

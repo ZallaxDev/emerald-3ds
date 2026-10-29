@@ -1,0 +1,35 @@
+Pokémon Emerald 3Ds Dual Screen changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: FRUTA before the BERRY's name in Portuguese
+Applies after 0063-portuguese-pokedex-metric-units.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/item.c b/src/item.c
+--- a/src/item.c
++++ b/src/item.c
+@@ -109,7 +109,8 @@
+     else
+         berryString = gText_Berries;
+ 
+-#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH)
++// Spanish, French and Portuguese put the word first: BAYA ATANIA, FRUTAS ORAN.
++#if defined(PORT_BRIDGE) && (GAME_LANGUAGE == LANGUAGE_SPANISH || GAME_LANGUAGE == LANGUAGE_FRENCH || CTR_LANG_PT_BR)
+     txtPtr = StringCopy(dst, berryString);
+     *txtPtr = CHAR_SPACE;
+     StringCopy(txtPtr + 1, berryName);
+diff --git a/src/strings.c b/src/strings.c
+--- a/src/strings.c
++++ b/src/strings.c
+@@ -1824,11 +1824,15 @@
+ const u8 gText_PokeBalls[] = _("POKé BALLS");
+ #if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_SPANISH
+ const u8 gText_Berry[] = _("BAYA");
++#elif CTR_LANG_PT_BR
++const u8 gText_Berry[] = _("FRUTA");
+ #else
+ const u8 gText_Berry[] = _("BERRY");
+ #endif
+ #if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_SPANISH
+ const u8 gText_Berries[] = _("BAYAS");
++#elif CTR_LANG_PT_BR
++const u8 gText_Berries[] = _("FRUTAS");
+ #else
+ const u8 gText_Berries[] = _("BERRIES");
+ #endif

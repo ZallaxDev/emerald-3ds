@@ -1,0 +1,35 @@
+# ESCONDERIJO MAGMA: 1º andar.
+
+[MagmaHideout_1F_Text_Grunt1Intro] 2b8dbf9925
+Quando a EQUIPE MAGMA faz a chamada,\n
+a gente pega as guardas importantes\l
+na ordem da fila.\p
+Por isso me largaram neste canto.\n
+Eu sempre chego atrasado na chamada!$
+
+[MagmaHideout_1F_Text_Grunt1Defeat] 938d012a57
+Também chego atrasado nos treinos!\p
+Odeio admitir, mas sou fracote…$
+
+[MagmaHideout_1F_Text_Grunt1PostBattle] 3d4d2619dd
+Tá, vou tentar me esforçar um\n
+pouquinho mais daqui pra frente…$
+
+[MagmaHideout_1F_Text_Grunt2Intro] 18cf3afcea
+O nosso líder mandou a gente cavar\n
+o MONTE CHIMNEY, e a gente cavou.\p
+E, no meio da escavação, achamos\n
+uma coisa de cair o queixo!\p
+O que a gente achou?\p
+Fuhahaha!\n
+Conto se você me vencer!$
+
+[MagmaHideout_1F_Text_Grunt2Defeat] 732011921b
+Argh!\n
+Derrubado!$
+
+[MagmaHideout_1F_Text_Grunt2PostBattle] f6f5cbd630
+Mudei de ideia, não vou contar.\n
+Você descobre quando chegar lá!\p
+Surpresa é melhor no final,\n
+não acha?$

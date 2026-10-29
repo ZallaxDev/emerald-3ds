@@ -1,0 +1,36 @@
+# ROTA 102: o WALLY capturando o primeiro POKéMON, os moradores e as placas.
+
+[Route102_Text_WatchMeCatchPokemon] 9303851226
+WALLY: {PLAYER}…\n
+Os POKéMON se escondem no mato alto\l
+assim, né?\p
+Fica olhando pra ver se eu consigo\n
+pegar um direitinho.\p
+…Opa!$
+
+[Route102_Text_WallyIDidIt] f95a774234
+WALLY: Consegui… É o meu…\n
+O meu POKéMON!$
+
+[Route102_Text_LetsGoBack] 327758756f
+{PLAYER}, obrigado!\n
+Vamos voltar pro GINÁSIO!$
+
+[Route102_Text_ImNotVeryTall] f34a240030
+Eu sou… meio baixinho, então afundo\n
+direto no mato alto.\p
+O mato entra no meu nariz e…\n
+Fuafuafuafuafua…\p
+Atchim!$
+
+[Route102_Text_CatchWholeBunchOfPokemon] 51c031f755
+Eu vou pegar um montão de\n
+POKéMON!$
+
+[Route102_Text_RouteSignOldale] c5a61c3bcd
+ROTA 102\n
+{RIGHT_ARROW} CIDADE DE OLDALE$
+
+[Route102_Text_RouteSignPetalburg] ce92143b81
+ROTA 102\n
+{LEFT_ARROW} CIDADE DE PETALBURG$

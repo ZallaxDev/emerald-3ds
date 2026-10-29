@@ -1,0 +1,319 @@
+# CIDADE DE SOOTOPOLIS: a crise do GROUDON e do KYOGRE, o WALLACE e as placas.
+
+[SootopolisCity_Text_GymSign] d3a1cd3e41
+GINÁSIO POKéMON DE SOOTOPOLIS\n
+LÍDER: JUAN\p
+“O LÍDER de GINÁSIO com a beleza\n
+da água pura!”$
+
+[SootopolisCity_Text_CitySign] bc799e3e0a
+CIDADE DE SOOTOPOLIS\p
+“A cidade mística onde a história\n
+adormece.”$
+
+[SootopolisCity_Text_DoorIsClosed] 26b27eaf88
+A porta está fechada.$
+
+[SootopolisCity_Text_PhysicallyFitLivingHere] 4b6ceccefc
+Mergulhar no mar. Subir e descer\n
+escadas o tempo todo…\p
+Quem mora nesta cidade acaba\n
+ficando em forma.$
+
+[SootopolisCity_Text_GiantPokemonSuddenlyAppeared] 2f0863b9b0
+Esses POKéMON gigantes apareceram\n
+de repente no meio da cidade!\p
+E eu nunca vi eles antes!\p
+Por que estão se chocando desse\n
+jeito?\p
+Por que esses POKéMON não podem\n
+ser amigos?$
+
+[SootopolisCity_Text_WhatIsThatGreenPokemon] 9a7014af5e
+Quê? Quê? Quê?\n
+Que POKéMON verde é aquele?!$
+
+[SootopolisCity_Text_WhereDidLegendariesGo] b286414e1e
+GROUDON e KYOGRE…\n
+Aonde eles foram?\p
+Vão causar secas ou tempestades\n
+em outro lugar?$
+
+[SootopolisCity_Text_TwoPokemonArentAngry] bfe6c76e68
+Tenho a impressão de que os dois\n
+POKéMON não estão com raiva.\p
+Acho que… Eles provavelmente não\n
+conseguem controlar o próprio poder…$
+
+[SootopolisCity_Text_FlyingMonStoppedRampage] d757ee7d75
+Aquele POKéMON voador desceu do\n
+céu e parou os POKéMON\l
+enfurecidos…$
+
+[SootopolisCity_Text_WonderWhatWorldIsLike] 3d9ba8c0d0
+Eu… Eu nunca saí desta cidade.\p
+Como será o mundo do outro lado\n
+deste céu redondo?$
+
+[SootopolisCity_Text_ThisIsWicked] 0d3b4cc569
+Uau!\n
+Isto é irado!$
+
+[SootopolisCity_Text_ThatWasWicked] 28984bc8c4
+Uau!\n
+Aquilo foi irado!$
+
+[SootopolisCity_Text_GoRedAndBlueMon] e7eeb50dc5
+Vai, POKéMON vermelho!\n
+Não recua, POKéMON azul!$
+
+[SootopolisCity_Text_DoYouKnowMonNames] c56327b9c7
+… … … … … …\p
+Oi, sabe o nome daqueles POKéMON\n
+brigando ali?$
+
+[SootopolisCity_Text_GreenOneSettlesThings] 913f5f4377
+Eu queria saber quem ia ganhar, o\n
+vermelho ou o azul, mas, nossa, foi\l
+o verde que resolveu tudo!\p
+Que reviravolta!$
+
+[SootopolisCity_Text_SeeingLegendWithOwnEyes] 5525b10065
+Uma lenda antiga diz que a terra e o\n
+mar foram moldados por uma batalha\l
+colossal entre POKéMON.\p
+Pois estou vendo isso acontecer\n
+com os meus próprios olhos!\p
+Uau! Nunca imaginei ver algo\n
+tão grandioso!$
+
+[SootopolisCity_Text_SawLegendWithOwnEyes] 7e3457dc59
+Uma lenda antiga diz que a terra e o\n
+mar foram moldados por uma batalha\l
+colossal entre POKéMON.\p
+Pois eu vi isso acontecer com os\n
+meus próprios olhos!\p
+Uau! Nunca imaginei ver algo\n
+tão grandioso!$
+
+[SootopolisCity_Text_BigPokemonFighting] b19a6bd957
+Um POKéMON grandão está brigando\n
+com outro POKéMON grandão!\p
+Por favor, alguém faz eles pararem!$
+
+[SootopolisCity_Text_PrettyMonCameFromSky] a00eabddd7
+Um POKéMON bonito desceu do céu…$
+
+[SootopolisCity_Text_SootopolisWillBeWrecked] cfc7bb4583
+Ah, não!\n
+A CIDADE DE SOOTOPOLIS vai acabar!$
+
+[SootopolisCity_Text_SootopolisDidntGetWrecked] 197ab6abe2
+A CIDADE DE SOOTOPOLIS não acabou!$
+
+[SootopolisCity_Text_NoOrdinaryTourist] da83539c5e
+Hum!\n
+Veio até SOOTOPOLIS?\l
+Não veio só a passeio, hein.\p
+Mas acho que isso também não faz\n
+de você alguém extraordinário.$
+
+[SootopolisCity_Text_CityRegainedCalm] fa4382470f
+A cidade voltou a ficar calma…$
+
+[SootopolisCity_Text_CaveOfOriginPleaseLeave] 5cf94beffe
+Quem é você?\p
+Esta é a CAVERNA DA ORIGEM.\p
+Dizem que os espíritos dos POKéMON,\n
+acalmados no MONTE PYRE, revivem aqui.\p
+Por favor, saia.$
+
+[SootopolisCity_Text_LeadSuperiorTrainerToCave] 539aaeb98f
+Uma pessoa de vontade forte e\n
+talento superior…\p
+Um TREINADOR que conheça e tenha\n
+vivido muitos tipos de POKéMON…\p
+Se uma pessoa assim aparecesse, o\n
+WALLACE me mandou levá-la até\l
+esta CAVERNA.$
+
+[SootopolisCity_Text_AwakenedPokemonClash] 69e62cbe9f
+Minha nossa…\p
+O choque entre os dois POKéMON\n
+despertados foi contido pelo\l
+despertar de um terceiro POKéMON…$
+
+[SootopolisCity_Text_CaveOfOriginSleepsToo] b53d497716
+Esta é a CAVERNA DA ORIGEM…\p
+Com o fim da crise, a caverna\n
+também vai adormecer…$
+
+[SootopolisCity_Text_SootopolisSkyBeautiful] 8567c37788
+SOOTOPOLIS nasceu como cidade na\n
+cratera de um vulcão.\p
+Olhando pro céu, também dá pra ver\n
+a borda da cratera.\l
+Então só se vê o céu num círculo.\p
+Mas é isso que torna o céu de\n
+SOOTOPOLIS o mais bonito.$
+
+[SootopolisCity_Text_GiganticPokemonFight] 46113b7368
+Com dois POKéMON gigantes brigando\n
+com tanta fúria, não há muito que\l
+a gente possa fazer.$
+
+[SootopolisCity_Text_FearedWorstWhenPokemonFlewDown] 55ed15509d
+Quando aquele terceiro POKéMON\n
+desceu voando, temi o pior.$
+
+[SootopolisCity_Text_NightSkyFavoriteScenery] 983c134c94
+Um círculo de céu noturno emoldurado\n
+pela cratera de um vulcão…\p
+E nesse anel, as estrelas piscam\n
+como se estivessem vivas…\l
+É a minha paisagem favorita.$
+
+[SootopolisCity_Text_WeatherWentWild] 70a5887f43
+O tempo estava limpo hoje de manhã,\n
+mas…\p
+De repente, juntaram nuvens escuras,\n
+caiu um temporal e ainda teve\l
+trovão e relâmpago.\p
+O tempo ficou completamente\n
+maluco!\p
+Será que é tudo por causa daqueles\n
+POKéMON?$
+
+[SootopolisCity_Text_YouBroughtFlyingMon] a2522f37cf
+Hã?\p
+Foi você que trouxe aquele POKéMON\n
+voador até aqui?\p
+Nossa, que incrível!$
+
+[SootopolisCity_Text_GroudonPleaseStop] 6e172adf4a
+MAXIE: G… GROUDON…\n
+Por favor! Pare com isso!\p
+Agora sei até onde vai o seu poder!\p
+Se continuar, não só SOOTOPOLIS,\n
+mas toda HOENN vai ficar arruinada!$
+
+[SootopolisCity_Text_AfterAllOurScheming] 685606d11a
+MAXIE: Então os POKéMON superantigos\n
+não eram só GROUDON e KYOGRE…\p
+Depois de todos os nossos planos\n
+inúteis e esforços desesperados, um\l
+gesto simples daquele POKéMON põe\l
+tudo em ordem como se nada fosse…\p
+Fu…\n
+Fuhahaha…$
+
+[SootopolisCity_Text_KyogreCalmDown] c37a04e39e
+ARCHIE: KYOGRE! O que houve?!\n
+Olhe aqui! É o ORBE VERMELHO!\l
+Acalme-se! KYOGRE!\p
+… … … … … …\n
+… … … … … …\p
+Não adianta!\n
+Ele não responde de jeito nenhum!$
+
+[SootopolisCity_Text_TryingMeaninglessToPokemon] 1762c1dbdc
+ARCHIE: KYOGRE e GROUDON voaram\n
+pra sabe-se lá onde.\p
+O clima de HOENN voltou ao\n
+normal…\p
+Haha…\n
+Hahaha…\p
+Talvez o que tentamos fazer fosse\n
+algo pequeno, até sem sentido,\l
+pros POKéMON…$
+
+[SootopolisCity_Text_InvolvedWithCrisisComeWithMe] d10ff54d86
+STEVEN: Aqueles POKéMON brigando…\n
+GROUDON… E KYOGRE…\p
+Os dois POKéMON superantigos\n
+despertaram de um longo sono…\p
+E agora se chocam com essa energia\n
+que ninguém controla…\p
+…{PLAYER}{KUN}.\p
+Se você está aqui agora, entendo\n
+que topa se envolver nesta crise.\p
+Então tem alguém que eu queria\n
+que você conhecesse.\p
+Venha comigo, por favor.$
+
+[SootopolisCity_Text_DoesThisMakeYourFearPokemon] 57a3e192f8
+STEVEN: Escute, {PLAYER}{KUN}.\p
+Ver o GROUDON e o KYOGRE faz você\n
+achar que os POKéMON dão medo?\p
+Mas não é verdade.\n
+Os POKéMON são muito mais…\p
+…Por que estou te perguntando isso?\n
+Você já sabe.$
+
+[SootopolisCity_Text_HereWereAreHelpWallace] afb67d264c
+STEVEN: Certo, chegamos!\p
+Aqui dentro está alguém chamado\n
+WALLACE.\p
+Acho que você tem o necessário pra\n
+ajudá-lo…$
+
+[SootopolisCity_Text_KnowWhatsNeededToHelpHim] d7dc563797
+STEVEN: Acho que você tem o\n
+necessário pra ajudá-lo…$
+
+[SootopolisCity_Text_NeverBeenToSkyPillar] 15dba8ad05
+STEVEN: O PILAR CELESTE…\p
+Nunca fui lá.\n
+Onde será que fica?$
+
+[SootopolisCity_Text_SoThatsRayquaza] 20df0732dd
+STEVEN: Então esse é o RAYQUAZA…\p
+É incrível como os dois POKéMON\n
+enfurecidos fugiram dele com medo…$
+
+[SootopolisCity_Text_MaxieArchieLeft] 02970c21cf
+STEVEN: Parece que o MAXIE e o ARCHIE\n
+foram embora pra algum lugar.\p
+Talvez tenham ido ao MONTE PYRE\n
+devolver os ORBES…$
+
+[SootopolisCity_Text_HaventYouScaledSkyPillar] cbbcf03743
+WALLACE: Ué?\n
+{PLAYER}{KUN}?\p
+Ainda não subiu o PILAR CELESTE?\p
+Tenho certeza de que você consegue\n
+chegar ao topo do PILAR CELESTE…$
+
+[SootopolisCity_Text_AquaMagmaDidntMeanHarm] ee9c261464
+WALLACE: {PLAYER}{KUN}…\p
+Os líderes da EQUIPE MAGMA e da AQUA,\n
+acho que não queriam fazer mal.\p
+Não custa ouvir o que eles têm a\n
+dizer.$
+
+[SootopolisCity_Text_ThankYouForHelpAcceptThis] 063e6ee999
+WALLACE: {PLAYER}{KUN}…\n
+Os meus olhos não me enganaram.\p
+Graças à sua ajuda, SOOTOPOLIS…\n
+Não, toda HOENN foi salva.\p
+Em nome do povo, eu te agradeço.\p
+Isto é um presente meu.\n
+Por favor, aceite.$
+
+[SootopolisCity_Text_ExplainWaterfallGoToGym] c051c46972
+Essa MÁQUINA OCULTA contém\n
+CACHOEIRA.\p
+Com a INSÍGNIA DA CHUVA, um POKéMON\n
+que aprendeu essa MO consegue subir\l
+cachoeiras.\p
+E onde se consegue a INSÍGNIA DA\n
+CHUVA? Você sabe, não sabe?\p
+Isso mesmo! Tem que vencer o LÍDER\n
+do GINÁSIO de SOOTOPOLIS.\p
+Quando der, passe por\n
+aquela porta.$
+
+[SootopolisCity_Text_DazzledByMentor] 52dca87e78
+WALLACE: Tenho certeza de que o\n
+estilo de batalha elegante do meu\l
+mestre vai te deslumbrar.$

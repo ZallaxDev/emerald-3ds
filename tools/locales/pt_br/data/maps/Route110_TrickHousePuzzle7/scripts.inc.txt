@@ -1,0 +1,77 @@
+# CASA DOS TRUQUES, sala 7.
+
+[Route110_TrickHousePuzzle7_Text_WroteSecretCodeLockOpened] 65cbe90ac5
+{PLAYER} escreveu a senha secreta\n
+na porta.\p
+“O MESTRE DOS TRUQUES é fofinho.”\n
+… … … … … … … …\p
+A fechadura abriu com um clique!$
+
+[Route110_TrickHousePuzzle7_Text_JoshuaIntro] 8481ab8fbc
+O MESTRE DOS TRUQUES sempre some\n
+como fumaça. Como ele faz isso?$
+
+[Route110_TrickHousePuzzle7_Text_JoshuaDefeat] 6dc531a47a
+Aaaai! Você é forte demais!\n
+Como você faz isso?$
+
+[Route110_TrickHousePuzzle7_Text_JoshuaPostBattle] 1adfccee89
+Queria poder aparecer e sumir como\n
+fumaça também.$
+
+[Route110_TrickHousePuzzle7_Text_PatriciaIntro] d771759c02
+Dar voltas no mesmo lugar…\n
+Dá azar…$
+
+[Route110_TrickHousePuzzle7_Text_PatriciaDefeat] b78d57ab0e
+Derrotada!\n
+É um mau sinal…$
+
+[Route110_TrickHousePuzzle7_Text_PatriciaPostBattle] 08c37e7e92
+Já dei mais de dez voltas no mesmo\n
+lugar… É azar…$
+
+[Route110_TrickHousePuzzle7_Text_AlexisIntro] 0b7732965f
+Quem vencer passa por aqui\n
+primeiro. É o que eu sinto.$
+
+[Route110_TrickHousePuzzle7_Text_AlexisDefeat] b43c1c546f
+Ah!\n
+Bom, pode passar, então!$
+
+[Route110_TrickHousePuzzle7_Text_AlexisPostBattle] f94184c0f3
+Você está resolvendo todos os enigmas\n
+da CASA DOS TRUQUES. É o que eu sinto.$
+
+[Route110_TrickHousePuzzle7_Text_MarielaIntro] b7a0beb812
+Nufufufu, finalmente!\n
+Vamos direto ao ponto!$
+
+[Route110_TrickHousePuzzle7_Text_MarielaDefeat] 12539a8646
+Você vence com tanta tranquilidade!$
+
+[Route110_TrickHousePuzzle7_Text_MarielaPostBattle] d02081ea35
+Hunf! Não estou chateada!\n
+Eu, não!$
+
+[Route110_TrickHousePuzzle7_Text_AlvaroIntro] 4eaae48232
+Eu te vi chegando, bem de pertinho!$
+
+[Route110_TrickHousePuzzle7_Text_AlvaroDefeat] da78bc4186
+Esse resultado eu não previ…$
+
+[Route110_TrickHousePuzzle7_Text_AlvaroPostBattle] 5f8cbdaa50
+Bom, de todo jeito, nós dois escolhemos\n
+um lugar esquisito pra nos conhecer.\p
+De esquisito pra esquisito,\n
+vamos dar o nosso melhor!$
+
+[Route110_TrickHousePuzzle7_Text_EverettIntro] 5458324bd2
+Está muito apertado aqui…$
+
+[Route110_TrickHousePuzzle7_Text_EverettDefeat] dbc4a7accf
+Ah, é, forte você é.$
+
+[Route110_TrickHousePuzzle7_Text_EverettPostBattle] 885b2632ba
+Eu esperava trocar de lugar com você\n
+quando te vencesse, mas…$

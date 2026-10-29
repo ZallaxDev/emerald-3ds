@@ -1,0 +1,56 @@
+# ROTA 118: o STEVEN, o pescador da VARA BOA e as placas.
+
+[Route118_Text_StevenQuestions] 5f8a94a702
+STEVEN: Oi, {PLAYER}{KUN}!\p
+Sou eu, o STEVEN!\n
+Nos vimos na caverna perto de DEWFORD.\p
+Conheceu muitos tipos de POKéMON\n
+desde a última vez?\p
+Há muitos e muitos tipos de POKéMON\n
+neste nosso mundo enorme.\p
+Se quiser treinar só os seus\n
+favoritos, tudo bem.\p
+Talvez seja mais divertido treinar\n
+todo tipo de POKéMON.\p
+Como TREINADOR de POKéMON,\n
+o que você acha?\p
+Claro, não é da minha conta.\p
+Seria bom a gente se encontrar\n
+de novo em algum lugar.$
+
+[Route118_Text_YouAgreeGoodRodIsGood] f48b0c1684
+Hmm!\n
+A VARA BOA é boa mesmo!\p
+Não concorda?$
+
+[Route118_Text_IdenticalMindsTakeThis] d31b07af07
+Hmm!\n
+Pensamos igualzinho!\p
+Hmm!\n
+Tome esta VARA BOA!$
+
+[Route118_Text_TryYourLuckFishing] a3c9dee4b7
+Onde tiver água, tente a sorte\n
+na pesca.$
+
+[Route118_Text_DontYouLikeToFish] 29135364a6
+Você não gosta de pescar?$
+
+[Route118_Text_TryCatchingMonWithGoodRod] bc527fdf99
+Tente pescar todo tipo de POKéMON\n
+com a sua VARA BOA.$
+
+[Route118_Text_CanCrossRiversWithSurf] 293a9a60f3
+Mesmo sem barco, dá pra atravessar\n
+rios e o mar se você tiver um\l
+POKéMON que saiba SURFAR.\p
+Dá pra contar com os POKéMON pra\n
+tanta coisa!$
+
+[Route118_Text_RouteSignMauville] 1e8b1d4884
+ROTA 118\n
+{LEFT_ARROW} CIDADE DE MAUVILLE$
+
+[Route118_Text_RouteSign119] 01dbf6a240
+ROTA 118\n
+{UP_ARROW} ROTA 119$

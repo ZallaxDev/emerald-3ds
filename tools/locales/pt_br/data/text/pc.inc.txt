@@ -1,0 +1,19 @@
+# Ligar o PC (CENTROS POKéMON e o quarto do jogador).
+
+[Text_BootUpPC] 65e0936607
+{PLAYER} ligou o PC.$
+
+[gText_WhichPCShouldBeAccessed] d133095ab6
+Qual PC você quer acessar?$
+
+[gText_AccessedSomeonesPC] e90ca4b7e7
+Acessou o PC DE ALGUÉM.$
+
+[gText_StorageSystemOpened] e9bffd19f1
+Sistema de CAIXAS aberto.$
+
+[gText_AccessedPlayersPC] e4903959ff
+Acessou o PC de {PLAYER}.$
+
+[gText_AccessedLanettesPC] 5fce4284c5
+Acessou o PC de LANETTE.$

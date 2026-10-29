@@ -1,0 +1,17 @@
+# CIDADE DE EVER GRANDE: a recepção da LIGA POKéMON.
+
+[EverGrandeCity_PokemonLeague_1F_Text_MustHaveAllGymBadges] 349c59e135
+Daqui em diante, só podem entrar\n
+TREINADORES que juntaram todas as\l
+INSÍGNIAS de GINÁSIO.\p
+TREINADOR, vamos conferir se você\n
+tem todas as INSÍGNIAS.$
+
+[EverGrandeCity_PokemonLeague_1F_Text_HaventObtainedAllBadges] 807e749846
+Você não tem todas as INSÍGNIAS.\p
+Se vai pra LIGA POKéMON, volte com\n
+todas elas.$
+
+[EverGrandeCity_PokemonLeague_1F_Text_GoForth] fd911838eb
+TREINADOR! Acredite em si mesmo e nos\n
+seus POKéMON, e siga em frente!$

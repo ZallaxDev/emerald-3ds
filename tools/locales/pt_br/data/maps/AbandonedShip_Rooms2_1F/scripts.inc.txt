@@ -1,0 +1,97 @@
+# NAVIO ABANDONADO: cabines do convés, com DAN e KIRA.
+
+[AbandonedShip_Rooms2_1F_Text_DanIntro] ed8d1b11c4
+DAN: Procurando tesouros, achamos\n
+um TREINADOR!$
+
+[AbandonedShip_Rooms2_1F_Text_DanDefeat] bfcb578b05
+DAN: Nem juntos conseguimos ganhar…$
+
+[AbandonedShip_Rooms2_1F_Text_DanPostBattle] f0650c3b79
+DAN: Não achamos nenhum tesouro…\n
+Será que alguém já pegou?$
+
+[AbandonedShip_Rooms2_1F_Text_DanNotEnoughMons] ad4e8c8264
+DAN: Você nem tem dois POKéMON.\n
+Assim não dá pra vencer a gente.$
+
+[AbandonedShip_Rooms2_1F_Text_KiraIntro] 0435b1864c
+KIRA: Hã?\n
+A gente procurava tesouros.\l
+Mas achou foi um TREINADOR!$
+
+[AbandonedShip_Rooms2_1F_Text_KiraDefeat] 8daab0916c
+KIRA: Uh, que força!$
+
+[AbandonedShip_Rooms2_1F_Text_KiraPostBattle] 7a86444bfa
+KIRA: Onde estarão os tesouros?\p
+Já decidi o que vou comprar quando\n
+a gente achar!$
+
+[AbandonedShip_Rooms2_1F_Text_KiraNotEnoughMons] c7c8bfa0ae
+KIRA: Ah, você não tem dois POKéMON?\n
+Vamos ter que batalhar outra hora!$
+
+[AbandonedShip_Rooms2_1F_Text_KiraRegister] 1cbd8bb601
+KIRA: Ah, que raiva!\n
+Vou te registrar por isso!$
+
+[AbandonedShip_Rooms2_1F_Text_DanRematchIntro] 1fe87b0362
+DAN: Passamos esse tempo todo\n
+procurando tesouros.\p
+Os nossos POKéMON ficaram mais fortes\n
+também. Vamos te mostrar, tá?$
+
+[AbandonedShip_Rooms2_1F_Text_DanRematchDefeat] 395a7aff90
+DAN: Forte como sempre!$
+
+[AbandonedShip_Rooms2_1F_Text_DanPostRematch] 958d6da777
+DAN: Não achamos tesouro, perdemos\n
+nas batalhas…\p
+Quero ir pra casa… Mas, se eu falar\n
+isso, ela fica uma fera comigo…$
+
+[AbandonedShip_Rooms2_1F_Text_DanRematchNotEnoughMons] ad4e8c8264
+DAN: Você nem tem dois POKéMON.\n
+Assim não dá pra vencer a gente.$
+
+[AbandonedShip_Rooms2_1F_Text_KiraRematchIntro] 6736b13dcc
+KIRA: Hã? Nos encontramos de novo!\p
+Igual à gente, você ainda não desistiu\n
+de procurar tesouros, né?\p
+Que tal quem perder desistir da\n
+busca?$
+
+[AbandonedShip_Rooms2_1F_Text_KiraRematchDefeat] d823f92bea
+KIRA: Ah, perdemos de novo…$
+
+[AbandonedShip_Rooms2_1F_Text_KiraPostRematch] 7fbefd3e07
+KIRA: Não vamos embora até treinar mais\n
+os POKéMON e achar os tesouros!$
+
+[AbandonedShip_Rooms2_1F_Text_KiraRematchNotEnoughMons] c7c8bfa0ae
+KIRA: Ah, você não tem dois POKéMON?\n
+Vamos ter que batalhar outra hora!$
+
+[AbandonedShip_Rooms2_1F_Text_JaniIntro] 979806e84c
+Não sou boa de nado,\n
+mas sou boa de batalha!$
+
+[AbandonedShip_Rooms2_1F_Text_JaniDefeat] 43fe2c7b2c
+Ops.\n
+Não deu muito certo.$
+
+[AbandonedShip_Rooms2_1F_Text_JaniPostBattle] ab06591367
+Andar descalça por este navio é\n
+meio nojento.$
+
+[AbandonedShip_Rooms2_1F_Text_GarrisonIntro] 2619149e46
+Força e compaixão…\n
+Esses são os tesouros de um TREINADOR!$
+
+[AbandonedShip_Rooms2_1F_Text_GarrisonDefeat] 2b203d083f
+Ah, tem algo em você que brilha.$
+
+[AbandonedShip_Rooms2_1F_Text_GarrisonPostBattle] 430ec21691
+Numa cabine a bordo, vi uma\n
+coisa brilhar.$

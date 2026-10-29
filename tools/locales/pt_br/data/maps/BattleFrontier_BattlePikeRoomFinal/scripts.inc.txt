@@ -1,0 +1,5 @@
+# FRONTEIRA DE BATALHA: a sala final do PICO.
+
+[BattleFrontier_BattlePikeRoomFinal_Text_CongratsThisWayPlease] c0f49e453f
+Parabéns…\n
+Agora, por aqui, por favor…$

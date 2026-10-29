@@ -1,0 +1,63 @@
+# CASA DO SR. BRINEY, na ROTA 104: o velho marinheiro e a PEEKO.
+
+[Route104_MrBrineysHouse_Text_WaitUpPeeko] 1940bd5823
+SR. BRINEY: Calma aí, mocinha!\n
+Me espera, PEEKO!$
+
+[Route104_MrBrineysHouse_Text_ItsYouLetsSailToDewford] 77a42342db
+Hm? Você é {PLAYER}{KUN}!\n
+Você salvou a minha querida PEEKO!\l
+Devemos tanto a você!\p
+Como é?\n
+Você quer navegar comigo?\p
+Hmhm…\p
+Então você tem uma CARTA para DEWFORD\n
+e um pacote para SLATEPORT?\p
+Que vida corrida você deve levar!\p
+Mas, claro, o que você está pedindo\n
+não é problema nenhum.\p
+Veio falar com a pessoa certa!\n
+Vamos zarpar para DEWFORD.$
+
+[Route104_MrBrineysHouse_Text_SetSailForDewford] 23a7c02289
+SR. BRINEY: Então é DEWFORD!\p
+Levantar âncora!\n
+PEEKO, minha querida, vamos zarpar!$
+
+[Route104_MrBrineysHouse_Text_DeclineDeliverySail] c2a2c68827
+SR. BRINEY: É mesmo?\n
+As entregas podem esperar?\p
+É só me avisar quando quiser\n
+zarpar!$
+
+[Route104_MrBrineysHouse_Text_NeedToMakeDeliveriesSailToDewford] 749884f465
+SR. BRINEY: Ahoy!\n
+Eu sei bem o que você quer dizer!\p
+Você vai entregar uma CARTA em DEWFORD\n
+e um pacote em SLATEPORT.\p
+O que você precisa não é problema\n
+nenhum. Sou a pessoa certa pra isso!\p
+Primeiro, vamos zarpar para DEWFORD.$
+
+[Route104_MrBrineysHouse_Text_NeedToDeliverPackageSailToDewford] cdf4af1954
+SR. BRINEY: Ahoy!\n
+Eu sei bem o que você quer dizer!\p
+Você vai entregar um pacote ao\n
+CAP. STERN, em SLATEPORT.\p
+O que você precisa não é problema\n
+nenhum. Sou a pessoa certa pra isso!\p
+Primeiro, vamos zarpar para DEWFORD.$
+
+[Route104_MrBrineysHouse_Text_WhereAreWeBound] c0039783b1
+SR. BRINEY: Ahoy!\n
+Por você, eu vou pro mar quando for!\p
+Agora, meu amigo, para onde vamos?$
+
+[Route104_MrBrineysHouse_Text_TellMeWheneverYouWantToSail] 231bcbed95
+SR. BRINEY: É mesmo?\n
+Bom, a PEEKO deve a vida a você.\p
+É só me avisar quando quiser\n
+zarpar!$
+
+[Route104_MrBrineysHouse_Text_Peeko] fe97d4c30b
+PEEKO: Piii piiriu!$

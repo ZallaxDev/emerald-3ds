@@ -1,0 +1,15 @@
+# CIDADE DE PACIFIDLOG: a casa da lenda dos três POKéMON.
+
+[PacifidlogTown_House1_Text_RegiStory] 1ee4f0db13
+Na região de HOENN há três POKéMON\n
+que representam o poder da pedra,\l
+do gelo e do aço.\p
+Dizem que cada um se esconde no\n
+fundo de uma caverna.\p
+Foi a história que ouvi quando era\n
+bem pequeno.$
+
+[PacifidlogTown_House1_Text_SixDotsOpenThreeDoors] a2787bb2b8
+“Seis pontos abrem três portas.”\p
+O vovô dizia isso, mas não sei o que\n
+ele queria dizer.$

@@ -1,0 +1,68 @@
+# CIDADE DE FORTREE: a rua, o KECLEON invisível e as placas.
+
+[FortreeCity_Text_SawGiganticPokemonInSky] 4e7487bf6a
+Ninguém acredita, mas eu vi um\n
+POKéMON gigante no céu.\p
+Ele parecia se contorcer enquanto\n
+voava pra ROTA 131.\p
+Aliás… Snif, snif…\n
+Hã… Você está com cheiro de queimado.\p
+Esteve num vulcão, por acaso?$
+
+[FortreeCity_Text_SomethingBlockingGym] b934042f26
+Quero ir ao GINÁSIO POKéMON, mas\n
+tem alguma coisa no caminho.\p
+Depois de todo aquele treino na\n
+ROTA 120…$
+
+[FortreeCity_Text_ThisTimeIllBeatWinona] ca59583541
+Estou com os meus POKéMON de\n
+estimação. Desta vez, venço a WINONA.$
+
+[FortreeCity_Text_TreesGrowByDrinkingRainwater] 4034115904
+A terra absorve a água da chuva, e\n
+as árvores crescem bebendo essa água…\p
+A nossa CIDADE DE FORTREE existe\n
+porque tem água e terra.$
+
+[FortreeCity_Text_EveryoneHealthyAndLively] ccdd004d92
+A CIDADE é feita de casas em cima\n
+das árvores.\p
+Talvez por esse jeito de viver,\n
+todo mundo é saudável e animado.\p
+Até eu me sinto trinta anos mais\n
+jovem.$
+
+[FortreeCity_Text_BugPokemonComeThroughWindow] f5be5622fb
+Morar em cima das árvores é bom.\p
+Mas às vezes entram POKéMON INSETO\n
+pela janela.\l
+É um susto e tanto.$
+
+[FortreeCity_Text_PokemonThatEvolveWhenTraded] d859118217
+Tem POKéMON que evoluem quando você\n
+os troca! Foi o que eu ouvi.$
+
+[FortreeCity_Text_SomethingUnseeable] 7d8966153b
+Tem alguma coisa invisível no caminho.$
+
+[FortreeCity_Text_UnseeableUseDevonScope] ceb2773fa9
+Tem alguma coisa invisível no caminho.\p
+Quer usar o ESCOPO DEVON?$
+
+[FortreeCity_Text_UsedDevonScopePokemonFled] 1395ff5155
+{PLAYER} usou o ESCOPO DEVON.\p
+Um POKéMON invisível ficou\n
+completamente visível!\p
+O POKéMON se assustou e fugiu!$
+
+[FortreeCity_Text_CitySign] 4ad949026d
+CIDADE DE FORTREE\n
+“A cidade na copa das árvores que\l
+brinca com a natureza.”$
+
+[FortreeCity_Text_GymSign] e3bd4b0b3a
+GINÁSIO POKéMON DE FORTREE\n
+LÍDER: WINONA\p
+“A domadora de pássaros que alça\n
+voo pelo mundo.”$

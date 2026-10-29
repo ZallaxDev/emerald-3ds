@@ -1,0 +1,124 @@
+# Quem dá FRUTAS: PAPAI, as ROTAS 104, 111, 114 e 120, LILYCOVE, o MESTRE DAS FRUTAS, a FLORICULTURA PÉTALA BONITA e KIRI.
+
+[PetalburgCity_Gym_Text_GiveEnigmaBerry] b6a07869cf
+PAPAI: Oi, {PLAYER}!\pAcabei de ganhar uma FRUTA muito rara.\nQuero que fique com você.$
+
+[Route104_Text_PlantBerriesInSoilTakeThis] 3a37b9d77d
+Se vir FRUTAS crescendo em terra\nfofa, pode pegar à vontade.\pMas plante uma FRUTA no mesmo\nlugar. É questão de educação.\pTome, vou dividir esta com você.$
+
+[Route104_Text_TrainersOftenMakeMonHoldBerries] 87eacf8f54
+Pelo seu jeito, você treina\nPOKéMON, né?\pOs TREINADORES costumam dar FRUTAS\npros POKéMON segurarem.\pPlantar FRUTAS ou usar, você\nque decide.$
+
+[Route111_Text_WateredPlantsEveryDayTakeBerry] b7fca0a4e0
+Reguei as plantas todo dia.\nElas deram um monte de flores.\pE também um monte de FRUTAS.\pTome!\nPode ficar!$
+
+[Route111_Text_GoingToTryToMakeDifferentColorBerries] bd6d0f094e
+Vou me esforçar muito pra ter\nFRUTAS de cores diferentes.\pVocê também, se esforce!$
+
+[Route111_Text_WhatColorBerriesToLookForToday] 5833c465fc
+Que cor de FRUTA será que\neu procuro hoje?$
+
+[Route114_Text_LoveUsingBerryCrushShareBerry] 49f11d7d86
+Eu adoro usar a máquina do\nTRITURA FRUTAS, por isso junto FRUTAS.\pSe quiser, divido uma com você.$
+
+[Route114_Text_TryBerryCrushWithFriends] a1f4e3d374
+Experimente o TRITURA FRUTAS\ncom os seus amigos.$
+
+[Route114_Text_FunToThinkAboutBerries] 0c446e6eb0
+Que FRUTA plantar?\nUsar as FRUTAS ou guardar?\pÉ divertido pensar nisso.$
+
+[Route120_Text_BerriesExpressionOfLoveIsntIt] eee1b52b66
+As FRUTAS crescem tomando sol.\pA gente ajuda regando sempre.\pÉ uma forma de amor, não é?$
+
+[Route120_Text_YesYouUnderstand] 88c9822704
+Isso, isso.\nVocê entende o que eu digo.\pFique com isto.$
+
+[Route120_Text_MakeYourOwnImpressions] 9128495dc7
+Ah… Mas é importante ter as suas\npróprias impressões, acho…\pPode ficar com isto.$
+
+[Route120_Text_BerryIsRareRaiseItWithCare] 8ca7ca8ec7
+Acho que essa FRUTA é rara.\nCuide dela com carinho.$
+
+[Route120_Text_IllGetMoreBerriesFromBerryMaster] 24af869b02
+Vou pegar mais FRUTAS com o\nMESTRE DAS FRUTAS.$
+
+[LilycoveCity_Text_BerrySuitsYou] a5941b6bac
+No fim das contas…\pAssim como o terno me cai bem\ne a brisa cai bem ao mar…\pUma FRUTA cai muito bem em você!\pE por que será?$
+
+[LilycoveCity_Text_BecauseYoureTrainer] 4fe5a810bb
+No fim das contas…\pÉ porque você treina POKéMON!$
+
+[LilycoveCity_Text_PokeblocksSuitPokemon] 43233930b2
+No fim das contas…\pAssim como a elegância simples\nme cai bem, {POKEBLOCK}S caem\lmuito bem nos POKéMON.$
+
+[Route123_BerryMastersHouse_Text_YoureDeservingOfBerry] 059fc84e7d
+Pode me chamar de MESTRE DAS FRUTAS.\pSonho em encher o mundo de\nflores lindas, então crio FRUTAS\le distribuo pra todo mundo.\pVocê merece uma!$
+
+[Route123_BerryMastersHouse_Text_WhyBeStingyTakeAnother] 0a011337c1
+Pra que ser mão de vaca?\nPegue outra!$
+
+[Route123_BerryMastersHouse_Text_VisitPrettyPetalFlowerShop] cc4314089b
+Não deixe de visitar a FLORICULTURA\nPÉTALA BONITA, perto de RUSTBORO.\pQue as flores encham o mundo!$
+
+[Route123_BerryMastersHouse_Text_DoneForToday] a992444800
+Por hoje chega.\nVolte outro dia.\pQue as flores encham o mundo!$
+
+[Route123_BerryMastersHouse_Text_HeardAGoodSayingLately] 7b69acc84a
+Meu marido cultiva FRUTAS como\nninguém. É o melhor do mundo.\pMe enche de orgulho, ah, se enche.\pAliás, criança, ouviu algum\nditado bom ultimamente?$
+
+[Route123_BerryMastersHouse_Text_InspirationalTakeThis] eedc3b3617
+Ah! Que ditado notável!\nQue inspiração!\pQuero que fique com isto.$
+
+[Route123_BerryMastersHouse_Text_GoodSayingTakeThis] da095f6db7
+Oh! Que ditado bom.\nVocê é muito especial.\pQuero que fique com isto.$
+
+[Route123_BerryMastersHouse_Text_JoyNeverGoesOutOfMyLife] 4157c99f09
+Nossos quatro netos vão ser ainda\nmelhores que o meu marido.\pA alegria nunca sai da minha vida!$
+
+[Route123_BerryMastersHouse_Text_Ah] e637fbb5d4
+Ah…$
+
+[Route104_PrettyPetalFlowerShop_Text_ThisIsPrettyPetalFlowerShop] 406cd74007
+Olá!\pEsta é a FLORICULTURA PÉTALA BONITA.\nEspalhando flores pelo mundo todo!$
+
+[Route104_PrettyPetalFlowerShop_Text_LearnAboutBerries] 5274814d61
+{PLAYER}{KUN}, quer aprender sobre\nFRUTAS?$
+
+[Route104_PrettyPetalFlowerShop_Text_IntroLearnAboutBerries] 805f9eec80
+Qual é o seu nome?\p{PLAYER}{KUN}.\nQue nome bonito.\p{PLAYER}{KUN}, quer aprender sobre\nFRUTAS?$
+
+[Route104_PrettyPetalFlowerShop_Text_BerriesExplanation] 78caa4adf8
+As FRUTAS nascem em árvores que só\ncrescem em terra fofa e fértil.\pSe pegar FRUTAS, não esqueça de\nplantar uma de novo na terra.\pA FRUTA plantada logo brota,\nvira uma planta, dá flores lindas\le depois dá FRUTAS de novo.\pQuero ver o mundo inteiro\ncheio de flores lindas.\lÉ o meu sonho.\pMe ajude, {PLAYER}{KUN}. Plante FRUTAS\ne traga mais flores pro mundo.$
+
+[Route104_PrettyPetalFlowerShop_Text_FlowersBringHappiness] 1e8bd5b10f
+As flores trazem tanta alegria\npras pessoas, né?$
+
+[Route104_PrettyPetalFlowerShop_Text_YouCanHaveThis] 1830f02823
+Olá!\pQuanto mais atenção você dá pras\nflores, mais lindas elas ficam.\pVocê vai gostar de cuidar de flores,\ntenho certeza. Pode ficar com isto.$
+
+[Route104_PrettyPetalFlowerShop_Text_WailmerPailExplanation] 5dd0fb483a
+Enquanto as plantas de FRUTA crescem,\nregue com o REGADOR.\pAh, outra coisa.\pSe você não colher as FRUTAS por\num tempo, elas caem no chão.\lMas brotam de novo.\pNão é incrível?\nParece que elas têm vontade de viver.$
+
+[Route104_PrettyPetalFlowerShop_Text_ImGrowingFlowers] 5bc25c3dc0
+Quero ser como as minhas irmãs.\nEu também cultivo flores!\pTome!\nÉ pra você!$
+
+[Route104_PrettyPetalFlowerShop_Text_MachineMixesBerries] 2acb56532f
+Dá pra plantar uma FRUTA e deixar\ncrescer, ou dar pra um POKéMON segurar.\pMas agora tem uma máquina que mistura\nFRUTAS diferentes e faz doces\lpros POKéMON.\pEu também quero doce.$
+
+[SootopolisCity_Text_NameIsKiriHaveOneOfThese] f9f8d4d56f
+Oi, qual é o seu nome?\p… … …  … … …  … … …\nAh, que legal!\pMeu nome é KIRI.\pMeu papai e minha mamãe me deram\nesse nome pra eu crescer saudável\le de bom coração. Foi o desejo deles.\pPode ficar com uma destas.$
+
+[SootopolisCity_Text_GiveYouThisBerryToo] cc339a13a9
+A KIRI também vai te dar esta FRUTA!\nEu gosto muito dela!$
+
+[SootopolisCity_Text_WhatKindOfWishInYourName] dd20da0b46
+Que desejo será que tem\nno seu nome?$
+
+[SootopolisCity_Text_LikeSeasonBornIn] 638b7016bc
+Primavera, verão, outono e inverno.\pQuem nasce na primavera gosta da\nprimavera, e quem nasce no verão\lgosta do verão?$
+
+[SootopolisCity_Text_ThenILoveAutumn] 61b1305aa5
+Então, a KIRI nasceu no outono,\npor isso eu amo o outono!\pDe qual estação você gosta?$
+
+[SootopolisCity_Text_OhDoesntMatter] 295dac9a83
+Ah…\nNão importa…\pTem tanta coisa que eu quero saber…$

@@ -1,0 +1,10 @@
+# CIDADE DE OLDALE, segunda casa.
+
+[OldaleTown_House2_Text_PokemonLevelUp] f0b8f2dd29
+Batalhando, os POKéMON acabam subindo\n
+de nível e ficando mais fortes.$
+
+[OldaleTown_House2_Text_YoullGoFurtherWithStrongPokemon] 72b1c9ec6d
+Se os POKéMON que estão com você\n
+ficarem mais fortes, você vai poder ir\l
+bem mais longe daqui.$

@@ -17,6 +17,15 @@
  * recognise Dewford's tree art; this test never uses that art, so an empty
  * tileset is enough for the link. */
 const struct Tileset gTileset_Dewford = {0};
+const struct Tileset gTileset_Fortree = {0};
+const struct Tileset gTileset_Mauville = {0};
+const struct Tileset gTileset_Lavaridge = {0};
+const struct Tileset gTileset_Rustboro = {0};
+const struct Tileset gTileset_Lilycove = {0};
+const struct Tileset gTileset_EverGrande = {0};
+const struct Tileset gTileset_BattleFrontierOutsideWest = {0};
+const struct Tileset gTileset_Mossdeep = {0};
+const struct Tileset gTileset_Fallarbor = {0};
 
 static VoxelMapInstance sMap={.layoutId=1,.width=8,.height=8};
 static VoxelAtlasMap sAtlas;

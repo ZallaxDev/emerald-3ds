@@ -1,0 +1,76 @@
+# ESTRADA DA VITÓRIA: subsolo 2.
+
+[VictoryRoad_B2F_Text_VitoIntro] 85d9720e78
+Treinei com a minha família inteira,\n
+cada um de nós!\l
+Não perco pra ninguém!$
+
+[VictoryRoad_B2F_Text_VitoDefeat] 13325db434
+Melhor que a minha família?!\n
+Como é possível?!$
+
+[VictoryRoad_B2F_Text_VitoPostBattle] 41a68e8d1b
+Eu era o melhor da minha família.\n
+Nunca tinha perdido…\p
+Perdi a confiança…\n
+Acho que vou pra casa…$
+
+[VictoryRoad_B2F_Text_OwenIntro] fc7044cf06
+Ouvi dizer que tinha uma criança forte\n
+por aí. Estão falando de você?$
+
+[VictoryRoad_B2F_Text_OwenDefeat] 1c18baeaca
+Essa tampinha é forte!$
+
+[VictoryRoad_B2F_Text_OwenPostBattle] 44beae911e
+Pelos boatos, essa criança forte é\n
+da CIDADE DE PETALBURG.$
+
+[VictoryRoad_B2F_Text_CarolineIntro] 959c8c2226
+Você já deve estar sem fôlego.$
+
+[VictoryRoad_B2F_Text_CarolineDefeat] eab8740bbf
+Nenhum sinal de cansaço!$
+
+[VictoryRoad_B2F_Text_CarolinePostBattle] 369cfaacfd
+A ESTRADA DA VITÓRIA e a LIGA POKéMON\n
+são desafios longos e puxados.\l
+Cuidado com o cansaço!$
+
+[VictoryRoad_B2F_Text_JulieIntro] b92a439de1
+Não se acomode só porque tem muitas\n
+INSÍGNIAS.\p
+Sempre vai existir alguém melhor\n
+que você!$
+
+[VictoryRoad_B2F_Text_JulieDefeat] a1feeff14c
+Você é melhor que eu!$
+
+[VictoryRoad_B2F_Text_JuliePostBattle] 39170b9a1d
+Olhe as INSÍGNIAS que juntou e\n
+lembre dos TREINADORES que enfrentou.$
+
+[VictoryRoad_B2F_Text_FelixIntro] 1f874fc742
+Cheguei até aqui, mas o nervoso está\n
+me dando uma dor de barriga horrível…$
+
+[VictoryRoad_B2F_Text_FelixDefeat] f2e5cb075b
+Ui…\n
+Dói…$
+
+[VictoryRoad_B2F_Text_FelixPostBattle] 6a04244258
+Não tem como não ficar nervoso\n
+sabendo que estou perto da LIGA.\p
+O máximo que consigo é fingir calma.$
+
+[VictoryRoad_B2F_Text_DianneIntro] d031563c21
+A elite da elite se reúne nesta\n
+caverna.\p
+O que está achando?$
+
+[VictoryRoad_B2F_Text_DianneDefeat] e3d4a6e7a6
+Nem se abalou!$
+
+[VictoryRoad_B2F_Text_DiannePostBattle] f9ca1e33cd
+Você tem garra! Gosto disso!\n
+Continue assim!$

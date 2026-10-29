@@ -36,15 +36,19 @@ bool VoxelRelief_CutVariant(unsigned i, unsigned *layout, unsigned *metatile, co
 }
 /* What voxel_relief.c gives a cut whose rock has no 45-degree side: its
  * background clear as drawn, and no pixel kept for the polygon's edge. */
+/* sFringe: pixel (1, 0) of the background kept, with the colour of (1, 1). */
+static bool sFringe;
 void VoxelRelief_CutClear(const uint8_t *rows, uint16_t clear[16])
 {
     for (int j = 0; j < 16; ++j)
         clear[j] = (uint16_t)((unsigned)rows[2 * j] | ((unsigned)rows[2 * j + 1] << 8));
+    if (sFringe)
+        clear[0] &= (uint16_t)~2u;
 }
 int VoxelRelief_CutFringe(const uint8_t *rows, const uint16_t clear[16], int x, int y)
 {
-    (void)rows; (void)clear; (void)x; (void)y;
-    return -1;
+    (void)rows; (void)clear;
+    return sFringe && x == 1 && y == 0 ? 17 : -1;
 }
 static uint8_t sPrimaryTiles[512 * 32], sSecondaryTiles[512 * 32];
 static uint16_t sPrimaryPalettes[16 * 16], sSecondaryPalettes[16 * 16];
@@ -155,6 +159,12 @@ static unsigned Random(void)
 
 static uint16_t sNew[VOXEL_ATLAS_PIXELS], sOld[VOXEL_ATLAS_PIXELS];
 
+/* A frame with no time left: VoxelAnim_Compose does one block. */
+static bool NoTime(void)
+{
+    return false;
+}
+
 static void Fill(unsigned blackEvery)
 {
     for (unsigned i = 0; i < sizeof(sPrimaryTiles); ++i)
@@ -204,6 +214,32 @@ static void Run(struct AtlasSource *src, unsigned trials, unsigned *blacks)
 /* ── Whole atlases: composed a slice at a time, exactly as in one go ────── */
 
 static uint16_t sOneGo[VOXEL_ATLAS_PIXELS], sSliced[VOXEL_ATLAS_PIXELS];
+static VoxelAnimPass sPass;
+
+/* A pass's runs (of pair `pair`, on page `onPage`) copied into a page as the GPU copies them:
+ * each two lines, the second a row of blocks after the first. The runs. */
+static unsigned ApplyPass(const VoxelAnimPass *pass, uint16_t *page, unsigned pair, unsigned onPage)
+{
+    static uint16_t run[VOXEL_ANIM_RUN_MAX * 256];
+    unsigned runs = 0;
+
+    for (unsigned i = 0; i < pass->targets;)
+    {
+        unsigned n = VoxelAnim_Run(pass, i);
+        unsigned line = n * 256u, offset = VoxelAnim_RunOffset(pass, i);
+
+        assert(n >= 1 && n <= VOXEL_ANIM_RUN_MAX);
+        if (pass->target[i].pair == pair && pass->target[i].page == onPage)
+        {
+            VoxelAnim_WriteRun(pass, i, n, run);
+            memcpy((uint8_t *)page + offset, run, line);
+            memcpy((uint8_t *)page + offset + (VOXEL_ATLAS_W / 8u) * 128u, (uint8_t *)run + line, line);
+            ++runs;
+        }
+        i += n;
+    }
+    return runs;
+}
 
 static void Sliced(const VoxelMapInstance *inst, const VoxelAtlasMap *base, VoxelAtlasMap *out,
                    unsigned *added)
@@ -448,47 +484,133 @@ static void AnimatedTiles(void)
                         && bytes < (row + 1u) * VOXEL_ATLAS_ROW_BYTES);
                 }
         }
-        /* The same slots redrawn alone, a couple at a time: each one's two runs
-         * are exactly what the page holds after the full refresh. */
+        /* The same slots redrawn by a pass, its runs copied as the GPU does
+         * (two lines a row of blocks apart) over a page that has them
+         * wiped: exactly the page of the full refresh. */
         {
-            static VoxelAnimSlot out[2];
-            unsigned cursor = 0, seen = 0, calls = 0;
+            unsigned runs;
 
-            while (cursor < VOXEL_METATILE_IDS)
+            memcpy(sSliced, sOneGo, sizeof(sOneGo));
+            for (unsigned i = 0; i < 3; ++i)
             {
-                unsigned n = VoxelAtlas_AnimatedSlots(&inst, &map, 0, live, dirty, &cursor, out, 2);
+                unsigned slot = (map.slotOf[animated[i]] - 1u) % VOXEL_ATLAS_MAX_SLOTS;
 
-                assert(n <= 2 && ++calls < 100);
-                for (unsigned i = 0; i < n; ++i, ++seen)
-                {
-                    unsigned c = out[i].slot % VOXEL_ATLAS_COLUMNS, r = out[i].slot / VOXEL_ATLAS_COLUMNS;
-                    unsigned b0 = 2u * r * (VOXEL_ATLAS_W / 8u) + 2u * c;
-
-                    assert(memcmp(out[i].pixels, sOneGo + b0 * 64u, 256) == 0);
-                    assert(memcmp(out[i].pixels + 128, sOneGo + (b0 + VOXEL_ATLAS_W / 8u) * 64u, 256) == 0);
-                }
+                for (unsigned y = 0; y < 16; ++y)
+                    for (unsigned x = 0; x < 16; ++x)
+                        sSliced[CtrVideo_Texel((slot % VOXEL_ATLAS_COLUMNS) * 16 + x,
+                                               (slot / VOXEL_ATLAS_COLUMNS) * 16 + y, VOXEL_ATLAS_W)] = 0x1234;
             }
-            assert(seen == 3 && calls >= 2);
+            VoxelAnim_Begin(&sPass, dirty);
+            assert(VoxelAnim_AddAtlas(&sPass, 0, &inst, false, &map, live));
+            assert(sPass.targets == 3);
+            assert(VoxelAnim_Compose(&sPass, live, NULL));
+            runs = ApplyPass(&sPass, sSliced, 0, 0);
+            assert(runs == 3);
+            assert(memcmp(sSliced, sOneGo, sizeof(sOneGo)) == 0);
+            /* the same pass again, its slots kept: the same page */
+            VoxelAnim_Again(&sPass);
+            assert(sPass.composed == 0 && sPass.targets == 3);
+            assert(VoxelAnim_Compose(&sPass, live, NULL));
+            assert(sPass.kept);
+            assert(ApplyPass(&sPass, sSliced, 0, 0) == 3);
+            assert(memcmp(sSliced, sOneGo, sizeof(sOneGo)) == 0);
+            /* another frame of the written tile is composed, not kept; its
+             * first one, back again, is found kept: the same page */
+            {
+                uint8_t frame[32];
+
+                memcpy(frame, live + 432 * 32, sizeof(frame));
+                for (unsigned i = 0; i < sizeof(frame); ++i)
+                    live[432 * 32 + i] = (uint8_t)(frame[i] ^ 0x11u);
+                VoxelAnim_Again(&sPass);
+                assert(VoxelAnim_Compose(&sPass, live, NULL) && !sPass.kept);
+                ApplyPass(&sPass, sSliced, 0, 0);
+                assert(memcmp(sSliced, sOneGo, sizeof(sOneGo)) != 0);
+                memcpy(live + 432 * 32, frame, sizeof(frame));
+                VoxelAnim_Again(&sPass);
+                assert(VoxelAnim_Compose(&sPass, live, NULL) && sPass.kept);
+                ApplyPass(&sPass, sSliced, 0, 0);
+                assert(memcmp(sSliced, sOneGo, sizeof(sOneGo)) == 0);
+            }
         }
         /* The atlas of a map beside the current one, sharing its primary:
          * the same three when they are drawn from primary tiles alone, and
          * one with a secondary tile in it (BG VRAM holds another map's) left
          * as it is - the current map's own pass still redraws it. */
         {
-            static VoxelAnimSlot out[4];
-            unsigned cursor = 0;
-
-            assert(VoxelAtlas_SharedAnimatedSlots(&inst, &map, 0, live, dirty, &cursor, out, 4) == 3);
+            VoxelAnim_Begin(&sPass, dirty);
+            assert(VoxelAnim_AddAtlas(&sPass, 1, &inst, true, &map, live) && sPass.targets == 3);
             sMetatiles[66 * 8 + 5] = 600;
-            cursor = 0;
-            assert(VoxelAtlas_SharedAnimatedSlots(&inst, &map, 0, live, dirty, &cursor, out, 4) == 2);
-            cursor = 0;
-            assert(VoxelAtlas_AnimatedSlots(&inst, &map, 0, live, dirty, &cursor, out, 4) == 3);
+            VoxelAnim_Begin(&sPass, dirty);
+            assert(VoxelAnim_AddAtlas(&sPass, 1, &inst, true, &map, live) && sPass.targets == 2);
+            VoxelAnim_Begin(&sPass, dirty);
+            assert(VoxelAnim_AddAtlas(&sPass, 0, &inst, false, &map, live) && sPass.targets == 3);
             sMetatiles[66 * 8 + 5] = 0;
         }
         memset(dirty, 0, sizeof(dirty));
         assert(VoxelAtlas_RefreshAnimatedPageRows(&inst, &map, 0, sOneGo, live, dirty, &rows) == 0
             && rows == 0);
+        /* Animated slots a few apart in a row go as one run, the slots
+         * between redrawn as they are; one far off is a run of its own. The
+         * page, its animated and gap slots wiped, comes out as the full
+         * refresh's. */
+        {
+            rows = 0;
+            dirty[432 >> 3] = 1u << (432 & 7);
+            memset(sMetatiles, 0, sizeof(sMetatiles));
+            for (unsigned id = 1; id <= 70; ++id)
+                for (unsigned t = 0; t < 4; ++t)
+                    sMetatiles[id * 8 + t] = (id == 5 || id == 8 || id == 12 || id == 30) ? 432 : 10 + id + t;
+            Fill(0);
+            assert(VoxelAtlas_Build(&inst, sOneGo, &map, false));
+            memcpy(live, sPrimaryTiles, sizeof(sPrimaryTiles));
+            memcpy(live + sizeof(sPrimaryTiles), sSecondaryTiles, sizeof(sSecondaryTiles));
+            memset(live + 432 * 32, 0x11, 32);
+            memcpy(sSliced, sOneGo, sizeof(sOneGo));
+            assert(VoxelAtlas_RefreshAnimatedPageRows(&inst, &map, 0, sOneGo, live, dirty, &rows) == 4);
+            for (unsigned id = 5; id <= 30; ++id)
+            {
+                unsigned slot = (map.slotOf[id] - 1u) % VOXEL_ATLAS_MAX_SLOTS;
+
+                if (id > 12 && id < 30)
+                    continue;
+                for (unsigned y = 0; y < 16; ++y)
+                    for (unsigned x = 0; x < 16; ++x)
+                        sSliced[CtrVideo_Texel((slot % VOXEL_ATLAS_COLUMNS) * 16 + x,
+                                               (slot / VOXEL_ATLAS_COLUMNS) * 16 + y, VOXEL_ATLAS_W)] = 0x1234;
+            }
+            VoxelAnim_Begin(&sPass, dirty);
+            assert(VoxelAnim_AddAtlas(&sPass, 0, &inst, false, &map, live));
+            assert(sPass.targets == 4 + 5);
+            assert(VoxelAnim_Compose(&sPass, live, NULL));
+            assert(ApplyPass(&sPass, sSliced, 0, 0) == 2);
+            assert(memcmp(sSliced, sOneGo, sizeof(sOneGo)) == 0);
+        }
+        /* A pass composed over several frames, the game writing the tile
+         * again meanwhile: composed from the tiles as they were when it
+         * began, and kept as that state. */
+        {
+            uint8_t first[32];
+
+            for (unsigned i = 0; i < 32; ++i)
+                live[432 * 32 + i] = first[i] = (uint8_t)(0x33u ^ i);
+            memcpy(sOld, sOneGo, sizeof(sOneGo));
+            VoxelAnim_Begin(&sPass, dirty);
+            assert(VoxelAnim_AddAtlas(&sPass, 0, &inst, false, &map, live));
+            assert(VoxelAnim_Compose(&sPass, live, NULL));
+            ApplyPass(&sPass, sOld, 0, 0);
+            memcpy(sSliced, sOneGo, sizeof(sOneGo));
+            VoxelAnim_Begin(&sPass, dirty);
+            assert(VoxelAnim_AddAtlas(&sPass, 0, &inst, false, &map, live) && sPass.blocks > 1);
+            assert(!VoxelAnim_Compose(&sPass, live, NoTime));
+            memset(live + 432 * 32, 0x44, 32);
+            assert(VoxelAnim_Compose(&sPass, live, NULL) && !sPass.kept);
+            ApplyPass(&sPass, sSliced, 0, 0);
+            assert(memcmp(sSliced, sOld, sizeof(sOld)) == 0);
+            memcpy(live + 432 * 32, first, sizeof(first));
+            VoxelAnim_Again(&sPass);
+            assert(VoxelAnim_Compose(&sPass, live, NULL) && sPass.kept);
+        }
     }
 }
 
@@ -537,10 +659,85 @@ static void DerivedPages(void)
                                      local / VOXEL_ATLAS_COLUMNS * 16, VOXEL_ATLAS_W)] &= (uint16_t)~1u;
         }
         assert(memcmp(sOneGo, sOld, sizeof(sOld)) == 0);
+        /* A pass over this page's ids alone - ground variants, cut tiles and
+         * all, the sea being in every one of them - writes each slot it took
+         * as the page has it. Cut tiles take blocks of their own, so it is
+         * full before the last ones: those wait. */
+        {
+            static VoxelAtlasMap one;
+            unsigned taken = 0;
+
+            one = job.map;
+            for (unsigned m = 0; m < VOXEL_METATILE_IDS; ++m)
+                if ((one.slotOf[m] - 1u) / VOXEL_ATLAS_MAX_SLOTS != job.page)
+                    one.slotOf[m] = 0;
+            VoxelAnim_Begin(&sPass, dirty);
+            VoxelAnim_AddAtlas(&sPass, 2, &inst, false, &one, live);
+            assert(sPass.targets > 0 && sPass.targets <= expected);
+            assert(sPass.full == (sPass.targets < expected));
+            assert(VoxelAnim_Compose(&sPass, live, NULL));
+            memcpy(sSliced, sOld, sizeof(sOld));
+            for (unsigned i = 0; i < sPass.targets; ++i, ++taken)
+            {
+                unsigned slot = sPass.target[i].slot;
+
+                assert(sPass.target[i].page == job.page && (i == 0 || slot > sPass.target[i - 1].slot));
+                for (unsigned y = 0; y < 16; ++y)
+                    for (unsigned x = 0; x < 16; ++x)
+                        sSliced[CtrVideo_Texel((slot % VOXEL_ATLAS_COLUMNS) * 16 + x,
+                                               (slot / VOXEL_ATLAS_COLUMNS) * 16 + y, VOXEL_ATLAS_W)] = 0x1234;
+            }
+            /* slots side by side: a run to each row of the page they fill */
+            assert(ApplyPass(&sPass, sSliced, 2, job.page) <= (taken + 31u) / 32u + 1u);
+            assert(memcmp(sSliced, sOld, sizeof(sOld)) == 0);
+        }
         ++pages;
     } while (VoxelAtlas_JobNextPage(&job));
     assert(pages == 4 && !job.active);
+    /* A cut tile over the moving sea: passed over while its rock (all but
+     * the clear corner) is drawn opaque over the sea by its upper layer,
+     * redrawn once that layer is clear and the sea shows through it. */
+    {
+        static VoxelAtlasMap one;
+
+        memset(&one, 0, sizeof(one));
+        one.slotOf[VOXEL_CUT_FIRST + 3] = 1;
+        memset(live + 10 * 32, 0x22, 32);
+        for (unsigned q = 0; q < 4; ++q)
+        {
+            sMetatiles[3 * 8 + q] = 432;
+            sMetatiles[3 * 8 + 4 + q] = 10;
+        }
+        VoxelAnim_Begin(&sPass, dirty);
+        assert(VoxelAnim_AddAtlas(&sPass, 0, &inst, false, &one, live) && sPass.targets == 0);
+        sMetatiles[3 * 8 + 4 + 2] = 0;
+        VoxelAnim_Begin(&sPass, dirty);
+        assert(VoxelAnim_AddAtlas(&sPass, 0, &inst, false, &one, live) && sPass.targets == 1);
+    }
     sDerived = false;
+}
+
+/* A cut tile as its kept plan draws it, met once and again: its clear
+ * pixel without alpha, its fringe pixel the colour of the rock beside. */
+static void CutPlans(const struct AtlasSource *src)
+{
+    static const uint16_t entries[8] = {5 | 2 << 12, 6, 7 | 1 << 10, 8, 0, 0, 0, 0};
+    uint8_t rows[32] = {0x03};
+    uint16_t plain[256], cut[256];
+
+    InitMorton();
+    sFringe = true;
+    for (unsigned round = 0; round < 2; ++round)
+    {
+        memset(plain, 0, sizeof(plain));
+        memset(cut, 0, sizeof(cut));
+        ComposeAt(src, entries, plain, 0, 0, 16, 0, NULL);
+        ComposeAt(src, entries, cut, 0, 0, 16, 0, rows);
+        plain[CtrVideo_Texel(0, 0, 16)] &= (uint16_t)~1u;
+        plain[CtrVideo_Texel(1, 0, 16)] = plain[CtrVideo_Texel(1, 1, 16)];
+        assert(memcmp(plain, cut, sizeof(cut)) == 0);
+    }
+    sFringe = false;
 }
 
 bool Voxel_LoadTilesStep(const void *t, uint8_t *d, uint32_t n, VoxelTileLoad *load, unsigned bytes)
@@ -563,6 +760,8 @@ int main(void)
     src.secondaryPalettes = sSecondaryPalettes;
 
     Fill(0);
+    BuildColorTable(&src);
+    CutPlans(&src);
     Run(&src, 2000, &blacks);
     /* Mostly black, then all black: the verdict is exercised both ways. */
     Fill(16);

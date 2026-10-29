@@ -1,0 +1,18 @@
+# CIDADE DE PETALBURG, casa 1: o casal que sonha com viagens.
+
+[PetalburgCity_House1_Text_TravelingIsWonderful] 6e68423236
+Viajar é maravilhoso!\p
+Quando eu era jovem, rodei os mares\n
+e as montanhas!$
+
+[PetalburgCity_House1_Text_GoOnAdventure] e53be08069
+Ai, ai…\p
+Queria tanto sair numa aventura\n
+com uns POKéMON…\p
+Rastejar pelo mato úmido…\n
+Escalar montanhas de pedra…\p
+Atravessar mares agitados…\n
+Andar por cavernas escuras…\p
+E, às vezes, até sentir um pouco\n
+de saudade de casa…\p
+Viajar deve ser incrível!$

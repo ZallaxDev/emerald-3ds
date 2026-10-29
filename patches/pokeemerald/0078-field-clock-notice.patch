@@ -1,0 +1,20 @@
+Clear the field clock notice when starting a new game.
+Load(NULL, 0) preserves the existing day/night reset and clears stale status.
+The existing continue hook and recovered-save clock binding are unchanged.
+
+diff --git a/src/new_game.c b/src/new_game.c
+--- a/src/new_game.c
++++ b/src/new_game.c
+@@ -1,2 +1,5 @@
+ #include "global.h"
++#ifdef PLATFORM_3DS
++#include "3ds_clock_store.h"
++#endif
+ #include "new_game.h"
+@@ -163,3 +166,6 @@
+ void NewGameInitData(void)
+ {
++#ifdef PLATFORM_3DS
++    CtrClockStore_Load(NULL, 0);
++#endif
+     if (gSaveFileStatus == SAVE_STATUS_EMPTY || gSaveFileStatus == SAVE_STATUS_CORRUPT)

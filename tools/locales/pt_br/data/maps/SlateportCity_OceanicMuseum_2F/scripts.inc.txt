@@ -1,0 +1,169 @@
+# MUSEU OCEÂNICO, 1º andar: o CAP. STERN, a EQUIPE AQUA e o ARCHIE, e as maquetes.
+
+[SlateportCity_OceanicMuseum_2F_Text_ThankYouForTheParts] 6ec8b551d6
+Sim? Se está procurando o STERN,\n
+sou eu mesmo.\p
+Ah! Devem ser as peças que encomendei\n
+do SR. STONE, da DEVON.\p
+Obrigado! Que ótimo!\n
+Agora podemos preparar a expedição.$
+
+[SlateportCity_OceanicMuseum_2F_Text_WellTakeThoseParts] d4eccd2026
+Hehehe, alto lá!\n
+Essas peças são nossas!$
+
+[SlateportCity_OceanicMuseum_2F_Text_SternWhoAreYou] 211bdd8ca1
+CAP. STERN: O-o quê?\n
+Quem são vocês?$
+
+[SlateportCity_OceanicMuseum_2F_Text_WereTeamAqua] 7fe26240ce
+Somos a EQUIPE AQUA!\p
+O nosso CHEFE quer essas peças!\n
+Fica quieto e passa pra cá!$
+
+[SlateportCity_OceanicMuseum_2F_Text_Grunt1Defeat] 68b9db38b5
+Aaaaaah!\n
+Uma criança me venceu!$
+
+[SlateportCity_OceanicMuseum_2F_Text_BossGoingToBeFurious] 1188aa4262
+Ai, que desastre…\n
+O CHEFE vai ficar furioso…$
+
+[SlateportCity_OceanicMuseum_2F_Text_LetMeTakeCareOfThis] d757a2d53f
+Hunf, seu bunda-mole chorão!\n
+Deixa que eu cuido disso!$
+
+[SlateportCity_OceanicMuseum_2F_Text_Grunt2Defeat] 06a736fbed
+O quê?!\n
+Eu também perdi!$
+
+[SlateportCity_OceanicMuseum_2F_Text_MeddlingKid] 1abf2681b3
+E agora? Se a gente não pegar as peças,\n
+vai sobrar pra gente!\p
+Argh, não contava com uma criança\n
+enxerida se metendo!$
+
+[SlateportCity_OceanicMuseum_2F_Text_CameToSeeWhatsTakingSoLong] 46087518b6
+Vim ver por que estava demorando tanto\n
+pra pegar umas peças, e vocês,\l
+molengas, travados por uma criança?$
+
+[SlateportCity_OceanicMuseum_2F_Text_ArchieWarning] 03e015637d
+Nós somos a EQUIPE AQUA,\n
+e amamos o mar!\p
+E eu sou o líder da EQUIPE AQUA,\n
+ARCHIE!\p
+Por que você se mete com a gente?\p
+…Não! Não pode ser!\n
+Você é da EQUIPE MAGMA?\p
+Espera, isso não faz sentido.\n
+Essa roupa não é de lá.\p
+… … … … … …\n
+… … … … … …\p
+POKéMON, pessoas… Toda a vida\n
+depende do mar.\p
+Por isso, a EQUIPE AQUA se dedica\n
+a expandir o mar.\p
+Não concorda? O que fazemos é\n
+uma obra magnífica.\p
+Ah, tudo bem…\n
+Você ainda é jovem demais pra entender\l
+o nosso nobre objetivo.\p
+Mas eu aviso: nem pense em\n
+atrapalhar os nossos planos de novo.\p
+As consequências vão sair\n
+caro pra você!\p
+E não se esqueça disso!$
+
+[SlateportCity_OceanicMuseum_2F_Text_SternThankYouForSavingUs] 7813d999cd
+CAP. STERN: Você é…\n
+Ah, claro, você é {PLAYER}{KUN}…\p
+Enfim, que situação tensa!\n
+Obrigado por nos salvar!\p
+Ah, é, quase esqueci que você\n
+ainda trouxe as peças da DEVON!$
+
+[SlateportCity_OceanicMuseum_2F_Text_SternIveGotToGo] 5471c13519
+CAP. STERN: Opa!\n
+Não há tempo a perder!\p
+Temos que partir pra nossa expedição\n
+ao fundo do mar logo, logo.\p
+Obrigado de novo, mas agora\n
+preciso ir!\p
+Mas fique à vontade pra passear e\n
+conhecer as nossas instalações.$
+
+[SlateportCity_OceanicMuseum_2F_Text_RemindsMeOfAbandonedShip] 8935d9fce1
+Vi uma maquete de navio aqui.\p
+Me lembrou do NAVIO ABANDONADO\n
+perto da CIDADE DE DEWFORD…$
+
+[SlateportCity_OceanicMuseum_2F_Text_DontRunInMuseum] 908e2d7343
+Nem pense em sair correndo dentro\n
+do MUSEU!$
+
+[SlateportCity_OceanicMuseum_2F_Text_WantToRideSubmarine] ad663f9429
+Uau, o submarino é demais!\n
+Quero dar uma volta nele!$
+
+[SlateportCity_OceanicMuseum_2F_Text_WaterQualitySample1] 074c2bae67
+“AMOSTRA DE ÁGUA 1”, diz a\n
+etiqueta.\p
+O mar é todo ligado, mas a água\n
+parece mudar de região pra região.$
+
+[SlateportCity_OceanicMuseum_2F_Text_WaterQualitySample2] d70e5c124d
+“AMOSTRA DE ÁGUA 2”, diz a\n
+etiqueta.\p
+Será que o sal do mar também muda\n
+de região pra região?$
+
+[SlateportCity_OceanicMuseum_2F_Text_PressureExperiment] 47515ac721
+Uma bola de borracha estica e\n
+encolhe.\p
+“No mar, o próprio peso da água\n
+faz pressão.\p
+“Em águas rasas, a pressão não\n
+é muito forte.\p
+“Mas, em águas muito profundas, a\n
+pressão chega a dezenas de milhares\l
+de toneladas numa área pequena.”$
+
+[SlateportCity_OceanicMuseum_2F_Text_HoennModel] bea49b0843
+“MAQUETE DA REGIÃO DE HOENN”\p
+É uma miniatura da região\n
+de HOENN.\p
+Onde fica a CIDADE DE LITTLEROOT aqui?$
+
+[SlateportCity_OceanicMuseum_2F_Text_DeepSeawaterDisplay] 794a2f619d
+É uma exposição sobre o fluxo da água\n
+do mar.\p
+“Perto do fundo do mar, a água corre\n
+por causa de diferenças de\l
+temperatura e salinidade.”$
+
+[SlateportCity_OceanicMuseum_2F_Text_SurfaceSeawaterDisplay] 84d714c49c
+É uma exposição sobre o fluxo da água\n
+do mar.\p
+“Perto da superfície, a água do mar\n
+corre em correntes levadas pelo vento.”$
+
+[SlateportCity_OceanicMuseum_2F_Text_SSTidalReplica] db4a6f1184
+“A BALSA S.S. TIDAL\p
+“Réplica em escala do navio em\n
+construção no ESTALEIRO DO STERN.”$
+
+[SlateportCity_OceanicMuseum_2F_Text_SubmarineReplica] bab17d01a9
+“SUBMARINO EXPLORADOR 1\p
+“Réplica do submarino potente\n
+para explorar o fundo do mar.”$
+
+[SlateportCity_OceanicMuseum_2F_Text_SumbersibleReplica] 7344af7222
+“CÁPSULA SUBMERSÍVEL\p
+“Réplica de uma cápsula compacta e não\n
+tripulada para explorar o fundo do mar.”$
+
+[SlateportCity_OceanicMuseum_2F_Text_SSAnneReplica] d3b81eb9fd
+“S.S. ANNE\p
+“Réplica do navio de luxo que dá\n
+a volta ao mundo.”$

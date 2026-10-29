@@ -1,0 +1,23 @@
+# CIDADE DE FALLARBOR: o corredor de CONCURSOS da TENDA DE BATALHA.
+
+[FallarborTown_ContestHall_Text_DoAllRightInPreliminary] a031fc9f91
+A gente vai bem na etapa preliminar,\n
+mas nunca ganha nas apresentações…\p
+Talvez eu tenha que ver o que os\n
+outros participantes fazem…$
+
+[FallarborTown_ContestHall_Text_MonAllTheseRibbons] 3b7816484e
+Olha!\n
+O meu POKéMON ganhou estas FITAS!\p
+Os seus POKéMON já ganharam FITAS?\n
+Dá pra ver no seu POKéNAV.$
+
+[FallarborTown_ContestHall_Text_CantWinEverywhere] 16d2a1bfe9
+Não venço LÍDERES de GINÁSIO…\p
+Não ganho nenhum CONCURSO…\p
+Já fui pra tudo quanto é lugar,\n
+e tudo à toa…$
+
+[FallarborTown_ContestHall_Text_SuperRankStage] 4ec1aea4b2
+CONCURSOS POKéMON\n
+PALCO DO NÍVEL SUPER!$

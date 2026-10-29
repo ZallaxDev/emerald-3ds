@@ -1,0 +1,35 @@
+# CIDADE DE LILYCOVE: o terraço da LOJA DE DEPARTAMENTOS.
+
+[LilycoveCity_DepartmentStoreRooftop_Text_SetDatesForClearOutSales] f20870c367
+Eles não têm data certa pras\n
+liquidações?\p
+Eu vejo TV, mas nunca passa\n
+propaganda.$
+
+[LilycoveCity_DepartmentStoreRooftop_Text_BeenWaitingForClearOutSale] 63717cedba
+Isso! Esperei muito por esta\n
+liquidação.\p
+Tem itens que só se acham aqui.\n
+Vou encher a sacola, ah, se vou!$
+
+[LilycoveCity_DepartmentStoreRooftop_Text_BoneDryThirsty] 0e036bdaa9
+Ai… Estou morrendo de sede!$
+
+[LilycoveCity_DepartmentStoreRooftop_Text_WhichDrinkWouldYouLike] 78f5201950
+É uma MÁQUINA DE BEBIDAS.\n
+Qual bebida você quer?$
+
+[LilycoveCity_DepartmentStoreRooftop_Text_CanOfDrinkDroppedDown] c32321b9c2
+Clang!\p
+Caiu uma lata de {STR_VAR_1}.$
+
+[LilycoveCity_DepartmentStoreRooftop_Text_ExtraCanOfDrinkDroppedDown] 51fce6147a
+Clang!\p
+Sorte! Caiu mais uma lata de\n
+{STR_VAR_1}!$
+
+[LilycoveCity_DepartmentStoreRooftop_Text_NotEnoughMoney] 86c13a1516
+Dinheiro insuficiente…$
+
+[LilycoveCity_DepartmentStoreRooftop_Text_DecidedAgainstBuyingDrink] 3621bf048b
+Desistiu de comprar uma bebida.$

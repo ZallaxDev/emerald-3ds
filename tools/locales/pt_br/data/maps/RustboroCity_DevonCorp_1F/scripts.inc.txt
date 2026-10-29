@@ -1,0 +1,64 @@
+# CORPORAÇÃO DEVON, 1º andar: a recepção e as vitrines.
+
+[RustboroCity_DevonCorp_1F_Text_WelcomeToDevonCorp] fdd3a12f56
+Olá, boas-vindas à CORPORAÇÃO\n
+DEVON.\p
+Temos orgulho de fabricar itens e\n
+remédios que melhoram a sua vida.$
+
+[RustboroCity_DevonCorp_1F_Text_StaffGotRobbed] e69779504b
+Um dos nossos pesquisadores bobeou\n
+e teve um pacote importante roubado.$
+
+[RustboroCity_DevonCorp_1F_Text_ThoseShoesAreOurProduct] ec5f96b758
+Ei, esse TÊNIS DE CORRER!\n
+É um dos nossos produtos!\p
+Fico feliz quando vejo alguém\n
+usando algo que a gente fez.$
+
+[RustboroCity_DevonCorp_1F_Text_RobberWasntVeryBright] 85a0850b15
+Aquele pacote roubado…\p
+Bom, é importante, claro, mas não é\n
+nada que qualquer um consiga usar.\p
+Na minha opinião, aquele ladrão\n
+não devia ser muito esperto.$
+
+[RustboroCity_DevonCorp_1F_Text_SoundsLikeStolenGoodsRecovered] 6d68b6bbb6
+Parece que recuperaram as PEÇAS\n
+DEVON que tinham sido roubadas.$
+
+[RustboroCity_DevonCorp_1F_Text_OnlyAuthorizedPeopleEnter] 394555cf14
+Desculpe, só pessoas autorizadas\n
+podem entrar aqui.$
+
+[RustboroCity_DevonCorp_1F_Text_HowCouldWeGetRobbed] 17cb16b976
+Que vacilo absurdo.\n
+Como deixamos nos roubarem?$
+
+[RustboroCity_DevonCorp_1F_Text_YoureAlwaysWelcomeHere] 7099cb2b0c
+Oi!\n
+Aqui a porta está sempre aberta!$
+
+[RustboroCity_DevonCorp_1F_Text_RocksMetalDisplay] 33dd58059a
+Amostras de pedras e metais estão\n
+expostas na vitrine.\p
+Tem um painel com um texto…\p
+“A CORPORAÇÃO DEVON começou\n
+produzindo pedras de pedreiras.\p
+“A empresa também produzia ferro\n
+a partir da limalha da areia.\p
+“Desse começo humilde, produzindo\n
+matéria-prima, a DEVON cresceu.\p
+“Hoje, a DEVON fabrica uma grande\n
+variedade de produtos industriais.”$
+
+[RustboroCity_DevonCorp_1F_Text_ProductDisplay] dcd1b60f33
+Protótipos e produtos em teste\n
+enchem a vitrine.\p
+Tem um painel com uma descrição…\p
+“Além de produtos industriais, a DEVON\n
+hoje vende artigos diversos e\l
+remédios para uma vida melhor.\p
+“Há pouco, a DEVON começou a vender\n
+ferramentas para TREINADORES, como\l
+POKé BOLAS e o POKéNAV.”$

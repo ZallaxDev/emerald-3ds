@@ -1,0 +1,101 @@
+# ESTRADA DA VITÓRIA: 1º andar, com o WALLY.
+
+[VictoryRoad_1F_Text_WallyNotGoingToLoseAnymore] c3e52cdc42
+WALLY: Oi! {PLAYER}!\p
+Aposto que não esperava me ver\n
+aqui!\p
+Cheguei até aqui, e é tudo graças\n
+a você!\p
+{PLAYER}, perder pra você aquela vez\n
+me deixou mais forte!\p
+Mas não vou perder mais!\p
+Vou vencer! Pelos POKéMON que me\n
+deram coragem e força!\p
+Certo… Lá vou eu!$
+
+[VictoryRoad_1F_Text_WallyEntranceDefeat] b37e8b9b15
+Uau!\n
+{PLAYER}, você é mesmo forte!$
+
+[VictoryRoad_1F_Text_WallyPostEntranceBattle] 4ea1efc8b4
+WALLY: Não consegui te vencer hoje,\n
+{PLAYER}, mas um dia desses eu\l
+te alcanço!$
+
+[VictoryRoad_1F_Text_WallyIntro] 0c2fbb4706
+WALLY: Oi! {PLAYER}!\p
+Fiquei mais forte desde a última vez!\n
+Queria te mostrar, {PLAYER}!\p
+Certo… Lá vou eu!$
+
+[VictoryRoad_1F_Text_WallyDefeat] b37e8b9b15
+Uau!\n
+{PLAYER}, você é mesmo forte!$
+
+[VictoryRoad_1F_Text_WallyPostBattle] 97e13b6ff4
+WALLY: Também não consegui te vencer\n
+desta vez… Mas um dia desses,\l
+{PLAYER}, eu te alcanço…\p
+E desafio a LIGA POKéMON!$
+
+[VictoryRoad_1F_Text_EdgarIntro] 77821fe24b
+Já cheguei até aqui algumas vezes,\n
+mas o último trecho é tão longo…$
+
+[VictoryRoad_1F_Text_EdgarDefeat] 70fde0e9b9
+O meu sonho acaba aqui de novo…$
+
+[VictoryRoad_1F_Text_EdgarPostBattle] 624a21f768
+Você chegou até aqui. Mantenha o\n
+embalo e chegue ao topo da LIGA!\p
+Se alguém consegue, é você!$
+
+[VictoryRoad_1F_Text_AlbertIntro] 1ebd5cce4d
+Não vim até aqui pra perder agora.\n
+Essa possibilidade não existe!$
+
+[VictoryRoad_1F_Text_AlbertDefeat] 663b5928bb
+Impossível…\n
+Eu perdi?$
+
+[VictoryRoad_1F_Text_AlbertPostBattle] cbb5470ae9
+Perdi aqui…\p
+Quer dizer que não tenho o que é\n
+preciso pra virar CAMPEÃO…$
+
+[VictoryRoad_1F_Text_HopeIntro] a9df1b7a86
+Esta estrada dura e quase infinita\n
+faz jus ao nome de VITÓRIA.$
+
+[VictoryRoad_1F_Text_HopeDefeat] 6a6d71a1cb
+O seu estilo de batalha é fantástico…$
+
+[VictoryRoad_1F_Text_HopePostBattle] f0a4a6c7be
+Parece que você tem potencial pra\n
+chegar ao topo da LIGA.$
+
+[VictoryRoad_1F_Text_QuincyIntro] b933aa1b8c
+O que é a ESTRADA DA VITÓRIA?\n
+Conto se você ganhar!$
+
+[VictoryRoad_1F_Text_QuincyDefeat] 1843ca4739
+Certo!\n
+Mandou bem!$
+
+[VictoryRoad_1F_Text_QuincyPostBattle] eae596293d
+Atravessar este lugar inteiro: esse\n
+é o teste final pra todo TREINADOR que\l
+quer chegar ao topo da LIGA POKéMON.\p
+Por isso se chama ESTRADA DA\n
+VITÓRIA.$
+
+[VictoryRoad_1F_Text_KatelynnIntro] 8228c62983
+Não tenho nada a dizer pra quem\n
+chegou até aqui. Vem!$
+
+[VictoryRoad_1F_Text_KatelynnDefeat] 5564b385c6
+Que vergonha…$
+
+[VictoryRoad_1F_Text_KatelynnPostBattle] 1b5ab77131
+Hunf, pode seguir em frente.\n
+Não estou nem aí.$

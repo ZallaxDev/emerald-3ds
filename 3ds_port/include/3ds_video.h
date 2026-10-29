@@ -8,6 +8,12 @@
 bool CtrVideo_TryVoxelUpload(void);
 /* How many more uploads TryVoxelUpload would grant this frame. */
 unsigned CtrVideo_VoxelUploadsLeft(void);
+/* The same for the animated tiles' copies, from room of their own. */
+bool CtrVideo_TryVoxelAnimUpload(void);
+/* In a frame: GX_TextureCopy calls between these go behind one split of its
+ * command list, with no heap flush each (their sources flushed already). */
+void CtrVideo_CopiesBegin(void);
+void CtrVideo_CopiesEnd(void);
 
 #define CTR_GAME_WIDTH 400
 #define CTR_GAME_HEIGHT 240
@@ -98,6 +104,7 @@ void CtrVideo_Bind(CtrVideoMemory memory);
 void CtrVideo_Present(void);
 /* Keep showing the last top-screen frame instead of the game's screen. */
 void CtrVideo_HoldTop(bool hold);
+bool CtrVideo_TopHeld(void);
 /* OAM entries belonging to field weather, tagged while BuildOamBuffer sorts sprites. */
 /*
  * The true y of the sprite that wrote OAM entries [first, end). OAM keeps 8
@@ -108,6 +115,10 @@ void CtrVideo_ClearOamAnchors(void);
 void CtrVideo_SetOamAnchor(unsigned first, unsigned end, int y);
 void CtrVideo_ClearVoxelWeatherOam(void);
 void CtrVideo_MarkVoxelWeatherOam(unsigned first, unsigned end);
+/* OAM entries of the clouds of WEATHER_SUNNY_CLOUDS: the GBA shows them only
+ * through the water (priority 3, under the ground's layer), and the voxel
+ * view lays them on its water itself (voxel_entities.c), never over the view. */
+void CtrVideo_MarkVoxelCloudOam(unsigned first, unsigned end);
 /* OAM entries of the fog's sprites, one picture on a 64-pixel lattice: the
  * compositor repeats it over the whole view (src/sprite.c). */
 void CtrVideo_ClearFogOam(void);
@@ -131,6 +142,20 @@ const uint16_t *CtrVideo_ExtPalette(unsigned index);
 void CtrVideo_ClearExtPaletteOam(void);
 void CtrVideo_MarkExtPaletteOam(unsigned first, unsigned end, unsigned index);
 void CtrVideo_NotifyTilesetAnimWrite(const void *dest, unsigned bytes);
+/*
+ * The field's banks of other tilesets (3ds_tile_banks.h). SetTileBank gives
+ * bank `bank` (0 to CTR_TILE_BANKS - 1) a secondary tileset's tiles (4bpp, at
+ * most CTR_TILE_BANK_BYTES) and its seven palettes 6-12, unfaded; NULL tiles
+ * empty it. A tilemap buffer registered with an array of bank numbers (1 +
+ * bank, 0 for none, an entry each) hands them over whenever the game copies
+ * it to VRAM (TilemapRequested, from bg.c); any other copy to that VRAM
+ * clears them. An entry keeps its bank only while VRAM holds the entry it
+ * was handed over with.
+ */
+void CtrVideo_SetTileBank(unsigned bank, const void *tiles, unsigned bytes, const uint16_t *palettes);
+void CtrVideo_RegisterTilemapBanks(const void *buffer, const uint8_t *banks, unsigned entries);
+void CtrVideo_UnregisterTilemapBanks(const void *buffer);
+void CtrVideo_TilemapRequested(unsigned vramOffset, const void *src, unsigned bytes);
 /*
  * A write the game made through its BIOS copies (3ds_prof_wrap.c): VRAM,
  * palette or OAM, by address. Phase F1, part B: which VRAM changed is
@@ -171,7 +196,9 @@ void CtrVideo_SetFieldBanner(bool banner);
 enum
 {
     CTR_CENTRED_NONE,
-    /* The fly map, the Town Map. */
+    /* The fly map, the Town Map, the OPTION screen, and the others with
+     * nothing of their own (ctr_gba_centred.h's default: contests,
+     * minigames). */
     CTR_CENTRED_PLAIN,
     /* The title menu and the professor's speech. */
     CTR_CENTRED_MAIN_MENU,
@@ -228,6 +255,14 @@ enum
     /* The Berry Blender: its bowl, an affine layer, kept to the picture. */
     CTR_CENTRED_BLENDER,
     CTR_CENTRED_POKEDEX_CAUGHT,
+    /* The trainer card from the field (the classic menus): in the bottom
+     * screen's window as the PokéNav. */
+    CTR_CENTRED_CARD,
+    /* The Game Corner's roulette: its wheel, an affine layer that does not
+     * wrap, whole past the picture's left edge and only once. */
+    CTR_CENTRED_ROULETTE,
+    /* The Game Corner's slot machine, set in the casino's wall. */
+    CTR_CENTRED_SLOTS,
     CTR_CENTRED_SCREENS
 };
 void CtrVideo_SetCentred(unsigned screen);
@@ -246,17 +281,27 @@ void CtrVideo_SetLineWindow(const uint16_t *values, unsigned lines, bool both);
  * coordinates (the sprites' frame) and its radius in pixels. Off with false.
  */
 void CtrVideo_SetFieldLight(bool on, int x, int y, int radius);
-/* Whether the last frame drew a game screen into the bottom screen: the
- * PokéNav or the bag into its left area, or one over all of it. */
+/* Where a game screen's 240x160 picture sits on the bottom screen, 1:1: the
+ * window 3ds_bottom_ui.c frames. Everything else there is its canvas. */
+#define CTR_BOTTOM_WIN_X 40
+#define CTR_BOTTOM_WIN_Y 40
+/* Whether the last frame drew a game screen into the bottom screen's window:
+ * the PokéNav, the bag, the party menu, the Pokédex, the boxes. */
 bool CtrVideo_BottomInUse(void);
-/* Whether it drew the whole bottom screen: the PC's boxes, a summary, the bag
- * opened from anywhere but the field. */
+/* The bottom screen draws the game's screen itself (3ds_bottom_ui.c's native
+ * views): its picture is not composed, and the top screen stays held. */
+void CtrVideo_SetBottomNative(bool native);
+/* Whether the field's Pokédex, bag and party menu are drawn natively (the
+ * classic menus off): their pictures are never composed then. */
+void CtrVideo_SetNativeMenus(bool on);
+/* The bottom screen's canvas just put on the screen: its header and dock over
+ * the game window's columns are drawn from it (3ds_video.c, StripUpload). */
+void CtrVideo_BottomStrips(const uint16_t *canvas);
+/* Whether that screen is one that has the bottom screen to itself, with no
+ * section dock round it: the PC's boxes, a summary, the bag or the party
+ * menu opened from anywhere but the field. */
 bool CtrVideo_BottomWhole(void);
-/*
- * The PokéNav's line of the picture a tap on line y of the bottom screen
- * lands on: its header stays on the top edge, its help bar on the bottom
- * edge and its body in between (3ds_video.c, NavBand). -1 between them.
- */
+/* The picture's line a tap on line y of the bottom screen lands on, -1 off it. */
 int CtrVideo_BottomPictureY(int y);
 /*
  * Whether the frames that follow are the battle scene: the 240x160 picture 1:1
@@ -294,13 +339,9 @@ void CtrVideo_MarkScreenOam(unsigned first, unsigned end);
  * player (the healing machine's balls and monitors): drawn where the map has
  * the machine rather than where the window layer has its text. */
 void CtrVideo_MarkMachineOam(unsigned first, unsigned end);
+/* And Fly's bird and its rider, flying on that picture around the player. */
+void CtrVideo_MarkFlyOam(unsigned first, unsigned end);
 const CtrVideoStats *CtrVideo_GetStats(void);
-void CtrScene_Init(void);
-void CtrScene_Update(void);
-unsigned CtrScene_Mode(void);
-void CtrCursor_Init(const void *tiles, const uint16_t *palette);
-void CtrCursor_Update(bool visible);
-void CtrCursor_GetPosition(int *x, int *y);
 
 /* Pure, SDK-free address/format helpers, also used by host regression tests. */
 uint32_t CtrVideo_TextMapOffset(unsigned x, unsigned y, unsigned size);

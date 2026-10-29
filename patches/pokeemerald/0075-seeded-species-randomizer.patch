@@ -1,0 +1,174 @@
+diff --git a/src/wild_encounter.c b/src/wild_encounter.c
+--- a/src/wild_encounter.c
++++ b/src/wild_encounter.c
+@@ -2,6 +2,9 @@
+ #ifdef PLATFORM_3DS
+ #include "3ds_extras.h" // optional settings (OPTIONS pages)
+ #include "3ds_encounters.h"
++#endif
++#ifdef PORT_BRIDGE
++#include "3ds_randomizer.h" // seeded species randomizer (off by default)
+ #endif
+ #include "wild_encounter.h"
+ #include "pokemon.h"
+@@ -76,6 +79,24 @@
+
+ EWRAM_DATA static u8 sWildEncountersDisabled = 0;
+ EWRAM_DATA static u32 sFeebasRngValue = 0;
++
++#ifdef PORT_BRIDGE
++// The species a wild Pokemon of the map's tables is met as (3ds_randomizer.h):
++// itself unless the randomizer's wild setting is on. The Battle Pike and the
++// Battle Pyramid look their own tables up by the species they find, so theirs
++// stay as they are.
++static u16 WildSpecies(u16 species)
++{
++    if (gMapHeader.mapLayoutId == LAYOUT_BATTLE_FRONTIER_BATTLE_PIKE_ROOM_WILD_MONS
++     || gMapHeader.mapLayoutId == LAYOUT_BATTLE_FRONTIER_BATTLE_PYRAMID_FLOOR
++     || InBattlePike() || CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE)
++        return species;
++    return CtrRandomizer_Species(CTR_RANDOMIZE_WILD, species);
++}
++#define WILD_SPECIES(species) WildSpecies(species)
++#else
++#define WILD_SPECIES(species) (species)
++#endif
+
+ #include "data/wild_encounters.h"
+
+@@ -466,7 +487,7 @@
+     if (gMapHeader.mapLayoutId != LAYOUT_BATTLE_FRONTIER_BATTLE_PIKE_ROOM_WILD_MONS && flags & WILD_CHECK_KEEN_EYE && !IsAbilityAllowingEncounter(level))
+         return FALSE;
+
+-    CreateWildMon(wildMonInfo->wildPokemon[wildMonIndex].species, level);
++    CreateWildMon(WILD_SPECIES(wildMonInfo->wildPokemon[wildMonIndex].species), level);
+     return TRUE;
+ }
+
+@@ -474,9 +495,10 @@
+ {
+     u8 wildMonIndex = ChooseWildMonIndex_Fishing(rod);
+     u8 level = ChooseWildMonLevel(&wildMonInfo->wildPokemon[wildMonIndex]);
+-
+-    CreateWildMon(wildMonInfo->wildPokemon[wildMonIndex].species, level);
+-    return wildMonInfo->wildPokemon[wildMonIndex].species;
++    u16 species = WILD_SPECIES(wildMonInfo->wildPokemon[wildMonIndex].species);
++
++    CreateWildMon(species, level);
++    return species;
+ }
+
+ static bool8 SetUpMassOutbreakEncounter(u8 flags)
+@@ -1061,7 +1083,8 @@
+             VisibleLogFail("kept away by a repel", wild->species);
+             return;
+         }
+-        v->species = wild->species;
++        // The species it is shown as is the one met when touched (VisibleStartBattle).
++        v->species = WILD_SPECIES(wild->species);
+         v->personality = VisibleRollPersonality();
+         v->shiny = GET_SHINY_VALUE(VisibleOtId(), v->personality) < SHINY_ODDS;
+         v->faceX = 0;
+@@ -1670,7 +1693,7 @@
+     {
+         u8 level = ChooseWildMonLevel(&sWildFeebas);
+
+-        species = sWildFeebas.species;
++        species = WILD_SPECIES(sWildFeebas.species);
+         CreateWildMon(species, level);
+     }
+     else
+diff --git a/src/starter_choose.c b/src/starter_choose.c
+--- a/src/starter_choose.c
++++ b/src/starter_choose.c
+@@ -26,6 +26,7 @@
+
+ #ifdef PORT_BRIDGE
+ #include "port_platform.h"
++#include "3ds_randomizer.h" // seeded species randomizer (off by default)
+ #endif
+
+ #define STARTER_MON_COUNT   3
+@@ -356,7 +357,13 @@
+ {
+     if (chosenStarterId > STARTER_MON_COUNT)
+         chosenStarterId = 0;
++#ifdef PORT_BRIDGE
++    // The label, the picture, the cry and the Pokemon given all come from
++    // here, so they agree (3ds_randomizer.h: itself unless the setting is on).
++    return CtrRandomizer_Species(CTR_RANDOMIZE_STARTERS, sStarterMon[chosenStarterId]);
++#else
+     return sStarterMon[chosenStarterId];
++#endif
+ }
+
+ static void VblankCB_StarterChoose(void)
+diff --git a/src/battle_main.c b/src/battle_main.c
+--- a/src/battle_main.c
++++ b/src/battle_main.c
+@@ -63,6 +63,15 @@
+ #include "constants/songs.h"
+ #include "constants/trainers.h"
+ #include "cable_club.h"
++
++#ifdef PORT_BRIDGE
++// Seeded species randomizer (3ds_randomizer.h, off by default): the species
++// an ordinary trainer's Pokemon is created as.
++#include "3ds_randomizer.h"
++#define TRAINER_MON_SPECIES(species) CtrRandomizer_Species(CTR_RANDOMIZE_TRAINERS, species)
++#else
++#define TRAINER_MON_SPECIES(species) (species)
++#endif
+
+ extern const struct BgTemplate gBattleBgTemplates[];
+ extern const struct WindowTemplate *const gBattleWindowTemplates[];
+@@ -2014,7 +2023,7 @@
+
+                 personalityValue += nameHash << 8;
+                 fixedIV = partyData[i].iv * MAX_PER_STAT_IVS / 255;
+-                CreateMon(&party[i], partyData[i].species, partyData[i].lvl, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
++                CreateMon(&party[i], TRAINER_MON_SPECIES(partyData[i].species), partyData[i].lvl, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
+                 break;
+             }
+             case F_TRAINER_PARTY_CUSTOM_MOVESET:
+@@ -2026,8 +2035,13 @@
+
+                 personalityValue += nameHash << 8;
+                 fixedIV = partyData[i].iv * MAX_PER_STAT_IVS / 255;
+-                CreateMon(&party[i], partyData[i].species, partyData[i].lvl, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
+-
++                CreateMon(&party[i], TRAINER_MON_SPECIES(partyData[i].species), partyData[i].lvl, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
++
++#ifdef PORT_BRIDGE
++                // A randomized species keeps the moves it learns by level:
++                // the custom moves were chosen for the original one.
++                if (GetMonData(&party[i], MON_DATA_SPECIES) == partyData[i].species)
++#endif
+                 for (j = 0; j < MAX_MON_MOVES; j++)
+                 {
+                     SetMonData(&party[i], MON_DATA_MOVE1 + j, &partyData[i].moves[j]);
+@@ -2044,7 +2058,7 @@
+
+                 personalityValue += nameHash << 8;
+                 fixedIV = partyData[i].iv * MAX_PER_STAT_IVS / 255;
+-                CreateMon(&party[i], partyData[i].species, partyData[i].lvl, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
++                CreateMon(&party[i], TRAINER_MON_SPECIES(partyData[i].species), partyData[i].lvl, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
+
+                 SetMonData(&party[i], MON_DATA_HELD_ITEM, &partyData[i].heldItem);
+                 break;
+@@ -2058,10 +2072,14 @@
+
+                 personalityValue += nameHash << 8;
+                 fixedIV = partyData[i].iv * MAX_PER_STAT_IVS / 255;
+-                CreateMon(&party[i], partyData[i].species, partyData[i].lvl, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
++                CreateMon(&party[i], TRAINER_MON_SPECIES(partyData[i].species), partyData[i].lvl, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
+
+                 SetMonData(&party[i], MON_DATA_HELD_ITEM, &partyData[i].heldItem);
+
++#ifdef PORT_BRIDGE
++                // As above: a randomized species keeps its level-up moves.
++                if (GetMonData(&party[i], MON_DATA_SPECIES) == partyData[i].species)
++#endif
+                 for (j = 0; j < MAX_MON_MOVES; j++)
+                 {
+                     SetMonData(&party[i], MON_DATA_MOVE1 + j, &partyData[i].moves[j]);

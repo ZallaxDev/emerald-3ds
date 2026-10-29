@@ -1,0 +1,165 @@
+# As palavras da FALA FÁCIL, grupo hobbies (src/data/easy_chat/easy_chat_group_hobbies.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_Idol] 009285ed4f width=72
+ÍDOLO
+
+[gEasyChatWord_Anime] 80b75c1aab width=72
+ANIME
+
+[gEasyChatWord_Song] b29ff6abcf width=72
+CANÇÃO
+
+[gEasyChatWord_Movie] 83d1753db5 width=72
+FILME
+
+[gEasyChatWord_Sweets] d62b88673e width=72
+DOCES
+
+[gEasyChatWord_Chat] 26bc51b8c2 width=72
+PAPO
+
+[gEasyChatWord_ChildsPlay] 73269e8c39 width=72
+BRINCADEIRA
+
+[gEasyChatWord_Toys] e3dd5e4c84 width=72
+BRINQUEDOS
+
+[gEasyChatWord_Music] bf3af1f80f width=72
+MÚSICA
+
+[gEasyChatWord_Cards] 2cb47ee37c width=72
+CARTAS
+
+[gEasyChatWord_Shopping] 3bf6960da0 width=72
+COMPRAS
+
+[gEasyChatWord_Camera] 7d20393155 width=72
+CÂMERA
+
+[gEasyChatWord_Viewing] 0aa82bd790 width=72
+ASSISTIR
+
+[gEasyChatWord_Spectator] 589d489cd6 width=72
+ESPECTADOR
+
+[gEasyChatWord_Gourmet] d98a025796 width=72
+GOURMET
+
+[gEasyChatWord_Game] 5787309be0 width=72
+JOGO
+
+[gEasyChatWord_Rpg] be38e4ffb7 width=72
+RPG
+
+[gEasyChatWord_Collection] 30109b0a1d width=72
+COLEÇÃO
+
+[gEasyChatWord_Complete] 2c85a73cd1 width=72
+COMPLETO
+
+[gEasyChatWord_Magazine] bc3948d57f width=72
+REVISTA
+
+[gEasyChatWord_Walk] abe59e364f width=72
+PASSEIO
+
+[gEasyChatWord_Bike] a3a29b90d8 width=72
+BICICLETA
+
+[gEasyChatWord_Hobby] a28961bbf7 width=72
+HOBBY
+
+[gEasyChatWord_Sports] 3beef3c74f width=72
+ESPORTES
+
+[gEasyChatWord_Software] fea459b94c width=72
+PROGRAMA
+
+[gEasyChatWord_Songs] 0307dd09fb width=72
+CANÇÕES
+
+[gEasyChatWord_Diet] a3d0ddc1db width=72
+DIETA
+
+[gEasyChatWord_Treasure] a77ab52e6f width=72
+TESOURO
+
+[gEasyChatWord_Travel] dd99db139f width=72
+VIAGEM
+
+[gEasyChatWord_Dance] 15838af745 width=72
+DANÇA
+
+[gEasyChatWord_Channel] f1947067fc width=72
+CANAL
+
+[gEasyChatWord_Making] 3a6e6d9795 width=72
+CRIAR
+
+[gEasyChatWord_Fishing] 51989c2081 width=72
+PESCARIA
+
+[gEasyChatWord_Date] 8c76abdec4 width=72
+ENCONTRO
+
+[gEasyChatWord_Design] 8d2fccfa70 width=72
+DESIGN
+
+[gEasyChatWord_Locomotive] 9100af3bb5 width=72
+LOCOMOTIVA
+
+[gEasyChatWord_PlushDoll] 10150939a1 width=72
+PELÚCIA
+
+[gEasyChatWord_Pc] 36f780fdbd width=72
+PC
+
+[gEasyChatWord_Flowers] a95303dff4 width=72
+FLORES
+
+[gEasyChatWord_Hero] 55d54c6783 width=72
+HERÓI
+
+[gEasyChatWord_Nap] fca8c44fb6 width=72
+SONECA
+
+[gEasyChatWord_Heroine] 1727d7eafb width=72
+HEROÍNA
+
+[gEasyChatWord_Fashion] 210e079c15 width=72
+MODA
+
+[gEasyChatWord_Adventure] 6d39913fd3 width=72
+AVENTURA
+
+[gEasyChatWord_Board] 3e91add48a width=72
+TABULEIRO
+
+[gEasyChatWord_Ball] 9f27bdbf8c width=72
+BOLA
+
+[gEasyChatWord_Book] b47d3753e8 width=72
+LIVRO
+
+[gEasyChatWord_Festival] 1873a9a959 width=72
+FESTIVAL
+
+[gEasyChatWord_Comics] 417845e765 width=72
+GIBIS
+
+[gEasyChatWord_Holiday] c25a2e049c width=72
+FERIADO
+
+[gEasyChatWord_Plans] ef82938a8b width=72
+PLANOS
+
+[gEasyChatWord_Trendy] bb2d30788e width=72
+NA MODA
+
+[gEasyChatWord_Vacation] 2e12d10e1e width=72
+FÉRIAS
+
+[gEasyChatWord_Look] de42400c95 width=72
+VISUAL

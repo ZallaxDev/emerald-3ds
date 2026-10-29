@@ -1,0 +1,38 @@
+# CIDADE DE FORTREE: a troca do VOLBEAT pelo PLUSLE.
+
+[FortreeCity_House1_Text_YouWillTradeWontYou] 3501911d2a
+Uooooaaar! Eu preciso!\n
+Tenho que ter um {STR_VAR_1}!\l
+Faço qualquer coisa!\p
+…Hã… Você ouviu?\n
+O meu grito do fundo do coração?\p
+Depois disso, você vai trocar o seu\n
+{STR_VAR_1} pelo meu {STR_VAR_2},\l
+não vai?$
+
+[FortreeCity_House1_Text_MonYouTakeCare] cac76a0c06
+Isso aí, beleza!\p
+{STR_VAR_1}, bem-vindo!\n
+{STR_VAR_2}, se cuida!$
+
+[FortreeCity_House1_Text_ThisIsntAMon] a96fe71159
+Hã, não, acho que não.\n
+Isso não é um {STR_VAR_1}.$
+
+[FortreeCity_House1_Text_YouWontTradeMe] 1addf4d563
+Não? Não vai trocar comigo?\n
+Mesmo depois de eu abrir o coração?$
+
+[FortreeCity_House1_Text_GoingToMakeVolbeatStrong] 4978316ef6
+De agora em diante, vou deixar o\n
+VOLBEAT superforte!\p
+Espero que você faça o mesmo com\n
+o PLUSLE!$
+
+[FortreeCity_House1_Text_TradingMemoriesWithOthers] f3279e665e
+Trocar POKéMON com os outros…\p
+É como trocar as suas próprias\n
+lembranças com outras pessoas.$
+
+[FortreeCity_House1_Text_Zigzagoon] ba574657fa
+ZIGZAGOON: Gumomoh?$

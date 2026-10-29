@@ -1,0 +1,21 @@
+# FRONTEIRA DE BATALHA: o CENTRO POKéMON.
+
+[BattleFrontier_PokemonCenter_1F_Text_NeverSeenPokemon] b7d6e9bd9a
+Tinha alguém aqui usando um POKéMON\n
+que eu nunca tinha visto.\p
+Pelo menos na ESCOLA DE TREINADORES\n
+nunca aprendi sobre ele.\p
+Onde será que se pega POKéMON\n
+assim?$
+
+[BattleFrontier_PokemonCenter_1F_Text_NextStopBattleArena] dec2b93a2c
+Certo! Próxima parada, ARENA DE\n
+BATALHA! Melhor pegar os POKéMON\l
+certos no sistema do PC.$
+
+[BattleFrontier_PokemonCenter_1F_Text_GoingThroughEveryChallenge] 2826e5e6b0
+Hihi… Vou passar por todos os\n
+desafios só com este fofinho!$
+
+[BattleFrontier_PokemonCenter_1F_Text_Skitty] 2adb0c758a
+SKITTY: Miá miaaah!$

@@ -1,0 +1,18 @@
+# CIDADE DE PACIFIDLOG: o CENTRO POKéMON.
+
+[PacifidlogTown_PokemonCenter_1F_Text_WhatColorTrainerCard] 086f36542f
+De que cor é o seu CARTÃO DE\n
+TREINADOR? O meu é cobre!$
+
+[PacifidlogTown_PokemonCenter_1F_Text_OnColonyOfCorsola] 5d88b5aced
+A CIDADE DE PACIFIDLOG flutua em cima\n
+de uma colônia de CORSOLA.\p
+Se eu te dissesse isso, você\n
+acreditaria?$
+
+[PacifidlogTown_PokemonCenter_1F_Text_AncestorsLivedOnBoats] 8ba07ccd95
+Dizem que os antepassados do povo de\n
+PACIFIDLOG nasciam, viviam e morriam\l
+a bordo de barcos.\p
+Pelo que sei, viviam assim porque\n
+estavam procurando alguma coisa.$

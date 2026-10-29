@@ -1,0 +1,34 @@
+# As mensagens de salvar o jogo (menu START), na caixa de mensagem.
+
+[gText_ConfirmSave] 93a55ddcb0
+Quer salvar o jogo?$
+
+[gText_AlreadySavedFile] d51d90d1e1
+Já existe um jogo salvo.\n
+Tudo bem gravar por cima dele?$
+
+[gText_SavingDontTurnOff] 66d1e58f35
+SALVANDO…\n
+NÃO DESLIGUE O APARELHO.$
+
+[gText_PlayerSavedGame] 1d30fbfda4
+{PLAYER} salvou o jogo.$
+
+[gText_DifferentSaveFile] cfa51c5b32
+ATENÇÃO!\p
+Já existe um jogo diferente\n
+salvo.\p
+Se você salvar agora, a aventura do\n
+outro jogo, com os itens e os\l
+POKéMON, será perdida por completo.\p
+Tem certeza de que quer salvar agora\n
+e gravar por cima do outro jogo?$
+
+[gText_SaveError] 671495ebc3
+Erro ao salvar.\p
+Troque a memória\n
+de backup.$
+
+[gText_SavingDontTurnOffPower] 66d1e58f35
+SALVANDO…\n
+NÃO DESLIGUE O APARELHO.$

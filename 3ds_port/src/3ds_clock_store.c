@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
@@ -27,13 +28,33 @@ static uint64_t ReadNumber(const unsigned char *bytes, unsigned size)
     return value;
 }
 
+static CtrClockStoreStatus sStatus = CTR_CLOCK_STORE_NONE;
+static unsigned sLoadSerial;
+
+CtrClockStoreStatus CtrClockStore_Status(void)
+{
+    return sStatus;
+}
+
+unsigned CtrClockStore_LoadSerial(void)
+{
+    return sLoadSerial;
+}
+
+bool CtrClockStore_NeedsNotice(CtrClockStoreStatus status)
+{
+    return status == CTR_CLOCK_STORE_MISSING || status == CTR_CLOCK_STORE_INVALID || status == CTR_CLOCK_STORE_MISMATCH;
+}
+
 bool CtrClockStore_Load(const void *save, size_t size)
 {
     unsigned char bytes[CLOCK_BYTES];
     FILE *file;
-    bool valid;
+    bool valid, found = false, mismatch = false;
     CtrDayNightSnapshot snapshot;
 
+    ++sLoadSerial;
+    sStatus = CTR_CLOCK_STORE_NONE;
     CtrDayNight_Reset();
     if (save == NULL || size == 0)
         return false;
@@ -45,25 +66,39 @@ bool CtrClockStore_Load(const void *save, size_t size)
     {
         file = CtrFs_OpenData(names[index], "rb");
         if (file == NULL)
+        {
+            found |= errno != ENOENT;
             continue;
+        }
+        found = true;
         valid = fread(bytes, 1, sizeof(bytes), file) == sizeof(bytes)
              && fgetc(file) == EOF && !ferror(file);
         if (fclose(file) != 0)
             valid = false;
+        /* The same checks as ever; only which one failed is now told apart:
+         * a sound record of another save is a mismatch, anything else invalid. */
         if (!valid || memcmp(bytes, "EM3DCLK1", 8) != 0 || bytes[12] > 1
          || bytes[13] != 0 || bytes[14] != 0 || bytes[15] != 0
-         || ReadNumber(bytes + 8, 4) != CtrPak_Crc32(0, save, size)
          || ReadNumber(bytes + 36, 4) != CtrPak_Crc32(0, bytes, 36)
          || ReadNumber(bytes + 28, 8) > INT64_MAX)
             continue;
+        if (ReadNumber(bytes + 8, 4) != CtrPak_Crc32(0, save, size))
+        {
+            mismatch = true;
+            continue;
+        }
         snapshot.timeMs = (uint32_t)ReadNumber(bytes + 16, 4);
         snapshot.berryBonusMs = ReadNumber(bytes + 20, 8);
         snapshot.wallSeconds = (int64_t)ReadNumber(bytes + 28, 8);
         snapshot.shifted = bytes[12] != 0;
         if (CtrDayNight_Restore(&snapshot))
+        {
+            sStatus = index == 0 ? CTR_CLOCK_STORE_RESTORED : CTR_CLOCK_STORE_RECOVERED;
             return true;
+        }
     }
-    CtrLog_Write(CTR_LOG_FS, "clock: no matching valid state, using local RTC");
+    sStatus = mismatch ? CTR_CLOCK_STORE_MISMATCH : found ? CTR_CLOCK_STORE_INVALID : CTR_CLOCK_STORE_MISSING;
+    CtrLog_Write(CTR_LOG_FS, "clock: no matching valid state, using local RTC (status %d)", (int)sStatus);
     return false;
 }
 

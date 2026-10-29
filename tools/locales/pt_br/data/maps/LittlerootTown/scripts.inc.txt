@@ -1,0 +1,111 @@
+# CIDADE DE LITTLEROOT: a chegada, a MAMÃE, os moradores e as placas.
+
+[LittlerootTown_Text_OurNewHomeLetsGoInside] 1c4eb2d20e
+MAMÃE: {PLAYER}, chegamos, meu amor!\p
+Deve ter sido cansativo viajar junto\n
+com a mudança no caminhão.\p
+Bem, esta é a CIDADE DE LITTLEROOT.\p
+O que achou?\n
+Esta é a nossa nova casa!\p
+É um lugar simples, mas parece ser\n
+tranquilo para morar, não acha?\p
+E você vai ter o seu próprio quarto,\n
+{PLAYER}! Vamos entrar.$
+
+[LittlerootTown_Text_WaitPlayer] 12eee5c3e2
+MAMÃE: Espere, {PLAYER}!$
+
+[LittlerootTown_Text_WearTheseRunningShoes] 8f8a92e70b
+MAMÃE: {PLAYER}! {PLAYER}! Você já se\n
+apresentou ao PROF. BIRCH?\p
+Oh! Que POKéMON mais lindo!\n
+Foi o PROF. BIRCH que deu? Que ótimo!\p
+Você puxou mesmo o seu pai.\n
+Você e os POKéMON combinam!\p
+Tome, meu amor! Se vai sair em uma\n
+aventura, use este TÊNIS DE CORRER.\p
+Ele vai deixar os seus passos ligeiros!$
+
+[LittlerootTown_Text_SwitchShoesWithRunningShoes] b1bbbe2394
+{PLAYER} trocou os sapatos pelo\n
+TÊNIS DE CORRER.$
+
+[LittlerootTown_Text_ExplainRunningShoes] e704f00f0d
+MAMÃE: {PLAYER}, o tênis veio com um\n
+manual de instruções.\p
+“Aperte o Botão B usando este TÊNIS\n
+DE CORRER para ir bem mais rápido!\p
+“Calce este TÊNIS DE CORRER e saia\n
+correndo pelo mundo afora!”$
+
+[LittlerootTown_Text_ComeHomeIfAnythingHappens] db99f3cffb
+… … … … … … … …\n
+… … … … … … … …\p
+E pensar que agora você tem o seu\n
+próprio POKéMON…\l
+O seu pai vai ficar muito feliz.\p
+…Mas, por favor, tome cuidado.\n
+Se algo acontecer, volte para casa.\p
+Agora vá, meu amor, mostre a eles!$
+
+[LittlerootTown_Text_CanUsePCToStoreItems] 9c0489d44f
+Com um PC, dá para guardar itens\n
+e POKéMON.\p
+O poder da ciência é impressionante!$
+
+[LittlerootTown_Text_BirchSpendsDaysInLab] 77d02da04c
+O PROF. BIRCH passa dias estudando\n
+no LABORATÓRIO, e de repente sai\l
+para pesquisar na natureza…\p
+Quando será que o PROF. BIRCH\n
+fica em casa?$
+
+[LittlerootTown_Text_IfYouGoInGrassPokemonWillJumpOut] 6fb2de942c
+Hum, hum, hum!\p
+Se você sair e entrar no mato alto,\n
+POKéMON selvagens vão aparecer!$
+
+[LittlerootTown_Text_DangerousIfYouDontHavePokemon] 9dd0a4080d
+É perigoso se você não tiver\n
+o seu próprio POKéMON.$
+
+[LittlerootTown_Text_CanYouGoSeeWhatsHappening] 89bb5fd5fe
+Hum, oi!\p
+Tem POKéMON assustadores lá fora!\n
+Dá para ouvir os gritos deles!\p
+Eu quero ver o que está acontecendo,\n
+mas não tenho nenhum POKéMON…\p
+Você pode ir ver o que está havendo\n
+para mim?$
+
+[LittlerootTown_Text_YouSavedBirch] 40175c7fb3
+Você salvou o PROF. BIRCH!\n
+Que alívio!$
+
+[LittlerootTown_Text_GoodLuckCatchingPokemon] cc67fca745
+Você vai capturar POKéMON?\n
+Boa sorte!$
+
+[LittlerootTown_Text_TownSign] c6e9af101d
+CIDADE DE LITTLEROOT\n
+“Uma cidade que cor nenhuma tinge.”$
+
+[LittlerootTown_Text_ProfBirchsLab] c06bae8d4c
+LABORATÓRIO POKéMON DO PROF. BIRCH$
+
+[LittlerootTown_Text_PlayersHouse] 8fd6753e8b
+CASA DE {PLAYER}$
+
+[LittlerootTown_Text_ProfBirchsHouse] 64a6fad147
+CASA DO PROF. BIRCH$
+
+[LittlerootTown_Text_BirchSomethingToShowYouAtLab] 91b5065218
+PROF. BIRCH: Ora, ora, {PLAYER}{KUN}!\n
+Foi um ótimo trabalho lá fora!\p
+Eu sabia que você tinha algo especial\n
+desde a primeira vez que te vi,\l
+mas nunca esperei por isso.\p
+Ah, sim. Você ainda tem a POKéDEX\n
+que eu te dei?\p
+Tenho algo para te mostrar.\n
+Vamos ao meu LABORATÓRIO.$

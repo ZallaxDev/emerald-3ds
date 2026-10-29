@@ -1,0 +1,32 @@
+# CIDADE DE FORTREE: o menino do WINGULL e a ERVA MENTAL.
+
+[FortreeCity_House4_Text_BringsWorldCloserTogether] 31cd0316ea
+Junto com os POKéMON, as pessoas\n
+fazem cada vez mais amigos.\p
+E isso aproxima o mundo.\n
+Acho isso maravilhoso!$
+
+[FortreeCity_House4_Text_GoBirdPokemon] 1c58b0eb6c
+Vai!\n
+Vai, POKéMON PÁSSARO!$
+
+[FortreeCity_House4_Text_AskedWingullToRunErrand] 2e1e07ebed
+Hehe, pedi pro meu WINGULL fazer\n
+um favor pra mim.$
+
+[FortreeCity_House4_Text_WelcomeWingullTakeMentalHerb] 016cb1dd1a
+Isso!\n
+Bem-vindo de volta, WINGULL!\p
+Hã? O que é isso?\n
+O que ele está segurando?\p
+Uma ERVA MENTAL?\n
+Deve ter achado em algum lugar.\p
+Mas eu não sou TREINADOR, então\n
+pode ficar com ela.$
+
+[FortreeCity_House4_Text_FriendsFarAwayThanksToWingull] 56562e7dbe
+Graças ao meu WINGULL, tenho amigos\n
+que moram longe.$
+
+[FortreeCity_House4_Text_Wingull] d6ce32141e
+WINGULL: Pihyoh!$

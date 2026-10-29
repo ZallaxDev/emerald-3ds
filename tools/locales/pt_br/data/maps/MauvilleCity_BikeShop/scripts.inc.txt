@@ -1,0 +1,145 @@
+# BICICLETARIA DO RYDEL, em MAUVILLE: as BICICLETAS e os manuais.
+
+[MauvilleCity_BikeShop_Text_RydelGreeting] dc85a41acd
+Ora, ora, o que temos aqui?\n
+Que freguesia cheia de energia!\p
+Eu? Pode me chamar de RYDEL.\n
+Sou o dono desta bicicletaria.$
+
+[MauvilleCity_BikeShop_Text_DidYouComeFromFarAway] 5d9333d4be
+RYDEL: O seu TÊNIS DE CORRER…\n
+Está sujo à beça.\p
+Você veio de longe?$
+
+[MauvilleCity_BikeShop_Text_GuessYouDontNeedBike] 00e80b331b
+RYDEL: É mesmo?\p
+Então acho que você não precisa de\n
+nenhuma das minhas BICICLETAS.$
+
+[MauvilleCity_BikeShop_Text_ExplainBikesChooseWhichOne] ab1f5189ec
+RYDEL: Hm, hm… … … … …\p
+Você está dizendo que veio lá de\n
+LITTLEROOT até aqui?\p
+Minha nossa!\n
+Isso é longe demais!\p
+Com uma das minhas BICICLETAS, você\n
+ia a qualquer lugar fácil, sentindo\l
+o carinho suave do vento!\p
+Já sei!\n
+Vou te dar uma BICICLETA!\p
+Ah, espera um pouco!\p
+Esqueci de dizer que existem dois\n
+tipos de BICICLETA!\p
+A BICICLETA MACH e a\n
+BICICLETA ACRO!\p
+A BICICLETA MACH é pra quem quer\n
+sentir o vento no corpo!\p
+E a BICICLETA ACRO é pra quem\n
+prefere manobras técnicas!\p
+Sou um amor de pessoa, então você\n
+pode ficar com a que quiser!\p
+Qual você escolhe?$
+
+[MauvilleCity_BikeShop_Text_ChoseMachBike] 8c3ca13ce0
+{PLAYER} escolheu a BICICLETA MACH.$
+
+[MauvilleCity_BikeShop_Text_ChoseAcroBike] 831a2ae9fd
+{PLAYER} escolheu a BICICLETA ACRO.$
+
+[MauvilleCity_BikeShop_Text_ComeBackToSwitchBikes] ae96c37d13
+RYDEL: Se der vontade de trocar de\n
+BICICLETA, é só vir me ver!$
+
+[MauvilleCity_BikeShop_Text_WantToSwitchBikes] 5e8d5d69d6
+RYDEL: Hã? Está pensando em trocar\n
+de BICICLETA?$
+
+[MauvilleCity_BikeShop_Text_IllSwitchBikes] f26321ddfc
+RYDEL: Tudo bem, sem problemas!\n
+Eu troco a BICICLETA pra você!$
+
+[MauvilleCity_BikeShop_Text_ExchangedMachForAcro] 8f3807af6b
+{PLAYER} trocou a BICICLETA MACH\n
+pela BICICLETA ACRO.$
+
+[MauvilleCity_BikeShop_Text_ExchangedAcroForMach] 228815e14c
+{PLAYER} trocou a BICICLETA ACRO\n
+pela BICICLETA MACH.$
+
+[MauvilleCity_BikeShop_Text_HappyYouLikeIt] c9b2eff94b
+RYDEL: Ótimo, ótimo!\n
+Fico feliz que tenha gostado!$
+
+[MauvilleCity_BikeShop_Text_OhYourBikeIsInPC] dfb11f8018
+Hã? O que aconteceu com a BICICLETA\n
+que eu te dei?\p
+Ah, entendi, você guardou no PC.\p
+Bom, tire do PC que eu troco\n
+com prazer!\p
+Que o vento sempre sopre a seu\n
+favor na aventura!$
+
+[MauvilleCity_BikeShop_Text_HandbooksAreInBack] ca45a293a2
+Estou aprendendo sobre BICICLETAS\n
+enquanto trabalho aqui.\p
+Se precisar de dicas pra andar de\n
+BICICLETA, tem uns manuais\l
+lá no fundo.$
+
+[MauvilleCity_BikeShop_Text_MachHandbookWhichPage] b3d70059fa
+É um manual da BICICLETA MACH.\p
+Qual página você quer ler?$
+
+[MauvilleCity_BikeShop_Text_HowToRideMachBike] 51b2f2a1fb
+A BICICLETA anda na direção em que\n
+você aperta o Botão Direcional.\p
+Ela acelera depois que pega embalo.\p
+Pra parar, solte o Botão Direcional.\n
+A BICICLETA vai desacelerar até parar.\p
+Quer ler outra página?$
+
+[MauvilleCity_BikeShop_Text_HowToTurnMachBike] ed068af07b
+A BICICLETA MACH é rápida, mas não\n
+consegue parar muito rápido.\p
+Fica um pouco difícil fazer\n
+as curvas.\p
+Solte o Botão Direcional um pouco\n
+antes da curva e desacelere.\p
+Quer ler outra página?$
+
+[MauvilleCity_BikeShop_Text_SandySlopes] 6298cfc5d4
+Há pequenas rampas de areia por\n
+toda a região de HOENN.\p
+A areia fofa e solta não deixa\n
+subir do jeito normal.\p
+Mas, com uma BICICLETA MACH, você\n
+sobe uma rampa de areia num instante.\p
+Quer ler outra página?$
+
+[MauvilleCity_BikeShop_Text_AcroHandbookWhichPage] e4a08dea3f
+É um manual da BICICLETA ACRO.\p
+Qual página você quer ler?$
+
+[MauvilleCity_BikeShop_Text_Wheelies] 03a98c10bf
+Aperte o Botão B enquanto pedala, e a\n
+roda da frente sobe.\p
+Dá pra andar com a roda da frente\n
+levantada usando o Botão Direcional.\p
+Essa manobra se chama empinar.\p
+Quer ler outra página?$
+
+[MauvilleCity_BikeShop_Text_BunnyHops] 920c0a38ab
+Segurando o Botão B, a sua\n
+BICICLETA pula sem sair do lugar.\p
+Essa manobra se chama bunny hop.\p
+Também dá pra andar pulando.\p
+Quer ler outra página?$
+
+[MauvilleCity_BikeShop_Text_Jumps] fda4344104
+Aperte o Botão B e o Botão Direcional\n
+ao mesmo tempo pra pular.\p
+Aperte o Botão Direcional pro lado\n
+pra pular de lado.\p
+Aperte pra trás pra BICICLETA\n
+mudar de direção enquanto pula.\p
+Quer ler outra página?$

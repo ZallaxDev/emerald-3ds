@@ -1,0 +1,11 @@
+# CIDADE DE LILYCOVE: a casa do dorminhoco.
+
+[LilycoveCity_House2_Text_NotAwakeYetHaveThis] e9508a1536
+Hã? Quê? O que foi?\p
+Ainda não acordei direito…\n
+Pode ficar com isto…$
+
+[LilycoveCity_House2_Text_SleepIsEssential] 8febf137fd
+Uaaah…\p
+Dormir é essencial pra saúde…\n
+Durma e recupere a saúde…$

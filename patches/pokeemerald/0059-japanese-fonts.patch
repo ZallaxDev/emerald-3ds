@@ -1,0 +1,35 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: The Japanese game has no Latin fonts
+Applies after 0005-port-hooks.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/fonts.c b/src/fonts.c
+--- a/src/fonts.c
++++ b/src/fonts.c
+@@ -1,5 +1,20 @@
+ #include "global.h"
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_JAPANESE
++// The Japanese game has no Latin fonts: all of its text is drawn with the
++// Japanese glyphs (text.c), so the Latin ones are never read. text.c still
++// names them; the widths stay whole in case a width is looked up.
++ALIGNED(4) const u16 gFontSmallNarrowLatinGlyphs[0x20] = {0};
++ALIGNED(4) const u8 gFontSmallNarrowLatinGlyphWidths[0x200] = {0};
++ALIGNED(4) const u16 gFontSmallLatinGlyphs[0x20] = {0};
++ALIGNED(4) const u8 gFontSmallLatinGlyphWidths[0x200] = {0};
++ALIGNED(4) const u16 gFontNarrowLatinGlyphs[0x20] = {0};
++ALIGNED(4) const u8 gFontNarrowLatinGlyphWidths[0x200] = {0};
++ALIGNED(4) const u16 gFontShortLatinGlyphs[0x20] = {0};
++ALIGNED(4) const u8 gFontShortLatinGlyphWidths[0x200] = {0};
++ALIGNED(4) const u16 gFontNormalLatinGlyphs[0x20] = {0};
++ALIGNED(4) const u8 gFontNormalLatinGlyphWidths[0x200] = {0};
++#else
+ ALIGNED(4) const u16 gFontSmallNarrowLatinGlyphs[] = INCBIN_U16("graphics/fonts/small_narrow.latfont");
+ ALIGNED(4) const u8 gFontSmallNarrowLatinGlyphWidths[] = {
+     3,  5,  5,  5,  5,  5,  5,  5,  5,  4,  3,  4,  4,  5,  5,  5,
+@@ -179,6 +194,7 @@
+     8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,
+     8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  3,
+ };
++#endif
+ 
+ ALIGNED(4) const u16 gFontSmallJapaneseGlyphs[] = INCBIN_U16("graphics/fonts/small.hwjpnfont");
+ ALIGNED(4) const u16 gFontNormalJapaneseGlyphs[] = INCBIN_U16("graphics/fonts/normal.hwjpnfont");

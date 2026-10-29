@@ -25,6 +25,9 @@
 #define TILES_PER_TILESET 512u
 #define SUBTILE_PX 8u
 
+/* In texels; see VoxelAtlas_SlotUV. */
+#define VOXEL_ATLAS_EDGE_INSET (1.0f / 32.0f)
+
 void VoxelAtlas_SlotUV(unsigned slot, float *u0, float *v0, float *u1, float *v1)
 {
     unsigned page = slot / VOXEL_ATLAS_MAX_SLOTS;
@@ -32,11 +35,21 @@ void VoxelAtlas_SlotUV(unsigned slot, float *u0, float *v0, float *u1, float *v1
     float x = (float)(slot % VOXEL_ATLAS_COLUMNS) * VOXEL_ATLAS_SLOT;
     float y = (float)(slot / VOXEL_ATLAS_COLUMNS) * VOXEL_ATLAS_SLOT;
 
-    /* Row 0 in memory is v=1, the same convention the 2D compositor uses. */
+    /*
+     * Row 0 in memory is v=1, the same convention the 2D compositor uses.
+     * The slot's rows stop a thirty-second of a texel short of its north and
+     * south edges. The slots touch, with no gutter, and while the camera
+     * scrolls north or south a tile's edge passes through pixel centres now
+     * and then: the sample there sits on v0 or v1 exactly, and a rounding
+     * error in the interpolation (or, at v0, nearest sampling's choice of
+     * the larger side) took a row of the slot above or below - a one-pixel
+     * line of another metatile's art right along the tile edge. Inside the
+     * slot no sample moves by more than that thirty-second.
+     */
     *u0 = page * 2.0f + x / VOXEL_ATLAS_W;
     *u1 = page * 2.0f + (x + VOXEL_ATLAS_SLOT) / VOXEL_ATLAS_W;
-    *v0 = 1.0f - y / VOXEL_ATLAS_H;
-    *v1 = 1.0f - (y + VOXEL_ATLAS_SLOT) / VOXEL_ATLAS_H;
+    *v0 = 1.0f - (y + VOXEL_ATLAS_EDGE_INSET) / VOXEL_ATLAS_H;
+    *v1 = 1.0f - (y + VOXEL_ATLAS_SLOT - VOXEL_ATLAS_EDGE_INSET) / VOXEL_ATLAS_H;
 }
 
 void VoxelAtlas_SolidUV(VoxelSolidColor color, float *u0, float *v0, float *u1, float *v1)
@@ -235,6 +248,153 @@ static bool AtlasSourceOf(const struct Tileset *primary, const struct Tileset *s
 }
 
 /*
+ * One tile of a metatile entry over its 8x8 block, in the PICA's order. Layer
+ * 0 is the opaque base; layer 1 keys out index 0 and, `hide`, draws nothing.
+ * `*black` turns false on anything drawn that is not black, and on a tile
+ * that is missing.
+ */
+static void ComposeTile(const struct AtlasSource *src, uint16_t entry, unsigned layer, bool hide,
+                        uint16_t *block, bool *black)
+{
+    unsigned tileId = entry & 0x3FF;
+    unsigned paletteId = (entry >> 12) & 0xF;
+    bool flipX = (entry >> 10) & 1;
+    unsigned flipY = (entry >> 11) & 1 ? SUBTILE_PX - 1 : 0;
+    const uint8_t *tile;
+    uint16_t texels[16];
+    unsigned used = 0;
+
+    if (tileId < TILES_PER_TILESET)
+        tile = src->primaryTiles != NULL ? src->primaryTiles + tileId * 32 : NULL;
+    else
+        tile = src->secondaryTiles != NULL
+             ? src->secondaryTiles + (tileId - TILES_PER_TILESET) * 32 : NULL;
+    if (tile == NULL)
+    {
+        *black = false;
+        return;
+    }
+    if (hide)
+        return;
+    memcpy(texels, src->texel[paletteId], sizeof(texels));
+    /* Index 0 of layer 0 is the backdrop, whatever palette. */
+    texels[0] = src->texel[0][0];
+    /*
+     * A row's eight pixels are a word, pixel x in nibble x (x ^ 7 flipped).
+     * Layer 0 is the opaque base; layer 1 keys out index 0, and an upper
+     * tile with nothing in it - most of the sea's - is passed over whole.
+     */
+    for (unsigned py = 0; py < SUBTILE_PX; ++py)
+    {
+        const uint8_t *row = tile + (py ^ flipY) * 4;
+        const uint8_t *morton = &sMorton[py * SUBTILE_PX];
+        uint32_t bits = (uint32_t)row[0] | (uint32_t)row[1] << 8 | (uint32_t)row[2] << 16
+                      | (uint32_t)row[3] << 24;
+
+        if (flipX)
+        {
+            /* the nibbles of each byte swapped, then the bytes reversed */
+            bits = (bits & 0x0F0F0F0Fu) << 4 | (bits >> 4 & 0x0F0F0F0Fu);
+            bits = bits >> 24 | (bits >> 8 & 0xFF00u) | (bits << 8 & 0xFF0000u) | bits << 24;
+        }
+        if (layer == 0)
+            for (unsigned px = 0; px < SUBTILE_PX; ++px, bits >>= 4)
+            {
+                unsigned colorIdx = bits & 0xF;
+
+                used |= 1u << colorIdx;
+                block[morton[px]] = texels[colorIdx];
+            }
+        else
+            for (unsigned px = 0; bits != 0; ++px, bits >>= 4)
+            {
+                unsigned colorIdx = bits & 0xF;
+
+                if (colorIdx == 0)
+                    continue;
+                used |= 1u << colorIdx;
+                block[morton[px]] = texels[colorIdx];
+            }
+    }
+    /* black only if every colour it drew is */
+    for (unsigned c = 0; used != 0 && *black; ++c, used >>= 1)
+        if ((used & 1u) && !(c == 0 ? src->black[0][0] : src->black[paletteId][c]))
+            *black = false;
+}
+
+/* A quadrant of a metatile: both its layers over one 8x8 block. */
+static bool ComposeQuadrant(const struct AtlasSource *src, uint16_t lower, uint16_t upper,
+                            bool hideUpper, uint16_t *block)
+{
+    bool black = true;
+
+    ComposeTile(src, lower, 0, false, block, &black);
+    ComposeTile(src, upper, 1, hideUpper, block, &black);
+    return black;
+}
+
+/*
+ * What a cut tile's background becomes (VoxelRelief_CutClear, _CutFringe):
+ * the pixels that are clear, and those kept for the polygon's edge with the
+ * colour of the rock pixel beside them. It follows from the cut's rows alone
+ * and takes far longer to work out than the tile takes to compose - a pass
+ * of the animated sea round Lilycove's rocks spent 14 ms on it (Azahar's
+ * count) - so it is kept for the cuts met last.
+ */
+#define CUT_PLAN_SETS 128u
+struct CutPlan
+{
+    uint8_t rows[32];       /* the cut's, which name it */
+    unsigned stamp;
+    uint16_t clear[16];     /* bit x of row y: clear */
+    uint16_t fringe[16];    /* bit x of row y: the colour of the rock pixel beside */
+    uint8_t from[128];      /* which one: kCutAround[nibble 16y + x] */
+};
+/* VoxelRelief_CutFringe's neighbours, in its order */
+static const int8_t kCutAround[8][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1},
+                                        {-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
+static struct CutPlan sCutPlans[CUT_PLAN_SETS][2];
+static unsigned sCutPlanStamp;
+
+static const struct CutPlan *CutPlanOf(const uint8_t *cut)
+{
+    unsigned hash = 0;
+    struct CutPlan *set, *plan;
+
+    for (unsigned i = 0; i < 32; ++i)
+        hash = hash * 31u + cut[i];
+    set = sCutPlans[hash % CUT_PLAN_SETS];
+    for (unsigned way = 0; way < 2; ++way)
+        if (set[way].stamp != 0 && memcmp(set[way].rows, cut, sizeof(set[way].rows)) == 0)
+        {
+            set[way].stamp = ++sCutPlanStamp;
+            return &set[way];
+        }
+    plan = set[0].stamp <= set[1].stamp ? &set[0] : &set[1];
+    memcpy(plan->rows, cut, sizeof(plan->rows));
+    plan->stamp = ++sCutPlanStamp;
+    VoxelRelief_CutClear(cut, plan->clear);
+    memset(plan->fringe, 0, sizeof(plan->fringe));
+    memset(plan->from, 0, sizeof(plan->from));
+    for (unsigned y = 0; y < 16; ++y)
+        for (unsigned x = 0; x < 16; ++x)
+        {
+            int from = VoxelRelief_CutFringe(cut, plan->clear, (int)x, (int)y);
+
+            if (from >= 0 && !((plan->clear[y] >> x) & 1u))
+            {
+                unsigned k = 0;
+
+                while (k < 7 && (int)((y + kCutAround[k][1]) * 16 + x + kCutAround[k][0]) != from)
+                    ++k;
+                plan->fringe[y] |= (uint16_t)(1u << x);
+                plan->from[(y * 16 + x) / 2] |= (uint8_t)(k << ((x & 1) * 4));
+            }
+        }
+    return plan;
+}
+
+/*
  * Composes one metatile straight into its packed slot of the destination,
  * less the upper-layer quarters in `hidden`. Returns whether everything it
  * drew is black - what an interior is filled with outside its rooms (see
@@ -247,83 +407,43 @@ static bool ComposeAt(const struct AtlasSource *src, const uint16_t *entries,
 {
     bool black = true;
 
-    for (unsigned layer = 0; layer < 2; ++layer)
+    for (unsigned quadrant = 0; quadrant < 4; ++quadrant)
     {
-        for (unsigned quadrant = 0; quadrant < 4; ++quadrant)
-        {
-            uint16_t entry = entries[layer * 4 + quadrant];
-            unsigned tileId = entry & 0x3FF;
-            unsigned paletteId = (entry >> 12) & 0xF;
-            unsigned flipX = (entry >> 10) & 1 ? SUBTILE_PX - 1 : 0;
-            unsigned flipY = (entry >> 11) & 1 ? SUBTILE_PX - 1 : 0;
-            const uint16_t *texels = src->texel[paletteId];
-            const bool *blacks = src->black[paletteId];
-            const uint8_t *tile;
-            uint16_t *block;
+        uint16_t *block = dest + CtrVideo_Texel(baseX + (quadrant % 2) * SUBTILE_PX,
+                                                baseY + (quadrant / 2) * SUBTILE_PX, width);
+        bool dark = ComposeQuadrant(src, entries[quadrant], entries[4 + quadrant],
+                                    (hidden >> quadrant) & 1u, block);
 
-            if (tileId < TILES_PER_TILESET)
-                tile = src->primaryTiles != NULL ? src->primaryTiles + tileId * 32 : NULL;
-            else
-                tile = src->secondaryTiles != NULL
-                     ? src->secondaryTiles + (tileId - TILES_PER_TILESET) * 32 : NULL;
-            if (tile == NULL)
-            {
-                black = false;
-                continue;
-            }
-            if (layer != 0 && (hidden >> quadrant) & 1u)
-                continue;
-            block = dest + CtrVideo_Texel(baseX + (quadrant % 2) * SUBTILE_PX,
-                                          baseY + (quadrant / 2) * SUBTILE_PX, width);
-
-            for (unsigned py = 0; py < SUBTILE_PX; ++py)
-            {
-                const uint8_t *row = tile + (py ^ flipY) * 4;
-                const uint8_t *morton = &sMorton[py * SUBTILE_PX];
-
-                for (unsigned px = 0; px < SUBTILE_PX; ++px)
-                {
-                    unsigned srcX = px ^ flipX;
-                    unsigned colorIdx = (row[srcX / 2] >> ((srcX & 1) * 4)) & 0xF;
-
-                    /* Layer 0 is the opaque base; layer 1 keys out index 0. */
-                    if (layer != 0 && colorIdx == 0)
-                        continue;
-                    /* Index 0 of layer 0 is the backdrop, whatever palette. */
-                    if (colorIdx == 0)
-                    {
-                        block[morton[px]] = src->texel[0][0];
-                        black = black && src->black[0][0];
-                    }
-                    else
-                    {
-                        block[morton[px]] = texels[colorIdx];
-                        black = black && blacks[colorIdx];
-                    }
-                }
-            }
-        }
+        black = black && dark;
     }
     /* a cut tile's background is clear: the alpha test leaves the ground
      * drawn flat under it to show (less what its straight diagonals take
      * in: VoxelRelief_CutClear) */
     if (cut != NULL)
     {
-        uint16_t clear[16];
+        const struct CutPlan *plan = CutPlanOf(cut);
+        uint16_t *origin = dest + CtrVideo_Texel(baseX, baseY, width);
+        unsigned blocks = width / SUBTILE_PX; /* to a row of the destination */
 
-        VoxelRelief_CutClear(cut, clear);
+#define SLOT_TEXEL(x, y) ((((y) >> 3) * blocks + ((x) >> 3)) * 64u + sMorton[((y) & 7u) * 8u + ((x) & 7u)])
         for (unsigned y = 0; y < VOXEL_ATLAS_SLOT && y < 16; ++y)
-            for (unsigned x = 0; x < 16; ++x)
+        {
+            for (unsigned bits = plan->clear[y]; bits != 0; bits &= bits - 1u)
             {
-                int from = VoxelRelief_CutFringe(cut, clear, (int)x, (int)y);
+                unsigned x = (unsigned)__builtin_ctz(bits);
 
-                if ((clear[y] >> x) & 1u)
-                    dest[CtrVideo_Texel(baseX + x, baseY + y, width)] &= (uint16_t)~1u;
-                else if (from >= 0)
-                    /* kept for the polygon's edge: the rock's colour */
-                    dest[CtrVideo_Texel(baseX + x, baseY + y, width)] =
-                        dest[CtrVideo_Texel(baseX + (unsigned)(from % 16), baseY + (unsigned)(from / 16), width)];
+                origin[SLOT_TEXEL(x, y)] &= (uint16_t)~1u;
             }
+            for (unsigned bits = plan->fringe[y]; bits != 0; bits &= bits - 1u)
+            {
+                unsigned x = (unsigned)__builtin_ctz(bits);
+                unsigned k = (plan->from[(y * 16 + x) / 2] >> ((x & 1) * 4)) & 7u;
+
+                /* kept for the polygon's edge: the rock's colour */
+                origin[SLOT_TEXEL(x, y)] = origin[SLOT_TEXEL(x + kCutAround[k][0], y + kCutAround[k][1])];
+            }
+        }
+#undef SLOT_TEXEL
     }
     return black;
 }
@@ -704,53 +824,334 @@ bool VoxelAtlas_Build(const VoxelMapInstance *inst, uint16_t *dest, VoxelAtlasMa
     return job.ok;
 }
 
+/* The animation pass (voxel_atlas.h). A block's flags: */
+#define ANIM_HIDE 1u    /* its upper layer is hidden (a ground variant) */
+#define ANIM_ANY 2u     /* drawn alike in every pair: primary tiles and palettes */
+#define ANIM_CUT 4u     /* the first of a cut slot's four, composed whole */
+#define ANIM_PART 8u    /* one of the other three: composed with the first */
+#define ANIM_BLACK 16u  /* everything it drew is black */
+
 /*
- * The animated metatiles of a page, a few at a time and each into a little
- * block of its own - 16x16 texels in the PICA's order, which is the slot's two
- * runs of 256 bytes in the page, one after the other - instead of into a copy
- * of the whole page that had to be read back from VRAM first (a 256 KiB
- * invalidation and a GPU copy, 6-7 ms of an Old 3DS frame, every few seconds).
- * `work` holds the tiles to redraw for, `*cursor` where the walk over the
- * ids goes on; it ends when *cursor reaches VOXEL_METATILE_IDS.
+ * The states the pass's blocks have been composed in. The sea and the flowers
+ * go round the same eight frames, so once the pass has composed each of them
+ * it only finds them again, by the content of the tiles written (the key):
+ * on an Old 3DS a pass took up to 19 frames of VOXEL_ANIM_COMPOSE_MS each,
+ * the sea composing all the time (port.log 2026-10-28). Kept for the blocks
+ * of one pass: a new one (VoxelAnim_Begin) forgets them.
  */
-static unsigned AnimatedSlots(const VoxelMapInstance *inst, const VoxelAtlasMap *map,
-                              unsigned page, const uint8_t *liveTiles,
-                              const uint8_t work[128], unsigned *cursor,
-                              VoxelAnimSlot *out, unsigned max, bool primaryOnly)
+#define ANIM_STATES 8u
+static struct
+{
+    uint32_t key[2];
+    unsigned stamp;
+    bool valid;
+    uint8_t black[VOXEL_ANIM_BLOCKS / 8u];
+} sAnimStates[ANIM_STATES];
+static uint16_t (*sAnimStatePixels)[VOXEL_ANIM_BLOCKS][64];
+static unsigned sAnimStateStamp;
+/* The tiles a pass composes from (VoxelAnim_Compose): both tilesets, BG VRAM's
+ * first 0x8000 bytes, as they were when it began. */
+static uint8_t sAnimTiles[2u * TILES_PER_TILESET * 32u] __attribute__((aligned(4)));
+
+static void AnimKey(const VoxelAnimPass *pass, const uint8_t *liveTiles, uint32_t key[2])
+{
+    uint32_t a = 2166136261u, b = 0x9E3779B9u;
+
+    for (unsigned i = 0; i < sizeof(pass->work); ++i)
+        for (unsigned bits = pass->work[i]; bits != 0; bits &= bits - 1u)
+        {
+            uint32_t words[8];
+
+            memcpy(words, liveTiles + (i * 8u + __builtin_ctz(bits)) * 32u, sizeof(words));
+            for (unsigned w = 0; w < 8; ++w)
+            {
+                a = (a ^ words[w]) * 16777619u;
+                b = (b + words[w]) * 2654435761u ^ (b >> 15);
+            }
+        }
+    key[0] = a;
+    key[1] = b;
+}
+
+void VoxelAnim_Begin(VoxelAnimPass *pass, const uint8_t work[128])
+{
+    for (unsigned s = 0; s < ANIM_STATES; ++s)
+        sAnimStates[s].valid = false;
+    pass->out = pass->pixels;
+    pass->state = -1;
+    memcpy(pass->work, work, sizeof(pass->work));
+    memset(pass->primary, 0, sizeof(pass->primary));
+    memset(pass->secondary, 0, sizeof(pass->secondary));
+    memset(pass->shared, 0, sizeof(pass->shared));
+    memset(pass->hash, 0, sizeof(pass->hash));
+    pass->targets = pass->blocks = pass->composed = 0;
+    pass->full = false;
+}
+
+void VoxelAnim_Again(VoxelAnimPass *pass)
+{
+    pass->composed = 0;
+}
+
+/* Whether an entry is drawn from the pair's own tiles or palettes. */
+static bool AnimOwnEntry(uint16_t entry)
+{
+    return (entry & 0x3FF) >= TILES_PER_TILESET || ((entry >> 12) & 0xF) >= NUM_PALS_IN_PRIMARY;
+}
+
+/* The block of a quadrant, found among the pass's or added: its index + 1,
+ * 0 when there is no room. */
+static unsigned AnimBlockOf(VoxelAnimPass *pass, unsigned pair, uint16_t lower, uint16_t upper,
+                            bool hide)
+{
+    unsigned flags = hide ? ANIM_HIDE : 0;
+    unsigned h;
+
+    if (!AnimOwnEntry(lower) && (hide || !AnimOwnEntry(upper)))
+        flags |= ANIM_ANY;
+    if (hide)
+        upper = 0;
+    h = ((unsigned)lower * 40503u ^ (unsigned)upper * 2654435761u ^ flags
+       ^ ((flags & ANIM_ANY) ? 0u : pair * 97u)) & (VOXEL_ANIM_HASH - 1u);
+    for (unsigned probe = 0; probe < VOXEL_ANIM_HASH; ++probe, h = (h + 1u) & (VOXEL_ANIM_HASH - 1u))
+    {
+        unsigned index = pass->hash[h];
+        const VoxelAnimBlock *block;
+
+        if (index == 0)
+            break;
+        block = &pass->block[index - 1u];
+        if (block->lower == lower && block->upper == upper
+         && (block->flags & (ANIM_HIDE | ANIM_ANY | ANIM_CUT | ANIM_PART)) == flags
+         && ((flags & ANIM_ANY) || block->pair == pair))
+            return index;
+    }
+    if (pass->blocks >= VOXEL_ANIM_BLOCKS || pass->hash[h] != 0)
+        return 0;
+    pass->block[pass->blocks] = (VoxelAnimBlock){lower, upper, (uint8_t)pair, (uint8_t)flags};
+    pass->hash[h] = (uint16_t)++pass->blocks;
+    return pass->blocks;
+}
+
+static int AnimTargetOrder(const void *a, const void *b)
+{
+    const VoxelAnimTarget *x = a, *y = b;
+
+    return (int)(x->page * VOXEL_ATLAS_MAX_SLOTS + x->slot) - (int)(y->page * VOXEL_ATLAS_MAX_SLOTS + y->slot);
+}
+
+/*
+ * Whether a cut tile shows any of the pass's tiles. Most of its background
+ * is clear and what is kept beside the rock takes the rock's colours: only
+ * the pixels with colours of their own are seen (CutPlanOf), and those show
+ * the lower layer only where the upper one is clear. The sea round Lilycove's
+ * rocks moves under them unseen, and each of its seventy cut tiles took
+ * longer to redraw than the rest of the pass.
+ */
+static bool AnimCutShows(const VoxelAnimPass *pass, const uint16_t *entries, unsigned hidden,
+                         const uint8_t *cut, const uint8_t *liveTiles)
+{
+    const struct CutPlan *plan = CutPlanOf(cut);
+
+    for (unsigned q = 0; q < 4; ++q)
+    {
+        unsigned lower = entries[q] & 0x3FF, upper = entries[4 + q] & 0x3FF;
+        bool hide = (hidden >> q) & 1u;
+        bool lowerWritten = (pass->work[lower >> 3] >> (lower & 7)) & 1u;
+        bool upperWritten = !hide && ((pass->work[upper >> 3] >> (upper & 7)) & 1u);
+        const uint8_t *tile = liveTiles + upper * 32u;
+        bool flipX = (entries[4 + q] >> 10) & 1;
+        unsigned flipY = (entries[4 + q] >> 11) & 1 ? 7 : 0;
+
+        if (!lowerWritten && !upperWritten)
+            continue;
+        for (unsigned y = 0; y < SUBTILE_PX; ++y)
+        {
+            unsigned row = (q / 2u) * SUBTILE_PX + y;
+            uint32_t seen = (~(unsigned)(plan->clear[row] | plan->fringe[row]) >> ((q % 2u) * SUBTILE_PX))
+                          & 0xFFu;
+            const uint8_t *bytes;
+            uint32_t bits;
+
+            if (seen == 0)
+                continue;
+            if (upperWritten || hide || liveTiles == NULL)
+                return true;
+            /* the seen pixels a nibble each, as the tile's row holds them */
+            seen = (seen | seen << 12) & 0x000F000Fu;
+            seen = (seen | seen << 6) & 0x03030303u;
+            seen = (seen | seen << 3) & 0x11111111u;
+            bytes = tile + (y ^ flipY) * 4;
+            bits = (uint32_t)bytes[0] | (uint32_t)bytes[1] << 8 | (uint32_t)bytes[2] << 16
+                 | (uint32_t)bytes[3] << 24;
+            if (flipX)
+            {
+                bits = (bits & 0x0F0F0F0Fu) << 4 | (bits >> 4 & 0x0F0F0F0Fu);
+                bits = bits >> 24 | (bits >> 8 & 0xFF00u) | (bits << 8 & 0xFF0000u) | bits << 24;
+            }
+            /* a nibble's low bit set where the upper tile draws: the rest
+             * of the seen pixels show the lower layer */
+            bits |= bits >> 2;
+            bits |= bits >> 1;
+            if (seen & ~bits & 0x11111111u)
+                return true;
+        }
+    }
+    return false;
+}
+
+/* Atlas id `m` in `slot` (page*512 + slot + 1) as a target of the pass; false
+ * (and the pass full) when there is no room. */
+static bool AnimAddTarget(VoxelAnimPass *pass, unsigned pair, unsigned m, unsigned slot,
+                          const uint16_t *entries, unsigned hidden, const uint8_t *cut)
+{
+    VoxelAnimTarget *target;
+
+    if (pass->targets >= VOXEL_ANIM_TARGETS)
+    {
+        pass->full = true;
+        return false;
+    }
+    target = &pass->target[pass->targets];
+    target->slot = (uint16_t)((slot - 1u) % VOXEL_ATLAS_MAX_SLOTS);
+    target->page = (uint8_t)((slot - 1u) / VOXEL_ATLAS_MAX_SLOTS);
+    target->id = (uint16_t)m;
+    target->pair = (uint8_t)pair;
+    if (cut != NULL)
+    {
+        /* its edge is drawn from across the slot: composed whole, its own */
+        if (pass->blocks + 4u > VOXEL_ANIM_BLOCKS)
+        {
+            pass->full = true;
+            return false;
+        }
+        for (unsigned q = 0; q < 4; ++q)
+        {
+            pass->block[pass->blocks] = (VoxelAnimBlock){(uint16_t)m, 0, (uint8_t)pair,
+                                                         (uint8_t)(q == 0 ? ANIM_CUT : ANIM_PART)};
+            target->block[q] = (uint16_t)pass->blocks++;
+        }
+    }
+    else
+        for (unsigned q = 0; q < 4; ++q)
+        {
+            unsigned index = AnimBlockOf(pass, pair, entries[q], entries[4 + q], (hidden >> q) & 1u);
+
+            if (index == 0)
+            {
+                pass->full = true;
+                return false;
+            }
+            target->block[q] = (uint16_t)(index - 1u);
+        }
+    ++pass->targets;
+    return true;
+}
+
+/*
+ * The slots between two runs of a row a few apart, redrawn as they are so the
+ * two runs and the gap go as one GPU copy. Each copy was a command of the GX
+ * queue of its own, with the split of the frame's command list before it: a
+ * pass of Mossdeep's sea was some 40 runs and added 4 ms to the GPU's frame
+ * on an Old 3DS (port.log 2026-10-28) for 118 KiB. A gap is filled only when
+ * every slot in it holds a metatile the pass can draw - not a free slot an
+ * extension may fill meanwhile, not one of a map beside drawn with secondary
+ * tiles BG VRAM does not hold.
+ */
+#define ANIM_GAP_MAX 8u
+/* the room in a pass gaps leave free */
+#define ANIM_GAP_ROOM 256u
+
+static void AnimFillGaps(VoxelAnimPass *pass, unsigned pair, unsigned first, const struct AtlasSource *src,
+                         const VoxelMapInstance *tilesets, bool shared, const VoxelAtlasMap *map)
+{
+    static uint16_t idOf[VOXEL_ATLAS_PAGES * VOXEL_ATLAS_MAX_SLOTS];
+    unsigned last = pass->targets, filled = 0;
+
+    memset(idOf, 0xFF, sizeof(idOf));
+    for (unsigned m = 0; m < VOXEL_METATILE_IDS; ++m)
+    {
+        unsigned slot = map->slotOf[m];
+
+        if (slot != 0 && slot != VOXEL_SLOT_ABSENT && slot != VOXEL_SLOT_PENDING
+         && slot - 1u < VOXEL_ATLAS_PAGES * VOXEL_ATLAS_MAX_SLOTS && idOf[slot - 1u] == 0xFFFFu)
+            idOf[slot - 1u] = (uint16_t)m;
+    }
+    for (unsigned i = first; i + 1u < last && !pass->full; ++i)
+    {
+        const VoxelAnimTarget *a = &pass->target[i], *b = &pass->target[i + 1u];
+        unsigned gap = b->slot - a->slot - 1u, k;
+
+        /* never at the cost of the animated slots of the atlases after */
+        if (b->page != a->page || b->slot <= a->slot + 1u || gap > ANIM_GAP_MAX
+         || a->slot / VOXEL_ATLAS_COLUMNS != b->slot / VOXEL_ATLAS_COLUMNS
+         || pass->targets + gap > VOXEL_ANIM_TARGETS - ANIM_GAP_ROOM
+         || pass->blocks + 4u * gap > VOXEL_ANIM_BLOCKS - ANIM_GAP_ROOM)
+            continue;
+        for (k = 1; k <= gap; ++k)
+        {
+            unsigned m = idOf[a->page * VOXEL_ATLAS_MAX_SLOTS + a->slot + k], base, hidden;
+            const uint8_t *cut;
+            const uint16_t *entries;
+
+            if (m == 0xFFFFu
+             || !AtlasSourceOf(tilesets->primaryTileset, tilesets->secondaryTileset, m, &base, &hidden, &cut)
+             || (entries = MetatileEntries(src, base)) == NULL)
+                break;
+            if (shared)
+            {
+                unsigned t = 0;
+
+                while (t < NUM_TILES_PER_METATILE && (entries[t] & 0x3FF) < TILES_PER_TILESET)
+                    ++t;
+                if (t < NUM_TILES_PER_METATILE)
+                    break;
+            }
+        }
+        if (k <= gap)
+            continue;
+        for (k = 1; k <= gap; ++k)
+        {
+            unsigned slot = a->page * VOXEL_ATLAS_MAX_SLOTS + a->slot + k;
+            unsigned m = idOf[slot], base, hidden;
+            const uint8_t *cut;
+
+            AtlasSourceOf(tilesets->primaryTileset, tilesets->secondaryTileset, m, &base, &hidden, &cut);
+            AnimAddTarget(pass, pair, m, slot + 1u, MetatileEntries(src, base), hidden, cut);
+            ++filled;
+        }
+    }
+    if (filled != 0)
+        qsort(pass->target + first, pass->targets - first, sizeof(*pass->target), AnimTargetOrder);
+}
+
+bool VoxelAnim_AddAtlas(VoxelAnimPass *pass, unsigned pair, const VoxelMapInstance *tilesets,
+                        bool shared, const VoxelAtlasMap *map, const uint8_t *liveTiles)
 {
     struct AtlasSource src;
-    uint8_t *voidBits;
-    unsigned count = 0, m = *cursor;
+    unsigned first = pass->targets;
 
-    if (inst == NULL || map == NULL || liveTiles == NULL || work == NULL || out == NULL)
-    {
-        *cursor = VOXEL_METATILE_IDS;
-        return 0;
-    }
+    if (pair >= VOXEL_ANIM_PAIRS || tilesets == NULL || map == NULL)
+        return false;
+    pass->primary[pair] = tilesets->primaryTileset;
+    pass->secondary[pair] = tilesets->secondaryTileset;
+    pass->shared[pair] = shared;
     memset(&src, 0, sizeof(src));
-    src.primaryTiles = liveTiles;
-    src.secondaryTiles = liveTiles + TILES_PER_TILESET * 32;
-    src.primaryMetatiles = Voxel_ResolveMetatiles(inst->primaryTileset);
-    src.secondaryMetatiles = Voxel_ResolveMetatiles(inst->secondaryTileset);
-    src.primaryPalettes = Voxel_ResolvePalettes(inst->primaryTileset);
-    src.secondaryPalettes = Voxel_ResolvePalettes(inst->secondaryTileset);
-    src.primaryCount = Voxel_MetatileCount(inst->primaryTileset, NUM_METATILES_IN_PRIMARY);
-    src.secondaryCount = Voxel_MetatileCount(inst->secondaryTileset,
+    src.primaryMetatiles = Voxel_ResolveMetatiles(tilesets->primaryTileset);
+    src.secondaryMetatiles = Voxel_ResolveMetatiles(tilesets->secondaryTileset);
+    src.primaryCount = Voxel_MetatileCount(tilesets->primaryTileset, NUM_METATILES_IN_PRIMARY);
+    src.secondaryCount = Voxel_MetatileCount(tilesets->secondaryTileset,
                                              NUM_METATILES_TOTAL - NUM_METATILES_IN_PRIMARY);
-    BuildColorTable(&src);
-    InitMorton();
-    voidBits = VoidBits(inst->primaryTileset, inst->secondaryTileset, true);
-    for (; m < VOXEL_METATILE_IDS && count < max; ++m)
+    for (unsigned m = 0; m < VOXEL_METATILE_IDS && !pass->full; ++m)
     {
         const uint16_t *entries;
         bool affected = false;
         unsigned slot = map->slotOf[m], base, hidden;
         const uint8_t *cut;
 
-        if (slot == 0 || slot == VOXEL_SLOT_ABSENT || slot == VOXEL_SLOT_PENDING
-         || (slot - 1u) / VOXEL_ATLAS_MAX_SLOTS != page)
+        if (slot == 0 || slot == VOXEL_SLOT_ABSENT || slot == VOXEL_SLOT_PENDING)
             continue;
-        if (!AtlasSourceOf(inst->primaryTileset, inst->secondaryTileset, m, &base, &hidden, &cut))
+        if (!AtlasSourceOf(tilesets->primaryTileset, tilesets->secondaryTileset, m, &base, &hidden, &cut))
             continue;
         entries = MetatileEntries(&src, base);
         if (entries == NULL)
@@ -758,44 +1159,217 @@ static unsigned AnimatedSlots(const VoxelMapInstance *inst, const VoxelAtlasMap 
         for (unsigned t = 0; t < NUM_TILES_PER_METATILE; ++t)
         {
             unsigned tile = entries[t] & 0x3FF;
-            if (primaryOnly && tile >= TILES_PER_TILESET)
+
+            if (shared && tile >= TILES_PER_TILESET)
             {
                 /* drawn with secondary tiles BG VRAM does not hold */
                 affected = false;
                 break;
             }
-            if (work[tile >> 3] & (1u << (tile & 7)))
+            if (pass->work[tile >> 3] & (1u << (tile & 7)))
                 affected = true;
-            if (affected && !primaryOnly)
+            if (affected && !shared)
                 break;
         }
-        if (!affected)
+        if (!affected || (cut != NULL && !AnimCutShows(pass, entries, hidden, cut, liveTiles)))
             continue;
-        if (voidBits != NULL)
-            voidBits[m >> 3] &= (uint8_t)~(1u << (m & 7));
-        memset(out[count].pixels, 0, sizeof(out[count].pixels));
-        if (ComposeAt(&src, entries, out[count].pixels, 0, 0, VOXEL_ATLAS_SLOT, hidden, cut)
-         && voidBits != NULL)
-            voidBits[m >> 3] |= (uint8_t)(1u << (m & 7));
-        out[count].slot = (slot - 1u) % VOXEL_ATLAS_MAX_SLOTS;
+        if (!AnimAddTarget(pass, pair, m, slot, entries, hidden, cut))
+            break;
+    }
+    /* by page and slot, which runs are made of */
+    qsort(pass->target + first, pass->targets - first, sizeof(*pass->target), AnimTargetOrder);
+    if (!pass->full)
+        AnimFillGaps(pass, pair, first, &src, tilesets, shared, map);
+    return !pass->full;
+}
+
+static void AnimSource(const VoxelAnimPass *pass, unsigned pair, const uint8_t *liveTiles,
+                       struct AtlasSource *src)
+{
+    memset(src, 0, sizeof(*src));
+    /* The game has already applied TransferTilesetAnimsBuffer to logical GBA
+     * VRAM. Both tilesets occupy the first 0x8000 bytes in 4bpp order. */
+    src->primaryTiles = liveTiles;
+    src->secondaryTiles = pass->shared[pair] ? NULL : liveTiles + TILES_PER_TILESET * 32;
+    src->primaryMetatiles = Voxel_ResolveMetatiles(pass->primary[pair]);
+    src->secondaryMetatiles = Voxel_ResolveMetatiles(pass->secondary[pair]);
+    src->primaryPalettes = Voxel_ResolvePalettes(pass->primary[pair]);
+    src->secondaryPalettes = Voxel_ResolvePalettes(pass->secondary[pair]);
+    src->primaryCount = Voxel_MetatileCount(pass->primary[pair], NUM_METATILES_IN_PRIMARY);
+    src->secondaryCount = Voxel_MetatileCount(pass->secondary[pair],
+                                              NUM_METATILES_TOTAL - NUM_METATILES_IN_PRIMARY);
+    BuildColorTable(src);
+}
+
+bool VoxelAnim_Compose(VoxelAnimPass *pass, const uint8_t *liveTiles, bool (*stillTime)(void))
+{
+    struct AtlasSource src;
+    unsigned srcPair = VOXEL_ANIM_PAIRS;
+    bool some = false;
+
+    if (pass->composed >= pass->blocks)
+        return true;
+    if (liveTiles == NULL)
+        return false;
+    if (pass->composed == 0)
+    {
+        unsigned victim = 0;
+
+        /*
+         * Composed from the tiles as they are now, whatever the game writes
+         * while it takes: on an Old 3DS a pass took up to 37 frames, past the
+         * next write (16), so composed from the live tiles it came out of
+         * two states, was never kept and every pass was composed again
+         * (port.log 2026-10-28: 15 kept of 601). Taken when it is not kept.
+         */
+        AnimKey(pass, liveTiles, pass->key);
+        pass->out = pass->pixels;
+        pass->state = -1;
+        pass->kept = false;
+        if (sAnimStatePixels == NULL)
+            sAnimStatePixels = malloc(ANIM_STATES * sizeof(*sAnimStatePixels));
+        for (unsigned s = 0; s < ANIM_STATES && sAnimStatePixels != NULL; ++s)
+        {
+            if (sAnimStates[s].valid && sAnimStates[s].key[0] == pass->key[0]
+             && sAnimStates[s].key[1] == pass->key[1])
+            {
+                sAnimStates[s].stamp = ++sAnimStateStamp;
+                pass->out = sAnimStatePixels[s];
+                for (unsigned i = 0; i < pass->blocks; ++i)
+                    pass->block[i].flags = (uint8_t)((sAnimStates[s].black[i >> 3] >> (i & 7)) & 1u
+                                                     ? pass->block[i].flags | ANIM_BLACK
+                                                     : pass->block[i].flags & ~ANIM_BLACK);
+                pass->composed = pass->blocks;
+                pass->kept = true;
+                goto composed;
+            }
+            if (!sAnimStates[s].valid
+             || (sAnimStates[victim].valid && sAnimStates[s].stamp < sAnimStates[victim].stamp))
+                victim = s;
+        }
+        memcpy(sAnimTiles, liveTiles, sizeof(sAnimTiles));
+        if (sAnimStatePixels != NULL)
+        {
+            /* composed straight into the state it will be */
+            sAnimStates[victim].valid = false;
+            pass->state = (int)victim;
+            pass->out = sAnimStatePixels[victim];
+        }
+    }
+    InitMorton();
+    for (; pass->composed < pass->blocks; ++pass->composed)
+    {
+        VoxelAnimBlock *block = &pass->block[pass->composed];
+        uint16_t *pixels = pass->out[pass->composed];
+        bool black;
+
+        if (block->flags & ANIM_PART)
+            continue;
+        /* one at least, or a frame short of time would never get on */
+        if (some && stillTime != NULL && !stillTime())
+            return false;
+        some = true;
+        if (block->pair != srcPair)
+        {
+            srcPair = block->pair;
+            AnimSource(pass, srcPair, sAnimTiles, &src);
+        }
+        if (block->flags & ANIM_CUT)
+        {
+            uint16_t whole[VOXEL_ATLAS_SLOT * VOXEL_ATLAS_SLOT];
+            unsigned base, hidden;
+            const uint8_t *cut;
+            const uint16_t *entries = NULL;
+
+            memset(whole, 0, sizeof(whole));
+            black = false;
+            if (AtlasSourceOf(pass->primary[srcPair], pass->secondary[srcPair], block->lower,
+                              &base, &hidden, &cut)
+             && (entries = MetatileEntries(&src, base)) != NULL)
+                black = ComposeAt(&src, entries, whole, 0, 0, VOXEL_ATLAS_SLOT, hidden, cut);
+            /* a 16x16 texture is its four blocks, quadrant by quadrant: this
+             * one's and the three after it */
+            memcpy(pixels, whole, sizeof(whole));
+        }
+        else
+        {
+            memset(pixels, 0, sizeof(pass->pixels[0]));
+            black = ComposeQuadrant(&src, block->lower, block->upper, (block->flags & ANIM_HIDE) != 0,
+                                    pixels);
+        }
+        block->flags = (uint8_t)(black ? block->flags | ANIM_BLACK : block->flags & ~ANIM_BLACK);
+    }
+    if (pass->state >= 0)
+    {
+        unsigned s = (unsigned)pass->state;
+
+        memset(sAnimStates[s].black, 0, sizeof(sAnimStates[s].black));
+        for (unsigned i = 0; i < pass->blocks; ++i)
+            if (pass->block[i].flags & ANIM_BLACK)
+                sAnimStates[s].black[i >> 3] |= (uint8_t)(1u << (i & 7));
+        sAnimStates[s].key[0] = pass->key[0];
+        sAnimStates[s].key[1] = pass->key[1];
+        sAnimStates[s].stamp = ++sAnimStateStamp;
+        sAnimStates[s].valid = true;
+        pass->state = -1;
+    }
+composed:
+    /* what draws nothing but black, as the atlas composition keeps it */
+    for (unsigned i = 0; i < pass->targets; ++i)
+    {
+        const VoxelAnimTarget *target = &pass->target[i];
+        uint8_t *voidBits = VoidBits(pass->primary[target->pair], pass->secondary[target->pair], true);
+        bool black = true;
+
+        if (voidBits == NULL)
+            continue;
+        if (pass->block[target->block[0]].flags & ANIM_CUT)
+            black = (pass->block[target->block[0]].flags & ANIM_BLACK) != 0;
+        else
+            for (unsigned q = 0; q < 4; ++q)
+                black = black && (pass->block[target->block[q]].flags & ANIM_BLACK) != 0;
+        if (black)
+            voidBits[target->id >> 3] |= (uint8_t)(1u << (target->id & 7));
+        else
+            voidBits[target->id >> 3] &= (uint8_t)~(1u << (target->id & 7));
+    }
+    return true;
+}
+
+unsigned VoxelAnim_Run(const VoxelAnimPass *pass, unsigned first)
+{
+    const VoxelAnimTarget *start = &pass->target[first];
+    unsigned count = 1;
+
+    while (first + count < pass->targets && count < VOXEL_ANIM_RUN_MAX)
+    {
+        const VoxelAnimTarget *next = &pass->target[first + count];
+
+        if (next->pair != start->pair || next->page != start->page || next->slot != start->slot + count
+         || next->slot / VOXEL_ATLAS_COLUMNS != start->slot / VOXEL_ATLAS_COLUMNS)
+            break;
         ++count;
     }
-    *cursor = m;
     return count;
 }
 
-unsigned VoxelAtlas_AnimatedSlots(const VoxelMapInstance *inst, const VoxelAtlasMap *map,
-                                  unsigned page, const uint8_t *liveTiles,
-                                  const uint8_t work[128], unsigned *cursor,
-                                  VoxelAnimSlot *out, unsigned max)
+void VoxelAnim_WriteRun(const VoxelAnimPass *pass, unsigned first, unsigned count, uint16_t *out)
 {
-    return AnimatedSlots(inst, map, page, liveTiles, work, cursor, out, max, false);
+    for (unsigned i = 0; i < count; ++i)
+    {
+        const VoxelAnimTarget *target = &pass->target[first + i];
+
+        for (unsigned q = 0; q < 4; ++q)
+            memcpy(out + ((q / 2u) * 2u * count + 2u * i + q % 2u) * 64u,
+                   pass->out[target->block[q]], sizeof(pass->pixels[0]));
+    }
 }
 
-unsigned VoxelAtlas_SharedAnimatedSlots(const VoxelMapInstance *inst, const VoxelAtlasMap *map,
-                                        unsigned page, const uint8_t *liveTiles,
-                                        const uint8_t work[128], unsigned *cursor,
-                                        VoxelAnimSlot *out, unsigned max)
+unsigned VoxelAnim_RunOffset(const VoxelAnimPass *pass, unsigned first)
 {
-    return AnimatedSlots(inst, map, page, liveTiles, work, cursor, out, max, true);
+    unsigned slot = pass->target[first].slot;
+
+    /* block (2c, 2r) of VOXEL_ATLAS_W / 8 to a row, 128 bytes each */
+    return (2u * (slot / VOXEL_ATLAS_COLUMNS) * (VOXEL_ATLAS_W / 8u)
+          + 2u * (slot % VOXEL_ATLAS_COLUMNS)) * 128u;
 }

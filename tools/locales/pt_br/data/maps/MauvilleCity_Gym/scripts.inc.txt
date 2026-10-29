@@ -1,0 +1,166 @@
+# GINÁSIO de MAUVILLE: o WATTSON, o guia e os TREINADORES elétricos.
+
+[MauvilleCity_Gym_Text_GymGuideAdvice] bf57f5f389
+E aí, tudo certo, {PLAYER}, rumo\n
+ao título de CAMPEÃO?\p
+O WATTSON, LÍDER do GINÁSIO,\n
+usa POKéMON do tipo ELÉTRICO.\p
+Se você desafiar ele com POKéMON de\n
+ÁGUA, ele frita todos! Bzzt!\p
+E ele pôs portas com interruptores\n
+pelo GINÁSIO todo! Excêntrico!\p
+Bom, vai fundo!$
+
+[MauvilleCity_Gym_Text_GymGuidePostVictory] 0b7525d8dc
+Uau, você é eletrizante!\n
+Você energizou a porta e abriu!$
+
+[MauvilleCity_Gym_Text_KirkIntro] 9aa4bfd3a4
+A minha alma elétrica vai detonar o\n
+seu sonho inteiro, uou-iê!$
+
+[MauvilleCity_Gym_Text_KirkDefeat] 2c0c71d4a1
+Foi ligado na tomada, amplificado,\n
+superelétrico, cara!$
+
+[MauvilleCity_Gym_Text_KirkPostBattle] 44627e1fb2
+POKéMON e rock, tudo é coração,\n
+uou-iê!$
+
+[MauvilleCity_Gym_Text_ShawnIntro] 03d404cd50
+Eu treinei com o WATTSON!\n
+Não tem como eu perder fácil!$
+
+[MauvilleCity_Gym_Text_ShawnDefeat] 85ba0ad2ad
+Desligado da tomada…$
+
+[MauvilleCity_Gym_Text_ShawnPostBattle] 768c340dc4
+O WATTSON, o nosso LÍDER, está por aí\n
+há muito, muito tempo.\p
+Ele já batalhava antes do seu pai\n
+nascer, aquele velho durão.$
+
+[MauvilleCity_Gym_Text_BenIntro] 9a5d8cf3b8
+Este GINÁSIO tem enigmas!\n
+Não é divertido?$
+
+[MauvilleCity_Gym_Text_BenDefeat] 51b0787638
+Perder não tem graça…$
+
+[MauvilleCity_Gym_Text_BenPostBattle] 27614c7d82
+O WATTSON diz que adora montar\n
+armadilhas com interruptores.$
+
+[MauvilleCity_Gym_Text_VivianIntro] ee338524cc
+Com o meu charme e os golpes dos meus\n
+POKéMON, você vai levar um choque!$
+
+[MauvilleCity_Gym_Text_VivianDefeat] e39212fa0e
+Quem levou um choque com a sua força\n
+fui eu!$
+
+[MauvilleCity_Gym_Text_VivianPostBattle] 53a6b52750
+Ouvi dizer que MAUVILLE foi fundada\n
+pelo WATTSON.\p
+Ele treinava POKéMON muito antes\n
+de a gente começar.\l
+Deve saber de tudo!$
+
+[MauvilleCity_Gym_Text_AngeloIntro] 04f10e3d34
+Eu amo coisas brilhantes!$
+
+[MauvilleCity_Gym_Text_AngeloDefeat] ebd6ba4906
+Ah…\n
+Meus olhos estão fritos…$
+
+[MauvilleCity_Gym_Text_AngeloPostBattle] 9226698f07
+O WATTSON do GINÁSIO de MAUVILLE tem a\n
+testa brilhante. Isso me deixa feliz!$
+
+[MauvilleCity_Gym_Text_WattsonIntro] 28736aac22
+Desisti dos meus planos de reformar\n
+a cidade, desisti.\p
+Então passei o tempo fazendo portas\n
+com armadilhas no meu GINÁSIO.\p
+Hã? E você, o que faz aqui?\p
+Como é? Você passou por todas as\n
+minhas portas armadas?\p
+Uahahahah!\n
+Isso, sim, é divertido!\p
+Então eu, WATTSON, LÍDER do GINÁSIO\n
+de MAUVILLE, vou te eletrizar!$
+
+[MauvilleCity_Gym_Text_WattsonDefeat] 184a38157b
+Uahahahah!\n
+Tá bom, perdi!\p
+Você acabou me dando um baita choque!\n
+Pegue esta INSÍGNIA!$
+
+[MauvilleCity_Gym_Text_ReceivedDynamoBadge] ecd5769156
+{PLAYER} recebeu a INSÍGNIA DÍNAMO\n
+do WATTSON.$
+
+[MauvilleCity_Gym_Text_ExplainDynamoBadgeTakeThis] 90d2e6badf
+Com a INSÍGNIA DÍNAMO, os POKéMON\n
+podem usar ESMAGA PEDRA fora\l
+da batalha.\p
+E ela deixa os seus POKéMON um\n
+pouquinho mais rápidos também.\p
+Hmm…\n
+Leve isto também!$
+
+[MauvilleCity_Gym_Text_ExplainShockWave] 45025b427a
+Essa MT34 tem ONDA CHOQUES.\p
+É um golpe confiável que nunca\n
+erra! Pode contar com ele!\p
+… … … … … …$
+
+[MauvilleCity_Gym_Text_RegisteredWattson] 17ff72a0f2
+O LÍDER DE GINÁSIO WATTSON foi\n
+registrado no POKéNAV.$
+
+[MauvilleCity_Gym_Text_WattsonPostBattle] b20bfe1b7b
+Fico cheio de otimismo vendo alguém\n
+tão promissor treinando POKéMON!$
+
+[MauvilleCity_Gym_Text_WattsonGoForthAndEndeavor] ddb5dae42b
+Uahahahah!\n
+Vá em frente e se esforce, jovem!$
+
+[MauvilleCity_Gym_Text_GymStatue] a55c9b7256
+GINÁSIO POKéMON DE MAUVILLE$
+
+[MauvilleCity_Gym_Text_GymStatueCertified] e7eaa191a0
+GINÁSIO POKéMON DE MAUVILLE\p
+TREINADORES APROVADOS POR WATTSON:\n
+{PLAYER}$
+
+[MauvilleCity_Gym_Text_WattsonPreRematch] 12c585c821
+WATTSON: Arrá! Finalmente!\n
+Eu sei o que você quer.\l
+Quer batalhar com os meus POKéMON!\p
+Uahahahaha!\p
+Vou fazer sair faísca de você!\n
+Não diga que eu não avisei!$
+
+[MauvilleCity_Gym_Text_WattsonRematchDefeat] 9d2542b15c
+Ufa…\n
+As nossas baterias acabaram…$
+
+[MauvilleCity_Gym_Text_WattsonPostRematch] e244a441cc
+WATTSON: Vamos ter que recarregar\n
+as baterias de novo.\p
+Carregados, aceitamos o seu\n
+desafio com prazer.\p
+Então, volte qualquer dia,\n
+combinado?$
+
+[MauvilleCity_Gym_Text_WattsonRematchNeedTwoMons] 0a882926de
+WATTSON: Arrá! Finalmente!\n
+Eu sei o que você quer.\l
+Quer batalhar com os meus POKéMON!\p
+Uahahahaha!\p
+Opa! Espera!\n
+Você só tem um POKéMON!\p
+Venha com dois ou mais\n
+POKéMON, combinado?$

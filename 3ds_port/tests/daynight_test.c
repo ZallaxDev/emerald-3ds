@@ -26,6 +26,16 @@ int CtrSettings_GetInt(const char *key, int fallback)
     if (strcmp(key, "timed_encounters") == 0) return sTimedEncounters;
     return fallback;
 }
+static unsigned sSetCalls;
+void CtrSettings_SetInt(const char *key, int value)
+{
+    ++sSetCalls;
+    if (strcmp(key, "clock_speed") == 0 && sSpeed != value)
+    {
+        CtrDayNight_Update();
+        sSpeed = value;
+    }
+}
 
 static void Near(float actual, float expected)
 {
@@ -391,6 +401,104 @@ static void BerryClockTests(void)
     assert(CtrDayNight_TakeBerryMinutes() == 0);
 }
 
+static void SyncHelperTests(void)
+{
+    CtrDayNightClock clock = {0}, fresh = {0};
+
+    CtrDayNight_Advance(&clock, 0, 3600, 1);
+    CtrDayNight_Advance(&clock, 1000, 3600, 1);
+    assert(clock.shifted && clock.timeMs == 3606000 && clock.berryBonusMs == 5000);
+    /* The last second is still credited at 6X, then the phase goes. */
+    CtrDayNight_Sync(&clock, 2000, 7200, 1);
+    assert(!clock.shifted && clock.ready && clock.lastMs == 2000);
+    assert(clock.timeMs == 7200000 && clock.berryBonusMs == 10000);
+    CtrDayNight_Advance(&clock, 3000, 7201, 0);
+    assert(clock.timeMs == 7201000 && clock.berryBonusMs == 10000);
+    /* Monotonic time going backwards credits nothing. */
+    CtrDayNight_Sync(&clock, 1000, 86400 + 5, 5);
+    assert(clock.timeMs == 5000 && clock.berryBonusMs == 10000 && clock.lastMs == 1000);
+    CtrDayNight_Sync(&fresh, 500, 86399, 5);
+    assert(fresh.ready && !fresh.shifted && fresh.timeMs == 86399000 && fresh.berryBonusMs == 0);
+}
+
+static void SyncRuntimeTests(void)
+{
+    CtrDayNightSnapshot snapshot;
+    unsigned seconds, rate, calls;
+
+    CtrDayNight_Reset();
+    sEnabled = 1;
+    sShowClock = sTimedEncounters = 0;
+    sOutdoor = sClockValid = true;
+    sSpeed = 5;
+    sLocal = 10u * 3600u;
+    sNow = 0;
+    assert(CtrDayNight_Time(&seconds, &rate) && seconds == 10u * 3600u && rate == 120);
+    sNow = 30000;
+    assert(CtrDayNight_Time(&seconds, &rate) && seconds == 11u * 3600u);
+    Near(CtrDayNight_Get()->rgb[0], 1.0f);
+
+    /* An unreadable RTC leaves clock and settings as they were. */
+    sClockValid = false;
+    sNow = 31000;
+    calls = sSetCalls;
+    assert(!CtrDayNight_SyncToConsole());
+    assert(sSpeed == 5 && sSetCalls == calls);
+    sClockValid = true;
+    assert(CtrDayNight_Snapshot(&snapshot) && snapshot.shifted);
+    assert(snapshot.timeMs == 39720000u && snapshot.berryBonusMs == 3689000u);
+
+    /* Sync just before midnight: the last second still earns bonus at 120X. */
+    sNow = 32000;
+    sLocal = 23u * 3600u + 59u * 60u + 30u;
+    assert(CtrDayNight_SyncToConsole());
+    assert(sSpeed == 0 && sSetCalls == calls + 1);
+    Near(CtrDayNight_Get()->rgb[0], 0.66f);
+    assert(CtrDayNight_Snapshot(&snapshot) && !snapshot.shifted);
+    assert(snapshot.timeMs == 86370000u && snapshot.berryBonusMs == 3808000u);
+
+    /* From then on it follows the local clock: midnight, then backwards. */
+    sNow = 62000;
+    sLocal = 30;
+    assert(CtrDayNight_Time(&seconds, &rate) && seconds == 30 && rate == 1);
+    sNow = 63000;
+    sLocal = 5u * 3600u;
+    assert(CtrDayNight_Time(&seconds, &rate) && seconds == 5u * 3600u);
+    assert(CtrDayNight_Snapshot(&snapshot) && !snapshot.shifted);
+    assert(snapshot.berryBonusMs == 3808000u);
+
+    /* Saved and loaded unshifted: still the local clock, bonus intact. */
+    sWall += 7200;
+    assert(CtrDayNight_Restore(&snapshot));
+    sLocal = 6u * 3600u;
+    sNow = 64000;
+    assert(CtrDayNight_Time(&seconds, &rate) && seconds == 6u * 3600u && rate == 1);
+    assert(CtrDayNight_Snapshot(&snapshot) && !snapshot.shifted && snapshot.berryBonusMs == 3808000u);
+    assert(CtrDayNight_TakeBerryMinutes() == 63);
+
+    /* Time asleep is not credited at the old speed by a sync on resume. */
+    sSpeed = 5;
+    sNow = 65000;
+    assert(CtrDayNight_Time(&seconds, &rate) && rate == 120);
+    assert(CtrDayNight_Snapshot(&snapshot) && snapshot.shifted && snapshot.berryBonusMs == 147000u);
+    CtrDayNight_Resume();
+    sNow += 3600000;
+    sLocal = 7u * 3600u;
+    assert(CtrDayNight_SyncToConsole() && sSpeed == 0);
+    assert(CtrDayNight_Snapshot(&snapshot) && !snapshot.shifted);
+    assert(snapshot.timeMs == 7u * 3600000u && snapshot.berryBonusMs == 147000u);
+    assert(CtrDayNight_Time(&seconds, &rate) && seconds == 7u * 3600u && rate == 1);
+
+    /* With every clock option off the bonus alone keeps the clock running
+     * until the field takes it. */
+    sEnabled = 0;
+    sNow += 1000;
+    assert(CtrDayNight_Active());
+    CtrDayNight_Reset();
+    sNow += 1000;
+    assert(!CtrDayNight_Active());
+}
+
 int main(void)
 {
     ClockTests();
@@ -400,6 +508,8 @@ int main(void)
     RuntimeTests();
     RuntimeSunTests();
     BerryClockTests();
-    puts("PASS day/night: rates, rollover, continuity, moonlight, all 32768 colours, fade composition, solar path, bonus berry minutes, fractions, restore, offline 1X, resume, invalid settings");
+    SyncHelperTests();
+    SyncRuntimeTests();
+    puts("PASS day/night: rates, rollover, continuity, moonlight, all 32768 colours, fade composition, solar path, bonus berry minutes, fractions, restore, offline 1X, resume, invalid settings, clock sync");
     return 0;
 }

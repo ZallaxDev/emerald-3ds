@@ -1,0 +1,16 @@
+# FRONTEIRA DE BATALHA: o salão 4.
+
+[BattleFrontier_Lounge4_Text_WonderIfInterviewsAiring] 7636d8f366
+Será que hoje vão passar entrevistas\n
+com TREINADORES fortes?$
+
+[BattleFrontier_Lounge4_Text_IfIOpenedRestaurantHere] ebbdd1e681
+Se eu abrisse um restaurante aqui,\n
+ia ganhar dinheiro, com certeza.$
+
+[BattleFrontier_Lounge4_Text_NeedBreatherAfterBattles] 0de0668eef
+Ufa…\p
+Preciso de um respiro depois de\n
+umas batalhas intensas…\p
+Mas, mesmo agora, não paro de\n
+planejar estratégias e combos.$

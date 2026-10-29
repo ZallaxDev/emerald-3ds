@@ -1,0 +1,84 @@
+# As palavras da FALA FÁCIL, grupo trainer (src/data/easy_chat/easy_chat_group_trainer.h): até 72 px, como
+# o inglês. A ordem alfabética das listas é refeita a partir destes
+# textos (tools/easy_chat_order.py).
+
+[gEasyChatWord_IChooseYou] da9d88d42f width=72
+TE ESCOLHO
+
+[gEasyChatWord_Gotcha] fb939d7dad width=72
+PEGUEI
+
+[gEasyChatWord_Trade] 91e044d0ff width=72
+TROCA
+
+[gEasyChatWord_Sapphire] addbc6ca2a width=72
+SAFIRA
+
+[gEasyChatWord_Evolve] 335cf572d6 width=72
+EVOLUIR
+
+[gEasyChatWord_Encyclopedia] ae4c08382a width=72
+ENCICLOPÉDIA
+
+[gEasyChatWord_Nature] b2f6d8e9d5 width=72
+NATUREZA
+
+[gEasyChatWord_Center] c7eb0f35af width=72
+CENTRO
+
+[gEasyChatWord_Egg] 715a2d4c2e width=72
+OVO
+
+[gEasyChatWord_Link] c1bbd9d8f7 width=72
+CONEXÃO
+
+[gEasyChatWord_SpAbility] f6f25e9274 width=72
+HAB. ESPECIAL
+
+[gEasyChatWord_Trainer] 6df205ccba width=72
+TREINADOR
+
+[gEasyChatWord_Version] b33892fbdd width=72
+VERSÃO
+
+[gEasyChatWord_Pokenav] 099ac0c66b width=72
+POKéNAV
+
+[gEasyChatWord_Pokemon] 79892c9525 width=72
+POKéMON
+
+[gEasyChatWord_Get] f030bbbd32 width=72
+PEGAR
+
+[gEasyChatWord_Pokedex] f1c591588f width=72
+POKéDEX
+
+[gEasyChatWord_Ruby] a09b4dd641 width=72
+RUBI
+
+[gEasyChatWord_Level] f481cc60f1 width=72
+NÍVEL
+
+[gEasyChatWord_Red] bb4e68e797 width=72
+VERMELHO
+
+[gEasyChatWord_Green] 5becf070a5 width=72
+VERDE
+
+[gEasyChatWord_Bag] 332c000cf7 width=72
+BOLSA
+
+[gEasyChatWord_Flame] 80e80e6263 width=72
+CHAMA
+
+[gEasyChatWord_Gold] 81ff70acd7 width=72
+OURO
+
+[gEasyChatWord_Leaf] 78a833a943 width=72
+FOLHA
+
+[gEasyChatWord_Silver] 462e8399a4 width=72
+PRATA
+
+[gEasyChatWord_Emerald] 55973449f3 width=72
+ESMERALDA

@@ -1,0 +1,16 @@
+# CIDADE DE RUSTBORO, casa 3: o PEKACHU.
+
+[RustboroCity_House3_Text_IGivePerfectlySuitedNicknames] 854a30d220
+Eu dou apelidos perfeitos pros\n
+meus POKéMON!\p
+É a minha forma de mostrar, hã…\n
+originalidade, isso mesmo!$
+
+[RustboroCity_House3_Text_NamingPikachuPekachu] 7a96f9a36e
+Mas dar o nome de PEKACHU a um\n
+PIKACHU? Parece meio sem sentido.\p
+Acho bom usar um nome fácil de\n
+entender, mas…$
+
+[RustboroCity_House3_Text_Pekachu] 3f63947e1a
+PEKACHU: Peka!$
