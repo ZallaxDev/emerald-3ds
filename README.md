@@ -88,7 +88,7 @@ interface on the bottom screen replaces the START menu. Enable the optional
 | :--- | :--- |
 | **Native 3DS homebrew** | Runs directly on the console's ARM11 using libctru, Citro2D and Citro3D, without an emulator. |
 | **Two screens, one adventure** | The game on top, with a dedicated touch interface below in place of the START menu. |
-| **Six languages** | English, Spanish, French, Italian, German (experimental) and Japanese (experimental), each built from your own cartridge of that language: texts, graphics and credits come from your ROM. |
+| **Seven languages** | English, Spanish, French, Italian, German (experimental) and Japanese (experimental), each built from your own cartridge of that language: texts, graphics and credits come from your ROM. Brazilian Portuguese is a fan translation built from the English cartridge. |
 | **Optional voxel overworld** | Modelled buildings, trees, signposts and terrain relief, with adjustable camera angle and zoom, and real stereoscopic 3D on a New 3DS. |
 | **HD battle interface** | Info boxes and text box drawn at the top screen's full resolution; optional 3D battles over the voxel world. |
 | **Follower Pokémon** | Optional: your lead Pokémon walks behind you with its HeartGold/SoulSilver overworld sprite and answers when you talk to it. |
