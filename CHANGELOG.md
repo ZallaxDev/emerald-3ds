@@ -4,6 +4,11 @@
 
 The first beta.
 
+Most of Hoenn is now recreated in voxels, but the 3D world is still under
+construction: there are still many faults, flat elements and other problems,
+which will be fixed in the coming versions. Everything keeps being built and
+improved.
+
 - Voxel world: most of Hoenn's interiors stand in 3D, by @Deunnis:
   Lilycove's contest stage, lobby and hall (pull request #125, issue #119),
   its Department Store from 1F to the rooftop with the elevator (pull

@@ -614,7 +614,10 @@ def check_python() -> None:
     """The release's Python (upstream.lock [python]): another one may make
     other voxel data than the one the release is meant to carry."""
     import tomllib
-    want = tomllib.loads((ROOT / "upstream.lock").read_text(encoding="utf-8")).get("python", {}).get("version")
+    lock = ROOT / "upstream.lock"
+    if not lock.is_file():
+        lock = ROOT / "public-manifest.toml"     # the private workspace: the lock is made from it
+    want = tomllib.loads(lock.read_text(encoding="utf-8")).get("python", {}).get("version")
     have = "%d.%d" % sys.version_info[:2]
     if want and have != want:
         raise SystemExit("voxel_precompile: this is Python %s; a release's voxel data is made with Python "
