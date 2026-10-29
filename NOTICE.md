@@ -1,8 +1,8 @@
 # Notices
 
 Emerald 3DS combines original port code with the pret decompilation and a few
-third-party components. Each keeps its own terms; `LICENSE-PORT.md` covers
-only the original Emerald 3DS work.
+third-party components. Each keeps its own terms; `LICENSE-PORT.md`
+(CC BY-NC-SA 4.0) covers only the original Emerald 3DS work.
 
 ## Upstream decompilation
 

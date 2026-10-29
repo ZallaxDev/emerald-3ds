@@ -9,6 +9,11 @@ construction: there are still many faults, flat elements and other problems,
 which will be fixed in the coming versions. Everything keeps being built and
 improved.
 
+- Licence: the original Emerald 3DS code, tools and documentation move from
+  MIT to CC BY-NC-SA 4.0 (`LICENSE-PORT.md`). Forks and changes stay welcome,
+  with credit and under the same licence, but not for profit. Copies of
+  0.4.x and earlier keep the MIT licence they were published under.
+
 - Voxel world: most of Hoenn's interiors stand in 3D, by @Deunnis:
   Lilycove's contest stage, lobby and hall (pull request #125, issue #119),
   its Department Store from 1F to the rooftop with the elevator (pull

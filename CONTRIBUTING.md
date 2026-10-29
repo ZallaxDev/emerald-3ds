@@ -274,6 +274,12 @@ pinned commit, one file per topic; see the headers of the existing patches).
 - Test on hardware when you touch rendering, memory, timing or file I/O, and
   say what you tested in the pull request.
 
+## Licence of contributions
+
+By contributing you agree that your work is published under the project's
+licence, CC BY-NC-SA 4.0 (`LICENSE-PORT.md`), with credit to you in the
+history and the changelog.
+
 ## AI-assisted contributions
 
 Welcome, under the same standard as any other: you are responsible for what
