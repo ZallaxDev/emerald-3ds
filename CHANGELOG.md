@@ -35,7 +35,8 @@ improved.
   switch as its puzzle switches them; Lavaridge's 1F and B1F, Petalburg's
   sliding doors, Fortree's round green columns, Mossdeep's panelled walls
   and Sootopolis's tiers, stairs and slides stand at their own levels. Doors
-  open with their own frames on every wall.
+  open with their own frames on every wall. The gyms are modelled but still
+  have faults, to be fixed in the coming versions.
 
 - Voxel world: Fortree's tree houses, plank bridges and treetop palms;
   every house of Sootopolis, its white walls, its cliff and the Cave of
@@ -75,22 +76,30 @@ improved.
   (entries, AREA, CRY, SIZE, search) are drawn natively at the touch
   screen's resolution, in battle too, with held items, a scroll bar in the
   bag and the summary's Pokémon moving with its animation. A tap on a
-  section jumps straight there. The options are sorted into categories, the
-  trainer card has its back, and CLASSIC MENUS (off by default) brings back
+  section jumps straight there. The trainer card has its back, and CLASSIC MENUS (off by default) brings back
   the game's own party, bag, Pokédex and card in the window. Plates are made
   ahead and kept on the SD card, so the screen redraws much faster.
 
-- Nuzlocke tracker (off by default, OPTIONS > ENHANCEMENTS): record by hand
+- OPTIONS, reorganised: every option of the game, the port and the
+  enhancements in one place on the bottom screen, sorted into five
+  categories - GENERAL (interface, system), WORLD (3D, field, helpers,
+  clock), BATTLE (scene, rules, experience), MODES (Nuzlocke, randomizer)
+  and CHEATS (catching, perks, Pokédex, items) - each with its groups as
+  tabs, six rows to a page. A row is a switch, a value between arrows, an
+  action or a line of information; options a build does not have are left
+  out.
+
+- Nuzlocke tracker (off by default, OPTIONS > MODES > NUZLOCKE): record by hand
   each area's catch or miss, mark fallen Pokémon and check the next badge's
   level cap. It never enforces a rule or changes the save, and keeps its
   records in `emerald3ds.nuzlocke` beside the save. By @jacobcorbett (pull
   request #112).
 
-- Randomizer (off by default, OPTIONS > CHEATS > RANDOMIZER): wild Pokémon,
+- Randomizer (off by default, OPTIONS > MODES > RANDOMIZER): wild Pokémon,
   starters and trainers' Pokémon by one reproducible seed; the ROM and the
   saves are untouched. By @jacobcorbett (pull request #113).
 
-- Field information (off by default): the wild Pokémon of the current area
+- Field information (off by default, OPTIONS > WORLD > HELPERS and CLOCK): the wild Pokémon of the current area
   with their levels and rates (names hidden until seen), the Repel steps
   left, and a notice when the saved clock had to fall back. SYNC CLOCK
   brings a fast clock back to the console's time without losing the berries'
@@ -157,7 +166,7 @@ improved.
   is API 2 (`run_web_build(..., language)`), and `web-manifest.json` may list
   the English ROM twice, once per language.
 
-- OPTIONS > ENHANCEMENTS > REAL-TIME PACING is on by default: a new
+- OPTIONS > GENERAL > SYSTEM > REAL-TIME PACING is on by default: a new
   settings.txt starts with it on (and so does one that never had it). A
   settings.txt that already chose off keeps off.
 
