@@ -26,7 +26,7 @@ class ManifestTests(unittest.TestCase):
                         self.assertLess(start, end)
                         self.assertTrue(0 <= offset < offset + size <= 16 << 20)
                         self.assertIsInstance(kind, str)
-                        self.assertRegex(kind, r"^(c|cfixed|asm|u32|u16s|u16array|u8array|bard|u8rows22|u16rows10|struct[BHbhIix]+)$")
+                        self.assertRegex(kind, r"^(c|cfixed|asm|u32|u16s|u16array|u8array|bard|u8rows22|u16rows10|struct\d*[BHbhIix]+|bits\d+(,\d+)*)$")
                         previous = end
                 for relative, offset, size in manifest["graphics"]:
                     self.assertFalse(Path(relative).is_absolute())
