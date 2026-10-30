@@ -2287,6 +2287,10 @@ typedef struct
     s16 mapViewX, mapViewY;
     u8 mapFly, flyFrontier, flyCanFly;
     u16 flyVisited;
+    /* FLY on the map itself (a town picked one can fly to): MAP_FLY_* for
+     * the header's FLY, the party slots that know Fly (a bit each) and the
+     * one that would fly. */
+    u8 flyNow, flyers, flyPick;
     u8 clockShown, clockValid, clockRate, clockPhase;
     u16 clockMinute;
     /* Map extras (3ds_field_qol_extras.inc), all zero with them off: the
@@ -2438,6 +2442,11 @@ static u8 sPickMapsec = MAPSEC_NONE, sPickX, sPickY, sPickPos;
  * if cancelled. While it is up the game sees no buttons. */
 static bool8 sMapZoom, sMapFly;
 static u8 sFlySlot, sFlyFrom;
+/* Who flies from the map's own FLY: the one last chosen or flown with (its
+ * personality), else the first that knows Fly. */
+static u32 sFlyerPersonality;
+static bool8 sFlyerKnown;
+enum { MAP_FLY_NONE, MAP_FLY_GREY, MAP_FLY_READY };
 static s16 sMapViewX, sMapViewY;
 /* Map extras: the wild list instead of the map, its page; the load
  * (CtrClockStore_LoadSerial) whose clock banner was dismissed. */
@@ -2480,6 +2489,8 @@ enum
     HIT_MAP_PANEL,         /* the place's panel: nothing under it */
     HIT_MAP_FLY,           /* the Fly map's FLY */
     HIT_MAP_FLY_CANCEL,    /* the Fly map's CANCEL */
+    HIT_MAP_FLY_NOW,       /* the map's own FLY, a town picked */
+    HIT_MAP_FLYER,         /* + party slot: who flies */
     HIT_OPTION = 0xC0,     /* + option row; +HIT_OPTION_BACK for its back half */
     HIT_PAGE = 0xE0,       /* + OPTIONS category tab; + 8 + group tab */
 };
@@ -2514,6 +2525,63 @@ static bool8 FieldIdle(void)
 {
     return gMain.callback2 == CB2_Overworld && !ArePlayerFieldControlsLocked() && !ScriptContext_IsEnabled()
         && gPlayerAvatar.tileTransitionState == T_NOT_MOVING && !gPaletteFade.active && !CtrStartMenu_Busy();
+}
+
+/*
+ * FLY on the map itself, as the party menu would let Fly be used: the
+ * party's Pokemon that know it (not an egg), the Feather Badge, a map whose
+ * type allows it (SetUpFieldMove_Fly), and the field free - no script, no
+ * fade, nothing holding the player. A step under way is no bar: the flight
+ * from the field ends it first (CtrFly_Start).
+ */
+static u8 MapFlyers(void)
+{
+    u8 flyers = 0;
+
+    for (int i = 0; i < PARTY_SIZE && i < gPlayerPartyCount; ++i)
+    {
+        struct Pokemon *mon = &gPlayerParty[i];
+
+        if (GetMonData(mon, MON_DATA_SPECIES) == SPECIES_NONE || GetMonData(mon, MON_DATA_IS_EGG))
+            continue;
+        for (int j = 0; j < MAX_MON_MOVES; ++j)
+            if (GetMonData(mon, MON_DATA_MOVE1 + j) == MOVE_FLY)
+            {
+                flyers |= 1 << i;
+                break;
+            }
+    }
+    return flyers;
+}
+
+static bool8 MapFlyField(void)
+{
+    return !gMain.inBattle && gMain.callback2 == CB2_Overworld && !ArePlayerFieldControlsLocked()
+        && !ScriptContext_IsEnabled() && !gPaletteFade.active && !CtrStartMenu_Busy()
+        && Overworld_MapTypeAllowsTeleportAndFly(gMapHeader.mapType);
+}
+
+/* Of the ones that know Fly, the one chosen or last flown with, else the first. */
+static u8 MapFlyerSlot(u8 flyers)
+{
+    if (flyers == 0)
+        return PARTY_SIZE;
+    if (sFlyerKnown)
+        for (int i = 0; i < PARTY_SIZE; ++i)
+            if (((flyers >> i) & 1) && GetMonData(&gPlayerParty[i], MON_DATA_PERSONALITY) == sFlyerPersonality)
+                return i;
+    for (int i = 0; i < PARTY_SIZE; ++i)
+        if ((flyers >> i) & 1)
+            return i;
+    return PARTY_SIZE;
+}
+
+static void RememberFlyer(u8 slot)
+{
+    if (slot >= PARTY_SIZE)
+        return;
+    sFlyerPersonality = GetMonData(&gPlayerParty[slot], MON_DATA_PERSONALITY);
+    sFlyerKnown = TRUE;
 }
 
 static u16 EnabledScreens(void)
@@ -3532,6 +3600,27 @@ static void SnapshotClock(ViewState *s)
 static void SnapshotOptionRows(ViewState *s);
 static u8 MapLandmarks(u8 mapsec, u8 type, u8 pos);
 
+/* The map's own FLY: with a town picked one can fly to, the Feather Badge
+ * and a Pokemon that knows Fly, ready where the field lets Fly be used and
+ * grey where it does not (indoors, a script); the party's icons for the
+ * choice of who flies. */
+static void SnapshotMapFly(ViewState *s)
+{
+    u8 flyers;
+
+    if (s->mode != MODE_FIELD || s->inBattle || s->encView || s->pickMapsec == MAPSEC_NONE
+     || (s->pickType != MAPSECTYPE_CITY_CANFLY && s->pickType != MAPSECTYPE_BATTLE_FRONTIER)
+     || !FlagGet(FLAG_BADGE06_GET))
+        return;
+    flyers = MapFlyers();
+    if (flyers == 0)
+        return;
+    s->flyers = flyers;
+    s->flyPick = MapFlyerSlot(flyers);
+    s->flyNow = MapFlyField() ? MAP_FLY_READY : MAP_FLY_GREY;
+    SnapshotParty(s);
+}
+
 static void Snapshot(ViewState *s, u8 mode, u8 pressed)
 {
     memset(s, 0, sizeof(*s));
@@ -3626,7 +3715,10 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
                 s->flyCanFly = s->pickType == MAPSECTYPE_CITY_CANFLY || s->pickType == MAPSECTYPE_BATTLE_FRONTIER;
             }
             else
+            {
                 SnapshotMapExtras(s);
+                SnapshotMapFly(s);
+            }
         }
         else
             s->cursorX = s->cursorY = 0;
@@ -6265,8 +6357,34 @@ static void FlyFromMap(void)
     }
     PlaySE(SE_SELECT);
     CtrLog_Write(CTR_LOG_INPUT, "bottom screen: fly to %u (%u) by %u", sPickMapsec, sPickPos, sFlySlot);
+    RememberFlyer(sFlySlot);
     CtrParty_Fly(sFlySlot, sPickMapsec, sPickPos);
     EndFlyMap();
+}
+
+/* The map's own FLY: the destination as the Fly map's A would take it, and
+ * the flight from the field with the Pokemon shown (CtrParty_Fly). Tapping
+ * the town and then FLY is the choice; there is nothing more to confirm. */
+static void MapFlyNow(void)
+{
+    u8 slot;
+
+    if (sShown.flyNow != MAP_FLY_READY || sShown.mapFly || sPickMapsec == MAPSEC_NONE)
+        return;
+    slot = MapFlyerSlot(MapFlyers());
+    if (slot >= PARTY_SIZE || !FlagGet(FLAG_BADGE06_GET) || !MapFlyField()
+     || (CtrRegionMap_MapSecType(sPickMapsec) != MAPSECTYPE_CITY_CANFLY
+      && CtrRegionMap_MapSecType(sPickMapsec) != MAPSECTYPE_BATTLE_FRONTIER))
+    {
+        PlaySE(SE_FAILURE);
+        return;
+    }
+    PlaySE(SE_SELECT);
+    CtrLog_Write(CTR_LOG_INPUT, "bottom screen: map FLY to %u (%u) by %u", sPickMapsec, sPickPos, slot);
+    RememberFlyer(slot);
+    CtrParty_Fly(slot, sPickMapsec, sPickPos);
+    sPickMapsec = MAPSEC_NONE;
+    sMapZoom = FALSE;
 }
 
 static void MapTap(u8 id)
@@ -6299,9 +6417,21 @@ static void MapTap(u8 id)
     case HIT_MAP_FLY_CANCEL:
         CancelFlyMap();
         break;
+    case HIT_MAP_FLY_NOW:
+        MapFlyNow();
+        break;
     case HIT_MAP_PANEL:
         break;
     default:
+        if (id >= HIT_MAP_FLYER && id < HIT_MAP_FLYER + PARTY_SIZE)
+        {
+            if (sShown.flyNow == MAP_FLY_READY && ((sShown.flyers >> (id - HIT_MAP_FLYER)) & 1))
+            {
+                RememberFlyer(id - HIT_MAP_FLYER);
+                PlaySE(SE_SELECT);
+            }
+            break;
+        }
         MapExtrasTap(id);
         break;
     }

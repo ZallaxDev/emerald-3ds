@@ -389,8 +389,74 @@ static void DrawZoomButton(const ViewState *s)
     AddHit(ZOOM_X - 2, ZOOM_Y - 2, ZOOM_W + 4, ZOOM_H + 4, HIT_MAP_ZOOM);
 }
 
+/*
+ * Who flies from the map's own FLY, when more than one Pokemon knows it:
+ * their icons along the picture's bottom, in the band under the last row of
+ * places, from its left; the one that would fly emerald.
+ */
+#define FLYER_W 30
+#define FLYER_H 22
+#define FLYER_X (MAP_ORIGIN_X + 4)
+#define FLYER_Y (MAP_ORIGIN_Y + MAP_PIC_H - 2 - FLYER_H)
+
+static int MapFlyerCount(const ViewState *s)
+{
+    int n = 0;
+
+    for (int i = 0; i < PARTY_SIZE; ++i)
+        n += (s->flyers >> i) & 1;
+    return n;
+}
+
+static bool8 MapFlyersShown(const ViewState *s)
+{
+    return s->flyNow == MAP_FLY_READY && MapFlyerCount(s) > 1;
+}
+
+/* A party icon's body centred in a plate's face, cut to it. */
+static void FlyerIcon(const ViewState *s, u8 slot, int x, int oy, int w, int h, bool8 grey)
+{
+    const MonView *mon = slot < PARTY_SIZE ? &s->party[slot] : NULL;
+    const u8 *tiles;
+    u8 pal;
+    int saved[4];
+
+    if (mon == NULL || !mon->species)
+        return;
+    tiles = MonIcon(mon->iconSpecies, mon->deoxys);
+    pal = gMonIconPaletteIndices[mon->iconSpecies];
+    if (!tiles || pal >= ARRAY_COUNT(sRes.monIconPal))
+        return;
+    ClipPush(saved, x + 1, oy + 1, x + w - 1, oy + h - 1);
+    IconCentred(tiles, 4, 2 * x + w, 2 * oy + h, sRes.monIconPal[pal].c, grey);
+    ClipPop(saved);
+}
+
+static void DrawMapFlyers(const ViewState *s)
+{
+    int n = 0;
+
+    if (!MapFlyersShown(s))
+        return;
+    for (int i = 0; i < PARTY_SIZE; ++i)
+    {
+        int x, oy;
+        bool8 pressed, chosen;
+
+        if (!((s->flyers >> i) & 1))
+            continue;
+        x = FLYER_X + n++ * (FLYER_W + 2);
+        pressed = s->pressed == HIT_MAP_FLYER + i;
+        chosen = s->flyPick == i;
+        oy = Plate(x, FLYER_Y, FLYER_W, FLYER_H, chosen || pressed ? sEmerald : sLight,
+                   pressed ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+        FlyerIcon(s, i, x, oy, FLYER_W, FLYER_H, FALSE);
+        AddHit(x - 1, FLYER_Y - 2, FLYER_W + 2, FLYER_H + 4, HIT_MAP_FLYER + i);
+    }
+}
+
 /* Whether a rectangle of the screen meets what is drawn over the map and is
- * not in its cache: the zoom button, the place panel. */
+ * not in its cache: the zoom button, the place panel, who flies. */
 static bool8 MapOverlayMeets(const ViewState *s, int x0, int y0, int x1, int y1)
 {
     int px, pw, ph, b[4];
@@ -398,6 +464,12 @@ static bool8 MapOverlayMeets(const ViewState *s, int x0, int y0, int x1, int y1)
     PlateBounds(ZOOM_X, ZOOM_Y, ZOOM_W, ZOOM_H, &b[0], &b[1], &b[2], &b[3]);
     if (RectsMeet(x0, y0, x1, y1, b[0], b[1], b[2], b[3]))
         return TRUE;
+    if (MapFlyersShown(s))
+    {
+        PlateBounds(FLYER_X, FLYER_Y, MapFlyerCount(s) * (FLYER_W + 2) - 2, FLYER_H, &b[0], &b[1], &b[2], &b[3]);
+        if (RectsMeet(x0, y0, x1, y1, b[0], b[1], b[2], b[3]))
+            return TRUE;
+    }
     if (!MapPanelWidth(s))
         return FALSE;
     MapPanelRect(s, &px, &pw, &ph);
@@ -571,6 +643,7 @@ static void DrawRegionMap(const ViewState *s)
         AddHit(MAP_ORIGIN_X, MAP_ORIGIN_Y, MAP_PIC_W, MAP_PIC_H, HIT_MAP);
         DrawMapPanel(s);
         DrawZoomButton(s);
+        DrawMapFlyers(s);
     }
     if (s->clockNotice)
     {
@@ -622,6 +695,28 @@ static void DrawFlyHeader(const ViewState *s)
     TextIn(gText_Cancel2, FLY_CANCEL_X, oy, FLY_CANCEL_W, HEAD_H, FitFont(&sNormal, gText_Cancel2, FLY_CANCEL_W - 8), 'c',
            STYLE_WHITE, 4);
     AddHit(FLY_CANCEL_X, HEAD_Y - 2, W - FLY_CANCEL_X, HEAD_H + 4, HIT_MAP_FLY_CANCEL);
+}
+
+/*
+ * The map's own FLY, a town one can fly to picked: in the header beside its
+ * name, where the Repel and the clock were, the icon of who would fly on
+ * it; grey where the field does not let Fly be used now.
+ */
+#define MAP_FLY_X REPEL_X
+#define MAP_FLY_W (CLOCK_X + CLOCK_W - REPEL_X)
+#define MAP_FLY_ICON_W 36
+
+static void DrawMapFlyButton(const ViewState *s)
+{
+    bool8 ready = s->flyNow == MAP_FLY_READY, pressed = ready && s->pressed == HIT_MAP_FLY_NOW;
+    int oy = Plate(MAP_FLY_X, HEAD_Y, MAP_FLY_W, HEAD_H, !ready ? sOffGrey : pressed ? sEmerald : sFieldBlue,
+                   pressed ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+
+    FlyerIcon(s, s->flyPick, MAP_FLY_X + 4, oy, MAP_FLY_ICON_W, HEAD_H, !ready);
+    TextIn(gMoveNames[MOVE_FLY], MAP_FLY_X + MAP_FLY_ICON_W, oy, MAP_FLY_W - MAP_FLY_ICON_W - 8, HEAD_H, &sNormal, 'c',
+           ready ? STYLE_WHITE : STYLE_GRAY, 4);
+    if (ready)
+        AddHit(MAP_FLY_X, HEAD_Y - 2, MAP_FLY_W, HEAD_H + 4, HIT_MAP_FLY_NOW);
 }
 
 /* ------------------------------------------------------------------------ */
