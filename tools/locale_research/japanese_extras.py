@@ -19,6 +19,9 @@ What make_japanese_manifest.py does not map:
   write BPEJ's records. Each is found through BPEJ's symbol or the literal
   pools of the functions that use it, and taken only when its records have
   the table's shape (readelf, beside --nm, gives each object's statics).
+- braille: braille texts with nothing to match (the Sealed Chamber's
+  letters), between two the matcher mapped: BPEJ's strings between those
+  two, in order, when the count and each brailleformat agree.
 
 Only positions, offsets and labels are written, as in the rest of the
 manifest: no byte of either ROM.
@@ -457,6 +460,49 @@ def tables(tree, en, ja, ja_syms, readelf, elf, manifest):
     return out
 
 
+BRAILLE_BLOCK = re.compile(r"^\w+:\n\t(brailleformat ([\d, ]+)\n(?:\t\.braille .*\n)*\t\.braille .*\$\")", re.M)
+
+
+def braille(tree, ja, manifest):
+    """The braille texts the matcher leaves English between two it mapped
+    (the Sealed Chamber's letters have no text to match): BPEJ's strings
+    between those two, in order, when there are as many and each begins
+    with its text's own brailleformat numbers."""
+    import hashlib
+    out = {}
+    for relative, entry in manifest["files"].items():
+        path = tree / relative
+        if not relative.endswith(".inc") or not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
+        if hashlib.sha256(text.encode()).hexdigest() != entry["sha256"]:
+            continue
+        blocks = [(m.start(1), m.end(1), bytes(int(n) for n in m.group(2).split(",")))
+                  for m in BRAILLE_BLOCK.finditer(text)]
+        edited = {e[0]: e for e in entry["edits"]}
+        added = []
+        mapped = [i for i, b in enumerate(blocks) if b[0] in edited]
+        for i, k in zip(mapped, mapped[1:]):
+            if k - i < 2:
+                continue
+            first, last = edited[blocks[i][0]], edited[blocks[k][0]]
+            at, strings = first[2] + first[3], []
+            while at < last[2] and len(strings) < k - i:
+                end = ja.find(b"\xff", at, last[2])
+                if end < 0:
+                    break
+                strings.append((at, end + 1 - at))
+                at = end + 1
+            if at != last[2] or len(strings) != k - i - 1:
+                continue
+            gap = blocks[i + 1:k]
+            if all(ja[s:s + 6] == b[2] for (s, _), b in zip(strings, gap)):
+                added += [[b[0], b[1], s, n, "asm"] for (s, n), b in zip(strings, gap)]
+        if added:
+            out[relative] = added
+    return out
+
+
 def extras(nm, elf, english_rom, japanese_rom, tree, manifest, symbols=SYMBOLS):
     en = Path(english_rom).read_bytes()
     ja = Path(japanese_rom).read_bytes()
@@ -471,6 +517,9 @@ def extras(nm, elf, english_rom, japanese_rom, tree, manifest, symbols=SYMBOLS):
         pinned = manifest["files"].setdefault(relative, {"sha256": entry["sha256"], "edits": []})
         pinned["edits"] = sorted(pinned["edits"] + entry["edits"])
         print("  tables", relative, [e[2:] for e in entry["edits"]])
+    for relative, edits in braille(Path(tree), ja, manifest).items():
+        manifest["files"][relative]["edits"] = sorted(manifest["files"][relative]["edits"] + edits)
+        print("  braille", relative, [e[2:] for e in edits])
     return added
 
 
