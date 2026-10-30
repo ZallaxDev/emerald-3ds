@@ -1,0 +1,44 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: the Frontier Pass from PLAYER
+Applies after 0082-japanese-pokedex-units.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/start_menu.c b/src/start_menu.c
+--- a/src/start_menu.c
++++ b/src/start_menu.c
+@@ -1509,8 +1509,17 @@
+     return FALSE;
+ }
+ 
+-// The bottom screen's TRAINER CARD button: the card itself, even with the
+-// Frontier Pass (which PLAYER would open instead).
++// PLAYER, the classic menus' TRAINER CARD and the bottom screen card's PASS
++// plate: as PLAYER in the original, the Frontier Pass once the player has it
++// (its CARD button shows the card), else the card (issue #150).
++static void CtrShowCardOrPass(void)
++{
++    if (FlagGet(FLAG_SYS_FRONTIER_PASS) && !IsOverworldLinkActive() && !InUnionRoom())
++        ShowFrontierPass(CB2_ReturnToFieldWithOpenMenu);
++    else
++        ShowPlayerTrainerCard(CB2_ReturnToFieldWithOpenMenu);
++}
++
+ static bool8 CtrTrainerCardCallback(void)
+ {
+     if (!gPaletteFade.active)
+@@ -1518,7 +1527,7 @@
+         PlayRainStoppingSoundEffect();
+         RemoveExtraStartMenuWindows();
+         CleanupOverworldWindowsAndTilemaps();
+-        ShowPlayerTrainerCard(CB2_ReturnToFieldWithOpenMenu);
++        CtrShowCardOrPass();
+         return TRUE;
+     }
+     return FALSE;
+@@ -1616,7 +1625,7 @@
+ 
+ static void CB2_CtrOpenTrainerCard(void)
+ {
+-    ShowPlayerTrainerCard(CB2_ReturnToFieldWithOpenMenu);
++    CtrShowCardOrPass();
+ }
+ 
+ // What an entry opens straight from another of the game's screens, the one
