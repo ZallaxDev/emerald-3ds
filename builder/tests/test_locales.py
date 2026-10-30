@@ -26,7 +26,10 @@ class ManifestTests(unittest.TestCase):
                         self.assertLess(start, end)
                         self.assertTrue(0 <= offset < offset + size <= 16 << 20)
                         self.assertIsInstance(kind, str)
-                        self.assertRegex(kind, r"^(c|cfixed|asm|u32|u16s|u16array|u8array|bard|u8rows22|u16rows10|struct[BHbhIix]+)$")
+                        # bits5,3,8,8,8 are agbcc bitfield widths, and
+                        # struct2B a two-dimensional table's count then its
+                        # format: japanese_extras.py emits both shapes.
+                        self.assertRegex(kind, r"^(c|cfixed|asm|u32|u16s|u16array|u8array|bard|u8rows22|u16rows10|bits[0-9,]+|struct[0-9BHbhIix]+)$")
                         previous = end
                 for relative, offset, size in manifest["graphics"]:
                     self.assertFalse(Path(relative).is_absolute())
