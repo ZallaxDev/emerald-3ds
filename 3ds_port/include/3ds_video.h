@@ -102,6 +102,17 @@ bool CtrVideo_Init(void);
 void CtrVideo_Shutdown(void);
 void CtrVideo_Bind(CtrVideoMemory memory);
 void CtrVideo_Present(void);
+/*
+ * The Fly cinematic in the voxel field (voxel_fly.c): begun by the game's
+ * Fly once the player is on the bird (3ds_game_full.c, Port_FlyHover), with
+ * the way to the destination in world tiles (+X east, +Z south); false when
+ * the field is not the voxel world's, and Fly plays as the GBA's. Hovers:
+ * the bird waits with the player while the camera climbs into the cloud.
+ * Busy: the landing waits while the camera comes down out of it.
+ */
+bool CtrVideo_FlyBegin(float dirX, float dirZ);
+bool CtrVideo_FlyHovers(void);
+bool CtrVideo_FlyBusy(void);
 /* Keep showing the last top-screen frame instead of the game's screen. */
 void CtrVideo_HoldTop(bool hold);
 bool CtrVideo_TopHeld(void);

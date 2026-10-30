@@ -412,6 +412,8 @@ unsigned CtrVideo_VoxelUploadsLeft(void)
 #include "voxel/ctr_voxel.h"
 #include "voxel/voxel_battle.h"
 #include "voxel/voxel_swoop.h"
+#include "voxel/voxel_fly.h"
+#include "3ds_map_events.h"
 
 /*
  * The game lays itself out over the whole 400x240 viewport, so screen and
@@ -6138,6 +6140,38 @@ enum { FIELD_MODE_NONE, FIELD_MODE_PIXEL, FIELD_MODE_VOXEL };
 #define VOXEL_SWOOP_STEPS_MAX 4u
 static unsigned sFieldMode;
 static VoxelSwoop sSwoop;
+/*
+ * The Fly cinematic (voxel_fly.c), started by the game's Fly through
+ * 3ds_game_full.c (CtrVideo_FlyBegin) once the player is on the bird, and
+ * stepped here beside the swoop. Only from a voxel field frame: in the 2D
+ * field, or with the option off, Fly plays as the GBA's.
+ */
+static VoxelFly sFly;
+/* The map's version (CtrMap_Version) as the flight began: the warp loads
+ * the map again, whatever the frames in between show (the load's frame is
+ * often dropped, so a frame with no field is not to be counted on). */
+static uint32_t sFlyMapVersion;
+
+bool CtrVideo_FlyBegin(float dirX, float dirZ)
+{
+    if (sFieldMode != FIELD_MODE_VOXEL || VoxelFly_Active(&sFly) || VoxelSwoop_Active(&sSwoop)
+        || CtrVoxel_CloudTexture() == NULL)
+        return false;
+    VoxelFly_Begin(&sFly, dirX, dirZ);
+    sFlyMapVersion = CtrMap_Version();
+    CtrLog_Write(CTR_LOG_VIDEO, "FLY cinematic begins towards (%.2f, %.2f)", (double)sFly.dirX, (double)sFly.dirZ);
+    return true;
+}
+
+bool CtrVideo_FlyHovers(void)
+{
+    return VoxelFly_Hovers(&sFly);
+}
+
+bool CtrVideo_FlyBusy(void)
+{
+    return VoxelFly_Busy(&sFly);
+}
 
 void CtrVideo_SetFieldLight(bool on, int x, int y, int radius)
 {
@@ -12020,6 +12054,54 @@ static void DrawSwoopLight(C3D_RenderTarget *target, const VoxelSwoopFrame *fx)
     C2D_Flush();
 }
 
+/*
+ * The Fly cinematic's cloud over a finished picture of the top screen
+ * (voxel_fly.c), the same in both eyes: a wash of white and two sheets of
+ * the world's cloud coverage (CtrVoxel_CloudTexture, tileable A8) at
+ * different scales drifting across each other, so the cloud churns rather
+ * than fades. The texture repeats under the picture through its own wrap
+ * mode: the image's texture rectangle just runs past 1.
+ */
+#define CLOUD_COVER_WASH 0.78f /* the flat white's share of the cover */
+
+static void DrawCloudCover(C3D_RenderTarget *target, float amount)
+{
+    const float w = CTR_GAME_WIDTH, h = CTR_GAME_HEIGHT;
+    C3D_Tex *tex = CtrVoxel_CloudTexture();
+    double seconds = (double)svcGetSystemTick() / SYSCLOCK_ARM11;
+    float k = fminf(amount, 1.0f);
+    C2D_ImageTint tint;
+
+    C2D_Prepare();
+    C3D_DepthTest(false, GPU_ALWAYS, GPU_WRITE_COLOR);
+    BlendForget();
+    SceneOn(target);
+    C2D_ViewReset();
+    Blend(5, false, false);
+    /* The wash: a cool white, most of the cover but never all of it. */
+    C2D_DrawRectSolid(0, 0, 0, w, h, C2D_Color32(238, 242, 248, (uint8_t)(k * k * CLOUD_COVER_WASH * 255.0f + 0.5f)));
+    if (tex != NULL)
+    {
+        /* Two sheets: a broad slow one and a finer quicker one over it. */
+        static const struct { float repeats, speedU, speedV; uint8_t alpha; } sheets[2] = {
+            {1.6f, 0.030f, 0.012f, 225},
+            {3.1f, -0.055f, 0.028f, 150},
+        };
+
+        for (unsigned s = 0; s < 2; ++s)
+        {
+            float u = (float)fmod(seconds * sheets[s].speedU, 1.0), v = (float)fmod(seconds * sheets[s].speedV, 1.0);
+            float ru = sheets[s].repeats, rv = sheets[s].repeats * h / w;
+            Tex3DS_SubTexture sub = {(uint16_t)w, (uint16_t)h, u, v, u + ru, v + rv};
+            C2D_Image image = {tex, &sub};
+
+            C2D_PlainImageTint(&tint, C2D_Color32(255, 255, 255, (uint8_t)(k * (float)sheets[s].alpha + 0.5f)), 1.0f);
+            C2D_DrawImageAt(image, 0.0f, 0.0f, 0.0f, &tint, 1.0f, 1.0f);
+        }
+    }
+    C2D_Flush();
+}
+
 static void DrawPoisonVeil(C3D_RenderTarget *target, unsigned alpha)
 {
     C2D_Prepare();
@@ -12672,6 +12754,22 @@ void CtrVideo_Present(void)
         CtrVoxel_SetSwoop(swoop.camera, swoop.height, swoop.cards, swoop.shadows);
         sSwoopFieldObjs = !swoop.cards;
     }
+    /* The Fly cinematic's camera, before the update too. */
+    {
+        VoxelFlyFrame fly;
+        CtrVoxelFly share;
+
+        VoxelFly_Frame(&sFly, &fly);
+        share.active = VoxelFly_Active(&sFly);
+        share.oldMap = fly.oldMap;
+        share.noFade = fly.noFade;
+        share.lift = fly.lift;
+        share.rise = fly.rise;
+        share.wisps = fly.wisps;
+        share.dirX = fly.dirX;
+        share.dirZ = fly.dirZ;
+        CtrVoxel_SetFly(&share);
+    }
     /* The slider before the update: the world's eyes are set, and its
      * frustum widened to what they see, before it picks this frame's chunks.
      * Per eye the frame clears and splits twice: the chunk uploads leave the
@@ -12922,6 +13020,45 @@ void CtrVideo_Present(void)
     {
         DrawPoisonVeil(sTop, PoisonVeil());
         if (stereo) DrawPoisonVeil(sTopRight, PoisonVeil());
+    }
+    if (!down && VoxelFly_Active(&sFly))
+    {
+        VoxelFlyFrame fly;
+        static uint64_t lastGameFrame;
+        uint64_t gameFrame = CtrPlatform_FrameCount();
+        unsigned steps = lastGameFrame != 0 && gameFrame > lastGameFrame ? (unsigned)(gameFrame - lastGameFrame) : 1u;
+
+        VoxelFly_Frame(&sFly, &fly);
+        /* The cloud cover over whatever the frame is - the world, the warp's
+         * black - the same in both eyes. */
+        if (fly.whiteout > 0.005f)
+        {
+            DrawCloudCover(sTop, fly.whiteout);
+            if (stereo) DrawCloudCover(sTopRight, fly.whiteout);
+        }
+        /* Paced by the game's frames, as the swoop is. Over the old map the
+         * world must be there to fly over: gone early (the field left for
+         * something else), the cinematic is dropped and Fly plays on as the
+         * GBA's. Inside the cloud a frame with no field is the warp. */
+        if (steps > VOXEL_SWOOP_STEPS_MAX) steps = VOXEL_SWOOP_STEPS_MAX;
+        lastGameFrame = gameFrame;
+        if (VoxelFly_Hovers(&sFly) && !voxel)
+        {
+            CtrLog_Write(CTR_LOG_VIDEO, "FLY cinematic dropped: no voxel field in phase %u", (unsigned)sFly.phase);
+            VoxelFly_Cancel(&sFly);
+        }
+        else
+        {
+            VoxelFlyPhase was = sFly.phase;
+
+            bool gone = !field || CtrMap_Version() != sFlyMapVersion;
+
+            while (steps-- != 0 && VoxelFly_Active(&sFly))
+                VoxelFly_Step(&sFly, voxel, gone);
+            if (sFly.phase != was)
+                CtrLog_Write(CTR_LOG_VIDEO, "FLY cinematic phase %u -> %u (frame %lu)", (unsigned)was,
+                             (unsigned)sFly.phase, (unsigned long)sStats.frames);
+        }
     }
     if (!down && VoxelSwoop_Active(&sSwoop))
     {

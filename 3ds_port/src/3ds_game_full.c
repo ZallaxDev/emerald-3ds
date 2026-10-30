@@ -70,6 +70,8 @@
 #include "script.h"
 #include "constants/maps.h"
 #endif
+#include "region_map.h"
+#include "constants/region_map_sections.h"
 #include "port_platform.h"
 #include "port_log.h"
 #include "port_prof.h"
@@ -1260,6 +1262,63 @@ bool8 Port_HoldPaletteFade(void)
     return sFadeHeld && gPaletteFade.active && gPaletteFade.yDec;
 }
 
+/*
+ * The Fly cinematic (3ds_video.c, voxel_fly.c). The game's Fly asks, from
+ * the bird's swoop with the player on it (field_effect.c), whether the bird
+ * is to hover: the first ask of a flight starts the cinematic, with the way
+ * from this map's region-map place to the destination's, and the bird hangs
+ * on while the camera climbs into the cloud. Only Fly out: the bird of the
+ * landing (FLDEFF_FLY_IN) swoops in the same way and is never held. Then the
+ * landing asks whether to wait (Task_FlyIntoMap) while the camera comes down
+ * out of the cloud over the new map.
+ */
+static bool sFlyAsked;
+
+static void FlyDirection(float *dirX, float *dirZ)
+{
+    const struct MapHeader *to = GetDestinationWarpMapHeader();
+    u8 from = gMapHeader.regionMapSectionId;
+    u8 dest = to != NULL ? to->regionMapSectionId : MAPSEC_NONE;
+
+    *dirX = 0.0f;
+    *dirZ = -1.0f;
+    if (from >= MAPSEC_NONE || dest >= MAPSEC_NONE)
+        return;
+    /* Region-map cells, x east and y south: the voxel world's +X and +Z. */
+    *dirX = ((float)gRegionMapEntries[dest].x + gRegionMapEntries[dest].width * 0.5f)
+          - ((float)gRegionMapEntries[from].x + gRegionMapEntries[from].width * 0.5f);
+    *dirZ = ((float)gRegionMapEntries[dest].y + gRegionMapEntries[dest].height * 0.5f)
+          - ((float)gRegionMapEntries[from].y + gRegionMapEntries[from].height * 0.5f);
+}
+
+bool8 Port_FlyHover(void)
+{
+    if (!FieldEffectActiveListContains(FLDEFF_USE_FLY) || FieldEffectActiveListContains(FLDEFF_FLY_IN))
+        return FALSE;
+    if (!sFlyAsked)
+    {
+        float dirX, dirZ;
+
+        sFlyAsked = true;
+        FlyDirection(&dirX, &dirZ);
+        if (!CtrVideo_FlyBegin(dirX, dirZ))
+            return FALSE;
+    }
+    return CtrVideo_FlyHovers();
+}
+
+bool8 Port_FlyBusy(void)
+{
+    return CtrVideo_FlyBusy();
+}
+
+static void FlyFrame(void)
+{
+    /* Asked once a flight: the next Fly asks again. */
+    if (!FieldEffectActiveListContains(FLDEFF_USE_FLY))
+        sFlyAsked = false;
+}
+
 static void HoldFieldFade(void)
 {
     const CtrVideoStats *video = CtrVideo_GetStats();
@@ -1307,6 +1366,7 @@ void CtrGame_WaitFrame(void)
     CtrPlatform_EndFrame();
     /* What the frame just shown was decides the game's next fade step. */
     HoldFieldFade();
+    FlyFrame();
     if (sFrames < 4)
     {
         CtrPlatform_ReportMemory("after present");
