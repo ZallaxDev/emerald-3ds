@@ -4267,16 +4267,39 @@ def museum_1f():
 # 2F: the back wall with the stairs up painted on it, its two ends a cell
 # forward, and a statue each side of the stairs - the west one 1F's, found
 # again (reuse_pieces); the east one faces the other way. The five stands
-# stay drawn: the game hangs the contest paintings in their frames
-# (setmetatile, LilycoveCity_LilycoveMuseum_2F/scripts.inc), and a model
-# would keep the empty frames of the drawing.
+# are picture walls, 13 px deep and 35 tall. The game hangs the contest
+# paintings in their frames (setmetatile,
+# LilycoveCity_LilycoveMuseum_2F/scripts.inc), so each stands only while
+# its frame is empty (`when`); museum_2f_paintings has it with its
+# painting hung.
 
 MUSEUM_2F_FLOOR = ("e6e6e6", "9c9c9c", "d5d5d5", "c5c5c5", "b4b4b4", "7b7b7b")
 MUSEUM_2F_WALL_SIDE = (96, 0, 112, 32)
+MUSEUM_2F_FRAME = 0x258             # the empty frame's left half
+MUSEUM_2F_PAINTING = 0x25A          # METATILE_LilycoveMuseum_Painting0_Left; each 2 on
+# each stand's west cell and top row, and the painting the script hangs in it
+MUSEUM_2F_STANDS = ((1, 4, 4), (9, 4, 2), (17, 4, 1), (5, 8, 0), (13, 8, 3))
+
+
+def museum_2f_stand(x, y, frame):
+    """The stand from cell (x, y), four cells wide, while its frame's left
+    half (a cell over and two down) holds `frame`."""
+    x0, y0 = x * 16, y * 16 + 8
+    return piece("stand_%d_%d" % (x, y), [(x0, y0, x0 + 64, y0 + 48)], 35, solid=True,
+                 side=(x0 + 4, y0 + 18, x0 + 16, y0 + 23), when=(x + 1, y + 2, frame))
+
+
+MUSEUM_2F_PAINTINGS_DRAW = {c: m for (x, y, n) in MUSEUM_2F_STANDS
+                            for c, m in (((x + 1, y + 2), MUSEUM_2F_PAINTING + 2 * n),
+                                         ((x + 2, y + 2), MUSEUM_2F_PAINTING + 2 * n + 1))}
+
+
+def museum_2f_paintings():
+    return [museum_2f_stand(x, y, MUSEUM_2F_PAINTING + 2 * n) for (x, y, n) in MUSEUM_2F_STANDS]
 
 
 def museum_2f():
-    return [
+    return [museum_2f_stand(x, y, MUSEUM_2F_FRAME) for (x, y, n) in MUSEUM_2F_STANDS] + [
         piece("statue_e", [(240, 16, 256, 35)], 19, base=6, round="lathe", leave=MUSEUM_2F_FLOOR),
         piece("statue_e_base", [(240, 35, 256, 48)], 6),
         piece("wall_w", [(0, 0, 64, 48)], 32, fill=16, foot=48, side=MUSEUM_2F_WALL_SIDE,
@@ -4832,7 +4855,11 @@ def cable_car_station():
 # printer on its arm), the pillar down to the display stand, the two
 # stands, and the two desks against the back wall (the lab's red book found
 # again on each: they stand on the wall's foot, 8 px into the room, as the
-# Centers' computer). The wall is drawn 4 px down, the void above it.
+# Centers' computer). The wall is drawn 4 px down, the void above it. The
+# stands are low walls, as the back wall is drawn (a white top, a face 23 px
+# tall); the east one before the rack, its face over the first bicycle's
+# top. The side walls are a stretch of the back wall clear of the tools
+# hung on it and the desks.
 
 BIKE_FLOOR = ("acbdac", "83948b", "d5ded5", "cdcdcd")
 BIKE_WALL = ("eeeede", "cdcdb4", "acac8b", "947b6a", "000000")
@@ -4840,20 +4867,20 @@ BIKE_WALL = ("eeeede", "cdcdb4", "acac8b", "947b6a", "000000")
 
 def bike_shop():
     fl = BIKE_FLOOR
-    side = (60, 4, 76, 32)
+    side = (144, 4, 160, 32)
+    stand_e = piece("stand_e", [(160, 60, 192, 88)], 23, leave=fl)
     bikes = [piece("bike_w%d" % k, [(0, y, 26, y + 16)], 16, card=True, leave=fl)
              for k, y in enumerate((40, 56, 72, 88, 104, 120))]
     # the east rack's: the last takes the rack's upright down to the wall's foot
     bikes += [piece("bike_e%d" % k, [(162, y0, 192, y1)], y1 - y0, card=True, leave=fl)
-              for k, (y0, y1) in enumerate(((86, 104), (104, 120), (120, 144)))]
-    return bikes + [
+              for k, (y0, y1) in enumerate(((88, 104), (104, 120), (120, 144)))]
+    return [stand_e] + bikes + [
         piece("printer", [(32, 26, 48, 38)], 8, base=10, leave=BIKE_WALL),
         piece("counter", [(32, 38, 48, 69), (48, 46, 80, 69)], 10, leave=fl,
               plan=[(32, 48), (48, 48), (48, 56), (79, 56), (79, 57), (80, 57), (80, 69),
                     (32, 69)]),
         piece("box", [(80, 46, 96, 63)], 7, leave=fl),
-        piece("stand_w", [(96, 60, 128, 88)], 8, leave=fl),
-        piece("stand_e", [(160, 60, 192, 80)], 8, leave=fl),
+        piece("stand_w", [(96, 60, 128, 88)], 23, leave=fl),
         piece("desk_w", [(112, 20, 144, 41)], 9, leave=fl + BIKE_WALL, solid=True, against=32),
         piece("desk_e", [(160, 20, 192, 41)], 9, leave=fl + BIKE_WALL, solid=True, against=32),
         # the shelf, its sides its top's grey
@@ -4943,7 +4970,11 @@ def mossdeep_game_corner_1f():
 
 
 def mystery_events_house_1f():
-    return [
+    # the chairs' seats are the houses', found again; their backs, drawn a
+    # pixel over another floor, are their own (as House2's)
+    backs = [piece("chair_%s_back" % n, [(x, y, x + 4, y + 16)], 9, leave=EVENTS_FLOOR, solid=True)
+             for n, x, y in (("nw", 98, 64), ("sw", 98, 80), ("ne", 154, 64), ("se", 154, 80))]
+    return backs + [
         piece("table", [(114, 64, 142, 91)], 4, leave=EVENTS_FLOOR, solid=True),
     ] + room_shell(176, 128)
 
@@ -5657,18 +5688,27 @@ def frontier_dome_lobby():
 # the Battle Factory's: as the Tower's, a divider 10 px tall from the wall
 # to a terminal or to a counter's end, the counters round them; and two
 # bins by the door. Its back wall stands to row 5, its base band and the
-# doorways into the back painted on it.
+# doorways into the back painted on it. The dividers and counters are
+# solid, their sides their own grey: projected, a divider's side was its
+# drawn column slanting down it.
 def frontier_factory_lobby():
+    def divider(name, rect):
+        # between its orange stripes
+        return piece(name, [rect], 10, solid=True, side=(rect[0] + 5, 80, rect[0] + 11, 96))
+
+    def counter(name, rect):
+        # its front's grey
+        return piece(name, [rect], 10, solid=True, side=(rect[0] + 6, 121, rect[0] + 14, 126))
     return [
-        piece("divider_2", [(32, 72, 48, 100)], 10),
+        divider("divider_2", (32, 72, 48, 100)),
         piece("terminal_2", [(32, 100, 48, 128)], 18),
-        piece("counter_3", [(48, 108, 64, 128)], 10),
-        piece("counter_5", [(80, 108, 112, 128)], 10),
-        piece("divider_7", [(112, 72, 128, 128)], 10),
-        piece("divider_11", [(176, 72, 192, 128)], 10),
-        piece("counter_12", [(192, 108, 224, 128)], 10),
-        piece("counter_15", [(240, 108, 256, 128)], 10),
-        piece("divider_16", [(256, 72, 272, 100)], 10),
+        counter("counter_3", (48, 108, 64, 128)),
+        counter("counter_5", (80, 108, 112, 128)),
+        divider("divider_7", (112, 72, 128, 128)),
+        divider("divider_11", (176, 72, 192, 128)),
+        counter("counter_12", (192, 108, 224, 128)),
+        counter("counter_15", (240, 108, 256, 128)),
+        divider("divider_16", (256, 72, 272, 100)),
         piece("terminal_16", [(256, 100, 272, 128)], 18),
         piece("bin_15", [(240, 166, 256, 192)], 16),
         piece("bin_17", [(272, 166, 288, 192)], 16),
@@ -5848,6 +5888,30 @@ def pike_wild_mons_room():
     return [pike_pillar(x, y) for (x, y) in cells]
 
 
+# The Battle Factory's pre-battle room: the pipes, the shutters and the
+# doorways painted on its back wall; the consoles in the west alcove and the
+# desk in the east one standing before it (the desk's top stops at the wall,
+# what is on it drawn above that left on the wall); a desk and consoles each
+# side below them, the files on the west desk; the Poke Ball racks, upright
+# shelves of one to three rows, and the two white tables. The cartridge
+# blocks none of it (the attendant walks the player up the middle), and the
+# bins are found again.
+def factory_pre_battle_room():
+    racks = [((48, 160, 80, 200), "w1"), ((80, 160, 112, 184), "w2"),
+             ((144, 128, 176, 184), "e1"), ((176, 144, 208, 200), "e2")]
+    return [piece("rack_" + n, [r], r[3] - r[1] - 1) for r, n in racks] + [
+        piece("table_w", [(1, 161, 31, 192)], 9),
+        piece("table_e", [(241, 161, 271, 192)], 9),
+        piece("files_w", [(23, 112, 38, 127)], 14, base=9),
+        piece("desk_w", [(0, 112, 39, 144)], 9),
+        piece("consoles_w", [(39, 112, 72, 143)], 25),
+        piece("consoles_e", [(224, 112, 256, 144)], 26, solid=True, side=(228, 127, 252, 128)),
+        piece("console_e", [(256, 112, 272, 143)], 25),
+        piece("consoles_alcove_w", [(16, 72, 64, 104)], 26, solid=True, side=(18, 78, 30, 79)),
+        piece("desk_alcove_e", [(208, 72, 248, 104)], 9, against=96),
+    ] + room_shell(272, 224, 96)
+
+
 def factory_battle_room():
     """The Factory's battle room: its back wall 40 px, its corners cut on the
     slant - the wall's foot runs from (16, 41) down to the side at row 57,
@@ -5918,10 +5982,8 @@ FRONTIER_ROOMS = [
      lambda: room_shell(272, 224, 64)),
     ("frontier_palace_battle_room", "LAYOUT_BATTLE_FRONTIER_BATTLE_PALACE_BATTLE_ROOM", 0x206,
      lambda: room_shell(240, 160, 48)),
-    # the pipes, the shutters, the doorways and the desks in the alcoves,
-    # all above row 6, painted on its wall
     ("frontier_factory_pre_battle_room", "LAYOUT_BATTLE_FRONTIER_BATTLE_FACTORY_PRE_BATTLE_ROOM",
-     0x202, lambda: room_shell(272, 224, 96)),
+     0x202, factory_pre_battle_room),
     ("frontier_factory_battle_room", "LAYOUT_BATTLE_FRONTIER_BATTLE_FACTORY_BATTLE_ROOM", 0x2f1,
      factory_battle_room),
     # the Pike's: their pillars copper (the lobby's), silver (the three-path
@@ -8008,6 +8070,12 @@ SPECS = [
                      "pieces": own_shell(museum_2f())},
     },
     {
+        # the stands with the contest paintings hung (MUSEUM_2F_PAINTINGS_DRAW)
+        "name": "museum_2f_paintings",
+        "interior": {"layout": "LAYOUT_LILYCOVE_CITY_LILYCOVE_MUSEUM_2F", "ground": [0x268],
+                     "draw": MUSEUM_2F_PAINTINGS_DRAW, "pieces": own_shell(museum_2f_paintings())},
+    },
+    {
         # Lilycove's Pokemon Trainer Fan Club
         "name": "trainer_fan_club",
         "interior": {"layout": "LAYOUT_LILYCOVE_CITY_POKEMON_TRAINER_FAN_CLUB", "ground": [0x223],
@@ -8666,21 +8734,33 @@ def link_room(w, h, foot, x0, x1, z1, top=0):
     rim runs down a side, the wall is the rim whole: a block the wall's
     height, its top the rim as drawn (`flat`, as Mauville's gym), its inner
     face the wall - a wall on the rim's inner edge alone left the rim at the
-    floor's level behind it, the floor seeming to run on past the wall. The
-    Union Room's floor runs to the map's edges: its walls stand there."""
+    floor's level behind it, the floor seeming to run on past the wall."""
     side = (x0 + 16, top, x0 + 32, foot)
-    out = [piece("wall", [(x0 - 16 if x0 else 0, top, x1 + 16 if x1 < w else w, foot)], foot - top,
-                 fill=16, foot=foot, side=side)]
-    if x0:
-        return out + [
-            piece("side_w", [(x0 - 16, foot, x0, z1)], foot - top, side=side, flat=True,
-                  walls=[((x0, z1), (x0, foot))]),
-            piece("side_e", [(x1, foot, x1 + 16, z1)], foot - top, side=side, flat=True,
-                  walls=[((x1, foot), (x1, z1))]),
-        ]
-    return out + [
-        piece("side_w", [], foot - top, side=side, walls=[((x0, z1), (x0, foot))]),
-        piece("side_e", [], foot - top, side=side, walls=[((x1, foot), (x1, z1))]),
+    return [
+        piece("wall", [(x0 - 16, top, x1 + 16, foot)], foot - top, fill=16, foot=foot, side=side),
+        piece("side_w", [(x0 - 16, foot, x0, z1)], foot - top, side=side, flat=True,
+              walls=[((x0, z1), (x0, foot))]),
+        piece("side_e", [(x1, foot, x1 + 16, z1)], foot - top, side=side, flat=True,
+              walls=[((x1, foot), (x1, z1))]),
+    ]
+
+
+# The Union Room's floor runs to the map's edges, and its walls stand there.
+# The back wall turns its corners on the slant, its foot dropping a pixel
+# every two to the map's edge (row 32 at x 15, row 39.5 at x 0): each
+# corner a prism (`plan`). The side walls are dressed with a stretch of the
+# back wall clear of the sign, its dashes every 16 px.
+def union_room():
+    side = (80, 0, 96, 32)
+    floor = ("9ceea4", "c5ffcd")
+    return [
+        piece("wall", [(15, 0, 225, 32)], 32, fill=16, foot=32, side=side),
+        piece("wall_corner_w", [(0, 0, 15, 40)], 32, plan=[(0, 32), (15, 32), (0, 39.5)],
+              side=side, leave=floor),
+        piece("wall_corner_e", [(225, 0, 240, 40)], 32, plan=[(225, 32), (240, 32), (240, 39.5)],
+              side=side, leave=floor),
+        piece("side_w", [], 32, side=side, walls=[((0, 176), (0, 39.5))]),
+        piece("side_e", [], 32, side=side, walls=[((240, 39.5), (240, 176))]),
     ]
 
 
@@ -8728,7 +8808,7 @@ LINK_ROOMS = [
      lambda: [piece("machine", [(82, 68, 110, 104)], 16)] + link_room(192, 144, 48, 16, 176, 128),
      link_rims(16, 176, 128)),
     ("record_corner", "LAYOUT_RECORD_CORNER", 0x2c4, record_corner, link_rims(64, 256, 144)),
-    ("union_room", "LAYOUT_UNION_ROOM", 0x213, lambda: link_room(240, 192, 32, 0, 240, 176), []),
+    ("union_room", "LAYOUT_UNION_ROOM", 0x213, union_room, []),
     ("inside_of_truck", "LAYOUT_INSIDE_OF_TRUCK", 0x20a, inside_of_truck, []),
 ]
 SPECS += [{"name": n, "interior": dict({"layout": lid, "ground": [g], "pieces": own_shell(f())},
