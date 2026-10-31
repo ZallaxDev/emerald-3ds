@@ -417,3 +417,23 @@ void CtrFlySky_ArriveTick(void)
         CtrLog_Write(CTR_LOG_GAME, "fly sky: the region's weather eases back to the map's %u", (unsigned)gMapHeader.weather);
     }
 }
+
+void CtrFlySky_Prefetch(void)
+{
+    static const u16 sLegends[3] = {SPECIES_LATIOS, SPECIES_LATIAS, SPECIES_RAYQUAZA};
+    const u8 *file;
+    u16 species, natives[4];
+    u32 personality;
+    bool8 shiny;
+    unsigned n, i;
+
+    if (!CtrFlySky_Enabled())
+        return;
+    if (FieldEffect_FlyMon(&species, &personality, &shiny))
+        FollowerMon_SkyFile(species, personality, &file);
+    n = CtrFlySky_Natives(natives, 4);
+    for (i = 0; i < n; i++)
+        FollowerMon_SkyFile(natives[i], 0, &file);
+    for (i = 0; i < 3; i++)
+        FollowerMon_SkyFile(sLegends[i], 0, &file);
+}

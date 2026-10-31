@@ -66,8 +66,13 @@ bool CtrFlySky_RiderSprite(CtrSkySprite *out);
  * the count. */
 unsigned CtrFlySky_Natives(uint16_t *species, unsigned max);
 
+/* Reads the scene's files ahead of time (the Pokemon doing the Fly, the
+ * natives, the legendaries that might pass) while the field move's banner
+ * shows, so the scene's start does not wait on the SD card. */
+void CtrFlySky_Prefetch(void);
 /* Frees what the sprite calls loaded (after the scene). */
 void CtrFlySky_Release(void);
+
 
 /* The sky's weather: that of the map flown from (as it is now) and of the
  * map flown to (its header's), each as one of these; the scene crosses

@@ -1343,9 +1343,19 @@ static void FlyFrame(void)
     static bool sFlyInSeen;
     bool flyIn = FieldEffectActiveListContains(FLDEFF_FLY_IN);
 
-    /* Asked once a flight: the next Fly asks again. */
-    if (!FieldEffectActiveListContains(FLDEFF_USE_FLY))
-        sFlyAsked = false;
+    /* Asked once a flight: the next Fly asks again. The sky scene's files
+     * are read as the flight starts, under the field move's banner. */
+    {
+        static bool sUseFlySeen;
+        bool useFly = FieldEffectActiveListContains(FLDEFF_USE_FLY);
+
+        if (!useFly)
+            sFlyAsked = false;
+        else if (!sUseFlySeen && CtrFlySky_Cinematic())
+            CtrFlySky_Prefetch();
+        sUseFlySeen = useFly;
+    }
+
     /* The landing's first frame: the region's weather over the new map
      * (with the full flight, whose sky showed it). */
     if (flyIn && !sFlyInSeen && CtrFlySky_Enabled())
