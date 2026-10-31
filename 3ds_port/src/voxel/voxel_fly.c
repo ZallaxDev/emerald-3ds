@@ -31,8 +31,9 @@
 /* ... and at most this long: a map the voxel world never draws (the option
  * off, a 2D fallback) ends the cinematic here. */
 #define VOXEL_FLY_CLOUD_MAX 600u
-/* The one motion in: out of the deck and down onto the player's pose. */
-#define VOXEL_FLY_DESCEND_FRAMES 60u
+/* The one motion in: out of the deck and down onto the player's pose, the
+ * Pokemon flying in beside the camera to land as it settles. */
+#define VOXEL_FLY_DESCEND_FRAMES 72u
 #define VOXEL_FLY_UNCOVER_OVER 0.28f /* share of it over which the cover opens */
 #define VOXEL_FLY_SINK_OVER 0.45f    /* ... over which the eye comes down out of the deck */
 #define VOXEL_FLY_WISPS_GONE_FROM 0.45f
@@ -108,7 +109,15 @@ bool VoxelFly_Hovers(const VoxelFly *f)
 
 bool VoxelFly_Busy(const VoxelFly *f)
 {
-    return f->phase == VOXEL_FLY_CLOUD || f->phase == VOXEL_FLY_DESCEND;
+    return f->phase == VOXEL_FLY_CLOUD;
+}
+
+bool VoxelFly_Landing(const VoxelFly *f, float *share)
+{
+    if (f->phase != VOXEL_FLY_DESCEND)
+        return false;
+    *share = Ramp(f->frame, VOXEL_FLY_DESCEND_FRAMES);
+    return true;
 }
 
 void VoxelFly_Frame(const VoxelFly *f, VoxelFlyFrame *out)
@@ -119,6 +128,7 @@ void VoxelFly_Frame(const VoxelFly *f, VoxelFlyFrame *out)
     out->rise = 0.0f;
     out->whiteout = 0.0f;
     out->wisps = 0.0f;
+    out->travel = 0.0f;
     out->dirX = f->dirX;
     out->dirZ = f->dirZ;
     out->oldMap = true;
@@ -138,6 +148,8 @@ void VoxelFly_Frame(const VoxelFly *f, VoxelFlyFrame *out)
         float u = Ramp(n + 1, VOXEL_FLY_CLIMB_FRAMES);
 
         out->lift = -VOXEL_FLY_DIP + (1.0f + VOXEL_FLY_DIP) * Smoother(u);
+        /* Under way towards the destination, gathering speed. */
+        out->travel = u * u;
         out->wisps = Over(u, VOXEL_FLY_WISPS_FROM, VOXEL_FLY_WISPS_OVER);
         out->rise = Over(u, VOXEL_FLY_RISE_FROM, 1.0f - VOXEL_FLY_RISE_FROM);
         out->whiteout = Over(u, VOXEL_FLY_COVER_FROM, 1.0f - VOXEL_FLY_COVER_FROM);
@@ -152,6 +164,7 @@ void VoxelFly_Frame(const VoxelFly *f, VoxelFlyFrame *out)
          * comes down. */
         out->lift = f->gone ? 0.0f : 1.0f;
         out->rise = out->lift;
+        out->travel = out->lift;
         out->wisps = f->gone ? 0.0f : 1.0f;
         out->whiteout = 1.0f;
         out->oldMap = !f->gone;
@@ -163,7 +176,10 @@ void VoxelFly_Frame(const VoxelFly *f, VoxelFlyFrame *out)
         float u = Ramp(n, VOXEL_FLY_DESCEND_FRAMES);
 
         out->lift = 1.0f - Smoother(u);
+        /* Still under way: in from behind the player, slowing onto them. */
+        out->travel = -(1.0f - u) * (1.0f - u);
         out->rise = 1.0f - Over(u, 0.0f, VOXEL_FLY_SINK_OVER);
+
         out->whiteout = 1.0f - Over(u, 0.0f, VOXEL_FLY_UNCOVER_OVER);
         out->wisps = 1.0f - Over(u, VOXEL_FLY_WISPS_GONE_FROM, VOXEL_FLY_WISPS_GONE_OVER);
         out->oldMap = false;

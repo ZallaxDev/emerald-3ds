@@ -5340,7 +5340,8 @@ static void BattleCamera(void)
 #define VOXEL_FLY_PITCH 62.0f    /* degrees below the horizon, at the top */
 #define VOXEL_FLY_DISTANCE 24.0f /* tiles of ground from the target to the eye's foot */
 #define VOXEL_FLY_RISE 22.0f     /* tiles the eye goes on up into the deck */
-#define VOXEL_FLY_LEAD 6.0f      /* tiles the view leads or trails along the way */
+#define VOXEL_FLY_TRAVEL 14.0f   /* tiles the view goes along the way, ahead over the
+                                  * old map and in from behind over the new one */
 
 static void FlyCamera(void)
 {
@@ -5351,8 +5352,12 @@ static void FlyCamera(void)
     /* Below the pose (the bird's dive): drawn in on the player, the pitch kept. */
     if (sFly.lift < 0.0f)
         distance = sCamera.distance * (1.0f + Clamp(sFly.lift, -1.0f, 0.0f));
-    float lead = VOXEL_FLY_LEAD * lift * (sFly.oldMap ? -1.0f : 1.0f);
-    float dx = sFly.dirX * lead, dz = sFly.dirZ * lead;
+    /* Under way: the view travels towards the destination, so the whole
+     * flight - out over the old map, in over the new - moves one way. The
+     * share is scaled by the lift so the new map is built on the pose. */
+    float along = VOXEL_FLY_TRAVEL * Clamp(sFly.travel, -1.0f, 1.0f) * lift;
+    float dx = sFly.dirX * along, dz = sFly.dirZ * along;
+
 
     VoxelCamera_Frame(&sCamera, sCamera.targetX + dx, sCamera.targetZ + dz, sCamera.ground,
                       pitch, distance);

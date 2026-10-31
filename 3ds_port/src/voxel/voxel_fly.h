@@ -13,7 +13,8 @@
  * (CLOUD) the game flies off, fades, warps and builds the new map's world
  * unseen: the cloud is the load screen. Over the new map the camera comes
  * down out of the deck and settles onto the player's pose in one motion
- * (DESCEND), and the bird swoops in as it always did.
+ * (DESCEND), the camera coming in from behind the player along the way, as
+ * the Pokemon flies in beside it and lands as it settles.
  */
 #ifndef CTR_VOXEL_FLY_H
 #define CTR_VOXEL_FLY_H
@@ -44,6 +45,10 @@ typedef struct
     float lift;     /* how far the camera is from the player's pose to the high
                      * one; below 0 it is drawn in closer than the pose (the dive) */
     float rise;     /* ... and beyond the high pose, straight up into the deck */
+    float travel;   /* where the view is along the way, in shares of the full
+                     * travel: ahead of the player towards the destination
+                     * (positive, the old map) or behind them, where they came
+                     * from (negative, the new map); 0 on the player */
     float whiteout; /* the cloud cover over the whole picture */
     float wisps;    /* the strength of the wisp sheets in the scene */
     float dirX, dirZ;
@@ -61,8 +66,12 @@ bool VoxelFly_Active(const VoxelFly *f);
 /* The bird, with the player aboard, keeps hovering: until the cloud has
  * closed over the picture. */
 bool VoxelFly_Hovers(const VoxelFly *f);
-/* The landing waits: from inside the cloud until the camera has settled. */
+/* The landing waits: while inside the cloud (the new map's world unseen). */
 bool VoxelFly_Busy(const VoxelFly *f);
+/* The camera is coming down onto the new map: `share` 0..1 of the way down,
+ * for the Pokemon flying in beside it to land as it settles. */
+bool VoxelFly_Landing(const VoxelFly *f, float *share);
+
 void VoxelFly_Frame(const VoxelFly *f, VoxelFlyFrame *out);
 /* The frame has been drawn: on to the next. `fieldShown`: the voxel world
  * was drawn this frame; `fieldGone`: the old field has gone (the map was

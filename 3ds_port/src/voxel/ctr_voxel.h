@@ -58,6 +58,8 @@ typedef struct
 {
     bool active, oldMap, noFade;
     float lift, rise, wisps;
+    float travel; /* ahead of the player (+) or behind them (-), shares of VOXEL_FLY_TRAVEL */
+
     float dirX, dirZ;
 } CtrVoxelFly;
 void CtrVoxel_SetFly(const CtrVoxelFly *fly);

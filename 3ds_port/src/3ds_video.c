@@ -6173,6 +6173,11 @@ bool CtrVideo_FlyBusy(void)
     return VoxelFly_Busy(&sFly);
 }
 
+bool CtrVideo_FlyLanding(float *share)
+{
+    return VoxelFly_Landing(&sFly, share);
+}
+
 void CtrVideo_SetFieldLight(bool on, int x, int y, int radius)
 {
     if (on && (!sFieldLight.on || sFieldLight.radius < 0))
@@ -12056,20 +12061,110 @@ static void DrawSwoopLight(C3D_RenderTarget *target, const VoxelSwoopFrame *fx)
 
 /*
  * The Fly cinematic's cloud over a finished picture of the top screen
- * (voxel_fly.c), the same in both eyes: a wash of white and two sheets of
+ * (voxel_fly.c): a wash of white, the whole cover once closed (whatever is
+ * under it - the warp's black - must not show through), and two sheets of
  * the world's cloud coverage (CtrVoxel_CloudTexture, tileable A8) at
  * different scales drifting across each other, so the cloud churns rather
  * than fades. The texture repeats under the picture through its own wrap
- * mode: the image's texture rectangle just runs past 1.
+ * mode: the image's texture rectangle just runs past 1. In 3D the sheets
+ * stand in front of the screen: the fine one nearest the eye, the broad one
+ * behind it, shifted apart by the slider (to the right in the left eye, as
+ * StereoParallax has what is nearer than the screen).
  */
-#define CLOUD_COVER_WASH 0.78f /* the flat white's share of the cover */
+/*
+ * The flight's wind: wisps of cloud streaming out from the picture's centre
+ * to its edges, over the world while the camera is up, as the air rushing
+ * past. Each is a long thin strip of the world's cloud texture (tileable A8
+ * noise, CtrVoxel_CloudTexture) stretched along its way and scrolled
+ * outwards, clear at its inner end and whitest at the edge; under them the
+ * edges are hazed white. Together they hide what the edges of the high view
+ * show before it is built (the black of unbuilt chunks) and sell the rush.
+ * Drawn under the cloud cover, a little in front of the screen in 3D.
+ */
+#define WIND_WISPS 30u
+#define WIND_PARALLAX 3.0f
+#define WIND_HAZE 0.6f     /* the edges' white haze, at full strength */
+#define WIND_SPEED 0.9f    /* texture repeats a second, outwards */
+static uint32_t WindRandom(uint32_t *state)
+{
+    *state = *state * 1664525u + 1013904223u;
+    return *state >> 8;
+}
 
-static void DrawCloudCover(C3D_RenderTarget *target, float amount)
+static float WindUnit(uint32_t *state)
+{
+    return (float)(WindRandom(state) & 0xFFFF) / 65535.0f;
+}
+
+static void DrawWind(C3D_RenderTarget *target, float strength, int eye)
+{
+    const float w = CTR_GAME_WIDTH, h = CTR_GAME_HEIGHT, cx = w * 0.5f, cy = h * 0.5f;
+    C3D_Tex *tex = CtrVoxel_CloudTexture();
+    double seconds = (double)svcGetSystemTick() / SYSCLOCK_ARM11;
+    float k = fminf(strength, 1.0f);
+    float parallax = eye < 0 ? 0.0f : (eye == 0 ? 1.0f : -1.0f) * WIND_PARALLAX * CtrScenario_Slider(osGet3DSliderState());
+    uint32_t state = 0x9E3779B9u; /* one set: the motion is the texture's */
+    unsigned i;
+
+    if (k <= 0.005f) return;
+    C2D_Prepare();
+    C3D_DepthTest(false, GPU_ALWAYS, GPU_WRITE_COLOR);
+    BlendForget();
+    SceneOn(target);
+    C2D_ViewReset();
+    Blend(5, false, false);
+    /* The haze: the picture's edges whitened, clear towards the middle. */
+    {
+        uint32_t edge = C2D_Color32(240, 244, 250, (uint8_t)(k * WIND_HAZE * 255.0f + 0.5f));
+        uint32_t none = C2D_Color32(240, 244, 250, 0);
+        float band = h * 0.45f;
+
+        C2D_DrawRectangle(0, 0, 0, w, band, edge, edge, none, none);
+        C2D_DrawRectangle(0, h - band, 0, w, band, none, none, edge, edge);
+        C2D_DrawRectangle(0, 0, 0, band, h, edge, none, edge, none);
+        C2D_DrawRectangle(w - band, 0, 0, band, h, none, edge, none, edge);
+    }
+    if (tex == NULL) { C2D_Flush(); return; }
+    for (i = 0; i < WIND_WISPS; ++i)
+    {
+        float angle = ((float)i + WindUnit(&state) * 0.8f) * (6.2831853f / (float)WIND_WISPS);
+        float dx = cosf(angle), dy = sinf(angle);
+        float inner = 50.0f + WindUnit(&state) * 80.0f;  /* clear of the middle */
+        float outer = 280.0f;                             /* past the corners */
+        float length = outer - inner;
+        float thick = 8.0f + WindUnit(&state) * 16.0f;
+        float alpha = k * (0.3f + WindUnit(&state) * 0.45f);
+        float speed = WIND_SPEED * (0.7f + WindUnit(&state) * 0.6f);
+        float v0 = WindUnit(&state);
+        /* The noise drawn out along the wisp (few repeats over its length,
+         * a sliver of it across), scrolled outwards. */
+        float ru = 0.45f + WindUnit(&state) * 0.35f, rv = thick / 128.0f * 0.5f;
+        float u0 = (float)fmod(-seconds * speed, 1.0);
+        Tex3DS_SubTexture sub = {(uint16_t)length, (uint16_t)thick, u0, v0, u0 + ru, v0 + rv};
+        C2D_Image image = {tex, &sub};
+        C2D_ImageTint tint;
+        uint32_t base = C2D_Color32(255, 255, 255, (uint8_t)(alpha * 255.0f + 0.5f));
+        uint32_t tip = C2D_Color32(255, 255, 255, 0);
+        float mx = cx + parallax + dx * (inner + length * 0.5f), my = cy + dy * (inner + length * 0.5f);
+
+        C2D_SetImageTint(&tint, C2D_TopLeft, tip, 1.0f);
+        C2D_SetImageTint(&tint, C2D_BotLeft, tip, 1.0f);
+        C2D_SetImageTint(&tint, C2D_TopRight, base, 1.0f);
+        C2D_SetImageTint(&tint, C2D_BotRight, base, 1.0f);
+        C2D_DrawImageAtRotated(image, mx, my, 0.0f, angle, &tint, 1.0f, 1.0f);
+    }
+    C2D_Flush();
+}
+
+#define CLOUD_COVER_PARALLAX 7.0f /* the fine sheet's shift at the slider's top, pixels */
+
+static void DrawCloudCover(C3D_RenderTarget *target, float amount, int eye)
 {
     const float w = CTR_GAME_WIDTH, h = CTR_GAME_HEIGHT;
     C3D_Tex *tex = CtrVoxel_CloudTexture();
     double seconds = (double)svcGetSystemTick() / SYSCLOCK_ARM11;
     float k = fminf(amount, 1.0f);
+    float parallax = eye < 0 ? 0.0f : (eye == 0 ? 1.0f : -1.0f) * CLOUD_COVER_PARALLAX * CtrScenario_Slider(osGet3DSliderState());
     C2D_ImageTint tint;
 
     C2D_Prepare();
@@ -12078,19 +12173,22 @@ static void DrawCloudCover(C3D_RenderTarget *target, float amount)
     SceneOn(target);
     C2D_ViewReset();
     Blend(5, false, false);
-    /* The wash: a cool white, most of the cover but never all of it. */
-    C2D_DrawRectSolid(0, 0, 0, w, h, C2D_Color32(238, 242, 248, (uint8_t)(k * k * CLOUD_COVER_WASH * 255.0f + 0.5f)));
+    /* The wash: a cool white. */
+    C2D_DrawRectSolid(0, 0, 0, w, h, C2D_Color32(238, 242, 248, (uint8_t)(k * k * 255.0f + 0.5f)));
     if (tex != NULL)
     {
         /* Two sheets: a broad slow one and a finer quicker one over it. */
-        static const struct { float repeats, speedU, speedV; uint8_t alpha; } sheets[2] = {
-            {1.6f, 0.030f, 0.012f, 225},
-            {3.1f, -0.055f, 0.028f, 150},
+        static const struct { float repeats, speedU, speedV, depth; uint8_t alpha; } sheets[2] = {
+            {1.6f, 0.030f, 0.012f, 0.45f, 225},
+            {3.1f, -0.055f, 0.028f, 1.0f, 150},
         };
 
         for (unsigned s = 0; s < 2; ++s)
         {
-            float u = (float)fmod(seconds * sheets[s].speedU, 1.0), v = (float)fmod(seconds * sheets[s].speedV, 1.0);
+            /* The eye's shift, in the sheet's own texture units (it is drawn
+             * over the whole picture, so it is scrolled rather than moved). */
+            float shift = parallax * sheets[s].depth * sheets[s].repeats / w;
+            float u = (float)fmod(seconds * sheets[s].speedU - shift, 1.0), v = (float)fmod(seconds * sheets[s].speedV, 1.0);
             float ru = sheets[s].repeats, rv = sheets[s].repeats * h / w;
             Tex3DS_SubTexture sub = {(uint16_t)w, (uint16_t)h, u, v, u + ru, v + rv};
             C2D_Image image = {tex, &sub};
@@ -12766,6 +12864,7 @@ void CtrVideo_Present(void)
         share.lift = fly.lift;
         share.rise = fly.rise;
         share.wisps = fly.wisps;
+        share.travel = fly.travel;
         share.dirX = fly.dirX;
         share.dirZ = fly.dirZ;
         CtrVoxel_SetFly(&share);
@@ -13029,13 +13128,23 @@ void CtrVideo_Present(void)
         unsigned steps = lastGameFrame != 0 && gameFrame > lastGameFrame ? (unsigned)(gameFrame - lastGameFrame) : 1u;
 
         VoxelFly_Frame(&sFly, &fly);
-        /* The cloud cover over whatever the frame is - the world, the warp's
-         * black - the same in both eyes. */
+        /* The wind over the world while the camera is up, under the cover;
+         * then the cloud cover over whatever the frame is - the world, the
+         * warp's black - its sheets in front of the screen in 3D. */
+        if (voxel && fly.lift > 0.005f && fly.whiteout < 0.995f)
+        {
+            float rush = fminf(fmaxf(fly.lift, 0.0f), 1.0f) * (1.0f - fly.whiteout);
+
+            DrawWind(sTop, rush, stereo ? 0 : -1);
+            if (stereo) DrawWind(sTopRight, rush, 1);
+        }
         if (fly.whiteout > 0.005f)
         {
-            DrawCloudCover(sTop, fly.whiteout);
-            if (stereo) DrawCloudCover(sTopRight, fly.whiteout);
+
+            DrawCloudCover(sTop, fly.whiteout, stereo ? 0 : -1);
+            if (stereo) DrawCloudCover(sTopRight, fly.whiteout, 1);
         }
+
         /* Paced by the game's frames, as the swoop is. Over the old map the
          * world must be there to fly over: gone early (the field left for
          * something else), the cinematic is dropped and Fly plays on as the

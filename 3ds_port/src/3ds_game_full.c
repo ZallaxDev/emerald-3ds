@@ -1312,6 +1312,28 @@ bool8 Port_FlyBusy(void)
     return CtrVideo_FlyBusy();
 }
 
+/* The destination lies east: the Pokemon and its rider go out to the right
+ * and come in from the left (the GBA's Fly always goes west). Asked as the
+ * flight out begins, while the destination warp is set. */
+bool8 Port_FlyEast(void)
+{
+    float dirX, dirZ;
+
+    FlyDirection(&dirX, &dirZ);
+    return dirX > 0.0f;
+}
+
+bool8 Port_FlyLanding(u8 *share)
+{
+    float s;
+
+    if (!CtrVideo_FlyLanding(&s))
+        return FALSE;
+    *share = (u8)(s * 255.0f + 0.5f);
+    return TRUE;
+}
+
+
 static void FlyFrame(void)
 {
     /* Asked once a flight: the next Fly asks again. */
