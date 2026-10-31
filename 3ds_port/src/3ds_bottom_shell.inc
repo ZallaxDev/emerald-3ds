@@ -218,7 +218,7 @@ static const u8 *SectionName(int screen)
 /* The title plate's width: the Repel's room too while it has no plate. */
 static int TitleWidth(const ViewState *s)
 {
-    return s->repelShown ? TITLE_W : TITLE_WIDE_W;
+    return s->repelShown || s->flyNow ? TITLE_W : TITLE_WIDE_W;
 }
 
 /* The wild list's toggle is on the title, on the map with AREA WILD LIST on. */
@@ -390,6 +390,7 @@ static void DrawRun(const ViewState *s)
 }
 
 static void DrawFlyHeader(const ViewState *s);
+static void DrawMapFlyButton(const ViewState *s);
 
 static void DrawHeader(const ViewState *s)
 {
@@ -400,9 +401,15 @@ static void DrawHeader(const ViewState *s)
         return;
     }
     DrawTitle(s);
-    DrawRepel(s);
-    if (!s->inBattle)
-        DrawClock(s);
+    /* The map's own FLY: where the Repel and the clock were. */
+    if (s->flyNow)
+        DrawMapFlyButton(s);
+    else
+    {
+        DrawRepel(s);
+        if (!s->inBattle)
+            DrawClock(s);
+    }
     DrawRun(s);
 }
 

@@ -1,0 +1,173 @@
+Fly's sky scene, the game's supply (3ds_port/src/3ds_fly_sky.c,
+include/3ds_fly_sky.h): follower_mon.c holds up to eight follower sprite
+files for the scene (FollowerMon_SkyFile, released by FollowerMon_SkyRelease,
+also on a soft reset) and seats a rider on a frame as the Fly sprite does
+(FollowerMon_SkySeat); field_effect.c tells which Pokemon does the Fly
+(FieldEffect_FlyMon); event_object_movement.c gives an object event
+palette by its tag (ObjectEventPaletteByTag), for the seated player.
+Applies after 0085-fly-direction-and-landing.patch; apply with tools/bootstrap.py.
+
+--- a/include/event_object_movement.h
++++ b/include/event_object_movement.h
+@@ -197,6 +197,7 @@
+ #if defined(PLATFORM_3DS)
+ void UpdateObjectEventsForViewChange(void);
+ bool8 FreeObjectEventSlotNearPlayer(void);
++const u16 *ObjectEventPaletteByTag(u16 paletteTag);
+ #endif
+ u8 GetWalkSlowMovementAction(u32);
+ u8 GetJumpMovementAction(u32);
+--- a/include/field_effect.h
++++ b/include/field_effect.h
+@@ -61,6 +61,9 @@
+ bool8 Port_FlyBusy(void);
+ bool8 Port_FlyEast(void);
+ bool8 Port_FlyLanding(u8 *share);
++// The Pokemon doing the Fly (FlyMon_Choose), for the 3DS sky scene
++// (3ds_port/src/3ds_fly_sky.c): FALSE when none (the bird, or no Fly).
++bool8 FieldEffect_FlyMon(u16 *species, u32 *personality, bool8 *shiny);
+ 
+ #endif
+ 
+--- a/include/follower_mon.h
++++ b/include/follower_mon.h
+@@ -48,6 +48,14 @@
+ bool8 FollowerMon_IsFlySprite(const struct Sprite *sprite);
+ /* Its sprite destroyed (NULL: none left), its palette and file let go. */
+ void FollowerMon_FlyFree(struct Sprite *sprite);
++/* Fly's sky scene (3ds_port/src/3ds_fly_sky.c): a Pokemon's follower file
++ * (FMN1: 8-byte header, normal and shiny palettes, 8 frames), held with up to
++ * seven others until SkyRelease; its frame size, 0 (and NULL) if it has none.
++ * SkySeat: where the rider sits on a frame seen from the side, from the
++ * sprite's centre, as on the Fly sprite. */
++u32 FollowerMon_SkyFile(u16 species, u32 personality, const u8 **file);
++void FollowerMon_SkyRelease(void);
++void FollowerMon_SkySeat(const u8 *frameTiles, u32 width, s8 *seatX, s8 *seatY);
+ #endif
+ 
+ #endif // GUARD_FOLLOWER_MON_H
+--- a/src/event_object_movement.c
++++ b/src/event_object_movement.c
+@@ -2312,6 +2312,17 @@
+     LoadPalette(sObjectEventSpritePalettes[paletteIndex].data, OBJ_PLTT_ID(paletteSlot), PLTT_SIZE_4BPP);
+ }
+ 
++#ifdef PLATFORM_3DS
++// Port: an object event palette's 16 colours by its tag (the asset as the
++// table names it), NULL if the table has none; for the Fly sky scene.
++const u16 *ObjectEventPaletteByTag(u16 paletteTag)
++{
++    u8 paletteIndex = FindObjectEventPaletteIndexByTag(paletteTag);
++
++    return paletteIndex == 0xFF ? NULL : sObjectEventSpritePalettes[paletteIndex].data;
++}
++#endif
++
+ void PatchObjectPaletteRange(const u16 *paletteTags, u8 minSlot, u8 maxSlot)
+ {
+     while (minSlot < maxSlot)
+--- a/src/field_effect.c
++++ b/src/field_effect.c
+@@ -3331,6 +3331,16 @@
+     sFlyMonShiny = IsMonShiny(mon);
+     // Read while the field move's banner shows.
+     FollowerMon_FlyPrefetch(sFlyMonSpecies, sFlyMonPersonality);
++}
++
++bool8 FieldEffect_FlyMon(u16 *species, u32 *personality, bool8 *shiny)
++{
++    if (sFlyMonSpecies == SPECIES_NONE)
++        return FALSE;
++    *species = sFlyMonSpecies;
++    *personality = sFlyMonPersonality;
++    *shiny = sFlyMonShiny;
++    return TRUE;
+ }
+ #endif
+ 
+--- a/src/follower_mon.c
++++ b/src/follower_mon.c
+@@ -651,8 +651,75 @@
+     sFly.stale = sFly.file;
+     sFly.file = NULL;
+     sFly.key[0] = '\0';
++}
++
++/*
++ * The Fly sky scene's sprites (3ds_port/src/3ds_fly_sky.c): the files of the
++ * Pokemon it shows, up to SKY_FILES of them, held until FollowerMon_SkyRelease.
++ */
++#define SKY_FILES 8
++
++static struct
++{
++    u8 *file;
++    char key[8];
++} sSky[SKY_FILES];
++
++u32 FollowerMon_SkyFile(u16 species, u32 personality, const u8 **file)
++{
++    char key[8];
++    u32 i, frameBytes;
++    u8 *data;
++
++    *file = NULL;
++    MonKey(key, species, personality);
++    if (key[0] == '\0')
++        return 0;
++    for (i = 0; i < SKY_FILES && sSky[i].file != NULL; i++)
++        if (strcmp(sSky[i].key, key) == 0)
++        {
++            *file = sSky[i].file;
++            return (u32)sSky[i].file[4] * sSky[i].file[5] / 2;
++        }
++    if (i == SKY_FILES)
++        return 0;
++    frameBytes = LoadFmn(key, &data);
++    if (frameBytes == 0)
++        return 0;
++    sSky[i].file = data;
++    strcpy(sSky[i].key, key);
++    *file = data;
++    return frameBytes;
+ }
+ 
++void FollowerMon_SkyRelease(void)
++{
++    u32 i;
++
++    for (i = 0; i < SKY_FILES; i++)
++    {
++        free(sSky[i].file);
++        sSky[i].file = NULL;
++        sSky[i].key[0] = '\0';
++    }
++}
++
++/* Where the rider sits on a frame seen from the side, as FollowerMon_FlySprite
++ * seats the player: from the sprite's centre; 0, -8 (the bird's) if blank. */
++void FollowerMon_SkySeat(const u8 *frameTiles, u32 width, s8 *seatX, s8 *seatY)
++{
++    int bx0, by0, bx1, by1;
++
++    *seatX = 0;
++    *seatY = -8;
++    FrameBox(frameTiles, width, &bx0, &by0, &bx1, &by1);
++    if (bx1 >= 0)
++    {
++        *seatX = (bx0 + bx1 + 1) / 2 - (int)width / 2;
++        *seatY = by0 + 4 - (int)width / 2;
++    }
++}
++
+ /*
+  * Its Poke Ball, a moment where it goes in or comes out: Emerald's own ball
+  * picture (the battle's) on an ext palette, opening or closing on the tile.
+@@ -1310,6 +1377,7 @@
+         free(sWild[i].stale);
+         sWild[i].file = sWild[i].stale = NULL;
+     }
++    FollowerMon_SkyRelease();
+     free(sTexts);
+     sTexts = NULL;
+     sTextsSize = 0;

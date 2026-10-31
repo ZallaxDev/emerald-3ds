@@ -24,6 +24,7 @@
 #include "scanline_effect.h"
 #include "item_menu.h"
 #include "party_menu.h"
+#include "constants/moves.h"
 #include "battle_main.h"
 #include "fldeff_misc.h"
 #include "field_effect.h"
@@ -70,13 +71,18 @@
 #include "script.h"
 #include "constants/maps.h"
 #endif
+#include "region_map.h"
+#include "constants/region_map_sections.h"
 #include "port_platform.h"
 #include "port_log.h"
 #include "port_prof.h"
 
 #include "3ds_battle_hud.h"
 #include "3ds_platform.h"
+#include "3ds_input.h"
 #include "3ds_video.h"
+#include "3ds_fly_sky.h"
+
 #include "3ds_assets.h"
 #include "3ds_audio.h"
 #include "3ds_bottom.h"
@@ -1260,6 +1266,159 @@ bool8 Port_HoldPaletteFade(void)
     return sFadeHeld && gPaletteFade.active && gPaletteFade.yDec;
 }
 
+/*
+ * The Fly cinematic (3ds_video.c, voxel_fly.c). The game's Fly asks, from
+ * the bird's swoop with the player on it (field_effect.c), whether the bird
+ * is to hover: the first ask of a flight starts the cinematic, with the way
+ * from this map's region-map place to the destination's, and the bird hangs
+ * on while the camera climbs into the cloud. Only Fly out: the bird of the
+ * landing (FLDEFF_FLY_IN) swoops in the same way and is never held. Then the
+ * landing asks whether to wait (Task_FlyIntoMap) while the camera comes down
+ * out of the cloud over the new map.
+ */
+static bool sFlyAsked;
+
+static void FlyDirection(float *dirX, float *dirZ)
+{
+    const struct MapHeader *to = GetDestinationWarpMapHeader();
+    u8 from = gMapHeader.regionMapSectionId;
+    u8 dest = to != NULL ? to->regionMapSectionId : MAPSEC_NONE;
+
+    *dirX = 0.0f;
+    *dirZ = -1.0f;
+    if (from >= MAPSEC_NONE || dest >= MAPSEC_NONE)
+        return;
+    /* Region-map cells, x east and y south: the voxel world's +X and +Z. */
+    *dirX = ((float)gRegionMapEntries[dest].x + gRegionMapEntries[dest].width * 0.5f)
+          - ((float)gRegionMapEntries[from].x + gRegionMapEntries[from].width * 0.5f);
+    *dirZ = ((float)gRegionMapEntries[dest].y + gRegionMapEntries[dest].height * 0.5f)
+          - ((float)gRegionMapEntries[from].y + gRegionMapEntries[from].height * 0.5f);
+}
+
+bool8 Port_FlyHover(void)
+{
+    if (!FieldEffectActiveListContains(FLDEFF_USE_FLY) || FieldEffectActiveListContains(FLDEFF_FLY_IN))
+        return FALSE;
+    if (!sFlyAsked)
+    {
+        float dirX, dirZ;
+
+        sFlyAsked = true;
+        if (!CtrFlySky_Cinematic())
+            return FALSE; /* ENHANCED FLYING off: the GBA's Fly */
+        FlyDirection(&dirX, &dirZ);
+        if (!CtrVideo_FlyBegin(dirX, dirZ))
+            return FALSE;
+    }
+    return CtrVideo_FlyHovers();
+}
+
+bool8 Port_FlyBusy(void)
+{
+    return CtrVideo_FlyBusy();
+}
+
+/* The destination lies east: the Pokemon and its rider go out to the right
+ * and come in from the left (the GBA's Fly always goes west). Asked as the
+ * flight out begins, while the destination warp is set. */
+bool8 Port_FlyEast(void)
+{
+    float dirX, dirZ;
+
+    FlyDirection(&dirX, &dirZ);
+    return dirX > 0.0f;
+}
+
+bool8 Port_FlyLanding(u8 *share)
+{
+    float s;
+
+    if (!CtrVideo_FlyLanding(&s))
+        return FALSE;
+    *share = (u8)(s * 255.0f + 0.5f);
+    return TRUE;
+}
+
+/* The flight's start as the port plays it (field_effect.c: the Pokemon out
+ * of its ball beside the player, the hop onto its back, the take-off) in
+ * place of the GBA's banner and bird out of the ball: with the cinematic
+ * at all. */
+bool8 Port_FlyIntro(void)
+{
+    return CtrFlySky_Cinematic();
+}
+
+
+/* settings.txt fly_demo=1: the game flies on its own, to two places in turn,
+ * a few seconds after each landing - for watching the start and the landing
+ * frame by frame from outside (no hands needed). */
+static void FlyDemo(void)
+{
+    static const u16 sPlaces[][2] = {{13, 0}, {10, 1}};
+    static unsigned sNext, sWait;
+    u8 slot;
+
+    if (CtrSettings_GetInt("fly_demo", 0) == 0)
+        return;
+    /* Not in the field yet (the title, the menu): A, now and then, through
+     * to the saved game. */
+    if (gMain.callback2 != CB2_Overworld && !FieldEffectActiveListContains(FLDEFF_USE_FLY)
+     && !FieldEffectActiveListContains(FLDEFF_FLY_IN))
+    {
+        if (++sWait % 40 == 0)
+            CtrInput_Inject(1); /* A */
+        return;
+    }
+    if (gMain.callback2 != CB2_Overworld
+     || FieldEffectActiveListContains(FLDEFF_USE_FLY) || FieldEffectActiveListContains(FLDEFF_FLY_IN)
+     || gPaletteFade.active || ArePlayerFieldControlsLocked())
+    {
+        sWait = 0;
+        return;
+    }
+    if (++sWait < 240)
+        return;
+    sWait = 0;
+    for (slot = 0; slot < PARTY_SIZE; slot++)
+        if (MonKnowsMove(&gPlayerParty[slot], MOVE_FLY))
+            break;
+    if (slot >= PARTY_SIZE)
+        return;
+    CtrLog_Write(CTR_LOG_GAME, "fly demo: to %u (%u) by %u", sPlaces[sNext][0], sPlaces[sNext][1], slot);
+    CtrParty_Fly(slot, sPlaces[sNext][0], (u8)sPlaces[sNext][1]);
+    sNext = (sNext + 1) % ARRAY_COUNT(sPlaces);
+}
+
+static void FlyFrame(void)
+{
+    static bool sFlyInSeen;
+    bool flyIn = FieldEffectActiveListContains(FLDEFF_FLY_IN);
+
+    FlyDemo();
+
+    /* Asked once a flight: the next Fly asks again. The sky scene's files
+     * are read as the flight starts, under the field move's banner. */
+    {
+        static bool sUseFlySeen;
+        bool useFly = FieldEffectActiveListContains(FLDEFF_USE_FLY);
+
+        if (!useFly)
+            sFlyAsked = false;
+        else if (!sUseFlySeen && CtrFlySky_Cinematic())
+            CtrFlySky_Prefetch();
+        sUseFlySeen = useFly;
+    }
+
+    /* The landing's first frame: the region's weather over the new map
+     * (with the full flight, whose sky showed it). */
+    if (flyIn && !sFlyInSeen && CtrFlySky_Enabled())
+        CtrFlySky_Arrive();
+
+    sFlyInSeen = flyIn;
+    CtrFlySky_ArriveTick();
+}
+
+
 static void HoldFieldFade(void)
 {
     const CtrVideoStats *video = CtrVideo_GetStats();
@@ -1307,6 +1466,7 @@ void CtrGame_WaitFrame(void)
     CtrPlatform_EndFrame();
     /* What the frame just shown was decides the game's next fade step. */
     HoldFieldFade();
+    FlyFrame();
     if (sFrames < 4)
     {
         CtrPlatform_ReportMemory("after present");

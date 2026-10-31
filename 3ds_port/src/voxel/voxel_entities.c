@@ -1321,6 +1321,7 @@ typedef struct
     bool front, decal, tile;
     bool surf;               /* the surf mon: lying on the water, ridden */
     bool cloud;              /* a cloud, laid on the water (EmitCloud) */
+    bool flyShadow;          /* Fly's Pokemon's shadow: its picture cast on its tile's ground */
 } VoxelEffectCard;
 
 static bool IsTemplate(const struct SpriteTemplate *template, unsigned first, unsigned last)
@@ -1355,6 +1356,18 @@ bool8 VisibleWild_IsSprite(u8 spriteId);
 bool8 __attribute__((weak)) VisibleWild_IsSprite(u8 spriteId)
 {
     (void)spriteId;
+    return FALSE;
+}
+
+/* field_effect.c (patch 0087): the shadow of the Pokemon doing the Fly, a
+ * map sprite with its tile in data[1], data[2] (as the grass has it): the
+ * voxel world lays its picture on that tile's ground as a cast shadow,
+ * where the GBA's own shadows are left out (the cards cast their own). */
+bool8 FieldEffect_IsFlyShadow(const struct Sprite *sprite);
+
+bool8 __attribute__((weak)) FieldEffect_IsFlyShadow(const struct Sprite *sprite)
+{
+    (void)sprite;
     return FALSE;
 }
 
@@ -1614,7 +1627,8 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
         effect->surf = sprite->template == gFieldEffectObjectTemplatePointers[FLDEFFOBJ_SURF_BLOB];
         effect->cloud = cloud;
         effect->decal = IsDecal(sprite->template) || cloud;
-        effect->tile = IsTileEffect(sprite->template);
+        effect->flyShadow = FieldEffect_IsFlyShadow(sprite);
+        effect->tile = IsTileEffect(sprite->template) || effect->flyShadow;
         /* A visible wild Pokemon stands on its own tile, never on an object:
          * a tile south of the player, owned by it, it sank under the ground. */
         effect->owner = effect->decal || effect->tile || VisibleWild_IsSprite((u8)id)
@@ -1813,6 +1827,16 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
             }
             if (fabsf(cx - camera->targetX) > 24.0f || fabsf(cz - camera->targetZ) > 24.0f)
                 continue;
+            if (effect->flyShadow)
+            {
+#if CTR_VOXEL_LIGHTING
+                if (shadows != NULL)
+                    EmitDecalShadow(shadows, &sSlots[effect->slot], effect->slot, cx, cz, 0.0f, shade);
+#else
+                EmitDecal(builder, &sSlots[effect->slot], effect->slot, cx, cz, 0.0f, shade);
+#endif
+                continue;
+            }
             EmitDecal(builder, &sSlots[effect->slot], effect->slot, cx, cz, 0.0f, shade);
             continue;
         }

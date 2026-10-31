@@ -44,6 +44,28 @@ void CtrVoxel_SetSwoop(float t, float height, bool cards, bool shadows);
 /* How far the swoop has taken the world's light to neutral, 0..1 (the
  * grade, haze and bloom gone with it): 3ds_video.c eases its blur the same way. */
 float CtrVoxel_SwoopNeutral(void);
+/*
+ * The Fly cinematic (voxel_fly.c): the camera's share this frame. `lift` how
+ * far it stands from the player's pose to the high one over the world, 0..1;
+ * `rise` how far on up into the cloud deck; `dirX, dirZ` the unit direction
+ * of travel, which the view leads towards on the old map (`oldMap`) and
+ * trails behind on the new; `wisps` the strength of the cloud sheets in the
+ * scene; `noFade`: the world ignores the palette fade (the new map's fade-in
+ * from black plays under the cloud cover). Before Update; `active` false
+ * hands the camera back.
+ */
+typedef struct
+{
+    bool active, oldMap, noFade;
+    float lift, rise, wisps;
+    float travel; /* ahead of the player (+) or behind them (-), shares of VOXEL_FLY_TRAVEL */
+
+    float dirX, dirZ;
+} CtrVoxelFly;
+void CtrVoxel_SetFly(const CtrVoxelFly *fly);
+/* The tileable cloud (fog) coverage texture, A8, or NULL without one: the
+ * compositor's cloud cover over the picture (3ds_video.c). */
+C3D_Tex *CtrVoxel_CloudTexture(void);
 /* The GBA brightness effect (BLDY) of the frame about to be drawn, as the
  * compositor reads it: on the backgrounds and on the sprites, towards white
  * or black. The palette fade is read by the voxel module itself. */

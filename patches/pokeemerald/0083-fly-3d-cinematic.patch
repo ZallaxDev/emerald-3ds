@@ -1,0 +1,75 @@
+The 3DS voxel field's Fly cinematic (3ds_port/src/voxel/voxel_fly.c): two weak
+hooks in Fly. The bird hangs with the player on it while the port's camera
+climbs into the cloud (Port_FlyHover), and the landing waits while the camera
+comes down out of it over the new map (Port_FlyBusy). FALSE by default: the
+GBA's Fly as it was.
+
+--- a/include/field_effect.h
++++ b/include/field_effect.h
+@@ -49,6 +49,13 @@
+ 
+ #ifdef PORT_BRIDGE
+ void CtrFly_Start(void);
++// Port: the 3DS voxel field's Fly cinematic (3ds_port/src/3ds_game_full.c).
++// Hover: TRUE while the bird is to hang with the player on it, the camera
++// climbing away into the cloud; the first ask of a flight starts it. Busy:
++// TRUE while the landing's bird must wait, the camera coming down out of the
++// cloud over the new map. Weak FALSE in field_effect.c otherwise.
++bool8 Port_FlyHover(void);
++bool8 Port_FlyBusy(void);
+ #endif
+ 
+ #endif // GUARD_FIELD_EFFECTS_H
+--- a/src/field_effect.c
++++ b/src/field_effect.c
+@@ -1479,7 +1479,12 @@
+     task = &gTasks[taskId];
+     if (task->data[0] == 0)
+     {
++#ifdef PORT_BRIDGE
++        // Port: and while the cinematic's camera is still coming down.
++        if (gPaletteFade.active || Port_FlyBusy())
++#else
+         if (gPaletteFade.active)
++#endif
+         {
+             return;
+         }
+@@ -3521,7 +3526,18 @@
+ {
+     sprite->x2 = FlySwoopX(sprite->data[2]);
+     sprite->y2 = Sin(sprite->data[2], 0x48);
++#ifdef PORT_BRIDGE
++    // Port: asked from the top of the dive (the cinematic's camera follows
++    // the bird); with the player aboard the bird flies on up and to the left
++    // at a quarter of its speed while that camera climbs (Port_FlyHover), so
++    // that it leaves the picture as the cloud closes, then as it was.
++    if (!Port_FlyHover() || sprite->sPlayerSpriteId == MAX_SPRITES)
++        sprite->data[2] = (sprite->data[2] + 4) & 0xff;
++    else
++        sprite->data[2] = (sprite->data[2] + 1) & 0xff;
++#else
+     sprite->data[2] = (sprite->data[2] + 4) & 0xff;
++#endif
+     if (sprite->sPlayerSpriteId != MAX_SPRITES)
+     {
+         struct Sprite *sprite1 = &gSprites[sprite->sPlayerSpriteId];
+@@ -4054,6 +4070,18 @@
+ #undef tObjEventId
+ 
+ #ifdef PORT_BRIDGE
++// The port's Fly cinematic hooks (include/field_effect.h): nothing, unless
++// the port says otherwise.
++bool8 __attribute__((weak)) Port_FlyHover(void)
++{
++    return FALSE;
++}
++
++bool8 __attribute__((weak)) Port_FlyBusy(void)
++{
++    return FALSE;
++}
++
+ // FieldCallback_UseFly from the field as it is (the bottom screen's Fly map,
+ // party_menu.c's CtrParty_Fly): no fade to come in from, the player perhaps
+ // walking.

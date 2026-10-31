@@ -1,0 +1,326 @@
+Fly on the Pokemon that flies: in place of the generic bird, the Pokemon
+doing the Fly on its overworld sprite of the follower's files (0056,
+followers/mon/KEY.bin of the data pack), facing west with its walking
+frames as wingbeats, through the same swoops out and in (the same sprite
+callbacks, centred where the bird was). The player sits 4 pixels under the
+top of its west-facing frame, over its middle (the bird's place for the
+bird's own shape). The Pokemon is chosen in FldEff_UseFly from the party
+slot the field effect uses and kept for the landing after the warp. The
+bird where it has no sprite. The follower waits in its ball while Fly runs.
+Applies after 0083-fly-3d-cinematic.patch; apply with tools/bootstrap.py.
+
+--- a/include/follower_mon.h
++++ b/include/follower_mon.h
+@@ -38,6 +38,15 @@
+ /* The soft reset (3ds_game_full.c): every file it holds freed, before the
+  * game's variables go back to their boot values. */
+ void FollowerMon_ReleaseAll(void);
++/* Fly (field_effect.c): the Pokemon that flies, on its sprite here in place
++ * of the bird. MAX_SPRITES where it has none (the bird then). `riderX`,
++ * `riderY`: where the player sits, from the sprite's centre. */
++void FollowerMon_FlyPrefetch(u16 species, u32 personality);
++u8 FollowerMon_FlySprite(u16 species, u32 personality, bool8 shiny, s16 x, s16 y, u8 subpriority,
++                         s8 *riderX, s8 *riderY);
++bool8 FollowerMon_IsFlySprite(const struct Sprite *sprite);
++/* Its sprite destroyed (NULL: none left), its palette and file let go. */
++void FollowerMon_FlyFree(struct Sprite *sprite);
+ #endif
+ 
+ #endif // GUARD_FOLLOWER_MON_H
+--- a/src/follower_mon.c
++++ b/src/follower_mon.c
+@@ -10,6 +10,7 @@
+ #include "event_data.h"
+ #include "event_object_lock.h"
+ #include "event_object_movement.h"
++#include "field_effect.h"
+ #include "field_player_avatar.h"
+ #include "field_weather.h"
+ #include "fieldmap.h"
+@@ -34,6 +35,7 @@
+ #include "constants/characters.h"
+ #include "constants/event_object_movement.h"
+ #include "constants/event_objects.h"
++#include "constants/field_effects.h"
+ #include "constants/flags.h"
+ #include "constants/items.h"
+ #include "constants/layouts.h"
+@@ -514,6 +516,140 @@
+     free(sWild[slot].stale);
+     sWild[slot].stale = sWild[slot].file;
+     sWild[slot].file = NULL;
++}
++
++/*
++ * Fly on the Pokemon that flies (field_effect.c): its sprite of the same
++ * files in place of the bird, facing west as the bird flies, its wings (or
++ * legs) going; on an ext palette of its own tag. The file is kept for the
++ * landing after the warp (the same Pokemon) and let go with its sprite.
++ */
++#define FLY_PAL_TAG 0x7F08
++
++static struct
++{
++    u8 *file, *stale;
++    char key[8];
++    struct SpriteFrameImage frames[FMN_FRAMES];
++    struct SpriteTemplate template;
++} sFly;
++
++void FollowerMon_FlyPrefetch(u16 species, u32 personality)
++{
++    char key[8];
++
++    MonKey(key, species, personality);
++    if (key[0] != '\0' && strcmp(key, sFly.key) != 0)
++        PrefetchKey(key);
++}
++
++/* A frame's visible pixels' box, in pixels of the frame; x1 < 0 if blank. */
++static void FrameBox(const u8 *tiles, u32 w, int *x0, int *y0, int *x1, int *y1)
++{
++    u32 x, y;
++
++    *x0 = *y0 = w;
++    *x1 = *y1 = -1;
++    for (y = 0; y < w; y++)
++        for (x = 0; x < w; x++)
++        {
++            const u8 *tile = tiles + ((y / 8) * (w / 8) + x / 8) * 32;
++
++            if (((tile[(y & 7) * 4 + (x & 7) / 2] >> ((x & 1) * 4)) & 15) == 0)
++                continue;
++            if ((int)x < *x0) *x0 = x;
++            if ((int)x > *x1) *x1 = x;
++            if ((int)y < *y0) *y0 = y;
++            if ((int)y > *y1) *y1 = y;
++        }
++}
++
++u8 FollowerMon_FlySprite(u16 species, u32 personality, bool8 shiny, s16 x, s16 y, u8 subpriority,
++                         s8 *riderX, s8 *riderY)
++{
++    char key[8];
++    u32 frameBytes, i;
++    u8 *file, spriteId, pal, w;
++    int bx0, by0, bx1, by1;
++
++    MonKey(key, species, personality);
++    if (key[0] == '\0')
++        return MAX_SPRITES;
++    free(sFly.stale);
++    sFly.stale = NULL;
++    if (sFly.file != NULL && strcmp(sFly.key, key) == 0)
++    {
++        file = sFly.file;
++        frameBytes = (u32)file[4] * file[5] / 2;
++    }
++    else
++    {
++        frameBytes = LoadFmn(key, &file);
++        if (frameBytes == 0)
++        {
++            CtrLog_Write(CTR_LOG_GAME, "fly: no sprite %s in the data, the bird flies", key);
++            return MAX_SPRITES;
++        }
++        sFly.stale = sFly.file;
++        sFly.file = file;
++        strcpy(sFly.key, key);
++    }
++    w = file[4];
++    FreeSpritePaletteByTag(FLY_PAL_TAG);
++    pal = LoadSpritePaletteExt(&(const struct SpritePalette){
++        (const u16 *)(file + FMN_HEADER) + (shiny ? 16 : 0), FLY_PAL_TAG});
++    if (pal == 0xFF)
++        return MAX_SPRITES;
++    UpdateSpritePaletteExtWithWeather(pal);
++    for (i = 0; i < FMN_FRAMES; i++)
++    {
++        sFly.frames[i].data = file + FMN_HEADER + FMN_PALETTES + i * frameBytes;
++        sFly.frames[i].size = frameBytes;
++        sFly.frames[i].offset = 0;
++    }
++    sFly.template.tileTag = TAG_NONE;
++    sFly.template.paletteTag = TAG_NONE;
++    sFly.template.oam = w == 64 ? &gObjectEventBaseOam_64x64 : &gObjectEventBaseOam_32x32;
++    sFly.template.anims = sAnimTable_Follower;
++    sFly.template.images = sFly.frames;
++    sFly.template.affineAnims = gDummySpriteAffineAnimTable;
++    sFly.template.callback = SpriteCallbackDummy;
++    spriteId = CreateSprite(&sFly.template, x, y, subpriority);
++    if (spriteId >= MAX_SPRITES)
++    {
++        FreeSpritePaletteByTag(FLY_PAL_TAG);
++        return MAX_SPRITES;
++    }
++    SetSpriteExtPalette(&gSprites[spriteId], pal);
++    StartSpriteAnim(&gSprites[spriteId], ANIM_STD_GO_WEST);
++    /* The player sits 4 pixels under the top of the Pokemon seen from the
++     * side, over the middle of it: as on the bird (its top at row 4 of 32,
++     * the player 8 above its centre). */
++    FrameBox(sFly.frames[FRAME_LEFT].data, w, &bx0, &by0, &bx1, &by1);
++    if (bx1 >= 0)
++    {
++        *riderX = (bx0 + bx1 + 1) / 2 - w / 2;
++        *riderY = by0 + 4 - w / 2;
++    }
++    CtrLog_Write(CTR_LOG_GAME, "fly: on %s%s (%ux%u, rider at %d,%d)", key, shiny ? " (shiny)" : "", w, w,
++                 *riderX, *riderY);
++    return spriteId;
++}
++
++bool8 FollowerMon_IsFlySprite(const struct Sprite *sprite)
++{
++    return sprite->inUse && sprite->template == &sFly.template;
++}
++
++void FollowerMon_FlyFree(struct Sprite *sprite)
++{
++    if (sprite != NULL && FollowerMon_IsFlySprite(sprite))
++        DestroySprite(sprite);
++    FreeSpritePaletteByTag(FLY_PAL_TAG);
++    free(sFly.stale);
++    sFly.stale = sFly.file;
++    sFly.file = NULL;
++    sFly.key[0] = '\0';
+ }
+ 
+ /*
+@@ -672,6 +808,10 @@
+         return TRUE;
+     if ((sFollower.flags & FMN_FLAG_TOO_TALL) && IsMapTypeIndoors(gMapHeader.mapType))
+         return TRUE;
++    /* Fly: the player goes off on a Pokemon (perhaps this one), and lands
++     * alone; it waits in its ball till the player steps off. */
++    if (FieldEffectActiveListContains(FLDEFF_USE_FLY) || FieldEffectActiveListContains(FLDEFF_FLY_IN))
++        return TRUE;
+     return FALSE;
+ }
+ 
+--- a/src/field_effect.c
++++ b/src/field_effect.c
+@@ -36,6 +36,7 @@
+ #endif
+ #if defined(PLATFORM_3DS)
+ #include "3ds_video.h"
++#include "follower_mon.h"
+ #endif
+ 
+ #define subsprite_table(ptr) {.subsprites = ptr, .subspriteCount = (sizeof ptr) / (sizeof(struct Subsprite))}
+@@ -1319,7 +1320,7 @@
+ {
+     u32 i;
+ 
+-    if (sprite->template == gFieldEffectObjectTemplatePointers[FLDEFFOBJ_BIRD])
++    if (sprite->template == gFieldEffectObjectTemplatePointers[FLDEFFOBJ_BIRD] || FollowerMon_IsFlySprite(sprite))
+         return TRUE;
+     if ((FieldEffectActiveListContains(FLDEFF_USE_FLY) || FieldEffectActiveListContains(FLDEFF_FLY_IN))
+      && sprite == &gSprites[gPlayerAvatar.spriteId])
+@@ -3296,11 +3297,42 @@
+ // Sprite data for the fly bird
+ #define sPlayerSpriteId data[6]
+ #define sAnimCompleted  data[7]
++
++#ifdef PLATFORM_3DS
++// Port: Fly on the Pokemon that flies, on its overworld sprite of the
++// follower's files (follower_mon.c) in place of the bird; kept from the
++// flight out for the landing after the warp. SPECIES_NONE, or no sprite for
++// it: the bird. The player sits where its sprite says (sFlyRiderX/Y).
++static u16 sFlyMonSpecies;
++static u32 sFlyMonPersonality;
++static bool8 sFlyMonShiny;
++static s8 sFlyRiderX, sFlyRiderY = -8;
++
++static void FlyMon_Choose(u32 slot)
++{
++    struct Pokemon *mon;
++
++    sFlyMonSpecies = SPECIES_NONE;
++    if (slot >= PARTY_SIZE)
++        return;
++    mon = &gPlayerParty[slot];
++    if (GetMonData(mon, MON_DATA_IS_EGG))
++        return;
++    sFlyMonSpecies = GetMonData(mon, MON_DATA_SPECIES);
++    sFlyMonPersonality = GetMonData(mon, MON_DATA_PERSONALITY);
++    sFlyMonShiny = IsMonShiny(mon);
++    // Read while the field move's banner shows.
++    FollowerMon_FlyPrefetch(sFlyMonSpecies, sFlyMonPersonality);
++}
++#endif
+ 
+ u8 FldEff_UseFly(void)
+ {
+     u8 taskId = CreateTask(Task_FlyOut, 254);
+     gTasks[taskId].tMonId = gFieldEffectArguments[0];
++#ifdef PLATFORM_3DS
++    FlyMon_Choose(gFieldEffectArguments[0]);
++#endif
+     return 0;
+ }
+ 
+@@ -3437,6 +3469,25 @@
+ {
+     u8 spriteId;
+     struct Sprite *sprite;
++#ifdef PLATFORM_3DS
++    // Port: the Pokemon itself, centred where the bird would be, the same
++    // swoops; the bird where it has no sprite.
++    sFlyRiderX = 0;
++    sFlyRiderY = -8;
++    spriteId = MAX_SPRITES;
++    if (sFlyMonSpecies != SPECIES_NONE)
++        spriteId = FollowerMon_FlySprite(sFlyMonSpecies, sFlyMonPersonality, sFlyMonShiny, 0xff, 0xb4, 0x1,
++                                         &sFlyRiderX, &sFlyRiderY);
++    if (spriteId < MAX_SPRITES)
++    {
++        sprite = &gSprites[spriteId];
++        sprite->oam.priority = 1;
++        sprite->callback = SpriteCB_FlyBirdLeaveBall;
++        return spriteId;
++    }
++    sFlyRiderX = 0;
++    sFlyRiderY = -8;
++#endif
+     spriteId = CreateSprite(gFieldEffectObjectTemplatePointers[FLDEFFOBJ_BIRD], 0xff, 0xb4, 0x1);
+     sprite = &gSprites[spriteId];
+     sprite->oam.paletteNum = 0;
+@@ -3542,8 +3593,14 @@
+     {
+         struct Sprite *sprite1 = &gSprites[sprite->sPlayerSpriteId];
+         sprite1->coordOffsetEnabled = FALSE;
++#ifdef PLATFORM_3DS
++        // Port: on the Pokemon's back, wherever its sprite has it.
++        sprite1->x = sprite->x + sprite->x2 + sFlyRiderX;
++        sprite1->y = sprite->y + sprite->y2 + sFlyRiderY;
++#else
+         sprite1->x = sprite->x + sprite->x2;
+         sprite1->y = sprite->y + sprite->y2 - 8;
++#endif
+         sprite1->x2 = 0;
+         sprite1->y2 = 0;
+     }
+@@ -3729,6 +3786,11 @@
+ {
+     if (GetFlyBirdAnimCompleted(task->tBirdSpriteId))
+     {
++#ifdef PLATFORM_3DS
++        if (FollowerMon_IsFlySprite(&gSprites[task->tBirdSpriteId]))
++            FollowerMon_FlyFree(&gSprites[task->tBirdSpriteId]);
++        else
++#endif
+         DestroySprite(&gSprites[task->tBirdSpriteId]);
+         task->tState++;
+         task->data[1] = 16;
+@@ -3752,6 +3814,11 @@
+         ObjectEventTurn(objectEvent, DIR_SOUTH);
+         gPlayerAvatar.flags = task->tAvatarFlags;
+         gPlayerAvatar.preventStep = FALSE;
++#ifdef PLATFORM_3DS
++        // The flight is over: the next one's Pokemon is chosen again.
++        sFlyMonSpecies = SPECIES_NONE;
++        FollowerMon_FlyFree(NULL);
++#endif
+         FieldEffectActiveListRemove(FLDEFF_FLY_IN);
+         DestroyTask(FindTaskIdByFunc(Task_FlyIn));
+     }
