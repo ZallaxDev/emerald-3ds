@@ -1302,6 +1302,8 @@ bool8 Port_FlyHover(void)
         float dirX, dirZ;
 
         sFlyAsked = true;
+        if (!CtrFlySky_Cinematic())
+            return FALSE; /* ENHANCED FLYING off: the GBA's Fly */
         FlyDirection(&dirX, &dirZ);
         if (!CtrVideo_FlyBegin(dirX, dirZ))
             return FALSE;
@@ -1344,9 +1346,11 @@ static void FlyFrame(void)
     /* Asked once a flight: the next Fly asks again. */
     if (!FieldEffectActiveListContains(FLDEFF_USE_FLY))
         sFlyAsked = false;
-    /* The landing's first frame: the region's weather over the new map. */
-    if (flyIn && !sFlyInSeen)
+    /* The landing's first frame: the region's weather over the new map
+     * (with the full flight, whose sky showed it). */
+    if (flyIn && !sFlyInSeen && CtrFlySky_Enabled())
         CtrFlySky_Arrive();
+
     sFlyInSeen = flyIn;
     CtrFlySky_ArriveTick();
 }

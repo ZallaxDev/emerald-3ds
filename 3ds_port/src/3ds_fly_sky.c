@@ -37,10 +37,17 @@
 #define RIDER_SIZE   32
 #define RIDER_BYTES  (RIDER_SIZE * RIDER_SIZE / 2)
 
+/* ENHANCED FLYING (3ds_extras.c): 0 off, 1 the clouds, 2 the full flight. */
+bool CtrFlySky_Cinematic(void)
+{
+    return CtrExtras_Get("fly_enhanced") >= 1;
+}
+
 bool CtrFlySky_Enabled(void)
 {
-    return CtrExtras_Get("skyflight") != 0;
+    return CtrExtras_Get("fly_enhanced") >= 2;
 }
+
 
 bool CtrFlySky_MonSprite(uint16_t species, uint32_t personality, bool shiny, CtrSkySprite *out)
 {

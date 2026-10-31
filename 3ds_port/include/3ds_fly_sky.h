@@ -38,9 +38,13 @@ typedef struct
     uint32_t frameBytes;
 } CtrSkySprite;
 
-/* The ENHANCEMENTS option ("SKY FLIGHT", settings.txt key "skyflight",
- * default on): false and the flight stays inside the cloud as before. */
+/* The ENHANCEMENTS option ENHANCED FLYING (settings.txt key "fly_enhanced":
+ * 0 off, 1 clouds, 2 full; default full). Cinematic: the camera's flight
+ * through the cloud at all (off: the GBA's Fly as it was). Enabled: the sky
+ * scene inside it too; false and the flight stays inside the cloud. */
+bool CtrFlySky_Cinematic(void);
 bool CtrFlySky_Enabled(void);
+
 
 /* A Pokemon's overworld sprite from the follower data: false without one
  * (no data pack, or the species has none). Up to eight may be held at once. */
