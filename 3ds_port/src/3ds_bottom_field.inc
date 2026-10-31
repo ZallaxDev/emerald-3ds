@@ -167,15 +167,18 @@ static const u8 *LargeCursor(void)
     return sCursorLarge;
 }
 
+static void MarkCentre(const ViewState *s, int *sx, int *sy);
+
 /* The player's mark and a picked cell's cursor, inside the window. */
 static void DrawMapMarks(const ViewState *s)
+
 {
     int saved[4], x, y;
 
     ClipToMapWindow(saved);
     if (s->mapsec != MAPSEC_NONE && sRes.playerIcon[s->gender])
     {
-        CellCentre(s, s->cursorX, s->cursorY, &x, &y);
+        MarkCentre(s, &x, &y);
         DrawSprite(sRes.playerIcon[s->gender], 2, 2, x - 8, y - 8, sRes.playerIconPal[s->gender].c);
     }
     if (s->pickMapsec != MAPSEC_NONE)
@@ -189,12 +192,22 @@ static void DrawMapMarks(const ViewState *s)
     RestoreClip(saved);
 }
 
-/* The mark's 2x2 tiles at a cursor cell, clipped to the map's picture. */
-static void MarkRect(const ViewState *s, u8 cx, u8 cy, int *x0, int *y0, int *x1, int *y1)
+/* Where the player's mark is: on its cell, or along the Fly's route
+ * (MapFlyGlide) while the cinematic flies it. */
+static void MarkCentre(const ViewState *s, int *sx, int *sy)
+{
+    if (s->flyGlide)
+        MapToScreen(s, s->flyMx, s->flyMy, sx, sy);
+    else
+        CellCentre(s, s->cursorX, s->cursorY, sx, sy);
+}
+
+/* The mark's 2x2 tiles where the state has it, clipped to the map's picture. */
+static void MarkRectOf(const ViewState *s, int *x0, int *y0, int *x1, int *y1)
 {
     int x, y;
 
-    CellCentre(s, cx, cy, &x, &y);
+    MarkCentre(s, &x, &y);
     *x0 = x - 8;
     *y0 = y - 8;
     *x1 = *x0 + 16;
@@ -206,6 +219,7 @@ static void MarkRect(const ViewState *s, u8 cx, u8 cy, int *x0, int *y0, int *x1
     if (*x1 < *x0) *x1 = *x0;
     if (*y1 < *y0) *y1 = *y0;
 }
+
 
 /*
  * The Fly map's icons (CreateFlyDestIcons, TryCreateRedOutlineFlyDestIcons):

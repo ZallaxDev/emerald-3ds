@@ -116,6 +116,10 @@ bool CtrVideo_FlyBusy(void);
 /* The camera is coming down onto the new map, `share` 0..1 of the way: the
  * Pokemon flies in beside it to land as it settles. */
 bool CtrVideo_FlyLanding(float *share);
+/* The cinematic is under way: `share` 0..1 of the whole flight, take-off to
+ * landing (the bottom screen's map walks the player's mark along it). */
+bool CtrVideo_FlyProgress(float *share);
+
 
 /* Keep showing the last top-screen frame instead of the game's screen. */
 void CtrVideo_HoldTop(bool hold);

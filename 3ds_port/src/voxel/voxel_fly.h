@@ -87,6 +87,11 @@ bool VoxelFly_Landing(const VoxelFly *f, float *share);
 /* The sky scene is on: `frame` 0..VOXEL_FLY_SKY_FRAMES-1, held at the last
  * while the new world is still being built. */
 bool VoxelFly_Sky(const VoxelFly *f, unsigned *frame);
+/* The flight is under way: `share` 0..1 of the whole of it, take-off to
+ * landing (an estimate inside the cloud, where the stay depends on the
+ * new map's build). */
+bool VoxelFly_Progress(const VoxelFly *f, float *share);
+
 
 
 void VoxelFly_Frame(const VoxelFly *f, VoxelFlyFrame *out);

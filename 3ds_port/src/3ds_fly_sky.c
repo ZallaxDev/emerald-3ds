@@ -166,11 +166,17 @@ bool CtrFlySky_RiderSprite(CtrSkySprite *out)
     return true;
 }
 
+/* Flying in the sky's sense: of the type, and not one of the sea serpents
+ * the type is a formality for (a flock of Gyarados over the clouds looked
+ * as odd as it sounds). */
 static bool IsFlying(u16 species)
 {
+    if (species == SPECIES_GYARADOS)
+        return false;
     return species != SPECIES_NONE && species < NUM_SPECIES
         && (gSpeciesInfo[species].types[0] == TYPE_FLYING || gSpeciesInfo[species].types[1] == TYPE_FLYING);
 }
+
 
 static unsigned AddNatives(const struct WildPokemonInfo *info, u32 count, uint16_t *species, unsigned n, unsigned max)
 {
@@ -351,4 +357,56 @@ void CtrFlySky_Weather(uint8_t *from, uint8_t *to)
     CtrLog_Write(CTR_LOG_GAME, "fly sky: weather %u -> %u (now %u, mapsec %u -> %u)", *from, *to,
                  (unsigned)GetCurrentWeather(), (unsigned)gMapHeader.regionMapSectionId,
                  dest != NULL ? (unsigned)dest->regionMapSectionId : 0u);
+}
+
+/* The weather put on the map at landing, and the map it was put on: taken
+ * off again, back to the map's own, after a while on the ground. */
+static struct { u16 weather; u8 group, num; u16 left; } sArrival;
+#define ARRIVAL_FRAMES (8 * 60)
+
+void CtrFlySky_Arrive(void)
+{
+    static const u8 sWeatherOf[CTR_SKY_WEATHERS] = {
+        [CTR_SKY_CLEAR] = WEATHER_NONE, [CTR_SKY_CLOUDY] = WEATHER_SUNNY_CLOUDS, [CTR_SKY_RAIN] = WEATHER_RAIN,
+        [CTR_SKY_STORM] = WEATHER_RAIN_THUNDERSTORM, [CTR_SKY_SAND] = WEATHER_SANDSTORM,
+        [CTR_SKY_ASH] = WEATHER_VOLCANIC_ASH, [CTR_SKY_DROUGHT] = WEATHER_DROUGHT,
+    };
+    u8 now = GetCurrentWeather();
+    uint8_t class = SkyVicinityClass(gMapHeader.regionMapSectionId);
+
+    sArrival.left = 0;
+    if (class == CTR_SKY_CLEAR || sWeatherOf[class] == WEATHER_NONE)
+        return;
+    if (now != WEATHER_NONE && now != WEATHER_SUNNY && now != WEATHER_SHADE && now != WEATHER_SUNNY_CLOUDS)
+        return; /* the map has weather of its own already */
+    SetWeather(sWeatherOf[class]);
+    DoCurrentWeather();
+    sArrival.weather = sWeatherOf[class];
+    sArrival.group = gSaveBlock1Ptr->location.mapGroup;
+    sArrival.num = gSaveBlock1Ptr->location.mapNum;
+    sArrival.left = ARRIVAL_FRAMES;
+    CtrLog_Write(CTR_LOG_GAME, "fly sky: landed in the region's weather %u (mapsec %u)", (unsigned)sWeatherOf[class],
+                 (unsigned)gMapHeader.regionMapSectionId);
+}
+
+void CtrFlySky_ArriveTick(void)
+{
+    if (sArrival.left == 0)
+        return;
+    /* Gone elsewhere: the map's own weather took over on the way. */
+    if (gSaveBlock1Ptr->location.mapGroup != sArrival.group || gSaveBlock1Ptr->location.mapNum != sArrival.num)
+    {
+        sArrival.left = 0;
+        return;
+    }
+    if (--sArrival.left != 0)
+        return;
+    /* Back to the map's own, through the weather's usual fade; unless
+     * something changed it meanwhile (a trigger walked onto). */
+    if (GetCurrentWeather() == sArrival.weather)
+    {
+        SetWeather(gMapHeader.weather);
+        DoCurrentWeather();
+        CtrLog_Write(CTR_LOG_GAME, "fly sky: the region's weather eases back to the map's %u", (unsigned)gMapHeader.weather);
+    }
 }

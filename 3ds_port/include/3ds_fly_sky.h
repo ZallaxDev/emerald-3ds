@@ -81,5 +81,16 @@ enum
 };
 void CtrFlySky_Weather(uint8_t *from, uint8_t *to);
 
+/* On landing: the map flown to gets its region's weather in the overworld
+ * (the one the sky showed) when its own is plain sunny - Emerald's towns
+ * only rain once a trigger tile is walked onto. Called as the Fly-in
+ * begins (3ds_game_full.c). */
+void CtrFlySky_Arrive(void);
+/* Once a frame on the ground: some seconds after landing the region's
+ * weather eases back to the map's own (unless the map was left). */
+void CtrFlySky_ArriveTick(void);
+
+
+
 
 #endif

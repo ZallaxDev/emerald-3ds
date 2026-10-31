@@ -79,6 +79,8 @@
 #include "3ds_battle_hud.h"
 #include "3ds_platform.h"
 #include "3ds_video.h"
+#include "3ds_fly_sky.h"
+
 #include "3ds_assets.h"
 #include "3ds_audio.h"
 #include "3ds_bottom.h"
@@ -1336,10 +1338,19 @@ bool8 Port_FlyLanding(u8 *share)
 
 static void FlyFrame(void)
 {
+    static bool sFlyInSeen;
+    bool flyIn = FieldEffectActiveListContains(FLDEFF_FLY_IN);
+
     /* Asked once a flight: the next Fly asks again. */
     if (!FieldEffectActiveListContains(FLDEFF_USE_FLY))
         sFlyAsked = false;
+    /* The landing's first frame: the region's weather over the new map. */
+    if (flyIn && !sFlyInSeen)
+        CtrFlySky_Arrive();
+    sFlyInSeen = flyIn;
+    CtrFlySky_ArriveTick();
 }
+
 
 static void HoldFieldFade(void)
 {

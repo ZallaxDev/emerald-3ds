@@ -2291,6 +2291,10 @@ typedef struct
      * the header's FLY, the party slots that know Fly (a bit each) and the
      * one that would fly. */
     u8 flyNow, flyers, flyPick;
+    /* The Fly cinematic under way: the player's mark glides along the route
+     * instead of standing on its cell, at this map pixel. */
+    u8 flyGlide;
+    s16 flyMx, flyMy;
     u8 clockShown, clockValid, clockRate, clockPhase;
     u16 clockMinute;
     /* Map extras (3ds_field_qol_extras.inc), all zero with them off: the
@@ -3118,6 +3122,47 @@ static u8 PlayerRegionPosition(u8 *outX, u8 *outY)
     return mapsec;
 }
 
+/*
+ * The Fly cinematic (CtrVideo_FlyProgress): the player's mark leaves its
+ * cell as the flight begins and glides to the destination's, arriving as
+ * the camera lands, so the map below shows the journey. The route is taken
+ * once, as the flight starts (before the warp moves the player).
+ */
+static struct { bool8 on; int fromMx, fromMy, toMx, toMy; } sFlyRoute;
+
+static void MapFlyGlide(ViewState *s)
+{
+    float share, t;
+
+    s->flyGlide = 0;
+    s->flyMx = s->flyMy = 0;
+    if (!CtrVideo_FlyProgress(&share))
+    {
+        sFlyRoute.on = FALSE;
+        return;
+    }
+    if (!sFlyRoute.on)
+    {
+        const struct MapHeader *dest = GetDestinationWarpMapHeader();
+        u8 to = dest != NULL ? dest->regionMapSectionId : MAPSEC_NONE;
+        const struct RegionMapLocation *e;
+
+        if (s->mapsec == MAPSEC_NONE || to >= MAPSEC_NONE)
+            return;
+        e = &gRegionMapEntries[to];
+        sFlyRoute.fromMx = s->cursorX * 8 + 4;
+        sFlyRoute.fromMy = s->cursorY * 8 + 4;
+        /* The destination's middle, in PlayerRegionPosition's cell space. */
+        sFlyRoute.toMx = (e->x + 1) * 8 + e->width * 4;
+        sFlyRoute.toMy = (e->y + 2) * 8 + e->height * 4;
+        sFlyRoute.on = TRUE;
+    }
+    t = share * share * (3.0f - 2.0f * share);
+    s->flyGlide = 1;
+    s->flyMx = (s16)(sFlyRoute.fromMx + (sFlyRoute.toMx - sFlyRoute.fromMx) * t + 0.5f);
+    s->flyMy = (s16)(sFlyRoute.fromMy + (sFlyRoute.toMy - sFlyRoute.fromMy) * t + 0.5f);
+}
+
 static void CopyText(u8 *dst, int size, const u8 *src)
 {
     int n = 0;
@@ -3688,6 +3733,7 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
         /* The header: the area's name and the map extras' toggle with it,
          * the Repel, the clock. */
         s->mapsec = PlayerRegionPosition(&s->cursorX, &s->cursorY);
+        MapFlyGlide(s);
         if (s->screen == SCR_MAP)
         {
             s->pickMapsec = sPickMapsec;
@@ -7232,12 +7278,16 @@ static bool8 MapCursorOnlyMoved(const ViewState *now, const ViewState *shown)
      /* Nothing walks on the Fly map; its icons are not in the cache. */
      || now->mapFly || shown->mapFly
      || (now->cursorX == shown->cursorX && now->cursorY == shown->cursorY
-         && now->mapsec == shown->mapsec))
+         && now->mapsec == shown->mapsec && now->flyGlide == shown->flyGlide
+         && now->flyMx == shown->flyMx && now->flyMy == shown->flyMy))
         return FALSE;
     moved = *now;
     moved.cursorX = shown->cursorX;
     moved.cursorY = shown->cursorY;
     moved.mapsec = shown->mapsec;
+    moved.flyGlide = shown->flyGlide;
+    moved.flyMx = shown->flyMx;
+    moved.flyMy = shown->flyMy;
     /* A step that moves the mark also takes one off a Repel: MoveMapCursor
      * redraws its plate for it. */
     moved.repelSteps = shown->repelSteps;
@@ -7257,8 +7307,9 @@ static bool8 MoveMapCursor(const ViewState *from, const ViewState *to)
 
     if (sCache[CACHE_MAP] == NULL || icon == NULL || CtrVideo_BottomInUse() || CtrVideo_BottomWhole())
         return FALSE;
-    MarkRect(from, from->cursorX, from->cursorY, &r[0][0], &r[0][1], &r[0][2], &r[0][3]);
-    MarkRect(to, to->cursorX, to->cursorY, &r[1][0], &r[1][1], &r[1][2], &r[1][3]);
+    MarkRectOf(from, &r[0][0], &r[0][1], &r[0][2], &r[0][3]);
+    MarkRectOf(to, &r[1][0], &r[1][1], &r[1][2], &r[1][3]);
+
     /* The zoom button and the place panel are drawn over the map, not in its
      * cache: a mark under them is a whole redraw. */
     for (int k = 0; k < 2; ++k)

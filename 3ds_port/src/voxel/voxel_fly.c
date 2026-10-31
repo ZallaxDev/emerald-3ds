@@ -113,8 +113,37 @@ bool VoxelFly_Busy(const VoxelFly *f)
     return f->phase == VOXEL_FLY_CLOUD || f->phase == VOXEL_FLY_SKY;
 }
 
+bool VoxelFly_Progress(const VoxelFly *f, float *share)
+{
+    float inside;
+
+    switch (f->phase)
+    {
+    case VOXEL_FLY_DIVE:
+        *share = 0.0f;
+        return true;
+    case VOXEL_FLY_CLIMB:
+        *share = 0.3f * Ramp(f->frame, VOXEL_FLY_CLIMB_FRAMES);
+        return true;
+    case VOXEL_FLY_CLOUD:
+        inside = Ramp(f->frame, 40u); /* the usual stay inside */
+        *share = 0.3f + 0.45f * (inside < 1.0f ? inside : 1.0f);
+        return true;
+    case VOXEL_FLY_SKY:
+        inside = Ramp(f->frame, VOXEL_FLY_SKY_FRAMES);
+        *share = 0.3f + 0.45f * (inside < 1.0f ? inside : 1.0f);
+        return true;
+    case VOXEL_FLY_DESCEND:
+        *share = 0.75f + 0.25f * Ramp(f->frame, VOXEL_FLY_DESCEND_FRAMES);
+        return true;
+    default:
+        return false;
+    }
+}
+
 bool VoxelFly_Sky(const VoxelFly *f, unsigned *frame)
 {
+
     if (f->phase != VOXEL_FLY_SKY)
         return false;
     *frame = f->frame < VOXEL_FLY_SKY_FRAMES ? f->frame : VOXEL_FLY_SKY_FRAMES - 1;

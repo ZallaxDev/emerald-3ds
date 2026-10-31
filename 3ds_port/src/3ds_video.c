@@ -426,6 +426,7 @@ __attribute__((weak)) bool CtrFlySky_RiderSprite(CtrSkySprite *out) { (void)out;
 __attribute__((weak)) unsigned CtrFlySky_Natives(uint16_t *species, unsigned max) { (void)species; (void)max; return 0; }
 __attribute__((weak)) void CtrFlySky_Release(void) {}
 __attribute__((weak)) void CtrFlySky_Weather(uint8_t *from, uint8_t *to) { *from = *to = CTR_SKY_CLEAR; }
+static bool SkyPuffTexture(void); /* the sky scene's cloud dollops, made at start-up */
 #include "3ds_map_events.h"
 
 /*
@@ -6198,6 +6199,11 @@ bool CtrVideo_FlyLanding(float *share)
     return VoxelFly_Landing(&sFly, share);
 }
 
+bool CtrVideo_FlyProgress(float *share)
+{
+    return VoxelFly_Progress(&sFly, share);
+}
+
 void CtrVideo_SetFieldLight(bool on, int x, int y, int radius)
 {
     if (on && (!sFieldLight.on || sFieldLight.radius < 0))
@@ -7047,6 +7053,7 @@ bool CtrVideo_Init(void)
         sMortonPair[i / 2] = sMorton[i] / 2;
         if ((sMorton[i] & 1) || sMorton[i + 1] != sMorton[i] + 1) sMortonPairs = false;
     }
+    SkyPuffTexture();
     for (unsigned i = 0; i < sizeof(sPalette) / sizeof(sPalette[0]); ++i)
         sTexturePalette[i] = CtrVideo_RGBA5551(sPalette[i]);
     C2D_Prepare();
@@ -12118,7 +12125,9 @@ static void DrawSwoopLight(C3D_RenderTarget *target, const VoxelSwoopFrame *fx)
 #define SKY_FLOCK_MAX 6u
 #define SKY_LEGEND_ODDS 30u /* one flight in this many */
 #define SKY_RAIN_DROPS 90u
-#define SKY_PUFFS 6u
+#define SKY_PUFFS 9u      /* the last SKY_BIG_PUFFS of them the big thick ones */
+#define SKY_BIG_PUFFS 3u
+#define SKY_PUFF_DENSE 3u /* the puff texture's thick slot */
 #define SKY_ASH_FLAKES 48u
 #define SKY_MARKS 26u
 #define SKY_FLYER_SCALE 2.0f
@@ -12172,7 +12181,7 @@ static struct
     struct { float y, len, speed, phase; uint8_t alpha, thick; } mark[SKY_MARKS];
     /* Dollops of cloud whizzing past in front of everything, each a window
      * of the cloud texture faded to its edges (its holes show us through). */
-    struct { float y, w, h, speed, phase, u, v; uint8_t alpha; } puff[SKY_PUFFS];
+    struct { float y, w, h, speed, phase; uint8_t alpha, slot; bool mirrored; } puff[SKY_PUFFS];
     uint32_t seed;
     SkyWeather from, to;
     float thickness;   /* the deck this flight, 0.35 thin .. 1 thick (clear skies vary) */
@@ -12334,9 +12343,16 @@ static void SkyPackActor(SkyActor *actor, const CtrSkySprite *sprite, unsigned f
              && SkyPackFrame(sprite, firstFrame + 1, &actor->sub[1]);
 }
 
+/* The dollops' texture, below. */
+#define SKY_PUFF_TEX_W 128u
+#define SKY_PUFF_TEX_H 64u
+#define SKY_PUFF_SLOTS 4u
+static bool SkyPuffTexture(void);
+
 static void SkySceneFree(void)
 {
     if (!sSky.loaded) return;
+
     C3D_TexDelete(&sSky.atlas);
     CtrFlySky_Release();
     memset(&sSky, 0, sizeof(sSky));
@@ -12367,6 +12383,8 @@ static bool SkySceneLoad(float dirX, float dirZ)
     sSky.seed = (uint32_t)sStats.frames * 2654435761u + 12345u;
     sSky.sx = dirX >= 0.0f ? 1 : -1;
     sSky.flashFrame = ~0u;
+    if (!SkyPuffTexture())
+        CtrLog_Write(CTR_LOG_ERROR, "FLY sky: no linear memory for the puffs; none this flight");
     /* The weather at both ends, the deck thin or thick by chance. */
     {
         uint8_t from, to;
@@ -12387,7 +12405,10 @@ static bool SkySceneLoad(float dirX, float dirZ)
     if (CtrFlySky_RiderSprite(&sprite))
     {
         sSky.rider.width = sprite.width;
-        sSky.rider.ok = SkyPackFrame(&sprite, sSky.sx > 0 ? 1 : 0, &sSky.rider.sub[0]);
+        /* Frame 0 is the seated pose as the game draws it for a ride west
+         * on the GBA, which is the picture facing right: so it is the one
+         * for a flight to the right, the mirrored frame 1 for the left. */
+        sSky.rider.ok = SkyPackFrame(&sprite, sSky.sx > 0 ? 0 : 1, &sSky.rider.sub[0]);
         sSky.rider.sub[1] = sSky.rider.sub[0];
     }
     sSky.natives = CtrFlySky_Natives(natives, SKY_NATIVES);
@@ -12427,6 +12448,9 @@ static bool SkySceneLoad(float dirX, float dirZ)
                     unsigned roll = SkyRandom() % 10;
 
                     f->count = (uint8_t)(roll < 4 ? 1 : roll < 7 ? 2 + SkyRandom() % 2 : 3 + SkyRandom() % (SKY_FLOCK_MAX - 2));
+                    /* The big ones (64-pixel sprites) fly alone, or in a pair. */
+                    if (sSky.native[actor].width == 64)
+                        f->count = (uint8_t)(1 + (SkyRandom() % 3 == 0));
                 }
                 f->crossing = (SkyRandom() & 3) == 0;
                 f->depth = SkyUnit();
@@ -12454,14 +12478,32 @@ static bool SkySceneLoad(float dirX, float dirZ)
     }
     for (unsigned i = 0; i < SKY_PUFFS; ++i)
     {
-        sSky.puff[i].w = 110.0f + SkyUnit() * 120.0f;
-        sSky.puff[i].h = sSky.puff[i].w * (0.42f + SkyUnit() * 0.2f);
-        sSky.puff[i].y = SKY_H * (0.08f + 0.78f * SkyUnit());
-        sSky.puff[i].speed = 7.0f + SkyUnit() * 8.0f;
-        sSky.puff[i].phase = SkyUnit() * (SKY_W + 600.0f);
-        sSky.puff[i].u = SkyUnit();
-        sSky.puff[i].v = SkyUnit();
-        sSky.puff[i].alpha = (uint8_t)(190 + SkyRandom() % 66);
+        bool big = i >= SKY_PUFFS - SKY_BIG_PUFFS;
+
+        if (big)
+        {
+            /* The big thick ones: a moment of near-white with the two of
+             * us only shapes in it. Spread along the scene so they pass
+             * one at a time. */
+            sSky.puff[i].w = 360.0f + SkyUnit() * 280.0f;
+            sSky.puff[i].h = sSky.puff[i].w * (0.40f + SkyUnit() * 0.12f);
+            sSky.puff[i].y = SKY_H * (0.25f + 0.5f * SkyUnit());
+            sSky.puff[i].speed = 11.0f + SkyUnit() * 6.0f;
+            sSky.puff[i].phase = (float)(i - (SKY_PUFFS - SKY_BIG_PUFFS)) * 1400.0f / SKY_BIG_PUFFS + SkyUnit() * 300.0f;
+            sSky.puff[i].slot = SKY_PUFF_DENSE;
+            sSky.puff[i].alpha = (uint8_t)(232 + SkyRandom() % 20);
+        }
+        else
+        {
+            sSky.puff[i].w = 110.0f + SkyUnit() * 120.0f;
+            sSky.puff[i].h = sSky.puff[i].w * (0.42f + SkyUnit() * 0.2f);
+            sSky.puff[i].y = SKY_H * (0.08f + 0.78f * SkyUnit());
+            sSky.puff[i].speed = 7.0f + SkyUnit() * 8.0f;
+            sSky.puff[i].phase = SkyUnit() * (SKY_W + 600.0f);
+            sSky.puff[i].slot = (uint8_t)(SkyRandom() % SKY_PUFF_DENSE);
+            sSky.puff[i].alpha = (uint8_t)(190 + SkyRandom() % 66);
+        }
+        sSky.puff[i].mirrored = (SkyRandom() & 1) != 0;
     }
     for (unsigned i = 0; i < SKY_MARKS; ++i)
     {
@@ -12568,29 +12610,113 @@ static void SkyDrawDeck(C3D_Tex *tex, unsigned n, float top, float bottom, float
     C2D_DrawImageAt(image, 0.0f, top, 0.0f, &tint, 1.0f, 1.0f);
 }
 
-/* A dollop of cloud: a window of the texture in four quarters, each faded
- * from the middle out to its far corner, so the whole fades to nothing all
- * round while the texture's own thin parts stay see-through. */
-static void SkyDrawPuff(C3D_Tex *tex, float cx, float cy, float w, float h, float u0, float v0, uint32_t colour)
+/*
+ * The dollops' texture: four puffs of cloud, each a value noise (three
+ * octaves on an 8-pixel lattice, wrapping) under an elliptical fall-off,
+ * thin where the noise is low so the puff has holes, nothing at its edge
+ * so it has no edge. Made once, A8, 128x64 a puff; a dollop is one image
+ * of it, scaled, perhaps mirrored, moved along x.
+ */
+#define SKY_PUFF_TEX_W 128u
+#define SKY_PUFF_TEX_H 64u
+#define SKY_PUFF_SLOTS 4u
+static C3D_Tex sSkyPuffTex;
+
+static uint32_t SkyHash(uint32_t a)
 {
-    float ru = w / 128.0f * 0.55f, rv = h / 128.0f * 0.55f;
-    uint32_t clear = colour & 0x00FFFFFFu;
+    a ^= a >> 16; a *= 0x7feb352du; a ^= a >> 15; a *= 0x846ca68bu; a ^= a >> 16;
+    return a;
+}
 
-    for (unsigned q = 0; q < 4; ++q)
+/* Value noise: a wrapping lattice of `cells` across and `cells`/2 down,
+ * its values made once into `table`, then read bilinearly. */
+#define SKY_LATTICE_MAX (32u * 16u)
+static void SkyLattice(uint32_t seed, unsigned cells, float *table)
+{
+    unsigned rows = cells / 2 ? cells / 2 : 1;
+
+    for (unsigned cy = 0; cy < rows; ++cy)
+        for (unsigned cx = 0; cx < cells; ++cx)
+            table[cy * cells + cx] = (float)(SkyHash(seed ^ (cx * 73856093u) ^ (cy * 19349663u)) & 0xFFFF) / 65535.0f;
+}
+
+static float SkyLatticeNoise(const float *table, unsigned cells, float x, float y)
+{
+    unsigned rows = cells / 2 ? cells / 2 : 1;
+    float fx = x * (float)cells, fy = y * (float)rows;
+    unsigned ix = (unsigned)fx, iy = (unsigned)fy;
+    float tx = fx - (float)ix, ty = fy - (float)iy;
+    float sx = tx * tx * (3.0f - 2.0f * tx), sy = ty * ty * (3.0f - 2.0f * ty);
+    unsigned ix1 = (ix + 1) % cells, iy1 = (iy + 1) % rows;
+    float top = table[iy * cells + ix] + (table[iy * cells + ix1] - table[iy * cells + ix]) * sx;
+    float bottom = table[iy1 * cells + ix] + (table[iy1 * cells + ix1] - table[iy1 * cells + ix]) * sx;
+
+    return top + (bottom - top) * sy;
+}
+
+/* Made at start-up (CtrVideo_Init), a few milliseconds; the first flight
+ * made it on the spot once, and dropped a frame for it. */
+static bool SkyPuffTexture(void)
+{
+    static float coarse[SKY_LATTICE_MAX], medium[SKY_LATTICE_MAX], fine[SKY_LATTICE_MAX];
+    uint8_t *data;
+
+    if (sSkyPuffTex.data != NULL) return true;
+    if (!C3D_TexInit(&sSkyPuffTex, SKY_PUFF_TEX_W, SKY_PUFF_TEX_H * SKY_PUFF_SLOTS, GPU_A8))
     {
-        unsigned qx = q & 1, qy = q >> 1;
-        float u = u0 + qx * ru * 0.5f, v = v0 + qy * rv * 0.5f;
-        Tex3DS_SubTexture sub = {(uint16_t)(w * 0.5f), (uint16_t)(h * 0.5f), u, 1.0f - v, u + ru * 0.5f, 1.0f - v - rv * 0.5f};
-        C2D_Image image = {tex, &sub};
-        C2D_ImageTint tint;
-
-        /* The corner at the dollop's middle is the full one. */
-        C2D_SetImageTint(&tint, C2D_TopLeft, qx == 1 && qy == 1 ? colour : clear, 1.0f);
-        C2D_SetImageTint(&tint, C2D_TopRight, qx == 0 && qy == 1 ? colour : clear, 1.0f);
-        C2D_SetImageTint(&tint, C2D_BotLeft, qx == 1 && qy == 0 ? colour : clear, 1.0f);
-        C2D_SetImageTint(&tint, C2D_BotRight, qx == 0 && qy == 0 ? colour : clear, 1.0f);
-        C2D_DrawImageAt(image, cx - w * 0.5f + qx * w * 0.5f, cy - h * 0.5f + qy * h * 0.5f, 0.0f, &tint, 1.0f, 1.0f);
+        memset(&sSkyPuffTex, 0, sizeof(sSkyPuffTex));
+        return false;
     }
+    C3D_TexSetFilter(&sSkyPuffTex, GPU_LINEAR, GPU_LINEAR);
+    C3D_TexSetWrap(&sSkyPuffTex, GPU_CLAMP_TO_EDGE, GPU_CLAMP_TO_EDGE);
+    data = sSkyPuffTex.data;
+    for (unsigned slot = 0; slot < SKY_PUFF_SLOTS; ++slot)
+    {
+        uint32_t seed = 0x51ED270Bu + slot * 0x9E3779B9u;
+        bool dense = slot == SKY_PUFF_DENSE;
+
+        SkyLattice(seed, 8, coarse);
+        SkyLattice(seed + 1, 16, medium);
+        SkyLattice(seed + 2, 32, fine);
+        for (unsigned y = 0; y < SKY_PUFF_TEX_H; ++y)
+        {
+            float v = (y + 0.5f) / SKY_PUFF_TEX_H, ey = (v - 0.5f) * 2.0f;
+
+            for (unsigned x = 0; x < SKY_PUFF_TEX_W; ++x)
+            {
+                float u = (x + 0.5f) / SKY_PUFF_TEX_W, ex = (u - 0.5f) * 2.0f;
+                float n = 0.5f * SkyLatticeNoise(coarse, 8, u, v) + 0.3f * SkyLatticeNoise(medium, 16, u, v)
+                        + 0.2f * SkyLatticeNoise(fine, 32, u, v);
+                /* The rim is the noise's: the puff ends where the noise
+                 * runs out at a radius that wanders with it, so no ellipse
+                 * shows. The last slot is the thick one: a lower floor, few
+                 * holes, a wider body. */
+                float d = ex * ex + ey * ey;
+                float rim = 1.0f - d / (dense ? 0.55f + 0.55f * n : 0.40f + 0.65f * n);
+                float body = (n - (dense ? 0.12f : 0.38f)) / 0.32f, alpha;
+
+                rim = rim < 0.0f ? 0.0f : rim > 1.0f ? 1.0f : rim * rim * (3.0f - 2.0f * rim);
+                body = body < 0.0f ? 0.0f : body > 1.0f ? 1.0f : body * body * (3.0f - 2.0f * body);
+                alpha = body * rim;
+
+                data[CtrVideo_Texel(x, slot * SKY_PUFF_TEX_H + y, SKY_PUFF_TEX_W)] = (uint8_t)(alpha * 255.0f + 0.5f);
+            }
+        }
+    }
+    C3D_TexFlush(&sSkyPuffTex);
+    return true;
+}
+
+/* A dollop: one puff of the texture, `w` by `h` about (cx, cy). */
+static void SkyDrawPuff(float cx, float cy, float w, float h, unsigned slot, bool mirrored, uint32_t colour)
+{
+    float v0 = 1.0f - (float)slot / SKY_PUFF_SLOTS, v1 = 1.0f - (float)(slot + 1) / SKY_PUFF_SLOTS;
+    Tex3DS_SubTexture sub = {SKY_PUFF_TEX_W, SKY_PUFF_TEX_H, mirrored ? 1.0f : 0.0f, v0, mirrored ? 0.0f : 1.0f, v1};
+    C2D_Image image = {&sSkyPuffTex, &sub};
+    C2D_ImageTint tint;
+
+    C2D_PlainImageTint(&tint, colour, 1.0f);
+    C2D_DrawImageAt(image, cx - w * 0.5f, cy - h * 0.5f, 0.0f, &tint, w / SKY_PUFF_TEX_W, h / SKY_PUFF_TEX_H);
 }
 
 /* The flocks of one tier of depth: 0 far behind the middle deck, 1 before
@@ -12711,13 +12837,24 @@ static void DrawSkyScene(C3D_RenderTarget *target, int eye, unsigned n)
     {
         SkyDrawDeck(cloud, n, SKY_H * 0.70f, SKY_H * 1.0f, 1.1f, 4.6f, SkyColour(w.deckTint, (unsigned)(120.0f * deckA)),
                     6.0f * par, 0.0f, 0.85f);
-        for (unsigned i = 0; i < SKY_PUFFS; ++i)
+        for (unsigned i = 0; sSkyPuffTex.data != NULL && i < SKY_PUFFS; ++i)
         {
-            float span = SKY_W + 2.0f * sSky.puff[i].w;
+            /* The big ones run a long loop, so each passes about once; they
+             * go with the weather - under a thin clear deck fewer and
+             * lighter, in rain and storm all of them, thicker and larger,
+             * so for a moment the two of us are shapes in the murk. */
+            bool big = i >= SKY_PUFFS - SKY_BIG_PUFFS;
+            float heavy = w.deck > w.rain ? w.deck : w.rain;
+            float grow = big ? 1.0f + 0.35f * w.rain : 1.0f;
+            float span = big ? 1400.0f + 2.0f * sSky.puff[i].w : SKY_W + 2.0f * sSky.puff[i].w;
             float x = span - (float)fmod(sSky.puff[i].phase + sSky.puff[i].speed * (float)n, span) - sSky.puff[i].w;
+            float alpha = sSky.puff[i].alpha * (big ? 0.45f + 0.55f * heavy : 0.6f + 0.4f * w.deck);
 
-            SkyDrawPuff(cloud, SkyScreenX(x) + 9.0f * par, sSky.puff[i].y, sSky.puff[i].w, sSky.puff[i].h,
-                        sSky.puff[i].u, sSky.puff[i].v, SkyColour(w.deckTint, (unsigned)(sSky.puff[i].alpha * (0.6f + 0.4f * w.deck))));
+            if (big && i == SKY_PUFFS - 1 && heavy < 0.5f)
+                continue; /* fine weather: one big one fewer */
+            SkyDrawPuff(SkyScreenX(x) + 9.0f * par, sSky.puff[i].y, sSky.puff[i].w * grow, sSky.puff[i].h * grow,
+                        sSky.puff[i].slot, sSky.puff[i].mirrored,
+                        SkyColour(w.deckTint, (unsigned)(alpha > 255.0f ? 255.0f : alpha)));
         }
     }
     /* The rain: drops driven down and back past us; the ash: flakes
@@ -12730,12 +12867,14 @@ static void DrawSkyScene(C3D_RenderTarget *target, int eye, unsigned n)
 
         for (unsigned i = 0; i < count; ++i)
         {
-            uint32_t h = i * 2654435761u + sSky.seed;
+            uint32_t h = SkyHash(i * 2654435761u + sSky.seed);
+            /* Each drop its own pace and length: in step they read as a grid. */
+            float pace = 0.7f + (float)(SkyHash(h) & 255) / 255.0f * 0.6f;
             float x0 = (float)(h & 0xFFFF) / 65535.0f * (SKY_W + 60.0f), y0 = (float)((h >> 16) & 0xFFFF) / 65535.0f * (SKY_H + 40.0f);
-            float y = (float)fmod(y0 + fall * (float)n, SKY_H + 40.0f) - 20.0f;
-            float x = (float)fmod(x0 - drift * (float)n + 4000.0f * (SKY_W + 60.0f), SKY_W + 60.0f) - 30.0f + 5.0f * par;
+            float y = (float)fmod(y0 + fall * pace * (float)n, SKY_H + 40.0f) - 20.0f;
+            float x = (float)fmod(x0 - drift * pace * (float)n + 4000.0f * (SKY_W + 60.0f), SKY_W + 60.0f) - 30.0f + 5.0f * par;
 
-            C2D_DrawLine(x, y, drop, x + drift * 0.9f, y - fall * 0.9f, clear, 1.0f, 0.0f);
+            C2D_DrawLine(x, y, drop, x + drift * 0.9f * pace, y - fall * 0.9f * pace, clear, 1.0f, 0.0f);
         }
         /* The spray: fine flecks torn off the rain, nearer, lighter and
          * quicker, driven almost level back past us. */
@@ -12746,10 +12885,10 @@ static void DrawSkyScene(C3D_RenderTarget *target, int eye, unsigned n)
 
             for (unsigned i = 0; i < count; ++i)
             {
-                uint32_t h = i * 2246822519u + sSky.seed * 3u;
+                uint32_t h = SkyHash(i * 2246822519u + sSky.seed * 3u);
                 float speed = rush * (0.8f + (float)(h & 15) / 40.0f);
                 float x0 = (float)(h & 0xFFFF) / 65535.0f * (SKY_W + 80.0f), y0 = (float)((h >> 16) & 0xFFFF) / 65535.0f * (SKY_H + 20.0f);
-                float y = (float)fmod(y0 + 3.5f * (float)n, SKY_H + 20.0f) - 10.0f;
+                float y = (float)fmod(y0 + (2.5f + (float)(h & 7) * 0.4f) * (float)n, SKY_H + 20.0f) - 10.0f;
                 float x = (float)fmod(x0 - speed * (float)n + 4000.0f * (SKY_W + 80.0f), SKY_W + 80.0f) - 40.0f + 10.0f * par;
 
                 C2D_DrawLine(x, y, fleck, x + speed * 0.3f, y - 1.2f, gone, 1.0f, 0.0f);
@@ -12766,7 +12905,7 @@ static void DrawSkyScene(C3D_RenderTarget *target, int eye, unsigned n)
 
         for (unsigned i = 0; i < count; ++i)
         {
-            uint32_t h = i * 3266489917u + sSky.seed;
+            uint32_t h = SkyHash(i * 3266489917u + sSky.seed);
             float speed = rush * (0.8f + (float)(h & 15) / 32.0f);
             float x0 = (float)(h & 0xFFFF) / 65535.0f * (SKY_W + 80.0f), y0 = (float)((h >> 16) & 0xFFFF) / 65535.0f * SKY_H;
             float y = y0 + 3.0f * sinf((float)n * 0.2f + (float)i);
@@ -12783,7 +12922,7 @@ static void DrawSkyScene(C3D_RenderTarget *target, int eye, unsigned n)
 
         for (unsigned i = 0; i < count; ++i)
         {
-            uint32_t h = i * 2246822519u + sSky.seed;
+            uint32_t h = SkyHash(i * 2246822519u + sSky.seed);
             float x0 = (float)(h & 0xFFFF) / 65535.0f * (SKY_W + 40.0f), y0 = (float)((h >> 16) & 0xFFFF) / 65535.0f * SKY_H;
             float y = (float)fmod(y0 + (1.2f + (float)(h & 7) * 0.2f) * (float)n, SKY_H + 10.0f) - 5.0f;
             float x = (float)fmod(x0 - 2.0f * (float)sSky.sx * (float)n + 4000.0f * (SKY_W + 40.0f), SKY_W + 40.0f) - 20.0f
@@ -13579,6 +13718,18 @@ void CtrVideo_Present(void)
     uint32_t rgb = CtrVideo_RGBA8(backdrop, true);
     uint32_t clear = C2D_Color32(rgb >> 24, rgb >> 16, rgb >> 8, 255);
     sBackdropShown = clear;
+    /* Under the Fly cinematic's high camera the wide view has holes the
+     * drafts have not reached yet: grass green in them, not the backdrop's
+     * black, so they pass under the wind. */
+    if (sFieldMode == FIELD_MODE_VOXEL && VoxelFly_Active(&sFly))
+    {
+        VoxelFlyFrame flyNow;
+
+        VoxelFly_Frame(&sFly, &flyNow);
+        if (flyNow.lift > 0.05f)
+            clear = C2D_Color32(92, 160, 76, 255);
+    }
+
     /*
      * The 3D slider decides the separation, and at zero the right eye is not
      * composed at all: with 3D off this is the same single pass as before.
