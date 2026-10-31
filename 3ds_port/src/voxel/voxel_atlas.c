@@ -403,7 +403,7 @@ static const struct CutPlan *CutPlanOf(const uint8_t *cut)
  */
 static bool ComposeAt(const struct AtlasSource *src, const uint16_t *entries,
                       uint16_t *dest, unsigned baseX, unsigned baseY, unsigned width,
-                      unsigned hidden, const uint8_t *cut)
+                      unsigned hidden, const uint8_t *cut, uint16_t *mean)
 {
     bool black = true;
 
@@ -445,14 +445,42 @@ static bool ComposeAt(const struct AtlasSource *src, const uint16_t *entries,
         }
 #undef SLOT_TEXEL
     }
+    /* The mean of what was drawn (VoxelAtlasMap.mean): the four blocks are
+     * each one run of 64 texels, whatever their order inside. */
+    if (mean != NULL)
+    {
+        unsigned r = 0, g = 0, b = 0, n = 0;
+
+        for (unsigned quadrant = 0; quadrant < 4; ++quadrant)
+        {
+            const uint16_t *block = dest + CtrVideo_Texel(baseX + (quadrant % 2) * SUBTILE_PX,
+                                                          baseY + (quadrant / 2) * SUBTILE_PX, width);
+
+            for (unsigned i = 0; i < SUBTILE_PX * SUBTILE_PX; ++i)
+            {
+                uint16_t t = block[i];
+
+                if ((t & 1u) == 0)
+                    continue;
+                r += t >> 11;
+                g += (t >> 6) & 31u;
+                b += (t >> 1) & 31u;
+                ++n;
+            }
+        }
+        *mean = n == 0 ? 0
+              : (uint16_t)(((r + n / 2) / n) << 11 | ((g + n / 2) / n) << 6 | ((b + n / 2) / n) << 1 | 1u);
+    }
     return black;
 }
 
 static bool ComposeMetatile(const struct AtlasSource *src, const uint16_t *entries,
-                            uint16_t *dest, unsigned slot, unsigned hidden, const uint8_t *cut)
+                            uint16_t *dest, unsigned slot, unsigned hidden, const uint8_t *cut,
+                            uint16_t *mean)
 {
     return ComposeAt(src, entries, dest, (slot % VOXEL_ATLAS_COLUMNS) * VOXEL_ATLAS_SLOT,
-                     (slot / VOXEL_ATLAS_COLUMNS) * VOXEL_ATLAS_SLOT, VOXEL_ATLAS_W, hidden, cut);
+                     (slot / VOXEL_ATLAS_COLUMNS) * VOXEL_ATLAS_SLOT, VOXEL_ATLAS_W, hidden, cut,
+                     mean);
 }
 
 /*
@@ -689,7 +717,7 @@ bool VoxelAtlas_JobStep(VoxelAtlasJob *job, unsigned metatiles)
         }
         voidBits[m >> 3] &= (uint8_t)~(1u << (m & 7));
         if (ComposeMetatile(&src, entries, job->dest,
-                            (slot - 1u) % VOXEL_ATLAS_MAX_SLOTS, hidden, cut))
+                            (slot - 1u) % VOXEL_ATLAS_MAX_SLOTS, hidden, cut, &map->mean[m]))
             voidBits[m >> 3] |= (uint8_t)(1u << (m & 7));
     }
     if (job->next < VOXEL_METATILE_IDS)
@@ -783,7 +811,7 @@ unsigned VoxelAtlas_RefreshAnimatedPageRows(const VoxelMapInstance *inst, const 
             continue;
         if (voidBits != NULL)
             voidBits[m >> 3] &= (uint8_t)~(1u << (m & 7));
-        if (ComposeMetatile(&src, entries, dest, (slot - 1u) % VOXEL_ATLAS_MAX_SLOTS, hidden, cut) && voidBits != NULL)
+        if (ComposeMetatile(&src, entries, dest, (slot - 1u) % VOXEL_ATLAS_MAX_SLOTS, hidden, cut, NULL) && voidBits != NULL)
             voidBits[m >> 3] |= (uint8_t)(1u << (m & 7));
         if (rows != NULL)
             *rows |= 1u << (((slot - 1u) % VOXEL_ATLAS_MAX_SLOTS) / VOXEL_ATLAS_COLUMNS);
@@ -1286,7 +1314,7 @@ bool VoxelAnim_Compose(VoxelAnimPass *pass, const uint8_t *liveTiles, bool (*sti
             if (AtlasSourceOf(pass->primary[srcPair], pass->secondary[srcPair], block->lower,
                               &base, &hidden, &cut)
              && (entries = MetatileEntries(&src, base)) != NULL)
-                black = ComposeAt(&src, entries, whole, 0, 0, VOXEL_ATLAS_SLOT, hidden, cut);
+                black = ComposeAt(&src, entries, whole, 0, 0, VOXEL_ATLAS_SLOT, hidden, cut, NULL);
             /* a 16x16 texture is its four blocks, quadrant by quadrant: this
              * one's and the three after it */
             memcpy(pixels, whole, sizeof(whole));
