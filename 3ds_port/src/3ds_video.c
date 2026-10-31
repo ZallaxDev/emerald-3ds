@@ -426,6 +426,7 @@ __attribute__((weak)) bool CtrFlySky_RiderSprite(CtrSkySprite *out) { (void)out;
 __attribute__((weak)) unsigned CtrFlySky_Natives(uint16_t *species, unsigned max) { (void)species; (void)max; return 0; }
 __attribute__((weak)) void CtrFlySky_Release(void) {}
 __attribute__((weak)) void CtrFlySky_Weather(uint8_t *from, uint8_t *to) { *from = *to = CTR_SKY_CLEAR; }
+__attribute__((weak)) void CtrFlySky_Cry(uint16_t species, int8_t pan, uint8_t volume) { (void)species; (void)pan; (void)volume; }
 static bool SkyPuffTexture(void); /* the sky scene's cloud dollops, made at start-up */
 #include "3ds_map_events.h"
 
@@ -5728,6 +5729,12 @@ static void DrawAffineBg(unsigned bg)
  * to where the camera sees the player (the GBA's (120, 80), as the circle of
  * a dark cave) - not projected, which would bend the bird's arc.
  */
+/* Fly's picture sprites in the voxel field are zoomed about the player's
+ * spot by how large the world draws a map sprite there (sizes and places
+ * alike, so the rider keeps its seat): set by PlaceScreenObject for the
+ * sprite being drawn, taken by DrawObjectAt. */
+static float sFlyZoom = 1.0f, sFlyZoomX, sFlyZoomY;
+
 static void PlaceScreenObject(int i, unsigned boxW, unsigned boxH, bool voxel, int *x, int *y)
 {
     if (sFlyOam[i >> 5] & (1u << (i & 31)))
@@ -5738,6 +5745,11 @@ static void PlaceScreenObject(int i, unsigned boxW, unsigned boxH, bool voxel, i
         {
             *x += (int)lroundf(px) - 120;
             *y += (int)lroundf(py) - 80;
+            /* The player's sprite's centre, GBA (120, 72), is the zoom's
+             * fixed point. */
+            sFlyZoom = fminf(fmaxf(scaleX, 0.5f), 2.5f);
+            sFlyZoomX = px;
+            sFlyZoomY = py - 8.0f;
             return;
         }
         *x += CTR_STAGE_X;
@@ -5901,6 +5913,39 @@ static void DrawObjectAt(int x, int y, unsigned attr1, unsigned attr2, unsigned 
                          unsigned height, unsigned boxW, unsigned boxH, bool affine, bool color256, bool effects,
                          unsigned mode)
 {
+    float zoom = sFlyZoom;
+
+    sFlyZoom = 1.0f;
+    if (zoom != 1.0f && !affine)
+    {
+        /* Fly's sprite, zoomed about the player's spot: drawn through a
+         * matrix as an affine one is, its tiles from the origin. */
+        float cx = sFlyZoomX + ((float)x + boxW * 0.5f - sFlyZoomX) * zoom;
+        float cy = sFlyZoomY + ((float)y + boxH * 0.5f - sFlyZoomY) * zoom;
+        bool flipX = (attr1 & 0x1000) != 0, flipY = (attr1 & 0x2000) != 0;
+        C3D_Mtx matrix;
+
+        if (cx + width * zoom * 0.5f <= sClipX0 || cx - width * zoom * 0.5f >= sClipX1
+         || cy + height * zoom * 0.5f <= sClipY0 || cy - height * zoom * 0.5f >= sClipY1) return;
+        ++sStats.sprites;
+        SpriteBatchFlush();
+        Blend(4, effects, mode == 1);
+        ViewBase();
+        Mtx_Identity(&matrix);
+        matrix.r[0] = FVec4_New(zoom, 0, 0, cx + CTR_VIEW_X + sLayerShift - width * zoom * 0.5f);
+        matrix.r[1] = FVec4_New(0, zoom, 0, cy + CTR_VIEW_Y - height * zoom * 0.5f);
+        ViewAffine(&matrix);
+        for (unsigned ty = 0; ty < height / 8; ++ty)
+            for (unsigned tx = 0; tx < width / 8; ++tx)
+            {
+                unsigned sx = flipX ? width / 8 - 1 - tx : tx;
+                unsigned sy = flipY ? height / 8 - 1 - ty : ty;
+                unsigned tile = CtrVideo_ObjTile(attr2 & 1023, sx, sy, width, color256, Reg(0) & 0x40);
+
+                DrawTile(0x10000 + tile * 32, bank, color256, (int)tx * 8, (int)ty * 8, flipX, flipY);
+            }
+        return;
+    }
     if (x >= sClipX1 || x + (int)boxW <= sClipX0
      || y >= sClipY1 || y + (int)boxH <= sClipY0) return;
     ++sStats.sprites;
@@ -12186,6 +12231,11 @@ static struct
     SkyWeather from, to;
     float thickness;   /* the deck this flight, 0.35 thin .. 1 thick (clear skies vary) */
     unsigned flashFrame; /* the last lightning's scene frame, or ~0u */
+    /* The flyers' cries: the species behind the actors, which flocks have
+     * called, the scene frame of the last call + 1, the frame last heard. */
+    uint16_t nativeSpecies[SKY_NATIVES], legendSpecies;
+    bool cried[SKY_FLOCKS];
+    unsigned lastCry, soundFrame;
 } sSky;
 
 static void SkySetColour(float *c, unsigned r, unsigned g, unsigned b)
@@ -12405,22 +12455,29 @@ static bool SkySceneLoad(float dirX, float dirZ)
     if (CtrFlySky_RiderSprite(&sprite))
     {
         sSky.rider.width = sprite.width;
-        /* Frame 0 is the seated pose as the game draws it for a ride west
-         * on the GBA, which is the picture facing right: so it is the one
-         * for a flight to the right, the mirrored frame 1 for the left. */
-        sSky.rider.ok = SkyPackFrame(&sprite, sSky.sx > 0 ? 0 : 1, &sSky.rider.sub[0]);
+        /* Frame 0 is the seated pose for a ride west, frame 1 its mirror
+         * for a ride east: the flight to the right takes the east one (seen
+         * facing left on a flight right, the other way round). */
+        sSky.rider.ok = SkyPackFrame(&sprite, sSky.sx > 0 ? 1 : 0, &sSky.rider.sub[0]);
         sSky.rider.sub[1] = sSky.rider.sub[0];
     }
     sSky.natives = CtrFlySky_Natives(natives, SKY_NATIVES);
     for (unsigned i = 0; i < sSky.natives; ++i)
+    {
+        sSky.nativeSpecies[i] = natives[i];
         if (CtrFlySky_MonSprite(natives[i], 0, false, &sprite))
             SkyPackActor(&sSky.native[i], &sprite, facing);
+    }
+    memset(sSky.cried, 0, sizeof(sSky.cried));
+    sSky.lastCry = 0;
+    sSky.soundFrame = ~0u;
     /* Rarely a legendary tears past. */
     if (SkyRandom() % SKY_LEGEND_ODDS == 0)
     {
         static const uint16_t legends[3] = {SKY_SPECIES_LATIOS, SKY_SPECIES_LATIAS, SKY_SPECIES_RAYQUAZA};
 
-        if (CtrFlySky_MonSprite(legends[SkyRandom() % 3], 0, false, &sprite))
+        sSky.legendSpecies = legends[SkyRandom() % 3];
+        if (CtrFlySky_MonSprite(sSky.legendSpecies, 0, false, &sprite))
             SkyPackActor(&sSky.legend, &sprite, facing);
     }
     C3D_TexFlush(&sSky.atlas);
@@ -12764,6 +12821,40 @@ static void SkyDrawFlocks(unsigned n, float par, unsigned tier)
                                   sSky.sx > 0 ? tail : head, sSky.sx > 0 ? head : tail,
                                   sSky.sx > 0 ? tail : head, sSky.sx > 0 ? head : tail);
             }
+    }
+}
+
+/* The flyers' cries: each flock calls once, softly, as its head comes into
+ * the picture - fainter the farther back, panned to its side, not two
+ * within half a second (the cry has one channel); the legendary louder,
+ * at once. Once a scene frame (the frame is held while the new world is
+ * built). */
+static void SkySounds(unsigned n)
+{
+    if (n == sSky.soundFrame)
+        return;
+    sSky.soundFrame = n;
+    for (unsigned i = 0; i < sSky.flocks; ++i)
+    {
+        const SkyFlock *f = &sSky.flock[i];
+        const SkyActor *actor = f->actor < SKY_NATIVES ? &sSky.native[f->actor] : &sSky.legend;
+        bool legend = f->actor >= SKY_NATIVES;
+        uint16_t species = legend ? sSky.legendSpecies : sSky.nativeSpecies[f->actor];
+        unsigned tier = SkyFlockTier(f);
+        float x0 = f->speed < 0.0f ? 1.15f * SKY_W : -0.3f * SKY_W, sxp, pan;
+
+        if (sSky.cried[i] || !actor->ok || species == 0 || n < f->start)
+            continue;
+        sxp = SkyScreenX(x0 + f->speed * (float)(n - f->start));
+        if (sxp < -8.0f || sxp > SKY_W + 8.0f)
+            continue;
+        if (!legend && sSky.lastCry != 0 && n + 1 - sSky.lastCry < 30u)
+            continue;
+        sSky.cried[i] = true;
+        sSky.lastCry = n + 1;
+        pan = (sxp / SKY_W - 0.5f) * 112.0f;
+        CtrFlySky_Cry(species, (int8_t)fmaxf(-64.0f, fminf(64.0f, pan)),
+                      legend ? 84u : tier == 0 ? 30u : tier == 1 ? 42u : 56u);
     }
 }
 
@@ -14077,6 +14168,7 @@ void CtrVideo_Present(void)
 
             if (VoxelFly_Sky(&sFly, &skyFrame) && sSky.loaded)
             {
+                SkySounds(skyFrame);
                 DrawSkyScene(sTop, stereo ? 0 : -1, skyFrame);
                 if (stereo) DrawSkyScene(sTopRight, 1, skyFrame);
             }

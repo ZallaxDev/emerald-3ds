@@ -90,6 +90,10 @@ enum
 };
 void CtrFlySky_Weather(uint8_t *from, uint8_t *to);
 
+/* A Pokemon's cry from the sky: `pan` -64 left .. 64 right, `volume` 0..127
+ * (a cry of its own is 120), without ducking the music. */
+void CtrFlySky_Cry(uint16_t species, int8_t pan, uint8_t volume);
+
 /* On landing: the map flown to gets its region's weather in the overworld
  * (the one the sky showed) when its own is plain sunny - Emerald's towns
  * only rain once a trigger tile is walked onto. Called as the Fly-in

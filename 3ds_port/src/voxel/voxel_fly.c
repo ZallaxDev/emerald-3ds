@@ -15,7 +15,7 @@
 /* How far in, as a share of the pose's distance taken off (FlyCamera). */
 #define VOXEL_FLY_DIP 0.0f /* 0: the camera waits on the pose (a dip was judged a jolt) */
 /* The one motion out: from drawn in, up over the world and into the deck. */
-#define VOXEL_FLY_CLIMB_FRAMES 60u
+#define VOXEL_FLY_CLIMB_FRAMES 72u
 /* ... along it (0..1): where the wisps come in, where the rise into the deck
  * starts and where the cover closes. */
 #define VOXEL_FLY_WISPS_FROM 0.10f
@@ -33,7 +33,7 @@
 #define VOXEL_FLY_CLOUD_MAX 600u
 /* The one motion in: out of the deck and down onto the player's pose, the
  * Pokemon flying in beside the camera to land as it settles. */
-#define VOXEL_FLY_DESCEND_FRAMES 72u
+#define VOXEL_FLY_DESCEND_FRAMES 84u
 #define VOXEL_FLY_UNCOVER_OVER 0.28f /* share of it over which the cover opens */
 #define VOXEL_FLY_SINK_OVER 0.45f    /* ... over which the eye comes down out of the deck */
 #define VOXEL_FLY_WISPS_GONE_FROM 0.45f

@@ -16,12 +16,14 @@
 #include "follower_mon.h"
 #include "overworld.h"
 #include "pokemon.h"
+#include "sound.h"
 #include "sprite.h"
 #include "wild_encounter.h"
 #include "constants/event_object_movement.h"
 #include "constants/map_groups.h"
 #include "constants/maps.h"
 #include "constants/pokemon.h"
+#include "constants/sound.h"
 #include "constants/species.h"
 #include "constants/wild_encounter.h"
 #include "constants/weather.h"
@@ -268,6 +270,13 @@ unsigned CtrFlySky_Natives(uint16_t *species, unsigned max)
         CtrLog_Write(CTR_LOG_GAME, "fly sky: natives%s (from %u:%u to %u:%u)", list, fromGroup, fromNum,
                      toGroup, toNum);
     return n;
+}
+
+void CtrFlySky_Cry(uint16_t species, int8_t pan, uint8_t volume)
+{
+    if (species == SPECIES_NONE || species >= NUM_SPECIES)
+        return;
+    PlayCry_NormalNoDucking(species, pan, (s8)(volume > 127 ? 127 : volume), CRY_PRIORITY_NORMAL);
 }
 
 void CtrFlySky_Release(void)

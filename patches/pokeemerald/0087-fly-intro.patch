@@ -1,0 +1,613 @@
+Fly's start as the 3DS plays it (Port_FlyIntro, 3ds_port/src/3ds_game_full.c)
+in place of the field move's banner and the bird out of the ball: from the
+ball pose the Pokemon doing the Fly comes out on the ground beside the player,
+small and white and growing into its colours with its cry and a few sparkles;
+the player turns and hops onto its back; it lifts off, hanging on while the
+cinematic's camera climbs (Port_FlyHover), then goes on as the bird's own
+fly-off. follower_mon.c tells where the Fly sprite's feet are
+(FollowerMon_FlyFeet), to stand it on the ground. Without a sprite for the
+Pokemon the GBA's start plays from its banner on.
+Applies after 0086-fly-sky-supply.patch; apply with tools/bootstrap.py.
+
+--- a/include/field_effect.h
++++ b/include/field_effect.h
+@@ -61,9 +61,16 @@
+ bool8 Port_FlyBusy(void);
+ bool8 Port_FlyEast(void);
+ bool8 Port_FlyLanding(u8 *share);
++// The flight's start as the port plays it (the Pokemon out of its ball
++// beside the player, the hop onto its back) in place of the field move's
++// banner and the bird; asked as the Fly begins.
++bool8 Port_FlyIntro(void);
+ // The Pokemon doing the Fly (FlyMon_Choose), for the 3DS sky scene
+ // (3ds_port/src/3ds_fly_sky.c): FALSE when none (the bird, or no Fly).
+ bool8 FieldEffect_FlyMon(u16 *species, u32 *personality, bool8 *shiny);
++// The shadow of the Pokemon doing the Fly (patch 0087): a map sprite the voxel
++// world lays on its tile's ground as a cast shadow (voxel_entities.c).
++bool8 FieldEffect_IsFlyShadow(const struct Sprite *sprite);
+ 
+ #endif
+ 
+--- a/include/follower_mon.h
++++ b/include/follower_mon.h
+@@ -46,6 +46,9 @@
+                          s8 *riderX, s8 *riderY);
+ 
+ bool8 FollowerMon_IsFlySprite(const struct Sprite *sprite);
++// The last Fly sprite's lowest drawn row from its centre (its side frame):
++// y of its feet, to stand it on the ground.
++s8 FollowerMon_FlyFeet(void);
+ /* Its sprite destroyed (NULL: none left), its palette and file let go. */
+ void FollowerMon_FlyFree(struct Sprite *sprite);
+ /* Fly's sky scene (3ds_port/src/3ds_fly_sky.c): a Pokemon's follower file
+--- a/src/field_effect.c
++++ b/src/field_effect.c
+@@ -37,7 +37,10 @@
+ #if defined(PLATFORM_3DS)
+ #include "3ds_video.h"
+ #include "follower_mon.h"
++#ifdef PLATFORM_3DS
++#include "3ds_log.h"
+ #endif
++#endif
+ 
+ #define subsprite_table(ptr) {.subsprites = ptr, .subspriteCount = (sizeof ptr) / (sizeof(struct Subsprite))}
+ 
+@@ -218,6 +221,10 @@
+ static void StartFlyBirdSwoopDown(u8);
+ static void SetFlyBirdPlayerSpriteId(u8, u8);
+ static void SpriteCB_FlyBirdLeaveBall(struct Sprite *);
++#ifdef PLATFORM_3DS
++static void SpriteCB_FlyShadow(struct Sprite *);
++static void SpriteCB_FlyBirdReturnToBall(struct Sprite *);
++#endif
+ static void SpriteCB_FlyBirdSwoopDown(struct Sprite *);
+ 
+ static void Task_FlyIn(u8);
+@@ -1320,7 +1327,8 @@
+ {
+     u32 i;
+ 
+-    if (sprite->template == gFieldEffectObjectTemplatePointers[FLDEFFOBJ_BIRD] || FollowerMon_IsFlySprite(sprite))
++    if (sprite->template == gFieldEffectObjectTemplatePointers[FLDEFFOBJ_BIRD] || FollowerMon_IsFlySprite(sprite)
++     || sprite->callback == SpriteCB_FlyShadow)
+         return TRUE;
+     if ((FieldEffectActiveListContains(FLDEFF_USE_FLY) || FieldEffectActiveListContains(FLDEFF_FLY_IN))
+      && sprite == &gSprites[gPlayerAvatar.spriteId])
+@@ -3293,6 +3301,7 @@
+ #define tBirdSpriteId   data[1] //re-used
+ #define tTimer          data[2]
+ #define tAvatarFlags    data[15]
++#define tIntro          data[3] // port: the 3DS's start (sFlyIntroFuncs)
+ 
+ // Sprite data for the fly bird
+ #define sPlayerSpriteId data[6]
+@@ -3315,7 +3324,92 @@
+ #define FLY_MIRROR_X(x) (sFlyEast ? 240 - (x) : (x))
+ #define FLY_MIRROR_DX(dx) (sFlyEast ? -(dx) : (dx))
+ #ifdef PLATFORM_3DS
++// A step in `dir`, in tiles.
++static void FlyIntro_Step(u8 dir, s16 *dx, s16 *dy)
++{
++    *dx = dir == DIR_EAST ? 1 : dir == DIR_WEST ? -1 : 0;
++    *dy = dir == DIR_SOUTH ? 1 : dir == DIR_NORTH ? -1 : 0;
++}
++
++// The Pokemon's shadow on the ground of a tile: the one it stands on out
++// of its ball and takes off from, or the one it lands on. A map sprite of
++// the GBA's shadow picture, its tile in data[1], data[2] as the grass has
++// it, which the voxel world lays on that tile's ground as a cast shadow
++// (voxel_entities.c, FieldEffect_IsFlyShadow; the GBA's own shadow sprites
++// it leaves out). Shown while the Pokemon is on the ground or just above
++// it, not once it has some height, nor going back into its ball.
++#define sShadowMon    data[0]
++#define sShadowTileX  data[1]
++#define sShadowTileY  data[2]
++#define sShadowGround data[3] // y of the ground under the Pokemon's feet, in its coordinates
++#define sShadowFeet   data[4] // the Pokemon's feet under its centre
++#define sShadowPicture data[5] // the Pokemon is on the picture: sShadowGround is there
++
++#define FLY_SHADOW_HEIGHT 20 // pixels up at which the shadow goes
++
++static struct SpriteTemplate sFlyShadowTemplate; // a copy: the port tells it from the GBA's shadows by its address
++
++bool8 FieldEffect_IsFlyShadow(const struct Sprite *sprite)
++{
++    return sprite->template == &sFlyShadowTemplate;
++}
++
++static void SpriteCB_FlyShadow(struct Sprite *sprite)
++{
++    struct Sprite *mon = &gSprites[sprite->sShadowMon];
++    s16 bottom;
++
++    if (!mon->inUse || !FollowerMon_IsFlySprite(mon))
++    {
++        DestroySprite(sprite);
++        return;
++    }
++    bottom = mon->y + mon->y2 + sprite->sShadowFeet;
++    if (!sprite->sShadowPicture)
++        sprite->sShadowGround = bottom; // on the ground still: under its feet
++    sprite->oam.priority = mon->oam.priority;
++    sprite->invisible = mon->invisible || mon->callback == SpriteCB_FlyBirdReturnToBall
++                     || sprite->sShadowGround - bottom > FLY_SHADOW_HEIGHT;
++}
+ 
++// The shadow on the tile `dx, dy` from the player's (map sprite coordinates
++// `x, y` of its own: the 2D field draws it there).
++static u8 FlyShadow_Create(u8 monSpriteId, s16 dx, s16 dy, s16 x, s16 y)
++{
++    const struct ObjectEvent *player = &gObjectEvents[gPlayerAvatar.objectEventId];
++    const struct Sprite *mon = &gSprites[monSpriteId];
++    u8 kind = mon->oam.size == ST_OAM_SIZE_3 ? FLDEFFOBJ_SHADOW_L : FLDEFFOBJ_SHADOW_M;
++    u8 spriteId;
++
++    sFlyShadowTemplate = *gFieldEffectObjectTemplatePointers[kind];
++    sFlyShadowTemplate.callback = SpriteCB_FlyShadow;
++    spriteId = CreateSpriteAtEnd(&sFlyShadowTemplate, x, y, 148);
++    if (spriteId < MAX_SPRITES)
++    {
++        struct Sprite *sprite = &gSprites[spriteId];
++
++        sprite->sShadowMon = monSpriteId;
++        sprite->sShadowTileX = player->currentCoords.x + dx;
++        sprite->sShadowTileY = player->currentCoords.y + dy;
++        sprite->sShadowFeet = FollowerMon_FlyFeet();
++        sprite->sShadowGround = mon->y + mon->y2 + sprite->sShadowFeet;
++        sprite->sShadowPicture = FALSE;
++        sprite->coordOffsetEnabled = TRUE;
++        sprite->oam.priority = mon->oam.priority;
++    }
++    return spriteId;
++}
++
++// The Pokemon has gone onto the picture, its ground line there at `ground`.
++static void FlyShadow_Picture(u8 shadowSpriteId, s16 ground)
++{
++    if (shadowSpriteId < MAX_SPRITES && gSprites[shadowSpriteId].callback == SpriteCB_FlyShadow)
++    {
++        gSprites[shadowSpriteId].sShadowPicture = TRUE;
++        gSprites[shadowSpriteId].sShadowGround = ground;
++    }
++}
++
+ static void FlyMon_Choose(u32 slot)
+ {
+     struct Pokemon *mon;
+@@ -3354,6 +3448,9 @@
+ #ifdef PORT_BRIDGE
+     sFlyEast = Port_FlyEast();
+ #endif
++#if defined(PLATFORM_3DS) && defined(PORT_BRIDGE)
++    gTasks[taskId].tIntro = sFlyMonSpecies != SPECIES_NONE && Port_FlyIntro();
++#endif
+     return 0;
+ }
+ 
+@@ -3369,8 +3466,58 @@
+     FlyOutFieldEffect_End,
+ };
+ 
++#if defined(PLATFORM_3DS) && defined(PORT_BRIDGE)
++// Port: the start of the flight as the 3DS plays it (Port_FlyIntro), in
++// place of the field move's banner and the bird out of the ball. From the
++// ball pose the Pokemon itself comes out on the ground on the free tile
++// beside the player (to the right where it can), a map sprite like any NPC,
++// which the voxel world covers as it covers them: small and white, growing into its
++// colours with its cry and a few sparkles. The player turns to it and hops
++// onto its back (the ledge jump's arc, across onto the seat), and it lifts
++// off - up and away, hanging on while the cinematic's camera climbs
++// (Port_FlyHover) - then goes on as the bird's own fly-off. Where the
++// Pokemon has no sprite, the GBA's start plays from its banner on.
++#define tMonX       data[4]
++#define tMonY       data[5]
++#define tPlayerX    data[6]
++#define tPlayerY    data[7]
++#define FLY_INTRO_GROW   22 // frames from the ball to full size and colour
++#define FLY_INTRO_SETTLE 14 // ... then a beat before the player moves
++#define FLY_INTRO_HOP    26 // the hop onto the back, its arc FLY_INTRO_HOP_RISE high
++#define FLY_INTRO_HOP_RISE 22
++#define tSide       data[8] // the direction from the player to the Pokemon
++#define tShadow     data[9] // the Pokemon's shadow sprite
++#define FLY_TAKEOFF_ANGLE 0x58 // where on the bird's fly-off the Pokemon goes on, let go
++
++static void FlyIntro_MonOut(struct Task *);
++static void FlyIntro_Step(u8 dir, s16 *dx, s16 *dy);
++static void FlyIntro_Grow(struct Task *);
++static void FlyIntro_Turn(struct Task *);
++static void FlyIntro_Hop(struct Task *);
++static void FlyIntro_TakeOff(struct Task *);
++static void SpriteCB_FlyMonTakeOff(struct Sprite *);
++
++static void (*const sFlyIntroFuncs[])(struct Task *) = {
++    FlyOutFieldEffect_FieldMovePose,
++    FlyIntro_MonOut,
++    FlyIntro_Grow,
++    FlyIntro_Turn,
++    FlyIntro_Hop,
++    FlyIntro_TakeOff,
++    FlyOutFieldEffect_WaitFlyOff,
++    FlyOutFieldEffect_End,
++};
++#endif
++
+ static void Task_FlyOut(u8 taskId)
+ {
++#if defined(PLATFORM_3DS) && defined(PORT_BRIDGE)
++    if (gTasks[taskId].tIntro)
++    {
++        sFlyIntroFuncs[gTasks[taskId].tState](&gTasks[taskId]);
++        return;
++    }
++#endif
+     sFlyOutFieldEffectFuncs[gTasks[taskId].tState](&gTasks[taskId]);
+ }
+ 
+@@ -3484,9 +3631,295 @@
+     {
+         FieldEffectActiveListRemove(FLDEFF_USE_FLY);
+         DestroyTask(FindTaskIdByFunc(Task_FlyOut));
++    }
++}
++
++#if defined(PLATFORM_3DS) && defined(PORT_BRIDGE)
++// Out of the ball: from a quarter of its size to full, a little over and
++// back (the colours come with it, FlyIntro_Grow).
++static const union AffineAnimCmd sAffineAnim_FlyMonOut[] = {
++    AFFINEANIMCMD_FRAME(0x40, 0x40, 0, 0),
++    AFFINEANIMCMD_FRAME(0xC, 0xC, 0, 16),
++    AFFINEANIMCMD_FRAME(0x6, 0x6, 0, 3),
++    AFFINEANIMCMD_FRAME(-0x6, -0x6, 0, 3),
++    AFFINEANIMCMD_END
++};
++
++static const union AffineAnimCmd *const sAffineAnims_FlyMonOut[] = {
++    sAffineAnim_FlyMonOut
++};
++
++// A sparkle beside the Pokemon coming out (the grass's, FLDEFF_SPARKLE),
++// nudged off the tile's centre by `seed`.
++static void FlyIntro_Sparkle(u8 side, s16 seed)
++{
++    struct ObjectEvent *objectEvent = &gObjectEvents[gPlayerAvatar.objectEventId];
++    s16 dx, dy;
++    u8 i;
++
++    FlyIntro_Step(side, &dx, &dy);
++    gFieldEffectArguments[0] = objectEvent->currentCoords.x - MAP_OFFSET + dx;
++    gFieldEffectArguments[1] = objectEvent->currentCoords.y - MAP_OFFSET + dy;
++    gFieldEffectArguments[2] = 1;
++    FieldEffectStart(FLDEFF_SPARKLE);
++    for (i = 0; i < MAX_SPRITES; i++)
++    {
++        struct Sprite *sprite = &gSprites[i];
++
++        if (sprite->inUse && sprite->callback == UpdateSparkleFieldEffect && sprite->data[2] == 0)
++        {
++            sprite->data[2] = 1;
++            sprite->x2 = (seed * 7) % 13 - 6;
++            sprite->y2 = (seed * 5) % 9 - 10;
++        }
++    }
++}
++
++static void FlyIntro_MonOut(struct Task *task)
++{
++    struct ObjectEvent *objectEvent = &gObjectEvents[gPlayerAvatar.objectEventId];
++    struct Sprite *player, *mon;
++    u8 spriteId;
++
++    if (!ObjectEventClearHeldMovementIfFinished(objectEvent))
++        return;
++    player = &gSprites[objectEvent->spriteId];
++    sFlyRiderX = 0;
++    sFlyRiderY = -8;
++    spriteId = FollowerMon_FlySprite(sFlyMonSpecies, sFlyMonPersonality, sFlyMonShiny, sFlyEast, 0, 0, 1,
++                                     &sFlyRiderX, &sFlyRiderY);
++    if (spriteId >= MAX_SPRITES)
++    {
++        // No sprite after all: the GBA's start, from its banner on.
++        task->tIntro = FALSE;
++        task->tState = 1;
++        return;
++    }
++    if (task->tAvatarFlags & PLAYER_AVATAR_FLAG_SURFING)
++    {
++        SetSurfBlob_BobState(objectEvent->fieldEffectSpriteId, BOB_JUST_MON);
++        SetSurfBlob_DontSyncAnim(objectEvent->fieldEffectSpriteId, FALSE);
++    }
++    mon = &gSprites[spriteId];
++    // On the free tile beside the player - to the right where it can, else
++    // left, in front, behind; none free, on the player's own tile - in the
++    // map's own coordinates (coordOffsetEnabled, as an object's sprite), so
++    // the port covers it with the voxel world as it covers an NPC; its
++    // feet on the ground line (an object sprite's bottom is 16 under its
++    // centre).
++    {
++        static const u8 sides[] = {DIR_EAST, DIR_WEST, DIR_SOUTH, DIR_NORTH};
++        s16 dx = 0, dy = 0;
++        u8 i;
++
++        task->tSide = objectEvent->facingDirection;
++        for (i = 0; i < ARRAY_COUNT(sides); i++)
++        {
++            s16 tx, ty;
++
++            FlyIntro_Step(sides[i], &tx, &ty);
++            if (GetCollisionAtCoords(objectEvent, objectEvent->currentCoords.x + tx, objectEvent->currentCoords.y + ty, sides[i]) == COLLISION_NONE)
++            {
++                task->tSide = sides[i];
++                dx = tx;
++                dy = ty;
++                break;
++            }
++        }
++        task->tMonX = player->x + 16 * dx;
++        task->tMonY = player->y + 16 * dy + 16 - FollowerMon_FlyFeet();
++    }
++    mon->x = task->tMonX;
++    mon->y = task->tMonY;
++    mon->x2 = 0;
++    mon->y2 = 0;
++    mon->coordOffsetEnabled = TRUE;
++    mon->oam.priority = 1;
++    mon->oam.affineMode = ST_OAM_AFFINE_DOUBLE;
++    mon->affineAnims = sAffineAnims_FlyMonOut;
++    InitSpriteAffineAnim(mon);
++    StartSpriteAffineAnim(mon, 0);
++    mon->callback = SpriteCallbackDummy;
++    task->tBirdSpriteId = spriteId;
++    task->tTimer = 0;
++    {
++        s16 dx, dy;
++
++        FlyIntro_Step(task->tSide, &dx, &dy);
++        task->tShadow = FlyShadow_Create(spriteId, dx, dy, player->x + 16 * dx, player->y + 16 * dy + 12);
++    }
++    PlayCry_Normal(sFlyMonSpecies, 0);
++    FlyIntro_Sparkle(task->tSide, 1);
++    task->tState++;
++}
++
++static void FlyIntro_Grow(struct Task *task)
++{
++    struct Sprite *mon = &gSprites[task->tBirdSpriteId];
++    u8 ext = GetSpriteExtPalette(mon);
++    s16 t = task->tTimer;
++
++    // White into its colours as it grows: its ext palette's own place in
++    // the palette buffers (UpdateSpritePaletteExtWithWeather), blended from
++    // the unfaded one each frame, the weather's tint put back at the end.
++    if (ext != 0xFF)
++    {
++        u16 coeff = t >= FLY_INTRO_GROW ? 0 : 16 - (t * 16) / FLY_INTRO_GROW;
++
++        BlendPalette(PLTT_ID(32 + ext), 16, coeff, RGB_WHITE);
++        if (coeff == 0)
++            UpdateSpritePaletteExtWithWeather(ext);
++    }
++    if (t == 7 || t == 15)
++        FlyIntro_Sparkle(task->tSide, t);
++    if (++task->tTimer >= FLY_INTRO_GROW + 2)
++    {
++        mon->oam.affineMode = ST_OAM_AFFINE_OFF;
++        FreeOamMatrix(mon->oam.matrixNum);
++        CalcCenterToCornerVec(mon, mon->oam.shape, mon->oam.size, ST_OAM_AFFINE_OFF);
++        // The player turns to it.
++        SetPlayerAvatarTransitionFlags(PLAYER_AVATAR_FLAG_ON_FOOT);
++        ObjectEventSetHeldMovement(&gObjectEvents[gPlayerAvatar.objectEventId],
++                                   GetFaceDirectionMovementAction(task->tSide));
++        task->tTimer = 0;
++        task->tState++;
++    }
++}
++
++static void FlyIntro_Turn(struct Task *task)
++{
++    struct ObjectEvent *objectEvent = &gObjectEvents[gPlayerAvatar.objectEventId];
++
++    if (++task->tTimer >= FLY_INTRO_SETTLE && ObjectEventClearHeldMovementIfFinished(objectEvent))
++    {
++        struct Sprite *player;
++
++        // The hop: the getting-on frames carried along the ledge jump's arc
++        // across onto the seat by FlyIntro_Hop.
++        ObjectEventSetGraphicsId(objectEvent, GetPlayerAvatarGraphicsIdByStateId(PLAYER_AVATAR_STATE_SURFING));
++        player = &gSprites[objectEvent->spriteId];
++        StartSpriteAnim(player, task->tSide == DIR_EAST ? ANIM_GET_ON_OFF_POKEMON_EAST
++                              : task->tSide == DIR_WEST ? ANIM_GET_ON_OFF_POKEMON_WEST
++                              : task->tSide == DIR_NORTH ? ANIM_GET_ON_OFF_POKEMON_NORTH : ANIM_GET_ON_OFF_POKEMON_SOUTH);
++        objectEvent->inanimate = TRUE;
++        PlaySE(SE_LEDGE);
++        // From here both are the picture's sprites (the port draws an object
++        // at its tile and places other map sprites by the player's, so a
++        // hop in the map's coordinates would move the Pokemon, not the
++        // player; the camera's flight leaves the map anyway). The port lays
++        // Fly's picture sprites where the camera sees the player, taking the
++        // player's sprite to be at the GBA's (120, 72), and zooms them to the
++        // size the voxel world draws a map sprite there: the two go there as
++        // they stood.
++        {
++            struct Sprite *mon = &gSprites[task->tBirdSpriteId];
++            s16 dx = 120 - player->x, dy = 72 - player->y;
++
++            mon->coordOffsetEnabled = FALSE;
++            task->tMonX += dx;
++            task->tMonY += dy;
++            mon->x = task->tMonX;
++            mon->y = task->tMonY;
++            // ... the shadow stays on the ground; the player's sprite at
++            // the picture's place of the player.
++            FlyShadow_Picture(task->tShadow, task->tMonY + FollowerMon_FlyFeet());
++            player->coordOffsetEnabled = FALSE;
++            player->x = 120;
++            player->y = 72;
++        }
++        task->tPlayerX = 120;
++        task->tPlayerY = 72;
++        task->tTimer = 0;
++        // The cinematic's camera starts with the hop: its first beat (the
++        // bird's dive, on the GBA) is about the hop's length.
++        Port_FlyHover();
++        task->tState++;
+     }
+ }
+ 
++static void FlyIntro_Hop(struct Task *task)
++{
++    struct Sprite *player = &gSprites[gObjectEvents[gPlayerAvatar.objectEventId].spriteId];
++    s16 t = ++task->tTimer;
++    s16 seatX = task->tMonX + sFlyRiderX, seatY = task->tMonY + sFlyRiderY;
++
++    if (t > FLY_INTRO_HOP)
++        t = FLY_INTRO_HOP;
++    player->x = task->tPlayerX + ((seatX - task->tPlayerX) * t) / FLY_INTRO_HOP;
++    player->y = task->tPlayerY + ((seatY - task->tPlayerY) * t) / FLY_INTRO_HOP;
++    player->x2 = 0;
++    player->y2 = -(s16)((4 * FLY_INTRO_HOP_RISE * (s32)t * (FLY_INTRO_HOP - t)) / (FLY_INTRO_HOP * FLY_INTRO_HOP));
++    if (task->tTimer >= FLY_INTRO_HOP)
++        task->tState++;
++}
++
++static void FlyIntro_TakeOff(struct Task *task)
++{
++    struct ObjectEvent *objectEvent = &gObjectEvents[gPlayerAvatar.objectEventId];
++    struct Sprite *mon = &gSprites[task->tBirdSpriteId];
++
++    ObjectEventClearHeldMovementIfActive(objectEvent);
++    objectEvent->inanimate = FALSE;
++    objectEvent->hasShadow = FALSE;
++    if (task->tAvatarFlags & PLAYER_AVATAR_FLAG_SURFING)
++        DestroySprite(&gSprites[objectEvent->fieldEffectSpriteId]);
++    // Seated the way the flight goes (the hop faced the Pokemon): the frame
++    // drawn now - an object standing still has its animation paused.
++    StartSpriteAnim(&gSprites[objectEvent->spriteId], sFlyEast ? ANIM_GET_ON_OFF_POKEMON_EAST : ANIM_GET_ON_OFF_POKEMON_WEST);
++    gSprites[objectEvent->spriteId].animPaused = FALSE;
++    AnimateSprite(&gSprites[objectEvent->spriteId]);
++    StartFlyBirdSwoopDown(task->tBirdSpriteId); // the fly-off's sprite data, the callback set below
++    mon->callback = SpriteCB_FlyMonTakeOff;
++    mon->x = task->tMonX;
++    mon->y = task->tMonY;
++    SetFlyBirdPlayerSpriteId(task->tBirdSpriteId, objectEvent->spriteId);
++    CameraObjectFreeze();
++    PlaySE(SE_M_FLY);
++    task->tState++;
++}
++
++// Off the ground with the player aboard: up, gathering speed, leaning the
++// way it goes, as long as the camera climbs (Port_FlyHover); let go, it
++// goes on as the bird's own fly-off (SpriteCB_FlyBirdSwoopDown) from where
++// it is, at FLY_TAKEOFF_ANGLE of it.
++#define sTakeOffFrames data[3]
++static void SpriteCB_FlyMonTakeOff(struct Sprite *sprite)
++{
++    struct Sprite *rider = &gSprites[sprite->sPlayerSpriteId];
++    s16 h = ++sprite->sTakeOffFrames;
++
++    if (Port_FlyHover())
++    {
++        if (h > 64)
++            h = 64;
++        sprite->y2 = -(h * h) / 48;
++        sprite->x2 = FLY_MIRROR_DX(-(h * h) / 160);
++    }
++    else
++    {
++        sprite->x += sprite->x2 - FLY_MIRROR_DX(FlySwoopX(FLY_TAKEOFF_ANGLE));
++        sprite->y += sprite->y2 - Sin(FLY_TAKEOFF_ANGLE, 0x48);
++        sprite->x2 = FLY_MIRROR_DX(FlySwoopX(FLY_TAKEOFF_ANGLE));
++        sprite->y2 = Sin(FLY_TAKEOFF_ANGLE, 0x48);
++        sprite->data[2] = FLY_TAKEOFF_ANGLE;
++        sprite->callback = SpriteCB_FlyBirdSwoopDown;
++    }
++    rider->coordOffsetEnabled = FALSE;
++    rider->x = sprite->x + sprite->x2 + sFlyRiderX;
++    rider->y = sprite->y + sprite->y2 + sFlyRiderY;
++    rider->x2 = 0;
++    rider->y2 = 0;
++}
++#undef sTakeOffFrames
++#undef tIntro
++#undef tMonX
++#undef tMonY
++#undef tPlayerX
++#undef tPlayerY
++#undef tSide
++#undef tShadow
++#endif
++
+ static u8 CreateFlyBirdSprite(void)
+ {
+     u8 spriteId;
+@@ -3760,6 +4193,16 @@
+         task->tBirdSpriteId = CreateFlyBirdSprite();
+         StartFlyBirdSwoopDown(task->tBirdSpriteId);
+         SetFlyBirdPlayerSpriteId(task->tBirdSpriteId, objectEvent->spriteId);
++#ifdef PLATFORM_3DS
++        if (FollowerMon_IsFlySprite(&gSprites[task->tBirdSpriteId]))
++        {
++            // The Pokemon's shadow waits on the ground where it lands (the
++            // player's feet, GBA (120, 88)).
++            FlyShadow_Picture(FlyShadow_Create(task->tBirdSpriteId, 0, 0, gSprites[objectEvent->spriteId].x,
++                                               gSprites[objectEvent->spriteId].y + 12),
++                              72 + 16);
++        }
++#endif
+     }
+ }
+ 
+@@ -4218,7 +4661,12 @@
+ }
+ 
+ bool8 __attribute__((weak)) Port_FlyBusy(void)
++
++{
++    return FALSE;
++}
+ 
++bool8 __attribute__((weak)) Port_FlyIntro(void)
+ {
+     return FALSE;
+ }
+--- a/src/follower_mon.c
++++ b/src/follower_mon.c
+@@ -532,6 +532,7 @@
+     char key[8];
+     struct SpriteFrameImage frames[FMN_FRAMES];
+     struct SpriteTemplate template;
++    s8 feet;
+ } sFly;
+ 
+ void FollowerMon_FlyPrefetch(u16 species, u32 personality)
+@@ -622,19 +623,26 @@
+     }
+     SetSpriteExtPalette(&gSprites[spriteId], pal);
+     StartSpriteAnim(&gSprites[spriteId], east ? ANIM_STD_GO_EAST : ANIM_STD_GO_WEST);
+-    /* The player sits 4 pixels under the top of the Pokemon seen from the
+-     * side, over the middle of it: as on the bird (its top at row 4 of 32,
+-     * the player 8 above its centre). */
++    /* The player sits a third of the way down the Pokemon's back seen from
++     * the side, over the middle of it: the seated frame's feet (10 rows
++     * under its centre) on that line. */
+     FrameBox(sFly.frames[east ? FRAME_RIGHT : FRAME_LEFT].data, w, &bx0, &by0, &bx1, &by1);
+ 
++    sFly.feet = w / 2;
+     if (bx1 >= 0)
+     {
+         *riderX = (bx0 + bx1 + 1) / 2 - w / 2;
+-        *riderY = by0 + 4 - w / 2;
++        *riderY = by0 + (by1 - by0) / 3 - 10 - w / 2;
++        sFly.feet = by1 + 1 - w / 2;
+     }
+     CtrLog_Write(CTR_LOG_GAME, "fly: on %s%s (%ux%u, rider at %d,%d)", key, shiny ? " (shiny)" : "", w, w,
+                  *riderX, *riderY);
+     return spriteId;
++}
++
++s8 FollowerMon_FlyFeet(void)
++{
++    return sFly.feet;
+ }
+ 
+ bool8 FollowerMon_IsFlySprite(const struct Sprite *sprite)

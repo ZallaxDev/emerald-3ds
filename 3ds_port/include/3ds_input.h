@@ -37,6 +37,9 @@ typedef struct {
 /* Pure conversion shared by HID and host regression tests. */
 void CtrInput_Update(CtrInput *state, const CtrInputSample *sample);
 void CtrInput_Scan(void);
+/* Buttons (CtrInputSample bits: A is bit 0) pressed for the next scan as if
+ * held on the console: a debug aid (settings.txt fly_demo). */
+void CtrInput_Inject(uint16_t buttons);
 void CtrInput_Clear(void);
 const CtrInput *CtrInput_Get(void);
 #endif

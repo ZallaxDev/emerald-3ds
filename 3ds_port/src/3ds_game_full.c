@@ -24,6 +24,7 @@
 #include "scanline_effect.h"
 #include "item_menu.h"
 #include "party_menu.h"
+#include "constants/moves.h"
 #include "battle_main.h"
 #include "fldeff_misc.h"
 #include "field_effect.h"
@@ -78,6 +79,7 @@
 
 #include "3ds_battle_hud.h"
 #include "3ds_platform.h"
+#include "3ds_input.h"
 #include "3ds_video.h"
 #include "3ds_fly_sky.h"
 
@@ -1337,11 +1339,62 @@ bool8 Port_FlyLanding(u8 *share)
     return TRUE;
 }
 
+/* The flight's start as the port plays it (field_effect.c: the Pokemon out
+ * of its ball beside the player, the hop onto its back, the take-off) in
+ * place of the GBA's banner and bird out of the ball: with the cinematic
+ * at all. */
+bool8 Port_FlyIntro(void)
+{
+    return CtrFlySky_Cinematic();
+}
+
+
+/* settings.txt fly_demo=1: the game flies on its own, to two places in turn,
+ * a few seconds after each landing - for watching the start and the landing
+ * frame by frame from outside (no hands needed). */
+static void FlyDemo(void)
+{
+    static const u16 sPlaces[][2] = {{13, 0}, {10, 1}};
+    static unsigned sNext, sWait;
+    u8 slot;
+
+    if (CtrSettings_GetInt("fly_demo", 0) == 0)
+        return;
+    /* Not in the field yet (the title, the menu): A, now and then, through
+     * to the saved game. */
+    if (gMain.callback2 != CB2_Overworld && !FieldEffectActiveListContains(FLDEFF_USE_FLY)
+     && !FieldEffectActiveListContains(FLDEFF_FLY_IN))
+    {
+        if (++sWait % 40 == 0)
+            CtrInput_Inject(1); /* A */
+        return;
+    }
+    if (gMain.callback2 != CB2_Overworld
+     || FieldEffectActiveListContains(FLDEFF_USE_FLY) || FieldEffectActiveListContains(FLDEFF_FLY_IN)
+     || gPaletteFade.active || ArePlayerFieldControlsLocked())
+    {
+        sWait = 0;
+        return;
+    }
+    if (++sWait < 240)
+        return;
+    sWait = 0;
+    for (slot = 0; slot < PARTY_SIZE; slot++)
+        if (MonKnowsMove(&gPlayerParty[slot], MOVE_FLY))
+            break;
+    if (slot >= PARTY_SIZE)
+        return;
+    CtrLog_Write(CTR_LOG_GAME, "fly demo: to %u (%u) by %u", sPlaces[sNext][0], sPlaces[sNext][1], slot);
+    CtrParty_Fly(slot, sPlaces[sNext][0], (u8)sPlaces[sNext][1]);
+    sNext = (sNext + 1) % ARRAY_COUNT(sPlaces);
+}
 
 static void FlyFrame(void)
 {
     static bool sFlyInSeen;
     bool flyIn = FieldEffectActiveListContains(FLDEFF_FLY_IN);
+
+    FlyDemo();
 
     /* Asked once a flight: the next Fly asks again. The sky scene's files
      * are read as the flight starts, under the field move's banner. */

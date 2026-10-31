@@ -45,9 +45,9 @@ typedef struct
 
 /* The sky scene's frames: bursting out of the deck as the picture comes
  * out of the white, soaring, and the dive back in as it goes white again. */
-#define VOXEL_FLY_SKY_ENTER 28u
-#define VOXEL_FLY_SKY_SOAR 104u
-#define VOXEL_FLY_SKY_EXIT 30u
+#define VOXEL_FLY_SKY_ENTER 32u
+#define VOXEL_FLY_SKY_SOAR 150u
+#define VOXEL_FLY_SKY_EXIT 34u
 
 #define VOXEL_FLY_SKY_FRAMES (VOXEL_FLY_SKY_ENTER + VOXEL_FLY_SKY_SOAR + VOXEL_FLY_SKY_EXIT)
 
