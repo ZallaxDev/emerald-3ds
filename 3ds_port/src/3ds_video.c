@@ -413,6 +413,18 @@ unsigned CtrVideo_VoxelUploadsLeft(void)
 #include "voxel/voxel_battle.h"
 #include "voxel/voxel_swoop.h"
 #include "voxel/voxel_fly.h"
+#include "3ds_fly_sky.h"
+
+/* The sky scene's supply (3ds_fly_sky.c, a game translation unit): absent
+ * from a build without the game, the scene stays off. */
+__attribute__((weak)) bool CtrFlySky_Enabled(void) { return false; }
+__attribute__((weak)) bool CtrFlySky_MonSprite(uint16_t species, uint32_t personality, bool shiny, CtrSkySprite *out)
+{ (void)species; (void)personality; (void)shiny; (void)out; return false; }
+__attribute__((weak)) bool CtrFlySky_FlyerSprite(CtrSkySprite *out, int8_t *seatX, int8_t *seatY)
+{ (void)out; (void)seatX; (void)seatY; return false; }
+__attribute__((weak)) bool CtrFlySky_RiderSprite(CtrSkySprite *out) { (void)out; return false; }
+__attribute__((weak)) unsigned CtrFlySky_Natives(uint16_t *species, unsigned max) { (void)species; (void)max; return 0; }
+__attribute__((weak)) void CtrFlySky_Release(void) {}
 #include "3ds_map_events.h"
 
 /*
@@ -6152,14 +6164,21 @@ static VoxelFly sFly;
  * often dropped, so a frame with no field is not to be counted on). */
 static uint32_t sFlyMapVersion;
 
+static bool SkySceneLoad(float dirX, float dirZ);
+static void SkySceneFree(void);
+
 bool CtrVideo_FlyBegin(float dirX, float dirZ)
 {
+    bool sky;
+
     if (sFieldMode != FIELD_MODE_VOXEL || VoxelFly_Active(&sFly) || VoxelSwoop_Active(&sSwoop)
         || CtrVoxel_CloudTexture() == NULL)
         return false;
-    VoxelFly_Begin(&sFly, dirX, dirZ);
+    sky = CtrFlySky_Enabled() && SkySceneLoad(dirX, dirZ);
+    VoxelFly_Begin(&sFly, dirX, dirZ, sky);
     sFlyMapVersion = CtrMap_Version();
-    CtrLog_Write(CTR_LOG_VIDEO, "FLY cinematic begins towards (%.2f, %.2f)", (double)sFly.dirX, (double)sFly.dirZ);
+    CtrLog_Write(CTR_LOG_VIDEO, "FLY cinematic begins towards (%.2f, %.2f)%s", (double)sFly.dirX, (double)sFly.dirZ,
+                 sky ? " with the sky scene" : "");
     return true;
 }
 
@@ -12072,6 +12091,459 @@ static void DrawSwoopLight(C3D_RenderTarget *target, const VoxelSwoopFrame *fx)
  * StereoParallax has what is nearer than the screen).
  */
 /*
+ * ── The Fly sky scene ────────────────────────────────────────────────────
+ *
+ * Inside the cloud, with the SKY FLIGHT option on (3ds_fly_sky.h), the
+ * flight is seen instead of hidden: the player on their Pokemon bursts out
+ * over the cloud deck into the open sky, soars across it with the wind
+ * streaking past and the region's wild flyers passing by, slower than us -
+ * a flock or two, now and then a legendary tearing past - and dives back
+ * into the deck as the picture goes white for the descent. The game's warp
+ * and the new map's build happen under it (voxel_fly.c, VOXEL_FLY_SKY).
+ *
+ * All of it is 2D over the closed cloud cover: a sky gradient, three sheets
+ * of the world's cloud texture as the deck in parallax, the sprites from
+ * one atlas texture packed at the flight's start (the Pokemon's and the
+ * natives' overworld frames from the follower data, the player's riding
+ * frame), the wind as streaks. The way of travel sets the side: east and
+ * we cross left to right; south and the whole path slopes down. In 3D the
+ * layers stand at their depths about the screen.
+ */
+#define SKY_W ((float)CTR_GAME_WIDTH)
+#define SKY_H ((float)CTR_GAME_HEIGHT)
+#define SKY_ATLAS 256u
+#define SKY_NATIVES 4u
+#define SKY_FLOCKS 8u
+#define SKY_FLOCK_MAX 5u
+#define SKY_MARKS 26u
+#define SKY_FLYER_SCALE 2.0f
+#define SKY_FADE_IN 14u
+#define SKY_FADE_OUT 16u
+/* Emerald's own species numbers of the legendaries that may pass. */
+#define SKY_SPECIES_RAYQUAZA 406
+#define SKY_SPECIES_LATIAS 407
+#define SKY_SPECIES_LATIOS 408
+
+typedef struct
+{
+    Tex3DS_SubTexture sub[2]; /* two wingbeat frames */
+    uint16_t width;
+    bool ok;
+} SkyActor;
+
+typedef struct
+{
+    uint8_t actor;     /* index into native[], or SKY_NATIVES for the legend */
+    uint8_t count;
+    bool crossing;     /* flying the other way (drawn flipped) */
+    uint16_t start;    /* scene frame it sets out */
+    float y, speed, depth, phase;
+} SkyFlock;
+
+static struct
+{
+    bool loaded;
+    C3D_Tex atlas;
+    unsigned packX, packY, packRow;
+    SkyActor flyer, rider, native[SKY_NATIVES], legend;
+    unsigned natives;
+    int8_t seatX, seatY;
+    int sx;            /* +1: left to right (east), -1: right to left */
+    float slope;       /* -1..1, the path's fall down the picture (south) */
+    SkyFlock flock[SKY_FLOCKS];
+    unsigned flocks;
+    struct { float y, len, speed, phase; uint8_t alpha, thick; } mark[SKY_MARKS];
+    uint32_t seed;
+} sSky;
+
+static uint32_t SkyRandom(void)
+{
+    sSky.seed = sSky.seed * 1664525u + 1013904223u;
+    return sSky.seed >> 8;
+}
+
+static float SkyUnit(void)
+{
+    return (float)(SkyRandom() & 0xFFFF) / 65535.0f;
+}
+
+/* One frame of a 4bpp sprite into the atlas; false when it has no room. */
+static bool SkyPackFrame(const CtrSkySprite *sprite, unsigned frame, Tex3DS_SubTexture *sub)
+{
+    unsigned w = sprite->width;
+    uint16_t *data = sSky.atlas.data;
+    const uint8_t *tiles = sprite->tiles + (size_t)frame * sprite->frameBytes;
+
+    if (frame >= sprite->frames || (w != 32 && w != 64))
+        return false;
+    if (sSky.packX + w > SKY_ATLAS)
+    {
+        sSky.packX = 0;
+        sSky.packY += sSky.packRow;
+        sSky.packRow = 0;
+    }
+    if (sSky.packY + w > SKY_ATLAS)
+        return false;
+    for (unsigned y = 0; y < w; ++y)
+        for (unsigned x = 0; x < w; ++x)
+        {
+            const uint8_t *tile = tiles + ((y / 8) * (w / 8) + x / 8) * 32;
+            unsigned index = (tile[(y & 7) * 4 + (x & 7) / 2] >> ((x & 1) * 4)) & 15;
+
+            data[CtrVideo_Texel(sSky.packX + x, sSky.packY + y, SKY_ATLAS)] =
+                index ? CtrVideo_RGBA5551(sprite->palette[index]) : 0;
+        }
+    sub->width = (uint16_t)w;
+    sub->height = (uint16_t)w;
+    sub->left = (float)sSky.packX / SKY_ATLAS;
+    sub->right = (float)(sSky.packX + w) / SKY_ATLAS;
+    sub->top = 1.0f - (float)sSky.packY / SKY_ATLAS;
+    sub->bottom = 1.0f - (float)(sSky.packY + w) / SKY_ATLAS;
+    sSky.packX += w;
+    if (w > sSky.packRow) sSky.packRow = w;
+    return true;
+}
+
+/* An actor's two frames facing the way of travel. */
+static void SkyPackActor(SkyActor *actor, const CtrSkySprite *sprite, unsigned firstFrame)
+{
+    actor->width = sprite->width;
+    actor->ok = SkyPackFrame(sprite, firstFrame, &actor->sub[0])
+             && SkyPackFrame(sprite, firstFrame + 1, &actor->sub[1]);
+}
+
+static void SkySceneFree(void)
+{
+    if (!sSky.loaded) return;
+    C3D_TexDelete(&sSky.atlas);
+    CtrFlySky_Release();
+    memset(&sSky, 0, sizeof(sSky));
+}
+
+/* Readies the scene for a flight that way: false and the flight stays
+ * inside the cloud (no sprite for the Pokemon, no memory). */
+static bool SkySceneLoad(float dirX, float dirZ)
+{
+    CtrSkySprite sprite;
+    uint16_t natives[SKY_NATIVES];
+    unsigned facing;
+
+    SkySceneFree();
+    if (!CtrFlySky_FlyerSprite(&sprite, &sSky.seatX, &sSky.seatY))
+        return false;
+    if (!C3D_TexInit(&sSky.atlas, SKY_ATLAS, SKY_ATLAS, GPU_RGBA5551))
+    {
+        CtrLog_Write(CTR_LOG_ERROR, "FLY sky: no linear memory for the sprite atlas (free=%lu)",
+                     (unsigned long)linearSpaceFree());
+        memset(&sSky, 0, sizeof(sSky));
+        return false;
+    }
+    sSky.loaded = true;
+    C3D_TexSetFilter(&sSky.atlas, GPU_NEAREST, GPU_NEAREST);
+    C3D_TexSetWrap(&sSky.atlas, GPU_CLAMP_TO_EDGE, GPU_CLAMP_TO_EDGE);
+    memset(sSky.atlas.data, 0, SKY_ATLAS * SKY_ATLAS * 2);
+    sSky.seed = (uint32_t)sStats.frames * 2654435761u + 12345u;
+    sSky.sx = dirX >= 0.0f ? 1 : -1;
+    sSky.slope = fmaxf(-1.0f, fminf(1.0f, dirZ));
+    facing = sSky.sx > 0 ? CTR_SKY_FRAME_RIGHT : CTR_SKY_FRAME_LEFT;
+    SkyPackActor(&sSky.flyer, &sprite, facing);
+    if (!sSky.flyer.ok)
+    {
+        SkySceneFree();
+        return false;
+    }
+    if (CtrFlySky_RiderSprite(&sprite))
+    {
+        sSky.rider.width = sprite.width;
+        sSky.rider.ok = SkyPackFrame(&sprite, sSky.sx > 0 ? 1 : 0, &sSky.rider.sub[0]);
+        sSky.rider.sub[1] = sSky.rider.sub[0];
+    }
+    sSky.natives = CtrFlySky_Natives(natives, SKY_NATIVES);
+    for (unsigned i = 0; i < sSky.natives; ++i)
+        if (CtrFlySky_MonSprite(natives[i], 0, false, &sprite))
+            SkyPackActor(&sSky.native[i], &sprite, facing);
+    /* Now and then a legendary tears past. */
+    if ((SkyRandom() & 7) == 0)
+    {
+        static const uint16_t legends[3] = {SKY_SPECIES_LATIOS, SKY_SPECIES_LATIAS, SKY_SPECIES_RAYQUAZA};
+
+        if (CtrFlySky_MonSprite(legends[SkyRandom() % 3], 0, false, &sprite))
+            SkyPackActor(&sSky.legend, &sprite, facing);
+    }
+    C3D_TexFlush(&sSky.atlas);
+    /* The flocks: set out over the soar, each from the far edge, drifting
+     * back past us (we are the faster), some crossing the other way. */
+    {
+        unsigned count = 3 + SkyRandom() % 3, usable = 0;
+
+        for (unsigned i = 0; i < sSky.natives; ++i) usable += sSky.native[i].ok;
+        sSky.flocks = 0;
+        if (usable != 0)
+            for (unsigned i = 0; i < count && sSky.flocks < SKY_FLOCKS - 1; ++i)
+            {
+                SkyFlock *f = &sSky.flock[sSky.flocks];
+                unsigned pick = SkyRandom() % usable, actor = 0;
+
+                for (unsigned j = 0; j < sSky.natives; ++j)
+                    if (sSky.native[j].ok && pick-- == 0) { actor = j; break; }
+                f->actor = (uint8_t)actor;
+                f->count = (uint8_t)(1 + SkyRandom() % SKY_FLOCK_MAX);
+                f->crossing = (SkyRandom() & 3) == 0;
+                f->depth = SkyUnit();
+                f->start = (uint16_t)(VOXEL_FLY_SKY_ENTER / 2
+                                      + (unsigned)((float)i / (float)count * (VOXEL_FLY_SKY_SOAR - 30u))
+                                      + SkyRandom() % 20);
+                f->y = SKY_H * (0.12f + 0.55f * SkyUnit());
+                f->speed = -(1.4f + 2.5f * f->depth + 1.1f * SkyUnit()) * (f->crossing ? 2.2f : 1.0f);
+                f->phase = SkyUnit() * 100.0f;
+                ++sSky.flocks;
+            }
+        if (sSky.legend.ok)
+        {
+            SkyFlock *f = &sSky.flock[sSky.flocks++];
+
+            f->actor = SKY_NATIVES;
+            f->count = 1;
+            f->crossing = false;
+            f->depth = 0.85f;
+            f->start = (uint16_t)(VOXEL_FLY_SKY_ENTER + VOXEL_FLY_SKY_SOAR / 3);
+            f->y = SKY_H * 0.26f;
+            f->speed = 8.5f; /* overtaking us from behind */
+            f->phase = 0.0f;
+        }
+    }
+    for (unsigned i = 0; i < SKY_MARKS; ++i)
+    {
+        sSky.mark[i].y = SkyUnit() * SKY_H;
+        sSky.mark[i].len = 30.0f + SkyUnit() * 90.0f;
+        sSky.mark[i].speed = 12.0f + SkyUnit() * 12.0f;
+
+        sSky.mark[i].phase = SkyUnit() * (SKY_W + 120.0f);
+        sSky.mark[i].alpha = (uint8_t)(70 + SkyRandom() % 110);
+        sSky.mark[i].thick = (SkyRandom() & 3) == 0 ? 2 : 1;
+    }
+    CtrLog_Write(CTR_LOG_VIDEO, "FLY sky: scene ready, %s, %u natives, %u flocks%s, rider %s",
+                 sSky.sx > 0 ? "left to right" : "right to left", sSky.natives, sSky.flocks,
+                 sSky.legend.ok ? " and a legendary" : "", sSky.rider.ok ? "on" : "missing");
+    return true;
+}
+
+/* A travel-space x (forward positive, from the left edge) to the screen. */
+static float SkyScreenX(float x)
+{
+    return sSky.sx > 0 ? x : SKY_W - x;
+}
+
+static float SkySmooth(float t)
+{
+    if (t <= 0.0f) return 0.0f;
+    if (t >= 1.0f) return 1.0f;
+    return t * t * (3.0f - 2.0f * t);
+}
+
+/* Our Pokemon's place along the scene: in fast, easing to a soar past the
+ * middle, then away fast; `speed` 0..1 how fast it is going. */
+static void SkyFlyerPath(unsigned n, float *x, float *y, float *tilt, float *speed)
+{
+    const float E = VOXEL_FLY_SKY_ENTER, S = VOXEL_FLY_SKY_SOAR, X = VOXEL_FLY_SKY_EXIT;
+    float p = (float)n / (float)VOXEL_FLY_SKY_FRAMES;
+    float bob = sinf((float)n * (6.2831853f / 70.0f));
+    float tx, ty = SKY_H * 0.46f + sSky.slope * SKY_H * 0.14f * (2.0f * p - 1.0f), dive = 0.0f, lift = 0.0f;
+
+    if ((float)n < E)
+    {
+        float u = (float)n / E, ease = 1.0f - (1.0f - u) * (1.0f - u) * (1.0f - u);
+
+        tx = -0.3f * SKY_W + (0.44f * SKY_W + 0.3f * SKY_W) * ease;
+        ty -= (1.0f - u) * (1.0f - u) * 24.0f;
+        lift = 1.0f - u;
+        *speed = 1.0f - 0.65f * ease;
+    }
+    else if ((float)n < E + S)
+    {
+        float t = ((float)n - E) / S;
+
+        tx = 0.44f * SKY_W + 0.10f * SKY_W * t;
+        *speed = 0.35f;
+    }
+    else
+    {
+        float u = ((float)n - E - S) / X, ease = u * u * u;
+
+        tx = 0.54f * SKY_W + (1.45f * SKY_W - 0.54f * SKY_W) * ease;
+        ty += u * u * 30.0f;
+        dive = u;
+        *speed = 0.35f + 0.65f * SkySmooth(u * 1.5f);
+    }
+    *x = SkyScreenX(tx);
+    *y = ty + 8.0f * bob;
+    *tilt = (float)sSky.sx * (0.09f * cosf((float)n * (6.2831853f / 70.0f)) + 0.28f * dive - 0.12f * lift);
+}
+
+static void SkyDrawActor(const SkyActor *actor, unsigned frame, float cx, float cy, float angle,
+                         float scale, bool flipped, uint8_t alpha)
+{
+    C2D_Image image = {&sSky.atlas, &actor->sub[frame & 1]};
+    C2D_ImageTint tint;
+
+    C2D_PlainImageTint(&tint, C2D_Color32(255, 255, 255, alpha), 0.0f);
+    C2D_DrawImageAtRotated(image, cx, cy, 0.0f, angle, &tint, flipped ? -scale : scale, scale);
+}
+
+/* A sheet of the cloud texture as a band of the deck, scrolled back along
+ * the way at its own pace (the nearer the faster), shifted for the eye,
+ * its edges faded (`fadeTop`, `fadeBottom`: the colour's alpha there, as a
+ * share of it) so no band shows a line. */
+static void SkyDrawDeck(C3D_Tex *tex, unsigned n, float top, float bottom, float repeats, float speed,
+                        uint32_t colour, float shift, float fadeTop, float fadeBottom)
+{
+    float h = bottom - top;
+    float ru = repeats, rv = repeats * h / SKY_W;
+    float u0 = (float)fmod((speed * (float)n * (float)sSky.sx - shift) * repeats / SKY_W, 1.0);
+    Tex3DS_SubTexture sub = {(uint16_t)SKY_W, (uint16_t)h, u0, 0.73f, u0 + ru, 0.73f - rv};
+    C2D_Image image = {tex, &sub};
+    C2D_ImageTint tint;
+    unsigned alpha = colour >> 24;
+    uint32_t rgb = colour & 0x00FFFFFFu;
+    uint32_t topColour = rgb | ((uint32_t)(alpha * fadeTop + 0.5f) << 24);
+    uint32_t bottomColour = rgb | ((uint32_t)(alpha * fadeBottom + 0.5f) << 24);
+
+    C2D_SetImageTint(&tint, C2D_TopLeft, topColour, 1.0f);
+    C2D_SetImageTint(&tint, C2D_TopRight, topColour, 1.0f);
+    C2D_SetImageTint(&tint, C2D_BotLeft, bottomColour, 1.0f);
+    C2D_SetImageTint(&tint, C2D_BotRight, bottomColour, 1.0f);
+    C2D_DrawImageAt(image, 0.0f, top, 0.0f, &tint, 1.0f, 1.0f);
+}
+
+/* The flocks at one depth: `near` those nearer than the middle plane. */
+static void SkyDrawFlocks(unsigned n, float par, bool near)
+{
+    for (unsigned i = 0; i < sSky.flocks; ++i)
+    {
+        const SkyFlock *f = &sSky.flock[i];
+        const SkyActor *actor = f->actor < SKY_NATIVES ? &sSky.native[f->actor] : &sSky.legend;
+        float scale = 1.0f + 0.9f * f->depth, dir = f->speed < 0.0f ? -1.0f : 1.0f;
+        float shift = (f->depth - 0.55f) * 6.0f * par;
+        float x0 = f->speed < 0.0f ? 1.15f * SKY_W : -0.3f * SKY_W;
+        float headX;
+
+        if ((f->depth >= 0.5f) != near || !actor->ok || n < f->start)
+            continue;
+        headX = x0 + f->speed * (float)(n - f->start);
+        for (unsigned m = 0; m < f->count; ++m)
+        {
+            float mx = headX - dir * (float)m * (14.0f + 10.0f * f->depth) * (actor->width / 32.0f);
+            float my = f->y + (float)((m + 1) / 2) * 11.0f * ((m & 1) ? -1.0f : 1.0f) * scale
+                     + 5.0f * sinf(((float)n + f->phase) * 0.09f + (float)m);
+            float sxp = SkyScreenX(mx) + shift;
+            unsigned wing;
+
+            if (sxp < -80.0f || sxp > SKY_W + 80.0f)
+                continue;
+            wing = ((n + m * 3) / (f->actor < SKY_NATIVES ? 7u : 4u)) & 1;
+            SkyDrawActor(actor, wing, sxp, my, 0.0f, scale, f->crossing, 255);
+        }
+        /* The legendary's wake. */
+        if (f->actor == SKY_NATIVES)
+            for (unsigned k = 0; k < 5; ++k)
+            {
+                float lx = SkyScreenX(headX - dir * (30.0f + 22.0f * (float)k)) + shift;
+                uint32_t head = C2D_Color32(255, 255, 255, (uint8_t)(150 - 25 * k)), tail = C2D_Color32(255, 255, 255, 0);
+
+                C2D_DrawRectangle(sSky.sx > 0 ? lx - 40.0f : lx, f->y - 6.0f + 3.0f * (float)k, 0, 40.0f, 1.0f,
+                                  sSky.sx > 0 ? tail : head, sSky.sx > 0 ? head : tail,
+                                  sSky.sx > 0 ? tail : head, sSky.sx > 0 ? head : tail);
+            }
+    }
+}
+
+static void DrawSkyScene(C3D_RenderTarget *target, int eye, unsigned n)
+{
+    C3D_Tex *cloud = CtrVoxel_CloudTexture();
+    float slider = eye < 0 ? 0.0f : CtrScenario_Slider(osGet3DSliderState());
+    float eyeSign = eye == 0 ? 1.0f : -1.0f; /* in front of the screen: right in the left eye */
+    float par = eyeSign * slider;
+    float fx, fy, tilt, speed;
+    unsigned wing;
+
+    C2D_Prepare();
+    C3D_DepthTest(false, GPU_ALWAYS, GPU_WRITE_COLOR);
+    BlendForget();
+    SceneOn(target);
+    C2D_ViewReset();
+    Blend(5, false, false);
+    /* The sky: deep above, pale at the deck. */
+    {
+        uint32_t zenith = C2D_Color32(58, 118, 212, 255), mid = C2D_Color32(132, 182, 236, 255);
+        uint32_t horizon = C2D_Color32(196, 222, 246, 255);
+
+        C2D_DrawRectangle(0, 0, 0, SKY_W, SKY_H * 0.36f, zenith, zenith, mid, mid);
+        C2D_DrawRectangle(0, SKY_H * 0.36f, 0, SKY_W, SKY_H * 0.64f, mid, mid, horizon, horizon);
+    }
+    SkyFlyerPath(n, &fx, &fy, &tilt, &speed);
+    /* The planes, far to near, with the flyers between them: high thin
+     * cloud far behind, the far deck, the far flocks, the middle deck, the
+     * near flocks and us, and a thin veil of the nearest cloud over all,
+     * seen through. Every sheet fades in from its top edge. */
+    if (cloud != NULL)
+    {
+        SkyDrawDeck(cloud, n, 0.0f, SKY_H * 0.34f, 2.6f, 1.3f, C2D_Color32(236, 244, 254, 110), -4.0f * par, 0.7f, 0.0f);
+        SkyDrawDeck(cloud, n, SKY_H * 0.48f, SKY_H * 1.0f, 2.2f, 1.0f, C2D_Color32(222, 234, 250, 150), -3.0f * par, 0.0f, 1.0f);
+    }
+    SkyDrawFlocks(n, par, false);
+    if (cloud != NULL)
+        SkyDrawDeck(cloud, n, SKY_H * 0.60f, SKY_H * 1.0f, 1.6f, 2.4f, C2D_Color32(232, 241, 252, 190), 0.0f, 0.0f, 1.0f);
+    SkyDrawFlocks(n, par, true);
+    /* Us: the Pokemon, the player on its back. */
+    {
+        float cx = fx + 3.0f * par, cy = fy;
+        float seatX = (float)(sSky.sx > 0 ? -sSky.seatX : sSky.seatX) * SKY_FLYER_SCALE;
+        float seatY = (float)sSky.seatY * SKY_FLYER_SCALE;
+        float c = cosf(tilt), s = sinf(tilt);
+
+        wing = (n / (speed > 0.6f ? 4u : 7u)) & 1;
+        SkyDrawActor(&sSky.flyer, wing, cx, cy, tilt, SKY_FLYER_SCALE, false, 255);
+        if (sSky.rider.ok)
+            SkyDrawActor(&sSky.rider, 0, cx + seatX * c - seatY * s, cy + seatX * s + seatY * c, tilt,
+                         SKY_FLYER_SCALE, false, 255);
+    }
+    if (cloud != NULL)
+        SkyDrawDeck(cloud, n, SKY_H * 0.70f, SKY_H * 1.0f, 1.1f, 4.6f, C2D_Color32(244, 248, 254, 120), 6.0f * par, 0.0f, 0.85f);
+    /* The wind: streaks running back past us, thick and fast as we go. */
+    for (unsigned i = 0; i < SKY_MARKS; ++i)
+    {
+        float span = SKY_W + 140.0f;
+        float x = (float)fmod(sSky.mark[i].phase - sSky.mark[i].speed * (0.4f + speed) * (float)n, span);
+        float len = sSky.mark[i].len * (0.5f + speed);
+        uint8_t a = (uint8_t)((float)sSky.mark[i].alpha * (0.25f + 0.75f * speed));
+        uint32_t bright = C2D_Color32(255, 255, 255, a), clear = C2D_Color32(255, 255, 255, 0);
+        float sx0;
+
+        if (x < 0.0f) x += span;
+        x -= 120.0f;
+        sx0 = sSky.sx > 0 ? x : SKY_W - x - len;
+        sx0 += 7.0f * par;
+        /* The head (forward) end bright, the tail clear. */
+        if (sSky.sx > 0)
+            C2D_DrawRectangle(sx0, sSky.mark[i].y, 0, len, sSky.mark[i].thick, clear, bright, clear, bright);
+        else
+            C2D_DrawRectangle(sx0, sSky.mark[i].y, 0, len, sSky.mark[i].thick, bright, clear, bright, clear);
+    }
+    /* Out of the white, and back into it. */
+    {
+        float white = 0.0f;
+
+        if (n < SKY_FADE_IN)
+            white = 1.0f - (float)n / (float)SKY_FADE_IN;
+        else if (n + SKY_FADE_OUT >= VOXEL_FLY_SKY_FRAMES)
+            white = (float)(n + SKY_FADE_OUT - VOXEL_FLY_SKY_FRAMES + 1) / (float)SKY_FADE_OUT;
+        if (white > 0.0f)
+            C2D_DrawRectSolid(0, 0, 0, SKY_W, SKY_H, C2D_Color32(238, 242, 248, (uint8_t)(fminf(white, 1.0f) * 255.0f + 0.5f)));
+    }
+    C2D_Flush();
+}
+
+/*
  * The flight's wind: wisps of cloud streaming out from the picture's centre
  * to its edges, over the world while the camera is up, as the air rushing
  * past. Each is a long thin strip of the world's cloud texture (tileable A8
@@ -13144,6 +13616,16 @@ void CtrVideo_Present(void)
             DrawCloudCover(sTop, fly.whiteout, stereo ? 0 : -1);
             if (stereo) DrawCloudCover(sTopRight, fly.whiteout, 1);
         }
+        /* The sky scene over the closed cover. */
+        {
+            unsigned skyFrame;
+
+            if (VoxelFly_Sky(&sFly, &skyFrame) && sSky.loaded)
+            {
+                DrawSkyScene(sTop, stereo ? 0 : -1, skyFrame);
+                if (stereo) DrawSkyScene(sTopRight, 1, skyFrame);
+            }
+        }
 
         /* Paced by the game's frames, as the swoop is. Over the old map the
          * world must be there to fly over: gone early (the field left for
@@ -13169,6 +13651,9 @@ void CtrVideo_Present(void)
                              (unsigned)sFly.phase, (unsigned long)sStats.frames);
         }
     }
+    /* The scene's sprites, once the flight is over (or dropped). */
+    if (sSky.loaded && !VoxelFly_Active(&sFly))
+        SkySceneFree();
     if (!down && VoxelSwoop_Active(&sSwoop))
     {
         VoxelSwoopFrame swoop;

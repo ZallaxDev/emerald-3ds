@@ -70,7 +70,7 @@ static void Go(VoxelFly *f, VoxelFlyPhase phase)
     f->frame = 0;
 }
 
-void VoxelFly_Begin(VoxelFly *f, float dirX, float dirZ)
+void VoxelFly_Begin(VoxelFly *f, float dirX, float dirZ, bool sky)
 {
     float length = sqrtf(dirX * dirX + dirZ * dirZ);
 
@@ -87,6 +87,7 @@ void VoxelFly_Begin(VoxelFly *f, float dirX, float dirZ)
     f->dirX = dirX;
     f->dirZ = dirZ;
     f->gone = false;
+    f->sky = sky;
     Go(f, VOXEL_FLY_DIVE);
 }
 
@@ -109,7 +110,15 @@ bool VoxelFly_Hovers(const VoxelFly *f)
 
 bool VoxelFly_Busy(const VoxelFly *f)
 {
-    return f->phase == VOXEL_FLY_CLOUD;
+    return f->phase == VOXEL_FLY_CLOUD || f->phase == VOXEL_FLY_SKY;
+}
+
+bool VoxelFly_Sky(const VoxelFly *f, unsigned *frame)
+{
+    if (f->phase != VOXEL_FLY_SKY)
+        return false;
+    *frame = f->frame < VOXEL_FLY_SKY_FRAMES ? f->frame : VOXEL_FLY_SKY_FRAMES - 1;
+    return true;
 }
 
 bool VoxelFly_Landing(const VoxelFly *f, float *share)
@@ -170,6 +179,13 @@ void VoxelFly_Frame(const VoxelFly *f, VoxelFlyFrame *out)
         out->oldMap = !f->gone;
         out->noFade = true;
         break;
+    case VOXEL_FLY_SKY:
+        /* The scene is drawn over the closed cover; under it the new map is
+         * built at the player's own pose, as in CLOUD. */
+        out->whiteout = 1.0f;
+        out->oldMap = !f->gone;
+        out->noFade = true;
+        break;
     case VOXEL_FLY_DESCEND:
     {
         /* One motion from the deck down onto the pose. */
@@ -201,7 +217,8 @@ void VoxelFly_Step(VoxelFly *f, bool fieldShown, bool fieldGone)
         if (f->frame >= VOXEL_FLY_DIVE_FRAMES) Go(f, VOXEL_FLY_CLIMB);
         break;
     case VOXEL_FLY_CLIMB:
-        if (f->frame >= VOXEL_FLY_CLIMB_FRAMES) Go(f, VOXEL_FLY_CLOUD);
+        if (fieldGone) f->gone = true;
+        if (f->frame >= VOXEL_FLY_CLIMB_FRAMES) Go(f, f->sky ? VOXEL_FLY_SKY : VOXEL_FLY_CLOUD);
         break;
     case VOXEL_FLY_CLOUD:
         if (fieldGone) f->gone = true;
@@ -210,8 +227,16 @@ void VoxelFly_Step(VoxelFly *f, bool fieldShown, bool fieldGone)
         else if (f->frame >= VOXEL_FLY_CLOUD_MAX)
             Go(f, VOXEL_FLY_IDLE);
         break;
+    case VOXEL_FLY_SKY:
+        if (fieldGone) f->gone = true;
+        if (f->frame >= VOXEL_FLY_SKY_FRAMES && f->gone && fieldShown)
+            Go(f, VOXEL_FLY_DESCEND);
+        else if (f->frame >= VOXEL_FLY_SKY_FRAMES + VOXEL_FLY_CLOUD_MAX)
+            Go(f, VOXEL_FLY_IDLE);
+        break;
     case VOXEL_FLY_DESCEND:
         if (f->frame >= VOXEL_FLY_DESCEND_FRAMES) Go(f, VOXEL_FLY_IDLE);
         break;
+
     }
 }

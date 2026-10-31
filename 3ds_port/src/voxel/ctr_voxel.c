@@ -4542,6 +4542,24 @@ static bool IsDrawn(const VoxelChunk *chunk)
  */
 static bool sHolesOnly;
 
+/*
+ * The Fly cinematic's camera is up (FlyCamera): for a second or two the
+ * wide view wants several times the squares of the ground view, far off and
+ * under the wind. They are covered by their drafts at a faster rate than on
+ * the ground (DraftHoles), and no real build is started for a drafted square
+ * or ahead of time meanwhile: those builds would take the frames the drafts
+ * need, and the VRAM a view that size has not got (they failed for room, and
+ * the square stayed black for VOXEL_NO_ROOM_FRAMES). The real builds follow
+ * the landing, as the view comes back to its size.
+ */
+#define VOXEL_FLY_DRAFT_PER_FRAME VOXEL_CHUNK_UPLOADS_MAX
+#define VOXEL_FLY_DRAFT_MS 3.0f
+
+static bool FlyingHigh(void)
+{
+    return sFly.active && sFly.lift > 0.05f;
+}
+
 /* Takes the most urgent request the frame can afford as the next job. */
 static bool StartNextJob(float elapsed, float holeMs, float aheadMs)
 {
@@ -4554,6 +4572,8 @@ static bool StartNextJob(float elapsed, float holeMs, float aheadMs)
 
         if (r->done || sFrame < sRequestWait[r->waitIndex].noRoomUntil)
             continue;
+        if (FlyingHigh() && (need > NEED_STALE || (r->chunk != NULL && r->chunk->draft)))
+            continue; /* the flight: drafts stand, nothing ahead of time */
         if (sHolesOnly && need != NEED_HOLE && !RequestOverdue(r))
             continue; /* sorted: holes come first */
         if (elapsed >= (forView ? holeMs : aheadMs))
@@ -4788,6 +4808,9 @@ static bool DraftHoles(unsigned *missing)
 {
     uint64_t start = svcGetSystemTick();
     unsigned made = 0;
+    bool flying = FlyingHigh();
+    unsigned perFrame = flying ? VOXEL_FLY_DRAFT_PER_FRAME : VOXEL_DRAFT_PER_FRAME;
+    float budgetMs = flying ? VOXEL_FLY_DRAFT_MS : VOXEL_DRAFT_MS;
 
     for (unsigned i = 0; i < sRequestCount && sRequests[i].need == NEED_HOLE; ++i)
     {
@@ -4797,8 +4820,9 @@ static bool DraftHoles(unsigned *missing)
 
         if (r->done || r->site.border)
             continue;
-        if (made >= VOXEL_DRAFT_PER_FRAME || (made != 0 && MsSince(start) >= VOXEL_DRAFT_MS))
+        if (made >= perFrame || (made != 0 && MsSince(start) >= budgetMs))
             break;
+
         /* The running job is for this square: let it finish. */
         if (sJob.active && SameSite(&r->site, &sJob.site))
             continue;

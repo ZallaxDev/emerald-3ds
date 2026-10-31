@@ -28,6 +28,9 @@ typedef enum
     VOXEL_FLY_DIVE,    /* the bird diving for the player, the camera drawing in */
     VOXEL_FLY_CLIMB,   /* the player aboard: out, up and into the deck */
     VOXEL_FLY_CLOUD,   /* inside: the game warps and the new world is built */
+    VOXEL_FLY_SKY,     /* instead of CLOUD with the sky scene on: out over the deck
+                        * in the open sky (3ds_video.c draws it), the game warping
+                        * and the new world built unseen under it */
     VOXEL_FLY_DESCEND, /* the new map: down out of the deck onto the player's pose */
 } VoxelFlyPhase;
 
@@ -36,8 +39,17 @@ typedef struct
     VoxelFlyPhase phase;
     unsigned frame;    /* frames into the phase */
     float dirX, dirZ;  /* unit direction of travel, world tiles (+X east, +Z south) */
-    bool gone;         /* CLOUD: the old world has been seen to go (the warp) */
+    bool gone;         /* CLOUD/SKY: the old world has been seen to go (the warp) */
+    bool sky;          /* the sky scene plays in place of the cloud's inside */
 } VoxelFly;
+
+/* The sky scene's frames: bursting out of the deck as the picture comes
+ * out of the white, soaring, and the dive back in as it goes white again. */
+#define VOXEL_FLY_SKY_ENTER 28u
+#define VOXEL_FLY_SKY_SOAR 104u
+#define VOXEL_FLY_SKY_EXIT 30u
+
+#define VOXEL_FLY_SKY_FRAMES (VOXEL_FLY_SKY_ENTER + VOXEL_FLY_SKY_SOAR + VOXEL_FLY_SKY_EXIT)
 
 /* What this frame draws, 0..1 unless said. */
 typedef struct
@@ -59,8 +71,9 @@ typedef struct
 } VoxelFlyFrame;
 
 /* Starts the cinematic: the bird dives for the player. `dirX, dirZ` the way
- * to the destination, any length (zero: north). */
-void VoxelFly_Begin(VoxelFly *f, float dirX, float dirZ);
+ * to the destination, any length (zero: north); `sky`: the sky scene plays
+ * inside the cloud (its sprites are ready). */
+void VoxelFly_Begin(VoxelFly *f, float dirX, float dirZ, bool sky);
 void VoxelFly_Cancel(VoxelFly *f);
 bool VoxelFly_Active(const VoxelFly *f);
 /* The bird, with the player aboard, keeps hovering: until the cloud has
@@ -71,6 +84,10 @@ bool VoxelFly_Busy(const VoxelFly *f);
 /* The camera is coming down onto the new map: `share` 0..1 of the way down,
  * for the Pokemon flying in beside it to land as it settles. */
 bool VoxelFly_Landing(const VoxelFly *f, float *share);
+/* The sky scene is on: `frame` 0..VOXEL_FLY_SKY_FRAMES-1, held at the last
+ * while the new world is still being built. */
+bool VoxelFly_Sky(const VoxelFly *f, unsigned *frame);
+
 
 void VoxelFly_Frame(const VoxelFly *f, VoxelFlyFrame *out);
 /* The frame has been drawn: on to the next. `fieldShown`: the voxel world

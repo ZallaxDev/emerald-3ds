@@ -257,6 +257,10 @@ const CtrExtra gCtrExtras[] =
      * screen's own (3ds_bottom_game.inc). */
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_ENHANCEMENTS, 1), CTR_TEXT("CLASSIC MENUS", "MENÚS CLÁSICOS", "MENUS CLASSIQ.", "MENU CLASSICI", "MENUS CLÁSSICOS", "KLASS. MENÜS", "むかしの メニュー"), "classic_menus", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_ENHANCEMENTS, 1), CTR_TEXT("FOLLOWER", "ACOMPAÑANTE", "COMPAGNON", "COMPAGNO", "COMPANHEIRO", "BEGLEITER", "つれあるき"), "follower", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
+    /* Fly soars across the open sky between the climb into the cloud and
+     * the descent, with the region's flying Pokémon (3ds_fly_sky.c); off,
+     * the flight stays inside the cloud. */
+    {CTR_EXTRAS_SCREEN(CTR_EXTRAS_ENHANCEMENTS, 1), CTR_TEXT("SKY FLIGHT", "VUELO EN CIELO", "VOL DANS LE CIEL", "VOLO NEL CIELO", "VOO NO CÉU", "HIMMELSFLUG", "そらの ひこう"), "skyflight", 2, 1, gCtrExtrasOffOn, NULL, NULL, NULL},
 #include "3ds_nuzlocke_extras.inc"
 #include "3ds_randomizer_extras.inc"
     #include "3ds_field_qol_extras.inc"
