@@ -425,6 +425,7 @@ __attribute__((weak)) bool CtrFlySky_FlyerSprite(CtrSkySprite *out, int8_t *seat
 __attribute__((weak)) bool CtrFlySky_RiderSprite(CtrSkySprite *out) { (void)out; return false; }
 __attribute__((weak)) unsigned CtrFlySky_Natives(uint16_t *species, unsigned max) { (void)species; (void)max; return 0; }
 __attribute__((weak)) void CtrFlySky_Release(void) {}
+__attribute__((weak)) void CtrFlySky_Weather(uint8_t *from, uint8_t *to) { *from = *to = CTR_SKY_CLEAR; }
 #include "3ds_map_events.h"
 
 /*
@@ -12114,7 +12115,11 @@ static void DrawSwoopLight(C3D_RenderTarget *target, const VoxelSwoopFrame *fx)
 #define SKY_ATLAS 256u
 #define SKY_NATIVES 4u
 #define SKY_FLOCKS 8u
-#define SKY_FLOCK_MAX 5u
+#define SKY_FLOCK_MAX 6u
+#define SKY_LEGEND_ODDS 30u /* one flight in this many */
+#define SKY_RAIN_DROPS 90u
+#define SKY_PUFFS 6u
+#define SKY_ASH_FLAKES 48u
 #define SKY_MARKS 26u
 #define SKY_FLYER_SCALE 2.0f
 #define SKY_FADE_IN 14u
@@ -12130,6 +12135,18 @@ typedef struct
     uint16_t width;
     bool ok;
 } SkyActor;
+
+/* The sky's weather as drawn: colours and strengths, blended between the
+ * map flown from and the map flown to halfway through the soar. */
+typedef struct
+{
+    float zenith[3], mid[3], horizon[3]; /* the sky gradient, 0..1 */
+    float deckTint[3];                   /* the cloud sheets' colour */
+    float deck;        /* the deck's thickness: the sheets' alpha, 0..1 */
+    float haze[3];     /* the air's colour over the far planes ... */
+    float hazeAmount;  /* ... and how much of it */
+    float rain, storm, ash, sand;
+} SkyWeather;
 
 typedef struct
 {
@@ -12153,8 +12170,113 @@ static struct
     SkyFlock flock[SKY_FLOCKS];
     unsigned flocks;
     struct { float y, len, speed, phase; uint8_t alpha, thick; } mark[SKY_MARKS];
+    /* Dollops of cloud whizzing past in front of everything, each a window
+     * of the cloud texture faded to its edges (its holes show us through). */
+    struct { float y, w, h, speed, phase, u, v; uint8_t alpha; } puff[SKY_PUFFS];
     uint32_t seed;
+    SkyWeather from, to;
+    float thickness;   /* the deck this flight, 0.35 thin .. 1 thick (clear skies vary) */
+    unsigned flashFrame; /* the last lightning's scene frame, or ~0u */
 } sSky;
+
+static void SkySetColour(float *c, unsigned r, unsigned g, unsigned b)
+{
+    c[0] = r / 255.0f;
+    c[1] = g / 255.0f;
+    c[2] = b / 255.0f;
+}
+
+static void SkyWeatherPreset(SkyWeather *w, unsigned class, float thickness)
+{
+    memset(w, 0, sizeof(*w));
+    SkySetColour(w->deckTint, 240, 246, 254);
+    SkySetColour(w->haze, 220, 230, 240);
+    w->deck = thickness;
+    switch (class)
+    {
+    default:
+    case CTR_SKY_CLEAR:
+        SkySetColour(w->zenith, 58, 118, 212);
+        SkySetColour(w->mid, 132, 182, 236);
+        SkySetColour(w->horizon, 196, 222, 246);
+        break;
+    case CTR_SKY_CLOUDY:
+        SkySetColour(w->zenith, 96, 132, 186);
+        SkySetColour(w->mid, 160, 184, 214);
+        SkySetColour(w->horizon, 206, 214, 226);
+        SkySetColour(w->deckTint, 228, 232, 240);
+        w->deck = fmaxf(thickness, 0.85f);
+        w->hazeAmount = 0.3f;
+        break;
+    case CTR_SKY_RAIN:
+        SkySetColour(w->zenith, 66, 80, 108);
+        SkySetColour(w->mid, 108, 122, 148);
+        SkySetColour(w->horizon, 148, 158, 174);
+        SkySetColour(w->deckTint, 186, 192, 204);
+        SkySetColour(w->haze, 150, 158, 172);
+        w->deck = 0.95f;
+        w->hazeAmount = 0.45f;
+        w->rain = 0.7f;
+        break;
+    case CTR_SKY_STORM:
+        SkySetColour(w->zenith, 24, 26, 42);
+        SkySetColour(w->mid, 44, 48, 68);
+        SkySetColour(w->horizon, 70, 74, 92);
+        SkySetColour(w->deckTint, 76, 80, 96);
+        SkySetColour(w->haze, 64, 68, 84);
+        w->deck = 1.0f;
+        w->hazeAmount = 0.6f;
+        w->rain = 1.0f;
+        w->storm = 1.0f;
+        break;
+    case CTR_SKY_SAND:
+        SkySetColour(w->zenith, 188, 150, 92);
+        SkySetColour(w->mid, 218, 186, 126);
+        SkySetColour(w->horizon, 236, 214, 168);
+        SkySetColour(w->deckTint, 226, 196, 136);
+        SkySetColour(w->haze, 218, 184, 120);
+        w->deck = 0.95f;
+        w->hazeAmount = 0.85f;
+        w->sand = 1.0f;
+        break;
+    case CTR_SKY_ASH:
+        SkySetColour(w->zenith, 104, 104, 114);
+        SkySetColour(w->mid, 146, 146, 154);
+        SkySetColour(w->horizon, 178, 178, 184);
+        SkySetColour(w->deckTint, 196, 196, 200);
+        SkySetColour(w->haze, 170, 170, 176);
+        w->deck = 0.7f;
+        w->hazeAmount = 0.5f;
+        w->ash = 1.0f;
+        break;
+    case CTR_SKY_DROUGHT:
+        SkySetColour(w->zenith, 236, 166, 104);
+        SkySetColour(w->mid, 248, 206, 146);
+        SkySetColour(w->horizon, 252, 232, 198);
+        SkySetColour(w->deckTint, 252, 236, 210);
+        SkySetColour(w->haze, 250, 220, 170);
+        w->deck = 0.4f;
+        w->hazeAmount = 0.25f;
+        break;
+    }
+}
+
+static float SkyLerp(float a, float b, float t) { return a + (b - a) * t; }
+
+static void SkyWeatherAt(SkyWeather *w, float t)
+{
+    const float *a = (const float *)&sSky.from, *b = (const float *)&sSky.to;
+    float *o = (float *)w;
+
+    for (unsigned i = 0; i < sizeof(SkyWeather) / sizeof(float); ++i)
+        o[i] = SkyLerp(a[i], b[i], t);
+}
+
+static uint32_t SkyColour(const float *c, unsigned alpha)
+{
+    return C2D_Color32((uint8_t)(c[0] * 255.0f + 0.5f), (uint8_t)(c[1] * 255.0f + 0.5f),
+                       (uint8_t)(c[2] * 255.0f + 0.5f), (uint8_t)alpha);
+}
 
 static uint32_t SkyRandom(void)
 {
@@ -12244,6 +12366,16 @@ static bool SkySceneLoad(float dirX, float dirZ)
     memset(sSky.atlas.data, 0, SKY_ATLAS * SKY_ATLAS * 2);
     sSky.seed = (uint32_t)sStats.frames * 2654435761u + 12345u;
     sSky.sx = dirX >= 0.0f ? 1 : -1;
+    sSky.flashFrame = ~0u;
+    /* The weather at both ends, the deck thin or thick by chance. */
+    {
+        uint8_t from, to;
+
+        CtrFlySky_Weather(&from, &to);
+        sSky.thickness = 0.35f + 0.65f * SkyUnit();
+        SkyWeatherPreset(&sSky.from, from, sSky.thickness);
+        SkyWeatherPreset(&sSky.to, to, sSky.thickness);
+    }
     sSky.slope = fmaxf(-1.0f, fminf(1.0f, dirZ));
     facing = sSky.sx > 0 ? CTR_SKY_FRAME_RIGHT : CTR_SKY_FRAME_LEFT;
     SkyPackActor(&sSky.flyer, &sprite, facing);
@@ -12262,8 +12394,8 @@ static bool SkySceneLoad(float dirX, float dirZ)
     for (unsigned i = 0; i < sSky.natives; ++i)
         if (CtrFlySky_MonSprite(natives[i], 0, false, &sprite))
             SkyPackActor(&sSky.native[i], &sprite, facing);
-    /* Now and then a legendary tears past. */
-    if ((SkyRandom() & 7) == 0)
+    /* Rarely a legendary tears past. */
+    if (SkyRandom() % SKY_LEGEND_ODDS == 0)
     {
         static const uint16_t legends[3] = {SKY_SPECIES_LATIOS, SKY_SPECIES_LATIAS, SKY_SPECIES_RAYQUAZA};
 
@@ -12272,9 +12404,13 @@ static bool SkySceneLoad(float dirX, float dirZ)
     }
     C3D_TexFlush(&sSky.atlas);
     /* The flocks: set out over the soar, each from the far edge, drifting
-     * back past us (we are the faster), some crossing the other way. */
+     * back past us (we are the faster), some crossing the other way. Some
+     * flights are quiet - a lone bird - and a storm keeps most grounded. */
     {
-        unsigned count = 3 + SkyRandom() % 3, usable = 0;
+        unsigned count = (SkyRandom() & 3) == 0 ? 1 + SkyRandom() % 2 : 2 + SkyRandom() % 4, usable = 0;
+        bool stormy = sSky.from.storm > 0.5f || sSky.to.storm > 0.5f;
+
+        if (stormy && count > 2) count = 1 + SkyRandom() % 2;
 
         for (unsigned i = 0; i < sSky.natives; ++i) usable += sSky.native[i].ok;
         sSky.flocks = 0;
@@ -12287,7 +12423,11 @@ static bool SkySceneLoad(float dirX, float dirZ)
                 for (unsigned j = 0; j < sSky.natives; ++j)
                     if (sSky.native[j].ok && pick-- == 0) { actor = j; break; }
                 f->actor = (uint8_t)actor;
-                f->count = (uint8_t)(1 + SkyRandom() % SKY_FLOCK_MAX);
+                {
+                    unsigned roll = SkyRandom() % 10;
+
+                    f->count = (uint8_t)(roll < 4 ? 1 : roll < 7 ? 2 + SkyRandom() % 2 : 3 + SkyRandom() % (SKY_FLOCK_MAX - 2));
+                }
                 f->crossing = (SkyRandom() & 3) == 0;
                 f->depth = SkyUnit();
                 f->start = (uint16_t)(VOXEL_FLY_SKY_ENTER / 2
@@ -12312,6 +12452,17 @@ static bool SkySceneLoad(float dirX, float dirZ)
             f->phase = 0.0f;
         }
     }
+    for (unsigned i = 0; i < SKY_PUFFS; ++i)
+    {
+        sSky.puff[i].w = 110.0f + SkyUnit() * 120.0f;
+        sSky.puff[i].h = sSky.puff[i].w * (0.42f + SkyUnit() * 0.2f);
+        sSky.puff[i].y = SKY_H * (0.08f + 0.78f * SkyUnit());
+        sSky.puff[i].speed = 7.0f + SkyUnit() * 8.0f;
+        sSky.puff[i].phase = SkyUnit() * (SKY_W + 600.0f);
+        sSky.puff[i].u = SkyUnit();
+        sSky.puff[i].v = SkyUnit();
+        sSky.puff[i].alpha = (uint8_t)(190 + SkyRandom() % 66);
+    }
     for (unsigned i = 0; i < SKY_MARKS; ++i)
     {
         sSky.mark[i].y = SkyUnit() * SKY_H;
@@ -12322,9 +12473,11 @@ static bool SkySceneLoad(float dirX, float dirZ)
         sSky.mark[i].alpha = (uint8_t)(70 + SkyRandom() % 110);
         sSky.mark[i].thick = (SkyRandom() & 3) == 0 ? 2 : 1;
     }
-    CtrLog_Write(CTR_LOG_VIDEO, "FLY sky: scene ready, %s, %u natives, %u flocks%s, rider %s",
+    CtrLog_Write(CTR_LOG_VIDEO, "FLY sky: scene ready, %s, %u natives, %u flocks%s, rider %s, deck %.2f",
                  sSky.sx > 0 ? "left to right" : "right to left", sSky.natives, sSky.flocks,
-                 sSky.legend.ok ? " and a legendary" : "", sSky.rider.ok ? "on" : "missing");
+                 sSky.legend.ok ? " and a legendary" : "", sSky.rider.ok ? "on" : "missing",
+                 (double)sSky.thickness);
+
     return true;
 }
 
@@ -12415,19 +12568,50 @@ static void SkyDrawDeck(C3D_Tex *tex, unsigned n, float top, float bottom, float
     C2D_DrawImageAt(image, 0.0f, top, 0.0f, &tint, 1.0f, 1.0f);
 }
 
-/* The flocks at one depth: `near` those nearer than the middle plane. */
-static void SkyDrawFlocks(unsigned n, float par, bool near)
+/* A dollop of cloud: a window of the texture in four quarters, each faded
+ * from the middle out to its far corner, so the whole fades to nothing all
+ * round while the texture's own thin parts stay see-through. */
+static void SkyDrawPuff(C3D_Tex *tex, float cx, float cy, float w, float h, float u0, float v0, uint32_t colour)
+{
+    float ru = w / 128.0f * 0.55f, rv = h / 128.0f * 0.55f;
+    uint32_t clear = colour & 0x00FFFFFFu;
+
+    for (unsigned q = 0; q < 4; ++q)
+    {
+        unsigned qx = q & 1, qy = q >> 1;
+        float u = u0 + qx * ru * 0.5f, v = v0 + qy * rv * 0.5f;
+        Tex3DS_SubTexture sub = {(uint16_t)(w * 0.5f), (uint16_t)(h * 0.5f), u, 1.0f - v, u + ru * 0.5f, 1.0f - v - rv * 0.5f};
+        C2D_Image image = {tex, &sub};
+        C2D_ImageTint tint;
+
+        /* The corner at the dollop's middle is the full one. */
+        C2D_SetImageTint(&tint, C2D_TopLeft, qx == 1 && qy == 1 ? colour : clear, 1.0f);
+        C2D_SetImageTint(&tint, C2D_TopRight, qx == 0 && qy == 1 ? colour : clear, 1.0f);
+        C2D_SetImageTint(&tint, C2D_BotLeft, qx == 1 && qy == 0 ? colour : clear, 1.0f);
+        C2D_SetImageTint(&tint, C2D_BotRight, qx == 0 && qy == 0 ? colour : clear, 1.0f);
+        C2D_DrawImageAt(image, cx - w * 0.5f + qx * w * 0.5f, cy - h * 0.5f + qy * h * 0.5f, 0.0f, &tint, 1.0f, 1.0f);
+    }
+}
+
+/* The flocks of one tier of depth: 0 far behind the middle deck, 1 before
+ * us, 2 nearer than us (they cross in front). */
+static unsigned SkyFlockTier(const SkyFlock *f)
+{
+    return f->depth < 0.5f ? 0u : f->depth < 0.8f ? 1u : 2u;
+}
+
+static void SkyDrawFlocks(unsigned n, float par, unsigned tier)
 {
     for (unsigned i = 0; i < sSky.flocks; ++i)
     {
         const SkyFlock *f = &sSky.flock[i];
         const SkyActor *actor = f->actor < SKY_NATIVES ? &sSky.native[f->actor] : &sSky.legend;
-        float scale = 1.0f + 0.9f * f->depth, dir = f->speed < 0.0f ? -1.0f : 1.0f;
-        float shift = (f->depth - 0.55f) * 6.0f * par;
+        float scale = 1.0f + 0.9f * f->depth + (tier == 2 ? 0.5f : 0.0f), dir = f->speed < 0.0f ? -1.0f : 1.0f;
+        float shift = (f->depth - 0.55f) * 8.0f * par;
         float x0 = f->speed < 0.0f ? 1.15f * SKY_W : -0.3f * SKY_W;
         float headX;
 
-        if ((f->depth >= 0.5f) != near || !actor->ok || n < f->start)
+        if (SkyFlockTier(f) != tier || !actor->ok || n < f->start)
             continue;
         headX = x0 + f->speed * (float)(n - f->start);
         for (unsigned m = 0; m < f->count; ++m)
@@ -12465,6 +12649,14 @@ static void DrawSkyScene(C3D_RenderTarget *target, int eye, unsigned n)
     float par = eyeSign * slider;
     float fx, fy, tilt, speed;
     unsigned wing;
+    SkyWeather w;
+    /* The crossing: out of the one map's weather into the other's over the
+     * middle of the soar. */
+    float crossing = SkySmooth(((float)n / (float)VOXEL_FLY_SKY_FRAMES - 0.2f) / 0.3f);
+    float deckA;
+
+    SkyWeatherAt(&w, crossing);
+    deckA = 0.55f + 0.45f * w.deck; /* a thin deck is a fainter one too */
 
     C2D_Prepare();
     C3D_DepthTest(false, GPU_ALWAYS, GPU_WRITE_COLOR);
@@ -12474,26 +12666,30 @@ static void DrawSkyScene(C3D_RenderTarget *target, int eye, unsigned n)
     Blend(5, false, false);
     /* The sky: deep above, pale at the deck. */
     {
-        uint32_t zenith = C2D_Color32(58, 118, 212, 255), mid = C2D_Color32(132, 182, 236, 255);
-        uint32_t horizon = C2D_Color32(196, 222, 246, 255);
+        uint32_t zenith = SkyColour(w.zenith, 255), mid = SkyColour(w.mid, 255), horizon = SkyColour(w.horizon, 255);
 
         C2D_DrawRectangle(0, 0, 0, SKY_W, SKY_H * 0.36f, zenith, zenith, mid, mid);
         C2D_DrawRectangle(0, SKY_H * 0.36f, 0, SKY_W, SKY_H * 0.64f, mid, mid, horizon, horizon);
     }
     SkyFlyerPath(n, &fx, &fy, &tilt, &speed);
     /* The planes, far to near, with the flyers between them: high thin
-     * cloud far behind, the far deck, the far flocks, the middle deck, the
-     * near flocks and us, and a thin veil of the nearest cloud over all,
-     * seen through. Every sheet fades in from its top edge. */
+     * cloud far behind, the far deck, the far flocks, the air's haze over
+     * those, the middle deck, the near flocks and us, and a thin veil of
+     * the nearest cloud over all, seen through. Every sheet fades in from
+     * its top edge; a thin deck is a sparser, lower one. */
     if (cloud != NULL)
     {
-        SkyDrawDeck(cloud, n, 0.0f, SKY_H * 0.34f, 2.6f, 1.3f, C2D_Color32(236, 244, 254, 110), -4.0f * par, 0.7f, 0.0f);
-        SkyDrawDeck(cloud, n, SKY_H * 0.48f, SKY_H * 1.0f, 2.2f, 1.0f, C2D_Color32(222, 234, 250, 150), -3.0f * par, 0.0f, 1.0f);
+        SkyDrawDeck(cloud, n, 0.0f, SKY_H * 0.34f, 2.6f, 1.3f, SkyColour(w.deckTint, (unsigned)(110.0f * deckA)), -4.0f * par, 0.7f, 0.0f);
+        SkyDrawDeck(cloud, n, SKY_H * (0.48f + 0.12f * (1.0f - w.deck)), SKY_H * 1.0f, 2.2f, 1.0f,
+                    SkyColour(w.deckTint, (unsigned)(150.0f * deckA)), -3.0f * par, 0.0f, 1.0f);
     }
-    SkyDrawFlocks(n, par, false);
+    SkyDrawFlocks(n, par, 0);
+    if (w.hazeAmount > 0.005f)
+        C2D_DrawRectSolid(0, 0, 0, SKY_W, SKY_H, SkyColour(w.haze, (unsigned)(w.hazeAmount * 150.0f)));
     if (cloud != NULL)
-        SkyDrawDeck(cloud, n, SKY_H * 0.60f, SKY_H * 1.0f, 1.6f, 2.4f, C2D_Color32(232, 241, 252, 190), 0.0f, 0.0f, 1.0f);
-    SkyDrawFlocks(n, par, true);
+        SkyDrawDeck(cloud, n, SKY_H * (0.60f + 0.10f * (1.0f - w.deck)), SKY_H * 1.0f, 1.6f, 2.4f,
+                    SkyColour(w.deckTint, (unsigned)(190.0f * deckA)), 0.0f, 0.0f, 1.0f);
+    SkyDrawFlocks(n, par, 1);
     /* Us: the Pokemon, the player on its back. */
     {
         float cx = fx + 3.0f * par, cy = fy;
@@ -12507,16 +12703,104 @@ static void DrawSkyScene(C3D_RenderTarget *target, int eye, unsigned n)
             SkyDrawActor(&sSky.rider, 0, cx + seatX * c - seatY * s, cy + seatX * s + seatY * c, tilt,
                          SKY_FLYER_SCALE, false, 255);
     }
+    /* The nearest flyers cross in front of us; then the veil and the
+     * dollops of cloud whizzing past over everything, now and then right
+     * over us. */
+    SkyDrawFlocks(n, par, 2);
     if (cloud != NULL)
-        SkyDrawDeck(cloud, n, SKY_H * 0.70f, SKY_H * 1.0f, 1.1f, 4.6f, C2D_Color32(244, 248, 254, 120), 6.0f * par, 0.0f, 0.85f);
+    {
+        SkyDrawDeck(cloud, n, SKY_H * 0.70f, SKY_H * 1.0f, 1.1f, 4.6f, SkyColour(w.deckTint, (unsigned)(120.0f * deckA)),
+                    6.0f * par, 0.0f, 0.85f);
+        for (unsigned i = 0; i < SKY_PUFFS; ++i)
+        {
+            float span = SKY_W + 2.0f * sSky.puff[i].w;
+            float x = span - (float)fmod(sSky.puff[i].phase + sSky.puff[i].speed * (float)n, span) - sSky.puff[i].w;
+
+            SkyDrawPuff(cloud, SkyScreenX(x) + 9.0f * par, sSky.puff[i].y, sSky.puff[i].w, sSky.puff[i].h,
+                        sSky.puff[i].u, sSky.puff[i].v, SkyColour(w.deckTint, (unsigned)(sSky.puff[i].alpha * (0.6f + 0.4f * w.deck))));
+        }
+    }
+    /* The rain: drops driven down and back past us; the ash: flakes
+     * drifting down; the sand: the wind's streaks thick and tan. */
+    if (w.rain > 0.02f)
+    {
+        unsigned count = (unsigned)(SKY_RAIN_DROPS * w.rain);
+        uint32_t drop = C2D_Color32(206, 222, 250, (uint8_t)(150.0f * w.rain)), clear = C2D_Color32(206, 222, 250, 0);
+        float fall = 13.0f + 5.0f * w.storm, drift = (3.5f + 3.0f * w.storm) * (float)sSky.sx;
+
+        for (unsigned i = 0; i < count; ++i)
+        {
+            uint32_t h = i * 2654435761u + sSky.seed;
+            float x0 = (float)(h & 0xFFFF) / 65535.0f * (SKY_W + 60.0f), y0 = (float)((h >> 16) & 0xFFFF) / 65535.0f * (SKY_H + 40.0f);
+            float y = (float)fmod(y0 + fall * (float)n, SKY_H + 40.0f) - 20.0f;
+            float x = (float)fmod(x0 - drift * (float)n + 4000.0f * (SKY_W + 60.0f), SKY_W + 60.0f) - 30.0f + 5.0f * par;
+
+            C2D_DrawLine(x, y, drop, x + drift * 0.9f, y - fall * 0.9f, clear, 1.0f, 0.0f);
+        }
+        /* The spray: fine flecks torn off the rain, nearer, lighter and
+         * quicker, driven almost level back past us. */
+        count = (unsigned)(SKY_RAIN_DROPS * (0.7f + 0.5f * w.storm) * w.rain);
+        {
+            uint32_t fleck = C2D_Color32(224, 236, 255, (uint8_t)(110.0f * w.rain)), gone = C2D_Color32(224, 236, 255, 0);
+            float rush = (14.0f + 6.0f * w.storm) * (float)sSky.sx;
+
+            for (unsigned i = 0; i < count; ++i)
+            {
+                uint32_t h = i * 2246822519u + sSky.seed * 3u;
+                float speed = rush * (0.8f + (float)(h & 15) / 40.0f);
+                float x0 = (float)(h & 0xFFFF) / 65535.0f * (SKY_W + 80.0f), y0 = (float)((h >> 16) & 0xFFFF) / 65535.0f * (SKY_H + 20.0f);
+                float y = (float)fmod(y0 + 3.5f * (float)n, SKY_H + 20.0f) - 10.0f;
+                float x = (float)fmod(x0 - speed * (float)n + 4000.0f * (SKY_W + 80.0f), SKY_W + 80.0f) - 40.0f + 10.0f * par;
+
+                C2D_DrawLine(x, y, fleck, x + speed * 0.3f, y - 1.2f, gone, 1.0f, 0.0f);
+            }
+        }
+    }
+
+    if (w.sand > 0.02f)
+    {
+        /* Blown sand: grains tearing past level with us, thick and quick. */
+        unsigned count = (unsigned)(SKY_RAIN_DROPS * 1.4f * w.sand);
+        uint32_t grain = SkyColour(w.haze, (unsigned)(190.0f * w.sand)), clear = SkyColour(w.haze, 0);
+        float rush = 18.0f * (float)sSky.sx;
+
+        for (unsigned i = 0; i < count; ++i)
+        {
+            uint32_t h = i * 3266489917u + sSky.seed;
+            float speed = rush * (0.8f + (float)(h & 15) / 32.0f);
+            float x0 = (float)(h & 0xFFFF) / 65535.0f * (SKY_W + 80.0f), y0 = (float)((h >> 16) & 0xFFFF) / 65535.0f * SKY_H;
+            float y = y0 + 3.0f * sinf((float)n * 0.2f + (float)i);
+            float x = (float)fmod(x0 - speed * (float)n + 4000.0f * (SKY_W + 80.0f), SKY_W + 80.0f) - 40.0f + 8.0f * par;
+
+            C2D_DrawLine(x, y, grain, x + speed * 0.5f, y + 0.6f, clear, (h & 8) ? 1.5f : 1.0f, 0.0f);
+        }
+    }
+    if (w.ash > 0.02f)
+    {
+        unsigned count = (unsigned)(SKY_ASH_FLAKES * w.ash);
+
+        uint32_t flake = C2D_Color32(226, 226, 230, (uint8_t)(200.0f * w.ash));
+
+        for (unsigned i = 0; i < count; ++i)
+        {
+            uint32_t h = i * 2246822519u + sSky.seed;
+            float x0 = (float)(h & 0xFFFF) / 65535.0f * (SKY_W + 40.0f), y0 = (float)((h >> 16) & 0xFFFF) / 65535.0f * SKY_H;
+            float y = (float)fmod(y0 + (1.2f + (float)(h & 7) * 0.2f) * (float)n, SKY_H + 10.0f) - 5.0f;
+            float x = (float)fmod(x0 - 2.0f * (float)sSky.sx * (float)n + 4000.0f * (SKY_W + 40.0f), SKY_W + 40.0f) - 20.0f
+                    + 6.0f * sinf((float)n * 0.05f + (float)i) + 4.0f * par;
+
+            C2D_DrawRectSolid(x, y, 0, (h & 8) ? 2.0f : 1.0f, (h & 8) ? 2.0f : 1.0f, flake);
+        }
+    }
     /* The wind: streaks running back past us, thick and fast as we go. */
     for (unsigned i = 0; i < SKY_MARKS; ++i)
     {
         float span = SKY_W + 140.0f;
         float x = (float)fmod(sSky.mark[i].phase - sSky.mark[i].speed * (0.4f + speed) * (float)n, span);
         float len = sSky.mark[i].len * (0.5f + speed);
-        uint8_t a = (uint8_t)((float)sSky.mark[i].alpha * (0.25f + 0.75f * speed));
-        uint32_t bright = C2D_Color32(255, 255, 255, a), clear = C2D_Color32(255, 255, 255, 0);
+        uint8_t a = (uint8_t)((float)sSky.mark[i].alpha * (0.25f + 0.75f * speed) * (1.0f + 0.5f * w.sand));
+        uint32_t bright = w.sand > 0.02f ? SkyColour(w.haze, a) : C2D_Color32(255, 255, 255, a);
+        uint32_t clear = bright & 0x00FFFFFFu;
         float sx0;
 
         if (x < 0.0f) x += span;
@@ -12529,9 +12813,29 @@ static void DrawSkyScene(C3D_RenderTarget *target, int eye, unsigned n)
         else
             C2D_DrawRectangle(sx0, sSky.mark[i].y, 0, len, sSky.mark[i].thick, bright, clear, bright, clear);
     }
+    /* The storm's lightning: a flash now and then, decided once a frame
+     * (the first eye), lighting the whole picture and dying over a few. */
+    if (w.storm > 0.3f)
+    {
+        if (eye <= 0 && ((n * 2654435761u + sSky.seed) >> 8) % 1000u < (unsigned)(w.storm * 22.0f))
+            sSky.flashFrame = n;
+        if (sSky.flashFrame != ~0u && n >= sSky.flashFrame && n - sSky.flashFrame < 10u)
+        {
+            /* Two strokes, dying away: the sky lit a little, the deck lit
+             * from inside, brightest low down where the bolt is. */
+            static const float strokes[10] = {1.0f, 0.65f, 0.3f, 0.9f, 0.55f, 0.38f, 0.26f, 0.16f, 0.08f, 0.03f};
+            float flash = strokes[n - sSky.flashFrame] * w.storm;
+            uint32_t lit = C2D_Color32(255, 250, 236, (uint8_t)(flash * 235.0f)), none = C2D_Color32(255, 250, 236, 0);
+
+            C2D_DrawRectSolid(0, 0, 0, SKY_W, SKY_H, C2D_Color32(230, 234, 255, (uint8_t)(flash * 70.0f)));
+            C2D_DrawRectangle(0, SKY_H * 0.42f, 0, SKY_W, SKY_H * 0.58f, none, none, lit, lit);
+        }
+
+    }
     /* Out of the white, and back into it. */
     {
         float white = 0.0f;
+
 
         if (n < SKY_FADE_IN)
             white = 1.0f - (float)n / (float)SKY_FADE_IN;

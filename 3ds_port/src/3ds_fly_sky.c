@@ -12,6 +12,7 @@
 #include "event_object_movement.h"
 #include "field_effect.h"
 #include "field_player_avatar.h"
+#include "field_weather.h"
 #include "follower_mon.h"
 #include "overworld.h"
 #include "pokemon.h"
@@ -23,6 +24,8 @@
 #include "constants/pokemon.h"
 #include "constants/species.h"
 #include "constants/wild_encounter.h"
+#include "constants/weather.h"
+#include "constants/region_map_sections.h"
 
 #include "port_platform.h"
 #include "3ds_extras.h"
@@ -257,4 +260,95 @@ unsigned CtrFlySky_Natives(uint16_t *species, unsigned max)
 void CtrFlySky_Release(void)
 {
     FollowerMon_SkyRelease();
+}
+
+/* A map's weather as the sky scene classes it. */
+static uint8_t SkyWeatherClass(u8 weather)
+{
+    switch (weather)
+    {
+    case WEATHER_SUNNY_CLOUDS:
+    case WEATHER_FOG_HORIZONTAL:
+    case WEATHER_FOG_DIAGONAL:
+    case WEATHER_ROUTE123_CYCLE:
+        return CTR_SKY_CLOUDY;
+    case WEATHER_RAIN:
+        return CTR_SKY_RAIN;
+    case WEATHER_RAIN_THUNDERSTORM:
+    case WEATHER_DOWNPOUR:
+    case WEATHER_ABNORMAL:
+    case WEATHER_ROUTE119_CYCLE:
+        return CTR_SKY_STORM;
+    case WEATHER_SANDSTORM:
+        return CTR_SKY_SAND;
+    case WEATHER_VOLCANIC_ASH:
+        return CTR_SKY_ASH;
+    case WEATHER_DROUGHT:
+        return CTR_SKY_DROUGHT;
+    default:
+        return CTR_SKY_CLEAR;
+    }
+}
+
+/* How strong a class is, the stronger shown when a place has two. */
+static unsigned SkyWeatherRank(uint8_t class)
+{
+    static const uint8_t rank[CTR_SKY_WEATHERS] = {
+        [CTR_SKY_CLEAR] = 0, [CTR_SKY_CLOUDY] = 1, [CTR_SKY_DROUGHT] = 2, [CTR_SKY_ASH] = 3,
+        [CTR_SKY_SAND] = 4, [CTR_SKY_RAIN] = 5, [CTR_SKY_STORM] = 6,
+    };
+    return class < CTR_SKY_WEATHERS ? rank[class] : 0;
+}
+
+/* The weather of a place's surroundings. Emerald's map headers say sunny
+ * for nearly every outdoor map - the rain, the ash and the sand are set by
+ * trigger tiles inside the routes - so the sky over a town is read from
+ * the region around it. */
+static uint8_t SkyVicinityClass(u8 mapsec)
+{
+    switch (mapsec)
+    {
+    case MAPSEC_FORTREE_CITY:
+    case MAPSEC_ROUTE_119:
+        return CTR_SKY_STORM;   /* Route 119's rain and thunder */
+    case MAPSEC_ROUTE_120:
+        return CTR_SKY_RAIN;
+    case MAPSEC_FALLARBOR_TOWN:
+    case MAPSEC_LAVARIDGE_TOWN:
+    case MAPSEC_ROUTE_113:
+    case MAPSEC_MT_CHIMNEY:
+        return CTR_SKY_ASH;     /* Mt. Chimney's ashfall */
+    case MAPSEC_ROUTE_111:
+        return CTR_SKY_SAND;    /* the desert */
+    case MAPSEC_MOSSDEEP_CITY:
+    case MAPSEC_EVER_GRANDE_CITY:
+    case MAPSEC_SOOTOPOLIS_CITY:
+    case MAPSEC_MT_PYRE:
+    case MAPSEC_ROUTE_121:
+    case MAPSEC_ROUTE_122:
+        return CTR_SKY_CLOUDY;  /* the east's cloud banks */
+    default:
+        return CTR_SKY_CLEAR;
+    }
+}
+
+static uint8_t SkyStronger(uint8_t a, uint8_t b)
+{
+    return SkyWeatherRank(b) > SkyWeatherRank(a) ? b : a;
+}
+
+void CtrFlySky_Weather(uint8_t *from, uint8_t *to)
+{
+    const struct MapHeader *dest = GetDestinationWarpMapHeader();
+    uint8_t here = SkyWeatherClass(GetCurrentWeather());
+
+    /* From: the weather as it is (a trigger's, a cycling route's resolved)
+     * or the region's, whichever is the stronger; to: the destination's
+     * header and its region. */
+    *from = SkyStronger(here, SkyVicinityClass(gMapHeader.regionMapSectionId));
+    *to = dest != NULL ? SkyStronger(SkyWeatherClass(dest->weather), SkyVicinityClass(dest->regionMapSectionId))
+                       : *from;
+    CtrLog_Write(CTR_LOG_GAME, "fly sky: weather %u -> %u (now %u, mapsec %u -> %u)", *from, *to,
+                 (unsigned)GetCurrentWeather(), (unsigned)gMapHeader.regionMapSectionId,
+                 dest != NULL ? (unsigned)dest->regionMapSectionId : 0u);
 }

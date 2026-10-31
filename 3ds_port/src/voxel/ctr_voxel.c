@@ -4546,11 +4546,12 @@ static bool sHolesOnly;
  * The Fly cinematic's camera is up (FlyCamera): for a second or two the
  * wide view wants several times the squares of the ground view, far off and
  * under the wind. They are covered by their drafts at a faster rate than on
- * the ground (DraftHoles), and no real build is started for a drafted square
- * or ahead of time meanwhile: those builds would take the frames the drafts
- * need, and the VRAM a view that size has not got (they failed for room, and
- * the square stayed black for VOXEL_NO_ROOM_FRAMES). The real builds follow
- * the landing, as the view comes back to its size.
+ * the ground (DraftHoles), and no real build is started meanwhile - not even
+ * for a hole the drafts could not cover this frame, which is the next
+ * frame's draft: a build would take the frames the drafts need, and the
+ * VRAM a view that size has not got (they failed for room, and the square
+ * stayed black for VOXEL_NO_ROOM_FRAMES). The real builds follow the
+ * landing, as the view comes back to its size.
  */
 #define VOXEL_FLY_DRAFT_PER_FRAME VOXEL_CHUNK_UPLOADS_MAX
 #define VOXEL_FLY_DRAFT_MS 3.0f
@@ -4572,8 +4573,9 @@ static bool StartNextJob(float elapsed, float holeMs, float aheadMs)
 
         if (r->done || sFrame < sRequestWait[r->waitIndex].noRoomUntil)
             continue;
-        if (FlyingHigh() && (need > NEED_STALE || (r->chunk != NULL && r->chunk->draft)))
-            continue; /* the flight: drafts stand, nothing ahead of time */
+        if (FlyingHigh())
+            continue; /* the flight: the drafts alone (a hole left is the next frame's draft) */
+
         if (sHolesOnly && need != NEED_HOLE && !RequestOverdue(r))
             continue; /* sorted: holes come first */
         if (elapsed >= (forView ? holeMs : aheadMs))

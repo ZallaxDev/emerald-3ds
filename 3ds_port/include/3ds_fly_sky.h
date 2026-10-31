@@ -65,4 +65,21 @@ unsigned CtrFlySky_Natives(uint16_t *species, unsigned max);
 /* Frees what the sprite calls loaded (after the scene). */
 void CtrFlySky_Release(void);
 
+/* The sky's weather: that of the map flown from (as it is now) and of the
+ * map flown to (its header's), each as one of these; the scene crosses
+ * from the one into the other halfway. */
+enum
+{
+    CTR_SKY_CLEAR,   /* sunny, none, shade */
+    CTR_SKY_CLOUDY,  /* sunny with clouds, horizontal fog, Route 123's cycle */
+    CTR_SKY_RAIN,    /* rain, Route 119's cycle */
+    CTR_SKY_STORM,   /* thunderstorm, downpour, the abnormal weather */
+    CTR_SKY_SAND,    /* the desert's sandstorm */
+    CTR_SKY_ASH,     /* Route 113's volcanic ash */
+    CTR_SKY_DROUGHT, /* Groudon's harsh sunlight */
+    CTR_SKY_WEATHERS
+};
+void CtrFlySky_Weather(uint8_t *from, uint8_t *to);
+
+
 #endif
