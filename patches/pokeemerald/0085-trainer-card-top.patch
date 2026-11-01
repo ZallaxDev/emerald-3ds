@@ -20,18 +20,19 @@ diff --git a/src/trainer_card.c b/src/trainer_card.c
  }
  
  // Which side of that card waits for a key: 0 its front, 1 its back, 2 none
-@@ -1956,4 +1960,19 @@
+@@ -1956,4 +1960,20 @@
          return 1;
      return 2;
  }
 +
-+// The card the Frontier Pass opened, for the top screen, once it is drawn:
-+// which side, how far a flip has folded it, and the rows only the game's
-+// card has.
++// The card the Frontier Pass opened, for the top screen, from its first
++// frame (the top screen's card is drawn from the save, not from the game's
++// windows, so it needs nothing the card's set-up makes): which side, how far
++// a flip has folded it, and the rows only the game's card has.
 +bool8 CtrTrainerCard_TopView(struct CtrCardTop *view)
 +{
 +    memset(view, 0, sizeof(*view));
-+    if (sData == NULL || sData->isLink || !CtrPass_Open() || sData->mainState < 7)
++    if (sData == NULL || sData->isLink || !CtrPass_Open())
 +        return FALSE;
 +    view->onBack = sData->onBack;
 +    view->fold = sData->cardTop >= CARD_FLIP_Y ? 256 : sData->cardTop * 256 / CARD_FLIP_Y;
