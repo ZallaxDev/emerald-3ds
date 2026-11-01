@@ -7337,7 +7337,7 @@ index 19ee9d18a5311cd051f806b5cd27f1ee05faa3aa..9459322f80c46aae576ad3f5145d1db4
  #endif
  	is_first_turn_for AI_USER
 diff --git a/data/battle_anim_scripts.s b/data/battle_anim_scripts.s
-index 489bffb2078c88703c4d96f4954a2db7d0f4bf00..ac24884bafd3c689d40d90c1aad971d1f1c419b3 100644
+index 489bffb2078c88703c4d96f4954a2db7d0f4bf00..d84e4cd17b57ec090eb88a427fcba73fe87ca9db 100644
 --- a/data/battle_anim_scripts.s
 +++ b/data/battle_anim_scripts.s
 @@ -8,418 +8,418 @@
@@ -8177,7 +8177,22 @@ index 489bffb2078c88703c4d96f4954a2db7d0f4bf00..ac24884bafd3c689d40d90c1aad971d1
  	waitforvisualfinish
  	end
  
-@@ -3480,7 +3480,7 @@ Move_HEAT_WAVE:
+@@ -3318,8 +3318,14 @@ Move_MILK_DRINK:
+ Move_MAGNITUDE:
+ 	createvisualtask AnimTask_IsPowerOver99, 2
+ 	waitforvisualfinish
++.ifdef UBFIX
++	jumpreteq FALSE, MagnitudeRegular
++	jumpreteq TRUE, MagnitudeIntense
++.else
+ 	jumpargeq 15, FALSE, MagnitudeRegular
+ 	jumpargeq 15, TRUE, MagnitudeIntense
++.endif
++
+ MagnitudeEnd:
+ 	end
+ MagnitudeRegular:
+@@ -3480,7 +3486,7 @@ Move_HEAT_WAVE:
  	createsprite gFlyingSandCrescentSpriteTemplate, ANIM_ATTACKER, 40, 60, 2560, 96, 1
  	end
  
@@ -8186,7 +8201,7 @@ index 489bffb2078c88703c4d96f4954a2db7d0f4bf00..ac24884bafd3c689d40d90c1aad971d1
  Move_HAIL:
  	loadspritegfx ANIM_TAG_HAIL
  	loadspritegfx ANIM_TAG_ICE_CRYSTALS
-@@ -4198,7 +4198,7 @@ Move_AIR_CUTTER:
+@@ -4198,7 +4204,7 @@ Move_AIR_CUTTER:
  	monbg ANIM_DEF_PARTNER
  	setalpha 12, 8
  	delay 0
@@ -8195,7 +8210,7 @@ index 489bffb2078c88703c4d96f4954a2db7d0f4bf00..ac24884bafd3c689d40d90c1aad971d1
  	waitforvisualfinish
  	playsewithpan SE_M_CUT, SOUND_PAN_TARGET
  	createsprite gAirCutterSliceSpriteTemplate, ANIM_ATTACKER, 2, 40, -32, 0, 2
-@@ -6335,7 +6335,7 @@ FlamethrowerCreateFlames:
+@@ -6335,7 +6341,7 @@ FlamethrowerCreateFlames:
  	delay 2
  	return
  
@@ -8204,7 +8219,7 @@ index 489bffb2078c88703c4d96f4954a2db7d0f4bf00..ac24884bafd3c689d40d90c1aad971d1
  Move_SANDSTORM:
  	loadspritegfx ANIM_TAG_FLYING_DIRT
  	playsewithpan SE_M_SANDSTORM, 0
-@@ -6716,7 +6716,7 @@ SubmissionHit:
+@@ -6716,7 +6722,7 @@ SubmissionHit:
  	delay 8
  	return
  
@@ -8213,7 +8228,7 @@ index 489bffb2078c88703c4d96f4954a2db7d0f4bf00..ac24884bafd3c689d40d90c1aad971d1
  Move_SUNNY_DAY:
  	loadspritegfx ANIM_TAG_SUNLIGHT
  	monbg ANIM_ATK_PARTNER
-@@ -6864,7 +6864,7 @@ Move_RAZOR_LEAF:
+@@ -6864,7 +6870,7 @@ Move_RAZOR_LEAF:
  	end
  
  Move_NATURE_POWER:
@@ -8222,7 +8237,7 @@ index 489bffb2078c88703c4d96f4954a2db7d0f4bf00..ac24884bafd3c689d40d90c1aad971d1
  
  Move_ANCIENT_POWER:
  	loadspritegfx ANIM_TAG_ROCKS
-@@ -9991,7 +9991,7 @@ IceCrystalEffectLong:
+@@ -9991,7 +9997,7 @@ IceCrystalEffectLong:
  	playsewithpan SE_M_ICY_WIND, SOUND_PAN_TARGET
  	return
  
@@ -8231,7 +8246,7 @@ index 489bffb2078c88703c4d96f4954a2db7d0f4bf00..ac24884bafd3c689d40d90c1aad971d1
  	loopsewithpan SE_M_ICY_WIND, SOUND_PAN_TARGET, 6, 4
  	createsprite gIceGroundSpikeSpriteTemplate, ANIM_TARGET, 2, 0, 24, 0
  	delay 4
-@@ -10544,7 +10544,7 @@ General_MonHit:
+@@ -10544,7 +10550,7 @@ General_MonHit:
  General_ItemSteal:
  	loadspritegfx ANIM_TAG_ITEM_BAG
  	createvisualtask AnimTask_SetAnimAttackerAndTargetForEffectAtk, 2
@@ -8240,7 +8255,7 @@ index 489bffb2078c88703c4d96f4954a2db7d0f4bf00..ac24884bafd3c689d40d90c1aad971d1
  	delay 1
  	createsprite gItemStealSpriteTemplate, ANIM_ATTACKER, 2, 0, -5, 10, 2, -1
  	end
-@@ -10694,7 +10694,7 @@ SnatchMoveSwapMonForSubstitute:
+@@ -10694,7 +10700,7 @@ SnatchMoveSwapMonForSubstitute:
  	waitforvisualfinish
  	goto SnatchMoveTrySwapToSubstituteEnd
  
@@ -18153,6 +18168,114 @@ index 955d4d556f75eca4ef7314b9a5c0453d74b60b21..b168294731bec34b64b1ef8081aa808e
  	.section .rodata
  
  	.align 2
+diff --git a/sound/programmable_wave_data.inc b/sound/programmable_wave_data.inc
+index 3e354d88a5921bbb398bb0c424f60c64cbacbbb2..91b840a8ca003960acc757b2760433dfe9bd1425 100644
+--- a/sound/programmable_wave_data.inc
++++ b/sound/programmable_wave_data.inc
+@@ -1,78 +1,103 @@
++    .align 2
+ ProgrammableWaveData_1::
+ 	.incbin "sound/programmable_wave_samples/01.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_2::
+ 	.incbin "sound/programmable_wave_samples/02.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_3::
+ 	.incbin "sound/programmable_wave_samples/03.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_4::
+ 	.incbin "sound/programmable_wave_samples/04.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_5::
+ 	.incbin "sound/programmable_wave_samples/05.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_6::
+ 	.incbin "sound/programmable_wave_samples/06.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_7::
+ 	.incbin "sound/programmable_wave_samples/07.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_8::
+ 	.incbin "sound/programmable_wave_samples/08.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_9::
+ 	.incbin "sound/programmable_wave_samples/09.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_10::
+ 	.incbin "sound/programmable_wave_samples/10.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_11::
+ 	.incbin "sound/programmable_wave_samples/11.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_12::
+ 	.incbin "sound/programmable_wave_samples/12.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_13::
+ 	.incbin "sound/programmable_wave_samples/13.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_14::
+ 	.incbin "sound/programmable_wave_samples/14.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_15::
+ 	.incbin "sound/programmable_wave_samples/15.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_16::
+ 	.incbin "sound/programmable_wave_samples/16.pcm"
+ 
+ @ Unused
++    .align 2
+ ProgrammableWaveData_17::
+ 	.incbin "sound/programmable_wave_samples/17.pcm"
+ 
+ @ Unused
++    .align 2
+ ProgrammableWaveData_18::
+ 	.incbin "sound/programmable_wave_samples/18.pcm"
+ 
+ @ Unused
++    .align 2
+ ProgrammableWaveData_19::
+ 	.incbin "sound/programmable_wave_samples/19.pcm"
+ 
+ @ Unused
++    .align 2
+ ProgrammableWaveData_20::
+ 	.incbin "sound/programmable_wave_samples/20.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_21::
+ 	.incbin "sound/programmable_wave_samples/21.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_22::
+ 	.incbin "sound/programmable_wave_samples/22.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_23::
+ 	.incbin "sound/programmable_wave_samples/23.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_24::
+ 	.incbin "sound/programmable_wave_samples/24.pcm"
+ 
++    .align 2
+ ProgrammableWaveData_25::
+ 	.incbin "sound/programmable_wave_samples/25.pcm"
 diff --git a/sound/song_table.inc b/sound/song_table.inc
 index 6e4237b998ba49430483eb95b113cddb26ad97f3..c551a656b9d46e4f8370c5a3265b5d25aef45dbc 100644
 --- a/sound/song_table.inc
