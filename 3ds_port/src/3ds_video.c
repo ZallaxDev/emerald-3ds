@@ -12680,6 +12680,14 @@ void CtrVideo_Present(void)
     CtrVoxel_SetStereo(voxelStereoWanted ? VoxelStereoSlider(slider) : 0.0f);
     if (voxelStereoWanted) sRenderReserve = RENDER_RESERVE_MOST;
     bool voxel = overworld && CtrVoxel_Update();
+    /* Under a wide camera (the swoop's, a high one) the world is cleared to
+     * the map's own ground colour, not the backdrop's black: what lies past
+     * the squares the frame could build or fill passes for ground. */
+    {
+        uint32_t ground;
+
+        if (voxel && CtrVoxel_WideBackdrop(&ground)) clear = ground;
+    }
     /* A new map still being made - a frame or two, behind the fade - is
      * black rather than the 2D picture flashing up before the 3D one. */
     /* ... unless the 2D field was up: it stays until the voxel world is

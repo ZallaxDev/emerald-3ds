@@ -167,6 +167,18 @@ void CtrVoxel_ArenaUse(uint32_t *chunkUsed, uint32_t *chunkLargest, uint32_t *pa
 /* A map just entered by a cut is still being built (see VOXEL_WARMUP_MS). */
 bool CtrVoxel_IsWarmingUp(void);
 
+/* The wide view (ctr_voxel.c, see there): a caller whose camera sees more
+ * squares than a frame can build - the Fly's high camera - says so, and the
+ * streaming degrades in rings (full builds, drafts, flat fills in the
+ * ground's colour) instead of leaving black squares. The swoop sets it by
+ * itself. Before Update; off again as the camera comes down. */
+void CtrVoxel_SetWideView(bool on);
+/* Under the wide view, the colour the frame should be cleared to behind the
+ * world - the map's own ground, not the GBA's black - as C2D_Color32 packs
+ * it; false (keep the backdrop) when the view is not wide or the colour is
+ * not known yet. After Update. */
+bool CtrVoxel_WideBackdrop(uint32_t *rgba);
+
 /*
  * Where the camera shows a point of the 240x160 picture the game lays out
  * around the player: `tileX`, `tileY` are tiles from the player's tile
