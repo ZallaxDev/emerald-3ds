@@ -718,11 +718,27 @@ static void DrawTrainerCard(const ViewState *s)
             DrawTile(sRes.badgeTiles + (2 * i + 17) * 32, x + 8, y + 8, pal, FALSE, FALSE);
         }
     }
-    oy = Plate(AREA_X + AREA_W - CARD_FLIP_W, CARD_BADGES_Y, CARD_FLIP_W, CARD_BADGES_H, s->pressed == HIT_OK ? sEmerald : sSlate,
-               s->pressed == HIT_OK ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
-    TextIn(Ascii(CTR_TEXT("FLIP", "GIRAR", "TOURNER", "GIRA", "VIRAR", "DREHEN", "うらがえす")), AREA_X + AREA_W - CARD_FLIP_W, oy, CARD_FLIP_W,
-           CARD_BADGES_H, &sNormal, 'c', STYLE_WHITE, 6);
-    AddHit(AREA_X + AREA_W - CARD_FLIP_W, CARD_BADGES_Y, CARD_FLIP_W, CARD_BADGES_H, HIT_OK);
+    {
+        /* With the Frontier Pass, FLIP over PASS, each half the height: the
+         * pass is the game's, which PLAYER opened in the original. */
+        int fh = s->hasPass ? CARD_BADGES_H / 2 - 1 : CARD_BADGES_H;
+
+        oy = Plate(AREA_X + AREA_W - CARD_FLIP_W, CARD_BADGES_Y, CARD_FLIP_W, fh, s->pressed == HIT_OK ? sEmerald : sSlate,
+                   s->pressed == HIT_OK ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+        TextIn(Ascii(CTR_TEXT("FLIP", "GIRAR", "TOURNER", "GIRA", "VIRAR", "DREHEN", "うらがえす")), AREA_X + AREA_W - CARD_FLIP_W, oy, CARD_FLIP_W,
+               fh, s->hasPass ? &sSmall : &sNormal, 'c', STYLE_WHITE, s->hasPass ? 4 : 6);
+        AddHit(AREA_X + AREA_W - CARD_FLIP_W, CARD_BADGES_Y, CARD_FLIP_W, fh, HIT_OK);
+        if (s->hasPass)
+        {
+            int py = CARD_BADGES_Y + CARD_BADGES_H - fh;
+
+            oy = Plate(AREA_X + AREA_W - CARD_FLIP_W, py, CARD_FLIP_W, fh, s->pressed == HIT_YES ? sEmerald : sSlate,
+                       s->pressed == HIT_YES ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+            TextIn(Ascii(CTR_TEXT("PASS", "PASE", "PASSE", "TESSERA", "PASSE", "KAMPFPASS", "パス")), AREA_X + AREA_W - CARD_FLIP_W, oy,
+                   CARD_FLIP_W, fh, &sSmall, 'c', STYLE_WHITE, 4);
+            AddHit(AREA_X + AREA_W - CARD_FLIP_W, py, CARD_FLIP_W, fh, HIT_YES);
+        }
+    }
 }
 
 /* ------------------------------------------------------------------------ */

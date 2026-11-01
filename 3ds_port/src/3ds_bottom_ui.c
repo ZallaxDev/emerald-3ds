@@ -2303,6 +2303,8 @@ typedef struct
     /* Trainer card, its back with cardBack. */
     u8 name[PLAYER_NAME_LENGTH + 1];
     u8 hasDex, stars, badges, minutes, cardBack, hofMinutes;
+    /* The Frontier Pass held, for PASS under FLIP. */
+    u8 hasPass;
     u16 id, dex, hours, hofHours, linkWins, linkLosses, trades, pokeblocks, contests;
     u32 money;
     /* Save and options. */
@@ -3080,6 +3082,7 @@ static void SnapshotCard(ViewState *s)
     s->hours = gSaveBlock2Ptr->playTimeHours > 999 ? 999 : gSaveBlock2Ptr->playTimeHours;
     s->minutes = gSaveBlock2Ptr->playTimeMinutes > 59 ? 59 : gSaveBlock2Ptr->playTimeMinutes;
     s->hasDex = FlagGet(FLAG_SYS_POKEDEX_GET);
+    s->hasPass = FlagGet(FLAG_SYS_FRONTIER_PASS);
     /* Counting the Pokédex walks every species; twice a second is plenty. */
     if ((frames++ % 30) == 0)
     {
@@ -6550,6 +6553,14 @@ static void Activate(u8 id, u8 mode)
         {
             sCardBack = !sCardBack;
             PlaySE(SE_SELECT);
+        }
+        /* PASS, the game's Frontier Pass, opened as PLAYER opens it
+         * (start_menu.c CtrShowCardOrPass). */
+        else if (id == HIT_YES && sShown.hasPass && FieldIdle() && CtrStartMenu_Available())
+        {
+            PlaySE(SE_SELECT);
+            StartPlan(PLAN_START, START_PLAYER);
+            BeginSession(FALSE);
         }
         break;
     case SCR_NUZLOCKE:
