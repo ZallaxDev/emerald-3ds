@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Hall of Fame: shown centred as a GBA screen instead of in the top screen's
+  top left corner, with black and falling confetti beside it. Its stripes
+  and dark bands carry on to the edges, and its texts (each Pokémon's
+  number, name and level, "Welcome to the HALL OF FAME!", "LEAGUE CHAMPION!
+  CONGRATULATIONS!") are back in the dark band where the GBA shows them;
+  the game prints them in the standard text box, which this screen lowers
+  for the overworld. By @eathanpage.
+
 ## 0.5.0 — 2026-10-29
 
 The first beta.

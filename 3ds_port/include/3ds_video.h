@@ -263,6 +263,9 @@ enum
     CTR_CENTRED_ROULETTE,
     /* The Game Corner's slot machine, set in the casino's wall. */
     CTR_CENTRED_SLOTS,
+    /* The Hall of Fame (the team on its stripes, the champion's card) and
+     * the PC's record of it: its bands carried out to the edges. */
+    CTR_CENTRED_HALL_OF_FAME,
     CTR_CENTRED_SCREENS
 };
 void CtrVideo_SetCentred(unsigned screen);

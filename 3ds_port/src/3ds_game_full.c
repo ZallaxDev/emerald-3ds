@@ -394,6 +394,11 @@ void CtrCentredSlots_SetVBlankCallback(IntrCallback callback)
     SetCentredCallback(callback, CTR_CENTRED_SLOTS);
 }
 
+void CtrCentredHallOfFame_SetVBlankCallback(IntrCallback callback)
+{
+    SetCentredCallback(callback, CTR_CENTRED_HALL_OF_FAME);
+}
+
 /* trade.c: the trade menu's VBlank callback; the trade's is the other. */
 IntrCallback CtrTrade_MenuVBlankCallback(void);
 

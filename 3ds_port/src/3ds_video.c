@@ -4069,6 +4069,10 @@ static void DrawBattleBgSplit(unsigned bg)
  *   shares its callback and its BG0 with the title menu, whose windows go
  *   down to the bottom of the screen; the speech is told apart by the
  *   character base its BG0 uses (main_menu.c, sBirchBgTemplate).
+ *   With bandRows, only that many rows from bandRow are moved, and they may
+ *   lie below the picture: the Hall of Fame prints in the standard text box,
+ *   which menu.c puts at row 24 on this screen (its frame a row either side);
+ *   it is brought back up into the dark band, at row 15 as on the GBA.
  */
 typedef struct
 {
@@ -4088,7 +4092,7 @@ typedef struct
     /* Or that tilemap entry itself, whatever the tilemap holds now. */
     bool entry;
     uint16_t tileEntry;
-    uint8_t skyRows, bandRow, bandChars;
+    uint8_t skyRows, bandRow, bandChars, bandRows;
     int8_t bandX, bandY;
 } CentredFill;
 
@@ -4120,6 +4124,10 @@ static const CentredFill sCentredFills[CTR_CENTRED_SCREENS] =
     [CTR_CENTRED_TRADE_MENU] = {.layers = (1u << 2) | (1u << 3), .wrap = true},
     /* The trade itself on its black. */
     [CTR_CENTRED_TRADE] = {0},
+    /* Its dark bands (BG1) and the stripes behind them (BG3), the same in
+     * every column of their 32x32 maps. */
+    [CTR_CENTRED_HALL_OF_FAME] = {.layers = (1u << 1) | (1u << 3), .wrap = true,
+                                  .bandRow = 23, .bandRows = 6, .bandChars = 2, .bandY = -72},
 };
 
 int CtrPokenavList_Bg(void);
@@ -4293,10 +4301,12 @@ static bool DrawCentredBg(unsigned bg)
     }
     if (bg == 0 && speech)
     {
-        DrawCentredSpan(0, 0, 240, 0, fill->bandRow * 8);
+        int bandTop = fill->bandRow * 8;
+
+        DrawCentredSpan(0, 0, 240, 0, (int)Min(bandTop, 160));
         sSpanShiftX = fill->bandX;
         sSpanShiftY = fill->bandY;
-        DrawCentredSpan(0, 0, 240, fill->bandRow * 8, 160);
+        DrawCentredSpan(0, 0, 240, bandTop, fill->bandRows ? bandTop + fill->bandRows * 8 : 160);
         sSpanShiftX = sSpanShiftY = 0;
         return true;
     }
