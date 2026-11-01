@@ -162,9 +162,10 @@ bool CtrFlySky_RiderSprite(CtrSkySprite *out)
     if (palette == NULL)
         return false;
     /* The surfing graphics seat the player facing west on its picture; the
-     * east anim is the same picture flipped. */
+     * east anim is the same picture flipped: each frame as the GBA shows
+     * it (the flip baked in), 0 facing west, 1 facing east. */
     if (!CopyRiderFrame(info, ANIM_GET_ON_OFF_POKEMON_WEST, false, sTiles)
-     || !CopyRiderFrame(info, ANIM_GET_ON_OFF_POKEMON_EAST, true, sTiles + RIDER_BYTES))
+     || !CopyRiderFrame(info, ANIM_GET_ON_OFF_POKEMON_EAST, false, sTiles + RIDER_BYTES))
         return false;
     memcpy(sPalette, palette, sizeof(sPalette));
     out->tiles = sTiles;
