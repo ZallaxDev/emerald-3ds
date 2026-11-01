@@ -1,0 +1,296 @@
+Fly's direction and landing: the flight is mirrored when the destination
+lies east (Port_FlyEast, asked as the flight out begins): the Pokemon
+leaves ball, swoops and returns on the right, its rider faces and mounts
+east, the follower sprite plays its east-facing frames (its own seat), the
+bird's affine turns go the other way. On the new map the Pokemon no longer
+waits for the camera to settle: it comes in beside the camera coming down
+(Port_FlyLanding, 0..255 of the way) and reaches the player as it settles,
+the rider let go on its angle rather than a timer. Port_FlyBusy now only
+holds the landing while inside the cloud.
+Applies after 0084-fly-on-the-pokemon.patch; apply with tools/bootstrap.py.
+
+--- a/include/field_effect.h
++++ b/include/field_effect.h
+@@ -53,9 +53,15 @@
+ // Hover: TRUE while the bird is to hang with the player on it, the camera
+ // climbing away into the cloud; the first ask of a flight starts it. Busy:
+ // TRUE while the landing's bird must wait, the camera coming down out of the
+-// cloud over the new map. Weak FALSE in field_effect.c otherwise.
++// cloud over the new map. East: the destination lies east, the flight is
++// mirrored (out to the right, in from the left). Landing: TRUE while the
++// camera comes down onto the new map, `share` 0..255 of the way, the Pokemon
++// flying in beside it. Weak FALSE in field_effect.c otherwise.
+ bool8 Port_FlyHover(void);
+ bool8 Port_FlyBusy(void);
++bool8 Port_FlyEast(void);
++bool8 Port_FlyLanding(u8 *share);
++
+ #endif
+ 
+ #endif // GUARD_FIELD_EFFECTS_H
+--- a/include/follower_mon.h
++++ b/include/follower_mon.h
+@@ -42,8 +42,9 @@
+  * of the bird. MAX_SPRITES where it has none (the bird then). `riderX`,
+  * `riderY`: where the player sits, from the sprite's centre. */
+ void FollowerMon_FlyPrefetch(u16 species, u32 personality);
+-u8 FollowerMon_FlySprite(u16 species, u32 personality, bool8 shiny, s16 x, s16 y, u8 subpriority,
++u8 FollowerMon_FlySprite(u16 species, u32 personality, bool8 shiny, bool8 east, s16 x, s16 y, u8 subpriority,
+                          s8 *riderX, s8 *riderY);
++
+ bool8 FollowerMon_IsFlySprite(const struct Sprite *sprite);
+ /* Its sprite destroyed (NULL: none left), its palette and file let go. */
+ void FollowerMon_FlyFree(struct Sprite *sprite);
+--- a/src/follower_mon.c
++++ b/src/follower_mon.c
+@@ -564,7 +564,7 @@
+         }
+ }
+ 
+-u8 FollowerMon_FlySprite(u16 species, u32 personality, bool8 shiny, s16 x, s16 y, u8 subpriority,
++u8 FollowerMon_FlySprite(u16 species, u32 personality, bool8 shiny, bool8 east, s16 x, s16 y, u8 subpriority,
+                          s8 *riderX, s8 *riderY)
+ {
+     char key[8];
+@@ -621,11 +621,12 @@
+         return MAX_SPRITES;
+     }
+     SetSpriteExtPalette(&gSprites[spriteId], pal);
+-    StartSpriteAnim(&gSprites[spriteId], ANIM_STD_GO_WEST);
++    StartSpriteAnim(&gSprites[spriteId], east ? ANIM_STD_GO_EAST : ANIM_STD_GO_WEST);
+     /* The player sits 4 pixels under the top of the Pokemon seen from the
+      * side, over the middle of it: as on the bird (its top at row 4 of 32,
+      * the player 8 above its centre). */
+-    FrameBox(sFly.frames[FRAME_LEFT].data, w, &bx0, &by0, &bx1, &by1);
++    FrameBox(sFly.frames[east ? FRAME_RIGHT : FRAME_LEFT].data, w, &bx0, &by0, &bx1, &by1);
++
+     if (bx1 >= 0)
+     {
+         *riderX = (bx0 + bx1 + 1) / 2 - w / 2;
+--- a/src/field_effect.c
++++ b/src/field_effect.c
+@@ -3307,6 +3307,14 @@
+ static u32 sFlyMonPersonality;
+ static bool8 sFlyMonShiny;
+ static s8 sFlyRiderX, sFlyRiderY = -8;
++#endif
++// Port: the destination lies east (Port_FlyEast, asked as the flight out
++// begins): the Pokemon and its rider leave to the right and come in from the
++// left, the GBA's westward Fly mirrored (FLY_MIRROR_X on the 240-wide picture).
++static bool8 sFlyEast;
++#define FLY_MIRROR_X(x) (sFlyEast ? 240 - (x) : (x))
++#define FLY_MIRROR_DX(dx) (sFlyEast ? -(dx) : (dx))
++#ifdef PLATFORM_3DS
+ 
+ static void FlyMon_Choose(u32 slot)
+ {
+@@ -3333,6 +3341,9 @@
+ #ifdef PLATFORM_3DS
+     FlyMon_Choose(gFieldEffectArguments[0]);
+ #endif
++#ifdef PORT_BRIDGE
++    sFlyEast = Port_FlyEast();
++#endif
+     return 0;
+ }
+ 
+@@ -3400,7 +3411,8 @@
+         task->tState++;
+         task->tTimer = 16;
+         SetPlayerAvatarTransitionFlags(PLAYER_AVATAR_FLAG_ON_FOOT);
+-        ObjectEventSetHeldMovement(&gObjectEvents[gPlayerAvatar.objectEventId], MOVEMENT_ACTION_FACE_LEFT);
++        ObjectEventSetHeldMovement(&gObjectEvents[gPlayerAvatar.objectEventId],
++                                   sFlyEast ? MOVEMENT_ACTION_FACE_RIGHT : MOVEMENT_ACTION_FACE_LEFT);
+     }
+ }
+ 
+@@ -3421,9 +3433,9 @@
+     {
+         struct ObjectEvent *objectEvent = &gObjectEvents[gPlayerAvatar.objectEventId];
+         ObjectEventSetGraphicsId(objectEvent, GetPlayerAvatarGraphicsIdByStateId(PLAYER_AVATAR_STATE_SURFING));
+-        StartSpriteAnim(&gSprites[objectEvent->spriteId], ANIM_GET_ON_OFF_POKEMON_WEST);
++        StartSpriteAnim(&gSprites[objectEvent->spriteId], sFlyEast ? ANIM_GET_ON_OFF_POKEMON_EAST : ANIM_GET_ON_OFF_POKEMON_WEST);
+         objectEvent->inanimate = TRUE;
+-        ObjectEventSetHeldMovement(objectEvent, MOVEMENT_ACTION_JUMP_IN_PLACE_LEFT);
++        ObjectEventSetHeldMovement(objectEvent, sFlyEast ? MOVEMENT_ACTION_JUMP_IN_PLACE_RIGHT : MOVEMENT_ACTION_JUMP_IN_PLACE_LEFT);
+         if (task->tAvatarFlags & PLAYER_AVATAR_FLAG_SURFING)
+         {
+             DestroySprite(&gSprites[objectEvent->fieldEffectSpriteId]);
+@@ -3476,7 +3488,7 @@
+     sFlyRiderY = -8;
+     spriteId = MAX_SPRITES;
+     if (sFlyMonSpecies != SPECIES_NONE)
+-        spriteId = FollowerMon_FlySprite(sFlyMonSpecies, sFlyMonPersonality, sFlyMonShiny, 0xff, 0xb4, 0x1,
++        spriteId = FollowerMon_FlySprite(sFlyMonSpecies, sFlyMonPersonality, sFlyMonShiny, sFlyEast, 0xff, 0xb4, 0x1,
+                                          &sFlyRiderX, &sFlyRiderY);
+     if (spriteId < MAX_SPRITES)
+     {
+@@ -3492,6 +3504,7 @@
+     sprite = &gSprites[spriteId];
+     sprite->oam.paletteNum = 0;
+     sprite->oam.priority = 1;
++    sprite->hFlip = sFlyEast;
+     sprite->callback = SpriteCB_FlyBirdLeaveBall;
+     return spriteId;
+ }
+@@ -3540,6 +3553,25 @@
+     sAffineAnim_FlyBirdReturnToBall
+ };
+ 
++// Port: the same mirrored, for a flight east: a negative width flips the
++// picture, and the turn goes the other way.
++static const union AffineAnimCmd sAffineAnim_FlyBirdLeaveBallEast[] = {
++    AFFINEANIMCMD_FRAME(-8, 8, 30, 0),
++    AFFINEANIMCMD_FRAME(-28, 28, 0, 30),
++    AFFINEANIMCMD_END
++};
++
++static const union AffineAnimCmd sAffineAnim_FlyBirdReturnToBallEast[] = {
++    AFFINEANIMCMD_FRAME(-256, 256, -64, 0),
++    AFFINEANIMCMD_FRAME(10, -10, 0, 22),
++    AFFINEANIMCMD_END
++};
++
++static const union AffineAnimCmd *const sAffineAnims_FlyBirdEast[] = {
++    sAffineAnim_FlyBirdLeaveBallEast,
++    sAffineAnim_FlyBirdReturnToBallEast
++};
++
+ static void SpriteCB_FlyBirdLeaveBall(struct Sprite *sprite)
+ {
+     if (sprite->sAnimCompleted == FALSE)
+@@ -3547,17 +3579,17 @@
+         if (sprite->data[0] == 0)
+         {
+             sprite->oam.affineMode = ST_OAM_AFFINE_DOUBLE;
+-            sprite->affineAnims = sAffineAnims_FlyBird;
++            sprite->affineAnims = sFlyEast ? sAffineAnims_FlyBirdEast : sAffineAnims_FlyBird;
+             InitSpriteAffineAnim(sprite);
+             StartSpriteAffineAnim(sprite, 0);
+-            sprite->x = 0x76;
++            sprite->x = FLY_MIRROR_X(0x76);
+             sprite->y = -0x30;
+             sprite->data[0]++;
+             sprite->data[1] = 0x40;
+             sprite->data[2] = 0x100;
+         }
+         sprite->data[1] += (sprite->data[2] >> 8);
+-        sprite->x2 = Cos(sprite->data[1], 0x78);
++        sprite->x2 = FLY_MIRROR_DX(Cos(sprite->data[1], 0x78));
+         sprite->y2 = Sin(sprite->data[1], 0x78);
+         if (sprite->data[2] < 0x800)
+         {
+@@ -3575,17 +3607,30 @@
+ 
+ static void SpriteCB_FlyBirdSwoopDown(struct Sprite *sprite)
+ {
+-    sprite->x2 = FlySwoopX(sprite->data[2]);
++    sprite->x2 = FLY_MIRROR_DX(FlySwoopX(sprite->data[2]));
+     sprite->y2 = Sin(sprite->data[2], 0x48);
+ #ifdef PORT_BRIDGE
+     // Port: asked from the top of the dive (the cinematic's camera follows
+     // the bird); with the player aboard the bird flies on up and to the left
+     // at a quarter of its speed while that camera climbs (Port_FlyHover), so
+-    // that it leaves the picture as the cloud closes, then as it was.
+-    if (!Port_FlyHover() || sprite->sPlayerSpriteId == MAX_SPRITES)
+-        sprite->data[2] = (sprite->data[2] + 4) & 0xff;
+-    else
+-        sprite->data[2] = (sprite->data[2] + 1) & 0xff;
++    // that it leaves the picture as the cloud closes, then as it was. On the
++    // new map it comes in beside the camera coming down (Port_FlyLanding),
++    // reaching the player as the camera settles.
++    {
++        u8 share;
++
++        if (sprite->sPlayerSpriteId != MAX_SPRITES && Port_FlyLanding(&share))
++        {
++            u16 angle = (u16)share * 64 / 255;
++
++            if (angle > sprite->data[2])
++                sprite->data[2] = angle;
++        }
++        else if (!Port_FlyHover() || sprite->sPlayerSpriteId == MAX_SPRITES)
++            sprite->data[2] = (sprite->data[2] + 4) & 0xff;
++        else
++            sprite->data[2] = (sprite->data[2] + 1) & 0xff;
++    }
+ #else
+     sprite->data[2] = (sprite->data[2] + 4) & 0xff;
+ #endif
+@@ -3595,7 +3640,8 @@
+         sprite1->coordOffsetEnabled = FALSE;
+ #ifdef PLATFORM_3DS
+         // Port: on the Pokemon's back, wherever its sprite has it.
+-        sprite1->x = sprite->x + sprite->x2 + sFlyRiderX;
++        sprite1->x = sprite->x + sprite->x2 + sFlyRiderX; // (the east-facing frame's own seat)
++
+         sprite1->y = sprite->y + sprite->y2 + sFlyRiderY;
+ #else
+         sprite1->x = sprite->x + sprite->x2;
+@@ -3617,10 +3663,10 @@
+         if (sprite->data[0] == 0)
+         {
+             sprite->oam.affineMode = ST_OAM_AFFINE_DOUBLE;
+-            sprite->affineAnims = sAffineAnims_FlyBird;
++            sprite->affineAnims = sFlyEast ? sAffineAnims_FlyBirdEast : sAffineAnims_FlyBird;
+             InitSpriteAffineAnim(sprite);
+             StartSpriteAffineAnim(sprite, 1);
+-            sprite->x = 0x5e;
++            sprite->x = FLY_MIRROR_X(0x5e);
+             sprite->y = -0x20;
+             sprite->data[0]++;
+             sprite->data[1] = 0xf0;
+@@ -3630,7 +3676,7 @@
+         sprite->data[1] += sprite->data[2] >> 8;
+         sprite->data[3] += sprite->data[2] >> 8;
+         sprite->data[1] &= 0xff;
+-        sprite->x2 = Cos(sprite->data[1], 0x20);
++        sprite->x2 = FLY_MIRROR_DX(Cos(sprite->data[1], 0x20));
+         sprite->y2 = Sin(sprite->data[1], 0x78);
+         if (sprite->data[2] > 0x100)
+         {
+@@ -3698,8 +3744,8 @@
+         }
+         ObjectEventSetGraphicsId(objectEvent, GetPlayerAvatarGraphicsIdByStateId(PLAYER_AVATAR_STATE_SURFING));
+         CameraObjectFreeze();
+-        ObjectEventTurn(objectEvent, DIR_WEST);
+-        StartSpriteAnim(&gSprites[objectEvent->spriteId], ANIM_GET_ON_OFF_POKEMON_WEST);
++        ObjectEventTurn(objectEvent, sFlyEast ? DIR_EAST : DIR_WEST);
++        StartSpriteAnim(&gSprites[objectEvent->spriteId], sFlyEast ? ANIM_GET_ON_OFF_POKEMON_EAST : ANIM_GET_ON_OFF_POKEMON_WEST);
+         objectEvent->invisible = FALSE;
+         task->tBirdSpriteId = CreateFlyBirdSprite();
+         StartFlyBirdSwoopDown(task->tBirdSpriteId);
+@@ -3711,7 +3757,13 @@
+ {
+     struct ObjectEvent *objectEvent;
+     struct Sprite *sprite;
++#ifdef PORT_BRIDGE
++    // Port: when the Pokemon has reached the player (the 17 frames' worth of
++    // its swoop: it may come in slower, beside the camera coming down).
++    if (gSprites[task->tBirdSpriteId].data[2] >= 68)
++#else
+     if (task->tTimer == 0 || (--task->tTimer) == 0)
++#endif
+     {
+         objectEvent = &gObjectEvents[gPlayerAvatar.objectEventId];
+         sprite = &gSprites[objectEvent->spriteId];
+@@ -4144,7 +4196,19 @@
+     return FALSE;
+ }
+ 
++bool8 __attribute__((weak)) Port_FlyEast(void)
++{
++    return FALSE;
++}
++
++bool8 __attribute__((weak)) Port_FlyLanding(u8 *share)
++{
++    (void)share;
++    return FALSE;
++}
++
+ bool8 __attribute__((weak)) Port_FlyBusy(void)
++
+ {
+     return FALSE;
+ }

@@ -279,6 +279,8 @@ static VoxelCamera sCamera;
 static float sSwoop;
 static float sSwoopHeight = 1.0f;
 static bool sSwoopCards = true, sSwoopShadows = true;
+/* The Fly cinematic's share of the camera this frame (CtrVoxel_SetFly). */
+static CtrVoxelFly sFly;
 /* Flattening, height becomes distance up the picture, as the GBA's art
  * draws a tall thing in the tiles above its base: tiles north per tile of
  * height lost. 1 puts a two-tall crown on the tile above its trunk. */
@@ -4540,6 +4542,25 @@ static bool IsDrawn(const VoxelChunk *chunk)
  */
 static bool sHolesOnly;
 
+/*
+ * The Fly cinematic's camera is up (FlyCamera): for a second or two the
+ * wide view wants several times the squares of the ground view, far off and
+ * under the wind. They are covered by their drafts at a faster rate than on
+ * the ground (DraftHoles), and no real build is started meanwhile - not even
+ * for a hole the drafts could not cover this frame, which is the next
+ * frame's draft: a build would take the frames the drafts need, and the
+ * VRAM a view that size has not got (they failed for room, and the square
+ * stayed black for VOXEL_NO_ROOM_FRAMES). The real builds follow the
+ * landing, as the view comes back to its size.
+ */
+#define VOXEL_FLY_DRAFT_PER_FRAME VOXEL_CHUNK_UPLOADS_MAX
+#define VOXEL_FLY_DRAFT_MS 3.0f
+
+static bool FlyingHigh(void)
+{
+    return sFly.active && sFly.lift > 0.05f;
+}
+
 /* Takes the most urgent request the frame can afford as the next job. */
 static bool StartNextJob(float elapsed, float holeMs, float aheadMs)
 {
@@ -4552,6 +4573,9 @@ static bool StartNextJob(float elapsed, float holeMs, float aheadMs)
 
         if (r->done || sFrame < sRequestWait[r->waitIndex].noRoomUntil)
             continue;
+        if (FlyingHigh())
+            continue; /* the flight: the drafts alone (a hole left is the next frame's draft) */
+
         if (sHolesOnly && need != NEED_HOLE && !RequestOverdue(r))
             continue; /* sorted: holes come first */
         if (elapsed >= (forView ? holeMs : aheadMs))
@@ -4786,6 +4810,9 @@ static bool DraftHoles(unsigned *missing)
 {
     uint64_t start = svcGetSystemTick();
     unsigned made = 0;
+    bool flying = FlyingHigh();
+    unsigned perFrame = flying ? VOXEL_FLY_DRAFT_PER_FRAME : VOXEL_DRAFT_PER_FRAME;
+    float budgetMs = flying ? VOXEL_FLY_DRAFT_MS : VOXEL_DRAFT_MS;
 
     for (unsigned i = 0; i < sRequestCount && sRequests[i].need == NEED_HOLE; ++i)
     {
@@ -4795,8 +4822,9 @@ static bool DraftHoles(unsigned *missing)
 
         if (r->done || r->site.border)
             continue;
-        if (made >= VOXEL_DRAFT_PER_FRAME || (made != 0 && MsSince(start) >= VOXEL_DRAFT_MS))
+        if (made >= perFrame || (made != 0 && MsSince(start) >= budgetMs))
             break;
+
         /* The running job is for this square: let it finish. */
         if (sJob.active && SameSite(&r->site, &sJob.site))
             continue;
@@ -5320,6 +5348,63 @@ static void BattleCamera(void)
     x += sBattle.shakeX * k;
     z += sBattle.shakeY * k / sinf(pitch * degrees);
     VoxelCamera_Frame(&sCamera, x, z, ground, pitch, distance);
+}
+
+/* ── The Fly cinematic ─────────────────────────────────────────────────────── */
+
+/*
+ * The camera's high pose over the world (voxel_fly.c, CtrVoxel_SetFly): on
+ * top of the player's pose this frame, the pitch steepened and the camera
+ * dollied out by `lift`, the view led towards the destination on the old map
+ * and trailing behind the player on the new one, and the eye lifted straight
+ * up into the cloud deck by `rise`. The lead goes through the camera's swoop
+ * shift, which the next follow step takes off again, so it never feeds the
+ * damping. The far plane (VOXEL_FAR, 200) and the view's reach
+ * (VOXEL_VIEW_REACH_MAX, 44 tiles) bound the pose: at the deck the eye is
+ * some 70 tiles up, and the far corner of the ground it sees is within both.
+ */
+#define VOXEL_FLY_PITCH 62.0f    /* degrees below the horizon, at the top */
+#define VOXEL_FLY_DISTANCE 24.0f /* tiles of ground from the target to the eye's foot */
+#define VOXEL_FLY_RISE 22.0f     /* tiles the eye goes on up into the deck */
+#define VOXEL_FLY_TRAVEL 14.0f   /* tiles the view goes along the way, ahead over the
+                                  * old map and in from behind over the new one */
+
+static void FlyCamera(void)
+{
+    float lift = Clamp(sFly.lift, 0.0f, 1.0f);
+    float pitch = sCamera.pitch + (VOXEL_FLY_PITCH - sCamera.pitch) * lift;
+    float distance = sCamera.distance + (VOXEL_FLY_DISTANCE - sCamera.distance) * lift;
+
+    /* Below the pose (the bird's dive): drawn in on the player, the pitch kept. */
+    if (sFly.lift < 0.0f)
+        distance = sCamera.distance * (1.0f + Clamp(sFly.lift, -1.0f, 0.0f));
+    /* Under way: the view travels towards the destination, so the whole
+     * flight - out over the old map, in over the new - moves one way. The
+     * share is scaled by the lift so the new map is built on the pose. */
+    float along = VOXEL_FLY_TRAVEL * Clamp(sFly.travel, -1.0f, 1.0f) * lift;
+    float dx = sFly.dirX * along, dz = sFly.dirZ * along;
+
+
+    VoxelCamera_Frame(&sCamera, sCamera.targetX + dx, sCamera.targetZ + dz, sCamera.ground,
+                      pitch, distance);
+    sCamera.swoopX += dx;
+    sCamera.swoopZ += dz;
+    sCamera.y += VOXEL_FLY_RISE * Clamp(sFly.rise, 0.0f, 1.0f);
+}
+
+void CtrVoxel_SetFly(const CtrVoxelFly *fly)
+{
+    if (fly == NULL || !fly->active)
+    {
+        sFly.active = false;
+        return;
+    }
+    sFly = *fly;
+}
+
+C3D_Tex *CtrVoxel_CloudTexture(void)
+{
+    return sHaveFog ? &sFogTex : NULL;
 }
 
 /* The lamps' buffers given back: at once (`now`: nothing queued draws from
@@ -5930,6 +6015,9 @@ bool CtrVoxel_Update(void)
     /* The swoop to or from the 2D field, on top of the player's pose. */
     if (!sBattle.on)
         VoxelCamera_Swoop(&sCamera, sSwoop);
+    /* The Fly cinematic's high camera, on top of it too. */
+    if (!sBattle.on && sFly.active)
+        FlyCamera();
     if (sBattle.on)
     {
         if (!sBattle.chosen)
@@ -7237,6 +7325,18 @@ static const FogBank sSandBanks[2] = {
 };
 
 /*
+ * The Fly cinematic's cloud wisps on the same two sheets, high over the
+ * world under the hovering camera (VOXEL_FLY_PITCH and _DISTANCE put the
+ * eye some 45 tiles up): a thin one and a thicker one, streaming back along
+ * the way of travel (the drift is set as the flight begins, DrawCloudWisps).
+ */
+#define VOXEL_FLY_WISP_SPEED 9.0f /* tiles per second, back along the way */
+static FogBank sCloudBanks[2] = {
+    {12.0f, 24.0f, 0.0f, 0.0f, 0.55f},
+    {7.0f, 33.0f, 0.0f, 0.0f, 0.75f},
+};
+
+/*
  * Wisps rather than a wash: four octaves of the dapples' noise, thresholded
  * so that clear gaps open between the banks. A8: only coverage is stored,
  * the colour is a constant of the frame.
@@ -7576,7 +7676,10 @@ static void PrepareFades(void)
     float target = sBrightWhite ? 1.0f : 0.0f;
 
     sWorldFade = none;
-    VoxelWorld_ScreenFade(&sWorldFade.amount, sWorldFade.rgb);
+    /* Under the Fly cinematic's cloud the new map fades in from black for
+     * the game's sake only: the world is to be seen coming down out of it. */
+    if (!(sFly.active && sFly.noFade))
+        VoxelWorld_ScreenFade(&sWorldFade.amount, sWorldFade.rgb);
     sWorldFade = FadeThen(sWorldFade, sBrightBg, target);
     sSpriteFade = FadeThen(none, sBrightObj, target);
 }
@@ -7768,6 +7871,21 @@ static void DrawBanks(const C3D_Mtx *view, const VoxelLight *light, const FogBan
 static void DrawFogBanks(const C3D_Mtx *view, const VoxelLight *light, bool cave, float density)
 {
     DrawBanks(view, light, sFogBanks, cave ? 0xFFBFAB9Eu : 0xFFF2EBE6u, density); /* 0xAABBGGRR */
+}
+
+/* The Fly cinematic's wisps (sCloudBanks), white, streaming back along the
+ * way of travel: the drift is the direction's, so a change of direction
+ * between two flights steps the pattern, which nobody sees at no strength. */
+static void DrawCloudWisps(const C3D_Mtx *view, const VoxelLight *light, float strength)
+{
+    for (unsigned bank = 0; bank < 2; ++bank)
+    {
+        float speed = VOXEL_FLY_WISP_SPEED * (bank == 0 ? 0.7f : 1.0f);
+
+        sCloudBanks[bank].driftX = -sFly.dirX * speed;
+        sCloudBanks[bank].driftZ = -sFly.dirZ * speed;
+    }
+    DrawBanks(view, light, sCloudBanks, 0xFFFBF8F4u, strength);
 }
 
 /*
@@ -8845,6 +8963,12 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
     {
         FadeFor(false);
         DrawBanks(&view, &light, sSandBanks, 0xFF88BEE0u, weatherAmount);
+    }
+    /* The Fly cinematic's cloud wisps, high over the world. */
+    if (sFly.active && sHaveFog && !indoor && sFly.wisps > 0.005f)
+    {
+        FadeFor(false);
+        DrawCloudWisps(&view, &light, Clamp(sFly.wisps, 0.0f, 1.0f));
     }
     /* Before the rays, which leave the orthographic projection behind. */
     if (sMotes != NULL && light.motes > 0.005f)

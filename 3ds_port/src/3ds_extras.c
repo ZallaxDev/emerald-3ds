@@ -40,6 +40,11 @@ static const char *const sTimedEncounters[] = {CTR_TEXT("ORIGINAL", "ORIGINAL", 
 
 static const char *const sVisibleWild[] = {CTR_TEXT("OFF", "NO", "NON", "NO", "NENHUM", "AUS", "オフ"), CTR_TEXT("FEW", "POCOS", "PEU", "POCHE", "POUCOS", "WENIGE", "すこし"), CTR_TEXT("SOME", "ALGUNOS", "MOYEN", "ALCUNE", "ALGUNS", "EINIGE", "ふつう"), CTR_TEXT("MANY", "MUCHOS", "BEAUCOUP", "MOLTE", "MUITOS", "VIELE", "たくさん")};
 static const char *const sEncounterRate[] = {CTR_TEXT("NORMAL", "NORMAL", "NORMAL", "NORMALE", "NORMAL", "NORMAL", "ふつう"), CTR_TEXT("OFF", "NO", "NON", "NO", "NENHUM", "AUS", "オフ"), "1/4", "1/2", "2X"};
+/* Fly in the voxel overworld (3ds_fly_sky.h): OFF is the GBA's Fly; CLOUDS
+ * the camera's climb into the cloud and down out of it over the new map;
+ * FULL that with the flight itself seen above the deck, the region's wild
+ * flyers and weather, and the map's mark flying the route. */
+static const char *const sFlyEnhanced[] = {CTR_TEXT("OFF", "NO", "NON", "NO", "NENHUM", "AUS", "オフ"), CTR_TEXT("CLOUDS", "NUBES", "NUAGES", "NUVOLE", "NUVENS", "WOLKEN", "くも"), CTR_TEXT("FULL", "COMPLETO", "COMPLET", "COMPLETO", "COMPLETO", "VOLL", "フル")};
 static const char *const sShinyOdds[] = {"1/8192", "1/4096", "1/1024", "1/256", "1/64", CTR_TEXT("ALWAYS", "SIEMPRE", "TOUJOURS", "SEMPRE", "SEMPRE", "IMMER", "かならず")};
 /* The voxel world per eye with the 3D slider (3ds_video.c): AUTO is on a
  * New 3DS only (the second pass costs an Old 3DS the frame), and how deep
@@ -257,6 +262,11 @@ const CtrExtra gCtrExtras[] =
      * screen's own (3ds_bottom_game.inc). */
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_ENHANCEMENTS, 1), CTR_TEXT("CLASSIC MENUS", "MENÚS CLÁSICOS", "MENUS CLASSIQ.", "MENU CLASSICI", "MENUS CLÁSSICOS", "KLASS. MENÜS", "むかしの メニュー"), "classic_menus", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_ENHANCEMENTS, 1), CTR_TEXT("FOLLOWER", "ACOMPAÑANTE", "COMPAGNON", "COMPAGNO", "COMPANHEIRO", "BEGLEITER", "つれあるき"), "follower", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
+    /* Fly soars across the open sky between the climb into the cloud and
+     * the descent, with the region's flying Pokémon (3ds_fly_sky.c); off,
+     * the flight stays inside the cloud. */
+    {CTR_EXTRAS_SCREEN(CTR_EXTRAS_ENHANCEMENTS, 1), CTR_TEXT("ENHANCED FLYING", "VUELO MEJORADO", "VOL AMÉLIORÉ", "VOLO MIGLIORATO", "VOO MELHORADO", "ERWEITERT FLIEGEN", "ひこう えんしゅつ"), "fly_enhanced", 3, 2, sFlyEnhanced, NULL, NULL, NULL},
+
 #include "3ds_nuzlocke_extras.inc"
 #include "3ds_randomizer_extras.inc"
     #include "3ds_field_qol_extras.inc"
