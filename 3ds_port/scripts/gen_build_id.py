@@ -31,6 +31,8 @@ def files(root: Path, part: str) -> list[Path]:
     path = root / part
     if path.is_file():
         return [path]
+    if not path.is_dir():
+        raise SystemExit("gen_build_id.py: %s not found" % path)
     return sorted((p for p in path.rglob("*") if p.is_file() and not any(s in p.parts for s in SKIP)),
                   key=lambda p: p.relative_to(root).as_posix())
 
@@ -39,7 +41,7 @@ def main() -> int:
     if len(sys.argv) != 4:
         print(__doc__, file=sys.stderr)
         return 2
-    port, patches, out = (Path(p) for p in sys.argv[1:])
+    port, patches, out = (Path(p).resolve() for p in sys.argv[1:])
     if not patches.is_file():
         print("gen_build_id.py: %s not found (run tools/bootstrap.py)" % patches, file=sys.stderr)
         return 1
