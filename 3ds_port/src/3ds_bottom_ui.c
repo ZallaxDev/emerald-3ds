@@ -2353,6 +2353,16 @@ static bool8 BagShown(u8 mode)
     return mode == MODE_BAG_MENU;
 }
 
+/* The bag to deposit from at the PC or to sell from at a shop: in the window,
+ * but it goes back to the PC's or the shop's menu as it closes, never to
+ * another screen (CtrBottom_LeaveTo), so the dock is locked to its own BAG,
+ * which closes it as B does. */
+static bool8 BagReturnsToMenu(u8 mode)
+{
+    return mode == MODE_BAG_MENU
+        && (gBagPosition.location == ITEMMENULOCATION_ITEMPC || gBagPosition.location == ITEMMENULOCATION_SHOP);
+}
+
 /* Whether the shop's BUY screen is what the whole screen shows. */
 static bool8 ShopShown(u8 mode)
 {
@@ -3585,7 +3595,7 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
                || ((mode == MODE_PARTY_MENU || mode == MODE_BAG_MENU) && s->bagView == BAG_VIEW_SECTION));
     /* The Fly map: only MAP, which cancels it, as in a battle's menus. */
     s->mapFly = sMapFly && mode == MODE_FIELD && s->screen == SCR_MAP && s->dock;
-    s->dockLocked = s->dock && (s->inBattle || s->mapFly);
+    s->dockLocked = s->dock && (s->inBattle || s->mapFly || BagReturnsToMenu(mode));
     StringCopy(s->name, gSaveBlock2Ptr->playerName);
     /* The header's Y and RUN, and the focus on the dock or the header; in a
      * battle neither is for now. */
@@ -6406,8 +6416,9 @@ static void Activate(u8 id, u8 mode)
                 CancelFlyMap();
             return;
         }
-        /* A battle's party menu, summary or bag: only its own button, their B. */
-        if (gMain.inBattle && screen != sShown.screen)
+        /* A battle's party menu, summary or bag, or the bag at the PC or a
+         * shop: only its own button, their B. */
+        if ((gMain.inBattle || sShown.dockLocked) && screen != sShown.screen)
             return;
 
         if (mode == MODE_POKENAV)
@@ -6852,7 +6863,7 @@ static bool8 ColumnShown(u8 mode)
     case MODE_PARTY_MENU:
         return gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD;
     case MODE_BAG_MENU:
-        return CtrBag_InWindow();
+        return CtrBag_InWindow() && !BagReturnsToMenu(mode);
     }
     return FALSE;
 }
