@@ -1239,7 +1239,8 @@ static bool sObjMaskOn;
  * mask, then the layers it shows over that mask. */
 enum { OBJWIN_NONE, OBJWIN_MASK, OBJWIN_LAYERS };
 static unsigned sObjWinPass;
-/* The battle's BG0 drew something above its text box (DrawBattleText). */
+/* The battle's BG0 drew something above its text box (DrawBattleText), or
+ * the level-up box was drawn (DrawBattleTextLayer). */
 static bool sTextAbove;
 static uint32_t sObjMask[4];
 /*
@@ -3748,7 +3749,15 @@ static void DrawBattleTextLayer(unsigned bg)
     if (bg == 0)
         DrawBattleText(bg);
     else
+    {
+        uint32_t before = sStats.tiles;
+
         DrawBattleCut(bg, VIEW_RIGHT - 240, VIEW_RIGHT, 0, 160, VIEW_RIGHT - 240);
+        /* The level-up box starts well above the text box: the 3D battle
+         * puts the whole surface on each eye then, not the text box's lines
+         * alone, which cut the box's top rows off (RenderBattleStereo). */
+        if (sStats.tiles != before) sTextAbove = true;
+    }
     C2D_Flush();
     sZoom = zoom;
     sOffX = offX;
