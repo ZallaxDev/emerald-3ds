@@ -63,6 +63,7 @@ static int sClipX0, sClipX1, sClipY0, sClipY1, sSpanShiftX, sSpanShiftY, sLayerS
 static unsigned sLayerExclude, sLineMask;
 static uint16_t registers[48], lineRegisters[CTR_LINE_REGS], tilemaps[2][1024];
 static const uint16_t *sRegLine;
+static int32_t sBandInside = -1;
 static struct { const uint16_t *regs; } sMemory = {registers};
 static struct { unsigned tiles, frames; } sStats;
 static float sZoom = 1, sOffX, sOffY;
