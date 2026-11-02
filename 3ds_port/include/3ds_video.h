@@ -105,6 +105,9 @@ void CtrVideo_Present(void);
 /* Keep showing the last top-screen frame instead of the game's screen. */
 void CtrVideo_HoldTop(bool hold);
 bool CtrVideo_TopHeld(void);
+/* The held frame darkened, once, until the hold is let go: the battle scene
+ * under its party menu, summary or bag. */
+void CtrVideo_DimHeldTop(void);
 /* OAM entries belonging to field weather, tagged while BuildOamBuffer sorts sprites. */
 /*
  * The true y of the sprite that wrote OAM entries [first, end). OAM keeps 8

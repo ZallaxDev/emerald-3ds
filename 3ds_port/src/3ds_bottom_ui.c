@@ -7085,6 +7085,28 @@ void CtrBottom_KeepWorld(void)
 }
 
 /*
+ * A battle is about to fade to black for one of its menus the bottom screen
+ * runs: the party menu to send out the next Pokémon (after a faint, or the
+ * switch it offers), the bag, the summary to forget a move for a new one
+ * (battle_controller_player.c, battle_script_commands.c). The top screen
+ * holds the battle scene from this frame on, before the fade darkens it, and
+ * shows it dimmed under the menu; a session begun only once the menu is up
+ * held the black the fade had left. Opened from the action menu, the session
+ * is already on (CtrBattleMenu_ActionInput).
+ */
+void CtrBattleMenu_HoldScene(void)
+{
+    /* As CtrBottom_KeepWorld: without CtrBottom_Frame the hold never ends. */
+    if (!sRes.ready)
+        return;
+    if (!sSession.active || !sSession.battle)
+        BeginSession(TRUE);
+    sSession.awaitMenu = TRUE;
+    CtrVideo_HoldTop(TRUE);
+    CtrVideo_DimHeldTop();
+}
+
+/*
  * Walking moves the player's mark on the MAP screen, and nothing else on it:
  * every move used to redraw the whole screen - 5-15 ms on an Old 3DS, in the
  * frame the move fell in. Now the mark's old square is restored from the
@@ -7619,6 +7641,9 @@ void CtrBottom_Frame(void)
         CtrVideo_HoldTop(hold);
         held = hold;
     }
+    /* A battle's menus: its scene stays up there, darkened. */
+    if (hold && sSession.battle)
+        CtrVideo_DimHeldTop();
     if (hold && mode != MODE_POKENAV && mode != MODE_STORAGE && mode != MODE_PARTY_MENU && mode != MODE_SUMMARY
      && mode != MODE_CARD
      && !BagShown(mode)
