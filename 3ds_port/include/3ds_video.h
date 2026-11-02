@@ -266,6 +266,9 @@ enum
     /* The Hall of Fame (the team on its stripes, the champion's card) and
      * the PC's record of it: its bands carried out to the edges. */
     CTR_CENTRED_HALL_OF_FAME,
+    /* The Battle Factory's rental and swap screens: their sprites kept to
+     * the picture, where the swap menu's bar slides in from past its edge. */
+    CTR_CENTRED_FACTORY,
     CTR_CENTRED_SCREENS
 };
 void CtrVideo_SetCentred(unsigned screen);
@@ -275,9 +278,16 @@ void CtrVideo_ShowNoHome(void);
  * The window edges an HBlank DMA writes line by line (the PokéNav's glow
  * behind its chosen option, its condition graph): values holds WIN0H for each
  * line, or WIN0H and WIN1H with both; NULL turns it off. Only the PokéNav's
- * screens are composed with them.
+ * screens are composed with them, and a centred screen that also hands over
+ * what its windows show (below).
  */
 void CtrVideo_SetLineWindow(const uint16_t *values, unsigned lines, bool both);
+/*
+ * WININ for each of the 160 lines, for a centred screen whose HBlank interrupt
+ * moves its windows and changes what they show (the Battle Dome's tourney
+ * tree); NULL turns it off.
+ */
+void CtrVideo_SetLineWindowInside(const uint16_t *values);
 /*
  * The circle of light of a dark cave (Flash) or the Battle Pyramid, which the
  * field draws as window 0 edges line by line: its centre in the field's screen

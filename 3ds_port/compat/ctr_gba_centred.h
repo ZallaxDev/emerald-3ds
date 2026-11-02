@@ -4,7 +4,8 @@
  * the title menu with the professor's speech, the OPTION screen, the naming
  * screen, the clock, the choice of starter from the professor's bag, the
  * communication error screen, the Berry Blender, the wireless minigames,
- * contests, the Game Corner's slot machine and the Hall of Fame;
+ * contests, the Game Corner's slot machine, the Hall of Fame and the other
+ * GBA screens (full.mk lists them);
  * and into pokenav.c, pokemon_storage_system.c (the PC's boxes),
  * pokemon_summary_screen.c, item_menu.c (the bag), pokedex.c, trade.c and
  * trainer_card.c (the field's card, with the classic menus),
@@ -54,6 +55,8 @@
 #define SetVBlankCallback CtrCentredSlots_SetVBlankCallback
 #elif defined(CTR_CENTRED_HALL_OF_FAME)
 #define SetVBlankCallback CtrCentredHallOfFame_SetVBlankCallback
+#elif defined(CTR_CENTRED_FACTORY)
+#define SetVBlankCallback CtrCentredFactory_SetVBlankCallback
 #elif defined(CTR_CENTRED_CARD)
 #define SetVBlankCallback CtrCentredCard_SetVBlankCallback
 #else
