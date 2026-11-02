@@ -133,7 +133,7 @@ enum
     CTR_BAG_VIEW_LIST,      /* choosing an item */
     CTR_BAG_VIEW_SWAP,      /* one being moved (swapRow) */
     CTR_BAG_VIEW_ACTIONS,   /* its menu: USE, GIVE, TOSS... */
-    CTR_BAG_VIEW_QUANTITY,  /* how many to toss */
+    CTR_BAG_VIEW_QUANTITY,  /* how many to toss, deposit or sell */
     CTR_BAG_VIEW_YESNO,     /* a question (text) and YES/NO */
     CTR_BAG_VIEW_MESSAGE,   /* a message (msg) waiting to go on */
 };
@@ -169,8 +169,9 @@ struct CtrBagView
 };
 
 bool8 CtrBag_GetView(struct CtrBagView *view);
-/* The bag in the bottom screen's window (from the field or the field's party
- * menu), not over the whole screen. */
+/* The bag in the bottom screen's window (from the field, the field's party
+ * menu, a battle, the PC's deposit or a shop's SELL), not over the whole
+ * screen. */
 bool8 CtrBag_InWindow(void);
 /* A point of the item list, its rows counted in 1/256s from its top, in
  * pixels of the bag's picture (for CtrBag_Touch). */
