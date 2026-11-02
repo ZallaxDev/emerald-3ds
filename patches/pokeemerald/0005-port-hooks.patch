@@ -16755,7 +16755,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          SetMainCallback2(sMonSummaryScreen->callback);
          gLastViewedMonIndex = sMonSummaryScreen->curMonIndex;
          SummaryScreen_DestroyAnimDelayTask();
-@@ -1529,10 +1550,437 @@ static void CloseSummaryScreen(u8 taskId)
+@@ -1529,10 +1550,445 @@ static void CloseSummaryScreen(u8 taskId)
      }
  }
  
@@ -16979,12 +16979,16 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
 +    }
 +}
 +
-+// The summary in the bottom screen's window: the field party menu's, and a
-+// battle's own (its moves locked); from the boxes it has the whole screen.
++// The summary in the bottom screen's window: the field party menu's, a
++// battle's own (its moves locked), and the move to forget for a new one
++// wherever that is learned (a level up in a battle, an evolution, a TM or a
++// tutor, the move relearner); from the boxes it has the whole screen.
 +bool8 CtrSummary_InWindow(void)
 +{
 +    if (sMonSummaryScreen == NULL || sMonSummaryScreen->isBoxMon || sMonSummaryScreen->monList.mons != gPlayerParty)
 +        return FALSE;
++    if (sMonSummaryScreen->mode == SUMMARY_MODE_SELECT_MOVE)
++        return TRUE;
 +    return gMain.inBattle ? sMonSummaryScreen->mode == SUMMARY_MODE_LOCK_MOVES
 +                          : gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD;
 +}
@@ -17008,6 +17012,10 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
 +    view->page = sMonSummaryScreen->currPageIndex;
 +    view->minPage = sMonSummaryScreen->minPageIndex;
 +    view->maxPage = sMonSummaryScreen->maxPageIndex;
++    // Replacing a move from the start: no leave for another screen from the
++    // dock while it loads (only one from the moves as they are).
++    if (sMonSummaryScreen->mode == SUMMARY_MODE_SELECT_MOVE)
++        view->movesMode = CTR_SUM_MOVES_REPLACE;
 +    if (gMain.callback2 == CB2_InitSummaryScreen && gMain.state <= 10)
 +    {
 +        view->loading = TRUE;
@@ -17193,7 +17201,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          if (JOY_NEW(DPAD_UP))
          {
              ChangeSummaryPokemon(taskId, -1);
-@@ -1616,7 +2064,7 @@ static void ChangeSummaryPokemon(u8 taskId, s8 delta)
+@@ -1616,7 +2072,7 @@ static void ChangeSummaryPokemon(u8 taskId, s8 delta)
                  SetSpriteInvisibility(SPRITE_ARR_ID_STATUS, TRUE);
                  ClearWindowTilemap(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS);
                  ScheduleBgCopyTilemapToVram(0);
@@ -17202,7 +17210,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
              }
              sMonSummaryScreen->curMonIndex = monId;
              gTasks[taskId].data[0] = 0;
-@@ -1657,7 +2105,7 @@ static void Task_ChangeSummaryMon(u8 taskId)
+@@ -1657,7 +2113,7 @@ static void Task_ChangeSummaryMon(u8 taskId)
          break;
      case 7:
          if (sMonSummaryScreen->summary.ailment != AILMENT_NONE)
@@ -17211,7 +17219,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          DrawPokerusCuredSymbol(&sMonSummaryScreen->currentMon);
          data[1] = 0;
          break;
-@@ -1683,7 +2131,7 @@ static void Task_ChangeSummaryMon(u8 taskId)
+@@ -1683,7 +2139,7 @@ static void Task_ChangeSummaryMon(u8 taskId)
          gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_MON]].data[2] = 0;
          break;
      default:
@@ -17220,7 +17228,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          {
              data[0] = 0;
              gTasks[taskId].func = Task_HandleInput;
-@@ -1782,6 +2230,56 @@ static void ChangePage(u8 taskId, s8 delta)
+@@ -1782,6 +2238,56 @@ static void ChangePage(u8 taskId, s8 delta)
      HidePageSpecificSprites();
  }
  
@@ -17277,7 +17285,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
  static void PssScrollRight(u8 taskId) // Scroll right
  {
      s16 *data = gTasks[taskId].data;
-@@ -1816,6 +2314,26 @@ static void PssScrollRightEnd(u8 taskId) // display right
+@@ -1816,6 +2322,26 @@ static void PssScrollRightEnd(u8 taskId) // display right
  {
      s16 *data = gTasks[taskId].data;
      sMonSummaryScreen->bgDisplayOrder ^= 1;
@@ -17304,7 +17312,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      data[1] = 0;
      data[0] = 0;
      DrawPagination();
-@@ -1889,8 +2407,8 @@ static void SwitchToMoveSelection(u8 taskId)
+@@ -1889,8 +2415,8 @@ static void SwitchToMoveSelection(u8 taskId)
      ClearWindowTilemap(PSS_LABEL_WINDOW_PORTRAIT_SPECIES);
      if (!gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_STATUS]].invisible)
          ClearWindowTilemap(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS);
@@ -17315,7 +17323,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      if (!sMonSummaryScreen->lockMovesFlag)
      {
          ClearWindowTilemap(PSS_LABEL_WINDOW_PROMPT_INFO);
-@@ -1914,6 +2432,17 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
+@@ -1914,6 +2440,17 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
  
      if (MenuHelpers_ShouldWaitForLinkRecv() != TRUE)
      {
@@ -17333,7 +17341,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          if (JOY_NEW(DPAD_UP))
          {
              data[0] = 4;
-@@ -1924,7 +2453,7 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
+@@ -1924,7 +2461,7 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
              data[0] = 4;
              ChangeSelectedMove(data, 1, &sMonSummaryScreen->firstMoveIndex);
          }
@@ -17342,7 +17350,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          {
              if (sMonSummaryScreen->lockMovesFlag == TRUE
               || (sMonSummaryScreen->newMove == MOVE_NONE && sMonSummaryScreen->firstMoveIndex == MAX_MON_MOVES))
-@@ -1942,11 +2471,13 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
+@@ -1942,11 +2479,13 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
                  PlaySE(SE_FAILURE);
              }
          }
@@ -17357,7 +17365,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      }
  }
  
-@@ -1996,8 +2527,8 @@ static void ChangeSelectedMove(s16 *taskData, s8 direction, u8 *moveIndexPtr)
+@@ -1996,8 +2535,8 @@ static void ChangeSelectedMove(s16 *taskData, s8 direction, u8 *moveIndexPtr)
          if (!gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_STATUS]].invisible)
              ClearWindowTilemap(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS);
          ScheduleBgCopyTilemapToVram(0);
@@ -17368,7 +17376,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      }
      if (*moveIndexPtr != MAX_MON_MOVES
          && newMoveIndex == MAX_MON_MOVES
-@@ -2006,8 +2537,8 @@ static void ChangeSelectedMove(s16 *taskData, s8 direction, u8 *moveIndexPtr)
+@@ -2006,8 +2545,8 @@ static void ChangeSelectedMove(s16 *taskData, s8 direction, u8 *moveIndexPtr)
          ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_POWER_ACC);
          ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_APPEAL_JAM);
          ScheduleBgCopyTilemapToVram(0);
@@ -17379,7 +17387,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      }
  
      *moveIndexPtr = newMoveIndex;
-@@ -2031,8 +2562,8 @@ static void CloseMoveSelectMode(u8 taskId)
+@@ -2031,8 +2570,8 @@ static void CloseMoveSelectMode(u8 taskId)
      {
          ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_POWER_ACC);
          ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_APPEAL_JAM);
@@ -17390,7 +17398,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      }
      ScheduleBgCopyTilemapToVram(0);
      ScheduleBgCopyTilemapToVram(1);
-@@ -2054,6 +2585,17 @@ static void Task_HandleInput_MovePositionSwitch(u8 taskId)
+@@ -2054,6 +2593,17 @@ static void Task_HandleInput_MovePositionSwitch(u8 taskId)
  
      if (MenuHelpers_ShouldWaitForLinkRecv() != TRUE)
      {
@@ -17408,7 +17416,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          if (JOY_NEW(DPAD_UP))
          {
              data[0] = 3;
-@@ -2064,17 +2606,19 @@ static void Task_HandleInput_MovePositionSwitch(u8 taskId)
+@@ -2064,17 +2614,19 @@ static void Task_HandleInput_MovePositionSwitch(u8 taskId)
              data[0] = 3;
              ChangeSelectedMove(&data[0], 1, &sMonSummaryScreen->secondMoveIndex);
          }
@@ -17430,7 +17438,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      }
  }
  
-@@ -2197,6 +2741,17 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
+@@ -2197,6 +2749,17 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
      {
          if (gPaletteFade.active != TRUE)
          {
@@ -17448,7 +17456,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
              if (JOY_NEW(DPAD_UP))
              {
                  data[0] = 4;
-@@ -2215,7 +2770,7 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
+@@ -2215,7 +2778,7 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
              {
                  ChangePage(taskId, 1);
              }
@@ -17457,7 +17465,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
              {
                  if (CanReplaceMove() == TRUE)
                  {
-@@ -2231,7 +2786,7 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
+@@ -2231,7 +2794,7 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
                      ShowCantForgetHMsWindow(taskId);
                  }
              }
@@ -17466,7 +17474,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
              {
                  StopPokemonAnimations();
                  PlaySE(SE_SELECT);
-@@ -2239,6 +2794,8 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
+@@ -2239,6 +2802,8 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
                  gSpecialVar_0x8005 = MAX_MON_MOVES;
                  BeginCloseSummaryScreen(taskId);
              }
@@ -17475,7 +17483,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          }
      }
  }
-@@ -2258,8 +2815,8 @@ static void ShowCantForgetHMsWindow(u8 taskId)
+@@ -2258,8 +2823,8 @@ static void ShowCantForgetHMsWindow(u8 taskId)
      ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_POWER_ACC);
      ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_APPEAL_JAM);
      ScheduleBgCopyTilemapToVram(0);
@@ -17486,7 +17494,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      PrintHMMovesCantBeForgotten();
      gTasks[taskId].func = Task_HandleInputCantForgetHMsMoves;
  }
-@@ -2269,7 +2826,7 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
+@@ -2269,7 +2834,7 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
  {
      s16 *data = gTasks[taskId].data;
      u16 move;
@@ -17495,7 +17503,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      {
          if (JOY_NEW(DPAD_UP))
          {
-@@ -2297,8 +2854,8 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
+@@ -2297,8 +2862,8 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
                  move = sMonSummaryScreen->summary.moves[sMonSummaryScreen->firstMoveIndex];
                  gTasks[taskId].func = Task_HandleReplaceMoveInput;
                  ChangePage(taskId, -1);
@@ -17506,7 +17514,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
              }
          }
          else if (JOY_NEW(DPAD_RIGHT) || GetLRKeysPressed() == MENU_R_PRESSED)
-@@ -2311,11 +2868,11 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
+@@ -2311,11 +2876,11 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
                  move = sMonSummaryScreen->summary.moves[sMonSummaryScreen->firstMoveIndex];
                  gTasks[taskId].func = Task_HandleReplaceMoveInput;
                  ChangePage(taskId, 1);
@@ -17521,7 +17529,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          {
              ClearWindowTilemap(PSS_LABEL_WINDOW_PORTRAIT_SPECIES);
              if (!gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_STATUS]].invisible)
-@@ -2323,8 +2880,8 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
+@@ -2323,8 +2888,8 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
              move = sMonSummaryScreen->summary.moves[sMonSummaryScreen->firstMoveIndex];
              PrintMoveDetails(move);
              ScheduleBgCopyTilemapToVram(0);
@@ -17532,7 +17540,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
              gTasks[taskId].func = Task_HandleReplaceMoveInput;
          }
      }
-@@ -2402,69 +2959,75 @@ static void DrawPagination(void) // Updates the pagination dots at the top of th
+@@ -2402,69 +2967,75 @@ static void DrawPagination(void) // Updates the pagination dots at the top of th
      Free(tilemap);
  }
  
@@ -17641,7 +17649,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          {
              if (sMonSummaryScreen->currPageIndex == PSS_PAGE_BATTLE_MOVES)
                  PutWindowTilemap(PSS_LABEL_WINDOW_MOVES_POWER_ACC);
-@@ -2482,46 +3045,46 @@ static void Task_SlidePowerAccWindow(u8 taskId)
+@@ -2482,46 +3053,46 @@ static void Task_SlidePowerAccWindow(u8 taskId)
      ScheduleBgCopyTilemapToVram(2);
  }
  
@@ -17708,7 +17716,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          }
          else
          {
-@@ -2538,37 +3101,37 @@ static void Task_SlideAppealJamWindow(u8 taskId)
+@@ -2538,37 +3109,37 @@ static void Task_SlideAppealJamWindow(u8 taskId)
      ScheduleBgCopyTilemapToVram(2);
  }
  
@@ -17765,7 +17773,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          {
              CreateSetStatusSprite();
              PutWindowTilemap(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS);
-@@ -2578,33 +3141,36 @@ static void Task_SlideStatusWindow(u8 taskId)
+@@ -2578,33 +3149,36 @@ static void Task_SlideStatusWindow(u8 taskId)
      }
  }
  
@@ -17812,7 +17820,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          }
      }
  }
-@@ -3167,6 +3733,9 @@ static void BufferMonTrainerMemo(void)
+@@ -3167,6 +3741,9 @@ static void BufferMonTrainerMemo(void)
  
  static void PrintMonTrainerMemo(void)
  {
@@ -17822,7 +17830,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      PrintTextOnWindow(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_MEMO), gStringVar4, 0, 1, 0, 0);
  }
  
-@@ -3271,6 +3840,9 @@ static void PrintEggState(void)
+@@ -3271,6 +3848,9 @@ static void PrintEggState(void)
      else
          text = gText_EggWillTakeALongTime;
  
@@ -17832,7 +17840,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      PrintTextOnWindow(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_ABILITY), text, 0, 1, 0, 0);
  }
  
-@@ -3295,6 +3867,9 @@ static void PrintEggMemo(void)
+@@ -3295,6 +3875,9 @@ static void PrintEggMemo(void)
          text = gText_OddEggFoundByCouple;
      }
  
