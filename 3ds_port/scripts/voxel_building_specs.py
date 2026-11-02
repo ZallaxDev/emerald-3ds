@@ -1332,6 +1332,14 @@ def battle_tent(art):
 # mainsail behind it.
 # the harbour bollard's profile, (y, radius) from its foot
 BOLLARD = [(0, 6.5), (2, 6), (5, 6), (6, 5.5), (7, 7), (8.5, 7), (9, 4), (11, 0)]
+# Lilycove's beacon (art 16x32, its foot at v 27), the same way on a plan
+# half as deep as wide: a drum on the ground (r 7), a post (r 4.5), the
+# gallery flaring to r 8 at y 14, the lamp (r 4) domed on it, 27 high in
+# all. Fitted to the drawing's outline row by row: at 45 degrees it covers
+# exactly the drawn pixels of every row.
+BEACON = [(0, 6), (2, 7), (4, 7), (6, 4.5), (10, 4.5), (12, 6.5), (14, 8), (16, 7.5), (18, 6),
+          (20, 4), (22, 4), (24, 2.5), (26, 1), (27, 0)]
+BEACON_Z = 25
 BOAT_Z = 35
 # the sails (x, y) in the keel's plane, and the mast (x0, x1, y0, y1)
 BOAT_SAILS = [[(27, 33), (9, 12), (27, 12)], [(32, 32), (44, 11), (32, 11)]]
@@ -6212,6 +6220,30 @@ SPECS = [
         # left a fin on its flank
         "parts": lambda: [ProjLathe("bollard", 8, 11.5, BOLLARD, squash=0.5, seg=10)],
         "exact": [(0, 0, 16, 16)],
+    },
+    {
+        # Lilycove's beacon, the little lighthouse on the grass point by the
+        # beach (art 16x32, all on the upper layer): a white drum on the
+        # grass, a post, a white gallery, the yellow lamp on top. It stands
+        # on the point's back row; its gallery and lamp are drawn over the
+        # beach behind, a level lower: that cell stays the relief's, drawn
+        # without them (relief_bare)
+        "name": "lilycove_beacon",
+        # its projected shapes stand past its drawing: cut to it
+        "clip_art": True,
+        "layout": "LAYOUT_LILYCOVE_CITY",
+        "relief_bare": True,
+        "rect": (61, 33, 1, 2),
+        # the grass it stands on, the beach its top is drawn over
+        "ground": [0x002, 0x19E],
+        "ground_px": True,
+        # its shadow drawn on the grass round its foot is the ground's
+        "ground_rgb": {(131, 131, 139)},
+        # turned smooth on a plan half as deep as wide, ten sides round, as
+        # the bollard (12 or 16 sides: more of its flanks smeared, 102 and
+        # 114 stretched triangles against 58)
+        "parts": lambda: [ProjLathe("beacon", 8, BEACON_Z, BEACON, squash=0.5, seg=10)],
+        "exact": [(0, 0, 16, 32)],
     },
     {
         # Route 109's beach parasols (red, blue and green: found by their own
