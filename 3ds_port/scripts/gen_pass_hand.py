@@ -17,7 +17,9 @@ import os
 PORT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(PORT, "src", "3ds_pass_hand.h")
 
-W, H = 34, 30
+# The shapes are drawn on a 34x30 grid and shown at SCALE of it.
+SCALE = 0.8
+W, H = 28, 24
 SS = 8
 OUTLINE = 1.5
 
@@ -108,7 +110,7 @@ def render():
             shadow = 0.0
             for sy in range(SS):
                 for sx in range(SS):
-                    px, py = x + (sx + 0.5) / SS, y + (sy + 0.5) / SS
+                    px, py = (x + (sx + 0.5) / SS) / SCALE, (y + (sy + 0.5) / SS) / SCALE
                     c = shape(px, py)
                     if c is not None:
                         r += c[0]
@@ -145,8 +147,8 @@ def main():
         " * each pixel its alpha (0-255) and its colour (RGB565). */",
         f"#define PASS_HAND_W {W}",
         f"#define PASS_HAND_H {H}",
-        f"#define PASS_HAND_TIP_X {int(TIP[0])}",
-        f"#define PASS_HAND_TIP_Y {int(TIP[1])}",
+        f"#define PASS_HAND_TIP_X {round(TIP[0] * SCALE)}",
+        f"#define PASS_HAND_TIP_Y {round(TIP[1] * SCALE)}",
         "",
         "static const u8 sPassHandAlpha[PASS_HAND_W * PASS_HAND_H] = {",
     ]

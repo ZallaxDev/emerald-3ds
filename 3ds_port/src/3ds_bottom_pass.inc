@@ -996,6 +996,9 @@ static void PassSnapCard(PassCard *c, const struct CtrCardTop *top)
         c->top = *top;
 }
 
+/* Between the zoom into the card and the pass back again. */
+static bool8 sPassCardFlow;
+
 static void PassTopFrame(void)
 {
     PassScene *sc = &sPassScene;
@@ -1008,6 +1011,15 @@ static void PassTopFrame(void)
         v.view = CTR_PASS_CARD;
     if (v.view == CTR_PASS_NONE)
     {
+        /* Between the pass and the card or the map it opens, the game has
+         * neither up for a frame or two: keep the last picture, so it does
+         * not blink to the game's screen in between. */
+        if (sPassUp && CtrPass_Open())
+        {
+            CtrPassTop_SetFade(gPaletteFade.blendColor, sPassCardFlow ? 0 : gPaletteFade.y);
+            return;
+        }
+        sPassCardFlow = FALSE;
         if (sPassUp)
         {
             CtrPassTop_Hide();
@@ -1093,6 +1105,13 @@ static void PassTopFrame(void)
         PassComposeHand(sc, lit);
         memcpy(&sPassShown, sc, sizeof(*sc));
     }
-    CtrPassTop_SetFade(gPaletteFade.blendColor, gPaletteFade.y);
+    /* The game fades to white into the card and back out of it, on top of
+     * the zoom that already takes the button to the card: on the top screen
+     * the zoom and the card meet without it. */
+    if (v.view == CTR_PASS_CARD || (v.view == CTR_PASS_MAIN && v.zoomArea == CTR_PASS_AREA_CARD))
+        sPassCardFlow = TRUE;
+    else if (v.view != CTR_PASS_MAIN || (!v.zoomArea && !gPaletteFade.active))
+        sPassCardFlow = FALSE;
+    CtrPassTop_SetFade(gPaletteFade.blendColor, sPassCardFlow ? 0 : gPaletteFade.y);
     sPassUp = TRUE;
 }
