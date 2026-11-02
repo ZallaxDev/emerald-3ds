@@ -1,0 +1,51 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: Japanese berry names
+Applies after 0082-japanese-pokedex-units.patch; apply with tools/bootstrap.py.
+
+BPEJ has no plural item names: an item is named as in the bag (ヒメリのみ), and
+the berry tree texts write のみ after the berry's bare name ({STR_VAR_1}のみを
+とった！). English's "ORAN BERRY"/"ORAN BERRIES", built from gText_Berry and
+gText_Berries (BPEJ has neither), printed ヒメリ BERRY.
+
+diff --git a/src/item.c b/src/item.c
+--- a/src/item.c
++++ b/src/item.c
+@@ -83,6 +83,12 @@
+ 
+ void CopyItemNameHandlePlural(u16 itemId, u8 *dst, u32 quantity)
+ {
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_JAPANESE
++    // Japanese has no plural, and its berry items are named with the berry
++    // word ("NOMI") already: the item's own name, as the Japanese game shows it.
++    (void)quantity;
++    StringCopy(dst, GetItemName(itemId));
++#else
+     if (itemId == ITEM_POKE_BALL)
+     {
+         if (quantity < 2)
+@@ -97,10 +103,18 @@
+         else
+             StringCopy(dst, GetItemName(itemId));
+     }
++#endif
+ }
+ 
+ void GetBerryCountString(u8 *dst, const u8 *berryName, u32 quantity)
+ {
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_JAPANESE
++    // The Japanese berry tree texts write the berry word after the name
++    // ("{STR_VAR_1}NOMI"): the berry's name alone, as the Japanese game copies it.
++    (void)quantity;
++    StringCopyN(dst, berryName, BERRY_NAME_LENGTH);
++    dst[BERRY_NAME_LENGTH] = EOS;
++#else
+     const u8 *berryString;
+     u8 *txtPtr;
+ 
+@@ -128,6 +142,7 @@
+     StringCopy(txtPtr + 1, berryString);
+ #endif
+ #endif
++#endif
+ }
+ 
+ bool8 IsBagPocketNonEmpty(u8 pocket)
