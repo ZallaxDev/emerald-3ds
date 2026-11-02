@@ -1204,7 +1204,14 @@ bool VoxelBuildings_CellAt(const VoxelMapInstance *inst, int x, int y,
     if (groundMetatile != NULL)
     {
         *groundMetatile = LayoutPlacements(inst, &count)[i].ground;
-        if (*groundMetatile == (int)OWN_GROUND)
+        /* A cell of the model it stands over nothing of, with quarters to
+         * leave out (a relief_bare model drawn over the cell behind it) is
+         * that cell's own drawing less them, as VoxelBuildings_BareVariant
+         * gives a lifted one: on a cell the relief does not lift (the
+         * beach behind Lilycove's beacon, a level under the grass point it
+         * stands on) the model's ground laid there was a square of grass
+         * in the sand. */
+        if (*groundMetatile == (int)OWN_GROUND || (sHeights[k] == 0 && sQuarters[k] != 0))
         {
             /* the cell's own drawing, less what the model stands for */
             unsigned own = (unsigned)VoxelWorld_GetMetatileId(x, y);
