@@ -1,0 +1,56 @@
+--- a/src/battle_controller_player.c
++++ b/src/battle_controller_player.c
+@@ -38,6 +38,9 @@
+ #ifdef PLATFORM_3DS
+ #include "event_data.h"
+ #include "constants/vars.h"
++// 3ds_bottom_ui.c: the battle scene held, dimmed, on the top screen from the
++// fade into a menu the bottom screen runs (the party menu, the bag).
++void CtrBattleMenu_HoldScene(void);
+ #endif
+ 
+ static void PlayerHandleGetMonData(void);
+@@ -2866,6 +2869,9 @@
+         return;
+     }
+ #endif
++#ifdef PLATFORM_3DS
++    CtrBattleMenu_HoldScene();
++#endif
+     BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 0x10, RGB_BLACK);
+     gBattlerControllerFuncs[gActiveBattler] = OpenBagAndChooseItem;
+     gBattlerInMenuId = gActiveBattler;
+@@ -2893,6 +2899,11 @@
+         *(&gBattleStruct->battlerPreventingSwitchout) = gBattleBufferA[gActiveBattler][1] >> 4;
+         *(&gBattleStruct->prevSelectedPartySlot) = gBattleBufferA[gActiveBattler][2];
+         *(&gBattleStruct->abilityPreventingSwitchout) = gBattleBufferA[gActiveBattler][3];
++#ifdef PLATFORM_3DS
++        // The forced switch after a faint comes here too, not through the
++        // action menu: the scene held before the fade, not the black after.
++        CtrBattleMenu_HoldScene();
++#endif
+         BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 0x10, RGB_BLACK);
+         gBattlerControllerFuncs[gActiveBattler] = OpenPartyMenuToChooseMon;
+         gBattlerInMenuId = gActiveBattler;
+--- a/src/battle_script_commands.c
++++ b/src/battle_script_commands.c
+@@ -1,6 +1,9 @@
+ #include "global.h"
+ #ifdef PLATFORM_3DS
+ #include "3ds_extras.h" // optional settings (OPTIONS pages)
++// 3ds_bottom_ui.c: the battle scene held, dimmed, on the top screen from the
++// fade into the summary that picks the move to forget.
++void CtrBattleMenu_HoldScene(void);
+ #endif
+ #include "battle.h"
+ #include "battle_message.h"
+@@ -5532,6 +5535,9 @@
+             if (gBattleCommunication[1] == 0)
+             {
+                 HandleBattleWindow(YESNOBOX_X_Y, WINDOW_CLEAR);
++#ifdef PLATFORM_3DS
++                CtrBattleMenu_HoldScene();
++#endif
+                 BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 16, RGB_BLACK);
+                 gBattleScripting.learnMoveState++;
+             }

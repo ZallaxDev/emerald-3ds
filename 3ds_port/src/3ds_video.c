@@ -12214,13 +12214,56 @@ static void HeldTopPutBack(void)
     HeldTopForget();
 }
 
+/*
+ * A battle's party menu, summary or bag: the battle scene stays up there
+ * under it, darkened (CtrVideo_DimHeldTop). The held frame is still in the
+ * top's buffers; it is drawn over once, in a frame of its own or in the
+ * first one that draws the bottom screen, and stays so until the hold goes.
+ */
+#define HELD_TOP_DIM_ALPHA 128
+static struct
+{
+    bool wanted, done;
+} sHeldDim;
+
+/* In a frame: the held frame, still in the top's buffers, darkened. */
+static void HeldTopDim(void)
+{
+    C3D_RenderTarget *eyes[2] = { sTop, sStereo ? sTopRight : NULL };
+
+    C2D_Prepare();
+    C3D_DepthTest(false, GPU_ALWAYS, GPU_WRITE_COLOR);
+    BlendForget();
+    for (int i = 0; i < 2; ++i)
+    {
+        if (!eyes[i]) continue;
+        SceneOn(eyes[i]);
+        C2D_ViewReset();
+        Blend(5, false, false);
+        C2D_DrawRectSolid(0, 0, 0, CTR_GAME_WIDTH, CTR_GAME_HEIGHT, C2D_Color32(0, 0, 0, HELD_TOP_DIM_ALPHA));
+    }
+    C2D_Flush();
+    BlendForget();
+    sHeldDim.done = true;
+    CtrLog_Write(CTR_LOG_VIDEO, "top screen: the held frame darkened at frame %lu", (unsigned long)sStats.frames);
+}
+
 void CtrVideo_HoldTop(bool hold)
 {
     if (hold != sHoldTop)
         CtrLog_Write(CTR_LOG_VIDEO, "top screen %s at frame %lu", hold ? "held" : "released",
                      (unsigned long)sStats.frames);
     sHoldTop = hold;
-    if (!hold) HeldTopForget();
+    if (!hold)
+    {
+        HeldTopForget();
+        sHeldDim.wanted = sHeldDim.done = false;
+    }
+}
+
+void CtrVideo_DimHeldTop(void)
+{
+    if (sHoldTop) sHeldDim.wanted = true;
 }
 
 bool CtrVideo_TopHeld(void) { return sHoldTop; }
@@ -12369,6 +12412,13 @@ void CtrVideo_Present(void)
         if (sHeldTop.kept && sHoldTop && C3D_FrameBegin(C3D_FRAME_SYNCDRAW))
         {
             HeldTopPutBack();
+            C3D_FrameEnd(0);
+        }
+        /* A battle's menu: the scene held under it darkened, once. */
+        else if (sHoldTop && sHeldDim.wanted && !sHeldDim.done && sTop
+                 && C3D_FrameBegin(C3D_FRAME_SYNCDRAW))
+        {
+            HeldTopDim();
             C3D_FrameEnd(0);
         }
         else
@@ -12859,6 +12909,7 @@ void CtrVideo_Present(void)
         if (bottom) RenderEye(sBottom, clear, 0.0f);
         if (dexTop) RenderDexTop(stereo, slider);
         else if (sHeldTop.kept && sHoldTop) HeldTopPutBack();
+        else if (sHoldTop && sHeldDim.wanted && !sHeldDim.done) HeldTopDim();
     }
     else if (sTransition && !blank)
     {
