@@ -8,6 +8,24 @@
   English, Spanish, French, Italian, German and Japanese builds of one
   release share it. The title screen shows it at the bottom left of the
   bottom screen, above the logo. By @eathanpage.
+- Hall of Fame: shown centred as a GBA screen instead of in the top screen's
+  top left corner, with black and falling confetti beside it. Its stripes
+  and dark bands carry on to the edges, and its texts (each Pokémon's
+  number, name and level, "Welcome to the HALL OF FAME!", "LEAGUE CHAMPION!
+  CONGRATULATIONS!") are back in the dark band where the GBA shows them;
+  the game prints them in the standard text box, which this screen lowers
+  for the overworld. By @eathanpage.
+- Wide screen and GBA screens: every other screen laid out for the GBA is
+  shown centred instead of in the top screen's top left corner: the Battle
+  Dome's tourney tree, the Battle Factory's rental and swap screens, the
+  Battle Pyramid's bag, Trainer Hill's records, Berry Crush, a berry's tag,
+  the clear-save and reset-clock screens, the museum's paintings, the
+  diploma, Easy Chat, the Frontier Pass, mail, the move relearner, the
+  PokéBlock case, feeding a PokéBlock, the condition screen, the save error
+  screen, the Union Room chat and the wireless status screen. The tourney
+  tree no longer has two black bars down its middle: its windows, which the
+  game moves line by line, are drawn line by line. The swap menu's bar no
+  longer lies across the margin past the picture. By @eathanpage.
 
 ## 0.5.0 — 2026-10-29
 
