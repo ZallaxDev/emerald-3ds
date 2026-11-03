@@ -57,6 +57,9 @@ int LocalLink_GetPeers(struct LocalPeer *out, int max);
 void LocalLink_Send(uint16_t dest, const void *data, uint32_t len);
 uint8_t LocalLink_PollEvent(struct LocalEvent *ev);
 uint32_t LocalLink_Milliseconds(void);
+/* The build's id (engine/build_id.bin) as it is shown, its first 16 hex
+ * digits; NULL without one. */
+const char *LocalLink_BuildName(void);
 
 /* Sessions. LocalLink_StartSession leaves the current one and joins the
  * nearby session of that kind (LOCAL_KIND_*), or hosts one if there is none;

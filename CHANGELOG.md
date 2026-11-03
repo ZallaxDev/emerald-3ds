@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Local wireless: every language of one release links. The build's id, which
+  two systems must share to play together, is now made from the patch set
+  and the port's code rather than the ROM-derived executable and data, so
+  English, Spanish, French, Italian, German and Japanese builds of one
+  release share it. The title screen shows it at the bottom left of the
+  bottom screen, above the logo. By @eathanpage.
 - Hall of Fame: shown centred as a GBA screen instead of in the top screen's
   top left corner, with black and falling confetti beside it. Its stripes
   and dark bands carry on to the edges, and its texts (each Pokémon's
