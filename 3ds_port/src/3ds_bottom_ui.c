@@ -7576,7 +7576,7 @@ void CtrBottom_Frame(void)
     static u32 frames;
     static bool8 iconsPending, held;
     u8 mode, pressed;
-    bool8 hold;
+    bool8 hold, look;
     uint64_t ticks[3];
 
     if (!sRes.ready)
@@ -7642,10 +7642,14 @@ void CtrBottom_Frame(void)
         CtrVideo_HoldTop(hold);
         held = hold;
     }
-    /* The column in focus: the top screen points down here meanwhile; with
-     * the top held too, the music a little quieter. */
-    CtrVideo_LookDown(sFocus != FOCUS_NONE || sInside != INSIDE_NONE);
-    CtrAudio_DuckMusic(hold || sFocus != FOCUS_NONE || sInside != INSIDE_NONE);
+    /* The column in focus, or a section of its own up on the field (the
+     * card, SAVE, OPTIONS, the Nuzlocke tracker): the top screen points
+     * down here meanwhile; with the top held too, the music a little
+     * quieter. */
+    look = sFocus != FOCUS_NONE || sInside != INSIDE_NONE
+        || (mode == MODE_FIELD && sScreen >= SCR_CARD && sScreen < SCR_COUNT);
+    CtrVideo_LookDown(look);
+    CtrAudio_DuckMusic(hold || look);
     if (hold && mode != MODE_POKENAV && mode != MODE_STORAGE && mode != MODE_PARTY_MENU && mode != MODE_SUMMARY
      && mode != MODE_CARD
      && !BagShown(mode)
