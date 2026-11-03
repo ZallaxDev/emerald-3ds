@@ -115,6 +115,7 @@
 #include "3ds_bottom_art.h"
 #include "3ds_clock_store.h"
 #include "3ds_input.h"
+#include "3ds_local.h"
 #include "3ds_nuzlocke_ui.h"
 #include "3ds_game_views.h"
 #include "3ds_log.h"
@@ -5055,9 +5056,11 @@ static struct
 } sIntro;
 
 /*
- * Under the title screen: the developer's logo in the bottom-left corner and
- * the build's version (CTR_APP_VERSION, the Makefile's APP_VERSION) in the
- * bottom-right one, both in the logo's own grey over black.
+ * Under the title screen: the developer's logo in the bottom-left corner, the
+ * build's id above it (engine/build_id.bin: two systems with the same one can
+ * play together over local wireless) and the build's version (CTR_APP_VERSION,
+ * the Makefile's APP_VERSION) in the bottom-right corner, all in the logo's
+ * own grey over black.
  */
 #ifndef CTR_APP_VERSION
 #define CTR_APP_VERSION "dev"
@@ -5068,7 +5071,7 @@ static struct
 
 static void DrawTitleCredit(void)
 {
-    int x0 = TITLE_MARGIN_X, y0 = H - TITLE_MARGIN_Y - ART_LOGO_H;
+    int x0 = TITLE_MARGIN_X, y0 = H - TITLE_MARGIN_Y - ART_LOGO_H, ink = ART_LOGO_W;
     u16 grey = PackRgb(TITLE_GREY, TITLE_GREY, TITLE_GREY);
 
     for (int y = 0; y < ART_LOGO_H; ++y)
@@ -5077,7 +5080,11 @@ static void DrawTitleCredit(void)
             u8 a = sArtLogo[y * ART_LOGO_W + x];
 
             if (a)
+            {
                 Put(x0 + x, y0 + y, PackRgb(a, a, a));
+                if (x < ink)
+                    ink = x;
+            }
         }
     /* Its capitals level with the logo's lettering (the logo's rows 8 to 20). */
     {
@@ -5089,6 +5096,21 @@ static void DrawTitleCredit(void)
         InkColumns(&sNormal, str, &ix0, &ix1);
         CapRows(&sNormal, &top, &bottom);
         DrawStr(&sNormal, str, W - TITLE_MARGIN_X - ix1, y0 + 8 + (12 - (bottom - top)) / 2 - top, grey, 0);
+    }
+    /* The id's capitals 4 pixels over the logo, its first ink on the logo's. */
+    if (LocalLink_BuildName() && sSmall.glyphs)
+    {
+        char text[40];
+        const u8 *str;
+        int ix0, ix1, top, bottom;
+
+        snprintf(text, sizeof(text), "%s %s",
+                 CTR_TEXT("Build", "Compilación", "Build", "Build", "Build", "Build", "ビルド"),
+                 LocalLink_BuildName());
+        str = Ascii(text);
+        InkColumns(&sSmall, str, &ix0, &ix1);
+        CapRows(&sSmall, &top, &bottom);
+        DrawStr(&sSmall, str, x0 + ink - ix0, y0 - 4 - bottom, grey, 0);
     }
 }
 

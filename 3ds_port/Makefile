@@ -243,11 +243,11 @@ ROMFS_DATA_OUTS := $(ROMFS_ASSET_OUTS) $(ROMFS_MAP_OUT) $(ROMFS_SCRIPT_OUTS) $(R
 romfs/engine/abi.bin: $(ROMFS_DATA_OUTS) $(SCRIPTS)/staging.py
 	"$(PYTHON)" $(SCRIPTS)/staging.py abi --romfs romfs
 
-# Local wireless play links only identical builds (src/3ds_local.c): a SHA-256
-# of the executable without its debug information and of the data's ABI.
-romfs/engine/build_id.bin: build/$(TARGET)_3dsx.elf romfs/engine/abi.bin scripts/gen_build_id.py
-	$(DEVKITARM)/bin/arm-none-eabi-objcopy --strip-debug $< build/$(TARGET)_id.elf
-	"$(PYTHON)" scripts/gen_build_id.py build/$(TARGET)_id.elf romfs/engine/abi.bin $@
+# Local wireless play links only the same build (src/3ds_local.c): a SHA-256
+# of the patch set and of the port's code, not of the ROM, so every language
+# of one release links. Remade at every link, when the code may have changed.
+romfs/engine/build_id.bin: build/$(TARGET)_3dsx.elf ../.emerald3ds-patches scripts/gen_build_id.py
+	"$(PYTHON)" scripts/gen_build_id.py . ../.emerald3ds-patches $@
 
 ifeq ($(EMBED_DATA),1)
 EMBED_MARKER := romfs/data.embedded

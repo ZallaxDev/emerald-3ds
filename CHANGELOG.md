@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Local wireless: every language of one release links. The build's id, which
+  two systems must share to play together, is now made from the patch set
+  and the port's code rather than the ROM-derived executable and data, so
+  English, Spanish, French, Italian, German and Japanese builds of one
+  release share it. The title screen shows it at the bottom left of the
+  bottom screen, above the logo. By @eathanpage.
+
 ## 0.5.0 — 2026-10-29
 
 The first beta.
