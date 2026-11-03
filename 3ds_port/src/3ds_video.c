@@ -13018,8 +13018,9 @@ void CtrVideo_Present(void)
         sSceneOn = NULL;
         DrawLookDown(sTop);
         if (stereo || (down && !dexTop && sStereo && sTopRight)) DrawLookDown(sTopRight);
-        /* kept as it was, it keeps it; drawn afresh, it is drawn again */
-        sTopDark = down && !dexTop;
+        /* The frame shown has it: a hold from here (X, then the party)
+         * keeps this one, not to be darkened again. */
+        sTopDark = true;
     }
 #if CTR_SHOW_FPS
     if (CtrSettings_ShowFps())
