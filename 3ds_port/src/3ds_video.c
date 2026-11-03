@@ -1369,6 +1369,9 @@ static bool sTransitionRequested, sTransition;
 static bool sTransitionCompose;
 static const uint16_t (*sLineRegs)[CTR_LINE_REGS];
 static const uint16_t *sRegLine;
+/* WININ of the band of line windows being composed, -1 outside one
+ * (CtrVideo_SetLineWindowInside). */
+static int32_t sBandInside = -1;
 
 static unsigned Reg(unsigned offset)
 {
@@ -1376,6 +1379,8 @@ static unsigned Reg(unsigned offset)
         return 0;
     if (sRegLine && offset - CTR_LINE_REG_FIRST < CTR_LINE_REGS * 2)
         return sRegLine[(offset - CTR_LINE_REG_FIRST) / 2];
+    if (offset == 0x48 && sBandInside >= 0)
+        return (unsigned)sBandInside;
     return sMemory.regs[offset / 2];
 }
 static unsigned Min(unsigned a, unsigned b) { return a < b ? a : b; }
@@ -4069,6 +4074,10 @@ static void DrawBattleBgSplit(unsigned bg)
  *   shares its callback and its BG0 with the title menu, whose windows go
  *   down to the bottom of the screen; the speech is told apart by the
  *   character base its BG0 uses (main_menu.c, sBirchBgTemplate).
+ *   With bandRows, only that many rows from bandRow are moved, and they may
+ *   lie below the picture: the Hall of Fame prints in the standard text box,
+ *   which menu.c puts at row 24 on this screen (its frame a row either side);
+ *   it is brought back up into the dark band, at row 15 as on the GBA.
  */
 typedef struct
 {
@@ -4088,7 +4097,7 @@ typedef struct
     /* Or that tilemap entry itself, whatever the tilemap holds now. */
     bool entry;
     uint16_t tileEntry;
-    uint8_t skyRows, bandRow, bandChars;
+    uint8_t skyRows, bandRow, bandChars, bandRows;
     int8_t bandX, bandY;
 } CentredFill;
 
@@ -4120,6 +4129,10 @@ static const CentredFill sCentredFills[CTR_CENTRED_SCREENS] =
     [CTR_CENTRED_TRADE_MENU] = {.layers = (1u << 2) | (1u << 3), .wrap = true},
     /* The trade itself on its black. */
     [CTR_CENTRED_TRADE] = {0},
+    /* Its dark bands (BG1) and the stripes behind them (BG3), the same in
+     * every column of their 32x32 maps. */
+    [CTR_CENTRED_HALL_OF_FAME] = {.layers = (1u << 1) | (1u << 3), .wrap = true,
+                                  .bandRow = 23, .bandRows = 6, .bandChars = 2, .bandY = -72},
 };
 
 int CtrPokenavList_Bg(void);
@@ -4293,10 +4306,12 @@ static bool DrawCentredBg(unsigned bg)
     }
     if (bg == 0 && speech)
     {
-        DrawCentredSpan(0, 0, 240, 0, fill->bandRow * 8);
+        int bandTop = fill->bandRow * 8;
+
+        DrawCentredSpan(0, 0, 240, 0, (int)Min(bandTop, 160));
         sSpanShiftX = fill->bandX;
         sSpanShiftY = fill->bandY;
-        DrawCentredSpan(0, 0, 240, fill->bandRow * 8, 160);
+        DrawCentredSpan(0, 0, 240, bandTop, fill->bandRows ? bandTop + fill->bandRows * 8 : 160);
         sSpanShiftX = sSpanShiftY = 0;
         return true;
     }
@@ -5962,6 +5977,40 @@ static void DrawObjects(unsigned priority, bool effects)
     bool fogDrawn = false, latticeDrawn = false;
     float layerShift = sLayerShift;
 
+    /*
+     * The Battle Factory's swap menu slides its bar in from past the right
+     * edge of the picture, where the GBA screen ends and hides it: in the
+     * margins it lay across the black. Its sprites are kept to the picture.
+     */
+    if (sCentred && sCentredScreen == CTR_CENTRED_FACTORY
+     && (sClipX0 < 0 || sClipY0 < 0 || sClipX1 > 240 || sClipY1 > 160))
+    {
+        int clipX0 = sClipX0, clipY0 = sClipY0, clipX1 = sClipX1, clipY1 = sClipY1;
+        bool scissored = sScissored;
+
+        if (sClipX0 < 0) sClipX0 = 0;
+        if (sClipY0 < 0) sClipY0 = 0;
+        if (sClipX1 > 240) sClipX1 = 240;
+        if (sClipY1 > 160) sClipY1 = 160;
+        if (sClipX0 < sClipX1 && sClipY0 < sClipY1)
+        {
+            SpriteBatchFlush();
+            C2D_Flush();
+            sScissored = true;
+            Scissor(sClipX0, sClipY0, sClipX1, sClipY1);
+            DrawObjects(priority, effects);
+            SpriteBatchFlush();
+            C2D_Flush();
+        }
+        sClipX0 = clipX0;
+        sClipY0 = clipY0;
+        sClipX1 = clipX1;
+        sClipY1 = clipY1;
+        sScissored = scissored;
+        RestoreScissor();
+        return;
+    }
+
     for (int i = 127; i >= 0; --i)
     {
         bool fog = (sFogOam[i >> 5] & (1u << (i & 31))) != 0;
@@ -6380,14 +6429,17 @@ static void WindowSpan(unsigned limits, unsigned over, bool vertical, int *first
  * The window edges an HBlank DMA writes line by line (CtrVideo_SetLineWindow):
  * WIN0H, or WIN0H and WIN1H, for each of the picture's 160 lines. The PokéNav
  * lights its chosen option with one, and its condition graph is a polygon
- * drawn as two of them. Only the PokéNav's screens use them here (LineWindows):
- * the frame is composed in bands of lines whose windows are the same, each
- * band partitioned as a frame with fixed windows is.
+ * drawn as two of them. The Battle Dome's tourney tree moves both from its
+ * HBlank interrupt, and what they show (WININ) with them. Only those use them
+ * here (LineWindows): the frame is composed in bands of lines whose windows
+ * are the same, each band partitioned as a frame with fixed windows is.
  */
 static struct
 {
     unsigned windows;
+    bool inside;
     uint16_t across[2][160];
+    uint16_t control[160];
 } sLineWindows;
 
 /* The band being composed: its lines, and the line-driven windows' edges there. */
@@ -6426,9 +6478,16 @@ void CtrVideo_SetLineWindow(const uint16_t *values, unsigned lines, bool both)
     }
 }
 
+void CtrVideo_SetLineWindowInside(const uint16_t *values)
+{
+    sLineWindows.inside = values != NULL;
+    if (values) memcpy(sLineWindows.control, values, sizeof(sLineWindows.control));
+}
+
 static bool LineWindows(void)
 {
-    return sLineWindows.windows && sCentredScreen == CTR_CENTRED_POKENAV && (Reg(0) & 0x6000);
+    return sLineWindows.windows && (Reg(0) & 0x6000)
+        && (sCentredScreen == CTR_CENTRED_POKENAV || (sLineWindows.inside && sCentredScreen != CTR_CENTRED_NONE));
 }
 
 /* Window w's rectangle in this band, empty when x0 >= x1 or y0 >= y1. */
@@ -6890,10 +6949,13 @@ static void Compose(void)
             sLineBand.across[1] = sLineWindows.across[1][y];
             for (next = y + 1; next < end; ++next)
                 if (sLineWindows.across[0][next] != sLineBand.across[0]
-                 || sLineWindows.across[1][next] != sLineBand.across[1]) break;
+                 || sLineWindows.across[1][next] != sLineBand.across[1]
+                 || (sLineWindows.inside && sLineWindows.control[next] != sLineWindows.control[y])) break;
             sLineBand.top = y;
             sLineBand.bottom = next;
+            sBandInside = sLineWindows.inside ? sLineWindows.control[y] : -1;
             ComposeBand(y, next);
+            sBandInside = -1;
         }
         sLineBand.across[0] = sLineBand.across[1] = 0;
         sLineBand.top = top > 160 ? top : 160;
