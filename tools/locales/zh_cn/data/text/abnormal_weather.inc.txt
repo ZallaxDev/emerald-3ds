@@ -1,0 +1,4 @@
+[gText_AbnormalWeatherEnded_Rain]
+倾盆大雨似乎\n停了……$
+[gText_AbnormalWeatherEnded_Sun]
+强烈的阳光似乎\n平静了……$

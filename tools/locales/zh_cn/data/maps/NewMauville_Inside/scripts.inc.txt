@@ -1,0 +1,6 @@
+[NewMauville_Inside_Text_GeneratorQuietedDown]
+发电机停止了。$
+[NewMauville_Inside_Text_GeneratorRadiatingHeat]
+在很远的地方就能感觉到\n发电机散发出的热量。\p看来必须赶紧\n关掉它。$
+[NewMauville_Inside_Text_SteppedOnSwitchGeneratorStopped]
+{PLAYER}踏上了开关。\p嘀……\p…… …… …… ……\n…… …… …… ……\p发电机似乎\n停止了……$

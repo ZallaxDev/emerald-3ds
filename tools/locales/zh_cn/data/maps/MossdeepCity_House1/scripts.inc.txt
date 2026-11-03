@@ -1,0 +1,8 @@
+[MossdeepCity_House1_Text_DoesntLikeOrDislikePokeblocks]
+它看来并没什么\n特别喜欢或不喜欢的树果。$
+[MossdeepCity_House1_Text_HmmYourPokemon]
+啊！\n你的{STR_VAR_1}……$
+[MossdeepCity_House1_Text_HusbandCanTellPokeblockMonLikes]
+我的丈夫一眼就能看出\n宝可梦喜欢什么样的树果。$
+[MossdeepCity_House1_Text_ItLikesXPokeblocks]
+它喜欢{STR_VAR_1}\n是吧？\p不，我肯定它\n就是喜欢{STR_VAR_1}！$

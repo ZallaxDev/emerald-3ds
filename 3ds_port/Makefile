@@ -192,8 +192,17 @@ build/config: FORCE
 	@cmp -s build/config.new $@ || cp build/config.new $@
 	@rm -f build/config.new
 
-.PHONY: all clean verify release pak devdata
+.PHONY: all clean verify release pak devdata sheets
 all: $(TARGET).3dsx
+
+# The Chinese glyph sheets are .latfont, converted from this port's PNGs by the
+# upstream Makefile's graphics_file_rules.mk; nothing in this port's own
+# Makefile produces them, so a build that skipped this step would quietly reuse
+# whatever .latfont an earlier run left behind (the game would keep rendering
+# the old face). Rebuild them here, and only when a PNG is newer.
+SHEETS := graphics/fonts/chinese_small.latfont graphics/fonts/chinese_normal.latfont
+sheets:
+	$(MAKE) -C $(ROOT) $(SHEETS)
 
 build/%.o: src/%.c Makefile
 	@mkdir -p $(dir $@)

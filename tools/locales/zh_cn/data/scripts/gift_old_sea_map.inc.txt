@@ -1,0 +1,8 @@
+[sText_MysteryGiftOldSeaMapBagFull]
+哦，抱歉，{PLAYER}。\n您的包包里放重要物品的口袋满了。\p请存一些东西到电脑\n然后回来拿这个吧。$
+[sText_MysteryGiftOldSeaMapForYou]
+感谢使用\n神秘礼物系统。\p让我确定下，您是{PLAYER}？\p我们收到这个古代航图是给您的。$
+[sText_MysteryGiftOldSeaMapThankYou]
+感谢使用神秘\n礼物系统。$
+[sText_MysteryGiftOldSeaMapUseAtPort]
+这个看起来是可以在\n水静市港口使用的。\p为什么不试一下\n看看它到底是什么？$

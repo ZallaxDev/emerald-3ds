@@ -1,0 +1,2 @@
+[BattleFrontier_BattlePikeRoomFinal_Text_CongratsThisWayPlease]
+恭喜……\n那么，这边请……$

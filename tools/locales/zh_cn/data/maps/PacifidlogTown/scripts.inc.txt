@@ -1,0 +1,8 @@
+[PacifidlogTown_Text_FastRunningCurrent]
+暮水镇与凯那市\n之间的海流很急，\p如果你打算冲浪，最后恐怕\n会被冲到谁也不知道的地方。$
+[PacifidlogTown_Text_NeatHousesOnWater]
+看，很简单的镇子吧？\n房子都建在水上！\p我就是在这儿出生的！$
+[PacifidlogTown_Text_SkyPillarTooScary]
+天空之柱？\p……哦，你是说不远处\n那座高高的塔吧。\p别问我，我不会去爬的，\n登那么高太可怕了。\p对我来说，还是住在海平面上的\n暮水镇中更安心。$
+[PacifidlogTown_Text_TownSign]
+这里是暮水镇。\n“朝阳照耀在水边的小镇。”$

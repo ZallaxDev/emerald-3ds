@@ -1,0 +1,4 @@
+[DewfordTown_PokemonCenter_1F_Text_FaintedMonCanUseHM]
+即使宝可梦昏厥不能战斗了，\n它也仍然可以使用秘传招式。$
+[DewfordTown_PokemonCenter_1F_Text_StoneCavern]
+镇子边上有个石窟。\p据说那里面能\n找到稀有的石头。$

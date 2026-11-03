@@ -1,0 +1,18 @@
+[MossdeepCity_StevensHouse_Text_CollectionOfRareRocks]
+是大吾收集的\n稀有石头。$
+[MossdeepCity_StevensHouse_Text_ExplainDive]
+大吾：使用冲浪的时候，\n你大概也注意到水中的深色区域了，\p在那样的区域上使用潜水\n就能够潜入海底。\p要是想再浮到海面上的话，\n再次使用潜水就好。\p不过，有些区域是\n无法上浮的。$
+[MossdeepCity_StevensHouse_Text_LeftPokeBallWhereItWas]
+{PLAYER}把精灵球\n放回了原处。$
+[MossdeepCity_StevensHouse_Text_LetterFromSteven]
+是一封信。\p…… …… ……\p致{PLAYER}{KUN}……\p已我决定踏上自我\n探索与修行之旅。\p短时间内不\n打算回家，\p我想拜托你收下\n桌上的精灵球，\p里面是我最喜欢的宝可梦——\n铁哑铃，\p拜托你照顾好它。\p愿你我终有相逢之日。\p大吾·兹伏奇$
+[MossdeepCity_StevensHouse_Text_NoSpaceForAnotherMon]
+没有地方放这只宝可梦了。$
+[MossdeepCity_StevensHouse_Text_ObtainedBeldum]
+{PLAYER}得到铁哑铃。$
+[MossdeepCity_StevensHouse_Text_TakeBallContainingBeldum]
+{PLAYER}调查精灵球。\p里面是宝可梦\n铁哑铃。\p要拿走精灵球吗？$
+[MossdeepCity_StevensHouse_Text_UnderwateCavernBetweenMossdeepSootopolis]
+大吾：据说在绿岭市和琉璃市\n之间有个海底洞窟，\p就是楠木馆长乘潜艇\n找到的那一个。$
+[MossdeepCity_StevensHouse_Text_YouveEarnedHMDive]
+大吾：{PLAYER}{KUN}……\p如你所见这里没什么东西，\n但这就是我家。\p感谢你一直以来的帮助。\p这是我的谢礼——\n秘传学习器潜水。\p不必不好意思——\n这是你应得的。$

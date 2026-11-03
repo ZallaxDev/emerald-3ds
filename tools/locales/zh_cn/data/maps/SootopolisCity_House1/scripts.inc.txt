@@ -1,0 +1,6 @@
+[SootopolisCity_House1_Text_DevelopedThisTM]
+我在琉璃市\n磨练了30年，\p制作出了这个强大的招式学习器。\n我传授给你吧！$
+[SootopolisCity_House1_Text_ExplainBrickBreak]
+招式学习器31的内容是劈瓦！这是一种\n无法描述的恐怖招式。$
+[SootopolisCity_House1_Text_Kecleon]
+变隐龙：噗噗噗呀。$

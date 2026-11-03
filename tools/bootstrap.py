@@ -51,6 +51,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OVERLAY = ["3ds_port", "builder", "tools"]
 
+# Art the patches reference but nothing else produces: the port's own PNGs,
+# converted into the tree by graphics_file_rules.mk.
+STAGED_GFX = (
+    Path("graphics/fonts/chinese_small.latfont"),
+    Path("graphics/fonts/chinese_normal.latfont"),
+)
+
 if "/opt/devkitpro" not in os.environ.get("PATH", ""):
     extra_paths = [p for p in ("/opt/homebrew/opt/make/libexec/gnubin", "/opt/homebrew/bin",
                                "/opt/devkitpro/tools/bin", "/opt/devkitpro/devkitARM/bin")
@@ -189,6 +196,12 @@ def main() -> int:
     if args.make or locale:
         run(["make", "tools", "-j%d" % args.jobs], cwd=tree)
         run(["make", "generated", "-j%d" % args.jobs], cwd=tree)
+        # The glyph sheets the patches add are .latfont, converted from the
+        # port's own PNGs by the upstream Makefile. `generated` does not build
+        # them and the port's Makefile cannot (it reads the sources only), so
+        # without this step a changed PNG would never reach the game data --
+        # the build would keep carrying whatever .latfont an earlier run left.
+        run(["make", "-j%d" % args.jobs] + [str(p) for p in STAGED_GFX], cwd=tree)
     if locale:
         run([args.python, ROOT / "tools" / locale[2], "--tree", tree,
              "--rom", locale[1].resolve()])

@@ -1,0 +1,4 @@
+[RustboroCity_Flat2_3F_Text_PresidentCollectsRareStones]
+得文的社长喜欢收集\n稀有的石头。$
+[RustboroCity_Flat2_3F_Text_PresidentsSonAlsoCollectsRareStones]
+我想社长的儿子\n也喜欢收集稀有石头。$

@@ -1,0 +1,6 @@
+[LilycoveCity_DepartmentStore_3F_Text_GaveCarbosToSpeedUpMon]
+我给我的宝可梦吃速度增强剂，\n它的速度提升了。$
+[LilycoveCity_DepartmentStore_3F_Text_ItemsBestForTougheningPokemon]
+要让宝可梦快速成长，\n最好使用道具。\p攻击增强剂能增加攻击，\n特攻增强剂则提升特攻。$
+[LilycoveCity_DepartmentStore_3F_Text_WantMoreEndurance]
+我想增强我的宝可梦的\n耐久，\p但我在考虑是用防御增强剂提升防御\n还是用特防增强剂提升特防。$

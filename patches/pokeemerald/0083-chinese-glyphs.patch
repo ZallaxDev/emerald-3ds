@@ -1,5 +1,5 @@
 diff --git a/charmap.txt b/charmap.txt
-index 477448c..c0ae8f2 100644
+index 477448c..01ba8c0 100644
 --- a/charmap.txt
 +++ b/charmap.txt
 @@ -321,9 +321,9 @@ TALL_PLUS   = FC 0C FB
@@ -9,13 +9,13 @@ index 477448c..c0ae8f2 100644
 -'！' = AB
 -'？' = AC
 -'。' = AD
-+'！' = 1F FA
-+'？' = 1F FB
-+'。' = 1F F7
++'！' = 1E 74
++'？' = 1E 75
++'。' = 1E 71
  'ー' = AE
  '⋯' = B0
  
-@@ -1087,3 +1087,6790 @@ EMOJI_BIGANGER = F9 FE
+@@ -1087,3 +1087,6791 @@ EMOJI_BIGANGER = F9 FE
  '\l' = FA @ scroll up window text
  '\p' = FB @ new paragraph
  '\n' = FE @ new line
@@ -6796,15 +6796,16 @@ index 477448c..c0ae8f2 100644
 +'咲' = 1E6F
 +'冴' = 1E70
 +
-+@ Chinese sentence punctuation: two bytes, the lead 0x1F (no Han character uses
-+@ it) and 0xF7-0xFF. 。！？ are repointed above from the halfwidth bytes this
-+@ charmap gave them; 、，：—～・ are new.
-+'、' = 1F F8
-+'，' = 1F F9
-+'：' = 1F FC
-+'—' = 1F FD
-+'～' = 1F FE
-+'・' = 1F FF
++@ Chinese sentence punctuation: two bytes on the row 0x1E past the last Han
++@ character. Not the high bytes 0xF7-0xFF -- those are the engine's control
++@ codes and a mark ending in one is read as that control. 。！？ are repointed
++@ above from the halfwidth bytes this charmap gave them; 、，：—～・ are new.
++'、' = 1E 72
++'，' = 1E 73
++'：' = 1E 76
++'—' = 1E 77
++'～' = 1E 78
++'・' = 1E 79
 +
 diff --git a/graphics_file_rules.mk b/graphics_file_rules.mk
 index e309ba2..47925c1 100644
@@ -6836,23 +6837,25 @@ index e309ba2..47925c1 100644
  
 diff --git a/include/chinese_text.h b/include/chinese_text.h
 new file mode 100644
-index 0000000..7b336e2
+index 0000000..9e16776
 --- /dev/null
 +++ b/include/chinese_text.h
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,25 @@
 +#ifndef GUARD_CHINESE_TEXT_H
 +#define GUARD_CHINESE_TEXT_H
 +
 +/* Simplified Chinese glyphs: a Han character is two bytes, the first 0x01-0x1E
 + * except 0x06 and 0x1B (the Latin é and É, which POKéMON needs), the second
-+ * 0x00-0xF6. src/chinese_text.c turns that pair into a glyph sheet slot.
++ * 0x00-0xF6.
 + *
-+ * The sentence punctuation is two bytes too: the lead 0x1F, which no Han
-+ * character uses, and 0xF7-0xFF. */
-+#define CHINESE_PUNCT_FIRST  0x1B71  // 7025, the sheet slot after the last Han glyph
-+#define CHINESE_PUNCT_COUNT  9
-+#define CHINESE_PUNCT_LEAD   0x1F
-+#define CHINESE_PUNCT_LO_MIN 0xF7
++ * The sentence punctuation is two bytes in the same space: the row 0x1E past
++ * the last Han character. It cannot use the high bytes -- 0xF7..0xFF are the
++ * engine's own control codes (CHAR_DYNAMIC, PLACEHOLDER_BEGIN, EOS...), and a
++ * mark ending in one of them is read as that control instead of as a glyph. */
++#define CHINESE_PUNCT_CODES 9
++#define CHINESE_PUNCT_HI    0x1E   /* the charmap first byte of every mark */
++#define CHINESE_PUNCT_LO    0x71   /* 。, then 、，！？：—～・ */
++#define CHINESE_PUNCT_SLOT  7026   /* the slot of 。; SheetIndex(0x1E71) is 7025 (stray art) */
 +
 +bool8 IsChineseChar(u16 currChar, u16 nextChar, u8 fontId, bool32 isJapanese);
 +bool8 IsChinesePunctuation(u16 currChar, u16 nextChar, u8 fontId, bool32 isJapanese);
@@ -6865,10 +6868,10 @@ index 0000000..7b336e2
 +#endif // GUARD_CHINESE_TEXT_H
 diff --git a/src/chinese_text.c b/src/chinese_text.c
 new file mode 100644
-index 0000000..8856320
+index 0000000..72e8f5a
 --- /dev/null
 +++ b/src/chinese_text.c
-@@ -0,0 +1,121 @@
+@@ -0,0 +1,156 @@
 +#include "global.h"
 +#include "text.h"
 +#include "fonts.h"
@@ -6882,14 +6885,16 @@ index 0000000..8856320
 + * drops those two holes and reads what is left as the glyph's sheet row; the
 + * sheets are .latfont, so the port's own font loader carries them unchanged.
 + *
-+ * The sentence punctuation is two bytes as well, the lead 0x1F and 0xF7-0xFF:
-+ * every single byte of this charmap is spoken for (the kana alone hold
-+ * 0x01-0xAE), so the marks could not have codes of their own. They follow the
-+ * Han glyphs in the same sheets. */
++ * The sentence punctuation is two bytes in the same code space, on the row
++ * 0x1E past the last Han character. It cannot be the high bytes: 0xF7-0xFF
++ * are the engine's own control codes (CHAR_DYNAMIC, CHAR_KEYPAD_ICON,
++ * CHAR_EXTRA_SYMBOL, the prompts, EXT_CTRL_CODE_BEGIN, PLACEHOLDER_BEGIN,
++ * CHAR_NEWLINE, EOS), and RenderText's switch would eat a mark whose second
++ * byte is one of them before this file ever saw it. */
 +
-+/* The nine marks in sheet order from CHINESE_PUNCT_FIRST: 。、，！？：—～・ */
-+static const u8 sPunctCodes[CHINESE_PUNCT_COUNT] = {
-+    0xF7, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF,
++/* The nine marks in sheet order from CHINESE_PUNCT_SLOT: 。、，！？：—～・ */
++static const u8 sPunctCodes[CHINESE_PUNCT_CODES] = {
++    0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79,
 +};
 +
 +//汉字编码的高位字节依次去掉 0x06 与 0x1B 两个空洞后，压缩成字模行号
@@ -6904,14 +6909,16 @@ index 0000000..8856320
 +}
 +
 +/* The sheet slot of a punctuation code, or 0xFFFF when it is not one. */
-+static u16 PunctIndex(u16 lo)
++static u16 PunctIndex(u16 hi, u16 lo)
 +{
 +    u32 i;
 +
-+    for (i = 0; i < CHINESE_PUNCT_COUNT; i++)
++    if (hi != CHINESE_PUNCT_HI)
++        return 0xFFFF;
++    for (i = 0; i < CHINESE_PUNCT_CODES; i++)
 +    {
 +        if (sPunctCodes[i] == lo)
-+            return CHINESE_PUNCT_FIRST + i;
++            return CHINESE_PUNCT_SLOT + i;
 +    }
 +    return 0xFFFF;
 +}
@@ -6921,6 +6928,26 @@ index 0000000..8856320
 +    return fontId == FONT_SMALL || fontId == FONT_SMALL_NARROW;
 +}
 +
++#ifdef PORT_BRIDGE
++/* The sheets are INCBIN stubs in the executable and their pixels live in the
++ * game data pack, so the base must be resolved before any offset is applied.
++ * text.c's own font readers do the same through ResolveFontAssetBase(). */
++static const u16 *ResolveSheet(const u16 *glyphs)
++{
++    const void *resolved = Port_ResolveFontPointer(glyphs);
++
++    if (resolved == glyphs)
++        resolved = Port_ResolveAssetPointer(glyphs);
++
++    return resolved;
++}
++#else
++static const u16 *ResolveSheet(const u16 *glyphs)
++{
++    return glyphs;
++}
++#endif
++
 +//检测是否为双字节中文汉字编码
 +bool8 IsChineseChar(u16 currChar, u16 nextChar, u8 fontId, bool32 isJapanese)
 +{
@@ -6928,9 +6955,11 @@ index 0000000..8856320
 +        return FALSE;
 +    if (fontId == FONT_BRAILLE)
 +        return FALSE;
-+    return currChar >= 0x01 && currChar <= 0x1E
-+        && currChar != 0x06 && currChar != 0x1B
-+        && nextChar <= 0xF6;
++    if (currChar < 0x01 || currChar > 0x1E || currChar == 0x06 || currChar == 0x1B)
++        return FALSE;
++    /* 0xF7-0xFF are the engine's control codes: a pair ending in one of them is
++     * never a glyph. */
++    return nextChar <= 0xF6;
 +}
 +
 +//检测是否为双字节中文符号编码
@@ -6940,18 +6969,22 @@ index 0000000..8856320
 +        return FALSE;
 +    if (fontId == FONT_BRAILLE)
 +        return FALSE;
-+    return currChar == CHINESE_PUNCT_LEAD
-+        && nextChar >= CHINESE_PUNCT_LO_MIN && nextChar <= 0xFF;
++    return PunctIndex(currChar, nextChar) != 0xFFFF;
 +}
 +
 +//仅在通过 IsChineseChar 或 IsChinesePunctuation 检测后使用
 +void DecompressGlyph_Chinese(u16 chineseChar, u8 fontId)
 +{
 +    u16 hi = chineseChar >> 8, lo = chineseChar & 0xFF;
-+    u16 glyphId = PunctIndex(lo);
++    u16 glyphId = PunctIndex(hi, lo);
 +    bool8 small = WantsSmallSheet(fontId);
-+    const u16 *glyphs = small ? gFontSmallChineseGlyphs : gFontNormalChineseGlyphs;
++    const u16 *glyphs = ResolveSheet(small ? gFontSmallChineseGlyphs
++                                           : gFontNormalChineseGlyphs);
 +
++    /* A mark takes its slot from the table above, not from SheetIndex: the
++     * sheet's slot 7025 (which SheetIndex gives for 0x1E71) holds stray art in
++     * the source sheet, so the marks start one slot later. Keep the two paths
++     * apart -- they disagree on purpose. */
 +    if (glyphId == 0xFFFF)
 +        glyphId = SheetIndex(hi, lo);
 +
@@ -6969,44 +7002,48 @@ index 0000000..8856320
 +{
 +    bool8 small = WantsSmallSheet(fontId);
 +
-+    /* The width the font really paints: a Han glyph is square, the marks are
-+     * the widths the fork's own sheet draws them at. */
++    /* The widths the source sheets were designed for
++     * (rh-hideout-chinese's GetChineseFontWidthFunc). In the small font the
++     * marks are narrow -- drawn in the left of the cell, with the empty right
++     * cut off -- while the normal font gives every mark its full cell except
++     * ・, which stays narrow there too. A Han character is square in both. */
++    if (!small)
++        return chineseChar == 0x1E79 ? 7 : 12;   /* 0x1E79 = ・ */
++
 +    switch (chineseChar)
 +    {
-+    case 0x1FF7: // 。
-+    case 0x1FFE: // ～
-+    case 0x1FFD: // —
-+        return small ? 7 : 8;
-+    case 0x1FF8: // 、
-+    case 0x1FF9: // ，
-+        return small ? 5 : 8;
-+    case 0x1FFA: // ！
-+    case 0x1FFB: // ？
-+    case 0x1FFC: // ：
-+        return small ? 6 : 8;
-+    case 0x1FFF: // ・
-+        return small ? 5 : 7;
++    case 0x1E71: // 。  (the fork's 0x37)
++        return 6;
++    case 0x1E77: // —  (0x3F)
++    case 0x1E78: // ～ (0x39)
++        return 7;
++    case 0x1E72: // 、 (0x3A)
++    case 0x1E73: // ， (0x3B)
++    case 0x1E74: // ！ (0x3C)
++    case 0x1E75: // ？ (0x3D)
++    case 0x1E76: // ： (0x3E)
++    case 0x1E79: // ・ (0x30)
++        return 5;
 +    default:
-+        return small ? 10 : 12;
++        return 10;
 +    }
 +}
 diff --git a/src/fonts.c b/src/fonts.c
-index 8ef32bf..85fb9c6 100644
+index 8ef32bf..c7a9880 100644
 --- a/src/fonts.c
 +++ b/src/fonts.c
-@@ -290,3 +290,10 @@ ALIGNED(4) const u8 gFontShortJapaneseGlyphWidths[] = {
+@@ -290,3 +290,9 @@ ALIGNED(4) const u8 gFontShortJapaneseGlyphWidths[] = {
      10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
      10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
  };
 +
 +/* The Simplified Chinese glyph sheets (src/chinese_text.c): the same .latfont
 + * layout as the Latin ones, rendered from an open-source CJK face by
-+ * 3ds_port/scripts/gen_chinese_font.py and staged from the port's own art. A
-+ * Han character's byte pair, and a punctuation mark's, select their slot. */
++ * 3ds_port/scripts/gen_chinese_font.py and staged from the port's own art. */
 +ALIGNED(4) const u16 gFontSmallChineseGlyphs[] = INCBIN_U16("graphics/fonts/chinese_small.latfont");
 +ALIGNED(4) const u16 gFontNormalChineseGlyphs[] = INCBIN_U16("graphics/fonts/chinese_normal.latfont");
 diff --git a/src/text.c b/src/text.c
-index 1c8a64d..13406ff 100644
+index 1c8a64d..0f8bbf3 100644
 --- a/src/text.c
 +++ b/src/text.c
 @@ -8,6 +8,7 @@
@@ -7017,13 +7054,15 @@ index 1c8a64d..13406ff 100644
  #include "blit.h"
  #include "menu.h"
  #include "dynamic_placeholder_text_util.h"
-@@ -1120,7 +1121,17 @@ static u16 RenderText(struct TextPrinter *textPrinter)
+@@ -1120,7 +1121,19 @@ static u16 RenderText(struct TextPrinter *textPrinter)
              return RENDER_FINISH;
          }
  
 -        switch (subStruct->fontId)
 +        /* A Han character and a Chinese punctuation mark are two bytes: the
-+         * engine reads the pair as one glyph (src/chinese_text.c). */
++         * engine reads the pair as one glyph (src/chinese_text.c). This has to
++         * come before the font switch, and the marks live below 0xF7 so the
++         * control-code cases above never swallow them. */
 +        if (IsChineseChar(currChar, *textPrinter->printerTemplate.currentChar,
 +                          subStruct->fontId, textPrinter->japanese)
 +         || IsChinesePunctuation(currChar, *textPrinter->printerTemplate.currentChar,
@@ -7036,7 +7075,7 @@ index 1c8a64d..13406ff 100644
          {
          case FONT_SMALL:
              DecompressGlyph_Small(currChar, textPrinter->japanese);
-@@ -1474,7 +1485,14 @@ s32 GetStringWidth(u8 fontId, const u8 *str, s16 letterSpacing)
+@@ -1474,7 +1487,14 @@ s32 GetStringWidth(u8 fontId, const u8 *str, s16 letterSpacing)
          case CHAR_PROMPT_CLEAR:
              break;
          default:

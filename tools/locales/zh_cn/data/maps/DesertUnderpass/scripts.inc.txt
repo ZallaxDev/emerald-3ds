@@ -1,0 +1,4 @@
+[DesertUnderpass_Text_FoundClawFossil]
+{PLAYER}找到了爪子化石。$
+[DesertUnderpass_Text_FoundRootFossil]
+{PLAYER}找到了根状化石。$

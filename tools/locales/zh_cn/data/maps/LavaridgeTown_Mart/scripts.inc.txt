@@ -1,0 +1,4 @@
+[LavaridgeTown_Mart_Text_LocalSpecialtyOnMtChimney]
+只有在烟囱山山顶\n才能买到当地的特产。\p给宝可梦吃的话，它会很高兴的。$
+[LavaridgeTown_Mart_Text_XSpeedFirstStrike]
+用速度强化给对战中的宝可梦\n提升速度，\p那样它就有可能抢先攻击——\n明显会成为优势！$

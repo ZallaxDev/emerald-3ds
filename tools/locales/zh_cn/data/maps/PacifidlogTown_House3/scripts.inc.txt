@@ -1,0 +1,12 @@
+[PacifidlogTown_House3_Text_IsThatAPokedex]
+那是宝可梦图鉴吗？\p你见过了很多不同的\n宝可梦了吗？\p我要是也能像你一样多好。$
+[PacifidlogTown_House3_Text_ItsSubtlyDifferentThankYou]
+呀，这个是{STR_VAR_1}？\p虽然跟{STR_VAR_2}有点像，\n但它们还是有不同之处。\p谢谢！$
+[PacifidlogTown_House3_Text_NotDesperateOrAnything]
+哦？你不想考虑一下吗？\p也好，我也不是急着想交换的。$
+[PacifidlogTown_House3_Text_ReallyWantedToGetBagon]
+我知道我也能自己\n去找一只，但是……\p我真的很想要一只\n其他训练家捕捉的宝贝龙……$
+[PacifidlogTown_House3_Text_WillingToTradeIt]
+看看这个{STR_VAR_2}！\p是我昨天为庆祝自己的生日\n捉到的{STR_VAR_2}！\p啊，看来你想要它！\n毕竟，它是无可估价的！\p但你如果愿意用{STR_VAR_1}\n跟我换的话，我也可以考虑。$
+[PacifidlogTown_House3_Text_WontAcceptAnyLessThanRealMon]
+不不不，除了真正的{STR_VAR_1}，\n我什么都不换！$

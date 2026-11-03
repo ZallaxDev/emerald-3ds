@@ -1,0 +1,4 @@
+[LavaridgeTown_House_Text_WifeWarmingEggInHotSprings]
+我妻子正在温泉里暖着一个蛋。\p她在培育屋寄存了2只宝可梦，\n然后就发现了那个蛋！$
+[LavaridgeTown_House_Text_Zigzagoon]
+蛇纹熊：噗休！$

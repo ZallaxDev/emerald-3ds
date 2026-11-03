@@ -6,13 +6,23 @@
     python tools/localize_chinese.py --tree build/upstream --status   # what is translated
 
 The texts come from rh-hideout-chinese/pokeemerald-expansion, whose translation
-covers the same pret labels this port builds from. They are kept as one JSON
-catalog (tools/locales/zh_cn/texts.json), keyed by source file and label,
-exactly as the fork wrote them.
+covers the pret labels this port builds from. The catalog mirrors the tree the
+way tools/locales/pt_br does -- one `.txt` per source file, the texts of
+`data/text/save.inc` in `data/text/save.inc.txt` -- so review reads it file by
+file and no single catalog file grows past the repository's 1 MiB rule:
 
-Only the labels this tree actually has are staged: one the fork added for
-expansion content is ignored, and one this tree has but the catalog does not
-stays in English, so the game builds at every stage of the work.
+    [gText_ConfirmSave]
+    Quer salvar o jogo?$
+
+An entry names a label and its Chinese text, written as the source writes it
+(\\n, \\l, \\p, {PLAYER}...). The file says nothing about which English text was
+translated: the label is the key, and a label this tree does not have is simply
+not staged.
+
+A label this tree does not have is ignored; a text this tree has but the
+catalog does not stays in English, so the game builds at every stage of the
+work. A text is left in English when its placeholders are not in this tree's
+charmap or one of its characters cannot be encoded there.
 
 Run by tools/bootstrap.py --port-lang zh_cn, after the patches: 0083 gives the
 charmap its Han code space and adds the two glyph sheets.
@@ -30,12 +40,27 @@ CATALOG = ROOT / "tools" / "locales" / "zh_cn"
 MARKER = "ZH-CN"
 
 INC_LABEL = re.compile(r"^(\w+)::?\s*$")
-# A {CONSTANT} or {CONSTANT arg} in a text: the charmap's name, expanded by the
-# preprocessor. The fork's translation is written for pokeemerald-expansion,
-# which has a few placeholders pret does not; a text using one stays English.
-PLACEHOLDER = re.compile(r"\{([^}]*)\}")
 INC_STRING = re.compile(r'^\s*\.string\s+"(.*)"\s*$')
-C_TEXT = re.compile(r'(g\w+)\s*\[[^\]]*\]\s*=\s*_\("((?:[^"\\]|\\.)*)"\)')
+C_TEXT = re.compile(r'(?:^|\s)(g?\w+)\s*\[[^\]]*\]\s*=\s*_\("((?:[^"\\]|\\.)*)"\)')
+PLACEHOLDER = re.compile(r"\{([^}]*)\}")
+
+# The charmap's own control constants: the preprocessor expands {NAME} for any
+# of these, so a text keeping them is safe whatever the tree's set is.
+CONTROL_CONSTANTS = {
+    "PAUSE", "PLAY_BGM", "PLAY_SE", "COLOR", "HIGHLIGHT", "SHADOW",
+    "COLOR_HIGHLIGHT_SHADOW", "PALETTE", "FONT", "RESET_FONT", "CLEAR", "SKIP",
+    "CLEAR_TO", "ESCAPE", "SHIFT_RIGHT", "SHIFT_DOWN", "FILL_WINDOW",
+    "MIN_LETTER_SPACING", "JPN", "ENG", "PAUSE_MUSIC", "RESUME_MUSIC",
+    "PAUSE_UNTIL_PRESS", "WAIT_SE",
+}
+
+# Where the texts live: the same set the port's own build compiles. The C side
+# is every source under src/, because the fork and pret disagree about which
+# file holds a label (the main menu's texts are in src/main_menu.c there and
+# src/strings.c here), and only the label is stable across the two.
+SOURCE_GLOBS = ("data/text/*.inc", "data/scripts/*.inc", "data/maps/*/scripts.inc",
+                "src/**/*.c")
+SOURCE_FILES = ("data/event_scripts.s",)
 
 
 def is_script(relative: str) -> bool:
@@ -43,7 +68,7 @@ def is_script(relative: str) -> bool:
 
 
 def inc_texts(source: str) -> dict[str, tuple[int, int, str]]:
-    """label -> (first .string line, line after the block, text) of each block."""
+    """label -> (first .string line, line after the block, text)."""
     lines = source.split("\n")
     found: dict[str, tuple[int, int, str]] = {}
     i = 0
@@ -65,154 +90,178 @@ def inc_texts(source: str) -> dict[str, tuple[int, int, str]]:
 
 def inc_lines(text: str) -> list[str]:
     """The text as .string lines, broken after each \\n, \\l and \\p."""
-    pieces = re.split(r"(?<=\\[nlp])", text)
-    return ['\t.string "%s"' % piece for piece in pieces if piece]
+    return ['\t.string "%s"' % piece
+            for piece in re.split(r"(?<=\\[nlp])", text) if piece]
 
 
 def c_texts(source: str) -> dict[str, tuple[int, int]]:
-    """label -> (start, end) of the text inside _("...")."""
+    """label -> the span of the text inside _("...")."""
     return {m.group(1): (m.start(2), m.end(2)) for m in C_TEXT.finditer(source)}
 
 
-def charmap_constants(tree: Path) -> set[str]:
-    """The names a text may write as {NAME}: charmap.txt's constants."""
-    source = (tree / "charmap.txt").read_text(encoding="utf-8")
-    out = set()
-    for line in source.splitlines():
-        line = line.split("@")[0].rstrip()
-        m = re.match(r"^(?:'(?P<ch>.+)'|(?P<name>[A-Za-z_]\w*))\s*=", line)
-        if m and m.group("name"):
-            out.add(m.group("name"))
+def sources(tree: Path) -> list[str]:
+    """Every file of the game that holds a text, as tree-relative paths."""
+    out: list[str] = []
+    for pattern in SOURCE_GLOBS:
+        out += [p.relative_to(tree).as_posix() for p in sorted(tree.glob(pattern))]
+    out += [f for f in SOURCE_FILES if (tree / f).is_file()]
     return out
 
 
-def unsupported(text: str, constants: set[str]) -> list[str]:
-    """The placeholders of a text this tree's charmap cannot expand."""
-    return [m.group(1).split()[0] for m in PLACEHOLDER.finditer(text)
-            if m.group(1).split() and m.group(1).split()[0] not in constants]
+def charmap(tree: Path) -> tuple[set[str], set[str]]:
+    """(the characters the charmap encodes, the constants it names)."""
+    chars: set[str] = set()
+    names: set[str] = set(CONTROL_CONSTANTS)
+    for line in (tree / "charmap.txt").read_text(encoding="utf-8").splitlines():
+        line = line.split("@")[0].rstrip()
+        m = re.match(r"^(?:'(.+?)'|(?P<name>[A-Za-z_]\w*))\s*=", line)
+        if not m:
+            continue
+        if m.group(1) is not None:
+            chars.add(m.group(1))
+        else:
+            names.add(m.group("name"))
+    return chars, names
 
 
-def han_codes(tree: Path) -> set[str]:
-    """The characters the Chinese charmap maps, plus the Latin ones."""
-    source = (tree / "charmap.txt").read_text(encoding="utf-8")
-    return {m.group(1) for m in re.finditer(r"^'(.+?)'\s*=", source, re.M)}
-
-
-def unencodable(text: str, codes: set[str]) -> list[str]:
-    """The characters of a text the charmap cannot encode. Placeholders,
-    control escapes and the terminator are not characters here."""
+def unencodable(text: str, chars: set[str]) -> list[str]:
     stripped = PLACEHOLDER.sub("", text)
     stripped = re.sub(r"\\[nlp]", "", stripped)
-    out = []
-    for ch in stripped:
-        if ch in ("$", "\\", " "):
-            continue
-        if ch not in codes:
-            out.append(ch)
-    return out
+    return [ch for ch in stripped if ch not in ("$", "\\", " ") and ch not in chars]
 
 
-def present(tree: Path, catalog: dict) -> list[str]:
-    return [rel for rel in catalog if (tree / rel).is_file()]
+ENTRY = re.compile(r"^\[(\w+)\]\s*$")
 
 
-def stage_script(source: str, entries: dict, usable) -> tuple[str, int]:
-    lines = source.split("\n")
-    texts = inc_texts(source)
-    plan = []
-    for label, text in entries.items():
-        if label not in texts or not usable(label, text):
-            continue
-        start, end, old = texts[label]
-        if old == text:
-            continue
-        plan.append((start, end, text))
-    for start, end, text in sorted(plan, reverse=True):
-        lines[start:end] = inc_lines(text)
-    return "\n".join(lines), len(plan)
+def read_catalog_file(path: Path) -> dict[str, str]:
+    """A catalog file: `[label]` then the text, until the next label."""
+    entries: dict[str, str] = {}
+    label = None
+    body: list[str] = []
+
+    def close() -> None:
+        if label is not None:
+            entries[label] = "".join(body)
+
+    for line in path.read_text(encoding="utf-8").splitlines():
+        header = ENTRY.match(line)
+        if header:
+            close()
+            label, body = header.group(1), []
+        elif label is not None:
+            body.append(line)
+    close()
+    return entries
 
 
-def stage_c(source: str, entries: dict, usable) -> tuple[str, int]:
-    texts = c_texts(source)
-    plan = []
-    for label, text in entries.items():
-        if label not in texts or not usable(label, text):
-            continue
-        start, end = texts[label]
-        if source[start:end] == text:
-            continue
-        plan.append((start, end, text))
-    for start, end, text in sorted(plan, reverse=True):
-        source = source[:start] + text + source[end:]
-    return source, len(plan)
+def load_catalog(tree: Path) -> dict[str, dict[str, str]]:
+    """{tree-relative source file: {label: text}} for the files this tree has."""
+    catalog: dict[str, dict[str, str]] = {}
+    for path in sorted(CATALOG.rglob("*.txt")):
+        relative = path.relative_to(CATALOG).as_posix()[:-len(".txt")]
+        if (tree / relative).is_file():
+            catalog[relative] = read_catalog_file(path)
+    return catalog
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--tree", type=Path, required=True)
     parser.add_argument("--check", action="store_true", help="validate the catalog, change nothing")
     parser.add_argument("--status", action="store_true", help="count the translated texts")
     args = parser.parse_args()
 
     tree = args.tree.resolve()
-    catalog = json.loads((CATALOG / "texts.json").read_text(encoding="utf-8"))
-    if "'啊'" not in (tree / "charmap.txt").read_text(encoding="utf-8"):
-        raise SystemExit("localize_chinese: the charmap has no Han block; apply patch 0083 first")
+    catalog_by_file = load_catalog(tree)
+    catalog: dict[str, str] = {label: text
+                               for entries in catalog_by_file.values()
+                               for label, text in entries.items()}
+    chars, names = charmap(tree)
+    if "啊" not in chars:
+        raise SystemExit("localize_chinese: the charmap has no Han block; "
+                         "apply patch 0083 first")
 
-    constants = charmap_constants(tree) | {"PAUSE", "PLAY_BGM", "PLAY_SE", "COLOR", "HIGHLIGHT",
-                                           "SHADOW", "COLOR_HIGHLIGHT_SHADOW", "PALETTE", "FONT",
-                                           "RESET_FONT", "CLEAR", "SKIP", "CLEAR_TO", "ESCAPE",
-                                           "SHIFT_RIGHT", "SHIFT_DOWN", "FILL_WINDOW",
-                                           "MIN_LETTER_SPACING", "JPN", "ENG", "PAUSE_MUSIC",
-                                           "RESUME_MUSIC", "PAUSE_UNTIL_PRESS", "WAIT_SE"}
-    codes = han_codes(tree)
+    files = sources(tree)
     rejected: dict[str, int] = {}
+    seen: set[str] = set()
 
-    def usable(label: str, text: str) -> bool:
-        """Whether this text can be staged: its placeholders exist, its
-        characters encode, and it keeps the dynamics of the original."""
-        bad = unsupported(text, constants)
+    def usable(text: str) -> bool:
+        for ph in PLACEHOLDER.finditer(text):
+            head = ph.group(1).split()
+            if head and head[0] not in names:
+                rejected["placeholder {%s}" % head[0]] = rejected.get("placeholder {%s}" % head[0], 0) + 1
+                return False
+        bad = unencodable(text, chars)
         if bad:
-            rejected["placeholder " + bad[0]] = rejected.get("placeholder " + bad[0], 0) + 1
-            return False
-        missing = unencodable(text, codes)
-        if missing:
-            rejected["character %r" % missing[0]] = rejected.get("character %r" % missing[0], 0) + 1
+            key = "character %r" % bad[0]
+            rejected[key] = rejected.get(key, 0) + 1
             return False
         return True
 
-    files = present(tree, catalog)
-    if args.status:
-        total = staged = 0
-        for relative in files:
-            source = (tree / relative).read_text(encoding="utf-8")
-            texts = inc_texts(source) if is_script(relative) else c_texts(source)
-            have = sum(1 for label in catalog[relative] if label in texts)
-            staged += have
-            total += len(texts)
-            print("%5d / %-5d %s" % (have, len(texts), relative))
-        print("%5d / %-5d texts staged from the Chinese catalog" % (staged, total))
-        return 0
-
-    applied = 0
+    staged = total = left = 0
     for relative in files:
         path = tree / relative
         source = path.read_text(encoding="utf-8")
-        staged_source, count = (stage_script(source, catalog[relative], usable) if is_script(relative)
-                                else stage_c(source, catalog[relative], usable))
-        applied += count
-        if count and not args.check:
-            path.write_text(staged_source, encoding="utf-8")
+        if is_script(relative):
+            texts = inc_texts(source)
+            plan = []
+            for label, (start, end, old) in texts.items():
+                total += 1
+                seen.add(label)
+                if label not in catalog or catalog[label] == old:
+                    left += label not in catalog
+                    continue
+                if not usable(catalog[label]):
+                    left += 1
+                    continue
+                plan.append((start, end, catalog[label]))
+            if not plan:
+                continue
+            staged += len(plan)
+            if not args.check:
+                lines = source.split("\n")
+                for start, end, text in sorted(plan, reverse=True):
+                    lines[start:end] = inc_lines(text)
+                path.write_text("\n".join(lines), encoding="utf-8")
+        else:
+            texts = c_texts(source)
+            plan = []
+            for label, (start, end) in texts.items():
+                total += 1
+                seen.add(label)
+                if label not in catalog or catalog[label] == source[start:end]:
+                    left += label not in catalog
+                    continue
+                if not usable(catalog[label]):
+                    left += 1
+                    continue
+                plan.append((start, end, catalog[label]))
+            if not plan:
+                continue
+            staged += len(plan)
+            if not args.check:
+                for start, end, text in sorted(plan, reverse=True):
+                    source = source[:start] + text + source[end:]
+                path.write_text(source, encoding="utf-8")
 
-    if args.check:
-        print("localize_chinese: %d texts in %d files check out" % (applied, len(files)))
+    untranslated = len(set(catalog) - seen)
+
+    if args.status:
+        print("%d texts in %d files: %d staged, %d still English, "
+              "%d catalog entries this tree does not have"
+              % (total, len(files), staged, total - staged, untranslated))
+        for what, count in sorted(rejected.items(), key=lambda kv: -kv[1])[:12]:
+            print("  left in English: %5d  %s" % (count, what))
         return 0
 
-    (tree / ".emerald3ds-locale").write_text(MARKER + "\n")
-    print("localize_chinese: %d texts staged from %d files" % (applied, len(files)))
-    for what, count in sorted(rejected.items(), key=lambda kv: -kv[1])[:12]:
-        print("  left in English: %4d  %s" % (count, what))
+    if not args.check:
+        (tree / ".emerald3ds-locale").write_text(MARKER + "\n")
+    print("localize_chinese: %d of %d texts %s from %d files"
+          % (staged, total, "check out" if args.check else "staged", len(files)))
+    if rejected:
+        for what, count in sorted(rejected.items(), key=lambda kv: -kv[1])[:8]:
+            print("  left in English: %5d  %s" % (count, what))
     return 0
 
 

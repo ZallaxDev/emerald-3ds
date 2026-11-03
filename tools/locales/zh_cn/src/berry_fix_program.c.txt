@@ -1,0 +1,6 @@
+[sText_BerryProgramUpdate]
+树果问题修复补丁程序
+[sText_Emerald]
+绿宝石
+[sText_RubySapphire]
+红宝石·蓝宝石

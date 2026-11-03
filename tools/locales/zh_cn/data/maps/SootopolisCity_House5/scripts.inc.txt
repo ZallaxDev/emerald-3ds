@@ -1,0 +1,4 @@
+[SootopolisCity_House5_Text_BrotherUsedToStudySea]
+我哥哥曾经研究海洋。$
+[SootopolisCity_House5_Text_SootopolisMtPyreConnection]
+似乎琉璃市与\n送神山之间存在着某种联系。\p我还在研究所工作的时候\n和同事一起做过这方面的调查。$

@@ -403,7 +403,11 @@ build/maps.s build/map_layouts.inc $(ROMFS_MAP_OUT) &: $(SCRIPTS)/gen_map_data.p
 
 # The asset index maps the linker's INCBIN stub addresses to RomFS files, so it
 # is generated from the finished ELF and does not feed back into the link.
-$(ROMFS_ASSET_OUTS) &: $(TARGET).elf $(SCRIPTS)/gen_asset_table.py
+# The sheets must be current before the index snapshots them: they are
+# .latfont, converted by the upstream Makefile from this port's PNGs, and
+# nothing else in this build produces them (see the sheets target in
+# Makefile).
+$(ROMFS_ASSET_OUTS) &: $(TARGET).elf $(SCRIPTS)/gen_asset_table.py | sheets
 	@mkdir -p romfs/assets
 	"$(PYTHON)" $(SCRIPTS)/gen_asset_table.py --port-dir . --map build/$(TARGET).map \
 		--fs-dir romfs --uri-prefix ""

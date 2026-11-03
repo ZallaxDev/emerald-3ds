@@ -52,22 +52,49 @@ charmap 的单字节码位已经全部被占用（假名就占了 0x01–0xAE）
 自己的拉丁字体同一种格式，所以 port 现有的字体加载器（`3ds_compat.c`）
 原样就能用。
 
-它们由 `3ds_port/scripts/gen_chinese_font.py` 从**开源 CJK 字体**渲染：
+`3ds_port/scripts/gen_chinese_font.py` 从**上游汉化工程的现成位图**装配：
 
 ```sh
-python 3ds_port/scripts/gen_chinese_font.py \
-    --charmap build/upstream/charmap.txt \
-    --font /path/to/NotoSansCJKsc-Regular.otf
+git clone https://github.com/rh-hideout-chinese/pokeemerald-expansion /tmp/cn
+python 3ds_port/scripts/gen_chinese_font.py --fork /tmp/cn
 ```
 
-字体本身（Noto Sans CJK SC，SIL OFL 1.1）**不进仓库**：14 MiB，许可是字体
-自己的。生成出来的两张 PNG 进仓库，因为它们是这个 port 的作品，`release_audit`
-的白名单里有说明。
+汉字与标点全部拷贝自该仓库提交的四个图集：
+
+| 来源 | 内容 |
+| :--- | :--- |
+| `graphics/fonts/chinese_normal.png` | 6771 个汉字（槽 0–7024） |
+| `graphics/fonts/chinese_small.png` | 同上，小字号 |
+| `graphics/fonts/latin_normal.png` | 9 个全角标点（槽 0x30–0x3F） |
+| `graphics/fonts/latin_small.png` | 同上，小字号 |
+
+它没有 ttf、没有字库、也没有生成脚本——字形是作者直接提交的位图，无法从
+某个字体复现。拷贝它们，本移植版的字才与它承载的译文出自同一手。
+
+脚本要改三件事才装得进来：
+
+- 源图的槽 7025 是杂图（无 charmap 对应），本移植版的 9 个标点因此从 **7026**
+  起，不从 `SheetIndex(0x1E71)` 算出的 7025 起；
+- **标点不在中文图集里**，在 `latin_normal.png` / `latin_small.png` 的
+  0x30–0x3F 上（那是被改成中文标点的假名槽位）。拷贝时要做 2bpp 值重映射：
+  拉丁图以 0/3 为背景，中文图以 0 为背景，直接拷贝会得到噪声；
+- 输出的图集保持 `.latfont` 几何（一行 16 字模），port 现有字体加载器原样可用。
+
+标点的宽度照上游的 `GetChineseFontWidthFunc`：小字号下 `。` 是 6，`—～` 是 7，
+`、，！？：・` 是 5；大字号下除 `・` 是 7 外都是 12。它们画在格子左侧，宽度
+截掉右侧空白，所以看起来偏左是设计如此。
 
 ## 译文
 
-`tools/locales/zh_cn/texts.json` 是 `{源文件: {标签: 中文}}`，标签与 pret 源码
-里的完全对应。
+译文来自
+[rh-hideout-chinese/pokeemerald-expansion](https://github.com/rh-hideout-chinese/pokeemerald-expansion)，
+由本移植版整理、校验，并适配到自己的字形与占位符体系。那个仓库没有写明
+许可，因此这里的转载以标注来源为前提；原作者若有异议，应改为由使用者自行
+获取译文，而不是随仓库分发。
+
+`tools/locales/zh_cn/texts.json` 是 `{标签: 中文}`，标签与 pret 源码里的完全
+对应——**不是按文件索引**：那个 fork 把部分文本挪到了别的文件（主菜单的在
+`src/main_menu.c`，本树的在 `src/strings.c`），只有标签是两边都稳定的。
 
 ```sh
 python tools/localize_chinese.py --tree build/upstream            # 注入

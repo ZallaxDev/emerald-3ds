@@ -1,0 +1,14 @@
+[Route101_Text_DontLeaveMe]
+你、你要去哪儿？！\n别丢下我啊——！$
+[Route101_Text_HelpMe]
+救、救命——！！$
+[Route101_Text_PleaseHelp]
+喂！那边的你！\n拜托！救救我！\p在那边的包里面\n里面有精灵球！$
+[Route101_Text_RouteSign]
+101号道路\n{UP_ARROW}古玫镇$
+[Route101_Text_TakeTiredPokemonToPokeCenter]
+宝可梦累了的话，\n就要带它们去宝可梦中心。\p附近的古玫镇里\n就有个宝可梦中心。$
+[Route101_Text_WildPokemonInTallGrass]
+在草丛中行走时野生宝可梦\n有可能跳出来袭击。\p如果想捕捉宝可梦的话，\n就得去草丛里寻找。$
+[Route101_Text_YouSavedMe]
+小田卷博士：哈啊哈啊……\p我刚想在草丛做调查，\n就被野生的宝可梦袭击了……\p总之得救了，\n谢谢你！\p咦？\p你不是{PLAYER}{KUN}吗？\p这儿不是聊天的地方，\n跟我来宝可梦研究所吧？$

@@ -1,0 +1,10 @@
+[BattleFrontier_BattlePalaceCorridor_Text_BeginningToUnderstandNature]
+你开始理解宝可梦的性格\n与它们的行动之间的关系了吗？$
+[BattleFrontier_BattlePalaceCorridor_Text_HeartfeltBondBetweenYouAndMons]
+啊……你和你的宝可梦之间的\n牵绊是多么强大啊……$
+[BattleFrontier_BattlePalaceCorridor_Text_LetMonDoWhatItLikes]
+与其勉强宝可梦做自己\n不喜欢的事情，不如让它们\l去做喜欢并且擅长的事。\p站在你的宝可梦的角度思考一下\n它究竟会喜欢什么样的招式。$
+[BattleFrontier_BattlePalaceCorridor_Text_MonDifferentWhenCornered]
+宝可梦的性格\n至关重要……\p一些宝可梦在陷入绝境时可能会\n做出与之前完全相反的行动来。$
+[BattleFrontier_BattlePalaceCorridor_Text_PeopleAndMonAreSame]
+人也好宝可梦也好，\n其实都是一样的……\p每个个体的性格决定了他们\n擅长哪些事情，\l不擅长哪些事情。$

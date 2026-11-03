@@ -1,0 +1,16 @@
+[RivalsHouse_1F_Text_BrendanWhoAreYou]
+嗨！\n你……\p你是谁？\p哦，你是刚搬到隔壁的\n{PLAYER}吧？\p想不到原来是个女孩。\p爸爸……小田卷博士说\n新来的邻居是道馆馆主的孩子，\l我还以为是男孩呢。\p我是小悠，\n今天起就是邻居了，请多关照！\p啊？{PLAYER}你还没有\n宝可梦吗？\p要我替你捉一只吗？\p啊，可恶，差点忘了……\p我还得去帮爸爸\n捉野生宝可梦。\p得准备出发了，\n{PLAYER}{KUN}，下次再聊吧！$
+[RivalsHouse_1F_Text_DoYouHavePokemon]
+嗨，邻居！\p你已经有自己的\n宝可梦了吗？$
+[RivalsHouse_1F_Text_LikeChildLikeFather]
+老公和孩子一个样。\p丈夫也和孩子似的\n疯狂地喜欢宝可梦。\p要是老公不在他的研究所里，\n那他肯定在野外的草丛里找什么东西。$
+[RivalsHouse_1F_Text_MayWhoAreYou]
+哎？\n你……你是谁？\p…… …… …… ……\n…… …… …… ……\p哦，你就是{PLAYER}{KUN}吧。\n你今天刚搬过来对吧？\p我……我叫小遥，\n请多指教！\p我……\n我的梦想是和全世界的\l宝可梦当朋友。\p爸爸……小田卷博士\n说过你的事，{PLAYER}{KUN}，\p我一直想着要是我们能\n成为好朋友就好了，{PLAYER}{KUN}。\p啊，明明才第一次和你说话，\n我居然一直在自言自语。\p嘿嘿……\p糟糕！我忘了！\p我还得去帮爸爸捕捉\n野生宝可梦！\p{PLAYER}{KUN}，回头见！$
+[RivalsHouse_1F_Text_OhYoureTheNewNeighbor]
+哎，你好，你是？\p…… …… …… …… ……\n…… …… …… …… ……\p啊，你是隔壁的邻居\n{PLAYER}{KUN}吧！你好！\p我家的{STR_VAR_1}\n也和你差不多大。\p我们{STR_VAR_1}特别喜欢\n交朋友，\p现在{STR_VAR_1}应该在楼上吧。$
+[RivalsHouse_1F_Text_ShouldGoHomeEverySoOften]
+我想，和宝可梦\n一起旅行感觉一定不错，\p但你也得经常回家一趟\n让你妈妈看看你怎么样了。\p她虽然不说，但肯定很担心你，\n{PLAYER}{KUN}。$
+[RivalsHouse_1F_Text_TooBusyToNoticeVisit]
+这个{RIVAL}！\p我想我家孩子现在\n满脑子都是宝可梦，\l没注意到你来了，{PLAYER}{KUN}。$
+[RivalsHouse_1F_Text_WentOutToRoute103]
+啊，{RIVAL}刚刚\n去了103号道路。\p孩子和老公一个样，\n{RIVAL}也在家里呆不住。$

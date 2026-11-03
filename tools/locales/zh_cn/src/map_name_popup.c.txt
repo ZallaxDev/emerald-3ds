@@ -1,0 +1,16 @@
+[sText_Pyramid]
+金字塔
+[sText_PyramidFloor1]
+金字塔1层
+[sText_PyramidFloor2]
+金字塔2层
+[sText_PyramidFloor3]
+金字塔3层
+[sText_PyramidFloor4]
+金字塔4层
+[sText_PyramidFloor5]
+金字塔5层
+[sText_PyramidFloor6]
+金字塔6层
+[sText_PyramidFloor7]
+金字塔7层

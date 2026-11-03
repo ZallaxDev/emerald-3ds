@@ -1,0 +1,10 @@
+[BattleFrontier_Lounge6_Text_DontTradeForAnythingButMon]
+啊，抱歉！\n我只想换一只\l{STR_VAR_1}。$
+[BattleFrontier_Lounge6_Text_PromiseIllBeGoodToIt]
+哇，太可爱了！\n谢谢！\l我保证会好好照顾它的！\p啊，你也要好好照顾\n我的{STR_VAR_2}哦！$
+[BattleFrontier_Lounge6_Text_SkittySoMuchCuterThanImagined]
+嘻嘻！\n向尾喵比我想象中可爱多了！\l太高兴了！$
+[BattleFrontier_Lounge6_Text_WellThatsFineToo]
+哎，你不想换吗？\n唉，那就算了。\l下回再说吧。$
+[BattleFrontier_Lounge6_Text_WouldYouLikeToTrade]
+我的宝可梦是{STR_VAR_2}，\n你知道它吗？\l它很可爱，很讨人喜欢。\p我可是很自豪有这么一只\n能与别人交换！\p你想用{STR_VAR_1}\n换我的{STR_VAR_2}吗？$

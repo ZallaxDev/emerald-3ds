@@ -1,0 +1,2 @@
+[gContestHallPaintingCaption]
+{STR_VAR_1}\n{STR_VAR_2}的{STR_VAR_3}

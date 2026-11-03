@@ -1,0 +1,6 @@
+[gText_HowMayIServeYou]
+欢迎！\p需要什么吗？$
+[gText_PlayerWhatCanIDoForYou]
+{PLAYER}{KUN}，欢迎！\p有什么需要我帮忙的？$
+[gText_PleaseComeAgain]
+欢迎再次光临！$

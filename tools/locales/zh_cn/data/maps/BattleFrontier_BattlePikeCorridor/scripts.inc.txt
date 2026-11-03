@@ -1,0 +1,2 @@
+[BattleFrontier_BattlePikeCorridor_Text_YourChallengeHasBegun]
+您的选择式对战挑战\n现在开始了……$

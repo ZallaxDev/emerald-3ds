@@ -1,0 +1,6 @@
+[DewfordTown_House1_Text_LifeGoesSlowlyOnIsland]
+我跟丈夫结婚后就离开了\n凯那市的港口。\p在小岛上的时光过得很缓慢，\n但被美丽的大海环绕着——\l感觉真的很幸福。$
+[DewfordTown_House1_Text_LotToBeSaidForLivingOnIsland]
+住在这样的小岛上，\n与家人、宝可梦和睦共处，\l多么美妙！$
+[DewfordTown_House1_Text_Zigzagoon]
+蛇纹熊：咕咕！$

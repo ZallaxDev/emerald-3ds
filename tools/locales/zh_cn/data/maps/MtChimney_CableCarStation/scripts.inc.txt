@@ -1,0 +1,6 @@
+[MtChimney_CableCarStation_Text_CableCarReadyGetOn]
+下行缆车即将发车。\n您要乘坐吗？$
+[MtChimney_CableCarStation_Text_RideAnotherTime]
+欢迎再次乘坐。$
+[MtChimney_CableCarStation_Text_StepThisWay]
+这边请。$

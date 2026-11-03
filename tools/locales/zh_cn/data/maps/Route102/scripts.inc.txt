@@ -1,0 +1,14 @@
+[Route102_Text_CatchWholeBunchOfPokemon]
+我要捉一大堆\n宝可梦！$
+[Route102_Text_ImNotVeryTall]
+我……不是很高，所以在草丛里\n走的时候我就被草遮起来了。\p草总是戳到我的鼻子里，然后就……\n阿——阿—阿——阿……\p阿嚏！$
+[Route102_Text_LetsGoBack]
+{PLAYER}，谢谢你！\n我们回道馆吧！$
+[Route102_Text_RouteSignOldale]
+102号道路\n{RIGHT_ARROW}古玫镇$
+[Route102_Text_RouteSignPetalburg]
+102号道路\n{LEFT_ARROW}橙华市$
+[Route102_Text_WallyIDidIt]
+满充：成功了……这是我的……\n我的宝可梦！$
+[Route102_Text_WatchMeCatchPokemon]
+满充：{PLAYER}……\n草丛里会藏着宝可梦，对吧？\p请你看看我捕捉宝可梦的\n方法对不对。\p……哇！$

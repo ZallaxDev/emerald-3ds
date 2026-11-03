@@ -23,6 +23,46 @@ third-party components. Each keeps its own terms; `LICENSE-PORT.md`
   `3ds_port/emerald3ds.ld.in` is a modified copy and stays under the MPL 2.0
   (https://mozilla.org/MPL/2.0/).
 
+## Translations
+
+The port's own interface strings (`3ds_port/include/3ds_locale.h`) are original
+to Emerald 3DS and under `LICENSE-PORT.md`. The two fan translations are not:
+they are the work of their translators.
+
+- **Brazilian Portuguese** (`tools/locales/pt_br/`) — by Carlos Mozart
+  (AllGenWiki), written for this port rather than copied from a cartridge; the
+  repository holds it as this project's own text. See `docs/PORTUGUESE.md` and
+  `docs/ROADMAP-PTBR.md`.
+- **Simplified Chinese** (`tools/locales/zh_cn/`) — from
+  [rh-hideout-chinese/pokeemerald-expansion](https://github.com/rh-hideout-chinese/pokeemerald-expansion),
+  a fan translation of the Expansion project's text. That repository states no
+  licence, and this port does not relicense it: the catalog here is a copy of
+  its texts, adapted to this tree's labels and glyph encoding, reproduced with
+  attribution to its source. **If its authors object to the copy, it will be
+  removed from the repository** — the port would then either ask the player for
+  the catalog or drop the Chinese build, whichever its maintainer prefers.
+  Until that happens, treat `tools/locales/zh_cn/` as theirs, not as Emerald
+  3DS's.
+
+Neither translation contains cartridge text beyond what the underlying game's
+own wording required: both are derived from the English the labels already hold
+in the pret tree.
+
+### Glyph sheets
+
+`3ds_port/assets/fonts/chinese_small.png` and `chinese_normal.png` are assembled
+by `3ds_port/scripts/gen_chinese_font.py` from the sheets of the same Chinese
+project: every Han character is copied from its `chinese_normal.png` and
+`chinese_small.png`, and the nine full-width marks from `latin_normal.png` and
+`latin_small.png`, where that project draws them over bytes it repointed for
+Chinese. That project ships no font file and no generator, so its glyphs cannot
+be reproduced from a face.
+
+These sheets therefore carry the **same provenance as the translation above**
+and the same condition: a copy with attribution, removed if its authors object.
+Neither holds cartridge glyphs -- the underlying Chinese shapes are the
+translator's rendering, not a Nintendo font.
+
 ## Libraries used by the build
 
 - **libctru, citro2d, citro3d** (devkitPro), zlib licence — linked into the 3DSX.

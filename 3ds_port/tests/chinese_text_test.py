@@ -24,9 +24,9 @@ from pathlib import Path
 HAN_LEAD_MIN, HAN_LEAD_MAX = 0x01, 0x1E
 HAN_LEAD_HOLES = {0x06, 0x1B}   # é and É, which POKéMON needs
 HAN_LO_MAX = 0xF6
-PUNCT_LEAD = 0x1F
-PUNCT_LO_MIN = 0xF7
-PUNCT_FIRST = 0x1B71            # 7025: the slot after the last Han glyph
+PUNCT_HI = 0x1E                 # the charmap's first byte for every mark
+PUNCT_LO_MIN = 0x71             # 。, then 、，！？：—～・
+PUNCT_SLOT = 7026               # the sheet slot of 。 (7025 is stray art)
 
 
 def failures(problems: list[str], what: str) -> int:
@@ -89,10 +89,7 @@ def main() -> int:
         for code in codes:
             if len(code) == 2:
                 hi, lo = code
-                if hi == PUNCT_LEAD:
-                    if lo < PUNCT_LO_MIN:
-                        problems.append("%r = 1F %02X: below the punctuation range"
-                                        % (ch, lo))
+                if hi == PUNCT_HI and PUNCT_LO_MIN <= lo <= 0xFF:
                     punct_codes.append(lo)
                     continue
                 if not (HAN_LEAD_MIN <= hi <= HAN_LEAD_MAX):
@@ -116,19 +113,17 @@ def main() -> int:
     punct_codes.sort()
     expect = list(range(PUNCT_LO_MIN, PUNCT_LO_MIN + len(punct_codes)))
     if punct_codes != expect:
-        problems.append("punctuation codes %s are not the run F7..%02X"
-                        % ([hex(c) for c in punct_codes], PUNCT_LO_MIN + len(punct_codes) - 1))
-    if punct_codes and slots and max(slots) >= PUNCT_FIRST:
+        problems.append("punctuation codes %s are not the run %02X..%02X"
+                        % ([hex(c) for c in punct_codes], PUNCT_LO_MIN,
+                           PUNCT_LO_MIN + len(punct_codes) - 1))
+    if punct_codes and slots and max(slots) >= PUNCT_SLOT:
         problems.append("Han slots run to %d, into the punctuation at %d"
-                        % (max(slots), PUNCT_FIRST))
-    if punct_codes and slots and max(slots) + 1 != PUNCT_FIRST:
-        # A gap is harmless (the sheets carry the empty slots), but the marks
-        # must start where the engine looks for them.
-        pass
+                        % (max(slots), PUNCT_SLOT))
+
 
     # 3. The sheets hold those slots.
     needed = max([max(slots) + 1 if slots else 0,
-                  PUNCT_FIRST + len(punct_codes)])
+                  PUNCT_SLOT + len(punct_codes)])
     for name in ("chinese_normal.png", "chinese_small.png"):
         png = tree / "graphics/fonts" / name
         if not png.is_file():

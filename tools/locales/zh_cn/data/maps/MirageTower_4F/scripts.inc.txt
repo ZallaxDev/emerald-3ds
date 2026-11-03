@@ -1,0 +1,8 @@
+[MirageTower_4F_Text_LeaveClawFossilAlone]
+{PLAYER}留下了爪子化石。$
+[MirageTower_4F_Text_LeftRootFossilAlone]
+{PLAYER}留下了根状化石。$
+[MirageTower_4F_Text_TakeClawFossil]
+你找到了爪子化石。\p如果拿走化石，周围的地面很可能\n会塌陷……\p真的要拿走爪子化石吗？$
+[MirageTower_4F_Text_TakeRootFossil]
+你找到了根状化石。\p如果拿走化石，周围的地面很可能\n会塌陷……\p真的要拿走根状化石吗？$

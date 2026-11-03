@@ -1,0 +1,12 @@
+[BattleFrontier_Lounge5_Text_GirlPlaysAtRedHouseALot]
+我知道我知道！\p那个小女孩经常在\n红色的房子里玩！$
+[BattleFrontier_Lounge5_Text_GirlSayingSomethingProfound]
+我感觉那个小女孩好像在\n说什么很晦涩难懂的话。$
+[BattleFrontier_Lounge5_Text_LadyClaimsSheUnderstandsPokemon]
+好像魔法一样啊！\n那边那位小女孩说她能\l懂得宝可梦在说什么！$
+[BattleFrontier_Lounge5_Text_NatureGirlEgg]
+你在说什么傻话！蛋可在沉睡啊！\n我怎么跟它交谈呢！$
+[BattleFrontier_Lounge5_Text_NatureGirlGreeting]
+呵呵！\n我能看出宝可梦在想什么哦！\p来吧！\n让我看看你的宝可梦！$
+[BattleFrontier_Lounge5_Text_NatureGirlNoneShown]
+砰！\n咔嚓！$

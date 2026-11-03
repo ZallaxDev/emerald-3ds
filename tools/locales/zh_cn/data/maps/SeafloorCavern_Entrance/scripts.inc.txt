@@ -1,0 +1,4 @@
+[SeafloorCavern_Entrance_Text_HearMagmaNearMossdeep]
+嘿！\n我记得你！\p既然你来了，那也就是说\n你又想来给我们捣乱了！\p像你这样的废物，难道还以为\n能凭自己阻止我们海洋队？\p告诉你，你还早了\n一万亿年！\p你这样的人和熔岩队\n那些家伙倒是挺般配！\p说起熔岩队，\n听说有人在绿岭市看见过他们。\p那些成捆的呆子，\n他们没资格接近大海！$
+[SeafloorCavern_Entrance_Text_HearMagmaNearMossdeepShort]
+像你这样的废物，难道还以为\n能凭自己阻止我们海洋队？\p告诉你，你还早了\n一万亿年！\p你这样的人和熔岩队\n那些家伙倒是挺般配！\p说起熔岩队，\n听说有人在绿岭市看见过他们。\p那些成捆的呆子，\n他们没资格接近大海！$

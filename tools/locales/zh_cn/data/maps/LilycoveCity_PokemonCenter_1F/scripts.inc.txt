@@ -1,0 +1,6 @@
+[LilycoveCity_PokemonCenter_1F_Text_HaventSeenRottenScoundrels]
+那些偷宝可梦\n抢陨石的恶徒……\p最近在这附近没看到他们。$
+[LilycoveCity_PokemonCenter_1F_Text_HeardAboutRottenScoundrels]
+我听说过那些\n偷宝可梦抢陨石的\l恶徒的事情。$
+[LilycoveCity_PokemonCenter_1F_Text_HowManyKindsOfPokemon]
+我想知道世界上\n有多少种宝可梦。\p穿越海洋和远方的人\n交换宝可梦一定不错。$

@@ -1,0 +1,4 @@
+[RustboroCity_Flat1_1F_Text_EveryPokemonHasAbility]
+每只宝可梦都有一种\n它可以使用的特性。$
+[RustboroCity_Flat1_1F_Text_PokemonStrange]
+宝可梦真是奇怪的生物。$

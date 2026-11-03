@@ -1,0 +1,8 @@
+[OldaleTown_PokemonCenter_1F_Text_PokemonCentersAreGreat]
+宝可梦中心真棒！\p你可以随时使用他们\n提供的服务，而且完全免费，\l什么也不用担心！$
+[OldaleTown_PokemonCenter_1F_Text_TradedInWirelessClub]
+二楼的宝可梦无线俱乐部\n最近刚刚建好，\p我马上就去交换了宝可梦。$
+[OldaleTown_PokemonCenter_1F_Text_TrainersCanUsePC]
+那边角落里的电脑是提供给所有\n宝可梦训练家使用的。\p当然，\n你也可以随意使用。$
+[OldaleTown_PokemonCenter_1F_Text_WirelessClubNotAvailable]
+二楼的宝可梦无线俱乐部\n最近刚刚建好，\p但据说现在\n还在调整中。$

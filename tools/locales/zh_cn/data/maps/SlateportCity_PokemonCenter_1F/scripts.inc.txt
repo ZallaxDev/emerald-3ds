@@ -1,0 +1,4 @@
+[SlateportCity_PokemonCenter_1F_Text_RaiseDifferentTypesOfPokemon]
+想要我指点一下如何对战吗？\p你应该用较平衡的方式\n培育多种宝可梦。\p仅仅培育一只强大的\n宝可梦并不够，\p如果它的属性被克制，\n对战会处于相当被动的局面。$
+[SlateportCity_PokemonCenter_1F_Text_TradedMonWithFriend]
+我和朋友交换宝可梦。\p如果交换来的宝可梦带有道具，\n我会更加兴奋的！$

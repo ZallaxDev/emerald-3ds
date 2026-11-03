@@ -1,0 +1,2 @@
+[BattleFrontier_BattleArenaCorridor_Text_PleaseStepIn]
+您将在下个房间进行对战。\n请进！$

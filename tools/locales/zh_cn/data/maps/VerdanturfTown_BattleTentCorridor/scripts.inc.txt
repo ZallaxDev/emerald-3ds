@@ -1,0 +1,8 @@
+[VerdanturfTown_ContestHall_Text_MyMonRules]
+我的宝可梦法则！\p它帅气、强壮、漂亮、可爱\n并且聪明。完美！\p我不妨赢得各项\n华丽大赛。$
+[VerdanturfTown_ContestHall_Text_NormalRankStage]
+宝可梦华丽大赛\n一般级会场！$
+[VerdanturfTown_ContestHall_Text_RaisedMonToBeCute]
+我培育宝可梦让它变得可爱。\p我发现你可以让宝可梦参加\n可爱部门！\p我很高兴我是用爱心来培育\n我的宝可梦。$
+[VerdanturfTown_ContestHall_Text_WhichContestYouEntering]
+你想要参加哪个部门？\n需要建议吗？\p在任一部门中，例如可爱部门\n我认为裁判不仅仅\l在第一回合中判定。\p你应该努力制定出更多方法\n来更好的培育你的宝可梦。$

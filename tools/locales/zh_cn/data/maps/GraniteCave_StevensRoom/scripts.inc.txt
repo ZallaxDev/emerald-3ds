@@ -1,0 +1,12 @@
+[GraniteCave_StevensRoom_Text_CouldBecomeChampionLetsRegister]
+大吾：你的宝可梦看起来\n培养得很不错。\p继续努力的话，也许有一天能\n成为宝可梦联盟的冠军呢。\l我是这么想的喔。\p对了！既然有缘相识，\n就在宝可导航里\l互相登录一下吧。\p…… …… ……$
+[GraniteCave_StevensRoom_Text_ImStevenLetterForMe]
+我的名字是大吾。\p我对稀有的石头很有兴趣，\n所有经常四处旅行。\p哦？\n有给我的信？$
+[GraniteCave_StevensRoom_Text_IveGotToHurryAlong]
+好了，那我先走一步了。$
+[GraniteCave_StevensRoom_Text_OhBagIsFull]
+喔，你的包满了……\n真可惜呢。$
+[GraniteCave_StevensRoom_Text_RegisteredSteven]
+把大吾\n登记到宝可导航里了。$
+[GraniteCave_StevensRoom_Text_ThankYouTakeThis]
+大吾：嗯，谢谢你。\p特意专程送信过来，\n要好好答谢你才行。\p我想想……\n这个招式学习器给你吧。\p里面有我最爱的招式\n钢翼。$

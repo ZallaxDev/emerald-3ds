@@ -1,0 +1,6 @@
+[BattleFrontier_Lounge4_Text_IfIOpenedRestaurantHere]
+在这儿开个饭馆的话\n肯定能挣大钱吧。$
+[BattleFrontier_Lounge4_Text_NeedBreatherAfterBattles]
+呼……\p那么紧张的对战之后，\n我得稍微休息一下了……\p但即使是现在，我脑子里也会\n一直设计着对战策略。$
+[BattleFrontier_Lounge4_Text_WonderIfInterviewsAiring]
+不知道今天会不会有关于强大训练家\n的电视采访？$

@@ -1,0 +1,36 @@
+[GiddyText_DontYouAgree]
+\n你同意吗？$
+[GiddyText_IBoughtCrayonsWith120Colors]
+我买了一套120色的蜡笔！\n你不觉得很棒吗？$
+[GiddyText_ISoWantToGoOnAVacation]
+我很想去旅行。\n你知道什么好去处吗？$
+[GiddyText_Is]
+ 是$
+[GiddyText_LyingBackInTheGreenGrass]
+往草地上这么一躺……\n哦，太，太棒了！$
+[GiddyText_SecretBasesAreSoWonderful]
+秘密基地真是太棒了！\n你不觉得刺激吗？$
+[GiddyText_SoAmusing]
+ 太有意思了！$
+[GiddyText_SoDarling]
+ 太迷人了！$
+[GiddyText_SoDesirable]
+ 太合意的了！$
+[GiddyText_SoExciting]
+ 太令人激动！$
+[GiddyText_SoMagical]
+ 太不可思议！$
+[GiddyText_SoPretty]
+ 非常漂亮！$
+[GiddyText_SoRelaxed]
+ 太悠闲了！$
+[GiddyText_SoSunny]
+ 太愉快了！$
+[GiddyText_WhatsTheBottomOfTheSeaLike]
+海底是个什么样子？\n我真想去一次，一次就好！$
+[GiddyText_WhenYouSeeTheSettingSunDoesIt]
+当你看到夕阳的时候，\n是不是会想回家？$
+[GiddyText_WhenYouWriteOnASandyBeach]
+你在沙滩上写好字，\n不久就会被冲掉的。真扫兴。$
+[GiddyText_WouldntItBeNiceIfWeCouldFloat]
+你不觉得，\n漂浮在一片泡泡云上很舒服吗？$

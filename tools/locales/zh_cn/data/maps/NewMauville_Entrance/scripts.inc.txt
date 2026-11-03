@@ -1,0 +1,6 @@
+[NewMauville_Entrance_Text_DoorIsLocked]
+门锁住了。$
+[NewMauville_Entrance_Text_UseBasementKey]
+使用地下钥匙吗？$
+[NewMauville_Entrance_Text_UsedBasementKey]
+{PLAYER}使用了地下钥匙。\p门打开了！$

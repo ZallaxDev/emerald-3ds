@@ -1,0 +1,42 @@
+[gText_AllOutOfAppealTime]
+表演时间结束！{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}
+[gText_AppealComboWentOverExcellently]
+前后演出的招式组合\n特别受大家喜欢！{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}
+[gText_AppealComboWentOverVeryWell]
+前后演出的招式组合\n很受大家喜欢！{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}
+[gText_AppealComboWentOverWell]
+前后演出的招式组合\n得到了大家的喜爱！{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}
+[gText_AppealNumButItCantParticipate]
+第{STR_VAR_1}回合的表演！\n但是无法参加！
+[gText_AppealNumWhichMoveWillBePlayed]
+第{STR_VAR_1}回合的表演！\n要使用哪个招式呢？
+[gText_AttractedCrowdsAttention]
+吸引了观众们的注意！{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}
+[gText_BadConditionResultedInWeakAppeal]
+它因为气势不行表演得一点也不好……{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}
+[gText_CouldntImproveItsCondition]
+但是它并没能提升自己的气势……{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}
+[gText_CrowdContinuesToWatchMon]
+观众们一直持续关注着{STR_VAR_3}！{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}
+[gText_JudgeLookedAtMonExpectantly]
+评委满怀期待地\n看着{STR_VAR_1}！{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}
+[gText_MonAppealedWithMove]
+{STR_VAR_1}使用了\n{STR_VAR_2}进行表演！
+[gText_MonCantAppealNextTurn]
+{STR_VAR_1}无法参加下一次的表演了！{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}
+[gText_MonWasTooNervousToMove]
+{STR_VAR_1}因为紧张\n无法使用招式表演了！{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}
+[gText_MonWasUnaffected]
+{STR_VAR_1}完全不为所动！{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}
+[gText_MonWasWatchingOthers]
+{STR_VAR_1}在观察\n其他的宝可梦！{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}
+[gText_MonsMoveIsIgnored]
+{STR_VAR_1}的{STR_VAR_2}被完全无视了……{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}
+[gText_MonsXDidntGoOverWell]
+{STR_VAR_1}的{STR_VAR_3}表演\n在这里不受欢迎……{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}
+[gText_MonsXGotTheCrowdGoing]
+{STR_VAR_1}的{STR_VAR_3}表演\n让整个会场沸腾了！{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}
+[gText_MonsXWentOverGreat]
+{STR_VAR_1}的{STR_VAR_3}表演\n受到了大家的热烈欢迎！{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}
+[gText_RepeatedAppeal]
+{STR_VAR_1}因为重复表演，让大家失望了。{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}

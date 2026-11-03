@@ -1,0 +1,12 @@
+[Route117_Text_AirIsTastyHere]
+这的空气中有一股清香！$
+[Route117_Text_ArentTheseFlowersPretty]
+你怎么想？\n这些花很漂亮吧？\p都是我种的！$
+[Route117_Text_DayCarePokemonHadNewMove]
+我把宝可梦寄存\n在培育屋里，\p但当我取回它时，它学会了一个\n我从未教过的招式。\l真的，我非常吃惊。$
+[Route117_Text_DayCareSign]
+培育屋\n“替你抚养宝可梦。”$
+[Route117_Text_RouteSignMauville]
+117号道路\n{RIGHT_ARROW}紫堇市$
+[Route117_Text_RouteSignVerdanturf]
+117号道路\n{LEFT_ARROW}绿茵镇$

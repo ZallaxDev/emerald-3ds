@@ -1,0 +1,12 @@
+[Text_BootUpPC]
+{PLAYER}登录了电脑。$
+[gText_AccessedLanettesPC]
+连接上了真由美的电脑！$
+[gText_AccessedPlayersPC]
+连接上了{PLAYER}的电脑！$
+[gText_AccessedSomeonesPC]
+连接上了某人的电脑！$
+[gText_StorageSystemOpened]
+调出了宝可梦寄放系统！$
+[gText_WhichPCShouldBeAccessed]
+要连接哪台电脑？$
