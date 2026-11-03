@@ -12137,10 +12137,12 @@ static void DrawSpeedBadge(C3D_RenderTarget *target, int halves)
  * screen, as on the DS games. Over a held top (below) it is drawn once, a
  * few frames into the hold so that a hold between two screens does not
  * flash; with the bottom screen's column in focus (CtrVideo_LookDown) the
- * game still draws the top, and it goes over every frame.
+ * game still draws the top, and it goes over every frame. sTopDark: the
+ * top's buffers have it already (left there by a hold, or kept with the
+ * held frame), never to be darkened twice over.
  */
 #define LOOK_DOWN_AFTER 6   /* frames held before the top darkens */
-static bool sLookDown, sLookDownDrawn;
+static bool sLookDown, sTopDark;
 static unsigned sHeldFrames;
 
 void CtrVideo_LookDown(bool on) { sLookDown = on; }
@@ -12183,7 +12185,7 @@ static bool sHoldTop;
 static struct
 {
     void *eye[2];
-    bool kept, dexShown, failed;
+    bool kept, dexShown, failed, dark;
 } sHeldTop;
 
 static void HeldTopForget(void)
@@ -12229,6 +12231,7 @@ static void HeldTopKeep(void)
                             GX_TRANSFER_RAW_COPY(1));
     }
     sHeldTop.kept = true;
+    sHeldTop.dark = sTopDark;
 }
 
 /* In a frame: the kept frame back in the top's buffers, which go out at its end. */
@@ -12243,6 +12246,7 @@ static void HeldTopPutBack(void)
                                 TargetBytes(eyes[i]), GX_TRANSFER_RAW_COPY(1));
             C3D_FrameDrawOn(eyes[i]);
         }
+    sTopDark = sHeldTop.dark;
     bool stereo = sHeldTop.eye[1] != NULL && sTopRight;
     if (stereo != sStereo) { gfxSet3D(stereo); sStereo = stereo; }
     CtrLog_Write(CTR_LOG_VIDEO, "top screen: the held frame back from under the Pokédex");
@@ -12403,15 +12407,18 @@ void CtrVideo_Present(void)
         bool putBack = sHeldTop.kept && sHoldTop;
         if (sHeldFrames < LOOK_DOWN_AFTER) ++sHeldFrames;
         /* The Pokédex gone with the top still held: its frame back, once,
-         * darkened again; or darkened once the hold has lasted. The frame
-         * stays in the top's buffer, so it is drawn over only once. */
-        if ((putBack || (!sLookDownDrawn && sHeldFrames >= LOOK_DOWN_AFTER)) && C3D_FrameBegin(C3D_FRAME_SYNCDRAW))
+         * darkened if it was not yet; or darkened once the hold has lasted.
+         * The frame stays in the top's buffer, so it is drawn over once. */
+        if ((putBack || (!sTopDark && sHeldFrames >= LOOK_DOWN_AFTER)) && C3D_FrameBegin(C3D_FRAME_SYNCDRAW))
         {
             if (putBack) HeldTopPutBack();
-            sSceneOn = NULL;   /* the buffer read back afresh, not from the colour cache */
-            DrawLookDown(sTop);
-            if (sStereo && sTopRight) DrawLookDown(sTopRight);
-            sLookDownDrawn = true;
+            if (!sTopDark)
+            {
+                sSceneOn = NULL;   /* the buffer read back afresh, not from the colour cache */
+                DrawLookDown(sTop);
+                if (sStereo && sTopRight) DrawLookDown(sTopRight);
+                sTopDark = true;
+            }
             C3D_FrameEnd(0);
         }
         else
@@ -12419,8 +12426,6 @@ void CtrVideo_Present(void)
         ++sStats.frames;
         return;
     }
-    /* Drawn afresh: a next hold darkens it again. */
-    sLookDownDrawn = false;
     sHeldFrames = 0;
     /* Wait for previous GPU work before editing the atlas. C3D owns VBlank
      * pacing and swap: no gfxSwapBuffers/gspWaitForVBlank in this path. */
@@ -12905,6 +12910,8 @@ void CtrVideo_Present(void)
         if (bottom) RenderEye(sBottom, clear, 0.0f);
         if (dexTop) RenderDexTop(stereo, slider);
         else if (sHeldTop.kept && sHoldTop) HeldTopPutBack();
+        /* Drawn afresh: darkened again below if it is to be. */
+        if (dexTop) sTopDark = false;
     }
     else if (sTransition && !blank)
     {
@@ -13004,10 +13011,15 @@ void CtrVideo_Present(void)
             }
         }
     }
-    if (sLookDown)
+    /* The top drawn afresh, or kept as it was (down): darkened on it once. */
+    if (!down) sTopDark = false;
+    if (sLookDown && !sTopDark)
     {
-        if (!down || dexTop) DrawLookDown(sTop);
-        if (stereo) DrawLookDown(sTopRight);
+        sSceneOn = NULL;
+        DrawLookDown(sTop);
+        if (stereo || (down && !dexTop && sStereo && sTopRight)) DrawLookDown(sTopRight);
+        /* kept as it was, it keeps it; drawn afresh, it is drawn again */
+        sTopDark = down && !dexTop;
     }
 #if CTR_SHOW_FPS
     if (CtrSettings_ShowFps())
