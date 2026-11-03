@@ -109,6 +109,7 @@
 #include "constants/trainers.h"
 #include "port_platform.h"
 
+#include "3ds_audio.h"
 #include "3ds_data.h"
 #include "3ds_bottom.h"
 #include "3ds_extras.h"
@@ -7641,8 +7642,10 @@ void CtrBottom_Frame(void)
         CtrVideo_HoldTop(hold);
         held = hold;
     }
-    /* The column in focus: the top screen points down here meanwhile. */
+    /* The column in focus: the top screen points down here meanwhile; with
+     * the top held too, the music a little quieter. */
     CtrVideo_LookDown(sFocus != FOCUS_NONE || sInside != INSIDE_NONE);
+    CtrAudio_DuckMusic(hold || sFocus != FOCUS_NONE || sInside != INSIDE_NONE);
     if (hold && mode != MODE_POKENAV && mode != MODE_STORAGE && mode != MODE_PARTY_MENU && mode != MODE_SUMMARY
      && mode != MODE_CARD
      && !BagShown(mode)
