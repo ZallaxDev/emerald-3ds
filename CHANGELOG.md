@@ -9,10 +9,10 @@
   release share it. The title screen shows it at the bottom left of the
   bottom screen, above the logo. By @eathanpage.
 - Bottom screen: while it has the player's attention (a menu it runs with the
-  top screen held, such as the party or the bag, or its button column in
-  focus with X), the top screen darkens towards its foot under an arrow
-  pointing down at it, as on the DS games, and the music plays a little
-  quieter. By @eathanpage.
+  top screen held, such as the party or the bag, one of its own sections such
+  as SAVE or OPTIONS, or its button column in focus with X), the top screen
+  darkens towards its foot under an arrow pointing down at it, as on the DS
+  games, and the music plays at half its volume. By @eathanpage.
 
 ## 0.5.0 — 2026-10-29
 
