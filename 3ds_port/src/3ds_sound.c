@@ -183,7 +183,7 @@ bool32 __wrap_IsPokemonCryPlaying(struct MusicPlayerInfo *info)
  * lowered under a cry and raised after it) are left as they are, and a song
  * started meanwhile, at full, is lowered in turn.
  */
-#define DUCKED_VOLX 48   /* three quarters */
+#define DUCKED_VOLX 32   /* half */
 extern struct MusicPlayerInfo gMPlayInfo_BGM;
 
 void CtrAudio_DuckMusic(bool duck)
