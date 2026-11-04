@@ -12194,6 +12194,43 @@ static void DrawSpeedBadge(C3D_RenderTarget *target, int halves)
 }
 
 /*
+ * Look below: while the bottom screen has the player's attention, the top
+ * screen darkens towards its foot under an arrow pointing down at the touch
+ * screen, as on the DS games. Over a held top (below) it is drawn once, a
+ * few frames into the hold so that a hold between two screens does not
+ * flash; with the bottom screen's column in focus (CtrVideo_LookDown) the
+ * game still draws the top, and it goes over every frame. sTopDark: the
+ * top's buffers have it already (left there by a hold, or kept with the
+ * held frame), never to be darkened twice over.
+ */
+#define LOOK_DOWN_AFTER 6   /* frames held before the top darkens */
+static bool sLookDown, sTopDark;
+static unsigned sHeldFrames;
+
+void CtrVideo_LookDown(bool on) { sLookDown = on; }
+
+static void DrawLookDown(C3D_RenderTarget *target)
+{
+    const float cx = CTR_GAME_WIDTH / 2.0f, tip = CTR_GAME_HEIGHT - 10.0f;
+    u32 top = C2D_Color32(0, 0, 0, 90), foot = C2D_Color32(0, 0, 0, 200);
+    u32 white = C2D_Color32(255, 255, 255, 235), edge = C2D_Color32(0, 0, 0, 255);
+
+    C2D_Prepare();
+    C3D_DepthTest(false, GPU_ALWAYS, GPU_WRITE_COLOR);
+    BlendForget();
+    SceneOn(target);
+    C2D_ViewReset();
+    Blend(5, false, false);
+    C2D_DrawRectangle(0, 0, 0, CTR_GAME_WIDTH, CTR_GAME_HEIGHT, top, top, foot, foot);
+    /* The arrow: a shaft and a head, each over its outline a pixel wider. */
+    C2D_DrawRectSolid(cx - 7, tip - 33, 0, 14, 17, edge);
+    C2D_DrawTriangle(cx - 17, tip - 17, edge, cx + 17, tip - 17, edge, cx, tip + 1, edge, 0);
+    C2D_DrawRectSolid(cx - 6, tip - 32, 0, 12, 16, white);
+    C2D_DrawTriangle(cx - 15, tip - 16, white, cx + 15, tip - 16, white, cx, tip - 1, white, 0);
+    C2D_Flush();
+}
+
+/*
  * The bottom screen runs some of the game's menus without showing them (the
  * party menu, the bag): while it does, the top screen keeps the last frame it
  * presented, the world as it was when the menu opened. Nothing is rendered;
@@ -12210,7 +12247,7 @@ static bool sHoldTop;
 static struct
 {
     void *eye[2];
-    bool kept, dexShown, failed;
+    bool kept, dexShown, failed, dark;
 } sHeldTop;
 
 static void HeldTopForget(void)
@@ -12256,6 +12293,7 @@ static void HeldTopKeep(void)
                             GX_TRANSFER_RAW_COPY(1));
     }
     sHeldTop.kept = true;
+    sHeldTop.dark = sTopDark;
 }
 
 /* In a frame: the kept frame back in the top's buffers, which go out at its end. */
@@ -12270,6 +12308,7 @@ static void HeldTopPutBack(void)
                                 TargetBytes(eyes[i]), GX_TRANSFER_RAW_COPY(1));
             C3D_FrameDrawOn(eyes[i]);
         }
+    sTopDark = sHeldTop.dark;
     bool stereo = sHeldTop.eye[1] != NULL && sTopRight;
     if (stereo != sStereo) { gfxSet3D(stereo); sStereo = stereo; }
     CtrLog_Write(CTR_LOG_VIDEO, "top screen: the held frame back from under the Pokédex");
@@ -12427,10 +12466,21 @@ void CtrVideo_Present(void)
         sStats.mode = CTR_MODE_OTHER;
         sStats.route = CTR_ROUTE_BLANK;
         sStats.gapMs = sStats.arriveMs = sStats.prepMs = 0.0f;
-        /* The Pokédex gone with the top still held: its frame back, once. */
-        if (sHeldTop.kept && sHoldTop && C3D_FrameBegin(C3D_FRAME_SYNCDRAW))
+        bool putBack = sHeldTop.kept && sHoldTop;
+        if (sHeldFrames < LOOK_DOWN_AFTER) ++sHeldFrames;
+        /* The Pokédex gone with the top still held: its frame back, once,
+         * darkened if it was not yet; or darkened once the hold has lasted.
+         * The frame stays in the top's buffer, so it is drawn over once. */
+        if ((putBack || (!sTopDark && sHeldFrames >= LOOK_DOWN_AFTER)) && C3D_FrameBegin(C3D_FRAME_SYNCDRAW))
         {
-            HeldTopPutBack();
+            if (putBack) HeldTopPutBack();
+            if (!sTopDark)
+            {
+                sSceneOn = NULL;   /* the buffer read back afresh, not from the colour cache */
+                DrawLookDown(sTop);
+                if (sStereo && sTopRight) DrawLookDown(sTopRight);
+                sTopDark = true;
+            }
             C3D_FrameEnd(0);
         }
         else
@@ -12438,6 +12488,7 @@ void CtrVideo_Present(void)
         ++sStats.frames;
         return;
     }
+    sHeldFrames = 0;
     /* Wait for previous GPU work before editing the atlas. C3D owns VBlank
      * pacing and swap: no gfxSwapBuffers/gspWaitForVBlank in this path. */
     /* Outside the frame, where deleting a render target may wait for the GPU. */
@@ -12921,6 +12972,8 @@ void CtrVideo_Present(void)
         if (bottom) RenderEye(sBottom, clear, 0.0f);
         if (dexTop) RenderDexTop(stereo, slider);
         else if (sHeldTop.kept && sHoldTop) HeldTopPutBack();
+        /* Drawn afresh: darkened again below if it is to be. */
+        if (dexTop) sTopDark = false;
     }
     else if (sTransition && !blank)
     {
@@ -13019,6 +13072,17 @@ void CtrVideo_Present(void)
                     VoxelSwoop_Step(&sSwoop);
             }
         }
+    }
+    /* The top drawn afresh, or kept as it was (down): darkened on it once. */
+    if (!down) sTopDark = false;
+    if (sLookDown && !sTopDark)
+    {
+        sSceneOn = NULL;
+        DrawLookDown(sTop);
+        if (stereo || (down && !dexTop && sStereo && sTopRight)) DrawLookDown(sTopRight);
+        /* The frame shown has it: a hold from here (X, then the party)
+         * keeps this one, not to be darkened again. */
+        sTopDark = true;
     }
 #if CTR_SHOW_FPS
     if (CtrSettings_ShowFps())

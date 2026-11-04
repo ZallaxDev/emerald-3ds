@@ -105,6 +105,9 @@ void CtrVideo_Present(void);
 /* Keep showing the last top-screen frame instead of the game's screen. */
 void CtrVideo_HoldTop(bool hold);
 bool CtrVideo_TopHeld(void);
+/* The top screen darkened under an arrow to the bottom screen, which has the
+ * player's attention (a held top is darkened anyway, a few frames in). */
+void CtrVideo_LookDown(bool on);
 /* OAM entries belonging to field weather, tagged while BuildOamBuffer sorts sprites. */
 /*
  * The true y of the sprite that wrote OAM entries [first, end). OAM keeps 8
