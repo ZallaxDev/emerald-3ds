@@ -75,15 +75,18 @@ STATIC_ASSERT(PASS_H == H, passTopHeight);
 #define PASS_ART_GY 32
 #define PASS_ART_GW 128
 #define PASS_ART_GH 72
-#define PASS_ART_DW 216
+#define PASS_ART_DW (PASS_ART_GW * PASS_MAP_HI)
 #define PASS_ART_DH (PASS_ART_GH * PASS_ART_DW / PASS_ART_GW)
 #define PASS_ART_X 10
 #define PASS_ART_Y (44 + (150 - PASS_ART_DH) / 2)
+/* The picture on its plate: the plate is PASS_ART_INSET taller than it on
+ * each side, so it sits in the plate's middle. */
+#define PASS_ART_INSET 4
 /* A point of the game's map screen, and a sprite's size, on the picture. */
 #define PASS_ART_SX(gx) (PASS_ART_X + ((gx) - PASS_ART_GX) * PASS_ART_DW / PASS_ART_GW)
 #define PASS_ART_SCALE(n) ((n) * PASS_ART_DW / PASS_ART_GW)
-#define PASS_NAMES_X 236
-#define PASS_NAMES_W 160
+#define PASS_NAMES_X 278
+#define PASS_NAMES_W 118
 #define PASS_NAMES_Y 42
 #define PASS_NAME_H 20
 #define PASS_NAME_STEP 22
@@ -107,7 +110,7 @@ static u16 sPassGrab[PASS_RIGHT_W * PASS_THUMB_H];
 /* The map's picture on its button, made smaller once (column by column). */
 static u16 *sPassMapSmall;
 /* The map's picture at PASS_MAP_HI times its size, edges kept (PassMapSharpen). */
-#define PASS_MAP_HI 3
+#define PASS_MAP_HI 2
 static u16 *sPassMapHi;
 
 /* ------------------------------------------------------------------------ */
@@ -555,7 +558,8 @@ static void PassDrawMap(const PassScene *sc, bool8 lit)
 
         GetMapName(name, MAPSEC_BATTLE_FRONTIER, 0);
         PassHeader(name, PassCancel(), FALSE);
-        ay = Plate(PASS_ART_X - 6, PASS_ART_Y - 4, PASS_ART_DW + 12, PASS_ART_DH + 8, sSlate,
+        ay = PASS_ART_INSET + Plate(PASS_ART_X - 6, PASS_ART_Y - PASS_ART_INSET, PASS_ART_DW + 12,
+                                    PASS_ART_DH + 2 * PASS_ART_INSET, sSlate,
                    PLATE_STATE_NORMAL);
         if (sPassMapHi)
             PassBlit(sPassMapHi, PASS_ART_GW * PASS_MAP_HI, PASS_ART_GH * PASS_MAP_HI, PASS_ART_X, ay,
@@ -958,12 +962,12 @@ static void PassFreeAll(void)
 /* The Frontier map's picture from the game's art for the map screen: the
  * part frontier_pass.c shows there, colour 0 its backdrop. */
 /*
- * The map's picture three times as big, its edges kept (the AdvMAME3x /
- * Scale3x rule: a pixel's corner takes its neighbours' colour where two of
- * them meet along a diagonal), so drawn at 1.5x it is the 3x picture halved:
- * its roads, shores and buildings get smooth, sharp edges instead of the
- * GBA's pixels made blurry by the box filter. Made from the game's own tiles
- * as they were decoded, once a pass.
+ * The map's picture twice as big, its edges kept (the EPX / Scale2x rule: a
+ * pixel's corner takes the colour two of its neighbours meet in along a
+ * diagonal), and drawn at exactly that size: its roads, shores and
+ * buildings get clean diagonal edges instead of the GBA's steps, with no
+ * filter blurring them. Made from the game's own tiles as they were
+ * decoded, once a pass.
  */
 static void PassMapSharpen(void)
 {
@@ -976,25 +980,21 @@ static void PassMapSharpen(void)
     for (int y = 0; y < h; ++y)
         for (int x = 0; x < w; ++x)
         {
-            int xl = x > 0 ? x - 1 : x, xr = x < w - 1 ? x + 1 : x;
-            int yu = y > 0 ? y - 1 : y, yd = y < h - 1 ? y + 1 : y;
             const u16 *p = sPassMapPic;
-            u16 A = p[yu * w + xl], B = p[yu * w + x], C = p[yu * w + xr];
-            u16 D = p[y * w + xl], E = p[y * w + x], F = p[y * w + xr];
-            u16 G = p[yd * w + xl], Hh = p[yd * w + x], I = p[yd * w + xr];
+            u16 B = p[(y > 0 ? y - 1 : y) * w + x], D = p[y * w + (x > 0 ? x - 1 : x)];
+            u16 E = p[y * w + x], F = p[y * w + (x < w - 1 ? x + 1 : x)];
+            u16 Hh = p[(y < h - 1 ? y + 1 : y) * w + x];
             u16 *o = sPassMapHi + y * PASS_MAP_HI * hw + x * PASS_MAP_HI;
-            bool8 db = D == B && D != Hh && B != F, bf = B == F && B != D && F != Hh;
-            bool8 dh = D == Hh && D != B && Hh != F, hf = Hh == F && D != Hh && B != F;
 
-            o[0] = db ? D : E;
-            o[1] = (db && E != C) || (bf && E != A) ? B : E;
-            o[2] = bf ? F : E;
-            o[hw] = (db && E != G) || (dh && E != A) ? D : E;
-            o[hw + 1] = E;
-            o[hw + 2] = (bf && E != I) || (hf && E != C) ? F : E;
-            o[2 * hw] = dh ? D : E;
-            o[2 * hw + 1] = (dh && E != I) || (hf && E != G) ? Hh : E;
-            o[2 * hw + 2] = hf ? F : E;
+            if (B != Hh && D != F)
+            {
+                o[0] = D == B ? D : E;
+                o[1] = B == F ? F : E;
+                o[hw] = D == Hh ? D : E;
+                o[hw + 1] = Hh == F ? F : E;
+            }
+            else
+                o[0] = o[1] = o[hw] = o[hw + 1] = E;
         }
 }
 
