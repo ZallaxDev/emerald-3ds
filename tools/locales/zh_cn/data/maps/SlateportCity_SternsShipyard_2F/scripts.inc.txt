@@ -1,0 +1,4 @@
+[SlateportCity_SternsShipyard_2F_Text_FloatsBecauseBuoyancy]
+你觉得用沉重的铁制成的船\n能浮在水上很奇怪吗？\p它是因为浮力原理\n浮起来的。$
+[SlateportCity_SternsShipyard_2F_Text_ShipDesignMoreLikeBuilding]
+虽说是组装交通工具，\n设计一条大船\l更像是建造大楼。$

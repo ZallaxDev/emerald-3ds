@@ -43,3 +43,11 @@ __pycache__/
 session-*.md
 .public-denylist
 .DS_Store
+
+# The CJK face the Chinese sheets are rendered from is not committed: it is a
+# third-party font (see 3ds_port/assets/fonts/README.md), fetched by whoever
+# regenerates the sheets.
+3ds_port/assets/fonts/*.otf
+3ds_port/assets/fonts/*.ttf
+# Scratch area for the Chinese work (build scripts, reference trees).
+.cn-build/

@@ -1,0 +1,10 @@
+[MossdeepCity_House4_Text_BrotherLikesToFindBases]
+我弟弟喜欢寻找\n别人的秘密基地。$
+[MossdeepCity_House4_Text_BrotherLikesToVisitBasesAndBattle]
+我弟弟喜欢寻找\n别人的秘密基地，\l和他们战斗。$
+[MossdeepCity_House4_Text_MakeSecretBase]
+你造一个秘密基地吧，\n然后我就去找出来！$
+[MossdeepCity_House4_Text_Skitty]
+向尾喵：喵呀？$
+[MossdeepCity_House4_Text_YouMadeSecretBaseNearX]
+是你在{STR_VAR_1}附近\n建的秘密基地吗？$

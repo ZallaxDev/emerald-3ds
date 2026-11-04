@@ -1,0 +1,6 @@
+[EverGrandeCity_PhoebesRoom_Text_Defeat]
+哦，天呀。\n我输了。$
+[EverGrandeCity_PhoebesRoom_Text_IntroSpeech]
+啊哈哈哈！\p我是四天王中的芙蓉。\n我在送神山进行修行。\p在修行过程中，我得到了能与\n幽灵宝可梦亲密交流的能力。\p没错，我和宝可梦之间的\n牵绊非常地深。\p那么，来试试看你有没有能力\n伤到我的宝可梦吧！$
+[EverGrandeCity_PhoebesRoom_Text_PostBattleSpeech]
+你和你的宝可梦也有着\n不容置疑的牵绊啊。\p我竟然没看出来这一点，\n也难怪是我输了。\p嗯，我想看看到你们的牵绊\n能带你们到多远。\p前进吧，继续去下一个房间。$

@@ -1,0 +1,6 @@
+[EverGrandeCity_Text_CitySign]
+这里是彩悠市。\n“鲜花、海洋与宝可梦的乐园。”$
+[EverGrandeCity_Text_EnteringPokemonLeague]
+由此进入宝可梦联盟\n中心大门$
+[EverGrandeCity_Text_EnteringVictoryRoad]
+由此进入冠军之路$

@@ -1,0 +1,2 @@
+[AbandonedShip_HiddenFloorRooms_Text_BrightShinyTrash]
+金光闪闪！\n可惜只是些垃圾……$

@@ -1,0 +1,16 @@
+[LilycoveCity_DepartmentStore_1F_Text_Azumarill]
+露力丽：玛丽露丽露丽！$
+[LilycoveCity_DepartmentStore_1F_Text_BuyingSomethingForAzumarill]
+我要给我赢了华丽大赛的露力丽\n买些东西奖励它。$
+[LilycoveCity_DepartmentStore_1F_Text_FloorNamesSign]
+1F： 服务前台\n     彩票中心\p2F： 训练家地带\p3F： 战斗收藏\p4F： 招式学习器中心\p5F： 宝可梦玩偶世界\p天台： 屋顶广场$
+[LilycoveCity_DepartmentStore_1F_Text_IBuyAllSortsOfThings]
+每次来百货，\n我都会买大包小包一大堆东西回家，\l这是我的快乐。$
+[LilycoveCity_DepartmentStore_1F_Text_MomBuyingMeFurniture]
+今天妈妈要给我\n买些漂亮的家具。$
+[LilycoveCity_DepartmentStore_1F_Text_SpreadWordAboutWirelessComm]
+我想把无线连接的乐趣\n传播出去。$
+[LilycoveCity_DepartmentStore_1F_Text_WelcomeToDeptStore]
+欢迎来到水静百货。$
+[LilycoveCity_DepartmentStore_1F_Text_WirelessCommIsFun]
+无线连接很有趣\n不是吗？\p我认为它把以前很多的不可能\n变成了可能。\p例如，你现在可以和不同的人\n进行交换。\p我认为它太有趣了！$

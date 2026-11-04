@@ -1,0 +1,10 @@
+[FallarborTown_BattleTentLobby_Text_CameToCampOut]
+我听说过一些关于帐篷的事，\n所以才出来宿营，\p但我没想到现在的帐篷\n会这么豪华！\p既然都来了，就进去试试\n放手一搏吧！$
+[FallarborTown_BattleTentLobby_Text_FallarborTentMyFavorite]
+你知道吗，不同城镇的对战帐篷\n所举行的比赛也不同。\p我最喜欢的就是秋叶镇的\n对战帐篷。\p训练家凭借着自己对宝可梦的信任，\n努力赢得比赛，太令人激动了！$
+[FallarborTown_BattleTentLobby_Text_MakeThinkImJustKid]
+哼哼哼哼哼。\p我要让大家以为我\n只是个孩子而轻视我，\p然后让他们大吃一惊，\n拔得头筹！$
+[FallarborTown_BattleTentLobby_Text_ScottLookingForSomeone]
+亚希达：嗨，{PLAYER}{KUN}！\n你也来这里的对战帐篷了！\p这里的人看上去大多都\n比较悠然自得，\p但你知道，\n我在寻找的是有……\p怎么说呢……\p胸怀强烈的求胜\n渴望与决心的人。\p如果有那样的训练家，\n我马上就……\p啊！没什么！\n继续加油吧！$
+[FallarborTown_BattleTentLobby_Text_ScottMakeChallenge]
+亚希达：与其同我闲聊浪费时间，\n何不试着去挑战一下呢？$

@@ -1,0 +1,4 @@
+[sText_MysteryGiftBattleCountCard]
+感谢使用\n神秘礼物系统。\p您的对战积分卡保留着\n您和其他拥有相同卡的\l训练家对战录像。\p寻找并和拥有与您有相同卡的训练家\n进行对战吧。\p您可以检查最终排名\n通过阅读新闻。\p请一定要试试看！$
+[sText_MysteryGiftBattleCountCard_WonPrize]
+感谢使用\n神秘礼物系统。\p恭喜！\p您获得了赢取\n3场对战的奖励！\p希望您再接再厉\n进行更多对战。$

@@ -1,0 +1,8 @@
+[sText_AuroraTicketBagFull]
+哦，抱歉，{PLAYER}。\n您的包包里放重要物品的口袋满了。\p请存一些东西到电脑\n然后回来拿这个吧。$
+[sText_AuroraTicketForYou]
+感谢使用\n神秘礼物系统。\p您一定是{PLAYER}。\n这是给您的票。$
+[sText_AuroraTicketThankYou]
+感谢使用\n神秘礼物系统。$
+[sText_AuroraTicketUseAtPort]
+看起来是在\n水静市港口使用的。\p为什么不试一下\n看看它到底怎么用？$

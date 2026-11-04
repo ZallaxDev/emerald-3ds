@@ -1,0 +1,2 @@
+[Route106_Text_TrainerTips]
+有用的公告牌！\p关于钓鱼的建议：\n当鱼咬钩时，按下A键。$

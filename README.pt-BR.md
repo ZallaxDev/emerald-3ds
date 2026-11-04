@@ -9,7 +9,7 @@
   Tradução do port nativo para Nintendo 3DS, com a nomenclatura oficial brasileira.
 </p>
 
-<p align="center"><a href="README.md">English</a> · Português</p>
+<p align="center"><a href="README.md">English</a> · Português · <a href="README.zh-CN.md">简体中文</a></p>
 
 ---
 

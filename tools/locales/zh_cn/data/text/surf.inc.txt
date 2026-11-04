@@ -1,0 +1,4 @@
+[gText_PlayerUsedSurf]
+{STR_VAR_1}使出了冲浪！$
+[gText_WantToUseSurf]
+水面呈现出一片湛蓝。\n要使用冲浪吗？$

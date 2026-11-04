@@ -1,0 +1,36 @@
+[Route119_Text_BrendanDefeat]
+唔……\n你进步得真快啊。$
+[Route119_Text_BrendanExplainFly]
+小悠：使用飞翔的话，\n宝可梦会瞬间带你飞回\l曾经去过的城镇，\p但必须先拿到茵郁市的\n道馆徽章才能用。\p好了，\n我先走一步啦！$
+[Route119_Text_BrendanIllGiveYouThis]
+小悠：我想你无论去哪儿\n找宝可梦都没问题。\p这个给你，\n试试吧。$
+[Route119_Text_BrendanIntro]
+小悠：{PLAYER}！\n来这里找宝可梦吗？\p让我检验下你的实力\n成长得如何了！\p那么！\n来对战吧！$
+[Route119_Text_CanYourMonMakeSecretBase]
+你的宝可梦能用秘密之力\n在一大团草中打出一个\l秘密基地吗？$
+[Route119_Text_DontGoNearWeatherInstitute]
+放哨的任务实在太无聊了。\p喂，你！\n别跑到天气研究所附近去。$
+[Route119_Text_MayDefeat]
+呜哇！\n{PLAYER}{KUN}变得好强！\p我之前还担心你会不会\n训练得不够呢。$
+[Route119_Text_MayExplainFly]
+小遥：使用飞翔的话，\n宝可梦会瞬间带你飞回\l曾经去过的城镇，\p但必须先拿到茵郁市的\n道馆徽章才能够使用，\l这很重要，不要忘了哦！\p偶尔也该飞回未白镇\n回家里看看，\p你妈妈会担心你的，\n{PLAYER}{KUN}。\p好了，下次再见！$
+[Route119_Text_MayIntro]
+小遥：{PLAYER}{KUN}！\n你去哪儿了？我找你很久了！\p让我来看看你\n变强了多少！\p准备好宝可梦了吗？\n你肯定没问题的，接招吧！$
+[Route119_Text_MayPresentForYou]
+小遥：看来完全不用担心嘛！\n保持这个势头吧！\p来！\n这个送给你。$
+[Route119_Text_RouteSignFortree]
+119号道路\n{RIGHT_ARROW} 茵郁市$
+[Route119_Text_ScottWayToGoBeSeeingYou]
+亚希达：哈哈哈哈！\n干得漂亮，{PLAYER}{KUN}！\p我刚刚遇到了个\n骑着自行车的训练家。\p你刚刚打败了那个训练家对吧？\n不用想都知道是你。\p那孩子气得脸红红的，\n好像很不甘心。\p我们看起来很有缘呢。\n你现在要去茵郁市道馆是吗？\p相信你一定会表现出色。\n好了，回头见！$
+[Route119_Text_ScottYouWonAtFortreeGym]
+…… …… ……\n…… …… ……哔！\p亚希达：嗨，{PLAYER}{KUN}，是我！\p你果然如我所料，\n赢下了茵郁市道馆。\p你的实力……\n或许正是我一直在找的训练家。\p记住我是你的头号粉丝，\n我会一直默默为你加油的。\l继续加油！\p…… …… ……\n…… …… ……咔哒！$
+[Route119_Text_StayAwayFromWeatherInstitute]
+我们在这里放哨。\p喂，你！别接近天气研究所，\n那儿不安全。$
+[Route119_Text_TallGrassSnaresBikeTires]
+切……\n过不去……\p长草会卷进自行车的轮胎里，\n不可能骑车过去。$
+[Route119_Text_ThoughtFlyByCatchingBirdMons]
+我本以为所谓飞翔是指\n捉一大群鸟宝可梦，\l然后想办法挂在它们身上。\p但实际上飞翔是\n一种秘传招式！\p我要是早点知道\n就好了……$
+[Route119_Text_TrainerTipsDecoration]
+有用的公告牌！\p秘密基地里面\n最多只能放16个\l装饰物品和家具。\p用你最喜欢的\n物品装扮出你自己的\l秘密基地吧。$
+[Route119_Text_WeatherInstitute]
+天气研究所$

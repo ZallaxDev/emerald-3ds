@@ -1,0 +1,12 @@
+[Route123_Text_BerryMastersHouse]
+树果名人的家$
+[Route123_Text_CheckTreesWithMyGrassMon]
+我用草属性宝可梦\n检查树木。我就像树的医生。$
+[Route123_Text_LoveGrassMonsHaveAny]
+我喜欢草属性宝可梦！\p你有草属性宝可梦吗？$
+[Route123_Text_RouteSign]
+{RIGHT_ARROW}123号道路\n{LEFT_ARROW}118号道路$
+[Route123_Text_RouteSignMtPyre]
+{UP_ARROW}送神山\n“胆小者禁止进入。”$
+[Route123_Text_YouLikeGrassMonsTooHaveThis]
+哦？\p你也喜欢草属性\n宝可梦是吗？\p太高兴了，这个给你！\n这是我们友情的象征。$

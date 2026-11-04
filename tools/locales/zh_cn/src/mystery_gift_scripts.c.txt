@@ -1,0 +1,2 @@
+[sText_CanceledReadingCard]
+读卡已取消。

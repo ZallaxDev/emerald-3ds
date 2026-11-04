@@ -1,0 +1,6 @@
+[Route112_CableCarStation_Text_CableCarReadyGetOn]
+登山缆车即将发车。\n您要乘坐吗？$
+[Route112_CableCarStation_Text_RideAnotherTime]
+欢迎再次乘坐。$
+[Route112_CableCarStation_Text_StepThisWay]
+这边请。$

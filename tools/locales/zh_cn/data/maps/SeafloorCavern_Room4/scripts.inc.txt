@@ -1,0 +1,12 @@
+[SeafloorCavern_Room4_Text_Grunt3Defeat]
+输了……$
+[SeafloorCavern_Room4_Text_Grunt3Intro]
+什么人？\n从哪儿进来的？$
+[SeafloorCavern_Room4_Text_Grunt3PostBattle]
+根本找不到出口！\p先说好——我才没害怕！$
+[SeafloorCavern_Room4_Text_Grunt4Defeat]
+任务失败！$
+[SeafloorCavern_Room4_Text_Grunt4Intro]
+什么人？\n想上哪儿去？$
+[SeafloorCavern_Room4_Text_Grunt4PostBattle]
+我那废物搭档\n把地图忘潜艇里了！\p你说这货有什么用？$

@@ -106,17 +106,21 @@ endif
 CPPFLAGS += -DCTR_SHOW_FPS=$(SHOW_FPS)
 GAMEFLAGS += -DCTR_SHOW_FPS=$(SHOW_FPS)
 # The port's own interface: en follows the game's language, pt_br shows it in
-# Brazilian Portuguese over the English game (include/3ds_locale.h).
+# Brazilian Portuguese over the English game, zh_cn in Simplified Chinese
+# (include/3ds_locale.h).
 PORT_LANG ?= en
+CTR_LANG_PT_BR := 0
+CTR_LANG_ZH_CN := 0
 ifeq ($(PORT_LANG),pt_br)
 CTR_LANG_PT_BR := 1
+else ifeq ($(PORT_LANG),zh_cn)
+CTR_LANG_ZH_CN := 1
 else ifeq ($(PORT_LANG),en)
-CTR_LANG_PT_BR := 0
 else
-$(error PORT_LANG must be en or pt_br)
+$(error PORT_LANG must be en, pt_br or zh_cn)
 endif
-CPPFLAGS += -DCTR_LANG_PT_BR=$(CTR_LANG_PT_BR)
-GAMEFLAGS += -DCTR_LANG_PT_BR=$(CTR_LANG_PT_BR)
+CPPFLAGS += -DCTR_LANG_PT_BR=$(CTR_LANG_PT_BR) -DCTR_LANG_ZH_CN=$(CTR_LANG_ZH_CN)
+GAMEFLAGS += -DCTR_LANG_PT_BR=$(CTR_LANG_PT_BR) -DCTR_LANG_ZH_CN=$(CTR_LANG_ZH_CN)
 CPPFLAGS += -DCTR_DATA_BACKEND=$(DATA_BACKEND)
 # Legacy code has existing warnings; platform code remains -Werror.
 GAMECFLAGS := $(filter-out -Werror,$(CFLAGS)) -fsigned-char -fno-strict-aliasing
@@ -188,8 +192,17 @@ build/config: FORCE
 	@cmp -s build/config.new $@ || cp build/config.new $@
 	@rm -f build/config.new
 
-.PHONY: all clean verify release pak devdata
+.PHONY: all clean verify release pak devdata sheets
 all: $(TARGET).3dsx
+
+# The Chinese glyph sheets are .latfont, converted from this port's PNGs by the
+# upstream Makefile's graphics_file_rules.mk; nothing in this port's own
+# Makefile produces them, so a build that skipped this step would quietly reuse
+# whatever .latfont an earlier run left behind (the game would keep rendering
+# the old face). Rebuild them here, and only when a PNG is newer.
+SHEETS := graphics/fonts/chinese_small.latfont graphics/fonts/chinese_normal.latfont
+sheets:
+	$(MAKE) -C $(ROOT) $(SHEETS)
 
 build/%.o: src/%.c Makefile
 	@mkdir -p $(dir $@)

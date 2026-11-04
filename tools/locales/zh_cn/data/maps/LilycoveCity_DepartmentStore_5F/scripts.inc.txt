@@ -1,0 +1,8 @@
+[LilycoveCity_DepartmentStore_5F_Text_ClosedRooftopForWeather]
+我想他们因为天气异常\n而关闭了顶楼。$
+[LilycoveCity_DepartmentStore_5F_Text_GettingDollInsteadOfPokemon]
+我还没到能训练宝可梦的年龄，\n所以还是买个玩偶吧。$
+[LilycoveCity_DepartmentStore_5F_Text_PlaceFullOfCuteDolls]
+这里都是可爱的玩偶。\p不止是孩子，\n连我自己都想要。$
+[LilycoveCity_DepartmentStore_5F_Text_SellManyCuteMatsHere]
+这里有很多可爱的\n垫子出售，\p我该买哪个？\n也许可以都买下来……$

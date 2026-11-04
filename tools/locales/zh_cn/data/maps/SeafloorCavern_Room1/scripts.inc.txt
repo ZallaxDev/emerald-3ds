@@ -1,0 +1,12 @@
+[SeafloorCavern_Room1_Text_Grunt1Defeat]
+我想回家了……$
+[SeafloorCavern_Room1_Text_Grunt1Intro]
+小鬼别在这里碍事！\n赶紧回家去！$
+[SeafloorCavern_Room1_Text_Grunt1PostBattle]
+好想升职当干部，\n那样就能使唤小卒们了……$
+[SeafloorCavern_Room1_Text_Grunt2Defeat]
+失败让我更难受！$
+[SeafloorCavern_Room1_Text_Grunt2Intro]
+那潜水艇……里面也太窄了！\n挤得真难受！$
+[SeafloorCavern_Room1_Text_Grunt2PostBattle]
+我们抢来的那潜水艇\n坐起来简直折磨人！\l里面挤得要命！$

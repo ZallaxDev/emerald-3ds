@@ -16,6 +16,9 @@ Where every part of Emerald 3DS comes from, and what ships where.
 | Builder (`builder/`) | Emerald 3DS | `LICENSE-PORT.md` | yes | standalone executable |
 | libctru, citro2d, citro3d | devkitPro | zlib | no | linked |
 | Python, Tk, Pillow, PyInstaller runtime | their projects | PSF / BSD / HPND / GPL+exception | no | inside the builder |
+| Brazilian Portuguese translation (`tools/locales/pt_br/`) | Carlos Mozart (AllGenWiki), written for this port | this project's own text, written for the port | yes | compiled into the pt_br 3DSX |
+| Simplified Chinese translation (`tools/locales/zh_cn/`) | [rh-hideout-chinese/pokeemerald-expansion](https://github.com/rh-hideout-chinese/pokeemerald-expansion), a fan translation | **no licence stated**; a copy with attribution, removed if its authors object (see `NOTICE.md`) | yes | a `PORT_LANG=zh_cn` build; `tools/build_release.py` has no Chinese variant yet |
+| Chinese glyph sheets (`3ds_port/assets/fonts/chinese_*.png`) | assembled by `3ds_port/scripts/gen_chinese_font.py` from rh-hideout-chinese's committed sheets (Han characters and full-width marks) | **same status as its translation**: no licence stated, a copy with attribution, removed on objection (see `NOTICE.md`) | yes | engine file in the 3DSX |
 
 ## Rules the tooling enforces
 

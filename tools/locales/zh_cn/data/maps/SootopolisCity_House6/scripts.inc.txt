@@ -1,0 +1,10 @@
+[SootopolisCity_House6_Text_DontWantThisDoll]
+你肯定吗？\n不想要这个玩偶？$
+[SootopolisCity_House6_Text_FirstGuestInWhileTakeDoll]
+你好！你是我们\n第一个客人，\p你照亮了我的一天，\n这个大吼吼鲸玩偶送给你。$
+[SootopolisCity_House6_Text_IllHoldItForYou]
+嗯？你想要，但现在还不能拿？\n那好，我先替你保管。$
+[SootopolisCity_House6_Text_LovePlushDolls]
+我喜欢毛绒玩偶！$
+[SootopolisCity_House6_Text_TakeGoodCareOfIt]
+要保存好它！$

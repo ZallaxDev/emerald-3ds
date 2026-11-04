@@ -1,0 +1,10 @@
+[SkyPillar_Outside_Text_DoorIsClosed]
+门关上了。$
+[SkyPillar_Outside_Text_EarthquakeNotMomentToWaste]
+米可利：是地震！\p不能再耽搁了！\n我们必须抓紧时间！$
+[SkyPillar_Outside_Text_GotToGoBackForSootopolis]
+米可利：不妙……\p天气异常居然已经\n蔓延到这一带了……\p{PLAYER}{KUN}。\p烈空坐应该还在\n上面的更高处。\p我担心琉璃市的安危，\n得先赶回去。\p一切就托付给你了，\n拜托了！$
+[SkyPillar_Outside_Text_OpenedDoorToSkyPillar]
+米可利：哎呀，\n真是抱歉！\p我太着急，\n竟没注意到你被落下了！\p我已经打开了天空之柱的大门。\p{PLAYER}{KUN}，我们走吧！$
+[SkyPillar_Outside_Text_SituationGettingWorse]
+米可利：嗯……\n情况越来越糟糕了……$

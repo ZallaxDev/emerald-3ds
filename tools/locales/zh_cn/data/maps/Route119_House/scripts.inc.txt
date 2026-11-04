@@ -1,0 +1,4 @@
+[Route119_House_Text_RumorAboutCaveOfOrigin]
+我听说有一个洞窟叫做\n觉醒神殿，\p传说宝可梦的灵魂会\n在那里复生。这样的事情\l真的有可能发生吗？$
+[Route119_House_Text_Wingull]
+长翅鸥：欧雷！$

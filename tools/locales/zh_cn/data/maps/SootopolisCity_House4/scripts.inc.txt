@@ -1,0 +1,6 @@
+[SootopolisCity_House4_Text_AncientTreasuresWaitingInSea]
+听着，我要告诉你\n一些好事。\p据说这附近的海里\n有一座古代遗迹，\p那里面一定有\n等待被发掘的宝藏。$
+[SootopolisCity_House4_Text_Azumarill]
+玛力露丽：马鹿马鹿。$
+[SootopolisCity_House4_Text_StrollUnderwaterWithPokemon]
+古代的宝藏……\p如果真的有当然好，\n但就算没有，\l和宝可梦一起进行一次\l海底旅行也不错。$

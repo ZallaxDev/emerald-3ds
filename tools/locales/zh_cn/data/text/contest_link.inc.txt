@@ -1,0 +1,2 @@
+[gText_LinkStandby4]
+正在等待连接！

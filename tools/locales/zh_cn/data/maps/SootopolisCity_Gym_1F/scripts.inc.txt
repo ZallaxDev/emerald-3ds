@@ -1,0 +1,32 @@
+[SootopolisCity_Gym_1F_Text_ExplainRainBadgeTakeThis]
+有了雨滴徽章，\n你所有的宝可梦都会完全\l服从你的每个指示。\p你也能使用秘传招式攀瀑\n攀登瀑布了。\p然后，为了不让你\n忘记这场对战，收下这个……$
+[SootopolisCity_Gym_1F_Text_ExplainWaterPulse]
+我交给你的这个招式学习器\n里面是水之波动。\p使用它时偶尔会因为超声波\n使目标陷入混乱。\p…… …… ……$
+[SootopolisCity_Gym_1F_Text_GoGetFortreeBadge]
+在丰缘地区仅剩\n最后1枚徽章了。\p如果你想挑战宝可梦联盟，\n你必须先获得茵郁市道馆的徽章。$
+[SootopolisCity_Gym_1F_Text_GymGuideAdvice]
+嗨，怎么样，向冠军目标\n冲刺的{PLAYER}？\p琉璃市的道馆馆主亚当\n是使用水属性宝可梦的大师，\p但要走到他面前，\n还要先通过冰结成的地面……\p很抱歉，\n我只能给你这一点建议。\p这条路，\n你要凭自己的智慧通过！$
+[SootopolisCity_Gym_1F_Text_GymGuidePostVictory]
+哟，被誉为丰缘第一的亚当\n都输给你了！\p好了！\n检查一下你的训练家卡，\p如果你集齐了所有徽章，\n就向宝可梦联盟出发吧！$
+[SootopolisCity_Gym_1F_Text_GymStatue]
+琉璃市宝可梦道馆$
+[SootopolisCity_Gym_1F_Text_GymStatueCertified]
+琉璃市宝可梦道馆\p亚当认可的训练家：\n{PLAYER}$
+[SootopolisCity_Gym_1F_Text_JuanDefeat]
+啊哈哈哈，好，好极了！\n你是赢家！\p在你身上，我看到了能\n克服一切的技巧的华丽光耀。\p然而，与我甚至米可利相比，\n你还欠缺优雅。\p也许我该借你\n一套衣服？\p…… …… ……\n…… …… ……\p哈哈哈，\n我只是在说笑！\p比起我的衣服，\n我更该给你这个，雨滴徽章。$
+[SootopolisCity_Gym_1F_Text_JuanIntro]
+让我来考考你。\n你知道吗？\l啊，我何必如此拐弯抹角呢。\p是我教给了米可利\n关于宝可梦的一切。\p我曾经放弃了道馆馆主的职位，\n将道馆托付给了米可利\p但是现在我又\n不得不回来。\p啊，闲话说得够多了。\n让我们开始比试吧？\p请你见证我们的艺术。\p由我和宝可梦塑造的\n华丽的水之幻影！$
+[SootopolisCity_Gym_1F_Text_JuanPostBattle]
+收集了丰缘地区所有的\n道馆徽章的训练家应该\l朝向最后的目的地前进，\p那就是宝可梦联盟。\p向着丰缘的最东方，\n前往那名为彩悠的岛屿吧。\p那里便是\n宝可梦联盟之所在。$
+[SootopolisCity_Gym_1F_Text_JuanPostRematch]
+亚当：如果我说要收你做徒弟，\n我想你绝对会拒绝。\p我想要把我的外衣\n作礼物送给你，\p但如果我没想错的话，\n你肯定也会拒绝。\p我的朋友，\n这正是你的高贵的表现啊！$
+[SootopolisCity_Gym_1F_Text_JuanPreRematch]
+亚当：啊，这间道馆终于恢复了\n它往日的风和日丽……\p但我们年轻的台风又再度袭来\n考验我们了！\p好的，我的朋友，\n当然！\p只要你想，\n我随时愿意与你共舞一曲！$
+[SootopolisCity_Gym_1F_Text_JuanRematchDefeat]
+啊哈哈哈，你是赢家！\n你又一次打败我了！$
+[SootopolisCity_Gym_1F_Text_JuanRematchNeedTwoMons]
+亚当：啊，这间道馆终于恢复了\n它往日的风和日丽……\p但我们年轻的台风又再度袭来\n考验我们了！\p好的，我的朋友，\n当然！\p只要你想，\n我随时愿意与你共舞一曲！\p啊，不不不，\n你只带了1只宝可梦。\p我希望你能至少\n带2只宝可梦来。$
+[SootopolisCity_Gym_1F_Text_ReceivedRainBadge]
+{PLAYER}从亚当那里\n得到了雨滴徽章。$
+[SootopolisCity_Gym_1F_Text_RegisteredJuan]
+把道馆馆主亚当\n登记到宝可导航里了。$

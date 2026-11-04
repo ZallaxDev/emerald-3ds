@@ -1,0 +1,6 @@
+[SootopolisCity_House2_Text_DidYouKnowAboutMtPyreOrbs]
+送神山……\p在它的顶峰并列着\n两块宝珠，你知道吗？$
+[SootopolisCity_House2_Text_OughtToVisitAndSee]
+是吗？\n也许你该去……$
+[SootopolisCity_House2_Text_YesTwoOrbsSideBySide]
+是的，并列的两块宝珠……\p看着它们摆在那儿……\n心中就会充满宁静……$

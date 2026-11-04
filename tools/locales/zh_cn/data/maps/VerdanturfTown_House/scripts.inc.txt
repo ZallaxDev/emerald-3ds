@@ -1,0 +1,4 @@
+[VerdanturfTown_House_Text_DefeatEliteFourInARow]
+我记得，宝可梦联盟规定\n你要连续跟四天王战斗，\p一旦输了，\n就得从第一个重新开始。$
+[VerdanturfTown_House_Text_TrainersGatherAtPokemonLeague]
+在遥远的彩悠市最深处，\n就是宝可梦联盟的所在地。\p聚集在那里的训练家\n都异乎寻常地强大。$

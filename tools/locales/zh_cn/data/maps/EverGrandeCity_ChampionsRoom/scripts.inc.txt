@@ -1,0 +1,26 @@
+[EverGrandeCity_ChampionsRoom_Text_BirchArriveRatePokedex]
+小田卷博士：看吧？\n我说什么来着，{RIVAL}？\p早就告诉你{PLAYER}{KUN}\n不用我们担心！\p…… …… …… ……\n{PLAYER}{KUN}，你终于做到了。\p当我听说你在橙华道馆\n打败了你的父亲，\l我就预感你可能有机会……\p但是没想到你现在\n真的成为了冠军！\p啊，对了！\p你的图鉴完成得如何了？\n来，让我看一下。$
+[EverGrandeCity_ChampionsRoom_Text_BirchCongratulations]
+小田卷博士：总之恭喜你！\p现在，昂首挺胸地走进\n最后的房间吧！$
+[EverGrandeCity_ChampionsRoom_Text_BrendanAdvice]
+小悠：{PLAYER}！\p挑战冠军前\n需要建议吗……？$
+[EverGrandeCity_ChampionsRoom_Text_BrendanCongratulations]
+小悠：什么？！…… …… ……\n…… …… …… ……\p既然是规定，那也没办法。\p{PLAYER}，去吧！\n恭喜你！$
+[EverGrandeCity_ChampionsRoom_Text_BrendanYouveWon]
+小悠：{PLAYER}……\p你该不会……\n已经打败冠军了？$
+[EverGrandeCity_ChampionsRoom_Text_Defeat]
+我，冠军，输了……\p美妙得令人赞叹！\n优雅得令人眼红！\l这实在是太～辉煌耀眼了！！\p光荣属于你，{PLAYER}{KUN}！\p你是一名真正高贵的\n宝可梦训练家！$
+[EverGrandeCity_ChampionsRoom_Text_IntroSpeech]
+米可利：欢迎你，{PLAYER}{KUN}。\n关于琉璃市的那件事……\l你做得真是太华丽了，\l凭一己之力就扭转了危机。\p哦！\p说是一己之力解决了\n那件事不太妥当，\p应该说你和你的宝可梦\n齐心协力排除万难才是。\p我们训练家通过给予宝可梦道具\n并教授它们对战的新技巧来培育它们，\p但我们自己也从宝可梦\n那里获益良多。\p而这里就是检验像你这样的\n训练家修行成果的地方。\p现在！\p谁是全丰缘最能与自己的宝可梦\n华丽共舞之人？\p此时此处，展示给我看吧！$
+[EverGrandeCity_ChampionsRoom_Text_MayAdvice]
+小遥：{PLAYER}{KUN}！\p挑战冠军前\n给你几个建议……$
+[EverGrandeCity_ChampionsRoom_Text_MayCongratulations]
+小遥：哎……\p…… …… …… ……\n…… …… …… ……\p我开玩笑啦！没关系！\n毕竟是规定嘛！\p{PLAYER}{KUN}！\n真的恭喜你！$
+[EverGrandeCity_ChampionsRoom_Text_MayItsAlreadyOver]
+小遥：咦？\n什么？\p{PLAYER}{KUN}……\n难道说……\l已经结束了？$
+[EverGrandeCity_ChampionsRoom_Text_PostBattleSpeech]
+米可利：你的宝可梦\n在对战中……\p时而轻柔如风，\n时而又迅猛如雷。\p还带着一丝，\n无疑是从你那里耳濡目染所得的，\l轻盈而坚定的优雅。\p甚至连我都为你\n出色的表现而深深地着迷！\p此刻你已站上宝可梦联盟\n光荣的顶峰，\p我宣布你已成为\n丰缘地区的新……$
+[EverGrandeCity_ChampionsRoom_Text_WallaceComeWithMe]
+米可利：{PLAYER}{KUN}……\p不，请容我改口。\p新任冠军！\p跟我来。$
+[EverGrandeCity_ChampionsRoom_Text_WallaceWaitOutside]
+米可利：我很抱歉，不过……\p从这里开始，只有成为冠军的\n训练家才能进入。\p请你和小田卷博士一起\n在外面等候吧。$

@@ -1,0 +1,20 @@
+[Route110_TrickHousePuzzle1_Text_EddieDefeat]
+我输了……$
+[Route110_TrickHousePuzzle1_Text_EddieIntro]
+我只是偶然地走进了\n这间奇怪的房屋……$
+[Route110_TrickHousePuzzle1_Text_EddiePostBattle]
+我迷路了，我输了对战，\n现在我越来越伤心……\l我出不去了……$
+[Route110_TrickHousePuzzle1_Text_RobinDefeat]
+在我出神的时候，我输掉了！$
+[Route110_TrickHousePuzzle1_Text_RobinIntro]
+戏法大王究竟是谁？$
+[Route110_TrickHousePuzzle1_Text_RobinPostBattle]
+你真强！\n你究竟是谁？$
+[Route110_TrickHousePuzzle1_Text_SallyDefeat]
+你这么认真干什么？$
+[Route110_TrickHousePuzzle1_Text_SallyIntro]
+我要用刚刚学会的居合劈\n砍出一条路！$
+[Route110_TrickHousePuzzle1_Text_SallyPostBattle]
+对砍树我永远\n不会厌烦！$
+[Route110_TrickHousePuzzle1_Text_WroteSecretCodeLockOpened]
+{PLAYER}在门上写下\n密码。\p“戏法大王是传说般的人”\n…… …… …… ……\p锁“咔嗒”一声开了！$

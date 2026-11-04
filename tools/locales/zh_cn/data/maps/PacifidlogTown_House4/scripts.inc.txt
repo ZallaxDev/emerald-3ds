@@ -1,0 +1,10 @@
+[PacifidlogTown_House4_Text_PeopleSawHighFlyingPokemon]
+有人说看到一只宝可梦\n从丰缘地区上空飞过。\p它总是在天空中飞吗？\n它不用休息吗？$
+[PacifidlogTown_House4_Text_SkyPokemon]
+空中的宝可梦！\n空中的宝可梦！$
+[PacifidlogTown_House4_Text_WhereDidYouComeFrom]
+你从哪个城镇来？$
+[PacifidlogTown_House4_Text_YesTown]
+什么？\n“是”镇？\p我从没听说过那种地方。$
+[PacifidlogTown_House4_Text_YouHaveToComeFromSomewhere]
+什么？我可不信，\n你肯定是从什么地方来的。\p哎！等等！你不会说\n你是生在海底的吧？$

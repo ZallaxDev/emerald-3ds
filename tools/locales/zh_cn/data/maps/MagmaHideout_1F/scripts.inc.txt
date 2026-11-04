@@ -1,0 +1,12 @@
+[MagmaHideout_1F_Text_Grunt1Defeat]
+我训练时也\n总是迟到！\p虽然不想承认，\n可我真的很弱……$
+[MagmaHideout_1F_Text_Grunt1Intro]
+当熔岩队点名布置任务的时候，\n我们按照排队的顺序各自领到\l重要性不同的守卫任务。\p所以我才被安排到这个角落里——\n因为我点名的时候总是迟到！$
+[MagmaHideout_1F_Text_Grunt1PostBattle]
+好吧，我以后做事会试着\n再努力一点的……$
+[MagmaHideout_1F_Text_Grunt2Defeat]
+啊！\n输了！$
+[MagmaHideout_1F_Text_Grunt2Intro]
+我们老大叫我们挖掘烟囱山，\n所以我们就一直挖啊挖。\p在挖的过程中，\n我们发现了劲爆的东西！\p究竟是什么？\p哈哈哈！\n打赢我的话就告诉你！$
+[MagmaHideout_1F_Text_Grunt2PostBattle]
+我才不会告诉你。\n你到了那里就知道了！\p悬念要保存到最后一刻，\n你说对吧？$

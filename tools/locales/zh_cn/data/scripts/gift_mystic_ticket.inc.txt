@@ -1,0 +1,8 @@
+[sText_MysticTicketBagFull]
+哦，抱歉，{PLAYER}。\n你的包包里放重要物品的口袋满了。\p请存一些东西到电脑\n然后回来拿这个吧。$
+[sText_MysticTicketForYou]
+感谢使用\n神秘礼物系统。\p你一定是{PLAYER}。\n这是给你的票。$
+[sText_MysticTicketThankYou]
+感谢使用\n神秘礼物系统。$
+[sText_MysticTicketUseAtPort]
+看起来是在\n水静市港口使用的。\p为什么不试一下\n看看它到底怎么用？$

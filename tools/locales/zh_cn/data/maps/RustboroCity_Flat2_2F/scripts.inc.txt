@@ -1,0 +1,6 @@
+[RustboroCity_Flat2_2F_Text_DevonWasTinyInOldDays]
+许多年以前，得文只是个\n微不足道的小公司。$
+[RustboroCity_Flat2_2F_Text_GoingToWorkAtDevonToo]
+我爸爸在公司里工作。\p我长大后，\n也要去得文工作。$
+[RustboroCity_Flat2_2F_Text_MyDaddyMadeThisYouCanHaveIt]
+我爸爸在公司里工作。\p他做了这个东西！\n但我不会用，给你吧。$

@@ -1,0 +1,2 @@
+[Text_ThisIsATestSignpostMsg]
+测试用信息，\n看板。$

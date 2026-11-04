@@ -1,0 +1,24 @@
+[PetalburgCity_Text_AreYouATrainer]
+打扰了！\p看你的打扮，\n是个宝可梦训练家吧？$
+[PetalburgCity_Text_AreYouRookieTrainer]
+嗨！莫非你是……\n新人训练家？\p你知道一位训练家来到\n新城镇时首先要做什么吗？\p他们会去看看那里\n有什么样的道馆。$
+[PetalburgCity_Text_CitySign]
+这里是橙华市。\n“人与自然沟通的城市。”$
+[PetalburgCity_Text_FullPartyExplanation]
+假如你已经带了6只宝可梦，\n那么再捕捉1只的话……\p就会通过电脑传送到盒子里。$
+[PetalburgCity_Text_GymSign]
+橙华市宝可梦道馆\n馆主：千里\l“追求强大力量的男人！”$
+[PetalburgCity_Text_ImLookingForTalentedTrainers]
+抱歉，占用你的时间了。\n我在这儿是为了\p寻找天才训练家。$
+[PetalburgCity_Text_ThisIsGymSign]
+这是道馆的标志。\n想要去道馆，找它就对了。$
+[PetalburgCity_Text_ThisIsPetalburgGym]
+看到了吗？这就是橙华市的道馆。$
+[PetalburgCity_Text_WallyHouseSign]
+满充的家$
+[PetalburgCity_Text_WaterReflection]
+我的脸倒映在水面上。\p那也许是张充满希望的笑脸……\p又或是在恐惧中挣扎的\n一张忧郁而沉默的脸……\p你的脸在水里会是什么样？$
+[PetalburgCity_Text_WellMaybeNot]
+…… …… ……\p嗯，也不一定。\n衣服看起来挺干净的……\p可能是个新人训练家，\n或者只个普通的孩子。$
+[PetalburgCity_Text_WhereIsWally]
+我家满充去哪儿了？\p我们得马上出发\n去绿茵镇了……$

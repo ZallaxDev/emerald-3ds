@@ -1,0 +1,4 @@
+[OldaleTown_House2_Text_PokemonLevelUp]
+宝可梦战斗时，\n会获得经验升级变强。$
+[OldaleTown_House2_Text_YoullGoFurtherWithStrongPokemon]
+如果你的宝可梦变强了，\n你就可能走得更远。$

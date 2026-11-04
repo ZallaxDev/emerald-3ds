@@ -1,0 +1,12 @@
+[MagmaHideout_3F_1R_Text_Grunt16Defeat]
+哦，不！\n真是不可轻视！$
+[MagmaHideout_3F_1R_Text_Grunt16Intro]
+我们加入组织，\n为的是帮助老大实现他的雄图伟业。\p我不管你是海洋队的人\n还是偶尔路过的小鬼头，\p敢碍事的家伙\n一个都别想跑！$
+[MagmaHideout_3F_1R_Text_Grunt16PostBattle]
+听好了——\n熔岩队才是正确的！\p别听海洋队的，\n别相信他们说的鬼话！$
+[MagmaHideout_3F_1R_Text_Grunt9Defeat]
+快热晕了……$
+[MagmaHideout_3F_1R_Text_Grunt9Intro]
+我怎么会被分配到\n这个岗位上？\p我的左耳快烤熟了！$
+[MagmaHideout_3F_1R_Text_Grunt9PostBattle]
+在岩浆火山里戴着兜帽\n在你不觉得奇怪吗？$

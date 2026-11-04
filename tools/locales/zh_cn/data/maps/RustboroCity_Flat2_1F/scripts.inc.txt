@@ -1,0 +1,4 @@
+[RustboroCity_Flat2_1F_Text_DevonWorkersLiveHere]
+这里是得文公司员工的\n宿舍楼。$
+[RustboroCity_Flat2_1F_Text_Skitty]
+向尾喵：喵呀呀！$

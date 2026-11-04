@@ -4,6 +4,8 @@
 
 <h1 align="center">Emerald 3DS</h1>
 
+<p align="center"><a href="README.pt-BR.md">Português</a> · <a href="README.zh-CN.md">简体中文</a></p>
+
 <p align="center">
   <strong>Rediscover Hoenn. Two screens. A new perspective.</strong><br>
   A native Nintendo 3DS port with a touch interface and an optional voxel overworld.

@@ -1,0 +1,2 @@
+[sText_MysteryGiftStampCard]
+感谢使用\n图章卡片系统。\p您需要收集更多{STR_VAR_1}\n来填满图章卡片。$
