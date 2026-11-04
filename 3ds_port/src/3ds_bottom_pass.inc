@@ -66,14 +66,22 @@ STATIC_ASSERT(PASS_H == H, passTopHeight);
 #define PASS_MAP_PIC_W 136
 #define PASS_MAP_PIC_H 70
 
-/* The Frontier map: its picture on the game's layer 2 (in its frame), 1.5x
- * at (PASS_ART_X, PASS_ART_Y); the facilities' plates beside it. */
-#define PASS_ART_GX 8
-#define PASS_ART_GY 20
-#define PASS_ART_GW 144
-#define PASS_ART_GH 100
+/* The Frontier map: its picture on the game's layer 2, only the map itself
+ * (not the cream bands and the frame around it on the GBA screen), drawn
+ * PASS_ART_DW x PASS_ART_DH at (PASS_ART_X, PASS_ART_Y), its plate as wide
+ * as before and centred where the taller one was; the facilities' plates
+ * beside it. */
+#define PASS_ART_GX 16
+#define PASS_ART_GY 32
+#define PASS_ART_GW 128
+#define PASS_ART_GH 72
+#define PASS_ART_DW 216
+#define PASS_ART_DH (PASS_ART_GH * PASS_ART_DW / PASS_ART_GW)
 #define PASS_ART_X 10
-#define PASS_ART_Y 44
+#define PASS_ART_Y (44 + (150 - PASS_ART_DH) / 2)
+/* A point of the game's map screen, and a sprite's size, on the picture. */
+#define PASS_ART_SX(gx) (PASS_ART_X + ((gx) - PASS_ART_GX) * PASS_ART_DW / PASS_ART_GW)
+#define PASS_ART_SCALE(n) ((n) * PASS_ART_DW / PASS_ART_GW)
 #define PASS_NAMES_X 236
 #define PASS_NAMES_W 160
 #define PASS_NAMES_Y 42
@@ -547,14 +555,13 @@ static void PassDrawMap(const PassScene *sc, bool8 lit)
 
         GetMapName(name, MAPSEC_BATTLE_FRONTIER, 0);
         PassHeader(name, PassCancel(), FALSE);
-        ay = Plate(PASS_ART_X - 6, PASS_ART_Y - 4, PASS_ART_GW * 3 / 2 + 12, PASS_ART_GH * 3 / 2 + 8, sSlate,
+        ay = Plate(PASS_ART_X - 6, PASS_ART_Y - 4, PASS_ART_DW + 12, PASS_ART_DH + 8, sSlate,
                    PLATE_STATE_NORMAL);
         if (sPassMapHi)
             PassBlit(sPassMapHi, PASS_ART_GW * PASS_MAP_HI, PASS_ART_GH * PASS_MAP_HI, PASS_ART_X, ay,
-                     PASS_ART_GW * 3 / 2, PASS_ART_GH * 3 / 2, FALSE);
+                     PASS_ART_DW, PASS_ART_DH, FALSE);
         else if (sPassMapPic)
-            PassBlit(sPassMapPic, PASS_ART_GW, PASS_ART_GH, PASS_ART_X, ay, PASS_ART_GW * 3 / 2, PASS_ART_GH * 3 / 2,
-                     FALSE);
+            PassBlit(sPassMapPic, PASS_ART_GW, PASS_ART_GH, PASS_ART_X, ay, PASS_ART_DW, PASS_ART_DH, FALSE);
     }
     for (int i = 0; i < CTR_PASS_FACILITIES; ++i)
     {
@@ -573,13 +580,15 @@ static void PassDrawMap(const PassScene *sc, bool8 lit)
         int saved[4];
 
         /* The facility's marker and the player's head on it, clipped to it. */
-        ClipPush(saved, PASS_ART_X, ay, PASS_ART_X + PASS_ART_GW * 3 / 2, ay + PASS_ART_GH * 3 / 2);
+        ClipPush(saved, PASS_ART_X, ay, PASS_ART_X + PASS_ART_DW, ay + PASS_ART_DH);
         if (sc->indicator.w)
-            PassSpriteAt(&sc->indicator, PASS_ART_X + (sc->indicatorX - PASS_ART_GX) * 3 / 2,
-                         ay + (sc->indicatorY - PASS_ART_GY) * 3 / 2, 3, FALSE);
+            PassBlit(sc->indicator.px, sc->indicator.w, sc->indicator.h, PASS_ART_SX(sc->indicatorX),
+                     ay + PASS_ART_SCALE(sc->indicatorY - PASS_ART_GY), PASS_ART_SCALE(sc->indicator.w),
+                     PASS_ART_SCALE(sc->indicator.h), FALSE);
         if (v->mapHead && sc->head.w)
-            PassSpriteAt(&sc->head, PASS_ART_X + (sc->headX - PASS_ART_GX) * 3 / 2,
-                         ay + (sc->headY - PASS_ART_GY) * 3 / 2, 3, FALSE);
+            PassBlit(sc->head.px, sc->head.w, sc->head.h, PASS_ART_SX(sc->headX),
+                     ay + PASS_ART_SCALE(sc->headY - PASS_ART_GY), PASS_ART_SCALE(sc->head.w),
+                     PASS_ART_SCALE(sc->head.h), FALSE);
         ClipPop(saved);
     }
     if (lit)
