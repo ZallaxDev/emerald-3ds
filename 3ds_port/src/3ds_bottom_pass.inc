@@ -107,6 +107,13 @@ static u16 *sPassStatic, *sPassBase, *sPassBackdrop;
 static u16 *sPassMapPic;
 /* A button's picture taken off the canvas to grow it as the game zooms. */
 static u16 sPassGrab[PASS_RIGHT_W * PASS_THUMB_H];
+/* The trainer card over the whole screen: the bottom screen's card made
+ * wider and taller, with every row the game's own card has; its badges in
+ * the band below. A flip folds it towards its middle row as the game's. */
+#define PASS_CARD_X 14
+#define PASS_CARD_Y0 40
+#define PASS_CARD_W 372
+#define PASS_CARD_H 158
 /* The map's picture on its button, made smaller once (column by column). */
 static u16 *sPassMapSmall;
 /* The map's picture at PASS_MAP_HI times its size, edges kept (PassMapSharpen). */
@@ -240,28 +247,6 @@ static void PassBlit(const u16 *src, int sw, int sh, int x, int y, int w, int h,
                                    Div255(u.b * (255 - a) + c.b * a));
                 }
             }
-        }
-    }
-}
-
-/* An opaque picture enlarged pixel by pixel: the zoom, every frame of it. */
-static void PassBlitNearest(const u16 *src, int sw, int sh, int x, int y, int w, int h)
-{
-    for (int dx = 0; dx < w; ++dx)
-    {
-        int cx = x + dx + sOX;
-        const u16 *col = src + dx * sw / w;
-        u16 *dst;
-
-        if (cx < sClipX0 || cx >= sClipX1)
-            continue;
-        dst = sDst + cx * H;
-        for (int dy = 0; dy < h; ++dy)
-        {
-            int cy = y + dy;
-
-            if (cy >= sClipY0 && cy < sClipY1)
-                dst[H - 1 - cy] = PassColour(col[(dy * sh / h) * sw]);
         }
     }
 }
@@ -528,16 +513,38 @@ static void PassDrawMain(const PassScene *sc, bool8 lit)
     else if (area == CTR_PASS_AREA_MAP || area == CTR_PASS_AREA_CARD)
         PassDrawButton(sc, area == CTR_PASS_AREA_CARD, TRUE);
 
-    /* Into the map or the card: its button grows over the screen, as the
-     * game's zooms, under the game's white fade. */
+    /* Into the map or the card, and back: the button grows from its place
+     * to where the map's picture or the card stands on the screen it opens,
+     * as far as the game's zoom has gone (1x to its 1.98x), so the zoom's
+     * last frame is that screen's picture and the two meet without a jump. */
     if (v->zoomArea && v->zoomScale > Q_8_8(1))
     {
         int k = v->zoomArea == CTR_PASS_AREA_CARD, y = k ? PASS_CARD_Y : PASS_MAP_Y;
-        int w = PASS_RIGHT_W * v->zoomScale / 256, h = PASS_THUMB_H * v->zoomScale / 256;
-        int cx = PASS_RIGHT_X + PASS_RIGHT_W / 2, cy = y + PASS_THUMB_H / 2;
+        int t = (v->zoomScale - Q_8_8(1)) * 256 / (Q_8_8(1.984375) - Q_8_8(1));
+        int tx = k ? PASS_CARD_X : PASS_ART_X, ty = k ? PASS_CARD_Y0 : PASS_ART_Y;
+        int tw = k ? PASS_CARD_W : PASS_ART_DW, th = k ? PASS_CARD_H : PASS_ART_DH;
+        int x, w, h;
 
+        t = t < 0 ? 0 : t > 256 ? 256 : t;
+        /* Eased out, as the game's zoom slows towards its end. */
+        t = 256 - (256 - t) * (256 - t) / 256;
+        x = PASS_RIGHT_X + (tx - PASS_RIGHT_X) * t / 256;
+        w = PASS_RIGHT_W + (tw - PASS_RIGHT_W) * t / 256;
+        h = PASS_THUMB_H + (th - PASS_THUMB_H) * t / 256;
         PassGrabRect(PASS_RIGHT_X, y, PASS_RIGHT_W, PASS_THUMB_H, sPassGrab);
-        PassBlitNearest(sPassGrab, PASS_RIGHT_W, PASS_THUMB_H, cx - w / 2, cy - h / 2, w, h);
+        y += (ty - y) * t / 256;
+        if (!k && sPassMapHi)
+        {
+            /* The map grows as itself, sharp, cut to the button's shape on
+             * the way and whole at the end. */
+            int ch = PASS_ART_GH * PASS_MAP_HI - (PASS_ART_GH * PASS_MAP_HI
+                     - PASS_ART_GW * PASS_MAP_HI * PASS_MAP_PIC_H / PASS_MAP_PIC_W) * (256 - t) / 256;
+
+            PassBlit(sPassMapHi + (PASS_ART_GH * PASS_MAP_HI - ch) / 2 * PASS_ART_GW * PASS_MAP_HI,
+                     PASS_ART_GW * PASS_MAP_HI, ch, x, y, w, h, FALSE);
+        }
+        else
+            PassBlit(sPassGrab, PASS_RIGHT_W, PASS_THUMB_H, x, y, w, h, FALSE);
     }
     PassDescription(v->description);
 }
@@ -572,8 +579,11 @@ static void PassDrawMap(const PassScene *sc, bool8 lit)
         bool8 on = i == v->mapCursor;
         int y = PASS_NAMES_Y + i * PASS_NAME_STEP;
 
-        if (lit != on)
+        /* Every facility in the unlit picture, the chosen one too: the lit
+         * one is drawn over it, so a facility left is never missing. */
+        if (lit && !on)
             continue;
+        on = on && lit;
         oy = Plate(PASS_NAMES_X, y, PASS_NAMES_W, PASS_NAME_H, on ? sEmerald : sSlate,
                    on ? PLATE_STATE_FOCUS : PLATE_STATE_NORMAL);
         if (v->names[i])
@@ -599,13 +609,7 @@ static void PassDrawMap(const PassScene *sc, bool8 lit)
         PassDescription(v->mapDescription);
 }
 
-/* The trainer card over the whole screen: the bottom screen's card made
- * wider and taller, with every row the game's own card has; its badges in
- * the band below. A flip folds it towards its middle row as the game's. */
-#define PASS_CARD_X 14
-#define PASS_CARD_Y0 40
-#define PASS_CARD_W 372
-#define PASS_CARD_H 158
+/* The trainer card over the whole screen (PassDrawCard). */
 #define PASS_CARD_ROW 25
 
 static void PassCardRow(int i, int oy, const u8 *label, const u8 *value)
