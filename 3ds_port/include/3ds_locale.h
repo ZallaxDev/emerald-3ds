@@ -34,4 +34,8 @@
 /* The same with a German text. */
 #define CTR_TEXT_PT_DE(english, portuguese, german) CTR_TEXT(english, english, english, english, portuguese, german, english)
 
+/* The same with French, Italian and German texts. */
+#define CTR_TEXT_FR_IT_PT_DE(english, french, italian, portuguese, german) \
+    CTR_TEXT(english, english, french, italian, portuguese, german, english)
+
 #endif

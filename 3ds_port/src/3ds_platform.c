@@ -6,6 +6,7 @@
 #include "3ds_platform.h"
 #include "3ds_daynight.h"
 #include "3ds_data.h"
+#include "3ds_locale.h"
 #include "3ds_audio.h"
 #include "3ds_video.h"
 #include "3ds_assets.h"
@@ -491,7 +492,13 @@ void CtrPlatform_ShowDataError(const char *title, const char *detail)
         printf(" %.*s\n", length, line);
         line = end ? end + 1 : NULL;
     }
-    printf("\n\n Press START to exit.");
+    printf("\n\n %s", CTR_TEXT("Press START to exit.",
+                                "Press START to exit.",
+                                "Appuie sur START pour quitter.",
+                                "Premi START per uscire.",
+                                "Press START to exit.",
+                                "Press START to exit.",
+                                "Press START to exit."));
     while (aptMainLoop())
     {
         hidScanInput();
