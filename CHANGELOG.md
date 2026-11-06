@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Voxel: the orbs' light in the Magma Hideout and the Seafloor Cavern is
+  translucent as in 2D, no longer a solid box hiding the legendary as it wakes
+  (issue #236). By @Johannes-Sch.
 - Local wireless: every language of one release links. The build's id, which
   two systems must share to play together, is now made from the patch set
   and the port's code rather than the ROM-derived executable and data, so
