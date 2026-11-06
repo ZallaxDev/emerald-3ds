@@ -469,9 +469,12 @@ static void PickMapCell(int x, int y)
 #define ENC_TITLE_H 18
 #define ENC_ROW_Y (ENC_Y + 25)
 #define ENC_ROW_H 22
-#define ENC_COL_NAME (ENC_X + 42)
+#define ENC_COL_CAUGHT (ENC_X + 38)
+#define ENC_COL_NAME (ENC_X + 48)
 #define ENC_COL_LEVEL (ENC_X + 150)
 #define ENC_COL_PERCENT (ENC_X + ENC_W - 10)
+
+static const u16 *CaughtBallPal(void);
 
 /* A species not seen is "???": the list names no more than the Pokedex. */
 static const u8 *EncName(const EncRow *row)
@@ -491,6 +494,7 @@ static void DrawEncounters(const ViewState *s)
     static const char *const none = CTR_TEXT("NO ENCOUNTER TABLE", "SIN TABLA DE ENCUENTROS", "AUCUNE TABLE ICI",
                                              "NESSUNA TABELLA", "SEM TABELA DE ENCONTROS", "KEINE BEGEGNUNGEN", "でてくる ポケモンは いない");
     static const char *const level = CTR_TEXT("LV", "NV", "N", "LV", "NV", "LV", "Lv");
+    const u8 *ball = CtrPokedex_CaughtBallGfx();
     char text[24];
     int oy, saved[4];
 
@@ -523,6 +527,9 @@ static void DrawEncounters(const ViewState *s)
                 DrawSprite(tiles, 4, 4, ENC_X + 6, y - 6, sRes.monIconPal[pal].c);
             ClipPop(saved);
         }
+        /* The Pokedex list's own mark for a species caught. */
+        if (row->seen == ENC_CAUGHT && ball)
+            DrawSprite(ball, 1, 2, ENC_COL_CAUGHT, y + (ENC_ROW_H - 16) / 2, CaughtBallPal());
         StyledStr(FitFont(&sSmall, EncName(row), ENC_COL_LEVEL - ENC_COL_NAME - 4), EncName(row), ENC_COL_NAME,
                   TextY(y, ENC_ROW_H, &sSmall), row->seen ? STYLE_INK : STYLE_GRAY);
         if (row->minLevel == row->maxLevel)

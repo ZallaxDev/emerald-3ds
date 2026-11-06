@@ -31,6 +31,8 @@
   as SAVE or OPTIONS, or its button column in focus with X), the top screen
   darkens towards its foot under an arrow pointing down at it, as on the DS
   games, and the music plays at half its volume. By @eathanpage.
+- Area wild list: a species already caught carries the Pokédex list's ball
+  mark, so the list tells caught from only seen. By @Johannes-Sch.
 
 ## 0.5.0 — 2026-10-29
 
