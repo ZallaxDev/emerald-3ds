@@ -251,6 +251,47 @@ static void PassBlit(const u16 *src, int sw, int sh, int x, int y, int w, int h,
     }
 }
 
+/*
+ * The same picture at w x h, each screen pixel the game pixel under its
+ * middle, as the game's own zoom draws it. For the zooms, drawn every frame
+ * they run: PassBlit's filter took tens of milliseconds a frame on the
+ * console there, and the game stuttered. Here a pixel is a lookup and a copy.
+ */
+static void PassBlitNearest(const u16 *src, int sw, int sh, int x, int y, int w, int h)
+{
+    static u16 rowOf[PASS_H];
+    int y0 = y < sClipY0 ? sClipY0 - y : 0, y1 = y + h > sClipY1 ? sClipY1 - y : h;
+    u16 last = 0, out = 0;
+
+    if (w <= 0 || h <= 0 || y1 <= y0 || h > PASS_H)
+        return;
+    for (int dy = y0; dy < y1; ++dy)
+        rowOf[dy] = (u16)((2 * dy + 1) * sh / (2 * h));
+    for (int dx = 0; dx < w; ++dx)
+    {
+        int cx = x + dx + sOX;
+        const u16 *col = src + (2 * dx + 1) * sw / (2 * w);
+        u16 *dst;
+
+        if (cx < sClipX0 || cx >= sClipX1)
+            continue;
+        dst = sDst + cx * H + (H - 1 - y);
+        for (int dy = y0; dy < y1; ++dy)
+        {
+            u16 p = col[rowOf[dy] * sw];
+
+            /* Most pixels are the one before them again, enlarged. */
+            if (p != last)
+            {
+                last = p;
+                out = PassColour(p);
+            }
+            if (p & PASS_OPAQUE)
+                dst[-dy] = out;
+        }
+    }
+}
+
 static void PassSpriteAt(const PassSprite *s, int x, int y, int scale2, bool8 hflip)
 {
     if (s->w)
@@ -533,18 +574,19 @@ static void PassDrawMain(const PassScene *sc, bool8 lit)
         h = PASS_THUMB_H + (th - PASS_THUMB_H) * t / 256;
         PassGrabRect(PASS_RIGHT_X, y, PASS_RIGHT_W, PASS_THUMB_H, sPassGrab);
         y += (ty - y) * t / 256;
-        if (!k && sPassMapHi)
+        if (!k && sPassMapPic)
         {
             /* The map grows as itself, sharp, cut to the button's shape on
-             * the way and whole at the end. */
-            int ch = PASS_ART_GH * PASS_MAP_HI - (PASS_ART_GH * PASS_MAP_HI
-                     - PASS_ART_GW * PASS_MAP_HI * PASS_MAP_PIC_H / PASS_MAP_PIC_W) * (256 - t) / 256;
+             * the way and whole at the end: from the picture at its own size
+             * while it is no bigger, then from the one twice as big. */
+            int s = w > PASS_ART_GW && sPassMapHi ? PASS_MAP_HI : 1;
+            int sw = PASS_ART_GW * s, sh = PASS_ART_GH * s;
+            int ch = sh - (sh - sw * PASS_MAP_PIC_H / PASS_MAP_PIC_W) * (256 - t) / 256;
 
-            PassBlit(sPassMapHi + (PASS_ART_GH * PASS_MAP_HI - ch) / 2 * PASS_ART_GW * PASS_MAP_HI,
-                     PASS_ART_GW * PASS_MAP_HI, ch, x, y, w, h, FALSE);
+            PassBlitNearest((s > 1 ? sPassMapHi : sPassMapPic) + (sh - ch) / 2 * sw, sw, ch, x, y, w, h);
         }
         else
-            PassBlit(sPassGrab, PASS_RIGHT_W, PASS_THUMB_H, x, y, w, h, FALSE);
+            PassBlitNearest(sPassGrab, PASS_RIGHT_W, PASS_THUMB_H, x, y, w, h);
     }
     PassDescription(v->description);
 }
