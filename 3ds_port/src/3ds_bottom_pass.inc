@@ -105,8 +105,6 @@ static u16 sPassCanvas[PASS_W * PASS_H] __attribute__((aligned(32)));
 static u16 *sPassStatic, *sPassBase, *sPassBackdrop;
 /* The map's picture decoded from the game's art, while the pass is open. */
 static u16 *sPassMapPic;
-/* A button's picture taken off the canvas to grow it as the game zooms. */
-static u16 sPassGrab[PASS_RIGHT_W * PASS_THUMB_H];
 /* The trainer card over the whole screen: the bottom screen's card made
  * wider and taller, with every row the game's own card has; its badges in
  * the band below. A flip folds it towards its middle row as the game's. */
@@ -251,47 +249,6 @@ static void PassBlit(const u16 *src, int sw, int sh, int x, int y, int w, int h,
     }
 }
 
-/*
- * The same picture at w x h, each screen pixel the game pixel under its
- * middle, as the game's own zoom draws it. For the zooms, drawn every frame
- * they run: PassBlit's filter took tens of milliseconds a frame on the
- * console there, and the game stuttered. Here a pixel is a lookup and a copy.
- */
-static void PassBlitNearest(const u16 *src, int sw, int sh, int x, int y, int w, int h)
-{
-    static u16 rowOf[PASS_H];
-    int y0 = y < sClipY0 ? sClipY0 - y : 0, y1 = y + h > sClipY1 ? sClipY1 - y : h;
-    u16 last = 0, out = 0;
-
-    if (w <= 0 || h <= 0 || y1 <= y0 || h > PASS_H)
-        return;
-    for (int dy = y0; dy < y1; ++dy)
-        rowOf[dy] = (u16)((2 * dy + 1) * sh / (2 * h));
-    for (int dx = 0; dx < w; ++dx)
-    {
-        int cx = x + dx + sOX;
-        const u16 *col = src + (2 * dx + 1) * sw / (2 * w);
-        u16 *dst;
-
-        if (cx < sClipX0 || cx >= sClipX1)
-            continue;
-        dst = sDst + cx * H + (H - 1 - y);
-        for (int dy = y0; dy < y1; ++dy)
-        {
-            u16 p = col[rowOf[dy] * sw];
-
-            /* Most pixels are the one before them again, enlarged. */
-            if (p != last)
-            {
-                last = p;
-                out = PassColour(p);
-            }
-            if (p & PASS_OPAQUE)
-                dst[-dy] = out;
-        }
-    }
-}
-
 static void PassSpriteAt(const PassSprite *s, int x, int y, int scale2, bool8 hflip)
 {
     if (s->w)
@@ -393,18 +350,6 @@ typedef struct
     s16 handX, handY;
 } PassScene;
 
-/* A piece of the canvas as a picture PassBlit takes (BGR555, opaque). */
-static void PassGrabRect(int x, int y, int w, int h, u16 *out)
-{
-    for (int dy = 0; dy < h; ++dy)
-        for (int dx = 0; dx < w; ++dx)
-        {
-            u16 c = sPassCanvas[(x + dx) * PASS_H + (PASS_H - 1 - (y + dy))];
-
-            out[dy * w + dx] = PASS_OPAQUE | (c >> 11) | (((c >> 6) & 31) << 5) | ((c & 31) << 10);
-        }
-}
-
 /* The map's picture on its button, filling it: as wide as the button, its
  * top and bottom cut evenly to the button's height. */
 static void PassMapButton(int x, int y)
@@ -459,7 +404,7 @@ static void PassMiniCard(const PassCard *c, int x, int y, int w, int h)
 
 /* The pass: its plates where the game's areas are, the art on them. It is
  * drawn in two goes (PassCompose): everything unlit once, then over a copy
- * of that the area the cursor is on lit, its description and the zoom. */
+ * of that the area the cursor is on lit and its description. */
 static void PassDrawSymbols(const PassScene *sc, bool8 on, int cell)
 {
     const struct CtrPassView *v = &sc->v;
@@ -554,40 +499,6 @@ static void PassDrawMain(const PassScene *sc, bool8 lit)
     else if (area == CTR_PASS_AREA_MAP || area == CTR_PASS_AREA_CARD)
         PassDrawButton(sc, area == CTR_PASS_AREA_CARD, TRUE);
 
-    /* Into the map or the card, and back: the button grows from its place
-     * to where the map's picture or the card stands on the screen it opens,
-     * as far as the game's zoom has gone (1x to its 1.98x), so the zoom's
-     * last frame is that screen's picture and the two meet without a jump. */
-    if (v->zoomArea && v->zoomScale > Q_8_8(1))
-    {
-        int k = v->zoomArea == CTR_PASS_AREA_CARD, y = k ? PASS_CARD_Y : PASS_MAP_Y;
-        int t = (v->zoomScale - Q_8_8(1)) * 256 / (Q_8_8(1.984375) - Q_8_8(1));
-        int tx = k ? PASS_CARD_X : PASS_ART_X, ty = k ? PASS_CARD_Y0 : PASS_ART_Y;
-        int tw = k ? PASS_CARD_W : PASS_ART_DW, th = k ? PASS_CARD_H : PASS_ART_DH;
-        int x, w, h;
-
-        t = t < 0 ? 0 : t > 256 ? 256 : t;
-        /* Eased out, as the game's zoom slows towards its end. */
-        t = 256 - (256 - t) * (256 - t) / 256;
-        x = PASS_RIGHT_X + (tx - PASS_RIGHT_X) * t / 256;
-        w = PASS_RIGHT_W + (tw - PASS_RIGHT_W) * t / 256;
-        h = PASS_THUMB_H + (th - PASS_THUMB_H) * t / 256;
-        PassGrabRect(PASS_RIGHT_X, y, PASS_RIGHT_W, PASS_THUMB_H, sPassGrab);
-        y += (ty - y) * t / 256;
-        if (!k && sPassMapPic)
-        {
-            /* The map grows as itself, sharp, cut to the button's shape on
-             * the way and whole at the end: from the picture at its own size
-             * while it is no bigger, then from the one twice as big. */
-            int s = w > PASS_ART_GW && sPassMapHi ? PASS_MAP_HI : 1;
-            int sw = PASS_ART_GW * s, sh = PASS_ART_GH * s;
-            int ch = sh - (sh - sw * PASS_MAP_PIC_H / PASS_MAP_PIC_W) * (256 - t) / 256;
-
-            PassBlitNearest((s > 1 ? sPassMapHi : sPassMapPic) + (sh - ch) / 2 * sw, sw, ch, x, y, w, h);
-        }
-        else
-            PassBlitNearest(sPassGrab, PASS_RIGHT_W, PASS_THUMB_H, x, y, w, h);
-    }
     PassDescription(v->description);
 }
 
@@ -786,7 +697,7 @@ static void PassTarget(bool8 on, int saved[5])
  * The picture is kept in three steps, each made again only when what it
  * shows changes: sPassStatic, everything unlit (the backdrop, the header,
  * every plate with its art); sPassBase, that with the cursor's area lit, its
- * description and a zoom over it; sPassCanvas, that with the hand. When only
+ * description; sPassCanvas, that with the hand. When only
  * the hand moves, the piece it left is put back from sPassBase and the hand
  * drawn again, and only those two pieces go to the texture.
  */
@@ -1103,9 +1014,6 @@ static void PassSnapCard(PassCard *c, const struct CtrCardTop *top)
         c->top = *top;
 }
 
-/* Between the zoom into the card and the pass back again. */
-static bool8 sPassCardFlow;
-
 static void PassTopFrame(void)
 {
     PassScene *sc = &sPassScene;
@@ -1123,10 +1031,9 @@ static void PassTopFrame(void)
          * not blink to the game's screen in between. */
         if (sPassUp && CtrPass_Open())
         {
-            CtrPassTop_SetFade(gPaletteFade.blendColor, sPassCardFlow ? 0 : gPaletteFade.y);
+            CtrPassTop_SetFade(gPaletteFade.blendColor, gPaletteFade.y);
             return;
         }
-        sPassCardFlow = FALSE;
         if (sPassUp)
         {
             CtrPassTop_Hide();
@@ -1156,6 +1063,10 @@ static void PassTopFrame(void)
     }
     memset(sc, 0, sizeof(*sc));
     memcpy(&sc->v, &v, sizeof(v));
+    /* The game's zoom into the map or the card is not drawn up here: the
+     * pass stays as it is and the game's fade takes it to the next screen. */
+    sc->v.zoomArea = 0;
+    sc->v.zoomScale = 0;
     /* The card does not change while the pass is up: read once a view. */
     if (sPassUp && sPassShown.v.view == v.view)
         sc->card = sPassShown.card;
@@ -1213,13 +1124,6 @@ static void PassTopFrame(void)
         PassComposeHand(sc, lit);
         memcpy(&sPassShown, sc, sizeof(*sc));
     }
-    /* The game fades to white into the card and back out of it, on top of
-     * the zoom that already takes the button to the card: on the top screen
-     * the zoom and the card meet without it. */
-    if (v.view == CTR_PASS_CARD || (v.view == CTR_PASS_MAIN && v.zoomArea == CTR_PASS_AREA_CARD))
-        sPassCardFlow = TRUE;
-    else if (v.view != CTR_PASS_MAIN || (!v.zoomArea && !gPaletteFade.active))
-        sPassCardFlow = FALSE;
-    CtrPassTop_SetFade(gPaletteFade.blendColor, sPassCardFlow ? 0 : gPaletteFade.y);
+    CtrPassTop_SetFade(gPaletteFade.blendColor, gPaletteFade.y);
     sPassUp = TRUE;
 }
