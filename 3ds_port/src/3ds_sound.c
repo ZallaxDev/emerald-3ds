@@ -190,3 +190,36 @@ bool32 __wrap_IsPokemonCryPlaying(struct MusicPlayerInfo *info)
     CtrAudio_UnlockSound();
     return playing;
 }
+
+/*
+ * The music a little quieter while the bottom screen has the player's
+ * attention. A track's volume (volX, 64 full) is lowered only from full, and
+ * raised back only from the ducked level: the game's own changes (the music
+ * lowered under a cry and raised after it) are left as they are, and a song
+ * started meanwhile, at full, is lowered in turn.
+ */
+#define DUCKED_VOLX 32   /* half */
+extern struct MusicPlayerInfo gMPlayInfo_BGM;
+
+void CtrAudio_DuckMusic(bool duck)
+{
+    static bool sDucked;
+    struct MusicPlayerTrack *track;
+    u8 from = duck ? 64 : DUCKED_VOLX, to = duck ? DUCKED_VOLX : 64;
+
+    if (!duck && !sDucked)
+        return;
+    sDucked = duck;
+    CtrAudio_LockSound();
+    if (gMPlayInfo_BGM.ident == ID_NUMBER)
+    {
+        track = gMPlayInfo_BGM.tracks;
+        for (int i = 0; i < gMPlayInfo_BGM.trackCount; ++i, ++track)
+            if ((track->flags & MPT_FLG_EXIST) && track->volX == from)
+            {
+                track->volX = to;
+                track->flags |= MPT_FLG_VOLCHG;
+            }
+    }
+    CtrAudio_UnlockSound();
+}

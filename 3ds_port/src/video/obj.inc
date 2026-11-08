@@ -428,6 +428,40 @@ static void DrawObjects(unsigned priority, bool effects)
     float layerShift = sLayerShift;
     const CtrObjList *list = sObjList;
 
+    /*
+     * The Battle Factory's swap menu slides its bar in from past the right
+     * edge of the picture, where the GBA screen ends and hides it: in the
+     * margins it lay across the black. Its sprites are kept to the picture.
+     */
+    if (sCentred && sCentredScreen == CTR_CENTRED_FACTORY
+     && (sClipX0 < 0 || sClipY0 < 0 || sClipX1 > 240 || sClipY1 > 160))
+    {
+        int clipX0 = sClipX0, clipY0 = sClipY0, clipX1 = sClipX1, clipY1 = sClipY1;
+        bool scissored = sScissored;
+
+        if (sClipX0 < 0) sClipX0 = 0;
+        if (sClipY0 < 0) sClipY0 = 0;
+        if (sClipX1 > 240) sClipX1 = 240;
+        if (sClipY1 > 160) sClipY1 = 160;
+        if (sClipX0 < sClipX1 && sClipY0 < sClipY1)
+        {
+            SpriteBatchFlush();
+            C2D_Flush();
+            sScissored = true;
+            Scissor(sClipX0, sClipY0, sClipX1, sClipY1);
+            DrawObjects(priority, effects);
+            SpriteBatchFlush();
+            C2D_Flush();
+        }
+        sClipX0 = clipX0;
+        sClipY0 = clipY0;
+        sClipX1 = clipX1;
+        sClipY1 = clipY1;
+        sScissored = scissored;
+        RestoreScissor();
+        return;
+    }
+
     if (!list || priority > 3)
     {
         for (int i = 127; i >= 0; --i)

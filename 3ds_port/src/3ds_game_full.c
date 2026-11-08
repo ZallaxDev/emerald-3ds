@@ -374,6 +374,16 @@ void CtrCentredSlots_SetVBlankCallback(IntrCallback callback)
     SetCentredCallback(callback, CTR_CENTRED_SLOTS);
 }
 
+void CtrCentredHallOfFame_SetVBlankCallback(IntrCallback callback)
+{
+    SetCentredCallback(callback, CTR_CENTRED_HALL_OF_FAME);
+}
+
+void CtrCentredFactory_SetVBlankCallback(IntrCallback callback)
+{
+    SetCentredCallback(callback, CTR_CENTRED_FACTORY);
+}
+
 /* trade.c: the trade menu's VBlank callback; the trade's is the other. */
 IntrCallback CtrTrade_MenuVBlankCallback(void);
 
@@ -640,6 +650,54 @@ static void CaptureLineScroll(void)
                            effect->dmaSrcBuffers[effect->srcBuffer ^ 1], DISPLAY_HEIGHT);
 }
 
+/*
+ * A centred screen that moves its windows from an HBlank interrupt, and
+ * changes what they show (the Battle Dome's tourney tree: two narrow windows
+ * along the bracket's middle lines, hiding one layer or another): the
+ * interrupt is played through the lines as for a transition, and the windows'
+ * edges and WININ each line shows go to the compositor. Without it the
+ * windows stayed as the screen opened them, two black bars the whole height
+ * of the picture. Only when they differ from line to line: the trainer
+ * card's interrupt moves a layer, not its windows.
+ */
+static void CaptureLineWindows(void)
+{
+    static uint16_t across[CTR_GBA_LINES][2], inside[CTR_GBA_LINES];
+    static uint16_t saved[CTR_LINE_REGS];
+    uint16_t *regs = (uint16_t *)((uint8_t *)REG_BASE + CTR_LINE_REG_FIRST);
+    bool moved = false;
+
+    if (!sCentred.on || TransitionOn() || !(REG_IME && (REG_IE & INTR_FLAG_HBLANK)
+     && (REG_DISPSTAT & DISPSTAT_HBLANK_INTR) && gIntrTable[INTR_INDEX_HBLANK]))
+    {
+        CtrVideo_SetLineWindowInside(NULL);
+        return;
+    }
+    memcpy(saved, regs, sizeof(saved));
+    /* The interrupt also comes in the VBlank's lines: line 0 shows what it
+     * left at the last of them, not what the screen opened with. */
+    REG_VCOUNT = 227;
+    gIntrTable[INTR_INDEX_HBLANK]();
+    for (unsigned y = 0; y < CTR_GBA_LINES; ++y)
+    {
+        across[y][0] = REG_WIN0H;
+        across[y][1] = REG_WIN1H;
+        inside[y] = REG_WININ;
+        moved |= y > 0 && (across[y][0] != across[0][0] || across[y][1] != across[0][1] || inside[y] != inside[0]);
+        REG_VCOUNT = y;
+        gIntrTable[INTR_INDEX_HBLANK]();
+    }
+    memcpy(regs, saved, sizeof(saved));
+    REG_VCOUNT = 0;
+    if (!moved)
+    {
+        CtrVideo_SetLineWindowInside(NULL);
+        return;
+    }
+    CtrVideo_SetLineWindow(&across[0][0], CTR_GBA_LINES, true);
+    CtrVideo_SetLineWindowInside(inside);
+}
+
 void CtrGame_VBlank(void)
 {
     PORT_PROF_BEGIN(vblank);
@@ -666,6 +724,7 @@ void CtrGame_VBlank(void)
     UpdateStage();
     PORT_PROF_BEGIN(lines);
     CaptureLineScroll();
+    CaptureLineWindows();
     CaptureLineRegisters();
     PORT_PROF_END(lines, PORT_PROF_LINES);
     CheckAudioRate();

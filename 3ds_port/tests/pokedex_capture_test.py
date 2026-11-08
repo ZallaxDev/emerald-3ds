@@ -68,6 +68,7 @@ static const uint16_t *sRegLine;
 /* BLDALPHA line by line (ComposeAlphaBands): the band being composed, whose
  * value Reg reads in place of the register's; none on the Pokedex's screens. */
 static int sLineAlphaBand = -1;
+static int32_t sBandInside = -1;
 static struct { const uint16_t *regs; } sMemory = {registers};
 static struct { unsigned tiles, frames; } sStats;
 static float sZoom = 1, sOffX, sOffY;

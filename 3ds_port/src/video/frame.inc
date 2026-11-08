@@ -283,6 +283,9 @@ static bool sTransitionRequested, sTransition;
 static bool sTransitionCompose;
 static const uint16_t (*sLineRegs)[CTR_LINE_REGS];
 static const uint16_t *sRegLine;
+/* WININ of the band of line windows being composed, -1 outside one
+ * (CtrVideo_SetLineWindowInside). */
+static int32_t sBandInside = -1;
 
 static unsigned Reg(unsigned offset)
 {
@@ -292,6 +295,8 @@ static unsigned Reg(unsigned offset)
         return sRegLine[(offset - CTR_LINE_REG_FIRST) / 2];
     if (offset == 0x52 && sLineAlphaBand >= 0)
         return (unsigned)sLineAlphaBand;
+    if (offset == 0x48 && sBandInside >= 0)
+        return (unsigned)sBandInside;
     return sMemory.regs[offset / 2];
 }
 static unsigned Min(unsigned a, unsigned b) { return a < b ? a : b; }

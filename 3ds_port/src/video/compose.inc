@@ -329,14 +329,17 @@ static void WindowSpan(unsigned limits, unsigned over, bool vertical, int *first
  * The window edges an HBlank DMA writes line by line (CtrVideo_SetLineWindow):
  * WIN0H, or WIN0H and WIN1H, for each of the picture's 160 lines. The PokéNav
  * lights its chosen option with one, and its condition graph is a polygon
- * drawn as two of them. Only the PokéNav's screens use them here (LineWindows):
- * the frame is composed in bands of lines whose windows are the same, each
- * band partitioned as a frame with fixed windows is.
+ * drawn as two of them. The Battle Dome's tourney tree moves both from its
+ * HBlank interrupt, and what they show (WININ) with them. Only those use them
+ * here (LineWindows): the frame is composed in bands of lines whose windows
+ * are the same, each band partitioned as a frame with fixed windows is.
  */
 static struct
 {
     unsigned windows;
+    bool inside;
     uint16_t across[2][160];
+    uint16_t control[160];
 } sLineWindows;
 
 /* The band being composed: its lines, and the line-driven windows' edges there. */
@@ -375,9 +378,16 @@ void CtrVideo_SetLineWindow(const uint16_t *values, unsigned lines, bool both)
     }
 }
 
+void CtrVideo_SetLineWindowInside(const uint16_t *values)
+{
+    sLineWindows.inside = values != NULL;
+    if (values) memcpy(sLineWindows.control, values, sizeof(sLineWindows.control));
+}
+
 static bool LineWindows(void)
 {
-    return sLineWindows.windows && sCentredScreen == CTR_CENTRED_POKENAV && (Reg(0) & 0x6000);
+    return sLineWindows.windows && (Reg(0) & 0x6000)
+        && (sCentredScreen == CTR_CENTRED_POKENAV || (sLineWindows.inside && sCentredScreen != CTR_CENTRED_NONE));
 }
 
 /* Window w's rectangle in this band, empty when x0 >= x1 or y0 >= y1. */
@@ -961,10 +971,13 @@ static void ComposeLines(void)
             sLineBand.across[1] = sLineWindows.across[1][y];
             for (next = y + 1; next < end; ++next)
                 if (sLineWindows.across[0][next] != sLineBand.across[0]
-                 || sLineWindows.across[1][next] != sLineBand.across[1]) break;
+                 || sLineWindows.across[1][next] != sLineBand.across[1]
+                 || (sLineWindows.inside && sLineWindows.control[next] != sLineWindows.control[y])) break;
             sLineBand.top = y;
             sLineBand.bottom = next;
+            sBandInside = sLineWindows.inside ? sLineWindows.control[y] : -1;
             ComposeBand(y, next);
+            sBandInside = -1;
         }
         sLineBand.across[0] = sLineBand.across[1] = 0;
         sLineBand.top = top > 160 ? top : 160;

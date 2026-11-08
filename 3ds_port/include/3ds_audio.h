@@ -45,5 +45,8 @@ bool CtrAudio_Kick(void);
 void CtrAudio_SetClock(bool on);
 void CtrAudio_LockSound(void);
 void CtrAudio_UnlockSound(void);
+/* The music a little quieter while the bottom screen has the player's
+ * attention (3ds_sound.c); called every frame. */
+void CtrAudio_DuckMusic(bool duck);
 
 #endif

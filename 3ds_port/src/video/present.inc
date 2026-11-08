@@ -93,16 +93,27 @@ VIDEO_PIECE bool PresentHeld(const PresentFrame *f)
         sReport.kind = CTR_PRESENT_HELD;
         sPerfBoundary = true;
         sShownCrossed = true;
-        /* The Pokédex gone with the top still held: its frame back, once. */
-        if (sHeldTop.kept && sHoldTop && C3D_FrameBegin(C3D_FRAME_SYNCDRAW))
+        bool putBack = sHeldTop.kept && sHoldTop;
+        if (sHeldFrames < LOOK_DOWN_AFTER) ++sHeldFrames;
+        /* The Pokédex gone with the top still held: its frame back, once,
+         * darkened if it was not yet; or darkened once the hold has lasted.
+         * The frame stays in the top's buffer, so it is drawn over once. */
+        if ((putBack || (!sTopDark && sHeldFrames >= LOOK_DOWN_AFTER)) && C3D_FrameBegin(C3D_FRAME_SYNCDRAW))
         {
             sReport.waitMs = (svcGetSystemTick() - heldWait) * 1000.0f / SYSCLOCK_ARM11;
-            uint64_t putBack = svcGetSystemTick();
+            uint64_t putBackTick = svcGetSystemTick();
 
             ReportGpu();
-            HeldTopPutBack();
+            if (putBack) HeldTopPutBack();
+            if (!sTopDark)
+            {
+                sSceneOn = NULL;   /* the buffer read back afresh, not from the colour cache */
+                DrawLookDown(sTop);
+                if (sStereo && sTopRight) DrawLookDown(sTopRight);
+                sTopDark = true;
+            }
             C3D_FrameEnd(0);
-            ReportSubmit(0.0f, putBack);
+            ReportSubmit(0.0f, putBackTick);
         }
         else
         {
@@ -112,6 +123,7 @@ VIDEO_PIECE bool PresentHeld(const PresentFrame *f)
         ++sStats.frames;
         return true;
     }
+    sHeldFrames = 0;
     return false;
 }
 
@@ -671,6 +683,8 @@ VIDEO_PIECE void FrameDraw(const PresentFrame *f)
         if (f->bottom) RenderEye(sBottom, f->clear, 0.0f);
         if (f->dexTop) RenderDexTop(f->stereo, f->slider);
         else if (sHeldTop.kept && sHoldTop) HeldTopPutBack();
+        /* Drawn afresh: darkened again below if it is to be. */
+        if (f->dexTop) sTopDark = false;
     }
     else if (sTransition && !f->blank) RenderTransition(f->voxel, f->clear);
     else if (f->voxel)
@@ -753,6 +767,17 @@ VIDEO_PIECE void FrameOverlays(const PresentFrame *f)
                     VoxelSwoop_Step(&sSwoop);
             }
         }
+    }
+    /* The top drawn afresh, or kept as it was (down): darkened on it once. */
+    if (!f->down) sTopDark = false;
+    if (sLookDown && !sTopDark)
+    {
+        sSceneOn = NULL;
+        DrawLookDown(sTop);
+        if (f->stereo || (f->down && !f->dexTop && sStereo && sTopRight)) DrawLookDown(sTopRight);
+        /* The frame shown has it: a hold from here (X, then the party)
+         * keeps this one, not to be darkened again. */
+        sTopDark = true;
     }
 #if CTR_SHOW_FPS
     if (CtrSettings_ShowFps())
