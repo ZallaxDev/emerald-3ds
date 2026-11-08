@@ -12,6 +12,9 @@ paths = [
     # The mountains' relief marked by hand in the voxel editor: JSON of cell
     # levels and shapes, the port's own data.
     "3ds_port/assets/voxel/relief_fixes.json",
+    # the same file as the builders' voxel generators read it
+    "Emerald3DS-v*-Windows/payload/voxelgen/assets/voxel/relief_fixes.json",
+    "payload/voxelgen/assets/voxel/relief_fixes.json",
     "Emerald3DS-v*-Windows/Emerald3DS-Builder.exe",
     "Emerald3DS-v*-Windows/emerald3ds-builder-cli.exe",
     "Emerald3DS-v*-Windows/payload/Emerald3DS.3dsx",

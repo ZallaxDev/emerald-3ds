@@ -33,9 +33,6 @@
 /* 1: the pop-up book, the world squashed to the ground under the crossfade;
  * 0: the world stands, the crossfade alone takes it to the 2D picture. */
 #define VOXEL_SWOOP_SQUASH 0
-/* The flash comes up over the last frames of the flattening, so it peaks as
- * the world lands flat on the 2D picture. */
-#define VOXEL_SWOOP_FLASH_RISE 0u
 /* The flash at full, the picture under it already the other renderer's. */
 #define VOXEL_SWOOP_FLASH_HOLD 1u /* at least 1: the frame the renderer swaps */
 /* The flash dying away over the new picture. */

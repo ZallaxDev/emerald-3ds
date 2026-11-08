@@ -92,6 +92,7 @@ bool CtrAudio_Init(void)
         sWave[i].status = NDSP_WBUF_DONE;
 
     memset(&sStats, 0, sizeof(sStats));
+    sStats.lowest = UINT32_MAX;
     sStats.rateHz = sRate;
     sNext = 0;
     sPrimed = 0;
@@ -165,11 +166,9 @@ static void CorrectDrift(unsigned queued)
 
 void CtrAudio_Queue(const int32_t *interleaved, int frames)
 {
-    uint64_t start;
     unsigned queued;
     ndspWaveBuf *buf;
     int16_t *out;
-    int32_t peak = 0;
 
     if (!sReady || interleaved == NULL || frames <= 0)
         return;
@@ -185,8 +184,9 @@ void CtrAudio_Queue(const int32_t *interleaved, int frames)
         frames = CTR_AUDIO_MAX_FRAMES;
     }
 
-    start = svcGetSystemTick();
     queued = QueuedBuffers();
+    if (queued < sStats.lowest)
+        sStats.lowest = queued;
 
     /* An empty queue once the pipeline is primed means the DSP reached the end
      * of the last buffer before this frame arrived: the speakers went silent. */
@@ -199,7 +199,6 @@ void CtrAudio_Queue(const int32_t *interleaved, int frames)
         /* Every buffer is still pending: the game is ahead of the DSP. Drop
          * this frame rather than overwrite audio that is about to play. */
         ++sStats.drops;
-        sStats.queued = queued;
         CorrectDrift(queued);
         return;
     }
@@ -216,10 +215,6 @@ void CtrAudio_Queue(const int32_t *interleaved, int frames)
         else if (sample < -32768)
             sample = -32768;
         out[i] = (int16_t)sample;
-        if (sample < 0)
-            sample = -sample;
-        if (sample > peak)
-            peak = sample;
     }
 
 #ifdef CTR_AUDIO_DUMP
@@ -246,10 +241,7 @@ void CtrAudio_Queue(const int32_t *interleaved, int frames)
     if (sPrimed < CTR_AUDIO_TARGET_DEPTH)
         ++sPrimed;
     ++sStats.frames;
-    sStats.peak = (uint32_t)peak;
-    sStats.queued = queued + 1;
     CorrectDrift(queued + 1);
-    sStats.submitMs = (float)((svcGetSystemTick() - start) * 1000.0 / SYSCLOCK_ARM11);
 }
 
 /* ── The sound engine's worker ─────────────────────────────────────────── */

@@ -33,10 +33,6 @@
 /* Present in the RomFS of a build that embeds its game data. */
 #define CTR_DATA_EMBEDDED_MARKER "romfs:/data.embedded"
 
-/* Pack format, see docs/ASSET_PIPELINE.md and builder/emerald3ds_builder/pak.py. */
-#define CTR_PAK_MAGIC "EM3DPAK"
-#define CTR_PAK_SCHEMA 1
-
 typedef enum
 {
     CTR_DATA_NONE,
@@ -48,6 +44,10 @@ typedef enum
 /* Chooses and validates the backend. On failure CtrData_ErrorTitle and
  * CtrData_ErrorDetail describe what the player has to do. */
 bool CtrData_Init(void);
+/* At exit, after every worker that reads game data has stopped: the
+ * read-ahead worker stopped and the pack closed (it stays open, and says so,
+ * if a read is still under way after two seconds). */
+void CtrData_Shutdown(void);
 const char *CtrData_BackendName(void);
 const char *CtrData_ErrorTitle(void);
 const char *CtrData_ErrorDetail(void);
@@ -64,9 +64,29 @@ void *CtrData_Load(const char *path, uint32_t *outSize);
 /* A file CtrData_Load will soon be asked for, read ahead on a worker so that
  * the read is not in the frame that wants it (a few, small: sprites). */
 void CtrData_Prefetch(const char *path);
-/* Where a file lies in the data pack, so that neighbouring files can be read
- * in one go with CtrData_ReadRange. False under any other backend. */
-bool CtrData_Locate(const char *path, uint64_t *outOffset, uint32_t *outSize);
+/* Where a file lies in the data pack, and its CRC-32 (`outCrc` may be NULL),
+ * so that neighbouring files can be read in one go with CtrData_ReadRange.
+ * False under any other backend. */
+bool CtrData_Locate(const char *path, uint64_t *outOffset, uint32_t *outSize, uint32_t *outCrc);
+/* Exactly `size` bytes of the pack from `offset`, straight into `dest`, from
+ * any thread. False under any other backend or if the card fails. */
 bool CtrData_ReadRange(uint64_t offset, void *dest, uint32_t size);
+
+typedef enum
+{
+    CTR_DATA_READ_OK,
+    CTR_DATA_READ_MISSING,  /* no such file */
+    CTR_DATA_READ_SIZE,     /* the pack holds it with another size */
+    CTR_DATA_READ_IO,       /* the card failed, or the file is short */
+    CTR_DATA_READ_CRC,      /* the pack's bytes fail their CRC: it is damaged */
+    CTR_DATA_READ_NOMEM,    /* no memory to read it into (the caller's) */
+} CtrDataRead;
+
+/* One whole file of exactly `size` bytes into `dest`, from any thread: from
+ * the pack in one read straight into it, its CRC checked; from the RomFS or
+ * the loose files through stdio. */
+CtrDataRead CtrData_ReadFile(const char *path, void *dest, uint32_t size);
+/* "missing", "crc"...: a CtrDataRead for the log. */
+const char *CtrData_ReadName(CtrDataRead result);
 
 #endif

@@ -14,6 +14,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from voxel_night import window_mask, building_mask, NIGHT_WINDOWS
+from video_text import read_video
 
 
 
@@ -181,6 +182,7 @@ static void C3D_TexSetWrap(C3D_Tex *tex, int first, int second) { (void)tex; (vo
 #define VOXEL_BUILDING_PAGES 4
 #define VOXEL_MAX_PAGES 256
 #define VOXEL_PAGE_RETRY_FRAMES 120u
+#define VOXEL_PAGE_LENT_RETRY_FRAMES 2u
 enum { STREAM_IDLE, STREAM_READING, STREAM_DONE, STREAM_FAILED };
 '''
     source += slot + r'''
@@ -188,6 +190,8 @@ static BuildingPageSlot sPageSlots[VOXEL_BUILDING_PAGES];
 static struct { BuildingPageSlot *slot; int state; bool copyQueued; } sStream;
 static uint32_t sFrame;
 static bool sGlowWanted, sGlowNoRoomLogged[VOXEL_MAX_PAGES];
+/* No gap lent to a battle here. */
+static bool PagesLentAsk(uint32_t bytes) { (void)bytes; return false; }
 static VoxelArena sPageArena;
 static unsigned sLogs;
 static void CtrLog_Write(int kind, const char *format, ...) { (void)kind; (void)format; ++sLogs; }
@@ -547,7 +551,7 @@ int main(void)
 
 
 def compositor_tests(cc):
-    video = (ROOT / "src/3ds_video.c").read_text(encoding="utf-8")
+    video = read_video()
     start = video.index("    if (night)\n", video.index("static void Blend("))
     end = video.index("    /* A semi-transparent sprite", start)
     cycle = (ROOT / "src/3ds_daynight.c").read_text(encoding="utf-8")

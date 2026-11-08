@@ -82,10 +82,23 @@ typedef struct
 
 static CtrDataBackend sBackend = CTR_DATA_NONE;
 static uint32_t sEngineAbi;
-static FILE *sPak;
+/*
+ * The pack: one FS file handle read positionally (FSFILE_Read names the
+ * offset in each call), so that the game, the asset warm-up and the voxel
+ * stream read it from their own threads with no lock and no stdio buffer
+ * between the card and their memory. Through a stdio FILE with a 64 KiB
+ * buffer, each seek dropped the buffer: every small payload cost a 64 KiB
+ * read of the card, and every reader waited for the others' under one lock.
+ * sPakReaders counts the reads under way, for CtrData_Shutdown; sPakReads
+ * and sPakBytes all of them, for its last line.
+ */
+static Handle sPakFile;
+static int32_t sPakReaders;
+static bool sPakClosing;
+static uint32_t sPakReads;
+static uint64_t sPakBytes;
 static CtrPakEntry *sEntries;
 static uint32_t sEntryCount;
-static LightLock sPakLock;
 static char sErrorTitle[96];
 static char sErrorDetail[512];
 
@@ -140,6 +153,56 @@ static const CtrPakEntry *FindEntry(const char *path)
     return CtrPak_Find(sEntries, sEntryCount, path);
 }
 
+/* `size` bytes of the pack from `offset` into `dest`, from any thread. */
+static bool PakReadAt(uint64_t offset, void *dest, uint32_t size)
+{
+    uint8_t *to = dest;
+    bool ok = true;
+
+    if (size == 0)
+        return true;
+    /* Counted before the pack is looked at: CtrData_Shutdown closes it only
+     * once it has said so and no read is counted. */
+    __atomic_add_fetch(&sPakReaders, 1, __ATOMIC_SEQ_CST);
+    if (__atomic_load_n(&sPakClosing, __ATOMIC_SEQ_CST) || sPakFile == 0)
+        ok = false;
+    else
+    {
+        __atomic_add_fetch(&sPakReads, 1, __ATOMIC_RELAXED);
+        __atomic_add_fetch(&sPakBytes, size, __ATOMIC_RELAXED);
+    }
+    while (ok && size != 0)
+    {
+        u32 got = 0;
+
+        if (R_FAILED(FSFILE_Read(sPakFile, &got, offset, to, size)) || got == 0 || got > size)
+            ok = false;
+        else
+        {
+            offset += got;
+            to += got;
+            size -= got;
+        }
+    }
+    __atomic_sub_fetch(&sPakReaders, 1, __ATOMIC_SEQ_CST);
+    return ok;
+}
+
+/* One pack entry whole into `dest` (rawSize bytes), checked against its CRC. */
+static CtrDataRead PakReadEntry(const CtrPakEntry *entry, void *dest)
+{
+    if (!PakReadAt(entry->offset, dest, entry->rawSize))
+        return CTR_DATA_READ_IO;
+    return CtrPak_Crc32(0, dest, entry->rawSize) == entry->crc32 ? CTR_DATA_READ_OK : CTR_DATA_READ_CRC;
+}
+
+static void ClosePak(void)
+{
+    if (sPakFile != 0)
+        FSFILE_Close(sPakFile);
+    sPakFile = 0;
+}
+
 static bool OpenPak(void)
 {
     uint8_t header[CTR_PAK_HEADER_BYTES];
@@ -148,9 +211,12 @@ static bool OpenPak(void)
     CtrPakStatus status;
     char detail[512];
 
-    sPak = fopen(CTR_DATA_PAK_PATH, "rb");
-    if (sPak == NULL)
+    /* The FS service's own path: CTR_DATA_PAK_PATH without its "sdmc:". */
+    if (R_FAILED(FSUSER_OpenFileDirectly(&sPakFile, ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, ""),
+                                         fsMakePath(PATH_ASCII, CTR_DATA_PAK_PATH + sizeof("sdmc:") - 1),
+                                         FS_OPEN_READ, 0)))
     {
+        sPakFile = 0;
         SetError(CTR_TEXT("The game data pack was not found.", "The game data pack was not found.", "The game data pack was not found.", "The game data pack was not found.", "O pacote de dados nao foi encontrado.", "Das Datenpaket wurde nicht gefunden.", "The game data pack was not found."),
                  CTR_TEXT_PT_DE("Run the builder that came with this\n"
                              "release with your own Pokemon Emerald\n"
@@ -166,8 +232,7 @@ static bool OpenPak(void)
                              "  /3ds/emerald3ds/emerald3ds.pak"));
         return false;
     }
-    setvbuf(sPak, NULL, _IOFBF, 64 * 1024);
-    status = fread(header, 1, sizeof(header), sPak) == sizeof(header)
+    status = PakReadAt(0, header, sizeof(header))
            ? CtrPak_ParseHeader(header, sEngineAbi, sSupportedRomSha1, &info) : CTR_PAK_BAD_MAGIC;
     switch (status)
     {
@@ -220,8 +285,7 @@ static bool OpenPak(void)
     index = malloc((size_t)info.entryCount * CTR_PAK_ENTRY_BYTES);
     sEntries = malloc((size_t)info.entryCount * sizeof(*sEntries));
     if (index == NULL || sEntries == NULL
-     || fseek(sPak, (long)info.indexOffset, SEEK_SET) != 0
-     || fread(index, CTR_PAK_ENTRY_BYTES, info.entryCount, sPak) != info.entryCount)
+     || !PakReadAt(info.indexOffset, index, info.entryCount * CTR_PAK_ENTRY_BYTES))
     {
         SetError(CTR_TEXT("The data pack could not be read.", "The data pack could not be read.", "The data pack could not be read.", "The data pack could not be read.", "Nao foi possivel ler o pacote de dados.", "Das Datenpaket konnte nicht gelesen werden.", "The data pack could not be read."),
                  CTR_TEXT("The SD card could not deliver its index.", "The SD card could not deliver its index.", "The SD card could not deliver its index.", "The SD card could not deliver its index.", "O cartao SD nao entregou o seu indice.", "Die SD-Karte lieferte kein Verzeichnis.", "The SD card could not deliver its index."));
@@ -240,8 +304,7 @@ static bool OpenPak(void)
     }
     free(index);
     sEntryCount = info.entryCount;
-    LightLock_Init(&sPakLock);
-    CtrLog_Write(CTR_LOG_FS, "data: pack %lu entries, ABI %08lx",
+    CtrLog_Write(CTR_LOG_FS, "data: pack %lu entries, ABI %08lx, read positionally",
                  (unsigned long)sEntryCount, (unsigned long)info.engineAbi);
     return true;
 
@@ -249,8 +312,7 @@ fail:
     free(index);
     free(sEntries);
     sEntries = NULL;
-    fclose(sPak);
-    sPak = NULL;
+    ClosePak();
     return false;
 }
 
@@ -330,22 +392,20 @@ const char *CtrData_BackendName(void)
     }
 }
 
+/* A stream keeps its own position: each read names it to the pack. */
 static ssize_t PakRead(void *cookie, char *buffer, size_t size)
 {
     PakStream *stream = cookie;
     size_t left = stream->size - stream->pos;
-    size_t got;
 
     if (size > left)
         size = left;
     if (size == 0)
         return 0;
-    LightLock_Lock(&sPakLock);
-    got = fseek(sPak, (long)(stream->base + stream->pos), SEEK_SET) == 0
-        ? fread(buffer, 1, size, sPak) : 0;
-    LightLock_Unlock(&sPakLock);
-    stream->pos += (uint32_t)got;
-    return got == 0 && size != 0 ? -1 : (ssize_t)got;
+    if (!PakReadAt(stream->base + stream->pos, buffer, (uint32_t)size))
+        return -1;
+    stream->pos += (uint32_t)size;
+    return (ssize_t)size;
 }
 
 static int PakSeek(void *cookie, off_t *offset, int whence)
@@ -440,7 +500,7 @@ bool CtrData_Size(const char *path, uint32_t *outSize)
     return true;
 }
 
-bool CtrData_Locate(const char *path, uint64_t *outOffset, uint32_t *outSize)
+bool CtrData_Locate(const char *path, uint64_t *outOffset, uint32_t *outSize, uint32_t *outCrc)
 {
     const CtrPakEntry *entry;
 
@@ -448,19 +508,50 @@ bool CtrData_Locate(const char *path, uint64_t *outOffset, uint32_t *outSize)
         return false;
     *outOffset = entry->offset;
     *outSize = entry->rawSize;
+    if (outCrc != NULL)
+        *outCrc = entry->crc32;
     return true;
 }
 
 bool CtrData_ReadRange(uint64_t offset, void *dest, uint32_t size)
 {
+    return sBackend == CTR_DATA_PAK && PakReadAt(offset, dest, size);
+}
+
+CtrDataRead CtrData_ReadFile(const char *path, void *dest, uint32_t size)
+{
+    FILE *file;
     bool ok;
 
-    if (sBackend != CTR_DATA_PAK || sPak == NULL)
-        return false;
-    LightLock_Lock(&sPakLock);
-    ok = fseek(sPak, (long)offset, SEEK_SET) == 0 && fread(dest, 1, size, sPak) == size;
-    LightLock_Unlock(&sPakLock);
-    return ok;
+    if (!PathValid(path))
+        return CTR_DATA_READ_MISSING;
+    if (sBackend == CTR_DATA_PAK)
+    {
+        const CtrPakEntry *entry = FindEntry(path);
+
+        if (entry == NULL)
+            return CTR_DATA_READ_MISSING;
+        return entry->rawSize != size ? CTR_DATA_READ_SIZE : PakReadEntry(entry, dest);
+    }
+    if ((file = CtrData_Open(path)) == NULL)
+        return CTR_DATA_READ_MISSING;
+    ok = fread(dest, 1, size, file) == size;
+    fclose(file);
+    return ok ? CTR_DATA_READ_OK : CTR_DATA_READ_IO;
+}
+
+const char *CtrData_ReadName(CtrDataRead result)
+{
+    switch (result)
+    {
+    case CTR_DATA_READ_OK: return "ok";
+    case CTR_DATA_READ_MISSING: return "missing";
+    case CTR_DATA_READ_SIZE: return "size differs";
+    case CTR_DATA_READ_IO: return "read failed";
+    case CTR_DATA_READ_CRC: return "CRC mismatch";
+    case CTR_DATA_READ_NOMEM: return "no memory";
+    default: return "?";
+    }
 }
 
 bool CtrData_Exists(const char *path)
@@ -474,28 +565,41 @@ static void *LoadNow(const char *path, uint32_t *outSize)
     uint8_t *buffer;
     FILE *file;
 
-    if (!CtrData_Size(path, &size) || (file = CtrData_Open(path)) == NULL)
-        return NULL;
-    buffer = malloc((size_t)size + 1);
-    if (buffer == NULL || fread(buffer, 1, size, file) != size)
-    {
-        fclose(file);
-        free(buffer);
-        CtrLog_Write(CTR_LOG_ERROR, "data: short read %s", path);
-        return NULL;
-    }
-    fclose(file);
-    buffer[size] = 0;
     if (sBackend == CTR_DATA_PAK)
     {
-        const CtrPakEntry *entry = FindEntry(path);
-        if (entry != NULL && CtrPak_Crc32(0, buffer, size) != entry->crc32)
+        /* One read of exactly the file, straight into its buffer. */
+        const CtrPakEntry *entry = PathValid(path) ? FindEntry(path) : NULL;
+        CtrDataRead result = CTR_DATA_READ_NOMEM;
+
+        if (entry == NULL)
+            return NULL;
+        size = entry->rawSize;
+        buffer = malloc((size_t)size + 1);
+        if (buffer == NULL || (result = PakReadEntry(entry, buffer)) != CTR_DATA_READ_OK)
         {
-            CtrLog_Write(CTR_LOG_ERROR, "data: %s fails its CRC; the pack is damaged", path);
+            if (result == CTR_DATA_READ_CRC)
+                CtrLog_Write(CTR_LOG_ERROR, "data: %s fails its CRC; the pack is damaged", path);
+            else
+                CtrLog_Write(CTR_LOG_ERROR, "data: short read %s", path);
             free(buffer);
             return NULL;
         }
     }
+    else
+    {
+        if (!CtrData_Size(path, &size) || (file = CtrData_Open(path)) == NULL)
+            return NULL;
+        buffer = malloc((size_t)size + 1);
+        if (buffer == NULL || fread(buffer, 1, size, file) != size)
+        {
+            fclose(file);
+            free(buffer);
+            CtrLog_Write(CTR_LOG_ERROR, "data: short read %s", path);
+            return NULL;
+        }
+        fclose(file);
+    }
+    buffer[size] = 0;
     if (outSize != NULL)
         *outSize = size;
     return buffer;
@@ -688,4 +792,37 @@ void *CtrData_Load(const char *path, uint32_t *outSize)
     if (outSize != NULL)
         *outSize = size;
     return copy;
+}
+
+void CtrData_Shutdown(void)
+{
+    unsigned waited;
+
+    /* The read-ahead worker ends once nothing is queued: what is queued is
+     * given up, what it reads now is finished. */
+    if (sAheadReady)
+    {
+        LightLock_Lock(&sAheadLock);
+        for (unsigned i = 0; i < AHEAD_SLOTS; ++i)
+            if (sAhead[i].state == AHEAD_QUEUED)
+                sAhead[i].state = AHEAD_FREE;
+        LightLock_Unlock(&sAheadLock);
+        for (waited = 0; __atomic_load_n(&sAheadWorker, __ATOMIC_ACQUIRE) && waited < 400; ++waited)
+            svcSleepThread(5 * 1000 * 1000);
+    }
+    if (sPakFile == 0)
+        return;
+    __atomic_store_n(&sPakClosing, true, __ATOMIC_SEQ_CST);
+    for (waited = 0; __atomic_load_n(&sPakReaders, __ATOMIC_SEQ_CST) != 0 && waited < 400; ++waited)
+        svcSleepThread(5 * 1000 * 1000);
+    if (__atomic_load_n(&sPakReaders, __ATOMIC_SEQ_CST) != 0)
+        CtrLog_Write(CTR_LOG_ERROR, "data: %ld pack reads still under way at exit; the pack is left open",
+                     (long)__atomic_load_n(&sPakReaders, __ATOMIC_SEQ_CST));
+    else
+    {
+        ClosePak();
+        CtrLog_Write(CTR_LOG_FS, "data: pack closed after %lu reads, %llu KiB",
+                     (unsigned long)__atomic_load_n(&sPakReads, __ATOMIC_RELAXED),
+                     (unsigned long long)(__atomic_load_n(&sPakBytes, __ATOMIC_RELAXED) >> 10));
+    }
 }

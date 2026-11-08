@@ -26,7 +26,7 @@ typedef struct {
 typedef struct {
     uint16_t held, down, up; /* GBA buttons + cardinal Circle Pad. */
     uint16_t physicalHeld, physicalDown, physicalUp;
-    uint16_t lastDown, lastUp, circleDirection;
+    uint16_t circleDirection;
     uint32_t presses[12];
     bool touchActive, touchDown, touchUp;
     uint16_t touchX, touchY; /* bottom pixels: 0..319, 0..239 */

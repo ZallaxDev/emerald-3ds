@@ -76,10 +76,39 @@ int VoxelEntities_PlayerVertexFirst(void);
  * visible object event to the builder. `atlas` is VOXEL_SPRITE_PIXELS
  * uint16_t in PICA order. Optional `shadows` receives each outdoor object's
  * cast shadow: one quad (VOXEL_CAST_SHADOW_VERTICES), alpha in `shade`.
- * Returns the number of slots re-decoded this frame.
  */
-unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas,
-                            const VoxelCamera *camera, VoxelBuilder *shadows,
-                            VoxelBuilder *reflections);
+void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas,
+                        const VoxelCamera *camera, VoxelBuilder *shadows,
+                        VoxelBuilder *reflections);
+/* Sprites in sight left out for want of a slot, counted per frame, in all
+ * (the frame profiler's quality counts). */
+unsigned VoxelEntities_SpritesLeftOut(void);
+
+/*
+ * What the slots did since the last call, for the log. A slot brought up to
+ * date (refreshes) is either gathered from OBJ VRAM as before, because a
+ * change was possible (raw: its sprite or slot changed, or the renderer
+ * could not say its tiles stayed the same), and of those decoded again
+ * because the picture did differ (regathered); or kept, its tiles unchanged
+ * since its token, and of those decoded again for its colours alone
+ * (keptPalette). One slot a frame that could be kept is gathered anyway
+ * (audits, counted in raw too), and one whose tiles differed (auditStale)
+ * was a write to OBJ VRAM the renderer was not told of - shown late, logged
+ * as CONTRACT.
+ */
+typedef struct
+{
+    uint32_t refreshes;
+    uint32_t raw, regathered;
+    uint32_t kept, keptPalette;
+    uint32_t audits, auditStale;
+} VoxelBillboardCounts;
+void VoxelEntities_TakeCounts(VoxelBillboardCounts *counts);
+/* false: every slot gathered and compared each frame, as before (the audit
+ * builds' nocache.txt bit 65536, set by ctr_voxel.c). */
+void VoxelEntities_SetKeep(bool keep);
+/* System ticks spent gathering, comparing and decoding slots since the last
+ * call; 0 with the profiler off (Port_ProfTick). */
+uint32_t VoxelEntities_TakeGatherTicks(void);
 
 #endif

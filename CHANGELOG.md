@@ -1,5 +1,37 @@
 # Changelog
 
+## Unreleased
+
+- Local wireless: every language of one release links. The build's id, which
+  two systems must share to play together, is now made from the patch set
+  and the port's code rather than the ROM-derived executable and data, so
+  English, Spanish, French, Italian, German and Japanese builds of one
+  release share it. The title screen shows it at the bottom left of the
+  bottom screen, above the logo. By @eathanpage.
+- Hall of Fame: shown centred as a GBA screen instead of in the top screen's
+  top left corner, with black and falling confetti beside it. Its stripes
+  and dark bands carry on to the edges, and its texts (each Pokémon's
+  number, name and level, "Welcome to the HALL OF FAME!", "LEAGUE CHAMPION!
+  CONGRATULATIONS!") are back in the dark band where the GBA shows them;
+  the game prints them in the standard text box, which this screen lowers
+  for the overworld. By @eathanpage.
+- Wide screen and GBA screens: every other screen laid out for the GBA is
+  shown centred instead of in the top screen's top left corner: the Battle
+  Dome's tourney tree, the Battle Factory's rental and swap screens, the
+  Battle Pyramid's bag, Trainer Hill's records, Berry Crush, a berry's tag,
+  the clear-save and reset-clock screens, the museum's paintings, the
+  diploma, Easy Chat, the Frontier Pass, mail, the move relearner, the
+  PokéBlock case, feeding a PokéBlock, the condition screen, the save error
+  screen, the Union Room chat and the wireless status screen. The tourney
+  tree no longer has two black bars down its middle: its windows, which the
+  game moves line by line, are drawn line by line. The swap menu's bar no
+  longer lies across the margin past the picture. By @eathanpage.
+- Bottom screen: while it has the player's attention (a menu it runs with the
+  top screen held, such as the party or the bag, one of its own sections such
+  as SAVE or OPTIONS, or its button column in focus with X), the top screen
+  darkens towards its foot under an arrow pointing down at it, as on the DS
+  games, and the music plays at half its volume. By @eathanpage.
+
 ## 0.5.0 — 2026-10-29
 
 The first beta.
@@ -8,6 +40,11 @@ Most of Hoenn is now recreated in voxels, but the 3D world is still under
 construction: there are still many faults, flat elements and other problems,
 which will be fixed in the coming versions. Everything keeps being built and
 improved.
+
+- Licence: the original Emerald 3DS code, tools and documentation move from
+  MIT to CC BY-NC-SA 4.0 (`LICENSE-PORT.md`). Forks and changes stay welcome,
+  with credit and under the same licence, but not for profit. Copies of
+  0.4.x and earlier keep the MIT licence they were published under.
 
 - Voxel world: most of Hoenn's interiors stand in 3D, by @Deunnis:
   Lilycove's contest stage, lobby and hall (pull request #125, issue #119),
@@ -339,7 +376,13 @@ improved.
   game's Japanese glyphs, the naming screen has the Japanese keyboard and
   5-character names, battles draw names, levels and HP as the Japanese game
   does, the touch screen has Japanese labels and the Pokédex shows metres
-  and kilograms. See docs/JAPANESE.md for what is still in English. The
+  and kilograms. The scripts' and TV shows' texts the matcher has found no
+  Japanese for yet (about a hundred) show the port's own "(みほんやく)" (not
+  yet translated) instead of the English game's text, which the release
+  does not carry; the sound effects BPEJ has in another version (the
+  EXP gain, Sandstorm and eight more) and the slot machine's menu come from
+  your ROM (`tools/locale_research/japanese_extras.py`). See docs/JAPANESE.md
+  for what is still to do. The
   touch screen no longer crashes the Japanese game half a second after a
   save loads (wrapped text measured with the Japanese fonts' fixed width),
   by @luksgrin (pull request #200). Also by @luksgrin (pull request #201):

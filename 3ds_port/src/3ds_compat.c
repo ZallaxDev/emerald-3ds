@@ -113,7 +113,6 @@ void Port_SetAudioDebugEx(u16 tag, u16 a, u16 b, u16 c, u16 d)
         if (partStart != 0)
             parts[3] += now - partStart;
         partStart = 0;
-        CtrAudio_Stats()->mixMs = ms;
         mixStart = 0;
         /* Wherever it runs (a worker core or the game thread), its average
          * and worst in the log, every 600 mixed frames. */
@@ -125,6 +124,19 @@ void Port_SetAudioDebugEx(u16 tag, u16 a, u16 b, u16 c, u16 d)
                          "voices %.3f, psg waves %.3f)", sum / frames, peak,
                          CtrPlatform_TickMs(parts[0]) / frames, CtrPlatform_TickMs(parts[1]) / frames,
                          CtrPlatform_TickMs(parts[2]) / frames, CtrPlatform_TickMs(parts[3]) / frames);
+            {
+                /* What the speakers got over those frames: a run dry is heard. */
+                static uint32_t lastUnderruns, lastDrops;
+                CtrAudioStats *stats = CtrAudio_Stats();
+
+                CtrLog_Write(CTR_LOG_AUDIO, "queue: ran dry %lu, frames dropped %lu, fewest queued %lu, rate %.0f Hz",
+                             (unsigned long)(stats->underruns - lastUnderruns),
+                             (unsigned long)(stats->drops - lastDrops),
+                             (unsigned long)stats->lowest, stats->rateHz);
+                lastUnderruns = stats->underruns;
+                lastDrops = stats->drops;
+                stats->lowest = UINT32_MAX;
+            }
             sum = peak = 0.0f;
             frames = 0;
             memset(parts, 0, sizeof(parts));
@@ -506,8 +518,6 @@ fail:
 
 /* ── Entry points the excluded GBA link/multiboot units would provide ───── */
 
-u32 JoyBusRead(void) { return 0; }
-void JoyBusWrite(void) {}
 void CB2_InitBerryFixProgram(void) { CTR_STUB("BERRY_FIX", "GBA berry-fix program not applicable"); }
 void CreateEReaderTask(void) { CTR_STUB("EREADER", "e-Reader link not supported"); }
 void CB2_InitMysteryGift(void) { CTR_STUB("MYSTERY_GIFT", "link menu not supported"); }

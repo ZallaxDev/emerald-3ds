@@ -294,7 +294,8 @@ or [contributing](CONTRIBUTING.md).
 ## Provenance and licences
 
 Only original Emerald 3DS code, tools and documentation are licensed by this
-project ([LICENSE-PORT.md](LICENSE-PORT.md)). The decompilation, the game and
+project, under [CC BY-NC-SA 4.0](LICENSE-PORT.md) since 0.5.0: fork it, change
+it and share it with credit, not for profit, and under the same licence. The decompilation, the game and
 third-party components keep their own terms; see [NOTICE.md](NOTICE.md) and
 [docs/PROVENANCE.md](docs/PROVENANCE.md). AI-assisted tooling was used during
 development: [AI_DISCLOSURE.md](AI_DISCLOSURE.md).

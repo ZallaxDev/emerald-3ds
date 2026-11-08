@@ -211,6 +211,14 @@ static void MakeLabels(const uint16_t *boxTileVram);
  */
 enum { WARM_NONE, WARM_RUNNING, WARM_DONE };
 static volatile int sWarm = WARM_NONE;
+/* The worker's end is told under sWarmLock on sWarmDone: whoever waits for
+ * it sleeps until then. A zeroed lock and condition are ready to use. */
+static CtrLock sWarmLock;
+static CtrCond sWarmDone;
+/* At exit, how long the worker may take to finish (hud.bin is read from the
+ * RomFS, which closes after it): its whole work is some 140 ms in Azahar, a
+ * few times that on a console. */
+#define WARM_EXIT_MS 2000u
 
 static void WarmWorker(void *arg)
 {
@@ -222,23 +230,61 @@ static void WarmWorker(void *arg)
         MakeLabels(NULL);
     CtrLog_Write(CTR_LOG_VIDEO, "battle hud: art and labels ready in %.1f ms on the worker",
                  CtrPlatform_TickMs(CtrPlatform_Ticks() - t0));
+    CtrLock_Lock(&sWarmLock);
     __atomic_store_n(&sWarm, WARM_DONE, __ATOMIC_RELEASE);
+    CtrLock_Unlock(&sWarmLock);
+    CtrCond_Broadcast(&sWarmDone);
+}
+
+/* At exit (CtrPlatform_Shutdown): the worker, if it still runs, waited for
+ * a bounded time before the file systems close under it. */
+static void WarmStopAtExit(void)
+{
+    uint64_t deadline = CtrPlatform_Milliseconds() + WARM_EXIT_MS;
+    bool running;
+
+    CtrLock_Lock(&sWarmLock);
+    for (;;)
+    {
+        uint64_t now = CtrPlatform_Milliseconds();
+
+        running = __atomic_load_n(&sWarm, __ATOMIC_ACQUIRE) == WARM_RUNNING;
+        if (!running || now >= deadline)
+            break;
+        CtrCond_WaitTimeout(&sWarmDone, &sWarmLock, (unsigned)(deadline - now) * 1000u);
+    }
+    CtrLock_Unlock(&sWarmLock);
+    if (running)
+        CtrLog_Write(CTR_LOG_ERROR, "battle hud: the worker was still at its art after %u ms; exiting under it",
+                     WARM_EXIT_MS);
 }
 
 void CtrBattleHud_Warm(void)
 {
+    static bool sStopRegistered;
+
     if (sWarm != WARM_NONE || (sArtTried && sHpLabel.made))
         return;
     sWarm = WARM_RUNNING;
     if (!CtrPlatform_StartThread(WarmWorker, NULL, 16 * 1024, -2))
         sWarm = WARM_NONE;
+    else if (!sStopRegistered)
+    {
+        sStopRegistered = true;
+        CtrPlatform_AtShutdown(WarmStopAtExit);
+    }
 }
 
-/* The worker's work, waited for if it is still at it. */
+/* The worker's work, waited for if it is still at it: asleep until it says
+ * it is done, rather than looking every half millisecond. */
 static void WarmWait(void)
 {
+    if (__atomic_load_n(&sWarm, __ATOMIC_ACQUIRE) != WARM_RUNNING)
+        return;
+    CtrLock_Lock(&sWarmLock);
     while (__atomic_load_n(&sWarm, __ATOMIC_ACQUIRE) == WARM_RUNNING)
-        CtrPlatform_SleepUs(500);
+        CtrCond_Wait(&sWarmDone, &sWarmLock);
+    CtrLock_Unlock(&sWarmLock);
 }
 
 bool CtrBattleHud_Ready(void)

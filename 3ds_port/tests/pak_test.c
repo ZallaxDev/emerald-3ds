@@ -42,6 +42,20 @@ static uint8_t *Load(const char *path, long *size)
     return data;
 }
 
+/* CRC-32 bit by bit, as zlib defines it: what the word-at-a-time one must equal. */
+static uint32_t BitwiseCrc(const uint8_t *p, size_t n)
+{
+    uint32_t crc = 0xFFFFFFFFu;
+
+    while (n--)
+    {
+        crc ^= *p++;
+        for (int k = 0; k < 8; ++k)
+            crc = (crc & 1) ? 0xEDB88320u ^ (crc >> 1) : crc >> 1;
+    }
+    return ~crc;
+}
+
 static CtrPakStatus Parse(const uint8_t *pak, uint32_t abi, const uint8_t *rom, CtrPakEntry *entries,
                           CtrPakHeader *header)
 {
@@ -83,8 +97,42 @@ int main(int argc, char **argv)
             CHECK(CtrPak_Crc32(0, pak + e->offset, e->rawSize) == e->crc32, "payload CRC");
         }
     }
+    {
+        /* The builder writes the payloads in path order (pak.py), which the
+         * console's warm-up reads in runs: these sorted, their offsets rise. */
+        static const char *const kByPath[] = {
+            "gamedata/gamedata.bin", "graphics/fonts/normal.latfont", "maps/layouts.bin", "voxel/relief.bin",
+        };
+        uint64_t last = 0;
+        int ordered = 1;
+
+        for (unsigned i = 0; i < 4; ++i)
+        {
+            const CtrPakEntry *e = CtrPak_Find(entries, header.entryCount, kByPath[i]);
+
+            ordered &= e != NULL && e->offset >= last;
+            if (e != NULL)
+                last = e->offset;
+        }
+        CHECK(ordered, "payloads in path order");
+    }
     CHECK(CtrPak_Find(entries, header.entryCount, "maps/layouts.bi") == NULL, "near miss is absent");
     CHECK(CtrPak_PathId("a") == 0xaf63dc4c8601ec8cull, "FNV-1a 64 reference");
+    {
+        /* From every alignment, over every length up to a few words: the
+         * bytes before a word boundary, the words, the bytes after. */
+        uint8_t bytes[96];
+        int same = 1;
+
+        for (unsigned i = 0; i < sizeof(bytes); ++i)
+            bytes[i] = (uint8_t)(i * 37u + 11u);
+        for (unsigned start = 0; start < 8; ++start)
+            for (unsigned n = 0; start + n <= sizeof(bytes); ++n)
+                same &= CtrPak_Crc32(0, bytes + start, n) == BitwiseCrc(bytes + start, n);
+        CHECK(same, "word-at-a-time CRC equals the bitwise one");
+        CHECK(CtrPak_Crc32(CtrPak_Crc32(0, bytes, 13), bytes + 13, 50) == BitwiseCrc(bytes, 63), "chained CRC");
+        CHECK(CtrPak_Crc32(0, "123456789", 9) == 0xCBF43926u, "CRC-32 check value");
+    }
 
     CHECK(Parse(pak, abi ^ 1, kRom, entries, &header) == CTR_PAK_BAD_ABI, "other release is refused");
     CHECK(header.engineAbi == abi, "pack ABI still reported");

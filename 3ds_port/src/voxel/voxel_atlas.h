@@ -80,9 +80,39 @@ typedef struct VoxelAtlasMap
 {
     uint16_t slotOf[VOXEL_METATILE_IDS];
     uint8_t tileMask[VOXEL_ATLAS_PAGES][128]; /* source tiles referenced per page */
-    unsigned used;      /* slots actually composed */
+    /* Slots spanned: one past the furthest given out. With the pair's plan
+     * (below) some of them may be left empty, kept for ids not in view. */
+    unsigned used;
     bool overflowed;    /* the map referenced more ids than the atlas holds */
 } VoxelAtlasMap;
+
+/*
+ * Where each id of a tileset pair goes, the same in every atlas made of the
+ * pair: its plan. A chunk's texture coordinates are its ids' slots, so with
+ * the slots of a rebuilt atlas left to the order its ids were met in - which
+ * depends on where the camera stood - every chunk drawn from the pair was
+ * stale once its atlas had been evicted and made again (on an Old 3DS the
+ * cache often holds one atlas: each pair left and come back to). An id keeps
+ * the place it was first given while the pair's plan is remembered (the
+ * pairs most recently composed); a new id takes the next free place. A plan
+ * that would spread the ids now in use over more pages than a fresh one is
+ * started again (a relayout): never more VRAM than the order of meeting
+ * took. Chunks still check their own ids' slots (ctr_voxel.c, the UV key):
+ * the plan only makes them match more often.
+ */
+void VoxelAtlas_SetStablePlan(bool on);
+typedef struct
+{
+    unsigned relayouts; /* fresh atlases that started their pair's plan again */
+    unsigned reseeds;   /* extensions that took their atlas's slots as the plan */
+    unsigned planned;   /* fresh atlases laid out by a plan kept from before */
+    unsigned moved;     /* ids an extension gave a place another id had */
+} VoxelAtlasPlanCounts;
+/* The counts since the last call, which clears them. */
+void VoxelAtlas_TakePlanCounts(VoxelAtlasPlanCounts *counts);
+/* Whether the pair's drawing of `metatile` is all black (VoxelAtlas_IsVoid),
+ * read without touching which pairs are kept: for keys only. */
+bool VoxelAtlas_VoidBit(const void *primary, const void *secondary, unsigned metatile);
 
 /*
  * Synchronous convenience for page zero only. Fills `dest` (VOXEL_ATLAS_PIXELS
@@ -125,6 +155,10 @@ typedef struct
     unsigned added;     /* ids given a slot of their own by this job */
     unsigned page;      /* current staging page; slotOf encodes page*512+slot+1 */
     bool pageReady;     /* CPU must not touch dest until its GPU upload retires */
+    int plan;           /* the pair's plan it assigns slots by, or -1 */
+    /* An extension's places held in its map (a bit each), for a new id to
+     * take a free one on the pages it has (AssignSlot). */
+    uint32_t taken[(VOXEL_ATLAS_PAGES * VOXEL_SOLID_BASE + 31u) / 32u];
 } VoxelAtlasJob;
 
 /* False with job->ok means base already covers the request: no buffers/upload. */
