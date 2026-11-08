@@ -7,6 +7,8 @@ from pathlib import Path
 import subprocess
 import tempfile
 
+from video_text import read_video
+
 ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parent
 
@@ -25,7 +27,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cc', default='gcc')
     args = parser.parse_args()
-    video = (ROOT / 'src/3ds_video.c').read_text(encoding='utf-8')
+    video = read_video()
     source = r'''
 #include "global.h"
 #include "gpu_regs.h"

@@ -101,6 +101,9 @@ void VoxelBuilder_Init(VoxelBuilder *builder, VoxelVertex *storage, unsigned cap
     builder->dropped = 0;
     builder->atlas = NULL;
     builder->uncovered = 0;
+    builder->readIds = NULL;
+    builder->readSlots = NULL;
+    builder->readMixed = false;
     builder->originX = 0.0f;
     builder->originZ = 0.0f;
     builder->lift = 0.0f;
@@ -191,6 +194,26 @@ static void WindowReset(int x0, int y0, int x1, int y1)
 
 /* ── UV lookup ──────────────────────────────────────────────────────────── */
 
+/* An id's slot in the bound atlas, noted for the chunk's UV key. */
+static unsigned SlotRead(VoxelBuilder *builder, unsigned id)
+{
+    unsigned slot = builder->atlas->slotOf[id];
+
+    if (builder->readIds != NULL && id < VOXEL_METATILE_IDS)
+    {
+        uint32_t bit = 1u << (id & 31u);
+
+        if (builder->readIds[id >> 5] & bit)
+            builder->readMixed = builder->readMixed || builder->readSlots[id] != slot;
+        else
+        {
+            builder->readIds[id >> 5] |= bit;
+            builder->readSlots[id] = (uint16_t)slot;
+        }
+    }
+    return slot;
+}
+
 /* Returns false when the atlas has no pixels for this tile's metatile; the
  * caller emits nothing, and `uncovered` has already asked for a rebuild. */
 /* UVs of an explicit metatile id in the bound atlas. */
@@ -201,7 +224,7 @@ static bool MetatileUV(VoxelBuilder *builder, int metatileId,
 
     if (metatileId < 0 || metatileId >= (int)VOXEL_METATILE_IDS)
         return false;
-    slot = builder->atlas->slotOf[metatileId];
+    slot = SlotRead(builder, (unsigned)metatileId);
     if (slot == 0 || slot == VOXEL_SLOT_PENDING)
     {
         ++builder->uncovered;
@@ -240,7 +263,7 @@ bool VoxelMesh_TileUV(VoxelBuilder *builder, int x, int y,
         if (VoxelWorld_UsesTreeSprites(inst))
             metatile = VoxelTree_GroundMetatile(inst->secondaryTileset, metatile);
     }
-    slot = builder->atlas->slotOf[metatile];
+    slot = SlotRead(builder, (unsigned)metatile);
 
     if (slot == 0 || slot == VOXEL_SLOT_PENDING)
     {
@@ -2313,7 +2336,7 @@ void VoxelMesh_EmitGroundRow(VoxelBuilder *builder, const VoxelMapInstance *inst
                 /* A ground variant the atlas has no slot for (a full atlas)
                  * gives way to the cell's whole drawing: never a hole. */
                 if (!drawn && ground >= (int)VOXEL_METATILE_REAL && ground < (int)VOXEL_METATILE_IDS
-                 && builder->atlas->slotOf[ground] == VOXEL_SLOT_ABSENT)
+                 && SlotRead(builder, (unsigned)ground) == VOXEL_SLOT_ABSENT)
                     drawn = MetatileUV(builder, VoxelWorld_GetMetatileId(x, y), &u0, &v0, &u1, &v1);
                 if (drawn)
                 {

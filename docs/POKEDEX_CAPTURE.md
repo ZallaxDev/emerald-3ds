@@ -49,7 +49,7 @@ La foto física identifica los síntomas, no los valores exactos de registros.
   captura, sprites, paletas y `gMain.inBattle` permanece intacta.
 - No hay flag persistente del port que pueda quedar activo tras un reset: el
   hook observa las tareas del juego. La Pokédex del campo conserva su ruta.
-- [3ds_video.c](../3ds_port/src/3ds_video.c) fija un fill propio: solo BG3,
+- [src/video/centred.inc](../3ds_port/src/video/centred.inc) fija un fill propio: solo BG3,
   celda (0, 2), la misma franja que PAGE_INFO. `StorageCompose` centra la imagen
   240×160 con márgenes de 40 píxeles en una salida 320×240; BG2 y sprites quedan
   recortados al rectángulo nativo. No se repiten texto, huellas ni bordes.
@@ -69,7 +69,7 @@ La foto física identifica los síntomas, no los valores exactos de registros.
 ## Integración manual en árboles staged
 
 La integración posterior necesita 0043 después de 0042 y las versiones
-coherentes de `3ds_game_full.c`, `3ds_video.c` y `3ds_video.h`. Copiar solamente
+coherentes de `3ds_game_full.c`, `3ds_video.c` con `src/video/` y `3ds_video.h`. Copiar solamente
 el puente antiguo deja el renderer equivocado; copiar el puente nuevo sin
 el header/renderer no integra el nuevo modo. Antes de integrar en otro árbol,
 conservar los cambios concurrentes de cada

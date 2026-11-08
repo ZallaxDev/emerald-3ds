@@ -3,10 +3,11 @@
  * (3ds_rfu_adapter.c) is the 3DS's local wireless (the UDS service), so the
  * game's wireless features find other systems nearby. See include/3ds_local.h.
  *
- * Builds. Only identical builds link: the game's link code exchanges its
+ * Builds. Only the same build links: the game's link code exchanges its
  * structures raw, and two builds can disagree on them. Every build carries a
- * SHA-256 of its executable and data (engine/build_id.bin, written by
- * scripts/gen_build_id.py). A session's beacon shows it and its passphrase
+ * SHA-256 of its patch set and code (engine/build_id.bin, written by
+ * scripts/gen_build_id.py), not of the ROM its language was staged from: the
+ * languages of one release link. A session's beacon shows it and its passphrase
  * holds it, so another build can neither find nor join the session; a player
  * whose counter has only sessions of other builds nearby is told so, rather
  * than left hosting a session nobody nearby can join.
@@ -129,6 +130,7 @@ struct AppData
 
 /* Ours, and the passphrase made with it. */
 static uint8_t sBuildId[BUILD_ID_SIZE];
+static bool sBuildKnown;   /* engine/build_id.bin was read */
 static char sPassphrase[sizeof(PASSPHRASE) + 2 * 16 + 2];
 
 enum
@@ -653,6 +655,17 @@ static const char *BuildHex(char *out, const uint8_t *id)
     return out;
 }
 
+const char *LocalLink_BuildName(void)
+{
+    static char name[17];
+
+    if (!sBuildKnown)
+        return NULL;
+    for (int i = 0; i < 8; i++)
+        snprintf(name + 2 * i, 3, "%02x", sBuildId[i]);
+    return name;
+}
+
 static int SessionCheck(const udsNetworkScanInfo *net, uint8_t kind, uint32_t *token)
 {
     struct AppData app = {0};   /* a short beacon leaves the rest unread */
@@ -1109,7 +1122,8 @@ void LocalLink_Init(void)
 
         if (file)
             fclose(file);
-        if (got != BUILD_ID_SIZE)
+        sBuildKnown = got == BUILD_ID_SIZE;
+        if (!sBuildKnown)
         {
             /* Links only with builds without one too. */
             memset(sBuildId, 0, sizeof(sBuildId));

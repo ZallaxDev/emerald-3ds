@@ -57,7 +57,11 @@ typedef struct
     float x, y, z;
     float contact; /* the contact AO factor, 1 where nothing stands close */
     bool lit;      /* the ray reached the sun */
-    bool rayCast;  /* lit is known: not for a point only its contact was asked of */
+    /* The sun `lit` was cast under (sSunGeneration); any other, and only the
+     * contact is known - a point only its contact was asked of, or one lit
+     * by an earlier sun. The contact reads the casters alone, never the sun
+     * (Contact), so it outlives a sun that moves. */
+    uint16_t sun;
     uint32_t generation;
 } LightSample;
 static LightSample sSamples[SAMPLE_CACHE_SIZE];
@@ -66,6 +70,8 @@ static LightSample sSamples[SAMPLE_CACHE_SIZE];
 static uint8_t sSampleNext[SAMPLE_SETS];
 static uint32_t sGeneration;
 static uint32_t sSampleGeneration;
+/* Bumped by every new sun (VoxelLighting_SetSun); never 0, which no sun is. */
+static uint16_t sSunGeneration = 1;
 VoxelSun gVoxelSun = {0.85f, 0.55f, 1.0f, 0};
 static float sAmbient = VOXEL_AMBIENT;
 static float sStepInverseX = 4.0f / 0.85f, sStepInverseZ = 4.0f / 0.55f;
@@ -288,7 +294,16 @@ bool VoxelLighting_SetSun(float dx, float dz, float strength, uint32_t key)
     sAmbient = 1.0f - (1.0f - VOXEL_AMBIENT) * strength;
     sStepInverseX = fabsf(dx) > 0.0001f ? 4.0f / dx : 0.0f;
     sStepInverseZ = fabsf(dz) > 0.0001f ? 4.0f / dz : 0.0f;
-    ResetSamples();
+    /* Every ray is cast again, but not the contacts: they test the casters
+     * round a point, which no sun moves, and with the world unchanged (a
+     * change resets the samples) each is the number it would be again. A
+     * door with DAY / NIGHT on is a new sun both ways. Wrapped round, a
+     * sample cast 65536 suns ago would pass for this one's: all go then. */
+    if (++sSunGeneration == 0)
+    {
+        ResetSamples();
+        sSunGeneration = 1;
+    }
     return true;
 }
 
@@ -928,7 +943,7 @@ static LightSample *FindSample(float x, float y, float z)
         sSampleNext[set] = (sSampleNext[set] + 1u) & (SAMPLE_WAYS - 1u);
     }
     sample->contact = Contact(x, y, z);
-    sample->rayCast = false;
+    sample->sun = 0;
     sample->x = x;
     sample->y = y;
     sample->z = z;
@@ -940,12 +955,12 @@ static const LightSample *CachedSample(float x, float y, float z)
 {
     LightSample *sample = FindSample(x, y, z);
 
-    if (!sample->rayCast)
+    if (sample->sun != sSunGeneration)
     {
         if (gVoxelSun.strength > 0.0f)
             ++sRays;
         sample->lit = Lit(x, y, z);
-        sample->rayCast = true;
+        sample->sun = sSunGeneration;
     }
     return sample;
 }
@@ -1255,10 +1270,10 @@ void VoxelLighting_Lattice(VoxelBuilder *builder, const VoxelVertex *lattice)
              || (v = LatticeInfer(wy, wz, lit, a, c)) < 0)
                 continue;
             sample = FindSample(wx[k], wy[k], wz[k]);
-            if (!sample->rayCast)
+            if (sample->sun != sSunGeneration)
             {
                 sample->lit = v != 0;
-                sample->rayCast = true;
+                sample->sun = sSunGeneration;
             }
         }
 }

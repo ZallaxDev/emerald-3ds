@@ -46,9 +46,10 @@ function pointers (callbacks, native script commands) are guarded for
    instead, whenever NDSP has fewer than three frames queued, and
    `FrameShown` in `3ds_platform.c` runs a hidden frame when the game has
    fallen a frame behind the display - in the field only: a battle keeps
-   the GBA's timing, save under its party menu, summary and bag, where
-   hidden frames keep real time with the engine still on the game's frames;
-   without a DSP the clock mode mixes once per frame as before);
+   its frames as on the GBA, save under its party menu, summary and bag,
+   where hidden frames keep real time; the sound engine stays on the DSP's
+   clock in a battle too, except a link battle's, so a late frame costs no
+   click; without a DSP the clock mode mixes once per frame as before);
 2. latches the GBA registers, OAM and palettes and presents: the compositor
    decodes changed tiles into an RGBA5551 atlas and draws BG/OBJ layers with
    the PICA200 at native 400x240 on the top screen; the voxel overworld, when
@@ -136,7 +137,7 @@ shared, so the second eye costs its draw calls and fill. The plane of zero
 parallax stands just in front of the player; the game's text and weather are
 composed on it, the same in both eyes. A New 3DS has the frame for the second
 pass; on an Old 3DS the world stays flat unless OPTIONS' 3D WORLD says ON
-(`sVoxelStereo` in `3ds_video.c`), and 3D DEPTH scales the slider. Both are
+(`sVoxelStereo` in `src/video/frame.inc`), and 3D DEPTH scales the slider. Both are
 extras on the SETTINGS tab's second screen (`3ds_extras.c`).
 
 ## The camera at a map's edge

@@ -19,10 +19,18 @@ LDFLAGS += -Wl,--wrap=GX_BindQueue
 LDFLAGS += -Wl,--wrap=GX_ProcessCommandList -Wl,--wrap=GX_TextureCopy -Wl,--wrap=GX_DisplayTransfer -Wl,--wrap=GX_RequestDma
 # Cache flushes made by the kernel call itself, not through the GSP service (3ds_video.c).
 LDFLAGS += -Wl,--wrap=GSPGPU_FlushDataCache
+# Draw calls and render target switches counted for the frame profiler (3ds_video.c).
+LDFLAGS += -Wl,--wrap=C3D_DrawArrays -Wl,--wrap=C3D_DrawElements -Wl,--wrap=C3D_FrameDrawOn
 # Every GPU memory allocation, charged to the code that made it (3ds_gpumem.c).
 GPUMEM_WRAPPED := vramAlloc vramMemAlign vramAllocAt vramMemAlignAt vramRealloc vramFree \
 	linearAlloc linearMemAlign linearRealloc linearFree C3D_TexInitWithParams C3D_RenderTargetCreate C3D_RenderTargetCreateFromTex
 LDFLAGS += $(foreach f,$(GPUMEM_WRAPPED),-Wl,--wrap=$(f))
+# The heap's allocations, so that a cache may give its memory back before one
+# fails (3ds_platform.c, CtrPlatform_SetHeapYield).
+LDFLAGS += -Wl,--wrap=malloc -Wl,--wrap=calloc -Wl,--wrap=realloc -Wl,--wrap=memalign
+# Every memcpy, newlib's inside libraries too: newlib's own copies a byte at a
+# time whenever source and destination are not both word aligned (3ds_memcpy.c).
+LDFLAGS += -Wl,--wrap=memcpy
 LIBS := -lctru -lm
 TARGET := emerald3ds
 APP_TITLE := Emerald 3DS
@@ -47,6 +55,9 @@ EXESUFFIX := $(if $(filter Windows_NT,$(OS)),.exe,)
 SOURCES := src/main_3ds.c src/3ds_log.c src/3ds_platform.c src/3ds_input.c src/3ds_input_decode.c src/3ds_fs.c src/3ds_audio.c src/3ds_icons_ptbr.c
 SOURCES += src/3ds_data.c src/3ds_pak.c src/3ds_settings.c src/3ds_prof.c src/3ds_gpumem.c src/3ds_scenario.c
 SOURCES += src/3ds_video.c src/3ds_video_decode.c src/3ds_bottom_screen.c
+# The OAM's draw list, published by the sprite engine (include/3ds_obj_list.h).
+SOURCES += src/3ds_obj_list.c
+SOURCES += src/3ds_memcpy.c
 # The Game Corner's backdrops (include/3ds_corner_art.h).
 SOURCES += src/3ds_corner_art.c
 # The Pokédex on the top screen (include/3ds_dex_top.h).
@@ -90,6 +101,12 @@ endif
 # DUMP_SWOOP=1 every frame the swoop plays is written to frames.raw.
 ifdef TEST_SWOOP
 GAMEFLAGS += -DCTR_TEST_SWOOP=$(TEST_SWOOP)
+endif
+# BATTLE_TOGGLES=1: console test builds. The compositor's nocache.txt bits are
+# read without FRAME_DUMP's dumps, and battletoggles.txt turns them off battle
+# by battle (3ds_video.c). Never in a release.
+ifdef BATTLE_TOGGLES
+CPPFLAGS += -DCTR_BATTLE_TOGGLES=1
 endif
 ifdef FRAME_DUMP
 CPPFLAGS += -DCTR_FRAME_DUMP=1
@@ -147,6 +164,7 @@ GAMECFLAGS += -Wno-error=incompatible-pointer-types -Wno-error=int-conversion -W
 #   PORT_HEAP_CHECK         ../src/malloc.c: CheckHeap walks the heap again.
 # TEST_FLAGS (3ds_cycle_test.c only, touch it to rebuild):
 #   CTR_BATTLE_TEST=SPECIES_x, CTR_BATTLE_TEST_LEVEL=n, CTR_BATTLE_TEST_TRAINER=TRAINER_x: a battle on demand.
+#   CTR_WEATHER_TEST=frames: the field's weathers in turn, that many field frames each (frame dumps).
 -include local.mk
 include full.mk
 OBJECTS += $(FULL_OBJECTS)
@@ -245,11 +263,13 @@ ROMFS_DATA_OUTS := $(ROMFS_ASSET_OUTS) $(ROMFS_MAP_OUT) $(ROMFS_SCRIPT_OUTS) $(R
 romfs/engine/abi.bin: $(ROMFS_DATA_OUTS) $(SCRIPTS)/staging.py
 	"$(PYTHON)" $(SCRIPTS)/staging.py abi --romfs romfs
 
-# Local wireless play links only identical builds (src/3ds_local.c): a SHA-256
-# of the executable without its debug information and of the data's ABI.
-romfs/engine/build_id.bin: build/$(TARGET)_3dsx.elf romfs/engine/abi.bin scripts/gen_build_id.py
-	$(DEVKITARM)/bin/arm-none-eabi-objcopy --strip-debug $< build/$(TARGET)_id.elf
-	"$(PYTHON)" scripts/gen_build_id.py build/$(TARGET)_id.elf romfs/engine/abi.bin $@
+# Local wireless play links only the same build (src/3ds_local.c): a SHA-256
+# of the patch set and of the port's code, not of the ROM, so every language
+# of one release links. Remade at every link, when the code may have changed.
+# The private workspace has no ../.emerald3ds-patches: there the script makes
+# the patch set as the export would (scripts/gen_build_id.py).
+romfs/engine/build_id.bin: build/$(TARGET)_3dsx.elf $(wildcard ../.emerald3ds-patches) scripts/gen_build_id.py
+	"$(PYTHON)" scripts/gen_build_id.py . ../.emerald3ds-patches $@
 
 ifeq ($(EMBED_DATA),1)
 EMBED_MARKER := romfs/data.embedded
@@ -309,7 +329,16 @@ build/input_test.exe: tests/input_test.c src/3ds_input_decode.c include/3ds_inpu
 	@mkdir -p build
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/input_test.c src/3ds_input_decode.c -o $@
 
+.PHONY: verify-memcpy
+verify-memcpy: build/memcpy_test$(EXESUFFIX)
+	./build/memcpy_test$(EXESUFFIX)
+
+build/memcpy_test$(EXESUFFIX): tests/memcpy_test.c src/3ds_memcpy.c
+	@mkdir -p build
+	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror tests/memcpy_test.c -o $@
+
 verify: verify-video
+verify: verify-memcpy
 verify: verify-daynight
 verify: verify-clock-store
 verify: verify-nuzlocke

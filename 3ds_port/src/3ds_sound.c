@@ -20,7 +20,9 @@
 #include "3ds_platform.h"
 
 static bool sThreaded, sTried;
-/* Runs of the sequencer, counted under the sound lock (see IsPokemonCryPlaying). */
+/* Runs of the sequencer, counted as each ends (under the sound lock) and read
+ * without it (IsPokemonCryPlaying): a run counted is a run whose state the
+ * reader sees. */
 static u32 sEngineRuns;
 
 void __real_m4aSoundVSync(void);
@@ -29,7 +31,7 @@ void __real_m4aSoundMain(void);
 static void EngineMain(void)
 {
     __real_m4aSoundMain();
-    sEngineRuns++;
+    __atomic_add_fetch(&sEngineRuns, 1, __ATOMIC_RELEASE);
 }
 
 static void MixFrame(void)
@@ -66,15 +68,6 @@ void __wrap_m4aSoundMain(void)
     PORT_PROF_END(mix, PORT_PROF_MIX);
 }
 
-#define LOCKED(ret, name, params, args)            \
-    ret __real_##name params;                      \
-    ret __wrap_##name params                       \
-    {                                              \
-        CtrAudio_LockSound();                      \
-        ret result = __real_##name args;           \
-        CtrAudio_UnlockSound();                    \
-        return result;                             \
-    }
 
 #define LOCKED_VOID(name, params, args)            \
     void __real_##name params;                     \
@@ -162,16 +155,71 @@ struct MusicPlayerInfo *__wrap_SetPokemonCryTone(struct ToneData *tone)
 }
 
 bool32 __real_IsPokemonCryPlaying(struct MusicPlayerInfo *info);
+
+/* m4a's IsPokemonCryPlaying with each pointer read once: the worker may
+ * change them meanwhile, and a second read of track->chan could be NULL. */
+static bool32 CryPlayingUnlocked(const struct MusicPlayerInfo *info)
+{
+    struct MusicPlayerTrack *track = info->tracks;
+    struct SoundChannel *chan = __atomic_load_n(&track->chan, __ATOMIC_RELAXED);
+
+    return chan != NULL && __atomic_load_n(&chan->track, __ATOMIC_RELAXED) == track;
+}
+
+/*
+ * Polled every frame while a cry plays (the BGM ducking task, IsCryPlaying),
+ * so first without the sound lock, which the worker holds for its whole mix
+ * (1.6-2.6 ms, peaks of 4 ms on an Old 3DS): "playing" is taken as it is
+ * read. A read in the middle of a run sees its state before or after it, and
+ * "playing" only from a cry that was playing before; "finished", which the
+ * game acts on (it clears the cry songs), is read again under the lock, as
+ * before. sCryPending and sCryStartRun belong to the game's thread
+ * (SetPokemonCryTone and this).
+ */
 bool32 __wrap_IsPokemonCryPlaying(struct MusicPlayerInfo *info)
 {
     bool32 playing;
-    int i;
+    int i = CryIndex(info);
 
-    CtrAudio_LockSound();
-    i = CryIndex(info);
-    if (i >= 0 && sCryPending[i] && sCryStartRun[i] != sEngineRuns)
+    if (i >= 0 && sCryPending[i] && sCryStartRun[i] != __atomic_load_n(&sEngineRuns, __ATOMIC_ACQUIRE))
         sCryPending[i] = FALSE;
-    playing = (i >= 0 && sCryPending[i]) || __real_IsPokemonCryPlaying(info);
+    if ((i >= 0 && sCryPending[i]) || CryPlayingUnlocked(info))
+        return TRUE;
+    CtrAudio_LockSound();
+    playing = __real_IsPokemonCryPlaying(info);
     CtrAudio_UnlockSound();
     return playing;
+}
+
+/*
+ * The music a little quieter while the bottom screen has the player's
+ * attention. A track's volume (volX, 64 full) is lowered only from full, and
+ * raised back only from the ducked level: the game's own changes (the music
+ * lowered under a cry and raised after it) are left as they are, and a song
+ * started meanwhile, at full, is lowered in turn.
+ */
+#define DUCKED_VOLX 32   /* half */
+extern struct MusicPlayerInfo gMPlayInfo_BGM;
+
+void CtrAudio_DuckMusic(bool duck)
+{
+    static bool sDucked;
+    struct MusicPlayerTrack *track;
+    u8 from = duck ? 64 : DUCKED_VOLX, to = duck ? DUCKED_VOLX : 64;
+
+    if (!duck && !sDucked)
+        return;
+    sDucked = duck;
+    CtrAudio_LockSound();
+    if (gMPlayInfo_BGM.ident == ID_NUMBER)
+    {
+        track = gMPlayInfo_BGM.tracks;
+        for (int i = 0; i < gMPlayInfo_BGM.trackCount; ++i, ++track)
+            if ((track->flags & MPT_FLG_EXIST) && track->volX == from)
+            {
+                track->volX = to;
+                track->flags |= MPT_FLG_VOLCHG;
+            }
+    }
+    CtrAudio_UnlockSound();
 }
