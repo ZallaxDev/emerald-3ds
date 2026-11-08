@@ -23,7 +23,13 @@ Layout (all integers little endian):
         32  crc32         u32 CRC-32 of the payload
         36  reserved      u32 0
 
-    payloads, each aligned to 32 bytes.
+    payloads, each aligned to 32 bytes, in path order (bytewise, as
+    "graphics/a/x" < "graphics/a/y" < "graphics/b"): the files under any one
+    prefix of paths - a directory, a tileset, a source file's generated
+    tables - lie together, so the console's asset warm-up, which reads them by
+    prefix, reads each group in a few long runs (3ds_port/src/3ds_assets.c).
+    Readers find a payload through its entry's offset only; the order is no
+    part of the schema.
 
 The console-side reader is 3ds_port/src/3ds_data.c.
 """
@@ -107,16 +113,19 @@ def write_pak(out: Path, files: Iterable[tuple[str, bytes]], abi: int, rom_sha1:
             raise PakError("id collision between %s and %s" % (seen[pid], path))
         seen[pid] = path
         items.append((pid, path, data))
+    # The index by id (the console's binary search), the payloads by path.
     items.sort()
+    by_path = sorted(items, key=lambda item: item[1].encode("utf-8"))
     count = len(items)
     index_offset = HEADER.size
     data_offset = (index_offset + count * ENTRY.size + ALIGN - 1) // ALIGN * ALIGN
-    entries = []
+    offsets: dict[int, int] = {}
     cursor = data_offset
-    for pid, path, data in items:
-        entries.append(ENTRY.pack(pid, entry_type(path), 0, cursor, len(data), len(data),
-                                  zlib.crc32(data) & 0xFFFFFFFF, 0))
+    for pid, _, data in by_path:
+        offsets[pid] = cursor
         cursor = (cursor + len(data) + ALIGN - 1) // ALIGN * ALIGN
+    entries = [ENTRY.pack(pid, entry_type(path), 0, offsets[pid], len(data), len(data),
+                          zlib.crc32(data) & 0xFFFFFFFF, 0) for pid, path, data in items]
     index = b"".join(entries)
     head = HEADER.pack(MAGIC, SCHEMA, abi, rom_sha1, count, index_offset, data_offset,
                        zlib.crc32(index) & 0xFFFFFFFF, 0)
@@ -127,7 +136,9 @@ def write_pak(out: Path, files: Iterable[tuple[str, bytes]], abi: int, rom_sha1:
         f.write(head)
         f.write(index)
         f.write(b"\0" * (data_offset - f.tell()))
-        for _, _, data in items:
+        for pid, path, data in by_path:
+            if f.tell() != offsets[pid]:
+                raise PakError("payload of %s written at %d, indexed at %d" % (path, f.tell(), offsets[pid]))
             f.write(data)
             pad = (-f.tell()) % ALIGN
             f.write(b"\0" * pad)

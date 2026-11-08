@@ -7,7 +7,12 @@ compiled out of ctr_voxel.c itself and run on the host with the GPU mocked.
   record a full request list hands over on a replacement;
 - ChunkVram giving up nothing when no gap could be made;
 - DraftChunk: the vertices a draft packs, their order by atlas page, the
-  bounds, the upload bookkeeping, and every refusal leaving nothing behind.
+  bounds, the upload bookkeeping, and every refusal leaving nothing behind;
+- every chunk block given back forgetting the mesh a build ahead of time found
+  no room for (ChunkBlockFree), and nothing else forgetting it;
+- the kept view walk (VisitRemember/VisitReplay/VisitStateSame) refused after
+  any change to the slot index or to a field it keys of a chunk it found or of
+  an atlas, and put back as it was kept otherwise.
 """
 import argparse
 from pathlib import Path
@@ -25,6 +30,12 @@ def function(source, signature):
         depth += (source[end] == '{') - (source[end] == '}')
         end += 1
     return source[start:end] + '\n'
+
+
+def through(source, begin, signature):
+    """The text from `begin` to the end of the function `signature` after it."""
+    start = source.index(begin)
+    return source[start:source.index(signature, start)] + function(source[start:], signature)
 
 
 def main():
@@ -56,6 +67,9 @@ def main():
 #define VOXEL_DRAFT_CELLS (VOXEL_CHUNK * VOXEL_CHUNK)
 #define VOXEL_STARVE_FRAMES 4u
 #define VOXEL_DRAFT_STARVE_FRAMES 90u
+#define VOXEL_ATLAS_SLOTS 6u
+#define VOXEL_DRAW_MAX 160u
+#define MAX_VOXEL_MAP_INSTANCES 8
 #define CTR_LOG_ERROR 0
 #define CTR_LOG_VIDEO 1
 #define u32 uint32_t
@@ -66,7 +80,10 @@ typedef struct { uint16_t slotOf[2048]; } VoxelAtlasMap;
 typedef struct { int mapGroup, mapNum, originX, originY, width, height;
     const void *primaryTileset, *secondaryTileset, *layout; } VoxelMapInstance;
 typedef struct { const VoxelMapInstance *inst; bool border; int cx, cy, x0, y0, x1, y1, baseX, baseY; } ChunkSite;
-typedef struct { bool valid; uint32_t generation, extension; bool extendPending; VoxelAtlasMap map; } VoxelAtlasSlot;
+typedef struct { bool valid; uint32_t generation, extension; bool extendPending; VoxelAtlasMap map;
+    const void *primaryTileset, *secondaryTileset; } VoxelAtlasSlot;
+typedef struct { float x, y, z, w; } VoxelPlane;
+typedef struct { ChunkSite site; unsigned key, need, waitIndex; } BuildRequest;
 typedef struct {
     bool used, border;
     int mapGroup, mapNum, cx, cy;
@@ -82,6 +99,8 @@ typedef struct {
     int gx0, gz0, gx1, gz1; float gy0, gy1, buildMs;
     bool uncovered; uint32_t atlasExtension; bool draft;
     unsigned staticCount;
+    bool uvKnown;
+    unsigned audit;
 } VoxelChunk;
 typedef struct {
     VoxelVertex *vertices; unsigned capacity, count, dropped;
@@ -97,6 +116,11 @@ static VoxelArenaPiece sChunkPieces[VOXEL_CHUNK_SLOTS + 1];
 static uint8_t sArenaBlock[1024 * 1024];
 static VoxelGpuVertex *sStaging;
 static unsigned sStagingUsed, sChunkUploads, uploadAllowed, copies;
+/* No cold mesh cache here: all the staging is the chunks', an eviction a release. */
+#define STAGING_ROOM VOXEL_STAGING_VERTICES
+static unsigned sStagingPromise;
+static void ReleaseChunk(VoxelChunk *chunk);
+static void EvictChunk(VoxelChunk *chunk) { ReleaseChunk(chunk); }
 static unsigned long copiedBytes;
 static Stats sStats U;
 static unsigned sDrafts;
@@ -139,14 +163,17 @@ static void VoxelMesh_DraftCell(VoxelBuilder *b, const VoxelMapInstance *inst, i
     for signature in ['static int16_t Quantise(', 'static void Pack(', 'static void ReportPackErrors(',
                       'static void GrowBounds(', 'static void PackDraft(', 'static int PackedFloor(', 'static int PackedCeil(',
                       'static unsigned ChunkBucket(', 'static unsigned ChunkBucketOf(',
-                      'static void ChunkUnindex(', 'static void ChunkIndex(', 'static void ReleaseChunk(',
+                      'static void ChunkUnindex(', 'static void ChunkIndex(', 'static void ChunkBlockFree(',
+                      'static void ReleaseChunk(',
                       'static VoxelChunk *FindChunk(', 'static bool Evictable(',
                       'static VoxelChunk *OldestChunk(', 'static VoxelChunk *FreeChunkSlot(',
                       'static bool ChunkRoomPossible(', 'static VoxelGpuVertex *ChunkVram(',
                       'static VoxelChunk *DraftChunk(']:
         if signature == 'static unsigned ChunkBucket(':
             source += 'static uint8_t sChunkHead[128];\nstatic uint8_t sChunkNext[VOXEL_CHUNK_SLOTS];\n' \
-                      '#define VOXEL_CHUNK_BUCKETS 128u\n'
+                      'static uint32_t sChunkIndexChanges;\n#define VOXEL_CHUNK_BUCKETS 128u\n'
+        if signature == 'static void ChunkBlockFree(':
+            source += 'static unsigned sAheadNoRoomBytes;\n'
         source += function(voxel, signature)
     # The linear table RequestWait replaced, for the equivalence run.
     source += r'''
@@ -156,6 +183,17 @@ static uint8_t sWaitHead[128], sWaitNext[VOXEL_REQUESTS_MAX];
 '''
     source += function(voxel, 'static unsigned WaitBucket(')
     source += function(voxel, 'static unsigned RequestWait(')
+    # The kept view walk, as the visit keeps it and puts it back.
+    source += r'''
+typedef struct { const VoxelChunk *chunk; int worldX, worldZ; } VoxelChunkDraw;
+static VoxelAtlasSlot sAtlases[VOXEL_ATLAS_SLOTS];
+static BuildRequest sRequests[VOXEL_REQUESTS_MAX];
+static unsigned sRequestCount, sDrawCount, sHashesLeft = 10;
+static VoxelChunkDraw sDraws[VOXEL_DRAW_MAX];
+static void Draw(VoxelChunk *chunk, int worldX, int worldZ)
+{ sDraws[sDrawCount++] = (VoxelChunkDraw){chunk, worldX, worldZ}; }
+'''
+    source += through(voxel, '#define VOXEL_VISIT_KEEP_SITES', 'static void VisitRemember(')
     source += r'''
 static unsigned RequestWaitOld(const ChunkSite *site)
 {
@@ -203,6 +241,9 @@ static unsigned rnd(void) { static uint32_t s = 12345; s = s * 1664525u + 101390
 
 static void TestIndex(void)
 {
+    /* (slots with no block: released, they give nothing back to the arena,
+     * and forget nothing - ChunkBlockFree) */
+    sAheadNoRoomBytes = 4096;
     /* few distinct keys, so the buckets hold chains */
     for (unsigned step = 0; step < 60000; ++step) {
         unsigned op = rnd() % 10, slot = rnd() % VOXEL_CHUNK_SLOTS;
@@ -228,6 +269,7 @@ static void TestIndex(void)
     }
     for (unsigned i = 0; i < VOXEL_CHUNK_SLOTS; ++i) ReleaseChunk(&sChunks[i]);
     for (unsigned b = 0; b < 128; ++b) assert(sChunkHead[b] == 0);
+    assert(sAheadNoRoomBytes == 4096);
     sBeltGrid = 1;
 }
 
@@ -326,9 +368,19 @@ static void TestDraft(void)
     assert(chunk->gy0 == 0.0f && chunk->gy1 > 0.0f && chunk->gy1 <= 0.75f + 1e-6f);
     /* the same square again reuses its slot and its block, and draws none of
      * the static models a build placed in it */
-    uploadAllowed = 8; chunk->staticCount = 2;
+    uploadAllowed = 8; chunk->staticCount = 2; sAheadNoRoomBytes = 4096;
     again = DraftChunk(&site, &atlas, chunk);
     assert(again == chunk && FindChunk(false, 1, 2, 1, 2) == chunk && again->staticCount == 0);
+    assert(sAheadNoRoomBytes == 4096); /* (no block given back) */
+    /* a block too small for the draft: a new one, the old given back, and
+     * with it the room a build ahead of time found none of is asked again */
+    {
+        VoxelGpuVertex *old = chunk->vram;
+        uploadAllowed = 8; chunk->bytes = 16;
+        again = DraftChunk(&site, &atlas, chunk);
+        assert(again == chunk && chunk->vram != old && chunk->bytes >= chunk->count * sizeof(VoxelGpuVertex));
+        assert(sAheadNoRoomBytes == 0 && VoxelArena_PieceOf(&sChunkArena, old) < 0);
+    }
     {
         unsigned used = 0; for (unsigned i = 0; i < VOXEL_CHUNK_SLOTS; ++i) used += sChunks[i].used;
         assert(used == 1);
@@ -357,9 +409,10 @@ static void TestDraft(void)
             sChunks[i].viewStamp = sFrame; sChunks[i].stamp = sFrame;
         }
         assert(VoxelArena_Alloc(&sChunkArena, 6 * 1024, false) == NULL);
-        uploadAllowed = 8; sStagingUsed = 0; sChunkUploads = 0; copies = 0;
+        uploadAllowed = 8; sStagingUsed = 0; sChunkUploads = 0; copies = 0; sAheadNoRoomBytes = 4096;
         assert(DraftChunk(&other, &atlas, NULL) == NULL);
         assert(FindChunk(false, 1, 2, 2, 2) == NULL && copies == 0 && uploadAllowed == 7);
+        assert(sAheadNoRoomBytes == 4096); /* nothing given back, nothing forgotten */
         /* two off screen but apart (8-16 and 24-32 KiB, an on-screen chunk
          * between): no 12 KiB gap even with both gone, so neither is given up */
         assert((uint8_t *)sChunks[2].vram - sArenaBlock == 8 * 1024);
@@ -369,7 +422,7 @@ static void TestDraft(void)
         sChunks[5].viewStamp = sFrame - 1; sChunks[5].stamp = sFrame - 7;
         assert(ChunkVram(12 * 1024, true) == NULL);
         assert(FindChunk(false, 9, 9, 2, 0) != NULL && FindChunk(false, 9, 9, 5, 0) != NULL);
-        assert(sChunkArena.used == 6 * 8 * 1024);
+        assert(sChunkArena.used == 6 * 8 * 1024 && sAheadNoRoomBytes == 4096);
         sChunks[2].viewStamp = sChunks[2].stamp = sFrame;
         sChunks[5].viewStamp = sChunks[5].stamp = sFrame;
         /* one of them off screen: it is the one given up */
@@ -378,16 +431,126 @@ static void TestDraft(void)
         chunk = DraftChunk(&other, &atlas, NULL);
         assert(chunk != NULL && chunk->draft && FindChunk(false, 1, 2, 2, 2) == chunk);
         assert(FindChunk(false, 9, 9, 3, 0) == NULL && FindChunk(false, 9, 9, 2, 0) != NULL);
+        /* its block given back (ReleaseChunk): asked again ahead of time */
+        assert(sAheadNoRoomBytes == 0);
     }
 }
 '''
     source += r'''
+/* One walk of the view as VisitView makes it, then kept if it may be: chunks
+ * 0 and 1 found (1 on screen and drawn), chunk 2 in the cache but not on the
+ * walk's way, one request. */
+static VoxelMapInstance sWalkInst = {.mapGroup = 3, .mapNum = 4};
+static void Walk(const VisitKey *key)
+{
+    ChunkSite site = {.inst = &sWalkInst, .cx = 5, .x0 = 40, .y0 = 0, .x1 = 48, .y1 = 8};
+    sDrawCount = sRequestCount = 0;
+    sChunks[0].stamp = sChunks[1].stamp = sFrame;
+    sChunks[1].viewStamp = sFrame;
+    Draw(&sChunks[1], 10, 20);
+    sRequests[sRequestCount++] = (BuildRequest){.site = site, .need = 2, .waitIndex = RequestWait(&site, -1)};
+    VisitRemember(key, 0, 1);
+}
+
+/* A field of a chunk the walk found: changed, the walk is made afresh; as it
+ * was, it is kept again. */
+#define KEYED(field, value) do { VoxelChunk saved = *c; c->field = (value); \
+    assert(!VisitStateSame()); *c = saved; assert(VisitStateSame()); ++keyed; } while (0)
+
+static void TestVisitMemo(void)
+{
+    int layoutA, tileA, tileB;
+    VisitKey key, other;
+    VoxelChunk *c;
+    unsigned missing = 0, keyed = 0;
+
+    (void)sVisitLastSites; (void)sVisitsSmall; (void)sVisitTicks;
+    for (unsigned i = 0; i < VOXEL_CHUNK_SLOTS; ++i) ReleaseChunk(&sChunks[i]);
+    for (unsigned a = 0; a < VOXEL_ATLAS_SLOTS; ++a)
+        sAtlases[a] = (VoxelAtlasSlot){.valid = a < 3, .generation = a, .extension = 2 * a,
+                                       .primaryTileset = &tileA, .secondaryTileset = &tileB};
+    for (unsigned i = 0; i < 3; ++i) {
+        Put(&sChunks[i], false, 3, 4, (int)i, 0, 1);
+        sChunks[i].hash = 100 + i; sChunks[i].epoch = 7; sChunks[i].layout = &layoutA;
+        sChunks[i].primary = &tileA; sChunks[i].secondary = &tileB;
+        sChunks[i].atlas = &sAtlases[1]; sChunks[i].atlasGeneration = 1; sChunks[i].count = 600;
+        sChunks[i].gx1 = sChunks[i].gz1 = 8; sChunks[i].gy1 = 1.5f;
+    }
+    memset(&key, 0, sizeof(key));
+    key.epoch = 7; key.instances = 1; key.atlases[0] = &sAtlases[1]; key.inRing[0] = 1;
+    memcpy(&other, &key, sizeof(key)); other.view[2] = 1;
+    /* Kept from the second of two walks of the same view, frames apart by one. */
+    sFrame = 500; Walk(&key); assert(!sVisitMemo.valid);
+    sFrame = 501; Walk(&key); assert(sVisitMemo.valid && sVisitMemo.foundCount == 2);
+    sFrame = 502;
+    assert(VisitStateSame());
+    /* Another view, a frame missed, or nothing kept: walked afresh. */
+    sDrawCount = sRequestCount = 0;
+    assert(!VisitReplay(&other, 0.0f, 0.0f, &missing));
+    sFrame = 503; assert(!VisitReplay(&key, 0.0f, 0.0f, &missing)); sFrame = 502;
+    sVisitMemo.valid = false; assert(!VisitReplay(&key, 0.0f, 0.0f, &missing)); sVisitMemo.valid = true;
+    /* Every field it keys of a chunk it found, the one on screen and not. */
+    for (unsigned k = 0; k < 2; ++k) {
+        c = &sChunks[k];
+        KEYED(used, !saved.used); KEYED(border, !saved.border); KEYED(openSame, !saved.openSame);
+        KEYED(uncovered, !saved.uncovered); KEYED(draft, !saved.draft);
+        KEYED(mapGroup, saved.mapGroup + 1); KEYED(mapNum, saved.mapNum + 1);
+        KEYED(cx, saved.cx + 1); KEYED(cy, saved.cy + 1); KEYED(beltGrid, saved.beltGrid + 1);
+        KEYED(openTiles, saved.openTiles + 1); KEYED(openEpoch, saved.openEpoch + 1);
+        KEYED(hash, saved.hash + 1); KEYED(epoch, saved.epoch + 1);
+        KEYED(staleHash, saved.staleHash + 1); KEYED(staleEpoch, saved.staleEpoch + 1);
+        KEYED(primary, (const void *)&saved); KEYED(secondary, (const void *)&saved);
+        KEYED(layout, (const void *)&saved); KEYED(atlas, &sAtlases[2]);
+        KEYED(atlasGeneration, saved.atlasGeneration + 1); KEYED(atlasExtension, saved.atlasExtension + 1);
+        KEYED(count, saved.count + 1);
+        KEYED(gx0, saved.gx0 + 1); KEYED(gz0, saved.gz0 + 1); KEYED(gx1, saved.gx1 + 1); KEYED(gz1, saved.gz1 + 1);
+        KEYED(gy0, saved.gy0 + 0.5f); KEYED(gy1, saved.gy1 + 0.5f);
+    }
+    assert(keyed == 2 * 29);
+    /* Every atlas, in view or not. */
+    for (unsigned a = 0; a < VOXEL_ATLAS_SLOTS; ++a) {
+        VoxelAtlasSlot saved = sAtlases[a];
+        sAtlases[a].valid = !saved.valid; assert(!VisitStateSame()); sAtlases[a] = saved;
+        sAtlases[a].generation++; assert(!VisitStateSame()); sAtlases[a] = saved;
+        sAtlases[a].extension++; assert(!VisitStateSame()); sAtlases[a] = saved;
+        sAtlases[a].primaryTileset = &layoutA; assert(!VisitStateSame()); sAtlases[a] = saved;
+        sAtlases[a].secondaryTileset = &layoutA; assert(!VisitStateSame()); sAtlases[a] = saved;
+        assert(VisitStateSame());
+    }
+    /* A chunk the walk did not find is not compared: only through the index
+     * could the next walk find it, and the index counts its changes. */
+    sChunks[2].hash = 999; assert(VisitStateSame());
+    /* Nothing changed: put back as it was kept, the stamps written, the
+     * requests keyed from where the player now is. */
+    sDrawCount = sRequestCount = 0; missing = 0;
+    assert(VisitReplay(&key, 44.0f, 1.0f, &missing));
+    assert(missing == 1 && sDrawCount == 1 && sDraws[0].chunk == &sChunks[1]);
+    assert(sDraws[0].worldX == 10 && sDraws[0].worldZ == 20);
+    assert(sRequestCount == 1 && sRequests[0].key == 2u * 100000u + 9u);
+    assert(sRequestWait[sRequests[0].waitIndex].seen == sFrame);
+    assert(sChunks[0].stamp == sFrame && sChunks[1].stamp == sFrame && sChunks[1].viewStamp == sFrame);
+    assert(sChunks[0].viewStamp != sFrame && sChunks[2].stamp != sFrame && sVisitsKept == 1);
+    /* The slot index changed - a chunk entered or left, found or not -
+     * the walk is made afresh. */
+    sFrame = 503;
+    assert(VisitStateSame());
+    Put(&sChunks[2], false, 3, 4, 2, 0, 1); /* (out and in again, as it was) */
+    assert(!VisitStateSame());
+    sDrawCount = sRequestCount = 0; assert(!VisitReplay(&key, 0.0f, 0.0f, &missing));
+    Walk(&key); assert(sVisitMemo.valid);
+    sFrame = 504; assert(VisitStateSame());
+    ReleaseChunk(&sChunks[0]); assert(!VisitStateSame());
+    sDrawCount = sRequestCount = 0; assert(!VisitReplay(&key, 0.0f, 0.0f, &missing));
+    for (unsigned i = 0; i < VOXEL_CHUNK_SLOTS; ++i) ReleaseChunk(&sChunks[i]);
+}
+
 int main(void)
 {
     TestIndex();
     TestWait();
     TestDraft();
-    puts("PASS draft: chunk index vs linear search, request wait vs linear table and reuse, no futile eviction, draft vertices/pages/bounds/uploads/refusals");
+    TestVisitMemo();
+    puts("PASS draft: chunk index vs linear search, request wait vs linear table and reuse, no futile eviction, draft vertices/pages/bounds/uploads/refusals, freed blocks forget the ahead no-room size, kept view walk refused on index or keyed field changes and replayed otherwise");
     return 0;
 }
 '''

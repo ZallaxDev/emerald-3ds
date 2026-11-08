@@ -8,6 +8,8 @@ from pathlib import Path
 import subprocess
 import tempfile
 
+from video_text import read_video
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -30,7 +32,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cc', default='gcc')
     args = parser.parse_args()
-    video = (ROOT / 'src/3ds_video.c').read_text(encoding='utf-8')
+    video = read_video()
     zoom = re.search(r'#define SCENE_ZOOM (\S+)', video).group(1)
     source = r'''
 #include <stdbool.h>

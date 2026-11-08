@@ -22,6 +22,7 @@
 #include "field_player_avatar.h"
 #include "field_camera.h"
 #include "constants/map_types.h"
+#include "constants/event_objects.h"
 #include "constants/maps.h"
 #include "constants/metatile_behaviors.h"
 #include "port_platform.h"
@@ -32,6 +33,7 @@
 #include "voxel_atlas.h"
 #include "voxel_relief.h"
 #ifdef PLATFORM_3DS
+#include "3ds_map_events.h"
 #include "3ds_video.h"
 #include "voxel_building.h"
 #include "field_weather.h"
@@ -292,11 +294,27 @@ static const struct
     { MAP_GROUP(MAP_ROUTE131), MAP_NUM(MAP_ROUTE131), NULL, LAYOUT_ROUTE131_SKY_PILLAR },
 };
 
+/* The swaps' conditions the build in progress asked, and their answers: kept
+ * with what it was built from (sBuiltFrom), and asked again by
+ * VoxelWorld_UpdateInstances. A bit a swap. */
+_Static_assert(ARRAY_COUNT(sLayoutSwaps) <= 8, "a swap's answer is a bit of a byte");
+static uint8_t sSwapsAsked, sSwapsAnswered;
+
+static bool SwapAsked(unsigned i)
+{
+    bool answer = sLayoutSwaps[i].swapped();
+
+    sSwapsAsked |= (uint8_t)(1u << i);
+    if (answer)
+        sSwapsAnswered |= (uint8_t)(1u << i);
+    return answer;
+}
+
 static u16 NeighbourLayoutId(const struct MapHeader *header, int mapGroup, int mapNum)
 {
     for (unsigned i = 0; i < ARRAY_COUNT(sLayoutSwaps); ++i)
         if (sLayoutSwaps[i].mapGroup == mapGroup && sLayoutSwaps[i].mapNum == mapNum
-         && (sLayoutSwaps[i].swapped == NULL || sLayoutSwaps[i].swapped())
+         && (sLayoutSwaps[i].swapped == NULL || SwapAsked(i))
          && Port_GetMapLayoutById(sLayoutSwaps[i].layoutId) != NULL)
             return sLayoutSwaps[i].layoutId;
     return header->mapLayoutId;
@@ -551,6 +569,38 @@ static int CurrentLift(int mapGroup, int mapNum)
     return lift > LIFT_FORGET || lift < -LIFT_FORGET ? 0 : lift;
 }
 
+/*
+ * What the last build read that the game can change while it runs, for
+ * VoxelWorld_UpdateInstances to build again only once one of them has:
+ *  - gMapHeader, whole: the current map's layout, connections, type and
+ *    events. The game writes it only as it loads a map or swaps its layout
+ *    in (overworld.c: LoadCurrentMapData, LoadSaveblockMapHeader,
+ *    SetCurrentMapLayout);
+ *  - the save block's location and layout id;
+ *  - the answer of each layout swap a neighbour was placed with (Route
+ *    111's tower flag, Mirage Island's day and party: NeighbourLayoutId);
+ *  - the map version (3ds_map_events.c), which every load, layout swap and
+ *    crossing moves as well.
+ * Nothing else it reads moves: the other maps' headers, connections and
+ * layouts are the ROM's, and a seam's step is read off the relief, loaded
+ * once and never changed (voxel_relief.c, VoxelRelief_SeamStep). The lifts
+ * are the build's own: the current map keeps the one it had in the last set
+ * (CurrentLift) and the others follow from it and the seams, so a build from
+ * the same inputs makes the same set, lifts and lift memory included - it
+ * was rebuilt every frame on that understanding.
+ */
+static struct
+{
+    bool valid;
+    struct MapHeader header;
+    s8 mapGroup, mapNum;
+    u16 layoutId;
+    uint8_t swapsAsked, swapsAnswered;
+    uint32_t version;
+} sBuiltFrom;
+/* Builds so far: what anything kept from the instances is checked against. */
+static uint32_t sInstanceBuilds;
+
 void VoxelWorld_BuildInstances(void)
 {
     unsigned near;
@@ -560,6 +610,17 @@ void VoxelWorld_BuildInstances(void)
     VoxelBuildings_SetVariantFits(VariantFits);
     VoxelBuildings_SetDrawings(VoxelWorld_LayoutDrawing);
 #endif
+    memcpy(&sBuiltFrom.header, &gMapHeader, sizeof(gMapHeader));
+    sBuiltFrom.mapGroup = gSaveBlock1Ptr->location.mapGroup;
+    sBuiltFrom.mapNum = gSaveBlock1Ptr->location.mapNum;
+    sBuiltFrom.layoutId = gSaveBlock1Ptr->mapLayoutId;
+#ifdef PLATFORM_3DS
+    sBuiltFrom.version = CtrMap_Version();
+#endif
+    sBuiltFrom.swapsAsked = sBuiltFrom.swapsAnswered = 0;
+    sBuiltFrom.valid = true;
+    sSwapsAsked = sSwapsAnswered = 0;
+    ++sInstanceBuilds;
     sInstanceCount = 0;
     sPlacedCount = 0;
     if (gMapHeader.mapLayout == NULL)
@@ -587,6 +648,47 @@ void VoxelWorld_BuildInstances(void)
         AddConnections(&sPlaced[i], false, i < near);
     for (unsigned i = 0; i < sInstanceCount; ++i)
         RememberLift(&sInstances[i]);
+    sBuiltFrom.swapsAsked = sSwapsAsked;
+    sBuiltFrom.swapsAnswered = sSwapsAnswered;
+}
+
+/* Would a build now read anything other than the last one did? */
+static bool InstancesCurrent(void)
+{
+    if (!sBuiltFrom.valid
+     || gSaveBlock1Ptr->location.mapGroup != sBuiltFrom.mapGroup
+     || gSaveBlock1Ptr->location.mapNum != sBuiltFrom.mapNum
+     || gSaveBlock1Ptr->mapLayoutId != sBuiltFrom.layoutId
+     || memcmp(&gMapHeader, &sBuiltFrom.header, sizeof(gMapHeader)) != 0)
+        return false;
+#ifdef PLATFORM_3DS
+    if (CtrMap_Version() != sBuiltFrom.version)
+        return false;
+#endif
+    /* (only the swaps it asked: the others placed no map it drew) */
+    for (unsigned i = 0; i < ARRAY_COUNT(sLayoutSwaps); ++i)
+        if ((sBuiltFrom.swapsAsked >> i) & 1u
+         && sLayoutSwaps[i].swapped() != (((sBuiltFrom.swapsAnswered >> i) & 1u) != 0))
+            return false;
+    return true;
+}
+
+bool VoxelWorld_UpdateInstances(void)
+{
+#ifdef PLATFORM_3DS
+    /* as every build sets them, every frame as before */
+    VoxelBuildings_SetVariantFits(VariantFits);
+    VoxelBuildings_SetDrawings(VoxelWorld_LayoutDrawing);
+#endif
+    if (InstancesCurrent())
+        return false;
+    VoxelWorld_BuildInstances();
+    return true;
+}
+
+unsigned VoxelWorld_InstanceBuilds(void)
+{
+    return (unsigned)sInstanceBuilds;
 }
 
 unsigned VoxelWorld_InstanceCount(void)
@@ -1537,24 +1639,113 @@ unsigned VoxelWorld_NearbyPayloads(const void **payloads, unsigned max)
     return count;
 }
 
-uint32_t VoxelWorld_PayloadSignature(void)
+static const void *ObjectPayload(u8 graphicsId)
+{
+    const struct ObjectEventGraphicsInfo *info = GetObjectEventGraphicsInfo(graphicsId);
+
+    return info != NULL && info->images != NULL ? info->images[0].data : NULL;
+}
+
+/*
+ * Whether an object's picture can change while its map stays: what
+ * GetObjectEventGraphicsInfo (event_object_movement.c) reads besides the id.
+ * An id from a variable (OBJ_EVENT_GFX_VARS and on), the follower's
+ * (NUM_OBJ_EVENT_GFX, follower_mon.h) and the Mauville old man's (the bard,
+ * who is whichever old man the save has) are looked up each time; any other
+ * id is an entry of the ROM's table of pictures, and so is its picture.
+ */
+static bool ObjectPayloadMoves(u8 graphicsId)
+{
+    return graphicsId >= NUM_OBJ_EVENT_GFX || graphicsId == OBJ_EVENT_GFX_BARD;
+}
+
+/*
+ * The signature's share no frame changes between two builds of the
+ * instances - their layouts and headers, which are the ROM's, and every
+ * picture that is a fixed entry of its table - worked out once a build, and
+ * the objects whose picture can change, asked again each call. It was all
+ * asked every frame: every object of every map in the set, some hundreds.
+ */
+#define VOXEL_PAYLOAD_MOVING_MAX 32u
+
+static struct
+{
+    bool known;
+    uint32_t builds;       /* the build of the instances it is for */
+    uint32_t hash;
+    unsigned moving;       /* past VOXEL_PAYLOAD_MOVING_MAX: all asked each call */
+    struct
+    {
+        uint8_t instance, event;
+    } moves[VOXEL_PAYLOAD_MOVING_MAX];
+} sPayloadFixed;
+
+static void PayloadFixedShare(void)
 {
     uint32_t hash = 2166136261u;
+
+    sPayloadFixed.moving = 0;
     for (unsigned i = 0; i < sInstanceCount; ++i)
     {
         const struct MapHeader *header = sInstances[i].header;
         const struct MapEvents *events = header != NULL ? header->events : NULL;
+
         hash = (hash ^ (uint32_t)(uintptr_t)sInstances[i].layout) * 16777619u;
         hash = (hash ^ (uint32_t)(uintptr_t)header) * 16777619u;
         if (events == NULL || events->objectEvents == NULL)
             continue;
+        /* (objectEventCount is a u8: an event's index fits a byte) */
         for (unsigned j = 0; j < events->objectEventCount; ++j)
         {
-            const struct ObjectEventGraphicsInfo *info =
-                GetObjectEventGraphicsInfo(events->objectEvents[j].graphicsId);
-            const void *payload = info != NULL && info->images != NULL ? info->images[0].data : NULL;
-            hash = (hash ^ (uint32_t)(uintptr_t)payload) * 16777619u;
+            u8 graphicsId = events->objectEvents[j].graphicsId;
+
+            if (!ObjectPayloadMoves(graphicsId))
+                hash = (hash ^ (uint32_t)(uintptr_t)ObjectPayload(graphicsId)) * 16777619u;
+            else
+            {
+                if (sPayloadFixed.moving < VOXEL_PAYLOAD_MOVING_MAX)
+                {
+                    sPayloadFixed.moves[sPayloadFixed.moving].instance = (uint8_t)i;
+                    sPayloadFixed.moves[sPayloadFixed.moving].event = (uint8_t)j;
+                }
+                ++sPayloadFixed.moving;
+            }
         }
+    }
+    sPayloadFixed.hash = hash;
+    sPayloadFixed.builds = sInstanceBuilds;
+    sPayloadFixed.known = true;
+}
+
+uint32_t VoxelWorld_PayloadSignature(void)
+{
+    uint32_t hash;
+
+    if (!sPayloadFixed.known || sPayloadFixed.builds != sInstanceBuilds)
+        PayloadFixedShare();
+    hash = sPayloadFixed.hash;
+    if (sPayloadFixed.moving > VOXEL_PAYLOAD_MOVING_MAX)
+    {
+        /* Too many to list: every object of every map, as it always was. */
+        for (unsigned i = 0; i < sInstanceCount; ++i)
+        {
+            const struct MapHeader *header = sInstances[i].header;
+            const struct MapEvents *events = header != NULL ? header->events : NULL;
+
+            if (events == NULL || events->objectEvents == NULL)
+                continue;
+            for (unsigned j = 0; j < events->objectEventCount; ++j)
+                hash = (hash ^ (uint32_t)(uintptr_t)ObjectPayload(events->objectEvents[j].graphicsId))
+                     * 16777619u;
+        }
+        return hash;
+    }
+    for (unsigned k = 0; k < sPayloadFixed.moving; ++k)
+    {
+        const struct MapHeader *header = sInstances[sPayloadFixed.moves[k].instance].header;
+
+        hash = (hash ^ (uint32_t)(uintptr_t)ObjectPayload(
+                   header->events->objectEvents[sPayloadFixed.moves[k].event].graphicsId)) * 16777619u;
     }
     return hash;
 }

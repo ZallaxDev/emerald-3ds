@@ -16,9 +16,12 @@
 static CtrPlatformHooks sHooks;
 static aptHookCookie sAptHook;
 static bool sInitialized, sExit, sWaiting;
-static uint64_t sFrames, sStart, sLastFrame, sFrameMs;
-static uint64_t sWorkStart, sLastTick, sExitStart;
+static uint64_t sFrames;
+static uint64_t sWorkStart, sExitStart;
 static CtrTiming sTiming;
+/* What this game frame went through besides itself, for the frame profiler
+ * (CTR_TICK_FLAG_*): set as it happens, handed over and cleared at its end. */
+static unsigned sTickFlags;
 
 static void Lifecycle(APT_HookType type, void *parameter)
 {
@@ -39,8 +42,10 @@ static void Lifecycle(APT_HookType type, void *parameter)
         CtrDayNight_Resume();
         CtrInput_Clear();
         CtrBottom_OnResume();
-        sLastFrame = CtrPlatform_Milliseconds();
-        sLastTick = sExitStart = 0;
+        sExitStart = 0;
+        /* The next picture's interval spans the time away. */
+        sTickFlags |= CTR_TICK_FLAG_RESUME;
+        CtrVideo_NoteResume();
         CtrLog_Write(CTR_LOG_BOOT, "resume");
     }
     else if (type == APTHOOK_ONEXIT)
@@ -92,7 +97,6 @@ bool CtrPlatform_Init(void)
     aptHook(&sAptHook, Lifecycle, NULL);
     CtrInput_Clear();
     sFrames = 0;
-    sStart = sLastFrame = CtrPlatform_Milliseconds();
     CtrLog_Write(CTR_LOG_VIDEO, "diagnostic console; game renderer will use GPU");
     CtrLog_Write(CTR_LOG_INPUT, "HID: held/down/up, touch, raw circle pad");
     if (!CtrFs_Init())
@@ -147,15 +151,86 @@ void CtrPlatform_ReportMemory(const char *stage)
                  (unsigned long)((info.fordblks + grow) >> 10), (unsigned long)(grow >> 10));
 }
 
+size_t CtrPlatform_HeapRoom(void)
+{
+    struct mallinfo info = mallinfo();
+    char *top = sbrk(0);
+    size_t grow = top != (char *)-1 && top < fake_heap_end ? (size_t)(fake_heap_end - top) : 0;
+
+    return (size_t)info.fordblks + grow;
+}
+
+/* The heap's yielding cache (the voxel world's cold meshes): asked only after
+ * the allocator itself said no, so it costs a pointer test on the way out. */
+static bool (*volatile sHeapYield)(void);
+
+void CtrPlatform_SetHeapYield(bool (*yield)(void))
+{
+    sHeapYield = yield;
+}
+
+static bool HeapYield(size_t size)
+{
+    bool (*yield)(void) = sHeapYield;
+
+    return size != 0 && yield != NULL && yield();
+}
+
+void *__real_malloc(size_t size);
+void *__real_calloc(size_t count, size_t size);
+void *__real_realloc(void *ptr, size_t size);
+void *__real_memalign(size_t alignment, size_t size);
+
+void *__wrap_malloc(size_t size)
+{
+    void *ptr = __real_malloc(size);
+
+    return ptr != NULL || !HeapYield(size) ? ptr : __real_malloc(size);
+}
+
+void *__wrap_calloc(size_t count, size_t size)
+{
+    void *ptr = __real_calloc(count, size);
+
+    return ptr != NULL || !HeapYield(count * size) ? ptr : __real_calloc(count, size);
+}
+
+void *__wrap_realloc(void *old, size_t size)
+{
+    void *ptr = __real_realloc(old, size);
+
+    /* (a failed realloc leaves the old block as it was) */
+    return ptr != NULL || !HeapYield(size) ? ptr : __real_realloc(old, size);
+}
+
+void *__wrap_memalign(size_t alignment, size_t size)
+{
+    void *ptr = __real_memalign(alignment, size);
+
+    return ptr != NULL || !HeapYield(size) ? ptr : __real_memalign(alignment, size);
+}
+
 _Static_assert(sizeof(CtrLock) == sizeof(LightLock), "CtrLock is a LightLock");
 
 void CtrLock_Init(CtrLock *lock) { LightLock_Init((LightLock *)lock); }
 void CtrLock_Lock(CtrLock *lock) { LightLock_Lock((LightLock *)lock); }
 void CtrLock_Unlock(CtrLock *lock) { LightLock_Unlock((LightLock *)lock); }
 
-bool CtrPlatform_StartThread(void (*entry)(void *), void *arg, unsigned stack, int core)
+_Static_assert(sizeof(CtrCond) == sizeof(CondVar), "CtrCond is a CondVar");
+
+void CtrCond_Init(CtrCond *cond) { CondVar_Init((CondVar *)cond); }
+void CtrCond_Wait(CtrCond *cond, CtrLock *lock) { CondVar_Wait((CondVar *)cond, (LightLock *)lock); }
+void CtrCond_Broadcast(CtrCond *cond) { CondVar_Broadcast((CondVar *)cond); }
+
+bool CtrCond_WaitTimeout(CtrCond *cond, CtrLock *lock, unsigned timeoutUs)
+{
+    return CondVar_WaitTimeout((CondVar *)cond, (LightLock *)lock, (s64)timeoutUs * 1000) == 0;
+}
+
+static Thread StartThread(void (*entry)(void *), void *arg, unsigned stack, int core, bool detached)
 {
     s32 priority = 0x30;
+    Thread thread = NULL;
 
     svcGetThreadPriority(&priority, CUR_THREAD_HANDLE);
     priority = priority < 0x3F ? priority + 1 : 0x3F;
@@ -167,13 +242,51 @@ bool CtrPlatform_StartThread(void (*entry)(void *), void *arg, unsigned stack, i
 
         if ((R_SUCCEEDED(APT_GetAppCpuTimeLimit(&limit)) && limit >= 30)
             || R_SUCCEEDED(APT_SetAppCpuTimeLimit(30)))
-        {
-            if (threadCreate(entry, arg, stack, priority, 1, true) != NULL)
-                return true;
-        }
+            thread = threadCreate(entry, arg, stack, priority, 1, detached);
+        if (thread != NULL)
+            return thread;
         core = -2;
     }
-    return threadCreate(entry, arg, stack, priority, core, true) != NULL;
+    return threadCreate(entry, arg, stack, priority, core, detached);
+}
+
+bool CtrPlatform_StartThread(void (*entry)(void *), void *arg, unsigned stack, int core)
+{
+    return StartThread(entry, arg, stack, core, true) != NULL;
+}
+
+CtrThread CtrPlatform_StartJoinable(void (*entry)(void *), void *arg, unsigned stack, int core)
+{
+    return (CtrThread)StartThread(entry, arg, stack, core, false);
+}
+
+bool CtrPlatform_JoinThread(CtrThread thread, unsigned timeoutMs)
+{
+    Result rc;
+
+    if (thread == NULL)
+        return true;
+    /* A wait that times out is no failure to R_FAILED (0x09401BFE, an info
+     * level): anything but 0 means the thread may still be running, and
+     * threadFree would leave it so. */
+    rc = threadJoin((Thread)thread, (u64)timeoutMs * 1000000u);
+    if (rc != 0)
+        return false;
+    threadFree((Thread)thread);
+    return true;
+}
+
+/* The workers' stops CtrPlatform_Shutdown calls (CtrPlatform_AtShutdown). */
+#define SHUTDOWN_STOPS 4
+static void (*sStops[SHUTDOWN_STOPS])(void);
+static unsigned sStopCount;
+
+void CtrPlatform_AtShutdown(void (*stop)(void))
+{
+    if (sStopCount < SHUTDOWN_STOPS)
+        sStops[sStopCount++] = stop;
+    else
+        CtrLog_Write(CTR_LOG_ERROR, "platform: no room for another worker's stop at exit");
 }
 
 void CtrPlatform_SleepUs(unsigned microseconds)
@@ -191,9 +304,9 @@ bool CtrPlatform_BeginFrame(void)
     CtrInput_Scan();
     const CtrInput *input = CtrInput_Get();
     /* Leave START and SELECT individually available to ReadKeys. Only the
-     * deliberate one-second chord exits the game; with A and B as well it is
+     * deliberate one-second chord exits the game; with L and R as well it is
      * the game's soft reset, which may be held longer. */
-    if ((input->physicalHeld & (CTR_KEY_START | CTR_KEY_SELECT | CTR_KEY_A | CTR_KEY_B))
+    if ((input->physicalHeld & (CTR_KEY_START | CTR_KEY_SELECT | CTR_KEY_L | CTR_KEY_R))
         == (CTR_KEY_START | CTR_KEY_SELECT))
     {
         if (!sExitStart) sExitStart = CtrPlatform_Milliseconds();
@@ -276,26 +389,31 @@ static bool PaceBehind(uint64_t now)
     return elapsed - sPaceFrames >= 1.0f;
 }
 
-/* The setting, read once a frame; the sound engine follows it. The field
- * only (and a battle's menus, below): the voxel world is what costs the
- * frame there, and a battle's own timing (its intro's slides, its cries) is
- * best left as the GBA's. */
+/* The setting, read once a frame. Hidden frames are for the field only (and a
+ * battle's menus, below): the voxel world is what costs the frame there, and
+ * a battle's own frames (its intro's slides) are best left as the GBA's. */
 static void PaceUpdate(void)
 {
     bool setting = CtrSettings_GetInt(PACE_KEY, 1) != 0;
     bool on = setting && !CtrVideo_InBattle();
     /* Nothing of the battle's own runs under its menus, only theirs: there
      * the game keeps the display's time too, a slow redraw of the bottom
-     * screen's view costing the picture a step and not the game. The sound
-     * engine stays on the game's frames, as in the rest of the battle: a
-     * hidden frame ticks it (sPacedFrame), so the music keeps its tempo. */
+     * screen's view costing the picture a step and not the game. Without the
+     * DSP's clock a hidden frame ticks the sound engine (sPacedFrame), so the
+     * music keeps its tempo. */
     bool menus = setting && CtrVideo_InBattle() && CtrVideo_TopHeld();
+    /* The sound engine's clock goes with the setting, battles included: a
+     * battle's frames stay the game's, but one that takes too long must not
+     * leave the DSP without a frame to play, which is heard as a click and,
+     * with 50 ms queued, comes back with every late frame for seconds. A link
+     * battle keeps the engine on its frames, as the partner's does. */
+    bool clock = setting && !(CtrVideo_InBattle() && LocalLink_InSession());
 
+    CtrAudio_SetClock(clock);
     if (on != sPace)
     {
         sPace = on;
         sPaceStart = 0;
-        CtrAudio_SetClock(on);
     }
     if (menus != sPaceMenus)
     {
@@ -427,28 +545,38 @@ void CtrPlatform_EndFrame(void)
     sTiming.vblankMs = (presentStart - endStart) * 1000.0f / SYSCLOCK_ARM11;
     /* FrameEnd(0) also flushes the console's linear LCD buffer. Calling
      * gfxFlushBuffers here would flush BOTH screens again, not just bottom. */
+    CtrVideoFrameReport report;
+    unsigned kind = CTR_TICK_NONE;
+
+    if (sHooks.videoPresent && shown)
+        sHooks.videoPresent();
+    /* What this frame's present did - nothing at all for a hidden frame:
+     * its wait is this frame's, never the last presented one's. */
+    CtrVideo_TakeFrameReport(&report);
     if (sHooks.videoPresent && shown)
     {
-        sHooks.videoPresent();
         /* The present's own work, without its wait for the display. */
-        sPresentMs = (svcGetSystemTick() - presentStart) * 1000.0f / SYSCLOCK_ARM11
-                     - CtrVideo_GetStats()->waitMs;
+        sPresentMs = (svcGetSystemTick() - presentStart) * 1000.0f / SYSCLOCK_ARM11 - report.waitMs;
         if (sPresentMs < 0) sPresentMs = 0;
         sShownTick = svcGetSystemTick();
+        kind = report.kind == CTR_PRESENT_DRAWN ? CTR_TICK_PRESENTED
+             : report.kind == CTR_PRESENT_HELD ? CTR_TICK_HELD : CTR_TICK_FAILED;
     }
+    else if (!shown)
+        kind = sPacedFrame ? CTR_TICK_PACED : CTR_TICK_FAST;
     ++sFrames;
-    uint64_t now = CtrPlatform_Milliseconds();
-    sFrameMs = now - sLastFrame;
-    sLastFrame = now;
     uint64_t tick = svcGetSystemTick();
-    sTiming.frameMs = sLastTick ? (tick - sLastTick) * 1000.0 / SYSCLOCK_ARM11 : 0;
-    sLastTick = tick;
     sTiming.workMs = (tick - sWorkStart) * 1000.0 / SYSCLOCK_ARM11;
-    sTiming.workMs -= CtrVideo_GetStats()->waitMs;
+    sTiming.workMs -= report.waitMs;
     if (sTiming.workMs < 0) sTiming.workMs = 0;
     if (sTiming.workMs > sTiming.peakWorkMs) sTiming.peakWorkMs = sTiming.workMs;
-    if (sTiming.workMs > 1000.0f / 60) ++sTiming.slowFrames;
-    CtrProf_EndFrame(sTiming.workMs, CtrVideo_GetStats()->waitMs, sFrames);
+    {
+        unsigned flags = sTickFlags | (sPacedFrame ? CTR_TICK_FLAG_PACING : 0)
+                       | (CtrAssets_WarmingUp() ? CTR_TICK_FLAG_WARMUP : 0);
+
+        sTickFlags = 0;
+        CtrProf_EndFrame(sTiming.workMs, kind, flags, sFrames, &report);
+    }
     sWaiting = false;
 }
 
@@ -459,13 +587,20 @@ void CtrPlatform_Shutdown(void)
     sInitialized = false;
     /* The last segment and what the GPU's memory holds, before it is freed. */
     CtrProf_Close();
+    /* The workers that read or write files first (the asset warm-up, then
+     * those registered: the plate file's, the battle boxes'), each joined or
+     * given up after a bound; the voxel stream stops with the video. */
     CtrAssets_StopWarmup();
+    while (sStopCount != 0)
+        sStops[--sStopCount]();
     CtrSettings_Shutdown();
     if (sHooks.shutdown)
         sHooks.shutdown();
     LocalLink_Shutdown();
     CtrVideo_Shutdown();
     CtrAudio_Shutdown();
+    /* Nothing reads game data past here: the pack is closed. */
+    CtrData_Shutdown();
     CtrLog_Write(CTR_LOG_BOOT, "clean shutdown, platform frames=%llu", (unsigned long long)sFrames);
     CtrScenario_Close();
     aptUnhook(&sAptHook);
@@ -531,6 +666,11 @@ void Port_ProfileMark(const char *label)
     float ms = sLast ? (float)((now - sLast) * 1000.0 / SYSCLOCK_ARM11) : 0.0f;
 
     sLast = now;
+    /* Only map changes mark their steps: the frame profiler's flags. Those
+     * of a walk across a map connection (fieldmap.c, field_camera.c) are a
+     * crossing, played on screen; the rest are a warp's load, under a fade. */
+    sTickFlags |= strncmp(label, "camera-", 7) == 0 || strcmp(label, "SaveMapView") == 0
+                  || strcmp(label, "DrawWholeMapView") == 0 ? CTR_TICK_FLAG_CROSSING : CTR_TICK_FLAG_LOADING;
     if (ms >= 0.8f && ms < 200.0f && sLogged < 400)
     {
         ++sLogged;

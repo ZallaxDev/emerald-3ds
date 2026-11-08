@@ -18,7 +18,9 @@
 #include <string.h>
 
 #include "3ds_platform.h"
+#include "3ds_assets.h"
 #include "3ds_video.h"
+#include "3ds_field_terrain.h"
 #include "3ds_gpumem.h"
 #include "3ds_map_events.h"
 #include "3ds_sprite_ids.h"
@@ -41,11 +43,13 @@ static unsigned sCalls;
 static float sTickCost;
 
 static const char *const sNames[PORT_PROF_COUNT] = {
-    "task", "spr", "fade", "vbl", "vcb", "dma3", "mix",
+    "task", "spr", "fade", "vbl", "dma3", "mix",
     "io", "lz", "copy", "lines", "pal", "lay", "draw", "end",
     "bw.world", "bw.post", "bw.scene",
-    "bs.prep", "bs.slots", "bs.text", "bs.eyes", "bs.whole",
+    "bs.prep", "bs.slots", "bs.text", "bs.eyes", "bs.whole", "iowait",
+    "bm.scene", "bm.place", "bm.text",
 };
+_Static_assert(sizeof(sNames) / sizeof(sNames[0]) == PORT_PROF_COUNT, "a name for every section");
 
 /* Only when there is a log to report to: every section is two tick reads,
  * and the engine's copies alone are hundreds of sections a frame. */
@@ -56,6 +60,11 @@ static bool ProfOn(void)
     if (sOn < 0)
         sOn = CtrLog_Enabled();
     return sOn;
+}
+
+unsigned Port_ProfOn(void)
+{
+    return ProfOn();
 }
 
 uint32_t Port_ProfTick(void)
@@ -80,6 +89,17 @@ void Port_ProfScene(const void *callback2)
 uintptr_t CtrProf_Scene(void)
 {
     return sScene;
+}
+
+/* The game's side of the frame's record (3ds_game_full.c). */
+static struct { uint16_t animId; uint8_t animKind, battle, sprites; } sGameNow;
+
+void Port_ProfBattle(unsigned animKind, unsigned animId, unsigned battle, unsigned sprites)
+{
+    sGameNow.animId = (uint16_t)animId;
+    sGameNow.animKind = (uint8_t)animKind;
+    sGameNow.battle = (uint8_t)battle;
+    sGameNow.sprites = sprites > 255 ? 255 : (uint8_t)sprites;
 }
 
 static int Sections(char *text, size_t size, const uint32_t *ticks, const uint64_t *sums, unsigned frames)
@@ -124,26 +144,143 @@ static const char *ModelName(u8 model)
     return model < sizeof(names) / sizeof(names[0]) ? names[model] : "unknown";
 }
 
-/* perf.bin begins with one header, then a CtrPerfRecord per frame. */
+/*
+ * perf.bin begins with one header, then a CtrPerfRecord per game frame.
+ *
+ * Version 2 keeps three counters
+ * apart: the game frame (tick), the picture a frame presented (image, an id
+ * of its GPU submission, 0 when it presented none) and the submission whose
+ * GPU figures the record carries (gpuOf: the one before, as FrameBegin reads
+ * it). A frame that did not present carries no presentation figures - the
+ * last presentation's were read again before - and its wait is its own.
+ * `lost` is the refreshes lost before this picture, counted only between two
+ * pictures with nothing in between that was meant to stop them (a held top
+ * screen, a resume: `boundary`).
+ *
+ * What nests: game includes bottom, tasks, sprites and load; present
+ * includes palette, layers, draw (which includes voxel and stereo eyes) and
+ * frameEnd; voxelAfter includes afterOwed (v3); ready = game + vblank + prep
+ * + present + voxelAfter + the rest of the frame, less its wait. gpu runs
+ * beside the CPU from gpuStart on: never add it to them. Version 6's sections
+ * are all inside draw: bw.* hold bs.* or bm.*, bs.whole holds bm.*, and the
+ * walks (bg, obj) are inside whichever composed.
+ */
 #define PERF_MAGIC 0x46503345u   /* "E3PF" */
-#define PERF_VERSION 1
+#define PERF_VERSION 6
+/* The LCD's refresh. */
+#define REFRESH_MS (1000.0f / 59.8261f)
 
 enum
 {
     T_READY, T_GAME, T_BOTTOM, T_VBLANK, T_PRESENT, T_PREP, T_WAIT, T_GPU, T_GPU_START,
     T_GAP, T_ARRIVE, T_PALETTE, T_LAYERS, T_DRAW, T_FRAMEEND, T_VOXEL, T_VOXEL_AFTER,
     T_STEREO_SAMPLE, T_STEREO_EYES, T_TASKS, T_SPRITES, T_MIX, T_LOAD, T_PROFILER,
+    /* Version 2: the game thread waiting for an asset (the table's lock, or
+     * a payload another thread is reading), and reading one itself. Version
+     * 3: of voxelAfter, the slice owed a static model missing from the
+     * picture - the drawn path's work, not the builds' elastic time (v2: 0). */
+    T_IO_WAIT, T_IO_READ, T_AFTER_OWED, T_SPARE2,
     T_COUNT
+};
+
+/* Version 5 (engine reform, stage 3): of a voxel picture, the CPU time of
+ * its Draws (both eyes summed) and of their passes, and of the update's
+ * billboards with two of their parts (CtrVoxelStats): measure only. */
+enum
+{
+    V_DRAW, V_CHUNKS, V_CARDS, V_AIR, V_WEATHER, V_BILLBOARDS, V_GATHER, V_PACK,
+    V_COUNT
+};
+
+/* Version 6 (heavy battles, item M): of a picture, the time in the layer
+ * walks and the sprites' (sBgTicks, sObjTicks), then the battle's sections. */
+enum
+{
+    B_BG, B_OBJ, B_BS_PREP, B_BS_SLOTS, B_BS_TEXT, B_BS_EYES, B_BS_WHOLE,
+    B_BW_WORLD, B_BW_POST, B_BW_SCENE, B_BM_SCENE, B_BM_PLACE, B_BM_TEXT,
+    B_COUNT
+};
+static const uint8_t sBattleSections[B_COUNT] = {
+    0, 0, PORT_PROF_BS_PREP, PORT_PROF_BS_SLOTS, PORT_PROF_BS_TEXT, PORT_PROF_BS_EYES, PORT_PROF_BS_WHOLE,
+    PORT_PROF_BW_WORLD, PORT_PROF_BW_POST, PORT_PROF_BW_SCENE, PORT_PROF_BM_SCENE, PORT_PROF_BM_PLACE,
+    PORT_PROF_BM_TEXT,
+};
+
+/* Version 2: counts of work and of what the picture went without. */
+enum
+{
+    N_DRAWS, N_TARGETS, N_COPIES, N_SYNC_READS,
+    N_CHUNKS_MISSING, N_MODELS_SKIPPED, N_SPRITES_DROPPED, N_CHUNK_BUILDS,
+    N_COUNT
 };
 
 typedef struct
 {
-    uint32_t frame, scene;
-    uint8_t mode, route, sliderPct, stereo;
-    uint8_t flat, missed, flags, reserved;
+    uint32_t tick, scene;
+    uint32_t image, gpuOf;
+    uint8_t kind, mode, route, sliderPct;
+    uint8_t stereo, flat, lost, flags;
     uint16_t t[T_COUNT];    /* units of 10 microseconds */
+    uint16_t n[N_COUNT];
+    /* Version 3. When submission gpuOf's queue last drained, from its frame's
+     * start (10 us; 0 = not seen): with the GPU started early, gpuStart + gpu
+     * is not that - a figure of its own, gpuEnd and REC_LATE_GPU keeping v2's
+     * meaning. The refreshes the top screen repeated before picture gpuOf, by
+     * the VBlanks the swaps took effect at (255 = not known): it sees the late
+     * GPU that the interval between FrameBegins cannot. It is gpuOf's, so a
+     * boundary picture's is good; one past a held top screen or a resume
+     * comes out not known (3ds_video.c breaks the chain per submission). */
+    uint16_t gpuDone;
+    uint8_t shown;
+    /* What this frame did: SCENERY_* of a battle frame without the 3D slider,
+     * effects it left out (B4's quality counts), TERRAIN_* bits of the 2D
+     * field's terrain, and game-thread asset requests that waited for another
+     * reader or found the read failing. */
+    uint8_t scenery, absent, terrain, assetWaits, assetFails;
+    /* Version 4 (engine reform, stage 1), of a picture: where the GPU was
+     * started early (CTR_EARLY_*, 0 at FrameEnd), and the surfaces a
+     * consumer wanted and went without (CTR_DENIED_* bits). */
+    uint8_t gpuEarly, denied;
+    uint8_t spare[6];
+    /* Version 5: V_* (10 us), 0 on a picture that did not update the voxel
+     * world. Draw comes before the record of its frame, so they are its own. */
+    uint16_t v[V_COUNT];
+    /* Version 6 (heavy battles, item M). The nocache bits a test build had
+     * off (BATTLE_TOGGLES, 0 in any other). */
+    uint32_t toggles;
+    /* Every frame, from the game: the battle animation playing, by its table
+     * (PORT_ANIM_*, 0 none) and index; PORT_BATTLE_* bits; the sprites in
+     * use. Of a picture: real target changes (SceneOn: `targets` also counts
+     * begins on the same target), why its scenery and text were composed or
+     * kept (CTR_SCENE_WHY_*, CTR_TEXT_WHY_* bits), and the slots' regions
+     * (bits of 3ds_video.c's SLOTS_AGAIN_*, SLOTS_UNKEPT_*). */
+    uint16_t animId;
+    uint8_t animKind, battle, sprites, switches;
+    uint16_t sceneWhy, textWhy;
+    uint8_t slotsAgain, slotsUnkept;
+    /* Of a picture: tile quads, the vertices of the draw calls, sprites drawn. */
+    uint16_t tiles, vertices, objects;
+    /* Submission gpuOf's queue drains: how many in all, how many the ring lost
+     * since the last report, and the first CTR_DRAIN_LIST - 1 and the last of
+     * them: the CTR_STAGE_* it had reached, and when, from its frame's start
+     * (10 us). `shown` has its own code for two swaps in one VBlank (254:
+     * SHOWN_TWICE), so the most refreshes it counts are 253. */
+    uint8_t drains, drainsLost;
+    uint8_t drainStage[CTR_DRAIN_LIST];
+    /* B_* (10 us), 0 on a frame that did not present. */
+    uint16_t b[B_COUNT];
+    uint16_t drainAt[CTR_DRAIN_LIST];
+    uint8_t spare6[2];
 } CtrPerfRecord;
-_Static_assert(sizeof(CtrPerfRecord) == 64, "perf.bin record");
+_Static_assert(sizeof(CtrPerfRecord) == 216, "perf.bin record");
+#define SHOWN_TWICE 254
+
+enum { SCENERY_NONE, SCENERY_KEPT, SCENERY_APART, SCENERY_SPRITES, SCENERY_WHOLE };
+#define TERRAIN_VIEW 0x01      /* a whole view left undrawn */
+#define TERRAIN_SLICE 0x02     /* window columns or rows left undrawn */
+#define TERRAIN_CELL 0x04      /* single metatiles left undrawn */
+#define TERRAIN_BANK 0x08      /* a crossing that kept no outgoing tile bank */
+#define TERRAIN_RESYNC 0x10    /* the whole view drawn again for a 2D frame */
 
 typedef struct
 {
@@ -195,8 +332,10 @@ void CtrProf_LogIdentity(void)
     for (unsigned i = 0; i < 1000; ++i)
         svcGetSystemTick();
     sTickCost = (svcGetSystemTick() - start) * 1000.0f / SYSCLOCK_ARM11 / 1000.0f;
-    CtrLog_Write(CTR_LOG_BOOT, "PERF tick read=%.2f us; perf.bin records of %u bytes, %u timings",
-                 sTickCost * 1000.0f, (unsigned)sizeof(CtrPerfRecord), (unsigned)T_COUNT);
+    CtrLog_Write(CTR_LOG_BOOT, "PERF tick read=%.2f us; perf.bin v%u records of %u bytes, %u timings, %u counts, "
+                 "%u voxel timings, %u battle timings, %u drains", sTickCost * 1000.0f, (unsigned)PERF_VERSION,
+                 (unsigned)sizeof(CtrPerfRecord), (unsigned)T_COUNT, (unsigned)N_COUNT, (unsigned)V_COUNT,
+                 (unsigned)B_COUNT, (unsigned)CTR_DRAIN_LIST);
 
     memset(&header, 0, sizeof(header));
     header.magic = PERF_MAGIC;
@@ -209,6 +348,12 @@ void CtrProf_LogIdentity(void)
     header.codeLow = (uint32_t)code;
     header.codeHigh = (uint32_t)(code >> 32);
     header.model = sModel;
+    /* Version 2: the counts after the timings; version 5: the voxel
+     * timings; version 6: the battle's and the drains kept. */
+    header.reserved[0] = N_COUNT;
+    header.reserved[1] = V_COUNT;
+    header.reserved[2] = B_COUNT;
+    header.reserved[3] = CTR_DRAIN_LIST;
     memcpy(header.linkId, gCtrLinkId, strnlen(gCtrLinkId, sizeof(header.linkId)));
     memcpy(header.appVersion, gCtrBuildVersion, strnlen(gCtrBuildVersion, sizeof(header.appVersion)));
     CtrLog_WriteBinary(&header, sizeof(header));
@@ -226,57 +371,221 @@ static const char *const sModes[CTR_MODE_COUNT] = {
     "other", "field", "voxel", "battle", "voxel-battle", "stage", "centred", "bottom",
 };
 
+/*
+ * A segment counts game frames (ticks) and the pictures among them apart:
+ * ready's percentiles are over the frames that presented (the CPU's arrival
+ * of each picture), gpuEnd's over the submissions the GPU finished, each
+ * paired with its own start, and `missed` is the refreshes lost between two
+ * pictures with nothing meant in between (v1 counted the last presentation's
+ * gap again on every frame that did not present).
+ */
 static struct
 {
-    uint32_t scene, first, last, frames;
+    uint32_t scene, first, last, frames, images;
     uint8_t mode;
     uint16_t ready[BINS], gpuEnd[BINS];
-    float readyMax, gpuEndMax;
-    uint32_t missed, missedFrames, slider, stereo, flat[8];
+    float readyMax, gpuEndMax, gapMax;
+    uint32_t gpuSamples;
+    uint32_t missed, missedFrames, missedCpu, missedGpu, boundaries;
+    /* Version 3: refreshes repeated by the swaps' VBlanks, and in how many
+     * pictures; pictures with that not known; battle frames by SCENERY_*;
+     * effects left out; terrain frames; asset waits and failures. */
+    uint32_t shown, shownFrames, shownUnknown, scenery[5], absent, absentFrames;
+    uint32_t terrainSkipped, terrainResyncs, assetWaits, assetFails;
+    /* Version 4: pictures by route and those of them the GPU started early
+     * on, by the point it started at, and by the surface they went without. */
+    uint32_t routePictures[CTR_ROUTE_COUNT], routeEarly[CTR_ROUTE_COUNT], earlyAt[CTR_EARLY_COUNT];
+    uint32_t denied[CTR_DENIED_KINDS];
+    /* ... and gpuDone, over the submissions whose swap was seen. */
+    uint16_t gpuDone[BINS];
+    float gpuDoneMax;
+    uint32_t gpuDoneSamples;
+    /* Frames by what they were (CTR_TICK_*) and went through (flags). */
+    uint32_t kinds[8], loading, crossing, warmup, resumes;
+    uint32_t slider, stereo, flat[8];
+    /* Game timings over every frame, presentation timings over the pictures. */
     double sum[T_COUNT];
+    uint32_t count[N_COUNT];
+    /* Version 5: the voxel timings, over the pictures that updated the world. */
+    double voxelSum[V_COUNT];
+    uint32_t voxelPictures;
+    /* Version 6: frames in a battle, of them double ones and with an
+     * animation playing; battle pictures, their timings and counts, and how
+     * many had each reason of their scenery and text; pictures that never
+     * reached the screen; drains over the submissions that had any. */
+    uint32_t battleFrames, doubleFrames, animFrames, battlePictures;
+    double battleSum[B_COUNT];
+    uint32_t tiles, vertices, objects, switches;
+    uint32_t sceneWhy[CTR_SCENE_WHY_COUNT], textWhy[CTR_TEXT_WHY_COUNT];
+    uint32_t shownTwice, drains, drainsLost, drainSubmissions, drainsPast;
 } sSeg;
 
 static float Percentile(const uint16_t *bins, unsigned frames, float fraction)
 {
     unsigned target = (unsigned)ceilf(frames * fraction), seen = 0;
 
+    if (frames == 0)
+        return 0.0f;
     for (unsigned i = 0; i < BINS; ++i)
         if ((seen += bins[i]) >= target)
             return (i + 1) * 0.1f;
     return BINS * 0.1f;
 }
 
+/* Which timings belong to a picture (averaged over the presented frames). */
+static bool PresentTiming(unsigned i)
+{
+    return i == T_PRESENT || i == T_PREP || i == T_WAIT || i == T_GAP || i == T_ARRIVE || i == T_PALETTE
+        || i == T_LAYERS || i == T_DRAW || i == T_FRAMEEND || i == T_VOXEL || i == T_VOXEL_AFTER
+        || i == T_AFTER_OWED || i == T_STEREO_SAMPLE || i == T_STEREO_EYES;
+}
+
 static void SegmentReport(void)
 {
-    unsigned n = sSeg.frames;
+    unsigned n = sSeg.frames, images = sSeg.images, gpu = sSeg.gpuSamples;
     double *s = sSeg.sum;
 
     if (n < SEGMENT_MIN)
         return;
-#define M(i) (float)(s[i] / n / 100.0)
+#define M(i) (float)(s[i] / (PresentTiming(i) ? (images ? images : 1) : n) / 100.0)
+#define G(i) (float)(s[i] / (gpu ? gpu : 1) / 100.0)
     CtrLog_Write(CTR_LOG_VIDEO, "PERF seg %s cb2=%08lx f=%lu-%lu n=%u ready p50=%.2f p95=%.2f p99=%.2f max=%.2f"
-                 " | gpuEnd p50=%.2f p95=%.2f p99=%.2f max=%.2f | missed=%lu in %lu frames",
+                 " | gpuEnd p50=%.2f p95=%.2f p99=%.2f max=%.2f | missed=%lu in %lu frames"
+                 " | v2 images=%u held=%lu paced=%lu fast=%lu failed=%lu loading=%lu crossing=%lu warmup=%lu"
+                 " resumes=%lu boundaries=%lu missed cpu=%lu gpu=%lu gap max=%.1f",
                  sModes[sSeg.mode], (unsigned long)sSeg.scene, (unsigned long)sSeg.first,
                  (unsigned long)sSeg.last, n,
-                 Percentile(sSeg.ready, n, 0.5f), Percentile(sSeg.ready, n, 0.95f),
-                 Percentile(sSeg.ready, n, 0.99f), sSeg.readyMax,
-                 Percentile(sSeg.gpuEnd, n, 0.5f), Percentile(sSeg.gpuEnd, n, 0.95f),
-                 Percentile(sSeg.gpuEnd, n, 0.99f), sSeg.gpuEndMax,
-                 (unsigned long)sSeg.missed, (unsigned long)sSeg.missedFrames);
+                 Percentile(sSeg.ready, images, 0.5f), Percentile(sSeg.ready, images, 0.95f),
+                 Percentile(sSeg.ready, images, 0.99f), sSeg.readyMax,
+                 Percentile(sSeg.gpuEnd, gpu, 0.5f), Percentile(sSeg.gpuEnd, gpu, 0.95f),
+                 Percentile(sSeg.gpuEnd, gpu, 0.99f), sSeg.gpuEndMax,
+                 (unsigned long)sSeg.missed, (unsigned long)sSeg.missedFrames,
+                 images, (unsigned long)sSeg.kinds[CTR_TICK_HELD], (unsigned long)sSeg.kinds[CTR_TICK_PACED],
+                 (unsigned long)sSeg.kinds[CTR_TICK_FAST], (unsigned long)sSeg.kinds[CTR_TICK_FAILED],
+                 (unsigned long)sSeg.loading, (unsigned long)sSeg.crossing, (unsigned long)sSeg.warmup,
+                 (unsigned long)sSeg.resumes, (unsigned long)sSeg.boundaries,
+                 (unsigned long)sSeg.missedCpu, (unsigned long)sSeg.missedGpu, sSeg.gapMax);
     CtrLog_Write(CTR_LOG_VIDEO, "PERF seg means game=%.2f (bottom=%.2f task=%.2f spr=%.2f load=%.2f) vblank=%.2f"
                  " prep=%.2f present=%.2f (pal=%.2f lay=%.2f draw=%.2f end=%.2f) gpu=%.2f gpuStart=%.2f"
-                 " voxel=%.2f after=%.2f stereo sample=%.2f eyes=%.2f mix=%.2f profiler=%.3f",
+                 " voxel=%.2f after=%.2f (owed=%.2f) stereo sample=%.2f eyes=%.2f mix=%.2f profiler=%.3f"
+                 " | io wait=%.3f read=%.3f",
                  M(T_GAME), M(T_BOTTOM), M(T_TASKS), M(T_SPRITES), M(T_LOAD), M(T_VBLANK), M(T_PREP),
-                 M(T_PRESENT), M(T_PALETTE), M(T_LAYERS), M(T_DRAW), M(T_FRAMEEND), M(T_GPU),
-                 M(T_GPU_START), M(T_VOXEL), M(T_VOXEL_AFTER), M(T_STEREO_SAMPLE), M(T_STEREO_EYES),
-                 M(T_MIX), M(T_PROFILER));
+                 M(T_PRESENT), M(T_PALETTE), M(T_LAYERS), M(T_DRAW), M(T_FRAMEEND), G(T_GPU),
+                 G(T_GPU_START), M(T_VOXEL), M(T_VOXEL_AFTER), M(T_AFTER_OWED), M(T_STEREO_SAMPLE),
+                 M(T_STEREO_EYES), M(T_MIX), M(T_PROFILER), M(T_IO_WAIT), M(T_IO_READ));
 #undef M
+#undef G
+    {
+        float per = images ? 1.0f / images : 0.0f;
+
+        CtrLog_Write(CTR_LOG_VIDEO, "PERF seg counts per picture: draws=%.1f targets=%.2f copies=%.2f; in all: "
+                     "game-thread reads=%lu, chunks missing=%lu (picture-frames), models skipped=%lu, "
+                     "sprites left out=%lu, chunk builds=%lu",
+                     sSeg.count[N_DRAWS] * per, sSeg.count[N_TARGETS] * per, sSeg.count[N_COPIES] * per,
+                     (unsigned long)sSeg.count[N_SYNC_READS], (unsigned long)sSeg.count[N_CHUNKS_MISSING],
+                     (unsigned long)sSeg.count[N_MODELS_SKIPPED], (unsigned long)sSeg.count[N_SPRITES_DROPPED],
+                     (unsigned long)sSeg.count[N_CHUNK_BUILDS]);
+    }
     CtrLog_Write(CTR_LOG_VIDEO, "PERF seg 3D slider up in %lu frames, 3D shown in %lu; whole per eye: blend=%lu "
                  "mosaic=%lu bg-front=%lu slots=%lu; flat: voxel-off=%lu no-surface=%lu no-planes=%lu other=%lu",
                  (unsigned long)sSeg.slider, (unsigned long)sSeg.stereo,
                  (unsigned long)sSeg.flat[0], (unsigned long)sSeg.flat[1], (unsigned long)sSeg.flat[2],
                  (unsigned long)sSeg.flat[3], (unsigned long)sSeg.flat[4], (unsigned long)sSeg.flat[5],
                  (unsigned long)sSeg.flat[6], (unsigned long)sSeg.flat[7]);
+    /* gpuDone apart from gpuEnd, which keeps v2's meaning (the DROP line's),
+     * on a line of its own: the next one has little room left of a log
+     * line's 384 characters. */
+    CtrLog_Write(CTR_LOG_VIDEO, "PERF seg v3 gpuDone (queue drained, top swapped) p50=%.2f p95=%.2f p99=%.2f "
+                 "max=%.2f in %lu of %lu submissions",
+                 Percentile(sSeg.gpuDone, sSeg.gpuDoneSamples, 0.5f),
+                 Percentile(sSeg.gpuDone, sSeg.gpuDoneSamples, 0.95f),
+                 Percentile(sSeg.gpuDone, sSeg.gpuDoneSamples, 0.99f), sSeg.gpuDoneMax,
+                 (unsigned long)sSeg.gpuDoneSamples, (unsigned long)gpu);
+    CtrLog_Write(CTR_LOG_VIDEO, "PERF seg v3 repeated refreshes (by the swaps' VBlanks)=%lu in %lu pictures, "
+                 "%lu not known | battle without 3D: scenery kept=%lu apart=%lu sprites alone=%lu whole=%lu"
+                 " | effects left out=%lu in %lu frames | terrain left undrawn in %lu frames, drawn again %lu"
+                 " | asset waits=%lu failures=%lu",
+                 (unsigned long)sSeg.shown, (unsigned long)sSeg.shownFrames, (unsigned long)sSeg.shownUnknown,
+                 (unsigned long)sSeg.scenery[SCENERY_KEPT], (unsigned long)sSeg.scenery[SCENERY_APART],
+                 (unsigned long)sSeg.scenery[SCENERY_SPRITES], (unsigned long)sSeg.scenery[SCENERY_WHOLE],
+                 (unsigned long)sSeg.absent, (unsigned long)sSeg.absentFrames,
+                 (unsigned long)sSeg.terrainSkipped, (unsigned long)sSeg.terrainResyncs,
+                 (unsigned long)sSeg.assetWaits, (unsigned long)sSeg.assetFails);
+    {
+        static const char *const routes[CTR_ROUTE_COUNT] = {"mono", "eyes", "planes", "battle-stereo", "voxel",
+            "voxel-stereo", "battle-world", "battle-world-stereo", "transition", "blank", "bottom"};
+        char line[200];
+        int used = 0;
+
+        /* Short of a log line's 384 characters with the rest. */
+        for (unsigned r = 0; r < CTR_ROUTE_COUNT && used < (int)sizeof(line) - 32; ++r)
+            if (sSeg.routePictures[r])
+                used += snprintf(line + used, sizeof(line) - used, " %s %lu/%lu", routes[r],
+                                 (unsigned long)sSeg.routeEarly[r], (unsigned long)sSeg.routePictures[r]);
+        CtrLog_Write(CTR_LOG_VIDEO, "PERF seg v4 gpu early (early/pictures):%s; at layers %lu scene %lu eye %lu "
+                     "plane %lu transition %lu voxel %lu battle %lu",
+                     used ? line : " none", (unsigned long)sSeg.earlyAt[CTR_EARLY_LAYERS],
+                     (unsigned long)sSeg.earlyAt[CTR_EARLY_SCENE], (unsigned long)sSeg.earlyAt[CTR_EARLY_EYE],
+                     (unsigned long)sSeg.earlyAt[CTR_EARLY_PLANE], (unsigned long)sSeg.earlyAt[CTR_EARLY_TRANSITION],
+                     (unsigned long)sSeg.earlyAt[CTR_EARLY_VOXEL], (unsigned long)sSeg.earlyAt[CTR_EARLY_BATTLE]);
+        CtrLog_Write(CTR_LOG_VIDEO, "PERF seg v4 surfaces denied (pictures): layer %lu plane %lu bottom %lu scene %lu "
+                     "keeper %lu blend %lu slots %lu voxel %lu",
+                     (unsigned long)sSeg.denied[0], (unsigned long)sSeg.denied[1], (unsigned long)sSeg.denied[2],
+                     (unsigned long)sSeg.denied[3], (unsigned long)sSeg.denied[4], (unsigned long)sSeg.denied[5],
+                     (unsigned long)sSeg.denied[6], (unsigned long)sSeg.denied[7]);
+    }
+    if (sSeg.voxelPictures)
+    {
+        const double *v = sSeg.voxelSum;
+        double per = 1.0 / sSeg.voxelPictures / 100.0;
+
+        CtrLog_Write(CTR_LOG_VIDEO, "PERF seg v5 voxel cpu (means over %lu voxel pictures): draw=%.2f (chunks=%.2f "
+                     "cards=%.2f air=%.2f weather=%.2f) billboards=%.2f (gather=%.2f pack=%.2f)",
+                     (unsigned long)sSeg.voxelPictures, v[V_DRAW] * per, v[V_CHUNKS] * per, v[V_CARDS] * per,
+                     v[V_AIR] * per, v[V_WEATHER] * per, v[V_BILLBOARDS] * per, v[V_GATHER] * per,
+                     v[V_PACK] * per);
+    }
+    if (sSeg.battleFrames)
+    {
+        const double *b = sSeg.battleSum;
+        const uint32_t *w = sSeg.sceneWhy, *t = sSeg.textWhy;
+        double per = 1.0 / (sSeg.battlePictures ? sSeg.battlePictures : 1) / 100.0;
+        float count = 1.0f / (sSeg.battlePictures ? sSeg.battlePictures : 1);
+
+        CtrLog_Write(CTR_LOG_VIDEO, "PERF seg v6 battle frames=%lu double=%lu animation=%lu, means over %lu pictures: "
+                     "bg=%.2f obj=%.2f tiles=%.0f vertices=%.0f objects=%.1f switches=%.1f bs prep=%.2f slots=%.2f "
+                     "text=%.2f eyes=%.2f whole=%.2f bw world=%.2f post=%.2f scene=%.2f bm scene=%.2f place=%.2f "
+                     "text=%.2f",
+                     (unsigned long)sSeg.battleFrames, (unsigned long)sSeg.doubleFrames, (unsigned long)sSeg.animFrames,
+                     (unsigned long)sSeg.battlePictures, b[B_BG] * per, b[B_OBJ] * per, sSeg.tiles * count,
+                     sSeg.vertices * count, sSeg.objects * count, sSeg.switches * count, b[B_BS_PREP] * per,
+                     b[B_BS_SLOTS] * per, b[B_BS_TEXT] * per, b[B_BS_EYES] * per, b[B_BS_WHOLE] * per,
+                     b[B_BW_WORLD] * per, b[B_BW_POST] * per, b[B_BW_SCENE] * per, b[B_BM_SCENE] * per,
+                     b[B_BM_PLACE] * per, b[B_BM_TEXT] * per);
+        CtrLog_Write(CTR_LOG_VIDEO, "PERF seg v6 scenery (pictures): kept %lu composed %lu layer %lu; why: reg %lu "
+                     "scroll %lu lines %lu drawable %lu version %lu key %lu palette %lu stamp %lu vram %lu still %lu "
+                     "path %lu new %lu slots %lu",
+                     (unsigned long)w[CTR_SCENE_WHY_KEPT], (unsigned long)w[CTR_SCENE_WHY_COMPOSED],
+                     (unsigned long)w[CTR_SCENE_WHY_LAYER], (unsigned long)w[CTR_SCENE_WHY_REG],
+                     (unsigned long)w[CTR_SCENE_WHY_SCROLL], (unsigned long)w[CTR_SCENE_WHY_LINES],
+                     (unsigned long)w[CTR_SCENE_WHY_DRAWABLE], (unsigned long)w[CTR_SCENE_WHY_VERSION],
+                     (unsigned long)w[CTR_SCENE_WHY_KEY], (unsigned long)w[CTR_SCENE_WHY_PALETTE],
+                     (unsigned long)w[CTR_SCENE_WHY_STAMP], (unsigned long)w[CTR_SCENE_WHY_VRAM],
+                     (unsigned long)w[CTR_SCENE_WHY_STILL], (unsigned long)w[CTR_SCENE_WHY_PATH],
+                     (unsigned long)w[CTR_SCENE_WHY_NEW], (unsigned long)w[CTR_SCENE_WHY_SLOTS]);
+        CtrLog_Write(CTR_LOG_VIDEO, "PERF seg v6 text (pictures): kept %lu; why: reg %lu view %lu palette %lu box %lu "
+                     "pictures %lu bg stamp %lu bank stamp %lu vram %lu fade %lu path %lu",
+                     (unsigned long)t[CTR_TEXT_WHY_KEPT], (unsigned long)t[CTR_TEXT_WHY_REG],
+                     (unsigned long)t[CTR_TEXT_WHY_VIEW], (unsigned long)t[CTR_TEXT_WHY_PALETTE],
+                     (unsigned long)t[CTR_TEXT_WHY_BOX], (unsigned long)t[CTR_TEXT_WHY_PICTURES],
+                     (unsigned long)t[CTR_TEXT_WHY_BG_STAMP], (unsigned long)t[CTR_TEXT_WHY_BANK_STAMP],
+                     (unsigned long)t[CTR_TEXT_WHY_VRAM], (unsigned long)t[CTR_TEXT_WHY_FADE],
+                     (unsigned long)t[CTR_TEXT_WHY_PATH]);
+    }
+    CtrLog_Write(CTR_LOG_VIDEO, "PERF seg v6 pictures never shown (two swaps in one VBlank)=%lu; queue drains=%lu in "
+                 "%lu submissions, past the record's list %lu, lost to a full ring %lu",
+                 (unsigned long)sSeg.shownTwice, (unsigned long)sSeg.drains, (unsigned long)sSeg.drainSubmissions,
+                 (unsigned long)sSeg.drainsPast, (unsigned long)sSeg.drainsLost);
     {
         uint32_t c[8];
 
@@ -307,60 +616,204 @@ static float Ms(uint32_t ticks)
     return ticks * 1000.0f / SYSCLOCK_ARM11;
 }
 
+static uint16_t Count(uint32_t n)
+{
+    return n > 65535 ? 65535 : (uint16_t)n;
+}
+
+/* What grew since the last frame, of a count kept in all (0 if it was reset). */
+static uint32_t Grown(uint32_t now, uint32_t *last)
+{
+    uint32_t grown = now >= *last ? now - *last : now;
+
+    *last = now;
+    return grown;
+}
+
+/* The record's kind: CTR_TICK_* in its low bits, and of a picture: */
+#define REC_BOUNDARY 0x10   /* its interval spans a held top screen or a resume */
+#define REC_LATE_CPU 0x20   /* refreshes lost, the CPU back at FrameBegin late */
+#define REC_LATE_GPU 0x40   /* refreshes lost, the last submission ending late */
+/* Its flags: CTR_TICK_FLAG_* in the low five bits, then: */
+#define REC_VOXEL 0x20      /* a picture the voxel world was updated for */
+#define REC_SCENARIO 0x40   /* a scenario playing */
+#define REC_FAST 0x80       /* the game sped up (SPEED above 1x) */
+_Static_assert(CTR_TICK_FLAG_CROSSING < REC_VOXEL, "the tick's flags fit below the record's own");
+
+static const char *const sKinds[] = {"none", "shown", "paced", "fast", "held", "failed"};
+
 /* One frame into perf.bin and its segment. */
-static void Record(float workMs, float waitMs, uint64_t frame, float profilerMs)
+static void Record(float workMs, unsigned kind, unsigned flags, uint64_t frame,
+                   const CtrVideoFrameReport *report, float profilerMs)
 {
     const CtrTiming *timing = CtrPlatform_GetTiming();
     const CtrVideoStats *video = CtrVideo_GetStats();
     const CtrVoxelStats *voxel = CtrVoxel_GetStats();
+    /* Counts kept in all, as they stood at the last frame. */
+    static uint32_t sMisses, sBuilds, sModels, sSprites;
+    bool presented = kind == CTR_TICK_PRESENTED;
+    bool voxelFrame = presented && video->voxelFrame;
+    /* When the submission gpuOf ended, from its own frame's start, as v2 and
+     * the DROP line have it: when it set the GPU going plus the drawing
+     * FrameBegin waited for. Short of the end when the GPU started early,
+     * since citro3d times the drawing from FrameEnd; its queue's last drain
+     * (gpuDone, v3) is kept apart, so that gpuEnd and REC_LATE_GPU mean the
+     * same in a v2 run and a v3 one. */
+    float gpuEnd = report->gpuStartMs + report->gpuMs;
+    unsigned lost = 0, models, sprites;
+    static uint32_t sWaits, sFails;
+    static CtrFieldTerrainStats sTerrain;
+    CtrFieldTerrainStats terrain;
+    CtrQualityCounts quality;
+    CtrGpuCounts gpu;
     CtrPerfRecord r;
-    /* FrameBegin read the last frame's drawing time: it ended that long
-     * after the last frame set the GPU going. (The record keeps both as
-     * read; perf_report.py pairs them the same way.) */
-    static float sLastGpuStart;
-    float gpuEnd = sLastGpuStart + video->gpuMs;
 
-    sLastGpuStart = video->gpuStartMs;
-    unsigned missed = video->gapMs > 0.0f ? (unsigned)((video->gapMs + 8.35f) / 16.7f) : 1;
-
-    missed = missed > 0 ? missed - 1 : 0;
+    CtrGpuCounts_Take(&gpu);
+    CtrVoxel_FrameCounts(&models, &sprites);
+    CtrVideo_TakeQualityCounts(&quality);
+    FieldCamera_GetTerrainStats(&terrain);
     memset(&r, 0, sizeof(r));
-    r.frame = (uint32_t)frame;
+    r.tick = (uint32_t)frame;
     r.scene = (uint32_t)sScene;
+    r.image = report->image;
+    r.gpuOf = report->gpuOf;
+    r.kind = (uint8_t)kind;
+    /* The screen's mode as of the last picture: a frame that drew none is
+     * still on that screen. */
     r.mode = video->mode;
-    r.route = video->route;
-    r.sliderPct = video->sliderPct;
-    r.stereo = video->stereo > 255 ? 255 : (uint8_t)video->stereo;
-    r.flat = video->flat;
-    r.missed = missed > 255 ? 255 : (uint8_t)missed;
-    r.flags = (video->voxelFrame ? 1 : 0) | (CtrScenario_Playing() ? 2 : 0) | (CtrSettings_SpeedHalves() > 2 ? 4 : 0);
+    r.flags = (uint8_t)(flags | (voxelFrame ? REC_VOXEL : 0) | (CtrScenario_Playing() ? REC_SCENARIO : 0)
+                        | (CtrSettings_SpeedHalves() > 2 ? REC_FAST : 0));
+    /* What only a picture has: how it was drawn, and the time since the one
+     * before. The refreshes lost before it, unless something meant to stop
+     * the pictures came between (boundary). */
+    if (presented)
+    {
+        r.route = video->route;
+        r.sliderPct = video->sliderPct;
+        r.stereo = video->stereo > 255 ? 255 : (uint8_t)video->stereo;
+        r.flat = video->flat;
+        if (report->boundary)
+            r.kind |= REC_BOUNDARY;
+        else if (video->gapMs > 0.0f)
+        {
+            unsigned refreshes = (unsigned)(video->gapMs / REFRESH_MS + 0.5f);
+
+            lost = refreshes > 1 ? refreshes - 1 : 0;
+            /* Which of the two missed the VBlank, as the DROP line names it. */
+            if (lost != 0)
+                r.kind |= video->arriveMs > 16.0f ? REC_LATE_CPU : gpuEnd > 15.5f ? REC_LATE_GPU : 0;
+        }
+        r.lost = lost > 255 ? 255 : (uint8_t)lost;
+        r.t[T_PRESENT] = Units(video->cpuMs);
+        r.t[T_PREP] = Units(video->prepMs);
+        r.t[T_GAP] = Units(video->gapMs);
+        r.t[T_ARRIVE] = Units(video->arriveMs);
+        r.t[T_STEREO_SAMPLE] = Units(video->stereoSampleMs);
+        r.t[T_STEREO_EYES] = Units(video->stereoEyesMs);
+        r.gpuEarly = video->gpuEarly;
+        r.denied = video->denied;
+        r.switches = gpu.switches > 255 ? 255 : (uint8_t)gpu.switches;
+        r.sceneWhy = video->sceneWhy;
+        r.textWhy = video->textWhy;
+        r.slotsAgain = video->slotsAgain;
+        r.slotsUnkept = video->slotsUnkept;
+        r.tiles = Count(video->tiles);
+        r.vertices = Count(gpu.vertices);
+        r.objects = Count(video->sprites);
+        r.b[B_BG] = Units(video->bgMs);
+        r.b[B_OBJ] = Units(video->objMs);
+        for (unsigned i = B_BS_PREP; i < B_COUNT; ++i)
+            r.b[i] = Units(Ms(sFrame[sBattleSections[i]]));
+        r.toggles = video->toggles;
+    }
+    r.animId = sGameNow.animId;
+    r.animKind = sGameNow.animKind;
+    r.battle = sGameNow.battle;
+    r.sprites = sGameNow.sprites;
+    if (voxelFrame)
+    {
+        r.t[T_VOXEL] = Units(voxel->updateMs);
+        r.t[T_VOXEL_AFTER] = Units(voxel->afterMs);
+        r.t[T_AFTER_OWED] = Units(voxel->afterOwedMs);
+        r.n[N_CHUNKS_MISSING] = Count(voxel->chunksMissing);
+        r.v[V_DRAW] = Units(voxel->drawMs);
+        r.v[V_CHUNKS] = Units(voxel->drawChunksMs);
+        r.v[V_CARDS] = Units(voxel->drawCardsMs);
+        r.v[V_AIR] = Units(voxel->drawAirMs);
+        r.v[V_WEATHER] = Units(voxel->drawWeatherMs);
+        r.v[V_BILLBOARDS] = Units(voxel->spritesMs);
+        r.v[V_GATHER] = Units(voxel->gatherMs);
+        r.v[V_PACK] = Units(voxel->packMs);
+    }
+    if (report->gpuOf != 0)
+    {
+        r.t[T_GPU] = Units(report->gpuMs);
+        r.t[T_GPU_START] = Units(report->gpuStartMs);
+    }
     r.t[T_READY] = Units(workMs);
     r.t[T_GAME] = Units(timing->gameMs);
     r.t[T_BOTTOM] = Units(timing->bottomMs);
     r.t[T_VBLANK] = Units(timing->vblankMs);
-    r.t[T_PRESENT] = Units(video->cpuMs);
-    r.t[T_PREP] = Units(video->prepMs);
-    r.t[T_WAIT] = Units(waitMs);
-    r.t[T_GPU] = Units(video->gpuMs);
-    r.t[T_GPU_START] = Units(video->gpuStartMs);
-    r.t[T_GAP] = Units(video->gapMs);
-    r.t[T_ARRIVE] = Units(video->arriveMs);
+    r.t[T_WAIT] = Units(report->waitMs);
     r.t[T_PALETTE] = Units(Ms(sFrame[PORT_PROF_PALETTE]));
     r.t[T_LAYERS] = Units(Ms(sFrame[PORT_PROF_LAYERS]));
     r.t[T_DRAW] = Units(Ms(sFrame[PORT_PROF_DRAW]));
     r.t[T_FRAMEEND] = Units(Ms(sFrame[PORT_PROF_FRAMEEND]));
-    if (video->voxelFrame)
-    {
-        r.t[T_VOXEL] = Units(voxel->updateMs);
-        r.t[T_VOXEL_AFTER] = Units(voxel->afterMs);
-    }
-    r.t[T_STEREO_SAMPLE] = Units(video->stereoSampleMs);
-    r.t[T_STEREO_EYES] = Units(video->stereoEyesMs);
     r.t[T_TASKS] = Units(Ms(sFrame[PORT_PROF_TASKS]));
     r.t[T_SPRITES] = Units(Ms(sFrame[PORT_PROF_SPRITES]));
     r.t[T_MIX] = Units(Ms(sFrame[PORT_PROF_MIX]));
     r.t[T_LOAD] = Units(Ms(sFrame[PORT_PROF_IO] + sFrame[PORT_PROF_LZ]));
     r.t[T_PROFILER] = Units(profilerMs);
+    r.t[T_IO_WAIT] = Units(Ms(sFrame[PORT_PROF_IO_WAIT]));
+    r.t[T_IO_READ] = Units(Ms(sFrame[PORT_PROF_IO]));
+    r.n[N_DRAWS] = Count(gpu.draws);
+    r.n[N_TARGETS] = Count(gpu.targets);
+    r.n[N_COPIES] = Count(gpu.copies);
+    r.n[N_SYNC_READS] = Count(Grown(CtrAssets_GetStats()->misses, &sMisses));
+    r.n[N_MODELS_SKIPPED] = Count(Grown(models, &sModels));
+    r.n[N_SPRITES_DROPPED] = Count(Grown(sprites, &sSprites));
+    r.n[N_CHUNK_BUILDS] = Count(Grown(voxel->meshRebuilds, &sBuilds));
+    /* Version 3. */
+    r.gpuDone = report->gpuOf != 0 ? Units(report->gpuDoneMs) : 0;
+    r.shown = report->shownTwice ? SHOWN_TWICE : report->shownKnown ? report->shownLost : 255;
+    /* Version 6: the list as ReportDrains left it, the last drain in the last
+     * place it takes. */
+    if (report->gpuOf != 0)
+    {
+        unsigned listed = report->drains < CTR_DRAIN_LIST ? report->drains : CTR_DRAIN_LIST;
+
+        r.drains = report->drains;
+        r.drainsLost = report->drainsLost;
+        for (unsigned i = 0; i < listed; ++i)
+        {
+            r.drainStage[i] = report->drainStage[i];
+            r.drainAt[i] = Units(Ms(report->drainTicks[i]));
+        }
+    }
+    {
+        uint32_t fallback = 0, absent;
+
+        for (unsigned i = 0; i < CTR_MONO_WHY_COUNT; ++i)
+            fallback += quality.monoFallback[i];
+        r.scenery = quality.monoKept ? SCENERY_KEPT : quality.monoRecomposed ? SCENERY_APART
+                  : quality.monoEmpty ? SCENERY_SPRITES : fallback ? SCENERY_WHOLE : SCENERY_NONE;
+        absent = quality.lineAlphaDropped + quality.lineDropped + quality.objWinIgnored + quality.mosaicIgnored;
+        r.absent = absent > 255 ? 255 : (uint8_t)absent;
+    }
+    /* Counters since boot in the game's memory: a soft reset takes them back
+     * to 0, which Grown reads as all new. */
+    r.terrain = (Grown(terrain.viewsSkipped, &sTerrain.viewsSkipped) ? TERRAIN_VIEW : 0)
+              | (Grown(terrain.slicesSkipped, &sTerrain.slicesSkipped) ? TERRAIN_SLICE : 0)
+              | (Grown(terrain.cellsSkipped, &sTerrain.cellsSkipped) ? TERRAIN_CELL : 0)
+              | (Grown(terrain.banksDeferred, &sTerrain.banksDeferred) ? TERRAIN_BANK : 0)
+              | (Grown(terrain.resyncs, &sTerrain.resyncs) ? TERRAIN_RESYNC : 0);
+    {
+        uint32_t waits = Grown(CtrAssets_GetStats()->waits, &sWaits);
+        uint32_t fails = Grown(CtrAssets_GetStats()->failures, &sFails);
+
+        r.assetWaits = waits > 255 ? 255 : (uint8_t)waits;
+        r.assetFails = fails > 255 ? 255 : (uint8_t)fails;
+    }
     CtrLog_WriteBinary(&r, sizeof(r));
 
     /* The segment: a new one at a change of screen or mode, or when full. */
@@ -394,25 +847,109 @@ static void Record(float workMs, float waitMs, uint64_t frame, float profilerMs)
     {
         sSeg.scene = r.scene;
         sSeg.mode = r.mode;
-        sSeg.first = r.frame;
+        sSeg.first = r.tick;
     }
-    sSeg.last = r.frame;
+    sSeg.last = r.tick;
     sSeg.frames++;
-    Bin(sSeg.ready, workMs);
-    Bin(sSeg.gpuEnd, gpuEnd);
-    if (workMs > sSeg.readyMax) sSeg.readyMax = workMs;
-    if (gpuEnd > sSeg.gpuEndMax) sSeg.gpuEndMax = gpuEnd;
-    sSeg.missed += missed;
-    sSeg.missedFrames += missed != 0;
-    sSeg.slider += r.sliderPct > 2;
-    sSeg.stereo += r.stereo != 0;
-    for (unsigned i = 0; i < 8; ++i)
-        sSeg.flat[i] += (r.flat >> i) & 1;
+    sSeg.kinds[kind < 8 ? kind : 0]++;
+    sSeg.loading += (flags & CTR_TICK_FLAG_LOADING) != 0;
+    sSeg.crossing += (flags & CTR_TICK_FLAG_CROSSING) != 0;
+    sSeg.warmup += (flags & CTR_TICK_FLAG_WARMUP) != 0;
+    sSeg.resumes += (flags & CTR_TICK_FLAG_RESUME) != 0;
+    sSeg.absent += r.absent;
+    sSeg.absentFrames += r.absent != 0;
+    sSeg.terrainSkipped += (r.terrain & (TERRAIN_VIEW | TERRAIN_SLICE | TERRAIN_CELL)) != 0;
+    sSeg.terrainResyncs += (r.terrain & TERRAIN_RESYNC) != 0;
+    sSeg.assetWaits += r.assetWaits;
+    sSeg.assetFails += r.assetFails;
+    sSeg.battleFrames += (r.battle & PORT_BATTLE_IN) != 0;
+    sSeg.doubleFrames += (r.battle & PORT_BATTLE_DOUBLE) != 0;
+    sSeg.animFrames += r.animKind != PORT_ANIM_NONE;
+    /* The game's timings over every frame; a picture's over the pictures. */
     for (unsigned i = 0; i < T_COUNT; ++i)
-        sSeg.sum[i] += r.t[i];
+        if (presented || !PresentTiming(i))
+            sSeg.sum[i] += r.t[i];
+    for (unsigned i = 0; i < N_COUNT; ++i)
+        if (presented || (i != N_DRAWS && i != N_TARGETS && i != N_COPIES))
+            sSeg.count[i] += r.n[i];
+    if (report->gpuOf != 0)
+    {
+        sSeg.gpuSamples++;
+        sSeg.drains += r.drains;
+        sSeg.drainsLost += r.drainsLost;
+        sSeg.drainSubmissions += r.drains != 0;
+        sSeg.drainsPast += r.drains > CTR_DRAIN_LIST ? r.drains - CTR_DRAIN_LIST : 0;
+        Bin(sSeg.gpuEnd, gpuEnd);
+        if (gpuEnd > sSeg.gpuEndMax) sSeg.gpuEndMax = gpuEnd;
+        if (r.gpuDone != 0)
+        {
+            sSeg.gpuDoneSamples++;
+            Bin(sSeg.gpuDone, report->gpuDoneMs);
+            if (report->gpuDoneMs > sSeg.gpuDoneMax) sSeg.gpuDoneMax = report->gpuDoneMs;
+        }
+    }
+    if (voxelFrame)
+    {
+        sSeg.voxelPictures++;
+        for (unsigned i = 0; i < V_COUNT; ++i)
+            sSeg.voxelSum[i] += r.v[i];
+    }
+    if (presented)
+    {
+        sSeg.images++;
+        Bin(sSeg.ready, workMs);
+        if (workMs > sSeg.readyMax) sSeg.readyMax = workMs;
+        if (report->boundary)
+            sSeg.boundaries++;
+        else if (video->gapMs > sSeg.gapMax)
+            sSeg.gapMax = video->gapMs;
+        sSeg.missed += lost;
+        sSeg.missedFrames += lost != 0;
+        if (r.kind & REC_LATE_CPU) sSeg.missedCpu += lost;
+        if (r.kind & REC_LATE_GPU) sSeg.missedGpu += lost;
+        sSeg.slider += r.sliderPct > 2;
+        sSeg.stereo += r.stereo != 0;
+        /* A boundary picture's counts too: it is of the submission before
+         * the hold or the resume, not of the interval across it. */
+        if (r.shown == 255)
+            sSeg.shownUnknown++;
+        else if (r.shown == SHOWN_TWICE)
+            sSeg.shownTwice++;
+        else
+        {
+            sSeg.shown += r.shown;
+            sSeg.shownFrames += r.shown != 0;
+        }
+        if (r.battle & PORT_BATTLE_IN)
+        {
+            sSeg.battlePictures++;
+            for (unsigned i = 0; i < B_COUNT; ++i)
+                sSeg.battleSum[i] += r.b[i];
+            sSeg.tiles += r.tiles;
+            sSeg.vertices += r.vertices;
+            sSeg.objects += r.objects;
+            sSeg.switches += r.switches;
+            for (unsigned i = 0; i < CTR_SCENE_WHY_COUNT; ++i)
+                sSeg.sceneWhy[i] += (r.sceneWhy >> i) & 1;
+            for (unsigned i = 0; i < CTR_TEXT_WHY_COUNT; ++i)
+                sSeg.textWhy[i] += (r.textWhy >> i) & 1;
+        }
+        sSeg.scenery[r.scenery]++;
+        for (unsigned i = 0; i < 8; ++i)
+            sSeg.flat[i] += (r.flat >> i) & 1;
+        if (r.route < CTR_ROUTE_COUNT)
+        {
+            sSeg.routePictures[r.route]++;
+            sSeg.routeEarly[r.route] += r.gpuEarly != CTR_EARLY_NONE;
+        }
+        sSeg.earlyAt[r.gpuEarly < CTR_EARLY_COUNT ? r.gpuEarly : CTR_EARLY_NONE]++;
+        for (unsigned i = 0; i < CTR_DENIED_KINDS; ++i)
+            sSeg.denied[i] += (r.denied >> i) & 1;
+    }
 }
 
-void CtrProf_EndFrame(float workMs, float waitMs, uint64_t frame)
+void CtrProf_EndFrame(float workMs, unsigned kind, unsigned flags, uint64_t frame,
+                      const struct CtrVideoFrameReport *report)
 {
     char text[400];
     uint64_t start;
@@ -424,15 +961,16 @@ void CtrProf_EndFrame(float workMs, float waitMs, uint64_t frame)
     {
         ++sSlowLines;
         Sections(text, sizeof(text), sFrame, NULL, 0);
-        CtrLog_Write(CTR_LOG_VIDEO, "PROF slow f=%llu cb2=%08lx work=%.2f wait=%.2f game=%.2f:%s",
-                     (unsigned long long)frame, (unsigned long)sScene, workMs, waitMs,
-                     CtrPlatform_GetTiming()->gameMs, text);
+        CtrLog_Write(CTR_LOG_VIDEO, "PROF slow f=%llu cb2=%08lx work=%.2f wait=%.2f game=%.2f:%s | %s flags=%02x",
+                     (unsigned long long)frame, (unsigned long)sScene, workMs, report->waitMs,
+                     CtrPlatform_GetTiming()->gameMs, text,
+                     kind < sizeof(sKinds) / sizeof(sKinds[0]) ? sKinds[kind] : "?", flags);
     }
     /* The profiler's own cost: the sections' tick reads, and this. */
     {
         static float sLastOwnMs;
 
-        Record(workMs, waitMs, frame, sCalls * 2 * sTickCost + sLastOwnMs);
+        Record(workMs, kind, flags, frame, report, sCalls * 2 * sTickCost + sLastOwnMs);
         sCalls = 0;
         sLastOwnMs = Ms((uint32_t)(svcGetSystemTick() - start));
     }

@@ -122,6 +122,11 @@ void CtrCycle_Input(CtrInputSample *sample)
  * that many battle frames, "BATTLE test done" in the log), vramleft= (KiB of
  * VRAM left free from battle frame vramat= on (1), the rest held, as on a
  * console with the voxel world's atlases in it).
+ *
+ * Under a scenario's playback (an input of its own, all zeros, made by
+ * scripts/make_idle_scenario.py) the clock and so the battle are the same
+ * every run: the double battle of the engine measurements (trainer=271
+ * move=57: TATE&LIZA against Surf).
  */
 #ifndef CTR_BATTLE_TEST_LEVEL
 #define CTR_BATTLE_TEST_LEVEL 50
@@ -195,6 +200,15 @@ void CtrCycle_Frame(void)
     {
         if (sMove)
         {
+            /* Two of the player's own on the field for a doubles trainer: a
+             * second one if the save has only the one, everyone healed. No
+             * random IVs or personality, so a scenario's run stays the same. */
+            if (GetMonData(&gPlayerParty[1], MON_DATA_SPECIES) == SPECIES_NONE)
+            {
+                CreateMon(&gPlayerParty[1], SPECIES_WAILMER, sLevel, 31, TRUE, 0, OT_ID_PLAYER_ID, 0);
+                CalculatePlayerPartyCount();
+            }
+            HealPlayerParty();
             SetMonMoveSlot(&gPlayerParty[0], sMove, 0);
             SetMonMoveSlot(&gPlayerParty[1], sMove, 0);
             CtrLog_Write(CTR_LOG_GAME, "BATTLE test: lead knows move %d", sMove);
@@ -225,6 +239,41 @@ void CtrCycle_Input(CtrInputSample *sample)
     if (!sFieldSeen && !gMain.inBattle && sFrame % 40 < 2)
         sample->buttons |= 1;
 }
+
+#elif defined(CTR_WEATHER_TEST)
+
+#include "field_weather.h"
+#include "constants/weather.h"
+
+/*
+ * The field's weather on demand, for frame dumps of the weather's sprites the
+ * compositor carries over the view - the fog's and the ash's lattice, the
+ * sandstorm, rain, snow, bubbles and clouds (-DCTR_WEATHER_TEST=frames): once
+ * the field is up, each weather below in turn for that many field frames,
+ * asked for again whenever a map's own takes over. Nothing is pressed (a
+ * scenario's own input plays) and nothing is saved.
+ */
+static const u8 sWeathers[] = {
+    WEATHER_FOG_HORIZONTAL, WEATHER_VOLCANIC_ASH, WEATHER_SANDSTORM, WEATHER_RAIN,
+    WEATHER_SNOW, WEATHER_FOG_DIAGONAL, WEATHER_UNDERWATER_BUBBLES, WEATHER_SUNNY_CLOUDS,
+};
+static u32 sFieldFrames;
+
+void CtrCycle_Frame(void)
+{
+    u8 wanted;
+
+    if (gMain.callback2 != CB2_Overworld || gMain.inBattle) return;
+    wanted = sWeathers[(sFieldFrames++ / CTR_WEATHER_TEST) % ARRAY_COUNT(sWeathers)];
+    if (gWeatherPtr->nextWeather != wanted)
+    {
+        SetNextWeather(wanted);
+        CtrLog_Write(CTR_LOG_GAME, "WEATHER test: weather %u at field frame %lu", (unsigned)wanted,
+                     (unsigned long)sFieldFrames);
+    }
+}
+
+void CtrCycle_Input(CtrInputSample *sample) { (void)sample; }
 
 #else
 

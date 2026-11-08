@@ -4,16 +4,15 @@ Applies after 0005-port-hooks.patch; apply with tools/bootstrap.py.
 diff --git a/src/field_camera.c b/src/field_camera.c
 --- a/src/field_camera.c
 +++ b/src/field_camera.c
-@@ -15,6 +15,8 @@
- #ifdef PORT_BRIDGE
+@@ -16,6 +16,7 @@
  #include "port_log.h"
  #include "port_platform.h"
-+
+ 
 +void PortDoor_Forget(void); // field_door.c
- #endif
- #if defined(PLATFORM_3DS)
- #include "constants/maps.h"
-@@ -167,6 +169,9 @@ static void GetMapWindow(s16 *x, s16 *y);
+ // fieldmap.c: the drawing's asset lookups, resolved once a stretch of it.
+ void FieldMap_BeginDrawBatch(void);
+ void FieldMap_EndDrawBatch(void);
+@@ -244,6 +245,9 @@ static void RememberDoorCell(int x, int y, const u16 *tiles)
  
  void DrawWholeMapView(void)
  {
@@ -22,7 +21,7 @@ diff --git a/src/field_camera.c b/src/field_camera.c
 +#endif
  #if defined(PLATFORM_3DS)
      GetMapWindow(&sMapWindowX, &sMapWindowY);
-     DrawWholeMapViewInternal(sMapWindowX, sMapWindowY, gMapHeader.mapLayout);
+     sDoorCellCount = 0;
 diff --git a/src/field_door.c b/src/field_door.c
 --- a/src/field_door.c
 +++ b/src/field_door.c

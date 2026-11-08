@@ -7,6 +7,8 @@
 
 #ifndef CTR_FIELD_VIEW_HOST
 #include "3ds_platform.h"
+#include "3ds_field_terrain.h"
+#include "voxel/ctr_voxel.h"
 #endif
 
 #define DEG_TO_RAD (3.14159265358979323846f / 180.0f)
@@ -184,5 +186,31 @@ unsigned CtrFieldView_Generation(void)
 {
     CtrFieldView_Current();
     return sGeneration;
+}
+
+/*
+ * The 2D field's terrain (3ds_field_terrain.h). The present says, frame by
+ * frame, whether the frame it drew showed the voxel world alone; the camera
+ * asks, as it draws, whether that still holds. Anything else - the option off
+ * (the swoop out is about to start: its camera rises before the 2D field
+ * fades in), the voxel world unavailable, a load or any other scene, a swoop
+ * under way, the 2D field drawn because the world could not be - wants the
+ * terrain drawn as the game draws it.
+ *
+ * The one thing the camera cannot know ahead is the world failing to draw in
+ * the very frame it was left undrawn: the present shows black then rather
+ * than stale terrain (FieldCamera_TerrainStale), and the terrain is drawn for
+ * the next.
+ */
+static bool sTerrainUnseen;
+
+void CtrFieldTerrain_NoteFrame(bool unseen)
+{
+    sTerrainUnseen = unseen;
+}
+
+bool CtrFieldTerrain_Wanted(void)
+{
+    return !(sTerrainUnseen && CtrSettings_Voxel() && CtrGame_IsOverworld() && CtrVoxel_IsAvailable());
 }
 #endif

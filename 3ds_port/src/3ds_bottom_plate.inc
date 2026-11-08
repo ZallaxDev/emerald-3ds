@@ -446,7 +446,9 @@ static bool8 PlateJobIs(const PlateSpec *s, bool8 odd)
 #define PLATE_DISK_READY 8
 #define PLATE_DISK_WRITES 6
 #define PLATE_DISK_ASKS 8
-#define PLATE_DISK_IDLE_US 20000
+/* At exit, how long the worker may take to finish what it is doing: one
+ * plate read or written. */
+#define PLATE_DISK_JOIN_MS 1000u
 
 typedef struct
 {
@@ -479,11 +481,14 @@ typedef struct
     u8 *block;
 } PlateDiskPic;
 
-/* Everything under `lock` but the file, which only the worker uses. */
+/* Everything under `lock` but the file, which only the worker uses. `wake`
+ * is signalled whenever the worker may have something to do: a plate asked
+ * for or to write, room for a plate read, the stop at exit (`quit`). */
 static struct
 {
     CtrLock lock;
-    bool8 started, scanned;
+    CtrCond wake;
+    bool8 started, scanned, quit;
     u32 probe;
     u16 count;
     struct { PlateSpec spec; u8 odd, bad, asked; u32 at; } index[PLATE_DISK_MAX];
@@ -493,11 +498,12 @@ static struct
     u8 writeCount;
     s16 asks[PLATE_DISK_ASKS];
     u8 askCount;
-    u32 reads, written, adopted;
+    u32 reads, written;
 } sDisk;
 
 static FILE *sDiskFile;
 static u32 sDiskEnd;
+static CtrThread sDiskThread;
 
 static u32 PlateSum(const u8 *t, const u16 *c, u32 n)
 {
@@ -633,22 +639,36 @@ static bool8 PlateDiskReadPixels(const PlateDiskEntry *e, u16 cols, PlateDiskPic
     }
 }
 
-/* The worker: a plate read handed over, once the game has room to take it. */
-static void PlateDiskHand(PlateDiskPic *pic)
+/* The worker: a plate read handed over, once the game has room to take it
+ * (PlateDiskAdopt wakes it); let go instead, and FALSE, at exit. */
+static bool8 PlateDiskHand(PlateDiskPic *pic)
 {
-    for (;;)
+    bool8 handed;
+
+    CtrLock_Lock(&sDisk.lock);
+    while (sDisk.readyCount >= PLATE_DISK_READY && !sDisk.quit)
+        CtrCond_Wait(&sDisk.wake, &sDisk.lock);
+    handed = !sDisk.quit;
+    if (handed)
     {
-        CtrLock_Lock(&sDisk.lock);
-        if (sDisk.readyCount < PLATE_DISK_READY)
-        {
-            sDisk.ready[sDisk.readyCount++] = *pic;
-            ++sDisk.reads;
-            CtrLock_Unlock(&sDisk.lock);
-            return;
-        }
-        CtrLock_Unlock(&sDisk.lock);
-        CtrPlatform_SleepUs(PLATE_DISK_IDLE_US);
+        sDisk.ready[sDisk.readyCount++] = *pic;
+        ++sDisk.reads;
     }
+    CtrLock_Unlock(&sDisk.lock);
+    if (!handed)
+        PlateDiskPicFree(pic);
+    return handed;
+}
+
+/* The worker: whether the stop at exit has come. */
+static bool8 PlateDiskQuitting(void)
+{
+    bool8 quit;
+
+    CtrLock_Lock(&sDisk.lock);
+    quit = sDisk.quit;
+    CtrLock_Unlock(&sDisk.lock);
+    return quit;
 }
 
 static bool8 PlateDiskFresh(u32 probe)
@@ -697,7 +717,8 @@ static void PlateDiskScan(void)
         u32 at = sizeof(head);
 
         sDiskFile = file;
-        while (sDisk.count < PLATE_DISK_MAX && fread(&e, sizeof(e), 1, file) == 1)
+        /* Cut short by the stop at exit: nothing is written after it. */
+        while (sDisk.count < PLATE_DISK_MAX && !PlateDiskQuitting() && fread(&e, sizeof(e), 1, file) == 1)
         {
             u32 bytes = 0, head = sizeof(e) + (e.format == PLATE_DISK_PACKED ? sizeof(PlateDiskPacked) : 0);
             u16 cols = 0;
@@ -731,9 +752,13 @@ static void PlateDiskScan(void)
                     PlateDiskPicFree(&pic);
                 else
                 {
-                    handedBytes += PlateBlockBytes(pic.pw, pic.ph, pic.cols);
-                    PlateDiskHand(&pic);
-                    ++handed;
+                    size_t picBytes = PlateBlockBytes(pic.pw, pic.ph, pic.cols);
+
+                    if (PlateDiskHand(&pic))
+                    {
+                        handedBytes += picBytes;
+                        ++handed;
+                    }
                 }
             }
             else if (fseek(file, bytes, SEEK_CUR) != 0)
@@ -827,7 +852,8 @@ static void PlateDiskReadAsked(int i)
         CtrLog_Write(CTR_LOG_ERROR, "bottom screen: a plate on the SD card did not read back; made again");
         return;
     }
-    PlateDiskHand(&pic);
+    if (!PlateDiskHand(&pic))
+        return;
     if ((sDisk.reads & 31) == 1)
         CtrLog_Write(CTR_LOG_VIDEO, "bottom screen: plates read from the SD card %lu, the last in %.1f ms on the worker",
                      (unsigned long)sDisk.reads, CtrPlatform_TickMs(CtrPlatform_Ticks() - start));
@@ -846,10 +872,22 @@ static void PlateDiskWorker(void *arg)
         int ask = -1;
         bool8 haveWrite = FALSE;
 
+        /* Asleep until there is something to do: no wake-ups while idle. */
         CtrLock_Lock(&sDisk.lock);
+        while (!sDisk.askCount && !sDisk.writeCount && !sDisk.quit)
+            CtrCond_Wait(&sDisk.wake, &sDisk.lock);
+        if (sDisk.quit)
+        {
+            /* What is still queued to write is let go, as an exit always
+             * let it go: the file holds every plate written whole. */
+            while (sDisk.writeCount)
+                PlateDiskPicFree(&sDisk.writes[--sDisk.writeCount]);
+            CtrLock_Unlock(&sDisk.lock);
+            break;
+        }
         if (sDisk.askCount)
             ask = sDisk.asks[--sDisk.askCount];
-        else if (sDisk.writeCount)
+        else
         {
             write = sDisk.writes[0];
             memmove(&sDisk.writes[0], &sDisk.writes[1], --sDisk.writeCount * sizeof(sDisk.writes[0]));
@@ -860,9 +898,28 @@ static void PlateDiskWorker(void *arg)
             PlateDiskReadAsked(ask);
         else if (haveWrite)
             PlateDiskWrite(&write);
-        else
-            CtrPlatform_SleepUs(PLATE_DISK_IDLE_US);
     }
+    if (sDiskFile)
+        fclose(sDiskFile);
+    sDiskFile = NULL;
+}
+
+/* At exit (CtrPlatform_Shutdown, before the SD card's file system closes):
+ * the worker told to stop after what it is doing, and joined. */
+static void PlateDiskStop(void)
+{
+    if (!sDisk.started)
+        return;
+    CtrLock_Lock(&sDisk.lock);
+    sDisk.quit = TRUE;
+    CtrLock_Unlock(&sDisk.lock);
+    CtrCond_Broadcast(&sDisk.wake);
+    if (CtrPlatform_JoinThread(sDiskThread, PLATE_DISK_JOIN_MS))
+        sDiskThread = NULL;
+    else
+        CtrLog_Write(CTR_LOG_ERROR, "bottom screen: the plate file's worker was still at the SD card after %u ms; "
+                     "exiting under it", PLATE_DISK_JOIN_MS);
+    sDisk.started = FALSE;
 }
 
 /* At boot (CtrBottom_Init): the probe made here, the rest on the worker. */
@@ -871,9 +928,13 @@ static void PlateDiskOpen(void)
     if (sDisk.started)
         return;
     CtrLock_Init(&sDisk.lock);
+    CtrCond_Init(&sDisk.wake);
     sDisk.probe = PlateDiskProbe();
-    sDisk.started = CtrPlatform_StartThread(PlateDiskWorker, NULL, 16 * 1024, -2);
-    if (!sDisk.started)
+    sDiskThread = CtrPlatform_StartJoinable(PlateDiskWorker, NULL, 16 * 1024, -2);
+    sDisk.started = sDiskThread != NULL;
+    if (sDisk.started)
+        CtrPlatform_AtShutdown(PlateDiskStop);
+    else
         CtrLog_Write(CTR_LOG_ERROR, "bottom screen: no worker for the plate file; plates are made each session");
 }
 
@@ -910,19 +971,26 @@ static void PlateDiskQueue(const PlateSpec *s, bool8 odd, const u8 *block, int p
         p.block = NULL;
     }
     CtrLock_Unlock(&sDisk.lock);
+    if (p.block == NULL)
+        CtrCond_Broadcast(&sDisk.wake);
     PlateDiskPicFree(&p);
 }
 
 /* The walk wants plate i of the card: asked for once, read on the worker. */
 static void PlateDiskAsk(int i)
 {
+    bool8 asked = FALSE;
+
     CtrLock_Lock(&sDisk.lock);
     if (!sDisk.index[i].asked && sDisk.askCount < PLATE_DISK_ASKS)
     {
         sDisk.index[i].asked = TRUE;
         sDisk.asks[sDisk.askCount++] = (s16)i;
+        asked = TRUE;
     }
     CtrLock_Unlock(&sDisk.lock);
+    if (asked)
+        CtrCond_Broadcast(&sDisk.wake);
 }
 
 static PlatePic *FindPlate(const PlateSpec *s, bool8 odd)
@@ -971,6 +1039,9 @@ static void PlateDiskAdopt(void)
             sDisk.index[i].asked = FALSE;
     }
     CtrLock_Unlock(&sDisk.lock);
+    /* Room again for a worker waiting to hand a plate over. */
+    if (n != 0)
+        CtrCond_Broadcast(&sDisk.wake);
     for (u8 k = 0; k < n; ++k)
     {
         PlateDiskPic *p = &got[k];
@@ -987,7 +1058,6 @@ static void PlateDiskAdopt(void)
             continue;
         }
         PlateTake(slot, &p->spec, p->odd, p->pw, p->ph, p->cols, p->block);
-        ++sDisk.adopted;
     }
 }
 

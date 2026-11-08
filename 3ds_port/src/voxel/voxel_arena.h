@@ -49,5 +49,59 @@ int VoxelArena_PieceOf(const VoxelArena *arena, const void *block);
 /* The largest piece that would fit once the pieces flagged in `freed` (one
  * entry per live piece, by address) were freed. Nothing is freed. */
 uint32_t VoxelArena_LargestGapFreeing(const VoxelArena *arena, const bool *freed);
+/* Whether a piece of `bytes`, rounded as VoxelArena_Alloc rounds it, would fit
+ * there. */
+bool VoxelArena_FitsFreeing(const VoxelArena *arena, const bool *freed, uint32_t bytes);
+
+/*
+ * Room made by sliding pieces along the arena, when there is enough free in
+ * all but no gap of it large enough. Only the bookkeeping, like the rest:
+ * the caller copies what a piece holds to its new place.
+ */
+enum
+{
+    VOXEL_ARENA_STAYS,  /* where it is */
+    VOXEL_ARENA_FREED,  /* counted as free: the caller frees it before a slide passes over it */
+    VOXEL_ARENA_SLIDES, /* may slide, never past another piece */
+};
+/* The most sliding pieces a run between two that stay may hold for a plan. */
+#define VOXEL_ARENA_PLAN_PIECES 16u
+
+typedef struct
+{
+    int piece;          /* the live piece to slide first */
+    uint32_t offset;    /* where to */
+    uint32_t cost;      /* the bytes the whole way copies and frees, and a price a slide */
+} VoxelArenaSlide;
+
+typedef struct
+{
+    uint32_t from, to, size; /* offsets in the arena */
+} VoxelArenaCopy;
+
+/* The piece at `block` moved to `offset` (aligned) between its neighbours,
+ * which stay: anywhere over its own place and the gaps beside it. Its new
+ * address, or NULL (nothing changed) if it does not fit there. */
+void *VoxelArena_Move(VoxelArena *arena, void *block, uint32_t offset);
+/* The copies a slide over `distance` takes for `held` bytes, each no longer
+ * than the distance or `copyMax` (VoxelArena_SlideSteps). */
+unsigned VoxelArena_SlideCopies(uint32_t held, uint32_t distance, uint32_t copyMax);
+/* Those copies for the first `held` bytes of a piece slid from `from` to
+ * `to`, in the order they must run, each finished before the next starts.
+ * Their number; none are written if that is more than `max`. */
+unsigned VoxelArena_SlideSteps(uint32_t from, uint32_t to, uint32_t held, uint32_t copyMax,
+                               VoxelArenaCopy *steps, unsigned max);
+/*
+ * A way to a gap of `size`, for the pieces as `kind` has them (one entry per
+ * live piece, by address): those that SLIDE move along the arena, never past
+ * one another or one that STAYS, and those FREED count as free. A piece
+ * holding `held[i]` bytes may slide only in at most `copiesMax` copies. Of
+ * every way found, the one that copies and frees the fewest bytes in the
+ * fewest slides; its first slide in `first`. False if there is none, or if
+ * no piece need slide (the gap is there once the FREED pieces are freed).
+ * Taken one slide at a time, asked again after each, it comes to the gap.
+ */
+bool VoxelArena_SlidePlan(const VoxelArena *arena, const uint8_t *kind, const uint32_t *held,
+                          uint32_t size, uint32_t copyMax, unsigned copiesMax, VoxelArenaSlide *first);
 
 #endif
