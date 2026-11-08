@@ -7,7 +7,7 @@ decompilation it compiles.
 | Path | What |
 |---|---|
 | `src/main_3ds.c`, `3ds_platform.c` | process, heaps, frame pacing, lifecycle |
-| `src/3ds_video.c`, `3ds_video_decode.c` | GPU compositor: GBA registers/VRAM/OAM to Citro3D |
+| `src/3ds_video.c`, `src/video/*.inc`, `3ds_video_decode.c` | GPU compositor: GBA registers/VRAM/OAM to Citro3D; one translation unit, its parts in `src/video/` |
 | `src/3ds_audio.c` | mixer frames to NDSP |
 | `src/3ds_input*.c` | buttons, Circle Pad, touch |
 | `src/3ds_data.c`, `3ds_pak.c` | game data backends (romfs, loose, pack) |

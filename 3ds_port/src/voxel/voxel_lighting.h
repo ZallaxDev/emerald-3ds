@@ -29,6 +29,8 @@ extern VoxelSun gVoxelSun;
  * were read from changes - a live tile, the set of maps or their origins -
  * and needed at no other time: the caches outlive builds and frames. */
 void VoxelLighting_Reset(void);
+/* True if the sun changed: every ray is cast again from then on, while the
+ * casters and the contact AO, which no sun moves, are kept. */
 bool VoxelLighting_SetSun(float dx, float dz, float strength, uint32_t key);
 uint32_t VoxelLighting_Hash(int x0, int z0, int x1, int z1);
 float VoxelLighting_Sample(float x, float y, float z);

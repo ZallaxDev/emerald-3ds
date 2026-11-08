@@ -23,6 +23,11 @@ typedef struct
 
 /* The largest VRAM block an allocation could still get, found by trying. */
 uint32_t CtrGpuMem_LargestVram(void);
+/* The largest VRAM block there would be with the `count` blocks at `gone` given
+ * back, read from the table of what is held: for choosing what to give back,
+ * the allocation itself still says whether it fits. 0 when the table cannot
+ * tell (more blocks held than it reads). */
+uint32_t CtrGpuMem_LargestVramWithout(void *const *gone, unsigned count);
 /* Totals, then every site holding memory or changed since the last report. */
 void CtrGpuMem_Report(const char *why);
 

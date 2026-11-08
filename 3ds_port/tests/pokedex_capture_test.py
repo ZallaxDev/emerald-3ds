@@ -5,6 +5,8 @@ from pathlib import Path
 import subprocess
 import tempfile
 
+from video_text import read_video
+
 
 ROOT = Path(__file__).resolve().parents[2]
 PATCH = ROOT / "patches/pokeemerald/0054-pokedex-capture-layout.patch"
@@ -63,6 +65,9 @@ static int sClipX0, sClipX1, sClipY0, sClipY1, sSpanShiftX, sSpanShiftY, sLayerS
 static unsigned sLayerExclude, sLineMask;
 static uint16_t registers[48], lineRegisters[CTR_LINE_REGS], tilemaps[2][1024];
 static const uint16_t *sRegLine;
+/* BLDALPHA line by line (ComposeAlphaBands): the band being composed, whose
+ * value Reg reads in place of the register's; none on the Pokedex's screens. */
+static int sLineAlphaBand = -1;
 static struct { const uint16_t *regs; } sMemory = {registers};
 static struct { unsigned tiles, frames; } sStats;
 static float sZoom = 1, sOffX, sOffY;
@@ -243,13 +248,26 @@ int main(void) {
         sLayers[bg].tex = (Texture){256, 256, bg};
         for (unsigned tile = 0; tile < 1024; ++tile) tilemaps[bg - 2][tile] = (uint16_t)tile;
     }
+    /* BLDALPHA is the register's, but a band's value while one is composed;
+     * the scanline registers, which hold it too, before either. */
+    registers[0x52 / 2] = 0x0a06;
+    assert(Reg(0x52) == 0x0a06);
+    sLineAlphaBand = 0x0410;
+    assert(Reg(0x52) == 0x0410);
+    for (unsigned index = 0; index < CTR_LINE_REGS; ++index) lineRegisters[index] = 511;
+    sRegLine = lineRegisters;
+    assert(Reg(0x52) == 511);
+    sRegLine = NULL;
+    sLineAlphaBand = -1;
+    registers[0x52 / 2] = 0;
+    assert(Reg(0x52) == 0);
     const unsigned scrolls[] = {0, 7, 80, 240, 256, 511};
     for (unsigned index = 0; index < sizeof(scrolls) / sizeof(scrolls[0]); ++index)
         for (unsigned scanline = 0; scanline < 2; ++scanline) {
             CheckRendering(scrolls[index], scrolls[index], true, scanline != 0);
             CheckRendering(scrolls[index], scrolls[index], false, scanline != 0);
         }
-    puts("PASS Pokédex capture rendering: 320x240 pixels, BG2 text, BG3 stripe-only margins, OAM clipping, texture/tile parity, borrowed scroll, scanlines, field/battle restoration");
+    puts("PASS Pokédex capture rendering: 320x240 pixels, BG2 text, BG3 stripe-only margins, OAM clipping, texture/tile parity, borrowed scroll, scanlines, BLDALPHA bands, field/battle restoration");
     return 0;
 }
 '''
@@ -511,7 +529,7 @@ int main(void) {
         subprocess.run([str(binary)], check=True)
         rendering = folder / "pokedex_rendering.c"
         renderer = folder / "pokedex_rendering"
-        rendering.write_text(rendering_source(args.video.read_text(encoding="utf-8"),
+        rendering.write_text(rendering_source(read_video(args.video),
                                              (ROOT / "3ds_port/include/3ds_video.h").read_text(encoding="utf-8")),
                              encoding="utf-8")
         subprocess.run([args.cc, "-std=c99", "-O1", "-Wall", "-Wextra", "-Werror", *flags,

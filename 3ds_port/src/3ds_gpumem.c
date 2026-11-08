@@ -326,6 +326,57 @@ uint32_t CtrGpuMem_LargestVram(void)
     return low;
 }
 
+/*
+ * The VRAM blocks held, but those at gone, in address order, and the largest
+ * gap between them. The sizes are the ones asked for; the allocator's own
+ * rounding (to its alignment) can make a real gap a little smaller.
+ */
+uint32_t CtrGpuMem_LargestVramWithout(void *const *gone, unsigned count)
+{
+    enum { HELD_MAX = 128 };
+    static uintptr_t start[HELD_MAX];
+    static uint32_t size[HELD_MAX];
+    uint32_t base = OS_VRAM_VADDR, end = OS_VRAM_VADDR + OS_VRAM_SIZE, at = base, largest = 0;
+    unsigned n = 0;
+    /* A block the table had no room for is held where it cannot see. */
+    bool whole = sStats.untracked == 0;
+
+    LightLock_Lock(&sLock);
+    for (unsigned i = 0; i < BLOCKS && whole; ++i)
+    {
+        bool freed = false;
+
+        if (sBlocks[i].ptr == NULL || sBlocks[i].pool != POOL_VRAM) continue;
+        for (unsigned g = 0; g < count && !freed; ++g)
+            freed = gone[g] == sBlocks[i].ptr;
+        if (freed) continue;
+        if (n == HELD_MAX) { whole = false; break; }
+        start[n] = (uintptr_t)sBlocks[i].ptr;
+        size[n++] = sBlocks[i].size;
+    }
+    LightLock_Unlock(&sLock);
+    if (!whole) return 0;
+    for (unsigned i = 1; i < n; ++i)
+        for (unsigned j = i; j > 0 && start[j] < start[j - 1]; --j)
+        {
+            uintptr_t s = start[j];
+            uint32_t z = size[j];
+
+            start[j] = start[j - 1];
+            size[j] = size[j - 1];
+            start[j - 1] = s;
+            size[j - 1] = z;
+        }
+    for (unsigned i = 0; i <= n; ++i)
+    {
+        uint32_t from = i < n ? (uint32_t)start[i] : end;
+
+        if (from > at && from - at > largest) largest = from - at;
+        if (i < n && from + size[i] > at) at = from + size[i];
+    }
+    return largest;
+}
+
 void CtrGpuMem_Report(const char *why)
 {
     if (!CtrLog_Enabled())

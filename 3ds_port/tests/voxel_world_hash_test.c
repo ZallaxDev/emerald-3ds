@@ -30,8 +30,10 @@ bool8 MetatileBehavior_IsPC(u8 b) { return b == MB_PC; }
 bool8 MetatileBehavior_IsSecretBasePC(u8 b) { return b == MB_SECRET_BASE_PC; }
 bool8 MetatileBehavior_IsPlayerRoomPCOn(u8 b) { return b == MB_PLAYER_ROOM_PC_ON; }
 static const struct ObjectEventGraphicsInfo *sDynamicInfo;
+/* A picture that follows a variable (an id from OBJ_EVENT_GFX_VARS on), the
+ * kind PayloadSignature asks for again every call. */
 const struct ObjectEventGraphicsInfo *GetObjectEventGraphicsInfo(u8 id)
-{ return id == 1 ? sDynamicInfo : NULL; }
+{ return id == OBJ_EVENT_GFX_VARS ? sDynamicInfo : NULL; }
 const struct Tileset gTileset_GenericBuilding = {0};
 bool VoxelAtlas_IsVoid(const VoxelMapInstance *inst, int metatile) { (void)inst; (void)metatile; return false; }
 
@@ -121,7 +123,7 @@ static void MaterialAndPayloadTests(void)
     static const u8 artA, artB;
     struct SpriteFrameImage images = {.data = &artA};
     struct ObjectEventGraphicsInfo info = {.images = &images};
-    struct ObjectEventTemplate object = {.graphicsId = 1};
+    struct ObjectEventTemplate object = {.graphicsId = OBJ_EVENT_GFX_VARS};
     struct MapEvents events = {.objectEventCount = 1, .objectEvents = &object};
     struct MapHeader header = {.events = &events};
     sInstances[0].header = &header; sDynamicInfo = &info;

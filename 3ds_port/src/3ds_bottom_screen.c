@@ -70,6 +70,28 @@ void CtrBottom_BlitRect(const uint16_t *canvas, int x0, int y0, int x1, int y1)
     sFlushTicks = svcGetSystemTick() - t1;
 }
 
+/* Two pixels a word at level/4 (1, 2 or 3), four words a pass. Inlined with
+ * the level a constant, so each caller is a loop of its own level. */
+static inline __attribute__((always_inline)) void DimWords(const u32 *src, u32 *dst, size_t words, int level)
+{
+    size_t i = 0;
+
+    for (; i + 4 <= words; i += 4)
+#pragma GCC unroll 4
+        for (unsigned k = 0; k < 4; ++k)
+        {
+            u32 v = src[i + k], half = (v >> 1) & 0x7BEF7BEFu, quarter = (v >> 2) & 0x39E739E7u;
+
+            dst[i + k] = level == 3 ? half + quarter : level == 2 ? half : quarter;
+        }
+    for (; i < words; ++i)
+    {
+        u32 v = src[i], half = (v >> 1) & 0x7BEF7BEFu, quarter = (v >> 2) & 0x39E739E7u;
+
+        dst[i] = level == 3 ? half + quarter : level == 2 ? half : quarter;
+    }
+}
+
 /*
  * The whole canvas at level/4 of its brightness (0 black, 4 as it is), for
  * the fades. RGB565 halves and quarters with a shift and a mask, two pixels
@@ -94,12 +116,12 @@ void CtrBottom_BlitDim(const uint16_t *canvas, int level)
         const u32 *src = (const u32 *)canvas;
         u32 *dst = (u32 *)fb;
 
-        for (size_t i = 0; i < pixels / 2; ++i)
-        {
-            u32 v = src[i], half = (v >> 1) & 0x7BEF7BEFu, quarter = (v >> 2) & 0x39E739E7u;
-
-            dst[i] = level == 3 ? half + quarter : level == 2 ? half : quarter;
-        }
+        /* Each level its own loop (DimWords): the level's test inside the
+         * loop over the screen's 38,400 words was a dozen instructions a word
+         * for three of work - 1.3-1.9 ms a fade frame in Azahar. */
+        if (level == 3) DimWords(src, dst, pixels / 2, 3);
+        else if (level == 2) DimWords(src, dst, pixels / 2, 2);
+        else DimWords(src, dst, pixels / 2, 1);
     }
     else
     {

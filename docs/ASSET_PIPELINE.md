@@ -31,8 +31,11 @@ files**: they describe the executable, not the game, and ship inside the
 3. otherwise → **pak**: `sdmc:/3ds/emerald3ds/emerald3ds.pak`.
 
 A file inside the pack opens as an ordinary `FILE*` (`fopencookie`), so every
-reader only changed the call that opens it. Pack reads share one SD handle
-under a lock and are safe from the voxel worker thread.
+reader only changed the call that opens it. Every pack read is positional
+(`FSFILE_Read` with its offset) on one FS file handle, straight into the
+reader's memory: no lock and no stdio buffer, safe from any thread. The asset
+cache reads each payload whole and checks its CRC-32; the warm-up reads runs
+of neighbouring payloads (`CtrData_ReadRange`) and checks each one's.
 
 ## Engine ABI
 
@@ -47,8 +50,12 @@ Little endian. Header (64 bytes): magic `EM3DPAK\0`, schema, engine ABI,
 ROM SHA-1, entry count, index offset, data offset, index CRC-32, header CRC-32.
 Index: 40-byte entries sorted by id (FNV-1a 64 of the path) — id, type,
 flags, offset, stored size, raw size, CRC-32. Payloads are 32-byte aligned and
-uncompressed. Writer: `builder/emerald3ds_builder/pak.py`; reader:
-`3ds_port/src/3ds_pak.c` (host test: `make verify-pak`).
+uncompressed, written in path order (bytewise), so that the files under one
+prefix — a directory, a tileset, a source file's generated tables — lie
+together and the console's warm-up reads them in a few long runs. Readers only
+follow the offsets; the order is not part of the schema. Writer:
+`builder/emerald3ds_builder/pak.py`; reader: `3ds_port/src/3ds_pak.c` (host
+test: `make verify-pak`; layout: `builder/tests/test_pak_layout.py`).
 
 ## Recipes: rebuilding the game data from a ROM
 

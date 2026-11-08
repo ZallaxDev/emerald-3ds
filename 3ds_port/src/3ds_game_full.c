@@ -24,6 +24,7 @@
 #include "scanline_effect.h"
 #include "item_menu.h"
 #include "party_menu.h"
+#include "battle.h"
 #include "battle_main.h"
 #include "fldeff_misc.h"
 #include "field_effect.h"
@@ -81,6 +82,7 @@
 #include "3ds_audio.h"
 #include "3ds_bottom.h"
 #include "3ds_dex_top.h"
+#include "3ds_field_terrain.h"
 #include "3ds_sprite_ids.h"
 
 #include <stdio.h>
@@ -237,28 +239,6 @@ static void CheckAudioRate(void)
         CtrLog_Write(CTR_LOG_AUDIO, "mixer and DSP agree at %u Hz, %u samples per frame",
                      expected, (unsigned)info->pcmSamplesPerVBlank);
     }
-}
-
-/* What the overlay reports about the frame the mixer has just produced. */
-static void SampleAudioStats(void)
-{
-    const struct SoundInfo *info = SOUND_INFO_PTR;
-    /* One block of memory, two parallel declarations of it: m4a calls it a
-     * SoundInfo, the mixer a SoundMixerState. The channel array only has a
-     * name in the second one. */
-    const struct SoundMixerState *mixer = (const struct SoundMixerState *)info;
-    CtrAudioStats *stats = CtrAudio_Stats();
-    unsigned voices = 0;
-
-    if (info == NULL || info->ident != ID_NUMBER)
-        return;
-    for (unsigned i = 0; i < mixer->numChans && i < MAX_SAMPLE_CHANNELS; ++i)
-    {
-        if ((mixer->chans[i].status & 0xC7) != 0)
-            ++voices;
-    }
-    stats->voices = voices;
-    stats->song = GetCurrentMapMusic();
 }
 
 /*
@@ -507,8 +487,11 @@ static void UpdateStage(void)
     CtrVideo_SetBattle(!caughtMonPage && sBattle.on);
     CtrVideo_SetTransition(!caughtMonPage && TransitionOn());
     /* The battle's info boxes made ready on a worker while the transition
-     * plays, not in a frame of the battle (3ds_battle_hud.c). */
-    if (sTransition.on)
+     * plays, not in a frame of the battle (3ds_battle_hud.c). Any transition,
+     * the ones over the field's own callback too: a trainer's double battle
+     * comes in that way, and its first battle of a session read and traced
+     * them in its first frame (53 ms in Azahar). */
+    if (TransitionOn())
         CtrBattleHud_Warm();
 }
 
@@ -631,9 +614,15 @@ static void CaptureLineScroll(void)
     {
         CtrVideo_SetLineWindow(NULL, 0, false);
         CtrVideo_SetLineScroll(0, false, NULL, 0);
+        CtrVideo_SetLineAlpha(NULL, 0);
         return;
     }
     CtrVideo_SetFieldLight(false, 0, 0, 0);
+    /* Surf's and Muddy Water's wave: BLDALPHA line by line. */
+    if (active && effect->dmaDest == &REG_BLDALPHA && !wide)
+        CtrVideo_SetLineAlpha((const uint16_t *)effect->dmaSrcBuffers[effect->srcBuffer ^ 1], DISPLAY_HEIGHT);
+    else
+        CtrVideo_SetLineAlpha(NULL, 0);
     /* 32-bit: WIN0H and WIN1H together, as the condition graph writes them. */
     if (active && effect->dmaDest == &REG_WIN0H)
         CtrVideo_SetLineWindow(effect->dmaSrcBuffers[effect->srcBuffer ^ 1], 160, wide);
@@ -641,6 +630,9 @@ static void CaptureLineScroll(void)
         CtrVideo_SetLineWindow(NULL, 0, false);
     if (!active || reg >= 0x10 || (reg & 1) || (wide && reg + 4 > 0x10))
     {
+        /* Anything else line by line shows entry 0's value: counted. */
+        if (active && effect->dmaDest != &REG_WIN0H && !(effect->dmaDest == &REG_BLDALPHA && !wide))
+            CtrVideo_NoteLineDropped();
         CtrVideo_SetLineScroll(0, false, NULL, 0);
         return;
     }
@@ -658,7 +650,15 @@ void CtrGame_VBlank(void)
      * must observe the same enable bits the game sets.
      */
     if (REG_IME && (REG_IE & INTR_FLAG_VBLANK) && gIntrTable[INTR_INDEX_VBLANK])
+    {
+        /* The field's 2D terrain, left undrawn while the voxel world was
+         * drawn alone, drawn again for a frame that may show it: the
+         * handler's DMA takes it to VRAM before this frame's present. Only
+         * when the handler runs: otherwise the terrain stays stale, and the
+         * present does not show it (FieldCamera_TerrainStale). */
+        FieldCamera_SyncTerrain();
         gIntrTable[INTR_INDEX_VBLANK]();
+    }
     /* The emulated Wireless Adapter's "interrupts" (3ds_rfu_adapter.c). */
     PortRfu_Frame();
     CtrEmu_EndVBlank();
@@ -669,7 +669,6 @@ void CtrGame_VBlank(void)
     CaptureLineRegisters();
     PORT_PROF_END(lines, PORT_PROF_LINES);
     CheckAudioRate();
-    SampleAudioStats();
     ++sFrames;
 }
 
@@ -1226,8 +1225,8 @@ static void MeasureAid(void)
 
 /*
  * After a door or a warp the voxel field is black while it builds the new
- * map (3ds_video.c, CTR_ROUTE_BLANK; ctr_voxel.c, the warm-up), which can
- * outlast the game's fade in from black - and the exit through a door
+ * map (3ds_video.c, CtrVideoStats.warmupBlack; ctr_voxel.c, the warm-up),
+ * which can outlast the game's fade in from black - and the exit through a door
  * (field_screen_effect.c, Task_ExitDoor) waits for that fade alone: the door
  * had opened, the player stepped out and the door closed behind the black
  * before the first picture. While the frame just shown was that black, the
@@ -1247,6 +1246,12 @@ static void MeasureAid(void)
  * bound: fast-forward and real-time catch-up keep the fade held between
  * pictures. A fade out, a fast or hardware fade and a weather fade (rain:
  * field_weather.c, which does not use gPaletteFade) are not held.
+ *
+ * Only the warm-up's black: a frame whose voxel world was not drawn while
+ * the 2D terrain was left stale (FieldCamera_TerrainStale) is black too
+ * (CTR_ROUTE_BLANK), but held for it, the fade would move by a frame against
+ * the VBlank's Random() calls, and the game's timing would depend on whether
+ * the port had drawn the terrain.
  */
 #define FIELD_FADE_HOLD_MAX 240u
 
@@ -1265,8 +1270,7 @@ static void HoldFieldFade(void)
     const CtrVideoStats *video = CtrVideo_GetStats();
     bool presented = video->frames != sFadeLastVideoFrame;
     sFadeLastVideoFrame = video->frames;
-    bool blank = video->mode == CTR_MODE_FIELD_VOXEL && video->route == CTR_ROUTE_BLANK
-              && CtrGame_IsOverworld();
+    bool blank = video->mode == CTR_MODE_FIELD_VOXEL && video->warmupBlack && CtrGame_IsOverworld();
     bool hold = FieldFadeHold(blank, gPaletteFade.active && gPaletteFade.yDec, sFadeHeldFrames);
 
     if (hold)
@@ -1288,6 +1292,31 @@ static void HoldFieldFade(void)
         sFadeHeldFrames = 0;
 }
 
+/* What the frame's record says of the game (3ds_prof.c): the battle animation
+ * playing, whether it is a double battle, and the sprites in use. */
+const u8 *const *Port_BattleAnimPlaying(u16 *id);
+extern const u8 *const gBattleAnims_Moves[], *const gBattleAnims_General[];
+extern const u8 *const gBattleAnims_Special[], *const gBattleAnims_StatusConditions[];
+
+static void ProfBattleFrame(void)
+{
+    const u8 *const *table;
+    unsigned sprites = 0, battle = 0, kind = PORT_ANIM_NONE;
+    u16 id;
+
+    if (!Port_ProfOn())
+        return;
+    table = Port_BattleAnimPlaying(&id);
+    if (table != NULL)
+        kind = table == gBattleAnims_Moves ? PORT_ANIM_MOVE : table == gBattleAnims_General ? PORT_ANIM_GENERAL
+             : table == gBattleAnims_Special ? PORT_ANIM_SPECIAL : PORT_ANIM_STATUS;
+    if (gMain.inBattle)
+        battle = PORT_BATTLE_IN | ((gBattleTypeFlags & BATTLE_TYPE_DOUBLE) ? PORT_BATTLE_DOUBLE : 0);
+    for (unsigned i = 0; i < MAX_SPRITES; ++i)
+        sprites += gSprites[i].inUse;
+    Port_ProfBattle(kind, table != NULL ? id : 0, battle, sprites);
+}
+
 void CtrGame_WaitFrame(void)
 {
     static MainCallback lastCallback;
@@ -1298,6 +1327,7 @@ void CtrGame_WaitFrame(void)
     if (sFrames < 4)
         CtrLog_Write(CTR_LOG_GAME, "frame %lu: game reached VBlank wait", (unsigned long)sFrames);
     Port_ProfScene((const void *)gMain.callback2);
+    ProfBattleFrame();
     /* The battle scene itself, not the bag, party or summary it opens: it has
      * its own speed and keys (3ds_platform.c). */
     CtrPlatform_SetBattleScene(gMain.inBattle && gMain.callback2 == BattleMainCB2);
@@ -1394,8 +1424,11 @@ void CtrGame_WaitFrame(void)
     }
 
     /* Which screen the game is on, and what the resource layer is doing for it.
-     * A callback change is the only unambiguous marker of progress in the log. */
-    if (gMain.callback2 != lastCallback || sFrames >= nextReport)
+     * A callback change is the only unambiguous marker of progress in the log.
+     * Only with a log to write it to: without one, mallinfo and the tilemaps'
+     * count still ran every 600 frames and at every callback change, for lines
+     * that went nowhere. */
+    if (CtrLog_Enabled() && (gMain.callback2 != lastCallback || sFrames >= nextReport))
     {
         const struct CtrAssetStats *stats = CtrAssets_GetStats();
 
@@ -1430,13 +1463,15 @@ void CtrGame_WaitFrame(void)
         const struct SaveBlock1 *save = gSaveBlock1Ptr;
 
         CtrLog_Write(CTR_LOG_GAME,
-                     "frame=%lu cb2=%08lx state=%u map=%d/%d assets=%lu/%lu %luKiB hit=%lu miss=%lu evict=%lu err=%lu",
+                     "frame=%lu cb2=%08lx state=%u map=%d/%d assets=%lu/%lu %luKiB hit=%lu miss=%lu evict=%lu err=%lu "
+                     "wait=%lu fail=%lu",
                      (unsigned long)sFrames, (unsigned long)(uintptr_t)gMain.callback2,
                      gMain.state, save ? save->location.mapGroup : -1,
                      save ? save->location.mapNum : -1,
                      (unsigned long)stats->loads, (unsigned long)stats->entries,
                      (unsigned long)(stats->bytes >> 10), (unsigned long)stats->hits,
                      (unsigned long)stats->misses, (unsigned long)stats->evictions,
-                     (unsigned long)stats->errors);
+                     (unsigned long)stats->errors, (unsigned long)stats->waits,
+                     (unsigned long)stats->failures);
     }
 }

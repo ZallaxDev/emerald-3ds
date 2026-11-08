@@ -508,6 +508,204 @@ bool VoxelAtlas_IsVoid(const VoxelMapInstance *inst, int metatile)
     return bits != NULL && (bits[metatile >> 3] & (1u << (metatile & 7))) != 0;
 }
 
+bool VoxelAtlas_VoidBit(const void *primary, const void *secondary, unsigned metatile)
+{
+    if (primary == NULL || metatile >= VOXEL_METATILE_IDS)
+        return false;
+    for (unsigned i = 0; i < VOID_PAIRS; ++i)
+        if (sVoid[i].primary == primary && sVoid[i].secondary == secondary)
+            return (sVoid[i].black[metatile >> 3] & (1u << (metatile & 7))) != 0;
+    return false;
+}
+
+/*
+ * The pairs' plans (voxel_atlas.h): as many as the void bits keep. A place is
+ * a slot counted over the pages' metatile slots, page by page (VOXEL_SOLID_BASE
+ * a page), plus one; 0 is none.
+ */
+#define PLAN_PAIRS 8
+static struct
+{
+    const void *primary, *secondary;
+    uint16_t at[VOXEL_METATILE_IDS];
+    unsigned span;      /* places given out: the next new id takes this one */
+    unsigned stamp;
+} sPlan[PLAN_PAIRS];
+static unsigned sPlanStamp;
+static bool sPlanOn = true;
+static VoxelAtlasPlanCounts sPlanCounts;
+_Static_assert(VOXEL_METATILE_IDS <= VOXEL_ATLAS_PAGES * VOXEL_SOLID_BASE,
+               "a plan gives every id a place of its own");
+
+/* Turned on or off, every plan is forgotten. */
+void VoxelAtlas_SetStablePlan(bool on)
+{
+    sPlanOn = on;
+    memset(sPlan, 0, sizeof(sPlan));
+}
+
+void VoxelAtlas_TakePlanCounts(VoxelAtlasPlanCounts *counts)
+{
+    *counts = sPlanCounts;
+    memset(&sPlanCounts, 0, sizeof(sPlanCounts));
+}
+
+static unsigned PlanPages(unsigned places)
+{
+    return (places + VOXEL_SOLID_BASE - 1u) / VOXEL_SOLID_BASE;
+}
+
+/* A place as slotOf encodes a slot, and back. */
+static unsigned PlaceSlot(unsigned place)
+{
+    return (place / VOXEL_SOLID_BASE) * VOXEL_ATLAS_MAX_SLOTS + place % VOXEL_SOLID_BASE + 1u;
+}
+
+static unsigned SlotPlace(unsigned slot)
+{
+    return ((slot - 1u) / VOXEL_ATLAS_MAX_SLOTS) * VOXEL_SOLID_BASE + (slot - 1u) % VOXEL_ATLAS_MAX_SLOTS;
+}
+
+static bool RealSlot(unsigned slot)
+{
+    return slot != 0 && slot != VOXEL_SLOT_ABSENT && slot != VOXEL_SLOT_PENDING;
+}
+
+/* The pair's plan, the least recently used one emptied for it if it has none. */
+static int PlanOf(const void *primary, const void *secondary)
+{
+    unsigned oldest = 0;
+
+    for (unsigned i = 0; i < PLAN_PAIRS; ++i)
+    {
+        if (sPlan[i].primary == primary && sPlan[i].secondary == secondary && primary != NULL)
+        {
+            sPlan[i].stamp = ++sPlanStamp;
+            return (int)i;
+        }
+        if (sPlan[i].stamp < sPlan[oldest].stamp)
+            oldest = i;
+    }
+    memset(&sPlan[oldest], 0, sizeof(sPlan[oldest]));
+    sPlan[oldest].primary = primary;
+    sPlan[oldest].secondary = secondary;
+    sPlan[oldest].stamp = ++sPlanStamp;
+    return (int)oldest;
+}
+
+/*
+ * The plan for a job: a fresh atlas keeps the pair's plan unless it would
+ * take more pages than a fresh layout of the ids in use; an extension needs
+ * the plan its atlas was laid out by, or takes that atlas's slots as the
+ * plan. Either way every slot the job's map holds is the plan's place.
+ */
+static int PlanForJob(VoxelAtlasJob *job, const VoxelAtlasMap *base)
+{
+    int p;
+
+    if (!sPlanOn)
+        return -1;
+    p = PlanOf(job->primary, job->secondary);
+    if (base == NULL)
+    {
+        unsigned inUse = 0, top = 0, fresh = 0, end;
+
+        for (unsigned id = 0; id < VOXEL_METATILE_IDS; ++id)
+            if (job->used[id])
+            {
+                ++inUse;
+                if (sPlan[p].at[id] == 0)
+                    ++fresh;
+                else if (sPlan[p].at[id] > top)
+                    top = sPlan[p].at[id];
+            }
+        end = fresh != 0 && sPlan[p].span + fresh > top ? sPlan[p].span + fresh : top;
+        if (sPlan[p].span != 0 && PlanPages(end) > PlanPages(inUse))
+        {
+            memset(sPlan[p].at, 0, sizeof(sPlan[p].at));
+            sPlan[p].span = 0;
+            ++sPlanCounts.relayouts;
+        }
+        else if (sPlan[p].span != 0)
+            ++sPlanCounts.planned;
+        return p;
+    }
+    for (unsigned id = 0; id < VOXEL_METATILE_IDS; ++id)
+        if (RealSlot(base->slotOf[id]) && sPlan[p].at[id] != SlotPlace(base->slotOf[id]) + 1u)
+        {
+            memset(sPlan[p].at, 0, sizeof(sPlan[p].at));
+            sPlan[p].span = 0;
+            for (unsigned m = 0; m < VOXEL_METATILE_IDS; ++m)
+                if (RealSlot(base->slotOf[m]))
+                {
+                    unsigned place = SlotPlace(base->slotOf[m]);
+
+                    sPlan[p].at[m] = (uint16_t)(place + 1u);
+                    if (place + 1u > sPlan[p].span)
+                        sPlan[p].span = place + 1u;
+                }
+            ++sPlanCounts.reseeds;
+            break;
+        }
+    memset(job->taken, 0, sizeof(job->taken));
+    for (unsigned id = 0; id < VOXEL_METATILE_IDS; ++id)
+        if (RealSlot(base->slotOf[id]))
+        {
+            unsigned place = SlotPlace(base->slotOf[id]);
+
+            job->taken[place >> 5] |= 1u << (place & 31u);
+        }
+    return p;
+}
+
+/*
+ * A slot for id `m`, which has none in the job's map: its place in the plan,
+ * or without one the next after the map's last. A new id of an extension
+ * whose place - the plan's, or the next one - is on a page the map has not
+ * got takes instead the first place free in the map, from the id the plan
+ * kept it for (not in this map): never more pages than the order of meeting
+ * took. A fresh atlas keeps a plan whose places for ids it does not use may
+ * lie past its pages (PlanForJob), so the plan's own place is no exception.
+ * False when full.
+ */
+static bool AssignSlot(VoxelAtlasJob *job, unsigned m, unsigned *slot)
+{
+    VoxelAtlasMap *map = &job->map;
+    unsigned place;
+
+    if (job->plan >= 0)
+    {
+        uint16_t *at = sPlan[job->plan].at;
+        unsigned candidate = at[m] != 0 ? at[m] - 1u : sPlan[job->plan].span;
+
+        if (job->extend && map->used != 0 && PlanPages(candidate + 1u) > PlanPages(map->used))
+            for (unsigned hole = 0; hole < PlanPages(map->used) * VOXEL_SOLID_BASE; ++hole)
+                if (!(job->taken[hole >> 5] & (1u << (hole & 31u))))
+                {
+                    for (unsigned id = 0; id < VOXEL_METATILE_IDS; ++id)
+                        if (at[id] == hole + 1u)
+                            at[id] = 0;
+                    at[m] = (uint16_t)(hole + 1u);
+                    if (hole + 1u > sPlan[job->plan].span)
+                        sPlan[job->plan].span = hole + 1u;
+                    ++sPlanCounts.moved;
+                    break;
+                }
+        if (at[m] == 0)
+            at[m] = (uint16_t)++sPlan[job->plan].span;
+        place = at[m] - 1u;
+        job->taken[place >> 5] |= 1u << (place & 31u);
+    }
+    else
+        place = map->used;
+    if (place >= VOXEL_ATLAS_PAGES * VOXEL_SOLID_BASE)
+        return false;
+    *slot = PlaceSlot(place);
+    if (place + 1u > map->used)
+        map->used = place + 1u;
+    return true;
+}
+
 /*
  * The composition, a piece at a time. A town's atlas is a few hundred
  * metatiles and two decompressed tilesets: 70-130 ms on an Old 3DS, which in
@@ -545,6 +743,7 @@ bool VoxelAtlas_JobBegin(VoxelAtlasJob *job, const VoxelMapInstance *inst, uint1
                          const VoxelAtlasMap *base)
 {
     memset(job, 0, sizeof(*job));
+    job->plan = -1;
     if (inst == NULL || dest == NULL)
         return false;
     job->primary = inst->primaryTileset;
@@ -600,6 +799,7 @@ bool VoxelAtlas_JobBegin(VoxelAtlasJob *job, const VoxelMapInstance *inst, uint1
         PORT_LOG("[ERROR] VOXEL atlas: no heap for tileset scratch\n");
         return false;
     }
+    job->plan = PlanForJob(job, base);
     job->active = true;
     memset(dest, 0, VOXEL_ATLAS_PIXELS * sizeof(uint16_t));
     FillSolidSlots(dest);
@@ -668,16 +868,13 @@ bool VoxelAtlas_JobStep(VoxelAtlasJob *job, unsigned metatiles)
         }
         if (!slot || slot == VOXEL_SLOT_PENDING)
         {
-            if (map->used >= VOXEL_ATLAS_PAGES * VOXEL_SOLID_BASE)
+            if (!AssignSlot(job, m, &slot))
             {
                 map->overflowed = true;
                 map->slotOf[m] = VOXEL_SLOT_PENDING;
                 continue;
             }
-            slot = (map->used / VOXEL_SOLID_BASE) * VOXEL_ATLAS_MAX_SLOTS
-                 + map->used % VOXEL_SOLID_BASE + 1u;
             map->slotOf[m] = (uint16_t)slot;
-            ++map->used;
             ++job->added;
         }
         if ((slot - 1u) / VOXEL_ATLAS_MAX_SLOTS != job->page)

@@ -12,13 +12,12 @@ int64_t CtrPlatform_WallSeconds(void);
 
 /* SDK-free boundary: game translation units never include libctru headers. */
 typedef struct {
-    float frameMs, workMs, peakWorkMs;
+    float workMs, peakWorkMs;
     /* Of the last frame: the game up to its VBlank wait, then audio and the
      * VBlank handler. What remains of workMs is the present. */
     float gameMs, vblankMs;
     /* ... of which the bottom screen, before the game ran (CtrBottom_Frame). */
     float bottomMs;
-    uint32_t slowFrames;
 } CtrTiming;
 
 typedef struct
@@ -46,6 +45,15 @@ const CtrTiming *CtrPlatform_GetTiming(void);
 void CtrPlatform_NoteBottom(float ms);
 void CtrPlatform_ReportMemory(const char *stage);
 /*
+ * The application heap's room: what newlib's arena holds free and what it may
+ * still grow by. And a cache that gives its memory back when an allocation
+ * would fail: malloc, calloc, realloc and memalign go through the linker's
+ * --wrap (Makefile), and a failed one calls `yield` (from whichever thread
+ * asked) and tries once more if it freed anything. One cache at a time.
+ */
+size_t CtrPlatform_HeapRoom(void);
+void CtrPlatform_SetHeapYield(bool (*yield)(void));
+/*
  * Threads and locks for the port's own workers, usable from game translation
  * units. A CtrLock is a libctru LightLock. A thread is started detached, one
  * priority step below the caller, on core (-2: the application's default;
@@ -55,10 +63,50 @@ typedef int32_t CtrLock;
 void CtrLock_Init(CtrLock *lock);
 void CtrLock_Lock(CtrLock *lock);
 void CtrLock_Unlock(CtrLock *lock);
+/* A libctru CondVar: Wait gives the lock up while it waits and holds it
+ * again on return (check the condition in a loop); Broadcast wakes every
+ * waiter, and costs nothing when there is none. */
+typedef int32_t CtrCond;
+void CtrCond_Init(CtrCond *cond);
+void CtrCond_Wait(CtrCond *cond, CtrLock *lock);
+/* Wait, for `timeoutUs` at most: false if that ran out first. */
+bool CtrCond_WaitTimeout(CtrCond *cond, CtrLock *lock, unsigned timeoutUs);
+void CtrCond_Broadcast(CtrCond *cond);
 bool CtrPlatform_StartThread(void (*entry)(void *), void *arg, unsigned stack, int core);
+/*
+ * A worker that is waited for at exit: started as CtrPlatform_StartThread
+ * starts one, but joinable (NULL if it could not be). JoinThread waits up to
+ * `timeoutMs` for it to end and frees it; false if it was still running then,
+ * when it is left as it is.
+ */
+typedef struct CtrThreadTag *CtrThread;
+CtrThread CtrPlatform_StartJoinable(void (*entry)(void *), void *arg, unsigned stack, int core);
+bool CtrPlatform_JoinThread(CtrThread thread, unsigned timeoutMs);
+/* A worker's stop, called by CtrPlatform_Shutdown before the file systems
+ * close, the last registered first. On the game's thread, a few at most. */
+void CtrPlatform_AtShutdown(void (*stop)(void));
 void CtrPlatform_SleepUs(unsigned microseconds);
-/* The frame profiler's report and reset, at present (3ds_prof.c). */
-void CtrProf_EndFrame(float workMs, float waitMs, uint64_t frame);
+/*
+ * The frame profiler's report and reset, once a game frame (3ds_prof.c).
+ * What the frame was (CTR_TICK_*): a picture presented, one hidden by
+ * real-time pacing or by fast-forward, the top screen held, or a present the
+ * GPU refused. Flags (CTR_TICK_FLAG_*): what else the frame went through.
+ */
+enum
+{
+    CTR_TICK_NONE, CTR_TICK_PRESENTED, CTR_TICK_PACED, CTR_TICK_FAST, CTR_TICK_HELD, CTR_TICK_FAILED,
+};
+enum
+{
+    CTR_TICK_FLAG_LOADING = 1 << 0,   /* a warp's map load step ran (Port_ProfileMark) */
+    CTR_TICK_FLAG_WARMUP = 1 << 1,    /* the asset warm-up worker still reading */
+    CTR_TICK_FLAG_RESUME = 1 << 2,    /* back from sleep or the HOME Menu */
+    CTR_TICK_FLAG_PACING = 1 << 3,    /* real-time pacing on for this frame */
+    CTR_TICK_FLAG_CROSSING = 1 << 4,  /* a walk across a map connection (its steps marked) */
+};
+struct CtrVideoFrameReport;
+void CtrProf_EndFrame(float workMs, unsigned kind, unsigned flags, uint64_t frame,
+                      const struct CtrVideoFrameReport *report);
 /* What executable and console the log comes from, at boot; the last
  * segment, at exit. */
 void CtrProf_LogIdentity(void);

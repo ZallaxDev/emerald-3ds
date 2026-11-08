@@ -723,6 +723,11 @@ verify: verify-voxel-draft
 verify-voxel-draft:
 	"$(PYTHON)" -B tests/voxel_draft_test.py --cc "$(HOSTCC)"
 
+.PHONY: verify-voxel-pages-gap
+verify: verify-voxel-pages-gap
+verify-voxel-pages-gap:
+	"$(PYTHON)" -B tests/voxel_pages_gap_test.py --cc "$(HOSTCC)"
+
 .PHONY: verify-bottom-map
 verify: verify-bottom-map
 verify-bottom-map:

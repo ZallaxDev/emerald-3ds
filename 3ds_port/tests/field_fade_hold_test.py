@@ -152,6 +152,10 @@ static void Arrive(void)
  * picture. Returns the frame the door opened, -1 if not by `frames`; what
  * PLTT showed on the first picture.
  */
+/* Whether the black is the voxel warm-up's (CtrVideoStats.warmupBlack) or
+ * another black, such as the field's stale terrain, that holds nothing. */
+static bool sBlackIsWarmup = true;
+
 static int Warp(int black, int frames, bool hold, unsigned mode, bool transferOff, int *shownAtPicture)
 {
     int door = -1;
@@ -167,6 +171,7 @@ static int Warp(int black, int frames, bool hold, unsigned mode, bool transferOf
         /* CtrVideo_Present, then the port's wait (CtrGame_WaitFrame). */
         sVideo.mode = (uint8_t)mode;
         sVideo.route = blank ? CTR_ROUTE_BLANK : CTR_ROUTE_VOXEL;
+        sVideo.warmupBlack = blank && sBlackIsWarmup;
         if (!blank && *shownAtPicture < 0) *shownAtPicture = sPltt[1];
         ++sVideo.frames;
         if (hold) HoldFieldFade();
@@ -197,6 +202,7 @@ static void PacedWarp(unsigned logicalPerPicture)
             ++pictures;
             sVideo.mode = CTR_MODE_FIELD_VOXEL;
             sVideo.route = pictures <= 180 ? CTR_ROUTE_BLANK : CTR_ROUTE_VOXEL;
+            sVideo.warmupBlack = pictures <= 180;
             if (pictures == 181) firstPicture = sPltt[1];
             ++sVideo.frames;
         }
@@ -213,6 +219,7 @@ static void PacedWarp(unsigned logicalPerPicture)
      * even with arbitrarily many hidden logical frames between presents. */
     Arrive();
     sVideo.route = CTR_ROUTE_BLANK;
+    sVideo.warmupBlack = true;
     BeginNormalPaletteFade(PALETTES_ALL, 0, 16, 0, 0);
     for (unsigned picture = 0; picture < FIELD_FADE_HOLD_MAX; ++picture)
     {
@@ -261,6 +268,14 @@ int main(void)
     Expect(door >= (int)FIELD_FADE_HOLD_MAX && door < (int)FIELD_FADE_HOLD_MAX + 60,
            "a black without end is let go at the bound", door, FIELD_FADE_HOLD_MAX);
 
+    /* A black that is not the warm-up's (the voxel world failing while the
+     * 2D terrain was left undrawn) holds nothing: the game's timing must
+     * not depend on whether the terrain was drawn. */
+    sBlackIsWarmup = false;
+    door = Warp(120, 400, true, CTR_MODE_FIELD_VOXEL, false, &shown);
+    Expect(door >= 0 && door < 120, "a black other than the warm-up's is not held", door, 120);
+    sBlackIsWarmup = true;
+
     /* The 2D field is never held. */
     door = Warp(120, 400, true, CTR_MODE_FIELD, false, &shown);
     Expect(door >= 0 && door < 120, "the 2D field is not held", door, 120);
@@ -270,6 +285,7 @@ int main(void)
     for (unsigned i = 0; i < PLTT_BUFFER_ALLOC; ++i) gPlttBufferFaded[i] = 0x7fff;
     sVideo.mode = CTR_MODE_FIELD_VOXEL;
     sVideo.route = CTR_ROUTE_BLANK;
+    sVideo.warmupBlack = true;
     BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 16, 0);
     for (int frame = 0; frame < 60 && gPaletteFade.active; ++frame)
     {
@@ -283,6 +299,7 @@ int main(void)
      * the same frame: its first step is still blended and shown. */
     Arrive();
     sVideo.route = CTR_ROUTE_BLANK;
+    sVideo.warmupBlack = true;
     BeginNormalPaletteFade(PALETTES_ALL, 0, 16, 0, 0);
     HoldFieldFade();
     Expect(sFadeHeld, "held", sFadeHeld, 1);

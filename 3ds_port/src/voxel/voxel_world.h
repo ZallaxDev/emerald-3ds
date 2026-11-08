@@ -86,6 +86,15 @@ void VoxelWorld_BeginBatch(void);
  * within VOXEL_WORLD_REACH of it (see voxel_world.c). */
 void VoxelWorld_BuildInstances(void);
 /*
+ * The same, once a frame, but built only when something the last build read
+ * has changed since (voxel_world.c, sBuiltFrom): the set is a function of
+ * those alone. True if it built.
+ */
+bool VoxelWorld_UpdateInstances(void);
+/* Builds so far: moves with every build of the instances, for whatever is
+ * worked out from them to tell it is still theirs. */
+unsigned VoxelWorld_InstanceBuilds(void);
+/*
  * The asset payloads the renderer reads for the maps on screen and one
  * crossing away - each layout's border, each tileset's attributes, metatiles,
  * palettes and tiles - nearest maps first, for reading them ahead of need.

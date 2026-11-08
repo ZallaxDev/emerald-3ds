@@ -17,16 +17,11 @@
 
 typedef struct
 {
-    uint32_t queued;     /* wave buffers the DSP has still to play */
     uint32_t frames;     /* mixer frames handed to NDSP */
     uint32_t underruns;  /* frames that arrived after the DSP had run dry */
     uint32_t drops;      /* frames discarded because every buffer was busy */
-    uint32_t peak;       /* loudest sample of the last frame, 0..32767 */
-    uint32_t voices;     /* sample channels the mixer had active */
-    uint32_t song;       /* song number the map music player last asked for */
+    uint32_t lowest;     /* fewest buffers found queued since the log took it */
     float rateHz;        /* playback rate after drift correction */
-    float submitMs;      /* backend cost of the last frame */
-    float mixMs;         /* mixer cost of the last frame */
 } CtrAudioStats;
 
 bool CtrAudio_Init(void);

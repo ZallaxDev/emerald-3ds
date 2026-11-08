@@ -19,9 +19,6 @@
 #include "global.h"
 
 /* ── Platform lifecycle hooks called from the shared main loop ───────────── */
-void Port_InitVramBanks(void);
-void Port_SyncVramToHardware(void);
-void Port_AudioSyncPlayerState(void);
 void Port_RecordMainLoopIteration(void);
 
 /* ── External resources ─────────────────────────────────────────────────── */
@@ -35,15 +32,11 @@ bool Port_IsAssetStub(const void *ptr);
 const char *Port_GetAssetPath(const void *ptr);
 u32 Port_GetAssetSize(const void *ptr);
 u32 Port_GetAssetSizeExact(const void *base);
-u32 Port_GetAssetSizeSized(const void *ptr, u32 size);
-bool Port_LoadAssetToBuffer(const char *path, void *dest, u32 maxSize);
 bool Port_LoadAssetPointerToBuffer(const void *ptr, void *dest, u32 maxSize);
 bool Port_LoadAssetPointerToBufferSized(const void *ptr, void *dest, u32 size);
 bool Port_LoadAssetRangeToBuffer(const void *base, u32 offset, void *dest, u32 size);
-bool Port_LoadAssetPointerToHeap(const void *ptr, u8 **outBuf, u32 *outSize);
 const void *Port_ResolveAssetPointer(const void *ptr);
 const void *Port_ResolveAssetPointerSized(const void *ptr, u32 size);
-const void *Port_ResolveAssetPointerInContainingAsset(const void *ptr, u32 size);
 u32 Port_GetSpriteFrameSize(const void *base, u32 declaredSize);
 const void *Port_ResolveSpriteFramePointer(const void *base, u32 size, u32 offset);
 /* The same, only if the frame is already in memory: NULL rather than a read. */
