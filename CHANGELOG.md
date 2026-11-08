@@ -31,12 +31,6 @@
   as SAVE or OPTIONS, or its button column in focus with X), the top screen
   darkens towards its foot under an arrow pointing down at it, as on the DS
   games, and the music plays at half its volume. By @eathanpage.
-- PARTY EXP SHARE has three values: OFF, GEN VI (what ON was: full EXP for
-  each Pokémon that fought, half for each of the rest) and BALANCED, where
-  those that fought split the full EXP and the rest split half of it,
-  leaving out eggs, fainted Pokémon and those at Lv. 100; the held Exp.
-  Share adds nothing there either. A save with the option on keeps GEN VI.
-  By @Stumblef00l.
 
 ## 0.5.0 — 2026-10-29
 

@@ -38,8 +38,6 @@ static void SyncClock(void)
 static const char *const sTimedEncounters[] = {CTR_TEXT("ORIGINAL", "ORIGINAL", "ORIGINAL", "ORIGINALE", "ORIGINAL", "ORIGINAL", "オリジナル"),
                                                CTR_TEXT("TIMED", "POR HORARIO", "PAR HORAIRE", "PER ORARIO", "POR HORÁRIO", "NACH UHRZEIT", "じかんたい")};
 
-/* Party Exp Share: GEN VI is what ON was before it had three values, so a
- * card that saved ON keeps it. */
 static const char *const sExpShare[] = {CTR_TEXT("OFF", "NO", "NON", "NO", "NENHUM", "AUS", "オフ"), CTR_TEXT("GEN VI", "GEN. VI", "GÉN. VI", "GEN. VI", "GER. VI", "GEN. VI", "だい6せだい"), CTR_TEXT("BALANCED", "EQUILIBRADO", "ÉQUILIBRÉ", "BILANCIATO", "EQUILIBRADO", "AUSGEWOGEN", "バランス")};
 static const char *const sVisibleWild[] = {CTR_TEXT("OFF", "NO", "NON", "NO", "NENHUM", "AUS", "オフ"), CTR_TEXT("FEW", "POCOS", "PEU", "POCHE", "POUCOS", "WENIGE", "すこし"), CTR_TEXT("SOME", "ALGUNOS", "MOYEN", "ALCUNE", "ALGUNS", "EINIGE", "ふつう"), CTR_TEXT("MANY", "MUCHOS", "BEAUCOUP", "MOLTE", "MUITOS", "VIELE", "たくさん")};
 static const char *const sEncounterRate[] = {CTR_TEXT("NORMAL", "NORMAL", "NORMAL", "NORMALE", "NORMAL", "NORMAL", "ふつう"), CTR_TEXT("OFF", "NO", "NON", "NO", "NENHUM", "AUS", "オフ"), "1/4", "1/2", "2X"};
