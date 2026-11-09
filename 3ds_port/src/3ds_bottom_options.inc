@@ -85,6 +85,7 @@ static const OptRowDef sRowsScene[] = {
     GAME_ROW(OPT_BATTLE_SCENE, CTR_TEXT("BATTLE SCENE", "ANIMACIÓN", "ANIM. COMBAT", "ANIMAZIONE", "ANIMAÇÃO", "KAMPFANIMAT.", "せんとうアニメ")),
     GAME_ROW(OPT_BATTLE_STYLE, CTR_TEXT("BATTLE STYLE", "ESTILO", "STYLE", "STILE", "ESTILO", "KAMPFSTIL", "しあいの ルール")),
     GAME_ROW(OPT_VOXEL_BATTLE, CTR_TEXT("3D BATTLE", "COMBATE 3D", "COMBAT 3D", "BATTAGLIA 3D", "BATALHA 3D", "3D-KAMPF", "3D バトル")),
+    EXTRA_ROW("battle_speed_fx"),
 };
 static const OptRowDef sRowsRules[] = {
     EXTRA_ROW("move_split"),
