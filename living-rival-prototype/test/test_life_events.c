@@ -127,8 +127,22 @@ static void test_catalog_validation(void) {
     LR_CHECK(memcmp(&world, &before, sizeof(world)) == 0);
 }
 
+static void test_retirement_phase_gate(void) {
+    setup();
+    LrEventCatalog prototype = LrPrototypeEventCatalog();
+    const LrLifeEvent *retire = &prototype.events[prototype.count-1];
+    world.cores[0].stress = 100;
+    LR_CHECK(!LrEventFits(&world,0,retire));
+    world.cores[0].journeyPhase = LR_PHASE_MENTOR;
+    LR_CHECK(LrEventFits(&world,0,retire));
+    LR_CHECK(LrApplyLifeEvent(&world,0,retire,world.nowMinute,1));
+    LR_CHECK_EQ_INT(world.cores[0].journeyPhase,LR_PHASE_RETIRED);
+    LR_CHECK_EQ_INT(world.runtime[0].active,0);
+}
+
 int main(void) {
     test_conditions_and_pools(); test_recent_and_phrase(); test_fallback(); test_zero_weights();
     test_effects_and_causes(); test_pending_not_party(); test_catalog_validation();
+    test_retirement_phase_gate();
     return lr_test_summary("test_life_events");
 }

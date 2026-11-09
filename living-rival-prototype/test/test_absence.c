@@ -99,6 +99,7 @@ static void test_no_player_ceiling(void) {
 static void test_summary_timestamp_order(void) {
     LR_CHECK(test_world_init(&world, 2, 23, 0));
     world.cores[0].stress = world.cores[1].stress = 100;
+    world.cores[0].journeyPhase = world.cores[1].journeyPhase = LR_PHASE_MENTOR;
     LrEventCatalog full = LrPrototypeEventCatalog(), catalog = {&full.events[11],1,1};
     LrAbsenceStats stats;
     LrSummarizeAbsence(&world,&catalog,0,7u*1440u,&stats);

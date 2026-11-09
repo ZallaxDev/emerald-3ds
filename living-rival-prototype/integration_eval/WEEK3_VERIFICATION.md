@@ -31,7 +31,8 @@ Test-only valid-world fixtures are shared; production dependencies are not mocke
 MSYS2 GCC16.2, `-std=c99 -O2 -Wall -Wextra -Werror`; standard build command:
 `make -C living-rival-prototype test`. Task10 also performed a clean rebuild;
 simulation and snapshot executables were run twice with identical output.
-The final fix reran all17 binaries successfully: **54,710 assertions**.
+The final suite, including the post-review retirement-gate fix, reran all17
+binaries successfully: **54,716 assertions**.
 
 | Binary | Final assertions PASS |
 |---|---:|
@@ -41,7 +42,7 @@ The final fix reran all17 binaries successfully: **54,710 assertions**.
 | daily | 47 |
 | gazette | 619 |
 | goals | 66 |
-| life_events | 49 |
+| life_events | 55 |
 | memory | 102 |
 | mind | 45,482 |
 | needs | 40 |
@@ -64,6 +65,28 @@ A fresh read-only reviewer examined d82f425..610ca62 and independently rebuilt
 all17 binaries in approved temporary storage (54,677 assertions before the fix).
 All five named Review Focus cases were verified. The reviewer also exercised
 the actual large-weight picker reaching candidate3 with seed73291.
+
+## Post-review behavior test
+
+A throwaway host harness (kept outside the branch) simulated ten varied
+profiles for365 days, printed journeys and Gazette news, round-tripped a
+snapshot, and performed a six-month offline jump. This found a content gate
+defect: every rookie retired within30 days because fixture12 allowed retirement
+from any phase at stress>=90. The phase model says retirement follows the
+mentor phase; stress should not make a rookie retire immediately. A regression
+test now proves a ROOKIE at stress100 cannot retire while a MENTOR can, and the
+suite passes. The same harness then showed all10 trainers still active after a
+year, with badges spread0–8,14 active goals, and a500-entry chronicle mixing
+381 life and118 clash events. Its temporary buffers reused a participant name;
+that was a harness display bug, not core state.
+
+This test also exposes a model limitation, not silently fixed here: detailed
+hourly simulation raises needs but has no routine satisfaction, so long-term
+needs/stress saturate and Snap clashes crowd the Gazette. Absence summaries do
+recover needs/stress. Defining offscreen detailed-time satisfaction is a future
+design decision (player actions, resources, activity), not authority granted
+by Week3's approved plan.
+
 
 One Important issue: Chronicle append accepted out-of-range faction IDs, while
 world/snapshot validation rejected them. Regression tests reproduced both the
