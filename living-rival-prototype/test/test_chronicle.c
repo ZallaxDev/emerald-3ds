@@ -62,10 +62,30 @@ static void test_invalid(void) {
     LR_CHECK(LrChronicleFind(&logbook, 1) == NULL);
 }
 
+static void test_reject_invalid_factions(void) {
+    LrWorldEvent event = {0};
+    LrChronicleInit(&logbook);
+    for (unsigned i = 0; i < 4; i++) {
+        const uint8_t invalid[] = {LR_FACTION_COUNT,254};
+        for (unsigned j = 0; j < 2; j++) {
+            event.factions[i] = invalid[j]; before = logbook;
+            uint32_t id = 42;
+            LR_CHECK(!LrChronicleAppend(&logbook,&event,&id));
+            LR_CHECK_EQ_INT(id,42);
+            LR_CHECK(memcmp(&logbook,&before,sizeof(logbook)) == 0);
+        }
+        event.factions[i] = 255;
+    }
+    LR_CHECK(LrChronicleAppend(&logbook,&event,NULL));
+    for (unsigned i = 0; i < 4; i++) event.factions[i] = LR_FACTION_COUNT-1;
+    LR_CHECK(LrChronicleAppend(&logbook,&event,NULL));
+}
+
 int main(void) {
     test_ring_ids();
     test_stale_heard();
     test_exhaustion();
     test_invalid();
+    test_reject_invalid_factions();
     return lr_test_summary("test_chronicle");
 }

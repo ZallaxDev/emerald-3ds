@@ -2,6 +2,8 @@
 #include "lr_test.h"
 #include "lr_mind.h"
 #include "lr_runtime.h"
+#include "lr_simulation.h"
+#include "lr_snapshot.h"
 
 static LrWorldState world, before;
 static TrainerJourneyCore cores[2];
@@ -94,7 +96,24 @@ static void test_validation(void) {
 #undef REJECT
 }
 
+static void test_rejected_event_preserves_world(void) {
+    setup();
+    LR_CHECK(LrWorldInit(&world,cores,exts,traits,2,1,0,1));
+    before = world;
+    LrWorldEvent event = {0}; event.factions[0] = LR_FACTION_COUNT;
+    uint32_t id = 42;
+    LR_CHECK(!LrChronicleAppend(&world.chronicle,&event,&id));
+    LR_CHECK_EQ_INT(id,42);
+    LR_CHECK(memcmp(&world,&before,sizeof(world)) == 0);
+    LR_CHECK(LrWorldValidate(&world));
+    LrEventCatalog catalog = {NULL,0,1}; LrAdvanceStats stats;
+    LR_CHECK(LrSimulateTo(&world,&catalog,60,&stats));
+    static uint8_t buffer[90000]; size_t written = 0;
+    LR_CHECK(LrSnapshotWrite(&world,buffer,sizeof(buffer),&written));
+}
+
 int main(void) {
     test_defaults(); test_owned_copy(); test_invalid_init(); test_validation();
+    test_rejected_event_preserves_world();
     return lr_test_summary("test_runtime");
 }

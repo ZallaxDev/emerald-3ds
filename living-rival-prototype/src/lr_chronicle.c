@@ -18,6 +18,8 @@ bool LrChronicleAppend(LrChronicle *log, const LrWorldEvent *event, uint32_t *ou
     if (!valid_ring(log) || !event || log->nextId == UINT32_MAX ||
         event->kind >= LR_EVENT_KIND_COUNT || event->region >= LR_REGION_COUNT ||
         event->heard > 1 || event->minute > LR_MAX_MINUTE) return false;
+    for (unsigned i = 0; i < 4; i++)
+        if (event->factions[i] != 255 && event->factions[i] >= LR_FACTION_COUNT) return false;
     LrWorldEvent copy = *event;
     copy.id = log->nextId++;
     log->events[log->head] = copy;
