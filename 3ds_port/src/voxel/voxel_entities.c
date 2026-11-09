@@ -13,6 +13,7 @@
 #include "sprite.h"
 #include "event_object_movement.h"
 #include "field_player_avatar.h"
+#include "constants/event_objects.h"
 #include "constants/field_effects.h"
 #include "constants/event_object_movement.h"
 #include "gba/io_reg.h"
@@ -1626,6 +1627,11 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
          */
         if (obj->invisible)
             continue;
+        /* A trainer buried in the ash or sand: on the GBA its priority puts it
+         * under the map's top layer until it jumps out (trainer_see.c gives it
+         * priority 2 at that moment). This renderer has no such layer. */
+        if (obj->movementType == MOVEMENT_TYPE_BURIED && sprite->oam.priority == 3)
+            continue;
         /* Carried on the screen instead of the map - the rider of Fly's
          * bird - it is drawn with the screen's sprites, over the view. */
         if (!sprite->coordOffsetEnabled)
@@ -1855,9 +1861,14 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
     {
         VoxelObjectCard *card = &objects[i];
         float rise, dusk;
+        bool underBridge;
 
         if (!card->drawn)
             continue;
+        /* Route 120's unseen Kecleon: the object at the bridge's lower level
+         * that the GBA draws under the deck, only its reflection showing in
+         * the water. The Kecleon itself is another object, invisible. */
+        underBridge = gObjectEvents[i].graphicsId == OBJ_EVENT_GFX_KECLEON_BRIDGE_SHADOW;
         /* Through an open door: gone, shadow and all. */
         dusk = DoorLight(doors, card->worldX + 0.5f, card->worldZ + 0.5f);
         if (dusk <= 0.0f)
@@ -1871,13 +1882,15 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
         /* Riding, it is off the ground: its shadow falls from its feet,
          * moved along the sun by how high they are, onto the water past
          * the mon's back. */
-        if (shadows != NULL && card->outdoor)
+        if (shadows != NULL && card->outdoor && !underBridge)
             EmitCastShadow(shadows, &sSlots[i], i, card->worldX, card->worldZ, rightX, rightZ,
                            stretch, card->shade, card->rise > 0.0f ? rise : 0.0f, card->deck);
 #endif
         if (reflections != NULL && gObjectEvents[i].hasReflection)
             EmitReflection(reflections, &sSlots[i], i, card->worldX, card->worldZ,
                            rightX, rightZ, stretch);
+        if (underBridge)
+            continue;
         unsigned first = builder->count;
         EmitBillboard(builder, &sSlots[i], i, card->worldX + 0.5f, card->worldZ + 0.5f,
                       0.0f, 0.0f, rise, card->deck, rightX, rightZ, stretch, card->shade * dusk, 1.0f);
