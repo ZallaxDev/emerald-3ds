@@ -594,10 +594,30 @@ static bool ShadowOf(const VoxelMapInstance *inst, int x, int y, SignShadow *s)
         }
     if (s->high == s->count)
         return false;
+    s->zMid = (float)(y - (head ? 1 : 0)) + (float)(s->low / 8) * 0.5f + 0.25f;
     relief = VoxelRelief_Cell(inst, x, y);
     if (relief != NULL)
-        s->base = relief[3 * VOXEL_RELIEF_SIDE + 2] / 16.0f;
-    s->zMid = (float)(y - (head ? 1 : 0)) + (float)(s->low / 8) * 0.5f + 0.25f;
+    {
+        /* Where voxel_mesh_builder.c stands it: lifted and moved south by
+         * its relief - under its board on a slope, else by the cell's - less
+         * what the rays already take off a cell of a drawn map (voxel_
+         * lighting.c Cell: its lift and shift are VoxelRelief_CellShift).
+         * Counted twice, a sign on a drawn map's raised ground cast from as
+         * high again over its drawing: on Fortree's terrace three tiles up,
+         * its shadow fell two and a half tiles east of it. */
+        const int under = 3 * VOXEL_RELIEF_SIDE + 2;
+        const int16_t *depth = VoxelRelief_Depth(inst, x, y);
+        float lift = VoxelRelief_CellLift(inst, x, y), shift = VoxelRelief_CellShift(inst, x, y);
+        float taken = VoxelRelief_IsDrawn(inst) ? VoxelRelief_CellShift(inst, x, y) : 0.0f;
+
+        if (VoxelRelief_IsSlope(relief))
+        {
+            lift = relief[under] / 16.0f;
+            shift = depth != NULL ? depth[under] / 16.0f : 0.0f;
+        }
+        s->base = lift - taken;
+        s->zMid += shift - taken;
+    }
     {
         /* on a bridge's deck (voxel_mesh_builder.c stands it there) */
         float deck;

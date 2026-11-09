@@ -129,9 +129,15 @@ static const OptRowDef sRowsItems[] = {
     EXTRA_ROW("give_now"),
 };
 
+/* The voxel world's picture beyond its camera (WORLD's 3D is full). */
+static const OptRowDef sRowsGraphics[] = {
+    EXTRA_ROW("voxel_shadows"),
+};
+
 static const OptGroupDef sGroupsGeneral[] = {
     GROUP(CTR_TEXT("INTERFACE", "INTERFAZ", "INTERFACE", "INTERFACCIA", "INTERFACE", "OBERFLÄCHE", "がめん"), sRowsUi),
     GROUP(CTR_TEXT("SYSTEM", "SISTEMA", "SYSTÈME", "SISTEMA", "SISTEMA", "SYSTEM", "システム"), sRowsSystem),
+    GROUP(CTR_TEXT("GRAPHICS", "GRÁFICOS", "GRAPHISMES", "GRAFICA", "GRÁFICOS", "GRAFIK", "グラフィック"), sRowsGraphics),
 };
 static const OptGroupDef sGroupsWorld[] = {
     GROUP("3D", sRows3d),

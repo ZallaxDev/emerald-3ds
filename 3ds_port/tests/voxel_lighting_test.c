@@ -418,6 +418,28 @@ int main(void)
     VoxelLighting_Reset();
     assert(VoxelLighting_Sample(12.9f, 0, 11.1f) < 0.8f);
     assert(VoxelLighting_Sample(12.9f, 0, 10.5f) > 0.9f);
+    /* SHADOW QUALITY HIGH: the shadow map casts everything, the railing
+     * and the crowns: no ray darkens a sample. Back on LOW, all as was. */
+    {
+        uint32_t lowHash = VoxelLighting_Hash(0, 0, 4, 4);
+
+        assert(VoxelLighting_Quality() == VOXEL_SHADOWS_LOW);
+        assert(VoxelLighting_SetQuality(VOXEL_SHADOWS_HIGH));
+        assert(!VoxelLighting_SetQuality(VOXEL_SHADOWS_HIGH));
+        assert(VoxelLighting_Ambient() == VOXEL_SHADOW_MAP_DARK);
+        assert(VoxelLighting_Hash(0, 0, 4, 4) != lowHash);
+        VoxelLighting_Reset();
+        assert(VoxelLighting_Sample(12.9f, 0, 11.1f) > 0.9f);
+        sTreePresent = true;
+        VoxelLighting_Reset();
+        assert(VoxelLighting_Sample(9.74f, 0, 5.13f) > 0.9f);
+        sTreePresent = false;
+        assert(VoxelLighting_SetQuality(VOXEL_SHADOWS_LOW));
+        assert(VoxelLighting_Ambient() == VOXEL_AMBIENT);
+        assert(VoxelLighting_Hash(0, 0, 4, 4) == lowHash);
+        VoxelLighting_Reset();
+        assert(VoxelLighting_Sample(12.9f, 0, 11.1f) < 0.8f);
+    }
     sRailPresent = false;
     VoxelLighting_Reset();
 
@@ -425,7 +447,7 @@ int main(void)
     sMaps[1].indoor = true;
     VoxelLighting_Reset();
     assert(VoxelLighting_Sample(3.5f, 0, 3.5f) == 1.0f);
-    puts("PASS lighting on: sample cache equivalence, ray ceiling, cell skipping, sun, AO, neighbour invalidation, rebase, seams, capacity, live trees, railing footprints, interiors");
+    puts("PASS lighting on: sample cache equivalence, ray ceiling, cell skipping, sun, AO, neighbour invalidation, rebase, seams, capacity, live trees, railing footprints, shadow quality, interiors");
 #else
     assert(builder.count == 6 && builder.dropped == 0);
     for (unsigned i = 0; i < builder.count; ++i) assert(storage[i].shade == 1.0f);

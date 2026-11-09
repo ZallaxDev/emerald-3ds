@@ -375,3 +375,10 @@ void CtrVideo_Shutdown(void)
 }
 
 bool CtrVideo_InBattle(void) { return sInBattle; }
+
+/* The logical surface, which the voxel world is drawn into: its shadow
+ * blur reads it back (ctr_voxel.c ShadowBlurPass). */
+C3D_Tex *CtrVideo_LogicalTexture(void)
+{
+    return &sSurface;
+}

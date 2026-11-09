@@ -6,6 +6,7 @@
 #include <string.h>
 #include "global.h"
 #include "3ds_locale.h"
+#include "3ds_locale_text.h"
 #include "3ds_extras.h"
 #include "3ds_randomizer.h"
 #include "3ds_nuzlocke_ui.h"
@@ -48,6 +49,28 @@ static const char *const sShinyOdds[] = {"1/8192", "1/4096", "1/1024", "1/256", 
  * them, and with it off they are greyed (CtrExtras_NeedsVoxel). */
 static const char *const sVoxelStereo[] = {CTR_TEXT("AUTO", "AUTO", "AUTO", "AUTO", "AUTO", "AUTO", "オート"), CTR_TEXT("ON", "SÍ", "OUI", "SÌ", "SIM", "AN", "オン"), CTR_TEXT("OFF", "NO", "NON", "NO", "NENHUM", "AUS", "オフ")};
 static const char *const sVoxelDepths[] = {"25%", "50%", "75%", "100%", "125%", "150%", "200%"};
+/*
+ * SHADOW QUALITY: the voxel world's shadows as they always were (LOW), or cut
+ * along the outline of what casts them (HIGH, voxel_lighting.c). Shown as
+ * the console takes it - HIGH on a New 3DS until one is chosen, LOW on an
+ * Old one (CtrSettings_VoxelShadowsHigh) - and kept as 1 (LOW) or 2 (HIGH).
+ */
+static const char *const sVoxelShadows[] = {CTR_TEXT("LOW", "BAJA", "BASSE", "BASSA", "BAIXA", "NIEDRIG", "ひくい"),
+                                            CTR_TEXT("HIGH", "ALTA", "HAUTE", "ALTA", "ALTA", "HOCH", "たかい")};
+
+static void VoxelShadowsStep(int direction)
+{
+    (void)direction; /* two values: either way is the other */
+    CtrSettings_SetInt("voxel_shadows", CtrSettings_VoxelShadowsHigh() ? 1 : 2);
+}
+
+static const u8 *VoxelShadowsText(void)
+{
+    static u8 text[24];
+
+    CtrLocale_ToGame(text, sizeof(text), sVoxelShadows[CtrSettings_VoxelShadowsHigh() ? 1 : 0]);
+    return text;
+}
 /*
  * Pokedex (CHEATS): the Hoenn Pokedex complete, the National Pokedex
  * unlocked, or complete (and unlocked): every Pokemon seen and caught. OPTIONS
@@ -211,6 +234,7 @@ const CtrExtra gCtrExtras[] =
     /* Features add their lines here. */
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("3D WORLD", "MUNDO 3D", "MONDE 3D", "MONDO 3D", "MUNDO 3D", "3D-WELT", "3D ワールド"), "voxel_stereo", 3, 0, sVoxelStereo, NULL, NULL, NULL},
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("3D DEPTH", "PROFUNDIDAD 3D", "PROFONDEUR 3D", "PROFOND. 3D", "PROFUNDIDADE 3D", "3D-TIEFE", "3D おくゆき"), "voxel_depth", 7, 3, sVoxelDepths, NULL, NULL, NULL},
+    {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("SHADOW QUALITY", "CALIDAD DE SOMBRAS", "QUALITÉ OMBRES", "QUALITÀ OMBRE", "QUALID. SOMBRAS", "SCHATTENQUALITÄT", "かげの ひんしつ"), "voxel_shadows", 0, 0, sVoxelShadows, NULL, VoxelShadowsStep, VoxelShadowsText},
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("SPEED", "VELOC. JUEGO", "VITESSE", "VELOCITÀ", "VELOCIDADE", "TEMPO", "スピード"), "speed", 0, 0, NULL, NULL, SpeedStep, SpeedText},
     /* The game and the music keep real time on a slow frame; the sound
      * engine mixes on the DSP's clock (3ds_platform.c, 3ds_audio.c). */
@@ -298,5 +322,5 @@ int CtrExtras_Get(const char *key)
 
 bool CtrExtras_NeedsVoxel(const CtrExtra *extra)
 {
-    return extra->values == sVoxelStereo || extra->values == sVoxelDepths;
+    return extra->values == sVoxelStereo || extra->values == sVoxelDepths || extra->values == sVoxelShadows;
 }

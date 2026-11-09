@@ -28,6 +28,9 @@ static void LightEvent_Signal(LightEvent *e) {
     pthread_cond_signal(&e->cond); pthread_mutex_unlock(&e->mutex);
 }
 static void svcGetThreadPriority(s32 *p, int handle) { (void)handle; *p = 0x30; }
+/* SHADOW QUALITY's default: an Old 3DS on the host. */
+#define R_FAILED(r) ((r) < 0)
+static s32 APT_CheckNew3DS(bool *out) { *out = false; return 0; }
 static void *hostThread(void *p) { Thread t = p; t->fn(t->arg); return NULL; }
 static Thread threadCreate(void (*fn)(void *), void *arg, size_t stack, int priority, int cpu, bool detached) {
     (void)stack; (void)priority; (void)cpu;
