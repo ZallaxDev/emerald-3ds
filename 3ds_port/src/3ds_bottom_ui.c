@@ -519,6 +519,8 @@ static struct
     /* The party menu's held item and mail signs, a tile each. */
     u8 *holdTiles;
     Pal holdPal;
+    u8 *statusTiles;
+    Pal statusPal;
     /* Trainer card. */
     Pal badgePal;
     u8 *badgeTiles;
@@ -632,6 +634,17 @@ static void LoadResources(void)
 
     sRes.holdTiles = ReadRomfs("party_menu/hold_icons.4bpp", NULL);
     PalFile("party_menu/hold_icons.gbapal", &sRes.holdPal, 1, FALSE);
+    /* The status icons the party menu and the summary show (PSN to FNT). */
+    sRes.statusTiles = Unlz(gStatusGfx_Icons, NULL);
+    {
+        u16 *raw = Unlz(gStatusPal_Icons, NULL);
+
+        if (raw)
+        {
+            ToPals(&sRes.statusPal, raw, 1);
+            free(raw);
+        }
+    }
 
     PalFile("trainer_card/badges.gbapal", &sRes.badgePal, 1, FALSE);
     sRes.badgeTiles = UnlzFile("trainer_card/badges.4bpp.lz", NULL);
@@ -3173,7 +3186,8 @@ static void SnapshotPartyFull(ViewState *s)
         view->level = GetMonData(mon, MON_DATA_LEVEL);
         view->hp = GetMonData(mon, MON_DATA_HP);
         view->maxHp = GetMonData(mon, MON_DATA_MAX_HP);
-        view->ailment = GetAilmentFromStatus(GetMonData(mon, MON_DATA_STATUS));
+        /* As the party menu reads it: fainted too, and Pokérus. */
+        view->ailment = GetMonAilment(mon);
         {
             u16 item = GetMonData(mon, MON_DATA_HELD_ITEM);
 

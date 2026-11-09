@@ -190,6 +190,21 @@ static void PartyHeldSign(const ViewState *s, int slot, int cx, int cy)
         DrawSprite(sRes.holdTiles + (held == HELD_MAIL ? 32 : 0), 1, 1, cx, cy + 6, sRes.holdPal.c);
 }
 
+/*
+ * The status icon in the level's place, as the party menu shows it
+ * (DisplayPartyPokemonLevelCheck): the game's own 32x8 icon, one row of the
+ * sheet for each of PSN, PAR, SLP, FRZ, BRN, PKRS, FNT. Pokérus keeps the
+ * level, as in the game. FALSE when there is none to show.
+ */
+static bool8 PartyStatusIcon(const MonView *mon, int x, int y)
+{
+    if (mon->ailment == AILMENT_NONE || mon->ailment == AILMENT_PKRS || mon->ailment > AILMENT_FNT
+     || !sRes.statusTiles)
+        return FALSE;
+    DrawSprite(sRes.statusTiles + (mon->ailment - 1) * 4 * 32, 4, 1, x, y, sRes.statusPal.c);
+    return TRUE;
+}
+
 static void DrawPartyLead(const ViewState *s, int slot)
 {
     const MonView *mon = &s->party[slot];
@@ -205,7 +220,8 @@ static void DrawPartyLead(const ViewState *s, int slot)
     PartyHeldSign(s, slot, x + 19, oy + 20);
     if (!mon->isEgg)
     {
-        StyledRight(&sSmall, LevelText(mon->level), x + 98, oy + 6, STYLE_WHITE);
+        if (!PartyStatusIcon(mon, x + 66, oy + 8))
+            StyledRight(&sSmall, LevelText(mon->level), x + 98, oy + 6, STYLE_WHITE);
         GenderSign(x + 88, oy + 20, mon->gender);
     }
     StyledStr(FitFont(&sNormal, mon->nick, 90), mon->nick, x + 8, oy + 40, STYLE_WHITE);
@@ -241,8 +257,11 @@ static void DrawPartyBox(const ViewState *s, int slot, int by)
     StyledStr(FitFont(&sNormal, mon->nick, 80), mon->nick, x + 44, TextY(oy, 16, &sNormal) + 1, STYLE_WHITE);
     if (!mon->isEgg)
     {
-        StyledStr(&sSmall, LevelText(mon->level), x + 44, oy + 15, STYLE_WHITE);
-        GenderSign(x + 74, oy + 15, mon->gender);
+        bool8 status = PartyStatusIcon(mon, x + 44, oy + 17);
+
+        if (!status)
+            StyledStr(&sSmall, LevelText(mon->level), x + 44, oy + 15, STYLE_WHITE);
+        GenderSign(status ? x + 80 : x + 74, oy + 15, mon->gender);
     }
     if (v->desc[slot] != CTR_PARTY_DESC_NONE)
         TextIn(CtrParty_DescText(v->desc[slot]), x + 120, oy, w - 120, PARTY_ROW_H, &sNormal, 'r',
