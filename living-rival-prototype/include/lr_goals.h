@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include "lr_types.h"
 
+/* LrAmbushMult returns per-mille (1000 == 1.0). LrHasGoal and
+ * LrHasGoalAgainstPlayer always return false for LR_GOAL_NONE. */
 int32_t LrHateTier(uint8_t hate);
 int32_t LrInitGoals(TrainerJourneyCore *core, const LrTrainerTraits *traits);
 bool LrSetGoal(TrainerJourneyCore *core, uint8_t type, uint16_t target);

@@ -5,6 +5,9 @@
 #include <stdint.h>
 #include "lr_types.h"
 
+/* Returns true only when the memory became long-term (crossed 65). A stored
+ * memory may return false; a rejected one also returns false. A corrupt
+ * memoryCount above LR_MAX_MEMORIES is treated as LR_MAX_MEMORIES. */
 bool LrRemember(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
                 uint8_t emotion, uint8_t intensity, uint8_t cause,
                 uint16_t nowDay, uint8_t targetFacet);

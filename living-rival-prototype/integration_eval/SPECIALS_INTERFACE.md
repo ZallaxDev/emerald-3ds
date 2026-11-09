@@ -1,13 +1,13 @@
 # Specials Interface — Host Mapping (Phase 2.5, Week 2)
 
-**Status:** design + mapping, validated by the Week 5 `test_specials_interface.c`
+**Status:** design + mapping. The Week 5 `test_specials_interface.c` will validate it.
 **Companion:** `../../../docs/superpowers/specs/2026-11-09-SPECIALS_INTERFACE.md` is the approved script-facing catalog (38 specials, parameter encoding, registration). This document does not restate it; it maps each special to the portable core and records the gaps.
 
 ## Scope
 
 The catalog is the contract between scripts and the engine. The portable core (`living-rival-prototype/`) is the simulation behind it. The port already implements all 38 specials as stubs (`emerald-3ds/3ds_port/src/living_rival_specials.c`); this mapping is what those stubs become when Phase 3 connects them to the core.
 
-Calling convention is unchanged: specials are `void(void)`, read `VAR_0x8000+`, and return through `gSpecialVar_Result`. All core functions below are ordinary C calls; the specials layer does the var packing.
+Calling convention matches the port: each special is `u16 f(void)`, reads `VAR_0x8000+`, writes `gSpecialVar_Result` (via `LR_SetResult`) and also returns the same value. All core functions below are ordinary C calls; the specials layer does the var packing.
 
 ## Mapping
 
@@ -51,12 +51,12 @@ Status legend: **now** = core API exists; **helper** = small wrapper still neede
 | # | Special | Core source | Status |
 |---|---|---|---|
 | 19 | `LRS_CreateMemory` | `LrRemember(core, ext, emotion, intensity, cause, nowDay, targetFacet)` | now |
-| 20 | `LRS_ModifyHate` | `LrCalculateHateDelta` + `LrAddHate`, then return `core->hate` | now |
-| 21 | `LRS_ModifyFear` | `LrCalculateFearDelta` + `LrAddFear`, then return `core->fear` | now |
+| 20 | `LRS_ModifyHate` | `LrAddHate(core, ext, traits, delta, nowDay)`, then return `core->hate` | now |
+| 21 | `LRS_ModifyFear` | `LrAddFear(core, ext, traits, delta, nowDay)`, then return `core->fear` | now |
 | 22 | `LRS_ModifyNotoriety` | `LrAddNotoriety`, then return `core->notoriety` | now |
 | 23 | `LRS_SetMentorStudent` | direct `mentorId` / `studentIds` writes | now |
 
-Note: `LrAddHate`/`LrAddFear` auto-create a memory for `abs(delta) >= 10`, by design. A script calling `LRS_ModifyHate(40)` therefore also feeds the drift pipeline.
+Note: `LrAddHate`/`LrAddFear` apply the multiplier chain themselves for positive deltas and auto-create a memory for `abs(delta) >= 10`, by design. Call `LrCalculateHateDelta` only to preview a value; calling it before `LrAddHate` double-applies the chain. A script calling `LRS_ModifyHate(40)` therefore also feeds the drift pipeline.
 
 ### Team / party (24–27)
 
@@ -116,6 +116,39 @@ Core: `PRODIGY, GRINDER, SPECIALIST, EXPERIMENTER, LATE_BLOOMER, MENTOR, MERCENA
 Catalog: `BALANCED, AGGRESSIVE, DEFENSIVE, SPEED, SPECIALIST, COLLECTOR, BREEDER, EXPLORER` (battle/collection style).
 
 There is no honest 1:1 map. **Recommendation:** scripts should expose the core archetypes and the catalog's list should be replaced in Phase 3. Pretending a `GRINDER` is `BALANCED` would leak a wrong value into dialogue and team templates.
+
+### Emotion — translate before `LrRemember`
+
+| Port/catalog | Core | Note |
+|---|---|---|
+| `HATE` (0) | `LR_MEMORY_ANGER` (0) | |
+| `FEAR` (1) | `LR_MEMORY_FEAR` (1) | only value that already agrees |
+| `RESPECT` (2) | `LR_MEMORY_PRIDE` (5) | esteem raises pride |
+| `GRATITUDE` (3) | `LR_MEMORY_JOY` (4) | |
+| `ANGER` (4) | `LR_MEMORY_ANGER` (0) | passing 4 through would become Joy |
+| `SADNESS` (5) | `LR_MEMORY_GRIEF` (3) | |
+
+Reverse (core → script), for text and gazette: Anger→`ANGER` (4), Fear→`FEAR`, Shame→`SADNESS`, Grief→`SADNESS`, Joy→`GRATITUDE`, Pride→`RESPECT`.
+
+### Cause — the catalog example is wrong for the core
+
+Core: `0 = world`, `1 = player`, `2 = other trainer`. The catalog's `LRS_CreateMemory` example says `BATTLE_LOSS(2)`; passing 2 through records a player's victory as another trainer's fault and blocks Avenge/Settle installation. Translate event causes explicitly: world/ambient → 0, player action or battle loss → 1, other trainer → 2. `nowDay` is the current game day (`u16`) from the world clock.
+
+### Region — different numbering
+
+| Script | Core |
+|---|---|
+| Hoenn (0) | `LR_REGION_HOENN` (2) |
+| Johto (1) | `LR_REGION_JOHTO` (1) |
+| Kanto (2) | `LR_REGION_KANTO` (0) |
+| Sinnoh (3) | 3 |
+| Unova (4) | 4 |
+
+The port stub's `currentRegion = 0 // Hoenn` confirms the script side.
+
+### Goal target — player sentinel
+
+Scripts use `0` for the player; the core uses `LR_TRAINER_PLAYER` (`0xFFFE`) and `0xFFFF` for none. On query: `0xFFFE → 0`; `0xFFFF → 0` (the goal type already says the slot is empty). On mutation: script `0 → 0xFFFE`; any other value is a trainer id.
 
 ## Validation plan (Week 5)
 

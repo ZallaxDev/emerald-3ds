@@ -38,34 +38,34 @@ bool LrSetGoal(TrainerJourneyCore *core, uint8_t type, uint16_t target) {
     uint8_t oldType[2] = { core->goal1_type, core->goal2_type };
     uint16_t oldTarget[2] = { core->goal1_target, core->goal2_target };
 
-    uint8_t keepType[2] = { LR_GOAL_NONE, LR_GOAL_NONE };
-    uint16_t keepTarget[2] = { LR_GOAL_TARGET_NONE, LR_GOAL_TARGET_NONE };
-    int kept = 0;
+    uint8_t keepType = LR_GOAL_NONE;
+    uint16_t keepTarget = LR_GOAL_TARGET_NONE;
 
     for (int i = 0; i < 2; i++) {
         uint8_t t = oldType[i];
         if (t == LR_GOAL_NONE || t == type) continue;
         if (type == LR_GOAL_AVENGE && t == LR_GOAL_SETTLE) continue;
         if (type == LR_GOAL_SETTLE && (t == LR_GOAL_PROVE || t == LR_GOAL_RISE)) continue;
-        if (kept < 2) {
-            keepType[kept] = t;
-            keepTarget[kept] = oldTarget[i];
-            kept++;
+        if (keepType == LR_GOAL_NONE) {
+            keepType = t;
+            keepTarget = oldTarget[i];
         }
     }
 
     core->goal1_type = type;
     core->goal1_target = target;
-    core->goal2_type = keepType[0];
-    core->goal2_target = keepTarget[0];
+    core->goal2_type = keepType;
+    core->goal2_target = keepTarget;
     return true;
 }
 
 bool LrHasGoal(const TrainerJourneyCore *core, uint8_t type) {
+    if (type == LR_GOAL_NONE) return false;
     return core->goal1_type == type || core->goal2_type == type;
 }
 
 bool LrHasGoalAgainstPlayer(const TrainerJourneyCore *core, uint8_t type) {
+    if (type == LR_GOAL_NONE) return false;
     if (core->goal1_type == type && core->goal1_target == LR_TRAINER_PLAYER) return true;
     if (core->goal2_type == type && core->goal2_target == LR_TRAINER_PLAYER) return true;
     return false;

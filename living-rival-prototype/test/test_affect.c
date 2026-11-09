@@ -105,6 +105,17 @@ int main(void) {
     LR_CHECK_EQ_INT(c.hate, 9);
     LR_CHECK_EQ_INT(e.memoryCount, 0);
 
+    /* Exactly 10 creates a memory. */
+    base(&c, &e, LR_TEMP_STEADY);
+    LrAddHate(&c, &e, 0, 10, 1);
+    LR_CHECK_EQ_INT(e.memoryCount, 1);
+
+    /* A multiplied positive delta feeds the memory intensity. */
+    base(&c, &e, LR_TEMP_HOTHEAD);
+    LrAddHate(&c, &e, 0, 40, 1);
+    LR_CHECK_EQ_INT(c.hate, 52);
+    LR_CHECK_EQ_INT(e.memoryIntensities[0], 52);
+
     base(&c, &e, LR_TEMP_STEADY);
     c.hate = 79;
     LrAddHate(&c, &e, 0, 30, 1);

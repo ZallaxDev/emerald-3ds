@@ -9,6 +9,10 @@ static int clamp_int(int v, int lo, int hi) {
     return v;
 }
 
+static int memory_count(const TrainerJourneyExtended *ext) {
+    return ext->memoryCount > LR_MAX_MEMORIES ? LR_MAX_MEMORIES : (int)ext->memoryCount;
+}
+
 static int region_count(const TrainerJourneyCore *core) {
     return core->regionFacetCount > LR_MAX_REGION_FACETS ? LR_MAX_REGION_FACETS : (int)core->regionFacetCount;
 }
@@ -64,7 +68,8 @@ static void swap_memories(TrainerJourneyExtended *ext, int a, int b) {
 }
 
 static void sort_memories(TrainerJourneyExtended *ext) {
-    for (int i = 1; i < (int)ext->memoryCount; i++) {
+    const int count = memory_count(ext);
+    for (int i = 1; i < count; i++) {
         int j = i;
         while (j > 0 && strength_at(ext, j) > strength_at(ext, j - 1)) {
             swap_memories(ext, j, j - 1);
@@ -74,7 +79,8 @@ static void sort_memories(TrainerJourneyExtended *ext) {
 }
 
 static int find_memory(const TrainerJourneyExtended *ext, uint8_t emotion, uint8_t cause) {
-    for (int i = 0; i < (int)ext->memoryCount; i++) {
+    const int count = memory_count(ext);
+    for (int i = 0; i < count; i++) {
         if (ext->memoryEmotions[i] == emotion && ext->memoryCauses[i] == cause && !ext->memoryLongTerm[i])
             return i;
     }
@@ -126,7 +132,7 @@ void LrDrift(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
         break;
     case LR_MEMORY_JOY:
         add_universal(core, LR_FACET_SOCIAL, 4);
-        set_facet(core, ext, targetFacet, (int)(current - 3));
+        set_facet(core, ext, targetFacet, LrGetFacet(core, ext, targetFacet) - 3);
         break;
     case LR_MEMORY_PRIDE: {
         int pride = pride_index(core);
@@ -152,6 +158,8 @@ void LrDrift(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
             }
         }
     }
+
+    LrDeriveValues(core, ext);
 }
 
 bool LrRemember(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
@@ -160,6 +168,7 @@ bool LrRemember(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
     if (emotion >= LR_MEMORY_EMOTION_COUNT) return false;
     if (cause > LR_CAUSE_OTHER_TRAINER) return false;
     if (intensity > 100) intensity = 100;
+    if (ext->memoryCount > LR_MAX_MEMORIES) ext->memoryCount = (uint8_t)LR_MAX_MEMORIES;
 
     if (LrIsBadEmotion(emotion))
         core->stress = (uint8_t)clamp_int((int)core->stress + (int)intensity / 8, 0, 100);

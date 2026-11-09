@@ -145,6 +145,19 @@ int main(void) {
     c.hate = 90;
     LR_CHECK_EQ_INT(LrShiftIntent(&c, LR_INTENT_WONT_HUNT, 10), LR_INTENT_WONT_HUNT);
 
+    /* HasGoal(NONE) is always false. */
+    base(&c);
+    LR_CHECK(!LrHasGoal(&c, LR_GOAL_NONE));
+    LR_CHECK(!LrHasGoalAgainstPlayer(&c, LR_GOAL_NONE));
+    LrSetGoal(&c, LR_GOAL_RISE, LR_GOAL_TARGET_NONE);
+    LR_CHECK(!LrHasGoal(&c, LR_GOAL_NONE));
+
+    /* Avenge + stress = 1800. */
+    base(&c);
+    LrSetGoal(&c, LR_GOAL_AVENGE, LR_TRAINER_PLAYER);
+    c.stress = 70;
+    LR_CHECK_EQ_INT(LrAmbushMult(&c), 1800);
+
     /* AmbushMultiplier is per-mille. */
     base(&c);
     LR_CHECK_EQ_INT(LrAmbushMult(&c), 1000);

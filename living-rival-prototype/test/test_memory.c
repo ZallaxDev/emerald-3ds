@@ -176,5 +176,49 @@ int main(void) {
     LR_CHECK(!has20);
     LR_CHECK(has66);
 
+    /* Drift refreshes derived values. */
+    base(&c, &e, LR_REGION_KANTO);
+    for (int i = 0; i < 8; i++) LrDrift(&c, &e, LR_MEMORY_GRIEF, LR_CAUSE_WORLD, LR_FACET_ANGER);
+    LR_CHECK_EQ_INT(c.universalFacets[LR_FACET_SOCIAL], 10);
+    LR_CHECK_EQ_INT(c.values[LR_VALUE_FAMILY], -2);
+
+    /* Joy targeting Social nets +1 (54 then -3). */
+    base(&c, &e, LR_REGION_KANTO);
+    LrDrift(&c, &e, LR_MEMORY_JOY, LR_CAUSE_WORLD, LR_FACET_SOCIAL);
+    LR_CHECK_EQ_INT(c.universalFacets[LR_FACET_SOCIAL], 51);
+
+    /* Drift can target a region facet (Kanto Honour, global 8). */
+    base(&c, &e, LR_REGION_KANTO);
+    e.regionFacets[0] = 50;
+    LrDrift(&c, &e, LR_MEMORY_ANGER, LR_CAUSE_WORLD, (uint8_t)LR_UNIVERSAL_FACET_COUNT);
+    LR_CHECK_EQ_INT(e.regionFacets[0], 55);
+    LR_CHECK_EQ_INT(c.universalFacets[LR_FACET_CRUELTY], 52);
+
+    /* A corrupt memoryCount must not walk past the arrays. */
+    struct { TrainerJourneyExtended ext; uint8_t guard[32]; } box;
+    base(&c, &box.ext, LR_REGION_KANTO);
+    for (int i = 0; i < LR_MAX_MEMORIES; i++) box.ext.memoryEmotions[i] = 1;
+    box.ext.memoryCount = 255;
+    memset(box.guard, 0xA5, sizeof(box.guard));
+    LrRemember(&c, &box.ext, LR_MEMORY_ANGER, 70, LR_CAUSE_WORLD, 1, LR_FACET_ANGER);
+    for (int i = 0; i < 32; i++) LR_CHECK_EQ_INT(box.guard[i], 0xA5);
+
+    /* A dropped memory never installs a goal. */
+    base(&c, &e, LR_REGION_KANTO);
+    c.universalFacets[LR_FACET_ANGER] = 50;
+    for (int i = 0; i < LR_MAX_MEMORIES; i++) {
+        uint8_t emotion = (uint8_t)(i % LR_MEMORY_EMOTION_COUNT);
+        uint8_t cause = (uint8_t)(i < LR_MEMORY_EMOTION_COUNT ? LR_CAUSE_WORLD : LR_CAUSE_OTHER_TRAINER);
+        LrRemember(&c, &e, emotion, 65, cause, (uint16_t)i, LR_FACET_ANGER);
+    }
+    LR_CHECK_EQ_INT(e.memoryCount, LR_MAX_MEMORIES);
+    LR_CHECK(!LrRemember(&c, &e, LR_MEMORY_ANGER, 65, LR_CAUSE_PLAYER, 50, LR_FACET_ANGER));
+    LR_CHECK(!LrHasGoal(&c, LR_GOAL_AVENGE));
+
+    /* A fresh 65 drifts. */
+    base(&c, &e, LR_REGION_KANTO);
+    LR_CHECK(LrRemember(&c, &e, LR_MEMORY_ANGER, 65, LR_CAUSE_WORLD, 1, LR_FACET_ANGER));
+    LR_CHECK_EQ_INT(c.universalFacets[LR_FACET_ANGER], 55);
+
     return lr_test_summary("test_memory");
 }
