@@ -2,7 +2,7 @@ HOSTCC ?= gcc
 CFLAGS := -std=c99 -O2 -Wall -Wextra -Werror -Iinclude
 BUILD := build
 SRCS := $(wildcard src/*.c)
-HDRS := $(wildcard include/*.h src/*.h)
+HDRS := $(wildcard include/*.h src/*.h test/*.h)
 TESTS := $(wildcard test/test_*.c)
 
 ifeq ($(OS),Windows_NT)

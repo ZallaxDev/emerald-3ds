@@ -1,0 +1,31 @@
+#include "lr_life_events.h"
+
+#define C(field, op, value) {LR_COND_##field, LR_OP_##op, value}
+#define F(kind, index, amount) {LR_FX_##kind, index, amount}
+#define ROW(id, category, kind, nc, ne) id,id,id,20,LR_CATEGORY_##category,255,LR_EVENT_##kind,0,nc,ne
+
+static const LrLifeEvent events[] = {
+    {ROW(1,TRAINING,LIFE,2,3), {C(RESOURCES,GE,10),C(SKILL,GE,20)},
+        {F(RESOURCE,0,-2),F(TRAINING,0,10),F(NEED,LR_NEED_VIOLENCE,-15)}},
+    {ROW(2,TRAINING,LIFE,2,3), {C(RESOURCES,GE,30),C(SKILL,GE,40)},
+        {F(RESOURCE,0,-5),F(TRAINING,0,20),F(STRESS,0,-5)}},
+    {ROW(3,PERSONAL,LIFE,1,3), {C(SOCIAL,GE,55)},
+        {F(GOAL,LR_GOAL_PROTECT,0),F(NEED,LR_NEED_COMPANY,-20),F(STRESS,0,-5)}},
+    {ROW(4,PERSONAL,LIFE,1,2), {C(AMBITION,GE,70)}, {F(GOAL,LR_GOAL_RISE,0),F(STRESS,0,-5)}},
+    {ROW(5,ACTIVITY,BADGE,4,3), {C(SKILL,GE,50),C(RESOURCES,GE,20),C(BADGES,LE,7),C(PHASE,LE,LR_PHASE_BADGE_HUNT)},
+        {F(RESOURCE,0,-10),F(BADGE,0,1),F(PHASE,LR_PHASE_BADGE_HUNT,0)}},
+    {ROW(6,ACTIVITY,LIFE,2,3), {C(COLLECTOR,GE,60),C(RESOURCES,GE,10)},
+        {F(RESOURCE,0,-5),F(REGION,LR_REGION_JOHTO,0),F(NEED,LR_NEED_COMPANY,-10)}},
+    {ROW(7,TEAM,LIFE,2,2), {C(COLLECTOR,GE,50),C(RESOURCES,GE,15)}, {F(RESOURCE,0,-5),F(CAPTURE_INTENT,0,1)}},
+    {ROW(8,TEAM,LIFE,2,2), {C(SKILL,GE,60),C(RESOURCES,GE,5)}, {F(EVOLVE_INTENT,0,1),F(RESOURCE,0,-5)}},
+    {ROW(9,TEAM,LIFE,1,2), {C(RESOURCES,GE,10)}, {F(REORGANIZE_INTENT,0,1),F(RESOURCE,0,-2)}},
+    {ROW(10,LIFE,LIFE,1,3), {C(STRESS,GE,70)}, {F(GOAL,LR_GOAL_SETTLE,0),F(STRESS,0,-20),F(NEED,LR_NEED_DRINK,-25)}},
+    {ROW(11,LIFE,LIFE,1,3), {C(RESOURCES,LE,30)}, {F(RESOURCE,0,5),F(STRESS,0,-10),F(NEED,LR_NEED_MONEY,-20)}},
+    {12,12,12,10,LR_CATEGORY_LIFE,255,LR_EVENT_RETIREMENT,0,2,2,
+        {C(PHASE,LE,LR_PHASE_MENTOR),C(STRESS,GE,90)}, {F(PHASE,LR_PHASE_RETIRED,0),F(STRESS,0,-30)}}
+};
+
+LrEventCatalog LrPrototypeEventCatalog(void) {
+    LrEventCatalog catalog = {events, sizeof(events) / sizeof(events[0]), 1};
+    return catalog;
+}
