@@ -2,6 +2,7 @@
 #include "lr_life_events.h"
 #include "lr_affect.h"
 #include "lr_goals.h"
+#include "lr_daily.h"
 
 static bool valid_event(const LrLifeEvent *e) {
     if (!e || !e->id || !e->titleId || e->category >= LR_CATEGORY_COUNT ||
@@ -118,19 +119,6 @@ static int32_t clamp(int32_t value, int32_t max) {
     return value < 0 ? 0 : value > max ? max : value;
 }
 
-static void sync_goals(const TrainerJourneyCore *c, LrTrainerRuntime *r, uint32_t minute) {
-    uint8_t types[2] = {c->goal1_type, c->goal2_type};
-    uint16_t targets[2] = {c->goal1_target, c->goal2_target};
-    uint32_t times[2] = {minute, minute};
-    for (unsigned i = 0; i < 2; i++) for (unsigned j = 0; j < 2; j++)
-        if (types[i] == r->trackedGoalTypes[j] && targets[i] == r->trackedGoalTargets[j])
-            times[i] = r->goalProgressMinute[j];
-    for (unsigned i = 0; i < 2; i++) {
-        r->trackedGoalTypes[i] = types[i]; r->trackedGoalTargets[i] = targets[i];
-        r->goalProgressMinute[i] = times[i];
-    }
-}
-
 bool LrApplyLifeEvent(LrWorldState *w, uint16_t slot, const LrLifeEvent *e,
                       uint32_t minute, uint8_t scaleDays) {
     if (!w || !scaleDays || scaleDays > 30 || minute != w->nowMinute || minute > LR_MAX_MINUTE ||
@@ -139,12 +127,18 @@ bool LrApplyLifeEvent(LrWorldState *w, uint16_t slot, const LrLifeEvent *e,
     TrainerJourneyCore core = w->cores[slot];
     TrainerJourneyExtended ext = w->exts[slot];
     LrTrainerRuntime runtime = w->runtime[slot];
+    bool richProgress = false, riseProgress = false;
     for (unsigned i = 0; i < e->effectCount; i++) {
         const LrEventEffect *f = &e->effects[i];
         int32_t amount = f->amount;
         switch (f->kind) {
         case LR_FX_NEED: core.needs[f->index] = (uint8_t)clamp(core.needs[f->index] + amount, 100); break;
-        case LR_FX_RESOURCE: runtime.resources = (uint8_t)clamp(runtime.resources + amount * (amount > 0 ? scaleDays : 1), 100); break;
+        case LR_FX_RESOURCE: {
+            uint8_t old = runtime.resources;
+            runtime.resources = (uint8_t)clamp(runtime.resources + amount * (amount > 0 ? scaleDays : 1), 100);
+            richProgress |= runtime.resources > old;
+            break;
+        }
         case LR_FX_TRAINING: runtime.trainingPoints = (uint32_t)clamp((int32_t)runtime.trainingPoints + amount * scaleDays, 1000000); break;
         case LR_FX_CAPTURE_INTENT: runtime.capturesPending = (uint16_t)clamp(runtime.capturesPending + amount, 65535); break;
         case LR_FX_EVOLVE_INTENT: runtime.evolutionsPending = (uint16_t)clamp(runtime.evolutionsPending + amount, 65535); break;
@@ -154,11 +148,15 @@ bool LrApplyLifeEvent(LrWorldState *w, uint16_t slot, const LrLifeEvent *e,
         case LR_FX_GOAL: LrSetGoal(&core, f->index, LR_GOAL_TARGET_NONE); break;
         case LR_FX_REGION: core.currentRegion = f->index; break;
         case LR_FX_STRESS: core.stress = (uint8_t)clamp(core.stress + amount, 100); break;
-        case LR_FX_BADGE: core.badgesEarned = (uint8_t)clamp(core.badgesEarned + amount, 8); break;
+        case LR_FX_BADGE: {
+            uint8_t old = core.badgesEarned;
+            core.badgesEarned = (uint8_t)clamp(core.badgesEarned + amount, 8);
+            riseProgress |= core.badgesEarned > old;
+            break;
+        }
         case LR_FX_PHASE: core.journeyPhase = f->index; if (f->index == LR_PHASE_RETIRED) runtime.active = 0; break;
         }
     }
-    sync_goals(&core, &runtime, minute);
     LrWorldEvent event = {0};
     event.minute = minute; event.contentId = e->id; event.titleId = e->titleId;
     event.kind = e->kind; event.region = core.currentRegion; event.place = e->place;
@@ -171,5 +169,8 @@ bool LrApplyLifeEvent(LrWorldState *w, uint16_t slot, const LrLifeEvent *e,
     runtime.historyHead = (uint8_t)((head + 1) % LR_HISTORY_SIZE);
     if (runtime.historyCount < LR_HISTORY_SIZE) runtime.historyCount++;
     w->cores[slot] = core; w->exts[slot] = ext; w->runtime[slot] = runtime;
+    LrSyncGoals(w, slot, minute);
+    if (richProgress) LrRecordGoalProgress(w, slot, LR_GOAL_RICH, LR_GOAL_TARGET_NONE, minute);
+    if (riseProgress) LrRecordGoalProgress(w, slot, LR_GOAL_RISE, LR_GOAL_TARGET_NONE, minute);
     return true;
 }

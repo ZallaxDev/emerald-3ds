@@ -13,6 +13,7 @@
 #include "lr_runtime.h"
 #include "lr_needs.h"
 #include "lr_life_events.h"
+#include "lr_daily.h"
 #include "lr_save.h"
 
 #endif
