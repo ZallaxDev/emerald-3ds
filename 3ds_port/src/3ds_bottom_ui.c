@@ -88,6 +88,7 @@
 #include "safari_zone.h"
 #include "save.h"
 #include "script.h"
+#include "field_message_box.h"
 #include "sound.h"
 #include "sprite.h"
 #include "string_util.h"
@@ -2532,6 +2533,12 @@ static bool8 FieldIdle(void)
 {
     return gMain.callback2 == CB2_Overworld && !ArePlayerFieldControlsLocked() && !ScriptContext_IsEnabled()
         && gPlayerAvatar.tileTransitionState == T_NOT_MOVING && !gPaletteFade.active && !CtrStartMenu_Busy();
+}
+
+/* A field message box is up (field_message_box.c), as when a person talks. */
+static bool8 FieldMessageUp(void)
+{
+    return gMain.callback2 == CB2_Overworld && !IsFieldMessageBoxHidden() && !gPaletteFade.active;
 }
 
 static u16 EnabledScreens(void)
@@ -6847,6 +6854,16 @@ static u8 ProcessTouch(u8 mode)
         {
             if (!sTouch.dragged)
                 PressOnce(A_BUTTON);
+            return HIT_NONE;
+        }
+        /* A message in the field (a sign, a person, the text after a
+         * battle): a tap off the buttons goes on with it, as in a battle.
+         * Only what waits on a message takes it (CtrMenu_PostAck), never a
+         * menu or a yes/no box, and the map picks no place meanwhile. */
+        if (mode == MODE_FIELD && !sTouch.dragged && FieldMessageUp()
+         && (sTouch.pressed == HIT_NONE || sTouch.pressed == HIT_MAP || sTouch.pressed == HIT_MAP_PANEL))
+        {
+            CtrMenu_PostAck();
             return HIT_NONE;
         }
         if ((!sTouch.dragged || sTouch.pressed == HIT_MAP) && HitTest(sTouch.lastX, sTouch.lastY) == sTouch.pressed)
