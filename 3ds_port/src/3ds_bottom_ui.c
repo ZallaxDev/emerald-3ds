@@ -97,6 +97,7 @@
 #include "text_window.h"
 #include "util.h"
 #include "wild_encounter.h"
+#include "constants/battle_frontier.h"
 #include "constants/items.h"
 #include "constants/maps.h"
 #include "constants/moves.h"
@@ -176,6 +177,15 @@ extern const struct PokedexEntry gPokedexEntries[];
 enum { START_POKEDEX, START_POKEMON, START_BAG, START_POKENAV, START_PLAYER, START_NONE = 0xFF };
 bool8 CtrTrainerCard_FieldOpen(void);
 u8 CtrTrainerCard_Side(void);
+/* frontier_pass.c: the game's pass with the classic menus; the bottom
+ * screen's own pass with the new ones (3ds_bottom_field.inc). */
+bool8 CtrFrontierPass_FieldOpen(void);
+u8 CtrFrontierPass_Waiting(void);
+void CtrFrontierPass_Tap(int x, int y);
+const u8 *CtrFrontierPass_Facility(u8 id, const u8 **description, s16 *x, s16 *y, bool8 *square);
+bool8 CtrFrontierPass_PlayerHead(s16 *x, s16 *y);
+void CtrFrontierPass_PlayRecord(void);
+bool32 CanCopyRecordedBattleSaveData(void);
 bool8 CtrBottom_NativeMenus(void);
 
 #define W CTR_BOTTOM_WIDTH
@@ -524,6 +534,18 @@ static struct
     u8 *badgeTiles;
     u8 *trainerPic[2];
     Pal trainerPicPal[2];
+    /* The Frontier Pass (the new menus'): its map's picture, the mark on a
+     * facility, the player's head, the symbols. */
+    u8 *passMapTiles;
+    u32 passMapTileCount;
+    u16 *passMapMap;
+    Pal passPal[8];
+    u8 *passMarkTiles;
+    Pal passMarkPal;
+    u8 *passHeadTiles;
+    Pal passHeadPal[2];
+    u8 *medalTiles;
+    Pal medalPal[2];
 } sRes;
 
 static void LoadItemIcon(Icon *icon, const void *tiles, const void *pal)
@@ -635,6 +657,19 @@ static void LoadResources(void)
 
     PalFile("trainer_card/badges.gbapal", &sRes.badgePal, 1, FALSE);
     sRes.badgeTiles = UnlzFile("trainer_card/badges.4bpp.lz", NULL);
+
+    sRes.passMapTiles = UnlzFile("frontier_pass/map_screen.4bpp.lz", &size);
+    sRes.passMapTileCount = size / 32;
+    sRes.passMapMap = UnlzFile("frontier_pass/map_screen.bin.lz", NULL);
+    PalFile("frontier_pass/bg.gbapal", sRes.passPal, 8, FALSE);
+    sRes.passMarkTiles = UnlzFile("frontier_pass/map_cursor.4bpp.lz", NULL);
+    PalFile("frontier_pass/map_cursor.gbapal", &sRes.passMarkPal, 1, FALSE);
+    sRes.passHeadTiles = UnlzFile("frontier_pass/map_heads.4bpp.lz", NULL);
+    PalFile("frontier_pass/map_heads.gbapal", &sRes.passHeadPal[MALE], 1, FALSE);
+    PalFile("frontier_pass/map_heads_female.gbapal", &sRes.passHeadPal[FEMALE], 1, FALSE);
+    sRes.medalTiles = UnlzFile("frontier_pass/medals.4bpp.lz", NULL);
+    PalFile("frontier_pass/silver.gbapal", &sRes.medalPal[0], 1, FALSE);
+    PalFile("frontier_pass/gold.gbapal", &sRes.medalPal[1], 1, FALSE);
 
     LoadGenderResources();
     LoadBattleArt();
@@ -2311,6 +2346,14 @@ typedef struct
     u8 hasDex, stars, badges, minutes, cardBack, hofMinutes;
     /* The Frontier Pass held, for PASS under FLIP. */
     u8 hasPass;
+    /* The card's screen with the new menus: the card, the Frontier Pass or
+     * its map (CARD_VIEW_*); what the pass describes (PASS_PICK_*), the
+     * facility on its map, whether a battle is recorded, the Battle Points,
+     * the symbols (two bits a facility: none, silver, gold) and the player's
+     * head on the map (passHead, the GBA screen's coordinates). */
+    u8 cardView, passPick, passMapPos, passRecord, passHead;
+    s16 passHeadX, passHeadY;
+    u16 battlePoints, symbols;
     u16 id, dex, hours, hofHours, linkWins, linkLosses, trades, pokeblocks, contests;
     u32 money;
     /* Save and options. */
@@ -2422,6 +2465,23 @@ static u8 sOptPage;
 static u8 sOptSub;
 /* The trainer card's back is up. */
 static bool8 sCardBack;
+/*
+ * The card's screen with the new menus: the card, or the Frontier Pass
+ * (PASS under FLIP) drawn here as the game's has it - its symbols and
+ * Battle Points, its MAP of the Battle Frontier and the recorded battle -
+ * or that map. What the pass describes, the map's facility, and whether a
+ * battle is recorded (read from the save as the pass opens, not every frame).
+ */
+enum { CARD_VIEW_CARD, CARD_VIEW_PASS, CARD_VIEW_MAP };
+enum
+{
+    PASS_PICK_SYMBOLS,
+    PASS_PICK_POINTS,
+    PASS_PICK_NO_RECORD,
+    PASS_PICK_SYMBOL,   /* + facility */
+};
+static u8 sCardView, sPassPick, sPassMapPos;
+static bool8 sPassRecord;
 
 /* What a row shows, for the redraw to notice a change: its value, or for
  * one with its own text, a sum of that text. */
@@ -2483,6 +2543,13 @@ enum
     HIT_OK,
     HIT_YES,
     HIT_NO,
+    HIT_PASS_MAP,          /* the Frontier Pass's MAP */
+    HIT_PASS_RECORD,       /* its recorded battle */
+    HIT_PASS_BACK,         /* back to the card, or from the map to the pass */
+    HIT_PASS_POINTS,       /* its Battle Points: what they are */
+    HIT_PASS_SYMBOLS,      /* its symbols' title: what they are */
+    HIT_PASS_SYMBOL = 0x40,   /* + facility: its symbol */
+    HIT_PASS_FACILITY = 0x48, /* + facility: on its map */
     HIT_ROW = 0x50,        /* + visible list row */
     HIT_ACTION = 0x60,     /* + action cursor */
     HIT_MOVE = 0x70,       /* + move slot */
@@ -2599,7 +2666,9 @@ static u8 CurrentMode(void)
         return MODE_POKENAV;
     if (CtrPokedex_IsOpen())
         return MODE_POKEDEX;
-    if (CtrTrainerCard_FieldOpen())
+    /* The game's card, or its Frontier Pass (PLAYER with the pass): the
+     * classic menus' own screens, in the window. */
+    if (CtrTrainerCard_FieldOpen() || CtrFrontierPass_FieldOpen())
         return MODE_CARD;
     /* The summary from the field's or a battle's party menu, drawn here; a
      * classic one has the whole screen, as from the boxes (MODE_STORAGE). */
@@ -3118,6 +3187,22 @@ static u16 CappedStat(u8 stat, u32 cap)
     u32 value = GetGameStat(stat);
 
     return value > cap ? cap : value;
+}
+
+/* The Frontier Pass, as frontier_pass.c's AllocateFrontierPassData fills
+ * it in; on its map, where the player's head is. */
+static void SnapshotPass(ViewState *s)
+{
+    s->hasPass = TRUE;
+    s->cardView = sCardView;
+    s->passPick = sPassPick;
+    s->passMapPos = sPassMapPos;
+    s->passRecord = sPassRecord;
+    s->battlePoints = gSaveBlock2Ptr->frontier.battlePoints;
+    for (int i = 0; i < NUM_FRONTIER_FACILITIES; ++i)
+        s->symbols |= (FlagGet(FLAG_SYS_TOWER_SILVER + i * 2) + FlagGet(FLAG_SYS_TOWER_GOLD + i * 2)) << (2 * i);
+    if (sCardView == CARD_VIEW_MAP)
+        s->passHead = CtrFrontierPass_PlayerHead(&s->passHeadX, &s->passHeadY);
 }
 
 /* The card's back, as trainer_card.c's SetPlayerCardData fills it in. */
@@ -3674,9 +3759,16 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
         switch (s->screen)
         {
         case SCR_CARD:
-            SnapshotCard(s);
-            if (sCardBack)
-                SnapshotCardBack(s);
+            /* The pass drawn here is the new menus'; the classic ones open
+             * the game's. */
+            if (sCardView != CARD_VIEW_CARD && !sClassicMenus)
+                SnapshotPass(s);
+            else
+            {
+                SnapshotCard(s);
+                if (sCardBack)
+                    SnapshotCardBack(s);
+            }
             break;
         case SCR_SAVE:
             SnapshotSave(s);
@@ -6233,6 +6325,66 @@ MainCallback CtrBottom_LeaveTo(MainCallback field)
 }
 
 
+/* The Frontier Pass, from PASS on the card: whether a battle is recorded is
+ * read from the save now, once, as the game's pass does as it opens. */
+static void OpenPass(void)
+{
+    sCardView = CARD_VIEW_PASS;
+    sPassPick = PASS_PICK_SYMBOLS;
+    sPassRecord = CanCopyRecordedBattleSaveData() != FALSE;
+    PlaySE(SE_SELECT);
+}
+
+/* BACK, B or the card's own button: the map to the pass, the pass to the card. */
+static void PassBack(void)
+{
+    sCardView = sCardView == CARD_VIEW_MAP ? CARD_VIEW_PASS : CARD_VIEW_CARD;
+    PlaySE(SE_PC_OFF);
+}
+
+/* A touch on the pass or its map, as the game's cursor and A would have it. */
+static void PassTap(u8 id)
+{
+    if (id == HIT_PASS_BACK)
+        PassBack();
+    else if (sShown.cardView == CARD_VIEW_MAP)
+    {
+        if (id >= HIT_PASS_FACILITY && id < HIT_PASS_FACILITY + NUM_FRONTIER_FACILITIES
+         && id - HIT_PASS_FACILITY != sPassMapPos)
+        {
+            sPassMapPos = id - HIT_PASS_FACILITY;
+            PlaySE(SE_DEX_SCROLL);
+        }
+    }
+    else if (id == HIT_PASS_MAP)
+    {
+        /* The map opens on its first facility, as the game's does. */
+        sCardView = CARD_VIEW_MAP;
+        sPassMapPos = 0;
+        PlaySE(SE_SELECT);
+    }
+    else if (id == HIT_PASS_RECORD)
+    {
+        if (!sShown.passRecord)
+        {
+            sPassPick = PASS_PICK_NO_RECORD;
+            PlaySE(SE_SELECT);
+        }
+        else if (FieldIdle())
+        {
+            PlaySE(SE_SELECT);
+            CtrFrontierPass_PlayRecord();
+        }
+    }
+    else if (id == HIT_PASS_POINTS || id == HIT_PASS_SYMBOLS
+          || (id >= HIT_PASS_SYMBOL && id < HIT_PASS_SYMBOL + NUM_FRONTIER_FACILITIES))
+    {
+        sPassPick = id == HIT_PASS_POINTS ? PASS_PICK_POINTS : id == HIT_PASS_SYMBOLS ? PASS_PICK_SYMBOLS
+                  : PASS_PICK_SYMBOL + (id - HIT_PASS_SYMBOL);
+        PlaySE(SE_SELECT);
+    }
+}
+
 /* Touches use the displayed snapshot and only act on enabled controls. */
 static void MapExtrasTap(u8 id)
 {
@@ -6476,7 +6628,10 @@ static void Activate(u8 id, u8 mode)
             return;
         }
         /* The game's card: its own button closes it (B on its front, A on
-         * its back); any other closes it for that screen. */
+         * its back); any other closes it for that screen. The pass the
+         * same with B, which on its map goes back to the pass first: the
+         * map closing for another screen goes straight to it
+         * (CtrFrontierPass_Leave). */
         if (mode == MODE_CARD)
         {
             u8 side = CtrTrainerCard_Side();
@@ -6484,6 +6639,12 @@ static void Activate(u8 id, u8 mode)
             if (side != 2)
             {
                 PressOnce(side == 0 ? B_BUTTON : A_BUTTON);
+                if (screen != SCR_CARD)
+                    LeaveForScreen(screen);
+            }
+            else if (!CtrTrainerCard_FieldOpen() && CtrFrontierPass_Waiting())
+            {
+                PressOnce(B_BUTTON);
                 if (screen != SCR_CARD)
                     LeaveForScreen(screen);
             }
@@ -6567,7 +6728,16 @@ static void Activate(u8 id, u8 mode)
         if (screen == SCR_SAVE && sScreen != SCR_SAVE)
             OpenSave();
         if (screen == SCR_CARD && sScreen != SCR_CARD)
+        {
             sCardBack = FALSE;
+            sCardView = CARD_VIEW_CARD;
+        }
+        /* Its own button on the pass or its map: back a step, as B. */
+        else if (screen == SCR_CARD && sCardView != CARD_VIEW_CARD)
+        {
+            PassBack();
+            return;
+        }
         if (screen != sScreen)
             PlaySE(SE_SELECT);
         sScreen = screen;
@@ -6601,14 +6771,11 @@ static void Activate(u8 id, u8 mode)
             sCardBack = !sCardBack;
             PlaySE(SE_SELECT);
         }
-        /* PASS, the game's Frontier Pass, opened as PLAYER opens it
-         * (start_menu.c CtrShowCardOrPass). */
-        else if (id == HIT_YES && sShown.hasPass && FieldIdle() && CtrStartMenu_Available())
-        {
-            PlaySE(SE_SELECT);
-            StartPlan(PLAN_START, START_PLAYER);
-            BeginSession(FALSE);
-        }
+        /* PASS: the Frontier Pass, drawn here. */
+        else if (id == HIT_YES && sShown.hasPass && sShown.cardView == CARD_VIEW_CARD)
+            OpenPass();
+        else if (sShown.cardView != CARD_VIEW_CARD)
+            PassTap(id);
         break;
     case SCR_NUZLOCKE:
         NuzlockeTap(id);
@@ -6829,8 +6996,14 @@ static u8 ProcessTouch(u8 mode)
         {
             u8 side = CtrTrainerCard_Side();
 
-            if (!sTouch.dragged && side != 2)
-                PressOnce(side == 0 ? A_BUTTON : B_BUTTON);
+            if (CtrTrainerCard_FieldOpen())
+            {
+                if (!sTouch.dragged && side != 2)
+                    PressOnce(side == 0 ? A_BUTTON : B_BUTTON);
+            }
+            /* The pass and its map take the tap where it is. */
+            else if (!sTouch.dragged)
+                CtrFrontierPass_Tap(sTouch.lastX - CTR_BOTTOM_WIN_X, sTouch.lastY - CTR_BOTTOM_WIN_Y);
             return HIT_NONE;
         }
         if (mode == MODE_POKENAV && InGameWindow(sTouch.startX, sTouch.startY))
@@ -7380,6 +7553,7 @@ void CtrBottom_SoftReset(void)
     sOptSub = 0;
     sOptFocus = 0;
     sCardBack = FALSE;
+    sCardView = CARD_VIEW_CARD;
     sPickMapsec = MAPSEC_NONE;
     sEncView = FALSE;
     sEncPage = 0;

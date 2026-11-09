@@ -12,7 +12,13 @@
   (issue #236). By @Johannes-Sch.
 - The Frontier Pass: PLAYER opens it again once the player has it, and the
   bottom screen's trainer card has a PASS plate under FLIP. By @DannyM90
-  (pull request #212).
+  (pull request #212). The pass then opened on the top screen and left the
+  menus stuck: with the classic menus PLAYER now opens the game's pass in
+  the bottom screen's window, as the card, its map and its card included,
+  worked by touch; with the new menus PASS shows the pass on the bottom
+  screen in their style - the symbols and Battle Points with what each one
+  is, the Battle Frontier's map with its facilities, and the recorded
+  battle.
 - OPTIONS: SPEED EFFECTS (SCENE) turns off the speed lines and the zoom blur
   of the 3D battle's entrance. By @DannyM90 (pull request #232).
 - German: the Frontier map screen gets its own tiles, not the pass's picture.

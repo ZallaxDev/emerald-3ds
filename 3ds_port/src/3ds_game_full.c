@@ -422,6 +422,15 @@ void CtrCentredCard_SetVBlankCallback(IntrCallback callback)
     SetCentredCallback(callback, CtrTrainerCard_FieldOpen() ? CTR_CENTRED_CARD : CTR_CENTRED_PLAIN);
 }
 
+/* frontier_pass.c: the pass PLAYER opens with the classic menus, its map and
+ * the card it opens, in the bottom screen's window as the card. */
+bool8 CtrFrontierPass_FieldOpen(void);
+
+void CtrCentredPass_SetVBlankCallback(IntrCallback callback)
+{
+    SetCentredCallback(callback, CtrFrontierPass_FieldOpen() ? CTR_CENTRED_CARD : CTR_CENTRED_PLAIN);
+}
+
 IntrCallback CtrPokedex_VBlankCallback(void);
 bool8 CtrPokedex_IsCaughtMonPage(void);
 

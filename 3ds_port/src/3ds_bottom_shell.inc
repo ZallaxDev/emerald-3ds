@@ -253,6 +253,9 @@ static void DrawTitle(const ViewState *s)
         else
             title = SectionName(SCR_MAP);
     }
+    /* The Frontier Pass and its map, on the card's screen. */
+    else if (s->screen == SCR_CARD && s->cardView != CARD_VIEW_CARD)
+        title = gText_BattleFrontier;
     else
         title = SectionName(s->screen < SCR_COUNT ? s->screen : SCR_MAP);
     if (TitleToggles(s))
