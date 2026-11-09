@@ -37,18 +37,17 @@ diff --git a/src/battle_message.c b/src/battle_message.c
 diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
 --- a/src/battle_script_commands.c
 +++ b/src/battle_script_commands.c
-@@ -3255,6 +3255,65 @@
+@@ -3255,6 +3255,64 @@
          gBattlescriptCurrInstr += 7;
  }
  
 +#ifdef PLATFORM_3DS
-+// Party Exp Share (OPTIONS, ENHANCEMENTS): as in the later games, the whole
-+// party gains EXP, those that did not fight under one line, and the held
-+// Exp. Share adds nothing. The values follow the option's order, so a save
-+// from when it was OFF/ON keeps ON as GEN VI.
++// Modern Exp Share (OPTIONS, ENHANCEMENTS): as in the later games, the whole
++// party shares - full EXP for who fought, half for the rest - and the rest
++// gain under one line. The held Exp. Share then adds nothing.
 +enum
 +{
-+    EXP_SHARE_OFF,      // the GBA rule: who fought split it, the held Exp. Share takes half
++    EXP_SHARE_OFF,      // Exp share off
 +    EXP_SHARE_GEN_VI,   // full EXP for each that fought, half for each of the rest
 +    EXP_SHARE_BALANCED, // who fought split the full EXP, the rest split half of it
 +};
@@ -58,7 +57,7 @@ diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
 +static bool8 sTeamExpShown;
 +
 +// Who the party share gives EXP to: not eggs, the fainted or those at Lv. 100.
-+static bool8 GetsPartyExp(struct Pokemon *mon)
++static bool8 ShouldGetPartyExp(struct Pokemon *mon)
 +{
 +    return GetMonData(mon, MON_DATA_SPECIES) != SPECIES_NONE
 +        && !GetMonData(mon, MON_DATA_IS_EGG)
@@ -77,7 +76,7 @@ diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
 +    case EXP_SHARE_BALANCED:
 +        for (i = 0; i < PARTY_SIZE; i++)
 +        {
-+            if (!GetsPartyExp(&gPlayerParty[i]))
++            if (!ShouldGetPartyExp(&gPlayerParty[i]))
 +                continue;
 +            if (gBitTable[i] & sentIn)
 +                fought++;
@@ -103,7 +102,7 @@ diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
  static void Cmd_getexp(void)
  {
      u16 item;
-@@ -3312,6 +3371,11 @@
+@@ -3312,6 +3370,11 @@
  
              calculatedExp = gSpeciesInfo[gBattleMons[gBattlerFainted].species].expYield * gBattleMons[gBattlerFainted].level / 7;
  
@@ -115,7 +114,7 @@ diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
              if (viaExpShare) // at least one mon is getting exp via exp share
              {
                  *exp = SAFE_DIV(calculatedExp / 2, viaSentIn);
-@@ -3333,6 +3397,9 @@
+@@ -3333,6 +3396,9 @@
              gBattleScripting.getexpState++;
              gBattleStruct->expGetterMonId = 0;
              gBattleStruct->sentInPokes = sentIn;
@@ -125,7 +124,7 @@ diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
          }
          // fall through
      case 2: // set exp value to the poke in expgetter_id and print message
-@@ -3345,7 +3412,15 @@
+@@ -3345,7 +3411,15 @@
              else
                  holdEffect = GetItemHoldEffect(item);
  
@@ -133,7 +132,7 @@ diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
 +            // Party Exp Share: everyone it gives EXP to. Lv. 100 is skipped
 +            // here as the next branch would.
 +            if (PARTY_EXP_SHARE()
-+             ? !GetsPartyExp(&gPlayerParty[gBattleStruct->expGetterMonId])
++             ? !ShouldGetPartyExp(&gPlayerParty[gBattleStruct->expGetterMonId])
 +             : (holdEffect != HOLD_EFFECT_EXP_SHARE && !(gBattleStruct->sentInPokes & 1)))
 +#else
              if (holdEffect != HOLD_EFFECT_EXP_SHARE && !(gBattleStruct->sentInPokes & 1))
@@ -141,7 +140,7 @@ diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
              {
                  *(&gBattleStruct->sentInPokes) >>= 1;
                  gBattleScripting.getexpState = 5;
-@@ -3374,6 +3449,15 @@
+@@ -3374,6 +3448,15 @@
                      else
                          gBattleMoveDamage = 0;
  
@@ -157,7 +156,7 @@ diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
                      if (holdEffect == HOLD_EFFECT_EXP_SHARE)
                          gBattleMoveDamage += gExpShareExp;
                      if (holdEffect == HOLD_EFFECT_LUCKY_EGG)
-@@ -3414,12 +3498,27 @@
+@@ -3414,12 +3497,27 @@
                          gBattleStruct->expGetterBattlerId = 0;
                      }
  
