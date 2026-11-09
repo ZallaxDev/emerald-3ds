@@ -10,6 +10,7 @@
 #include "lr_memory.h"
 #include "lr_affect.h"
 #include "lr_chronicle.h"
+#include "lr_runtime.h"
 #include "lr_save.h"
 
 #endif
