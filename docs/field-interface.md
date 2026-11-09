@@ -5,7 +5,8 @@ All three switches are OFF by default, on the second ENHANCEMENTS page.
 - **AREA WILD LIST**: tap the map name plate to switch between the Hoenn map
   and the current map's encounters. Tap the list to cycle available methods:
   grass, Surf, Rock Smash, Old Rod, Good Rod and Super Rod. Pages with no table
-  are omitted. Species not yet seen in the Pokédex appear as `???`.
+  are omitted. Species not yet seen in the Pokédex appear as `???`; species
+  already caught carry the Pokédex's own Poké Ball mark.
 - **REPEL STEPS**: the name plate shows the game's remaining Repel steps while
   a Repel is active. This reads `VAR_REPEL_STEP_COUNT` and never changes it.
 - **CLOCK NOTICE**: a dismissible banner reports when an existing game's saved

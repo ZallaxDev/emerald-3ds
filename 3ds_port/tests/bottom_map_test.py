@@ -90,6 +90,7 @@ typedef bool bool8;
 #define CTR_TEXT(english, spanish, french, italian, portuguese, german, japanese) spanish
 #define SPECIES_NONE 0
 #define FLAG_GET_SEEN 0
+#define FLAG_GET_CAUGHT 1
 #define VAR_REPEL_STEP_COUNT 0x4021
 #define VAR_ALTERING_CAVE_WILD_SET 0x403E
 #define MAP_GROUP(map) ((map) >> 8)
@@ -180,9 +181,16 @@ static const struct WildPokemonInfo *CtrEncounters_Land(const struct WildPokemon
 }
 static unsigned sMapped;
 static u16 CtrEncounters_DisplaySpecies(u16 species) {return sMapped&&species==1?(sMapped==2?2:7):species;}
-static int8_t sSeen[256];
+static int8_t sSeen[256],sCaught[256];
 static u16 SpeciesToNationalPokedexNum(u16 species) {return species+100;}
-static int8_t GetSetPokedexFlag(u16 national,u8 caseId) {assert(caseId==FLAG_GET_SEEN);return sSeen[national];}
+/* FLAG_GET_CAUGHT clears a species' flags when they disagree, as the game's does:
+ * so it is never to be asked of a species not seen, as a save could say caught. */
+static int8_t GetSetPokedexFlag(u16 national,u8 caseId) {
+    if(caseId==FLAG_GET_SEEN)return sSeen[national];
+    assert(caseId==FLAG_GET_CAUGHT);
+    assert(sSeen[national]);
+    return sCaught[national];
+}
 static int sExtra[3];
 static int CtrExtras_Get(const char *key) {
     if(!strcmp(key,"map_encounters"))return sExtra[0];
@@ -280,6 +288,21 @@ static void TestTables(void) {
     sSeen[101]=1;sMapped=true;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
     assert(s.enc[0].species==7&&!s.enc[0].seen&&s.enc[0].percent==40);
     sSeen[107]=1;memset(&s,0,sizeof(s));SnapshotEncounters(&s);assert(s.enc[0].seen);
+    /* Caught is its own state, of the species the list shows; a save saying
+     * caught but not seen stays unseen (GetSetPokedexFlag's assert: not asked). */
+    assert(s.enc[0].seen==ENC_SEEN);
+    sCaught[107]=1;memset(&s,0,sizeof(s));SnapshotEncounters(&s);assert(s.enc[0].seen==ENC_CAUGHT);
+    {ViewState a,b;memset(&a,0,sizeof(a));memset(&b,0,sizeof(b));
+     SnapshotEncounters(&a);sCaught[107]=0;SnapshotEncounters(&b);
+     assert(memcmp(&a,&b,sizeof(a))!=0);       /* a catch redraws the list */
+     sCaught[107]=1;memset(&b,0,sizeof(b));SnapshotEncounters(&b);
+     assert(memcmp(&a,&b,sizeof(a))==0);}      /* and nothing else does */
+    sCaught[107]=0;
+    sSeen[107]=0;sCaught[107]=1;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
+    assert(s.enc[0].species==7&&s.enc[0].seen==ENC_UNSEEN);
+    sSeen[107]=1;sCaught[107]=0;
+    /* No padding for stack bytes to survive in (the rows are compared whole). */
+    assert(sizeof(EncRow)==6);
     sMapped=2;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
     assert(s.encCount==5&&s.enc[0].species==2&&s.enc[0].percent==70);
     assert(s.enc[0].minLevel==2&&s.enc[0].maxLevel==4);

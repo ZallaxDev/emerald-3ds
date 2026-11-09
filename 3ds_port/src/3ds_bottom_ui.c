@@ -2254,6 +2254,10 @@ enum { HELD_NONE, HELD_ITEM, HELD_MAIL };
 /* A row of the map's wild Pokemon list (map extras): a species of one
  * method's table, its slots' levels and chances added up. */
 #define ENC_ROWS 12   /* a method's rows, at most */
+/* What the Pokedex knows of a row's species: its seen field. No field of its
+ * own for caught: the rows are copied from the stack and compared with memcmp,
+ * and one more u8 would add a padding byte that holds whatever was there. */
+enum { ENC_UNSEEN, ENC_SEEN, ENC_CAUGHT };
 typedef struct
 {
     u16 species;
@@ -3491,9 +3495,18 @@ static void SnapshotEncounters(ViewState *s)
         memcpy(s->enc, rows + page * ENC_SHOWN, s->encCount * sizeof(EncRow));
         break;
     }
-    /* Only what the Pokedex has seen is named. */
+    /* Only what the Pokedex has seen is named, and what it has caught marked.
+     * FLAG_GET_CAUGHT clears the species' flags when they disagree: asked only
+     * of a species seen, whose flags agree, it reads and changes nothing. */
     for (u8 i = 0; i < s->encCount; ++i)
-        s->enc[i].seen = GetSetPokedexFlag(SpeciesToNationalPokedexNum(s->enc[i].species), FLAG_GET_SEEN) != 0;
+    {
+        u16 national = SpeciesToNationalPokedexNum(s->enc[i].species);
+
+        if (GetSetPokedexFlag(national, FLAG_GET_SEEN) == 0)
+            s->enc[i].seen = ENC_UNSEEN;
+        else
+            s->enc[i].seen = GetSetPokedexFlag(national, FLAG_GET_CAUGHT) != 0 ? ENC_CAUGHT : ENC_SEEN;
+    }
 }
 
 static void SnapshotMapExtras(ViewState *s)

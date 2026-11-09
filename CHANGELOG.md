@@ -45,6 +45,9 @@
   the world as before. Signposts' shadows no longer float off the sign on
   drawn terrain. The option changes without a restart, the world redrawing
   itself a piece at a time.
+||||||| 413b916
+- Area wild list: a species already caught carries the Pokédex list's ball
+  mark, so the list tells caught from only seen. By @Johannes-Sch.
 
 ## 0.5.0 — 2026-10-29
 
