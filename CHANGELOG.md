@@ -8,6 +8,10 @@
 ||||||| 413b916
 - Voxel: rotating gates in Fortree Gym and the Trick House lie on the ground,
   turned as in 2D, so the puzzles can be read (issue #238). By @Johannes-Sch.
+||||||| 413b916
+- Voxel: the orbs' light in the Magma Hideout and the Seafloor Cavern is
+  translucent as in 2D, no longer a solid box hiding the legendary as it wakes
+  (issue #236). By @Johannes-Sch.
 - Local wireless: every language of one release links. The build's id, which
   two systems must share to play together, is now made from the patch set
   and the port's code rather than the ROM-derived executable and data, so
