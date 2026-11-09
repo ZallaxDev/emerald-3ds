@@ -67,7 +67,7 @@ The cap prevents a months-long absence from stalling the first frame, while stil
 - Persist `personalSeed`, `teamVersion` and the full derived state. A load must never re-derive a journey differently.
 - Same seed plus same saved state produces bitwise-identical arrays; this is asserted by `test_mind` (same seed → `memcmp == 0`).
 - Never store pointers. Never store host-specific padding: `LR_PACKED` plus the size assertions make the record layout portable.
-- `historyTimestamps[]` is a `u8` game-day inherited from the spec; it wraps every 256 days. Consumers must compare it modularly, `(uint8_t)(now - ts)`, which is correct across the wrap.
+- `historyTimestamps[]` is a legacy `u8` game-day inherited from the spec; modular comparison is only valid for ages less than 256 days. Week 3 uses full-width sidecar history for suppression, not this legacy array.
 
 ## 7. Corruption recovery
 
@@ -81,3 +81,49 @@ The cap prevents a months-long absence from stalling the first frame, while stil
 - Little-endian only; PC (x86-64/ARM64), 3DS (ARM11) and mobile (ARM64) are all little-endian.
 - `LR_PACKED` is GCC/Clang-specific; a new compiler must define it (the header raises a compile-time error otherwise).
 - The sidecar blob can be embedded in a larger save container later without changing the record format; only the header/offset layer moves.
+
+## 9. Week 3 complete-state in-memory snapshot (implemented separately)
+
+`LrSnapshotWrite`/`LrSnapshotRestore` encode authoritative replay state, not
+platform save files. The v1 trainer-only codec above is unchanged. A future
+world save envelope must include this information; saving only the v1 trainer
+blob cannot reproduce Week 3 simulation. Dual-slot I/O remains unimplemented.
+
+Snapshot header, little-endian (20 bytes): magic `LRS1` (4), schema=1 (u16),
+trainer count (u16, at most80), content version (u32), payload bytes (u32),
+CRC-32 of payload (u32). Unknown schema/content versions fail without mutation.
+Payload field order and widths:
+
+1. nowMinute u32, rtcHighWater u64 (UTC minutes), rtcAnchored u8, RNG state u32:
+   **17 bytes**. Maximum game minute94371839 (last minute of day65535).
+2. Per used trainer, sorted unique full u16 trainer IDs:
+   - Existing packed core87 and extended233, little-endian as above.
+   - Traits: aggression, disposition, devotion, smarts, wealth, rank,
+     traitsRolled (seven u8), then pastEvents u16: **9 bytes**.
+   - Runtime: active/resources/skill/collector (four u8); trainingPoints u32;
+     capturesPending/evolutionsPending/reorganizationsPending/hostileTo (four
+     u16); trackedGoalTypes[2] u8; trackedGoalTargets[2] u16;
+     goalProgressMinute[2] u32; historyEventIds[60] u16;
+     historyPhraseIds[60] u16; historyMinutes[60] u32;
+     historyCount/historyHead (two u8): **512 bytes**.
+   - Total per trainer: **841 bytes**, no host padding.
+3. Chronicle count/head (two u16), nextId u32: **8 bytes**.
+4. All500 physical chronicle slots, **40 bytes each**: id/minute (two u32),
+   contentId/titleId (two u16), lineIds[4] u16, people[4] u16,
+   kind/region/place (three u8), factions[4] u8, outcomes[4] u8, heard u8.
+   Unused slots are encoded as zero and nonzero unused wire slots are rejected.
+
+Total bytes: **20045 + 841 * trainerCount**, at most87325 for80 trainers.
+Trainer arrays beyond trainerCount are omitted and restored as zero. No pointer,
+text callback, immutable catalog, or native struct padding is serialized.
+Buffers/world/output-size storage must not overlap. Writer validates before
+writing; decoder checks length/header/CRC and every semantic field in a first
+pass before touching the destination. Parsing uses per-record scratch, not a
+full world on the stack. A second pass restores deterministic zeroed storage.
+
+Offline time is counted once per closed interval at one game minute per real
+minute; the adapter anchors on close and resumes on open. Backward clock
+movement yields no time until the saved high-water mark is exceeded. Forward
+changes count as elapsed time; this is not tamper-proof clock enforcement.
+Game calendar advances separately during active play. Both the high-water mark
+and simulation RNG belong in the future world save container.
