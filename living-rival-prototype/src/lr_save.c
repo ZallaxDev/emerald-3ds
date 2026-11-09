@@ -42,6 +42,7 @@ uint32_t LrCrc32(const void *data, size_t len) {
 bool LrSaveEncode(const TrainerJourneyCore *cores, const TrainerJourneyExtended *exts,
                   uint16_t count, uint8_t *out, size_t cap, size_t *outLen) {
     if (!out || !outLen) return false;
+    if (count > 0 && (!cores || !exts)) return false;
 
     const size_t record = LrSaveRecordBytes();
     const size_t payload = (size_t)count * record;

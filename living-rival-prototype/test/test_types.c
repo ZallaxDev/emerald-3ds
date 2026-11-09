@@ -5,12 +5,13 @@
 
 int main(void) {
     LR_CHECK_EQ_INT(sizeof(TrainerJourneyCore), 87);
-    LR_CHECK_EQ_INT(sizeof(TrainerJourneyExtended), 221);
+    LR_CHECK_EQ_INT(sizeof(TrainerJourneyExtended), 233);
 
     /* No padding: bytes are contiguous and deterministic. */
     LR_CHECK_EQ_INT((int)(offsetof(TrainerJourneyCore, universalFacets) - offsetof(TrainerJourneyCore, hate)), 3);
     LR_CHECK_EQ_INT((int)(offsetof(TrainerJourneyCore, facetFlags) + sizeof(uint32_t)), 87);
     LR_CHECK_EQ_INT((int)(offsetof(TrainerJourneyExtended, historyTimestamps) + LR_HISTORY_SIZE), 221);
+    LR_CHECK_EQ_INT((int)(offsetof(TrainerJourneyExtended, memoryTargetFacets) + LR_MAX_MEMORIES), 233);
 
     /* Zero-initialization is the documented pre-roll state. */
     TrainerJourneyCore core;

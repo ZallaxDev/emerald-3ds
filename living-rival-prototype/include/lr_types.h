@@ -60,6 +60,7 @@ typedef struct LR_PACKED {
     uint8_t  memoryLongTerm[LR_MAX_MEMORIES];
     uint8_t  historyTextIds[LR_HISTORY_SIZE];
     uint8_t  historyTimestamps[LR_HISTORY_SIZE];
+    uint8_t  memoryTargetFacets[LR_MAX_MEMORIES];
 } TrainerJourneyExtended;
 
 typedef struct {
@@ -75,6 +76,6 @@ typedef struct {
 
 #define LR_STATIC_ASSERT(cond, name) typedef char lr_static_assert_##name[(cond) ? 1 : -1]
 LR_STATIC_ASSERT(sizeof(TrainerJourneyCore) == 87, core_size);
-LR_STATIC_ASSERT(sizeof(TrainerJourneyExtended) == 221, extended_size);
+LR_STATIC_ASSERT(sizeof(TrainerJourneyExtended) == 233, extended_size);
 
 #endif

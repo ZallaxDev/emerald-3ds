@@ -2,6 +2,7 @@
 #include "lr_test.h"
 #include "lr_types.h"
 #include "lr_mind.h"
+#include "lr_facet_tables.h"
 
 static void make_core(TrainerJourneyCore *c, TrainerJourneyExtended *e,
                       uint8_t temp, uint8_t region, uint8_t faction) {
@@ -151,6 +152,70 @@ int main(void) {
     a.regionFacetCount = 3;
     LrDeriveValues(&a, &ea);
     LR_CHECK_EQ_INT(a.values[LR_VALUE_SPIRIT], 0);
+
+    /* Out-of-range temperament/archetype must not index profile tables. */
+    make_core(&a, &ea, 200, LR_REGION_HOENN, LR_FACTION_GYM_CIRCUIT);
+    a.archetype = 200;
+    LrRollMind(&a, &ea, 0, 9);
+    for (int i = 0; i < LR_UNIVERSAL_FACET_COUNT; i++)
+        LR_CHECK(a.universalFacets[i] >= 0 && a.universalFacets[i] <= 100);
+    for (int i = 0; i < LR_MAX_REGION_FACETS; i++)
+        LR_CHECK(ea.regionFacets[i] >= 0 && ea.regionFacets[i] <= 100);
+    for (int i = 0; i < LR_MAX_FACTION_FACETS; i++)
+        LR_CHECK(ea.factionFacets[i] >= 0 && ea.factionFacets[i] <= 100);
+    for (int i = 0; i < LR_UNIVERSAL_FACET_COUNT + (int)a.regionFacetCount + (int)a.factionFacetCount; i++) {
+        int32_t b = LrComputeBaseline(&a, (uint16_t)i);
+        LR_CHECK(b >= 15 && b <= 85);
+    }
+
+    /* Stored facet counts larger than the arrays must not read past them. */
+    memset(&a, 0, sizeof(a));
+    memset(&ea, 0xAA, sizeof(ea));
+    a.mindRolled = 1;
+    a.temperament = LR_TEMP_STEADY;
+    a.archetype = LR_ARCH_GRINDER;
+    a.homeRegion = LR_REGION_KANTO;
+    a.faction = LR_FACTION_GYM_CIRCUIT;
+    a.regionFacetCount = 3;
+    a.factionFacetCount = 255;
+    LR_CHECK_EQ_INT(LrGetFacet(&a, &ea, 11), ea.factionFacets[0]);
+    LR_CHECK_EQ_INT(LrGetFacet(&a, &ea, 8 + LR_MAX_REGION_FACETS + LR_MAX_FACTION_FACETS + 5), 50);
+
+    a.regionFacetCount = 255;
+    a.factionFacetCount = 0;
+    a.faction = LR_FACTION_INDEPENDENT;
+    LR_CHECK_EQ_INT(LrGetFacet(&a, &ea, 8 + 200), 50);
+    LR_CHECK_EQ_INT(LrComputeBaseline(&a, 8 + 200), 50);
+
+    /* A fresh roll has no mentor or students. */
+    make_core(&a, &ea, LR_TEMP_STEADY, LR_REGION_KANTO, LR_FACTION_INDEPENDENT);
+    LrRollMind(&a, &ea, 0, 1);
+    LR_CHECK_EQ_INT(a.mentorId, LR_NO_TRAINER);
+    LR_CHECK_EQ_INT(a.studentIds[0], LR_NO_TRAINER);
+    LR_CHECK_EQ_INT(a.studentIds[1], LR_NO_TRAINER);
+
+    /* Rolled=false traits are identical to no traits at all. */
+    LrTrainerTraits zeroed;
+    memset(&zeroed, 0, sizeof(zeroed));
+    make_core(&a, &ea, LR_TEMP_STEADY, LR_REGION_KANTO, LR_FACTION_INDEPENDENT);
+    LrRollMind(&a, &ea, 0, 77);
+    make_core(&b, &eb, LR_TEMP_STEADY, LR_REGION_KANTO, LR_FACTION_INDEPENDENT);
+    LrRollMind(&b, &eb, &zeroed, 77);
+    LR_CHECK(memcmp(&a, &b, sizeof(a)) == 0);
+
+    /* Short and empty profiles roll cleanly. */
+    const uint8_t regions[2] = { LR_REGION_JOHTO, LR_REGION_HOENN };
+    const uint8_t factions[2] = { LR_FACTION_INDEPENDENT, LR_FACTION_GYM_CIRCUIT };
+    for (int k = 0; k < 2; k++) {
+        for (uint32_t s = 0; s < 50; s++) {
+            make_core(&a, &ea, LR_TEMP_PROUD, regions[k], factions[k]);
+            LrRollMind(&a, &ea, 0, s);
+            LR_CHECK_EQ_INT(a.regionFacetCount, LrRegionFacetCount(regions[k]));
+            LR_CHECK_EQ_INT(a.factionFacetCount, LrFactionFacetCount(factions[k]));
+            for (int i = 0; i < a.regionFacetCount; i++) LR_CHECK(ea.regionFacets[i] <= 100);
+            for (int i = 0; i < a.factionFacetCount; i++) LR_CHECK(ea.factionFacets[i] <= 100);
+        }
+    }
 
     return lr_test_summary("test_mind");
 }

@@ -8,13 +8,13 @@
 | Structure | Size |
 |---|---|
 | `TrainerJourneyCore` | **87 B** |
-| `TrainerJourneyExtended` | **221 B** |
-| One record (core + extended) | **308 B** |
-| 80 marked trainers | **24,640 B (24.1 KiB)** |
-| Blob (16 B header + 80 records) | **24,656 B (24.1 KiB)** |
-| Dual-slot total | **49,312 B (48.2 KiB)** |
+| `TrainerJourneyExtended` | **233 B** |
+| One record (core + extended) | **320 B** |
+| 80 marked trainers | **25,600 B (25.0 KiB)** |
+| Blob (16 B header + 80 records) | **25,616 B (25.0 KiB)** |
+| Dual-slot total | **51,232 B (50.0 KiB)** |
 
-`LIVING_RIVAL_PROTOTYPE.md` estimated 72 B / 56 B, but that does not match its own field list. The real layout is the field list, and the sizes above are enforced at compile time by `LR_STATIC_ASSERT` in `include/lr_types.h`. `milestoneFlags` was widened from `u16` to `u32` because the milestone list needs about 20 bits.
+`LIVING_RIVAL_PROTOTYPE.md` estimated 72 B / 56 B, but that does not match its own field list. The real layout is the field list, and the sizes above are enforced at compile time by `LR_STATIC_ASSERT` in `include/lr_types.h`. `milestoneFlags` was widened from `u16` to `u32` because the milestone list needs about 20 bits. `memoryTargetFacets[12]` was appended after the Week 1 review because the design's `Memory` struct persists a `targetFacet` that `Drift` consumes; the extended record had omitted it.
 
 ## 2. Blob layout
 
@@ -25,9 +25,9 @@ All integers are little-endian. The blob is a 16-byte header followed by `count`
 | 0 | 4 | magic `0x314A524C` (`"LRJ1"` bytes) |
 | 4 | 2 | version (`LR_SAVE_VERSION`, currently 1) |
 | 6 | 2 | record count |
-| 8 | 4 | payload bytes (`count * 308`) |
+| 8 | 4 | payload bytes (`count * 320`) |
 | 12 | 4 | CRC-32 of the payload |
-| 16 | `count * 308` | records: `core` (87 B) then `extended` (221 B) |
+| 16 | `count * 320` | records: `core` (87 B) then `extended` (233 B) |
 
 The CRC is the standard reflected CRC-32 (polynomial `0xEDB88320`, init `0xFFFFFFFF`, final XOR `0xFFFFFFFF`); the known vector `"123456789"` → `0xCBF43926` is pinned in `test/test_save.c`.
 
@@ -38,7 +38,7 @@ Records can be `memcpy`-ed because both structs are `LR_PACKED` and the save con
 - Version 1 is the baseline.
 - **Unknown or older version → discard the blob and re-initialize every journey at `LR_PHASE_ROOKIE`.** Never crash, never partially apply a blob you do not understand.
 - New fields append to the structs and bump the version.
-- Per-version migration functions live in `src/lr_save.c`; the decode path dispatches on the header version before copying records.
+- Per-version migration functions will live in `src/lr_save.c`; today v1 has no predecessor and any other version is rejected rather than migrated.
 - Never renumber enumerators in `lr_enums.h`: their numeric values are part of the on-disk format.
 
 ## 4. Dual-slot write protocol
@@ -56,7 +56,7 @@ On load, validate magic, version, count, payload length and CRC on the active sl
 ## 5. Load and bounded catch-up
 
 1. Decode the active slot into the in-memory arrays.
-2. Compute elapsed game minutes since `lastSeenMinute`.
+2. Compute elapsed game minutes since the surrounding save container's `lastSeenMinute` (world-level state, not part of the per-trainer record).
 3. Call the simulation with the bounded catch-up rules before the first frame: at most 48 hourly ticks and 7 daily ticks per load (`LrSimulateTo`, Week 3).
 4. Persist the new `lastSeenMinute` with the next save.
 
@@ -67,10 +67,11 @@ The cap prevents a months-long absence from stalling the first frame, while stil
 - Persist `personalSeed`, `teamVersion` and the full derived state. A load must never re-derive a journey differently.
 - Same seed plus same saved state produces bitwise-identical arrays; this is asserted by `test_mind` (same seed → `memcmp == 0`).
 - Never store pointers. Never store host-specific padding: `LR_PACKED` plus the size assertions make the record layout portable.
+- `historyTimestamps[]` is a `u8` game-day inherited from the spec; it wraps every 256 days. Consumers must compare it modularly, `(uint8_t)(now - ts)`, which is correct across the wrap.
 
 ## 7. Corruption recovery
 
-- Validate magic, version, count, payload length and CRC before touching any destination buffer. `LrSaveDecode` returns `false` and leaves outputs untouched on any failure (pinned by `test_save`).
+- Validate magic, version, count, payload length and CRC before touching any destination buffer. `LrSaveDecode` returns `false` and leaves outputs untouched on any failure; `test_save` pins the untouched contract on the magic and CRC paths.
 - If both slots are corrupt, re-initialize journeys at `LR_PHASE_ROOKIE` rather than failing the boot.
 - CRC covers the payload only; the header is validated field by field.
 

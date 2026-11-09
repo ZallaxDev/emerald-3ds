@@ -8,12 +8,31 @@ static int clamp100(int v) {
     return v;
 }
 
+static uint8_t safe_temperament(uint8_t t) {
+    return t < LR_TEMPERAMENT_COUNT ? t : (uint8_t)LR_TEMP_STEADY;
+}
+
+static uint8_t safe_archetype(uint8_t a) {
+    return a < LR_ARCHETYPE_COUNT ? a : (uint8_t)LR_ARCH_GRINDER;
+}
+
+static int safe_region_count(uint8_t count) {
+    return count > LR_MAX_REGION_FACETS ? LR_MAX_REGION_FACETS : (int)count;
+}
+
+static int safe_faction_count(uint8_t count) {
+    return count > LR_MAX_FACTION_FACETS ? LR_MAX_FACTION_FACETS : (int)count;
+}
+
 void LrRollMind(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
                 const LrTrainerTraits *traits, uint32_t seed) {
     LrRng rng;
     LrRngSeed(&rng, seed);
 
-    const int8_t *u = LrUniversalTemperamentOffsets(core->temperament);
+    const uint8_t temp = safe_temperament(core->temperament);
+    const uint8_t arch = safe_archetype(core->archetype);
+
+    const int8_t *u = LrUniversalTemperamentOffsets(temp);
     int v[LR_UNIVERSAL_FACET_COUNT];
     for (int i = 0; i < LR_UNIVERSAL_FACET_COUNT; i++) v[i] = 50 + u[i];
 
@@ -22,7 +41,7 @@ void LrRollMind(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
     int rv[LR_MAX_REGION_FACETS];
     for (int i = 0; i < LR_MAX_REGION_FACETS; i++) {
         if (i < (int)core->regionFacetCount) {
-            rv[i] = 50 + rp->temperamentOffsets[core->temperament][i];
+            rv[i] = 50 + rp->temperamentOffsets[temp][i];
             core->regionFacetIds[i] = (uint8_t)i;
         } else {
             rv[i] = 0;
@@ -35,7 +54,7 @@ void LrRollMind(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
     int fv[LR_MAX_FACTION_FACETS];
     for (int i = 0; i < LR_MAX_FACTION_FACETS; i++) {
         if (i < (int)core->factionFacetCount) {
-            fv[i] = 50 + fp->archetypeOffsets[core->archetype][i];
+            fv[i] = 50 + fp->archetypeOffsets[arch][i];
             core->factionFacetIds[i] = (uint8_t)i;
         } else {
             fv[i] = 0;
@@ -101,26 +120,35 @@ void LrRollMind(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
     core->goal1_target = LR_GOAL_TARGET_NONE;
     core->goal2_target = LR_GOAL_TARGET_NONE;
 
+    core->mentorId = LR_NO_TRAINER;
+    core->studentIds[0] = LR_NO_TRAINER;
+    core->studentIds[1] = LR_NO_TRAINER;
+
     core->mindRolled = 1;
 }
 
 int32_t LrComputeBaseline(const TrainerJourneyCore *core, uint16_t globalFacetIndex) {
     if (!core->mindRolled) return 50;
 
+    const uint8_t temp = safe_temperament(core->temperament);
+    const uint8_t arch = safe_archetype(core->archetype);
+    const int regionCount = safe_region_count(core->regionFacetCount);
+    const int factionCount = safe_faction_count(core->factionFacetCount);
+
     int idx = (int)globalFacetIndex;
     if (idx < LR_UNIVERSAL_FACET_COUNT)
-        return 50 + LrUniversalTemperamentOffsets(core->temperament)[idx];
+        return 50 + LrUniversalTemperamentOffsets(temp)[idx];
 
     idx -= LR_UNIVERSAL_FACET_COUNT;
-    if (idx < (int)core->regionFacetCount) {
+    if (idx < regionCount) {
         const LrRegionProfile *rp = LrGetRegionProfile(core->homeRegion);
-        return 50 + rp->temperamentOffsets[core->temperament][idx];
+        return 50 + rp->temperamentOffsets[temp][idx];
     }
 
-    idx -= (int)core->regionFacetCount;
-    if (idx < (int)core->factionFacetCount) {
+    idx -= regionCount;
+    if (idx < factionCount) {
         const LrFactionProfile *fp = LrGetFactionProfile(core->faction);
-        return 50 + fp->archetypeOffsets[core->archetype][idx];
+        return 50 + fp->archetypeOffsets[arch][idx];
     }
 
     return 50;
@@ -130,20 +158,25 @@ int32_t LrGetFacet(const TrainerJourneyCore *core, const TrainerJourneyExtended 
                    uint16_t globalFacetIndex) {
     if (!core->mindRolled) return 50;
 
+    const int regionCount = safe_region_count(core->regionFacetCount);
+    const int factionCount = safe_faction_count(core->factionFacetCount);
+
     int idx = (int)globalFacetIndex;
     if (idx < LR_UNIVERSAL_FACET_COUNT) return core->universalFacets[idx];
 
     idx -= LR_UNIVERSAL_FACET_COUNT;
-    if (idx < (int)core->regionFacetCount) return ext->regionFacets[idx];
+    if (idx < regionCount) return ext->regionFacets[idx];
 
-    idx -= (int)core->regionFacetCount;
-    if (idx < (int)core->factionFacetCount) return ext->factionFacets[idx];
+    idx -= regionCount;
+    if (idx < factionCount) return ext->factionFacets[idx];
 
     return 50;
 }
 
 void LrDeriveValues(TrainerJourneyCore *core, const TrainerJourneyExtended *ext) {
     const LrRegionProfile *rp = LrGetRegionProfile(core->homeRegion);
+    const int regionCount = safe_region_count(core->regionFacetCount);
+    const int factionCount = safe_faction_count(core->factionFacetCount);
 
     int social = core->universalFacets[LR_FACET_SOCIAL];
     int loyalty = core->universalFacets[LR_FACET_LOYALTY];
@@ -152,33 +185,32 @@ void LrDeriveValues(TrainerJourneyCore *core, const TrainerJourneyExtended *ext)
     int ambition = core->universalFacets[LR_FACET_AMBITION];
 
     int family = social;
-    if (rp->familyFacet >= 0 && (int)rp->familyFacet < (int)core->regionFacetCount)
+    if (rp->familyFacet >= 0 && (int)rp->familyFacet < regionCount)
         family = (social + ext->regionFacets[rp->familyFacet]) / 2;
     core->values[LR_VALUE_FAMILY] = (int8_t)((family - 50) / 16);
 
     int faction = loyalty;
-    if (core->factionFacetCount > 0) {
+    if (factionCount > 0) {
         int sum = 0;
-        for (int i = 0; i < (int)core->factionFacetCount; i++)
-            sum += ext->factionFacets[i];
-        faction = (loyalty + sum / (int)core->factionFacetCount) / 2;
+        for (int i = 0; i < factionCount; i++) sum += ext->factionFacets[i];
+        faction = (loyalty + sum / factionCount) / 2;
     }
     core->values[LR_VALUE_FACTION] = (int8_t)((faction - 50) / 16);
 
     int money = ambition;
-    if (rp->moneyFacet >= 0 && (int)rp->moneyFacet < (int)core->regionFacetCount)
+    if (rp->moneyFacet >= 0 && (int)rp->moneyFacet < regionCount)
         money = (ambition + ext->regionFacets[rp->moneyFacet]) / 2;
     core->values[LR_VALUE_MONEY] = (int8_t)((money - 50) / 16);
 
     core->values[LR_VALUE_HONOUR] = (int8_t)(((honesty + disc) / 2 - 50) / 16);
 
     int law = honesty;
-    if (rp->lawFacet >= 0 && (int)rp->lawFacet < (int)core->regionFacetCount)
+    if (rp->lawFacet >= 0 && (int)rp->lawFacet < regionCount)
         law = (honesty + ext->regionFacets[rp->lawFacet]) / 2;
     core->values[LR_VALUE_LAW] = (int8_t)((law - 50) / 16);
 
     int spirit = 0;
-    if (rp->spiritFacet >= 0 && (int)rp->spiritFacet < (int)core->regionFacetCount)
+    if (rp->spiritFacet >= 0 && (int)rp->spiritFacet < regionCount)
         spirit = (ext->regionFacets[rp->spiritFacet] - 50) / 16;
     core->values[LR_VALUE_SPIRIT] = (int8_t)spirit;
 
