@@ -1,5 +1,6 @@
 #include "lr_mind.h"
 #include "lr_facet_tables.h"
+#include "lr_goals.h"
 #include "lr_rng.h"
 
 static int clamp100(int v) {
@@ -115,16 +116,12 @@ void LrRollMind(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
         core->needs[i] = (uint8_t)LrRandomRange(&rng, 10, 45);
     core->stress = (uint8_t)LrRandomRange(&rng, 5, 25);
 
-    core->goal1_type = LR_GOAL_NONE;
-    core->goal2_type = LR_GOAL_NONE;
-    core->goal1_target = LR_GOAL_TARGET_NONE;
-    core->goal2_target = LR_GOAL_TARGET_NONE;
+    core->mindRolled = 1;
+    LrInitGoals(core, traits);
 
     core->mentorId = LR_NO_TRAINER;
     core->studentIds[0] = LR_NO_TRAINER;
     core->studentIds[1] = LR_NO_TRAINER;
-
-    core->mindRolled = 1;
 }
 
 int32_t LrComputeBaseline(const TrainerJourneyCore *core, uint16_t globalFacetIndex) {

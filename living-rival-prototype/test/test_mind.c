@@ -53,8 +53,9 @@ int main(void) {
             for (int i = 0; i < LR_NEED_COUNT; i++)
                 LR_CHECK(a.needs[i] >= 10 && a.needs[i] <= 44);
             LR_CHECK(a.stress >= 5 && a.stress <= 24);
-            LR_CHECK_EQ_INT(a.goal1_type, LR_GOAL_NONE);
             LR_CHECK_EQ_INT(a.goal2_type, LR_GOAL_NONE);
+            LR_CHECK(a.goal1_type == LR_GOAL_NONE || a.goal1_type == LR_GOAL_SETTLE ||
+                     a.goal1_type == LR_GOAL_RISE || a.goal1_type == LR_GOAL_RICH);
         }
     }
 
@@ -216,6 +217,14 @@ int main(void) {
             for (int i = 0; i < a.factionFacetCount; i++) LR_CHECK(ea.factionFacets[i] <= 100);
         }
     }
+
+    /* RollMind installs an initial goal from thresholds. */
+    make_core(&a, &ea, LR_TEMP_COWARD, LR_REGION_KANTO, LR_FACTION_INDEPENDENT);
+    LrRollMind(&a, &ea, 0, 11);
+    LR_CHECK_EQ_INT(a.goal1_type, LR_GOAL_SETTLE);
+    make_core(&a, &ea, LR_TEMP_STEADY, LR_REGION_KANTO, LR_FACTION_INDEPENDENT);
+    LrRollMind(&a, &ea, 0, 11);
+    LR_CHECK_EQ_INT(a.goal1_type, LR_GOAL_NONE);
 
     return lr_test_summary("test_mind");
 }
