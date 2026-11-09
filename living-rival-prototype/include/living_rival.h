@@ -4,5 +4,6 @@
 #include "lr_rng.h"
 #include "lr_enums.h"
 #include "lr_facet_tables.h"
+#include "lr_types.h"
 
 #endif
