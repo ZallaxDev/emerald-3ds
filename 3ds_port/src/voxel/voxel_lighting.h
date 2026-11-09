@@ -24,11 +24,29 @@ extern VoxelSun gVoxelSun;
  * away from the sun. The same number, so a wall and the shadow it casts on
  * the grass read as the same shade. */
 #define VOXEL_AMBIENT 0.70f
+/* HIGH's ambient: the light of a cast shadow and of a face turned from the
+ * sun, under the GPU's shadow map (ctr_voxel.c "Shadow map"). The map takes
+ * the sun's own part away and never darkens below it, so a face the sun
+ * does not reach looks the same whatever the map reads there. */
+#define VOXEL_SHADOW_MAP_DARK 0.62f
 
+/*
+ * SHADOW QUALITY (OPTIONS): VOXEL_SHADOWS_LOW is the original lighting, cast
+ * and drawn as it always was; VOXEL_SHADOWS_HIGH leaves the shadows to the
+ * GPU's shadow map (ctr_voxel.c "Shadow map") and bakes only the crowns'
+ * and the contact shading, at HIGH's ambient. True if the quality changed:
+ * every chunk's signature changes with it (VoxelLighting_Hash), so they are
+ * built again.
+ */
+enum { VOXEL_SHADOWS_LOW, VOXEL_SHADOWS_HIGH };
+bool VoxelLighting_SetQuality(int quality);
+int VoxelLighting_Quality(void);
 /* Forgets every cached caster and sample. Required whenever the world they
  * were read from changes - a live tile, the set of maps or their origins -
  * and needed at no other time: the caches outlive builds and frames. */
 void VoxelLighting_Reset(void);
+/* True if the sun changed: every ray is cast again from then on, while the
+ * casters and the contact AO, which no sun moves, are kept. */
 bool VoxelLighting_SetSun(float dx, float dz, float strength, uint32_t key);
 uint32_t VoxelLighting_Hash(int x0, int z0, int x1, int z1);
 float VoxelLighting_Sample(float x, float y, float z);
@@ -49,6 +67,10 @@ unsigned VoxelLighting_SurfaceTests(void);
 /* The light a face gets from the sun for its facing alone, VOXEL_AMBIENT for
  * a face turned away. The normal need not be unit length. */
 float VoxelLighting_Face(float nx, float ny, float nz);
+/* The light of what the sun does not reach, for this sun and quality:
+ * VOXEL_AMBIENT on LOW, VOXEL_SHADOW_MAP_DARK on HIGH, towards 1 as the sun
+ * weakens. */
+float VoxelLighting_Ambient(void);
 void VoxelLighting_Quad(VoxelBuilder *builder, const VoxelVertex *a,
                          const VoxelVertex *b, const VoxelVertex *c,
                          const VoxelVertex *d);

@@ -48,7 +48,6 @@ typedef struct
     uint32_t frames, tiles, uploads, sprites, errors, stereo;
     /* Layer cells drawn through the compositor's own program (FastCells). */
     uint32_t cells;
-    uint16_t display;
     float fps, cpuMs, gpuMs, waitMs;
     /* Of the last frame: when the GPU was set to work, from the frame's start
      * (its early start, or FrameEnd); whether the voxel world was updated. */
@@ -63,7 +62,198 @@ typedef struct
      * slider asked for in percent, and why it was less than that
      * (CTR_FLAT_*: flattened groups, or no 3D at all). */
     uint8_t mode, route, sliderPct, flat;
+    /* The frame was the voxel world's warm-up black (route CTR_ROUTE_BLANK
+     * for it), which holds the field's fade in (3ds_game_full.c,
+     * HoldFieldFade). Not the black of a frame whose voxel world was not
+     * drawn while the 2D terrain was left stale (FieldCamera_TerrainStale). */
+    bool warmupBlack;
+    /* Where in the frame the GPU was set to work before FrameEnd
+     * (CTR_EARLY_*, 0: at FrameEnd), and the surfaces a consumer wanted and
+     * went without this frame (CTR_DENIED_* bits): the dispatch and the
+     * residency of the engine reform's stage 1. */
+    uint8_t gpuEarly, denied;
+    /* Of the frame just made, for perf.bin v6: the time in the layer walks
+     * and in the sprites' (with the slider up, both eyes' and the slots'),
+     * why its scenery and its text were composed or kept (CTR_SCENE_WHY_*,
+     * CTR_TEXT_WHY_*, as bits), why the slots' regions were composed again or
+     * could not be kept (bits, 3ds_video.c: SLOTS_AGAIN_*, SLOTS_UNKEPT_*), and
+     * the nocache bits a test build had off (BATTLE_TOGGLES). */
+    float bgMs, objMs;
+    uint16_t sceneWhy, textWhy;
+    uint8_t slotsAgain, slotsUnkept;
+    uint32_t toggles;
 } CtrVideoStats;
+
+/*
+ * Why a battle frame's scenery was composed, or that it was kept: bits of one
+ * frame (all its composes together), in perf.bin v6 and by bit in the PERF seg
+ * lines. First the parts of the kept scenery's key that differ, in the order
+ * of 3ds_video.c's SCENE_PART_*; with the key the same, what the check after
+ * it found. Bits say what was seen, not one cause: over the world a frame can
+ * show a part of the key before the fill, and NEW is only set alone.
+ */
+enum
+{
+    CTR_SCENE_WHY_REG,      /* the key: registers and the view */
+    CTR_SCENE_WHY_SCROLL,   /* the key: the layers' scroll */
+    CTR_SCENE_WHY_LINES,    /* the key: the line by line tables */
+    CTR_SCENE_WHY_DRAWABLE, /* the key: what the layers decide beyond the registers */
+    CTR_SCENE_WHY_VERSION,  /* the key: the scenery's published version */
+    CTR_SCENE_WHY_KEY,      /* the key, in no part: a term outside them (the OBJ window slotted) */
+    CTR_SCENE_WHY_PALETTE,  /* a palette bank a layer names changed */
+    CTR_SCENE_WHY_STAMP,    /* the stamps of everything else: other BG palettes, tile banks */
+    CTR_SCENE_WHY_VRAM,     /* a layer's map or the characters it names */
+    CTR_SCENE_WHY_STILL,    /* a layer's measures (StillHolds) */
+    CTR_SCENE_WHY_PATH,     /* not a keepable frame: bitmap mode, the OBJ window, composed flat */
+    CTR_SCENE_WHY_NEW,      /* nothing kept under this key */
+    CTR_SCENE_WHY_SLOTS,    /* over the world: the slots took the scenery's columns */
+    CTR_SCENE_WHY_KEPT,     /* a scenery was kept */
+    CTR_SCENE_WHY_COMPOSED, /* a scenery was composed */
+    CTR_SCENE_WHY_LAYER,    /* the blending layer apart was composed */
+    CTR_SCENE_WHY_COUNT
+};
+
+/*
+ * The same of the 3D battle's text pass, composed once for both eyes: the
+ * parts of its key that differ, its pictures, the stamps and VRAM after it.
+ */
+enum
+{
+    CTR_TEXT_WHY_REG,       /* the key: DISPCNT, the text layers' registers, windows, blending */
+    CTR_TEXT_WHY_VIEW,      /* the key: the view, the clip, the passes */
+    CTR_TEXT_WHY_PALETTE,   /* the key: the banks the text names, and the fade */
+    CTR_TEXT_WHY_BOX,       /* the key: where the HD box is, hidden or sliding */
+    CTR_TEXT_WHY_PICTURES,  /* the HD box's pictures */
+    CTR_TEXT_WHY_BG_STAMP,  /* sBgOtherStamp */
+    CTR_TEXT_WHY_BANK_STAMP,/* sTilemapBankStamp */
+    CTR_TEXT_WHY_VRAM,      /* the text layers' maps or characters */
+    CTR_TEXT_WHY_FADE,      /* the frame was fading: the reasons above come with it */
+    CTR_TEXT_WHY_PATH,      /* not keepable: over the world, no text kept, line effects, the OBJ window */
+    CTR_TEXT_WHY_KEPT,      /* the text was kept */
+    CTR_TEXT_WHY_COUNT
+};
+
+/*
+ * Each queue drain of a submission (QueueDone), for perf.bin v6: when it came
+ * and the last point the frame had queued everything up to then, so that a
+ * drain says all of that was done by its time. A point stands only after a
+ * split: what is recorded and not yet split is not in the queue. The drain
+ * in which citro3d swapped the top screen has CTR_STAGE_SWAP too.
+ */
+enum
+{
+    CTR_STAGE_NONE,     /* nothing marked yet: uploads, the frame's first lists */
+    CTR_STAGE_LAYERS,   /* the layer textures and the OBJ window */
+    CTR_STAGE_WORLD,    /* the voxel world's geometry */
+    CTR_STAGE_POST,     /* the world to the screen: blur, glow, shadows, curtain */
+    CTR_STAGE_SCENE,    /* the battle's scenery */
+    CTR_STAGE_LOGICAL,  /* the logical surface: the text box, with the slots in 3D */
+    CTR_STAGE_END,      /* FrameEnd reached: the eyes and the transfers */
+    CTR_STAGE_COUNT
+};
+#define CTR_STAGE_SWAP 0x80u
+/* A submission's drains kept by name: the first ones and always the last. */
+#define CTR_DRAIN_LIST 12
+
+/* Where the GPU was started early (GpuStartEarly), from the first point of
+ * the frame that had work queued for it. */
+enum
+{
+    CTR_EARLY_NONE,         /* at FrameEnd, as Citro3D does */
+    CTR_EARLY_LAYERS,       /* the layer textures and the OBJ window, before the 2D composition */
+    CTR_EARLY_SCENE,        /* the 2D battle's scene, before its text box and boxes */
+    CTR_EARLY_EYE,          /* the logical surface composed, before its blit and the other eye */
+    CTR_EARLY_PLANE,        /* the furthest depth plane, before the nearer ones */
+    CTR_EARLY_TRANSITION,   /* a battle transition's field, before its own picture */
+    CTR_EARLY_VOXEL,        /* the voxel world drawn (field, transition) */
+    CTR_EARLY_BATTLE,       /* the 3D battle's scenery and the battle over the world */
+    CTR_EARLY_COUNT
+};
+
+/* A consumer that wanted its surface (or the voxel world its VRAM) and went
+ * without it this frame: the tile walk, flat 3D, the scene composed whole. */
+enum
+{
+    CTR_DENIED_LAYER = 1 << 0,  /* a layer texture: its background walked tile by tile */
+    CTR_DENIED_PLANE = 1 << 1,  /* the depth planes of a 2D screen in 3D */
+    CTR_DENIED_BOTTOM = 1 << 2, /* the bottom screen's surface */
+    CTR_DENIED_SCENE = 1 << 3,  /* the battle scene's surface */
+    CTR_DENIED_KEEPER = 1 << 4, /* the surface keeping a 2D battle's scenery */
+    CTR_DENIED_BLEND = 1 << 5,  /* the 2D battle's blending layer */
+    CTR_DENIED_SLOTS = 1 << 6,  /* the 3D battle's sprite slots */
+    CTR_DENIED_VOXEL = 1 << 7,  /* the voxel world's arenas, wanted and not claimed: the world
+                                 * parked (the field in 2D), or up without its
+                                 * building pages (the houses drawn flat) */
+    CTR_DENIED_KINDS = 8
+};
+
+/*
+ * What CtrVideo_Present did in one game frame, for the frame profiler
+ * (3ds_prof.c), taken once a frame (CtrVideo_TakeFrameReport) and cleared
+ * then: a frame that did not present reports nothing, instead of the last
+ * presentation's figures over again. Every GPU submission (one C3D frame)
+ * has an id; the drawing time FrameBegin reads belongs to the submission
+ * before it, and says so (gpuOf), so that it is never paired with the wrong
+ * frame's start.
+ */
+enum
+{
+    CTR_PRESENT_NONE,       /* Present not called (a hidden frame), or FrameBegin refused */
+    CTR_PRESENT_HELD,       /* the top screen held: nothing new drawn up there */
+    CTR_PRESENT_DRAWN,      /* a frame drawn and submitted */
+};
+
+typedef struct CtrVideoFrameReport
+{
+    uint8_t kind;           /* CTR_PRESENT_* */
+    /* The first picture after a held top screen or a resume: the interval to
+     * the picture before spans that time, and is no frame interval. */
+    bool boundary;
+    uint32_t image;         /* a drawn frame's submission, 0 = no new picture */
+    /* What the CPU waited for in Present (FrameBegin, or the VBlank while held). */
+    float waitMs;
+    /* Read at this frame's FrameBegin: the drawing time of submission gpuOf
+     * (0 = none read), and when that submission set the GPU going, from its
+     * own frame's start. */
+    uint32_t gpuOf;
+    float gpuMs, gpuStartMs;
+    /* When submission gpuOf's queue last drained, which is when citro3d
+     * swapped the top screen for it (from its frame's start; 0 = no swap
+     * seen), and the refreshes the top screen repeated before it, by the
+     * VBlanks its swap and the submission's before took effect at
+     * (shownKnown false: not known - one of the two swapped no top screen,
+     * or a held top screen or a resume came between their submissions). */
+    float gpuDoneMs;
+    uint8_t shownLost;
+    bool shownKnown;
+    /* Its swap took effect at the same VBlank as the submission's before: that
+     * picture never reached the screen (shownKnown is false then). */
+    bool shownTwice;
+    /* Submission gpuOf's queue drains: how many (of them at most
+     * CTR_DRAIN_LIST kept, the last in the last place), each as ticks from its
+     * frame's start and its CTR_STAGE_*; and the drains since the last report
+     * that found the ring full. */
+    uint8_t drains, drainsLost;
+    uint8_t drainStage[CTR_DRAIN_LIST];
+    uint32_t drainTicks[CTR_DRAIN_LIST];
+} CtrVideoFrameReport;
+
+void CtrVideo_TakeFrameReport(CtrVideoFrameReport *out);
+/* Back from sleep or the HOME Menu: the next picture's interval spans it. */
+void CtrVideo_NoteResume(void);
+
+/*
+ * Per-frame counts of GPU work (the linker wraps of citro3d, 3ds_gpumem.c),
+ * read and cleared by the frame profiler: draw calls, render target
+ * switches, and copies/transfers queued. `targets` counts C3D_FrameDrawOn,
+ * which C2D_SceneBegin calls with the target unchanged too; `switches` the
+ * changes SceneOn really made. `vertices`: those the draw calls named.
+ */
+typedef struct
+{
+    uint32_t draws, targets, copies, switches, vertices;
+} CtrGpuCounts;
+void CtrGpuCounts_Take(CtrGpuCounts *out);
 
 enum
 {
@@ -105,9 +295,9 @@ void CtrVideo_Present(void);
 /* Keep showing the last top-screen frame instead of the game's screen. */
 void CtrVideo_HoldTop(bool hold);
 bool CtrVideo_TopHeld(void);
-/* The held frame darkened, once, until the hold is let go: the battle scene
- * under its party menu, summary or bag. */
-void CtrVideo_DimHeldTop(void);
+/* The top screen darkened under an arrow to the bottom screen, which has the
+ * player's attention (a held top is darkened anyway, a few frames in). */
+void CtrVideo_LookDown(bool on);
 /* OAM entries belonging to field weather, tagged while BuildOamBuffer sorts sprites. */
 /*
  * The true y of the sprite that wrote OAM entries [first, end). OAM keeps 8
@@ -170,6 +360,31 @@ void CtrVideo_TilemapRequested(unsigned vramOffset, const void *src, unsigned by
  * cell frames, cells, tiles}. */
 void CtrVideo_DecodeCounts(uint32_t counts[8]);
 void CtrVideo_NotifyWrite(const void *dest, unsigned bytes);
+/*
+ * What the OBJ VRAM did since something was made from it (the voxel field's
+ * cards). CtrVideo_VramToken is the token of the frame being presented:
+ * recorded with what is copied from OBJ VRAM in it.
+ */
+uint32_t CtrVideo_VramToken(void);
+/*
+ * Whether it changed after a token, answered by comparing, as the renderer's
+ * own readers do: only inside CtrVideo_Present, from its VramTrustFrame on
+ * (the voxel field's update), it compares the blocks of OBJ VRAM [offset,
+ * offset + bytes) that may have changed, sets *changed to whether any changed
+ * after `token`, and returns true. Then a caller that copies those bytes may
+ * record CtrVideo_VramToken() for them: every block of the range was compared
+ * at it.
+ * Anywhere else it compares nothing, sets *changed and returns false - a token
+ * recorded then would not hold (a block changed and changed back unseen).
+ */
+bool CtrVideo_ObjVramSyncChanged(unsigned offset, unsigned bytes, uint32_t token, bool *changed);
+/* The compositor's nocache bits exist in the frame dumps' builds, and in the
+ * console test builds that turn them off battle by battle (BATTLE_TOGGLES). */
+#if defined(CTR_FRAME_DUMP) || defined(CTR_BATTLE_TOGGLES)
+#define CTR_AUDIT_BITS 1
+/* Audit builds: the bits of nocache.txt (3ds_video.c, CtrDumpOff). */
+unsigned CtrVideo_DumpOff(void);
+#endif
 const uint8_t *CtrVideo_GetBgVram(void);
 /* Frees the 2D compositor's 3D depth planes before the next frame, for the
  * overworld when it cannot place an atlas. */
@@ -266,6 +481,12 @@ enum
     CTR_CENTRED_ROULETTE,
     /* The Game Corner's slot machine, set in the casino's wall. */
     CTR_CENTRED_SLOTS,
+    /* The Hall of Fame (the team on its stripes, the champion's card) and
+     * the PC's record of it: its bands carried out to the edges. */
+    CTR_CENTRED_HALL_OF_FAME,
+    /* The Battle Factory's rental and swap screens: their sprites kept to
+     * the picture, where the swap menu's bar slides in from past its edge. */
+    CTR_CENTRED_FACTORY,
     CTR_CENTRED_SCREENS
 };
 void CtrVideo_SetCentred(unsigned screen);
@@ -275,9 +496,16 @@ void CtrVideo_ShowNoHome(void);
  * The window edges an HBlank DMA writes line by line (the PokéNav's glow
  * behind its chosen option, its condition graph): values holds WIN0H for each
  * line, or WIN0H and WIN1H with both; NULL turns it off. Only the PokéNav's
- * screens are composed with them.
+ * screens are composed with them, and a centred screen that also hands over
+ * what its windows show (below).
  */
 void CtrVideo_SetLineWindow(const uint16_t *values, unsigned lines, bool both);
+/*
+ * WININ for each of the 160 lines, for a centred screen whose HBlank interrupt
+ * moves its windows and changes what they show (the Battle Dome's tourney
+ * tree); NULL turns it off.
+ */
+void CtrVideo_SetLineWindowInside(const uint16_t *values);
 /*
  * The circle of light of a dark cave (Flash) or the Battle Pyramid, which the
  * field draws as window 0 edges line by line: its centre in the field's screen
@@ -320,6 +548,47 @@ void CtrVideo_SetBattle(bool battle);
  */
 void CtrVideo_SetLineScroll(unsigned reg, bool wide, const void *values, unsigned lines);
 /*
+ * Per-scanline values of REG_BLDALPHA for the next frame (Surf's and Muddy
+ * Water's wave band): one unit per line, NULL when the scanline effect writes
+ * something else. Composed in bands of equal weights (3ds_video.c, Compose).
+ */
+void CtrVideo_SetLineAlpha(const uint16_t *values, unsigned lines);
+/* A scanline effect on a register the port does not draw line by line (not a
+ * BG scroll, WIN0H or BLDALPHA): counted, the frame shows entry 0's value. */
+void CtrVideo_NoteLineDropped(void);
+/*
+ * What the frames since the last call did not draw as the GBA would, or drew
+ * a cheaper way, for the profiler: counts of frames, reset by each call.
+ */
+enum
+{
+    CTR_MONO_WHY_OBJWIN,    /* an OBJ window: it is shaped by the sprites */
+    CTR_MONO_WHY_FRONT,     /* front-tie: no background at or behind the furthest sprite's priority to keep */
+    CTR_MONO_WHY_KEEPER,    /* no surface to keep the scenery in (or too narrow) */
+    CTR_MONO_WHY_OTHER,     /* a transition, a bitmap mode or forced blank, a scanline register, audit dumps */
+    CTR_MONO_WHY_UNSETTLED, /* the scenery not as the frame before left it: kept once it holds */
+    CTR_MONO_WHY_COUNT
+};
+typedef struct
+{
+    /* Battle frames without the 3D slider (2D or over the voxel world). */
+    uint32_t monoKept;         /* the scenery kept from a frame before, the sprites over it */
+    uint32_t monoRecomposed;   /* the scenery composed again apart, then kept (as the frame before showed it) */
+    uint32_t monoEmpty;        /* no background of the scene drew anything: the sprites alone */
+    uint32_t monoFallback[CTR_MONO_WHY_COUNT]; /* composed whole, as before */
+    uint32_t monoBlankLayers;  /* blank backgrounds left out of the scene's walk (layers, not frames) */
+    uint32_t monoFrontLayers;  /* kept frames whose backgrounds in front of a sprite were composed with the sprites */
+    uint32_t edgeBlankLayers;  /* blank backgrounds of the battle's edges measured but not walked (layers) */
+    /* Effects. */
+    uint32_t lineAlphaBanded;  /* per-line BLDALPHA composed in bands */
+    uint32_t lineAlphaDropped; /* per-line BLDALPHA shown with one line's weights */
+    uint32_t lineDropped;      /* another per-line register, or per-line windows off the
+                                * PokeNav, shown with the first line's value */
+    uint32_t objWinIgnored;    /* an OBJ window that only changes effects or hides layers: not drawn */
+    uint32_t mosaicIgnored;    /* a mosaic that shows, drawn without it */
+} CtrQualityCounts;
+void CtrVideo_TakeQualityCounts(CtrQualityCounts *out);
+/*
  * Whether the frames that follow show a battle transition: GBA geometry
  * (compat/ctr_gba_transition.h), composed over the field - 2D or voxel - at
  * the battle scene's scale. See 3ds_video.c, RenderTransition.
@@ -357,5 +626,9 @@ int32_t CtrVideo_AffineReference(uint32_t value);
 /* A battle is on (its transition included): OPTIONS' REAL-TIME PACING is
  * for the field, where the voxel world costs the frame (3ds_platform.c). */
 bool CtrVideo_InBattle(void);
+/* Before the voxel world parks its VRAM (CtrVoxel_ParkVram, outside the
+ * frame): the battle's keeper or a large layer over a gap of its building
+ * pages' arena, if one holds it, given back first (CtrVoxel_LendPagesGap). */
+void CtrVideo_PagesGapRevoke(void);
 
 #endif

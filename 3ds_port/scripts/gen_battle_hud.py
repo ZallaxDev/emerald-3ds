@@ -43,6 +43,7 @@ K = SS * ZOOM          # canvas pixels per GBA pixel
 FRAMES = {"single_opponent": 0, "single_player": 1, "double_opponent": 2,
           "double_player": 3, "safari": 4}
 ID_HP_TRACK = 8
+ID_HP_TRACK_CAPPED = 13
 ID_HP_FILL = {"green": 9, "yellow": 10, "red": 11}
 ID_EXP_FILL = 12
 ID_PILL = {"psn": 16, "par": 17, "slp": 18, "frz": 19, "brn": 20}
@@ -65,6 +66,11 @@ EXP_RECT = (32, 34.6, 96, 37.0)
 HP_BAR = (0, 0, 66, 6)
 HP_TRACK = (15, 0.8, 65.2, 5.2)
 HP_INSIDE = (15.8, 1.5, 64.4, 4.5)
+# Where a status pill takes the "HP" label's place (opponents', doubles'),
+# the GBA swaps the bar's first two tiles for nothing and the frame's round
+# end (HEALTHBOX_GFX_0, _65, UpdateStatusIconInHealthbox): no dark label end,
+# the box's panel up to a round cap just left of the track.
+HP_CAP_X = 12.8
 # A status pill (24x8 on the GBA, its letters in the first 20 columns).
 PILL = (0, 0, 20, 8)
 STATUS_COLOURS = {  # sStatusIconColors (battle_interface.c), RGB5 to 8
@@ -229,13 +235,24 @@ def draw_frame(name):
     return cv.out()
 
 
-def draw_hp_track():
+def draw_hp_track(capped=False):
+    """The HP bar's frame and track, from its origin; capped, without the
+    "HP" label's dark end (HP_CAP_X): its image then starts at the screen
+    pixel the cap's left falls in (returned)."""
     x0, y0, x1, y1 = HP_BAR
     cv = Canvas(int((x1 + 1) * K) // SS * SS + SS, int((y1 + 1) * K) // SS * SS + SS)
-    cv.paint(cv.bar(x0, y0, x1, y1), [(0, (96, 122, 104)), (1, (60, 84, 70))])
+    if capped:
+        r = (y1 - y0) / 2
+        cv.paint(cv.corners(HP_CAP_X, y0, x1, y1, (r, r, r, r)), [(0, (96, 122, 104)), (1, (60, 84, 70))])
+    else:
+        cv.paint(cv.bar(x0, y0, x1, y1), [(0, (96, 122, 104)), (1, (60, 84, 70))])
     cv.paint(cv.bar(*HP_TRACK), [(0, (255, 255, 255)), (1, (226, 232, 226))])
     cv.paint(cv.bar(*HP_INSIDE), [(0, (58, 58, 72)), (1, (96, 108, 102))])
-    return cv.out()
+    image = cv.out()
+    if not capped:
+        return 0, image
+    px = math.floor(HP_CAP_X * ZOOM)
+    return px, image.crop((px, 0, image.width, image.height))
 
 
 def draw_fill(rect, stops, gloss):
@@ -339,7 +356,10 @@ def main():
     items = []
     for name, eid in FRAMES.items():
         items.append((eid, 0, 0, draw_frame(name)))
-    items.append((ID_HP_TRACK, 0, 0, draw_hp_track()))
+    x, track = draw_hp_track()
+    items.append((ID_HP_TRACK, x, 0, track))
+    x, track = draw_hp_track(capped=True)
+    items.append((ID_HP_TRACK_CAPPED, x, 0, track))
     for colour, eid in ID_HP_FILL.items():
         items.append((eid, *draw_fill(HP_INSIDE, FILL_GRADIENTS[colour], True)))
     items.append((ID_EXP_FILL, *draw_fill(EXP_RECT, [(0, (170, 236, 255)), (0.5, (66, 196, 255)), (1, (30, 128, 214))],

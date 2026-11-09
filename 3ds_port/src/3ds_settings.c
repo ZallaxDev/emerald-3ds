@@ -418,6 +418,29 @@ void CtrSettings_SetVoxelBlur(bool on)
     Save();
 }
 
+/*
+ * SHADOW QUALITY (OPTIONS, 3ds_extras.c): settings.txt voxel_shadows=1 is
+ * LOW, 2 HIGH; with neither (a new card, or 0) the console's own: HIGH on a
+ * New 3DS, which has the CPU for its rays, LOW on an Old one.
+ */
+bool CtrSettings_VoxelShadowsHigh(void)
+{
+    static int sNewModel = -1;
+    int value = CtrSettings_GetInt("voxel_shadows", 0);
+
+    if (value == 1 || value == 2)
+        return value == 2;
+    if (sNewModel < 0)
+    {
+        bool newModel = false;
+
+        if (R_FAILED(APT_CheckNew3DS(&newModel)))
+            newModel = false;
+        sNewModel = newModel ? 1 : 0;
+    }
+    return sNewModel != 0;
+}
+
 bool CtrSettings_VoxelBattle(void)
 {
     return sVoxelBattle;

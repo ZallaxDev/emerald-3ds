@@ -85,6 +85,7 @@ static const OptRowDef sRowsScene[] = {
     GAME_ROW(OPT_BATTLE_SCENE, CTR_TEXT("BATTLE SCENE", "ANIMACIÓN", "ANIM. COMBAT", "ANIMAZIONE", "ANIMAÇÃO", "KAMPFANIMAT.", "せんとうアニメ")),
     GAME_ROW(OPT_BATTLE_STYLE, CTR_TEXT("BATTLE STYLE", "ESTILO", "STYLE", "STILE", "ESTILO", "KAMPFSTIL", "しあいの ルール")),
     GAME_ROW(OPT_VOXEL_BATTLE, CTR_TEXT("3D BATTLE", "COMBATE 3D", "COMBAT 3D", "BATTAGLIA 3D", "BATALHA 3D", "3D-KAMPF", "3D バトル")),
+    EXTRA_ROW("battle_speed_fx"),
 };
 static const OptRowDef sRowsRules[] = {
     EXTRA_ROW("move_split"),
@@ -129,9 +130,15 @@ static const OptRowDef sRowsItems[] = {
     EXTRA_ROW("give_now"),
 };
 
+/* The voxel world's picture beyond its camera (WORLD's 3D is full). */
+static const OptRowDef sRowsGraphics[] = {
+    EXTRA_ROW("voxel_shadows"),
+};
+
 static const OptGroupDef sGroupsGeneral[] = {
     GROUP(CTR_TEXT("INTERFACE", "INTERFAZ", "INTERFACE", "INTERFACCIA", "INTERFACE", "OBERFLÄCHE", "がめん"), sRowsUi),
     GROUP(CTR_TEXT("SYSTEM", "SISTEMA", "SYSTÈME", "SISTEMA", "SISTEMA", "SYSTEM", "システム"), sRowsSystem),
+    GROUP(CTR_TEXT("GRAPHICS", "GRÁFICOS", "GRAPHISMES", "GRAFICA", "GRÁFICOS", "GRAFIK", "グラフィック"), sRowsGraphics),
 };
 static const OptGroupDef sGroupsWorld[] = {
     GROUP("3D", sRows3d),

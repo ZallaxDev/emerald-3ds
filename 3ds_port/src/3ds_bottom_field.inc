@@ -469,9 +469,12 @@ static void PickMapCell(int x, int y)
 #define ENC_TITLE_H 18
 #define ENC_ROW_Y (ENC_Y + 25)
 #define ENC_ROW_H 22
-#define ENC_COL_NAME (ENC_X + 42)
+#define ENC_COL_CAUGHT (ENC_X + 38)
+#define ENC_COL_NAME (ENC_X + 48)
 #define ENC_COL_LEVEL (ENC_X + 150)
 #define ENC_COL_PERCENT (ENC_X + ENC_W - 10)
+
+static const u16 *CaughtBallPal(void);
 
 /* A species not seen is "???": the list names no more than the Pokedex. */
 static const u8 *EncName(const EncRow *row)
@@ -491,6 +494,7 @@ static void DrawEncounters(const ViewState *s)
     static const char *const none = CTR_TEXT("NO ENCOUNTER TABLE", "SIN TABLA DE ENCUENTROS", "AUCUNE TABLE ICI",
                                              "NESSUNA TABELLA", "SEM TABELA DE ENCONTROS", "KEINE BEGEGNUNGEN", "でてくる ポケモンは いない");
     static const char *const level = CTR_TEXT("LV", "NV", "N", "LV", "NV", "LV", "Lv");
+    const u8 *ball = CtrPokedex_CaughtBallGfx();
     char text[24];
     int oy, saved[4];
 
@@ -523,6 +527,9 @@ static void DrawEncounters(const ViewState *s)
                 DrawSprite(tiles, 4, 4, ENC_X + 6, y - 6, sRes.monIconPal[pal].c);
             ClipPop(saved);
         }
+        /* The Pokedex list's own mark for a species caught. */
+        if (row->seen == ENC_CAUGHT && ball)
+            DrawSprite(ball, 1, 2, ENC_COL_CAUGHT, y + (ENC_ROW_H - 16) / 2, CaughtBallPal());
         StyledStr(FitFont(&sSmall, EncName(row), ENC_COL_LEVEL - ENC_COL_NAME - 4), EncName(row), ENC_COL_NAME,
                   TextY(y, ENC_ROW_H, &sSmall), row->seen ? STYLE_INK : STYLE_GRAY);
         if (row->minLevel == row->maxLevel)
@@ -718,11 +725,27 @@ static void DrawTrainerCard(const ViewState *s)
             DrawTile(sRes.badgeTiles + (2 * i + 17) * 32, x + 8, y + 8, pal, FALSE, FALSE);
         }
     }
-    oy = Plate(AREA_X + AREA_W - CARD_FLIP_W, CARD_BADGES_Y, CARD_FLIP_W, CARD_BADGES_H, s->pressed == HIT_OK ? sEmerald : sSlate,
-               s->pressed == HIT_OK ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
-    TextIn(Ascii(CTR_TEXT("FLIP", "GIRAR", "TOURNER", "GIRA", "VIRAR", "DREHEN", "うらがえす")), AREA_X + AREA_W - CARD_FLIP_W, oy, CARD_FLIP_W,
-           CARD_BADGES_H, &sNormal, 'c', STYLE_WHITE, 6);
-    AddHit(AREA_X + AREA_W - CARD_FLIP_W, CARD_BADGES_Y, CARD_FLIP_W, CARD_BADGES_H, HIT_OK);
+    {
+        /* With the Frontier Pass, FLIP over PASS, each half the height: the
+         * pass is the game's, which PLAYER opened in the original. */
+        int fh = s->hasPass ? CARD_BADGES_H / 2 - 1 : CARD_BADGES_H;
+
+        oy = Plate(AREA_X + AREA_W - CARD_FLIP_W, CARD_BADGES_Y, CARD_FLIP_W, fh, s->pressed == HIT_OK ? sEmerald : sSlate,
+                   s->pressed == HIT_OK ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+        TextIn(Ascii(CTR_TEXT("FLIP", "GIRAR", "TOURNER", "GIRA", "VIRAR", "DREHEN", "うらがえす")), AREA_X + AREA_W - CARD_FLIP_W, oy, CARD_FLIP_W,
+               fh, s->hasPass ? &sSmall : &sNormal, 'c', STYLE_WHITE, s->hasPass ? 4 : 6);
+        AddHit(AREA_X + AREA_W - CARD_FLIP_W, CARD_BADGES_Y, CARD_FLIP_W, fh, HIT_OK);
+        if (s->hasPass)
+        {
+            int py = CARD_BADGES_Y + CARD_BADGES_H - fh;
+
+            oy = Plate(AREA_X + AREA_W - CARD_FLIP_W, py, CARD_FLIP_W, fh, s->pressed == HIT_YES ? sEmerald : sSlate,
+                       s->pressed == HIT_YES ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+            TextIn(Ascii(CTR_TEXT("PASS", "PASE", "PASSE", "TESSERA", "PASSE", "KAMPFPASS", "パス")), AREA_X + AREA_W - CARD_FLIP_W, oy,
+                   CARD_FLIP_W, fh, &sSmall, 'c', STYLE_WHITE, 4);
+            AddHit(AREA_X + AREA_W - CARD_FLIP_W, py, CARD_FLIP_W, fh, HIT_YES);
+        }
+    }
 }
 
 /* ------------------------------------------------------------------------ */

@@ -54,7 +54,7 @@ ALIASES = {"sBardSoundTemplates_" + n: "gBardSounds_" + n for n in (
     "Actions Adjectives Battle Endings Events Feelings Greetings Hobbies Lifestyle Misc Moves "
     "People Pokemon Speech Status Time Trainer TrendySaying Voices").split()}
 ALIASES.update({
-    "gFrontierPassMapScreen_Gfx": "gFrontierPassMapAndCard_Gfx",
+    "gFrontierPassMapScreen_Gfx": "sMapScreen_Gfx",
     "gCreditsCopyrightEnd_Gfx": "sCreditsCopyrightEnd_Gfx",
 })
 # Row tables whose German width differs from English; the kind fixes the shape.

@@ -748,10 +748,95 @@ bool Voxel_LoadTilesStep(const void *t, uint8_t *d, uint32_t n, VoxelTileLoad *l
     return true;
 }
 
+/* An atlas of the pair made with `used` (ids at 1, `first` visible at 2). */
+static void PlanBuild(VoxelAtlasMap *map, unsigned from, unsigned to, unsigned first,
+                      unsigned extraFrom, unsigned extraTo)
+{
+    VoxelMapInstance inst = {.primaryTileset = &kPrimary, .secondaryTileset = &kSecondary};
+
+    memset(sUsed, 0, sizeof(sUsed));
+    for (unsigned m = from; m < to; ++m) sUsed[m] = 1;
+    for (unsigned m = extraFrom; m < extraTo; ++m) sUsed[m] = 1;
+    sUsed[first] = 2;
+    assert(VoxelAtlas_Build(&inst, sOneGo, map, false));
+}
+
+/* The pair's plan: a rebuilt atlas keeps its ids' slots whatever the order
+ * they are met in, starts again when the plan would take more pages, and a
+ * new id of an extension takes a free place on the pages there are. */
+static void StablePlans(void)
+{
+    static VoxelAtlasMap a, b, c, d;
+    VoxelMapInstance inst = {.primaryTileset = &kPrimary, .secondaryTileset = &kSecondary};
+    VoxelAtlasPlanCounts counts;
+
+    sDerived = false;
+    VoxelAtlas_SetStablePlan(true);
+    PlanBuild(&a, 10, 60, 40, 0, 0);
+    PlanBuild(&b, 10, 60, 55, 100, 110);
+    for (unsigned m = 10; m < 60; ++m)
+        assert(a.slotOf[m] != 0 && b.slotOf[m] == a.slotOf[m]);
+    for (unsigned m = 100; m < 110; ++m)
+        assert(b.slotOf[m] != 0 && b.slotOf[m] != VOXEL_SLOT_ABSENT);
+    /* the order of meeting, without a plan: the visible id first */
+    VoxelAtlas_SetStablePlan(false);
+    PlanBuild(&c, 10, 60, 55, 100, 110);
+    assert(c.slotOf[55] == 1 && c.slotOf[55] != a.slotOf[55]);
+    /* a plan spread over two pages for ids that fit one: laid out again */
+    VoxelAtlas_SetStablePlan(true);
+    PlanBuild(&a, 0, 600, 0, 0, 0);
+    assert(VoxelAtlas_PageCount(&a) == 2);
+    VoxelAtlas_TakePlanCounts(&counts);
+    PlanBuild(&b, 550, 600, 550, 0, 0);
+    VoxelAtlas_TakePlanCounts(&counts);
+    assert(counts.relayouts == 1 && VoxelAtlas_PageCount(&b) == 1);
+    /* kept on one page: an extension's new id fills a hole there, not a new page */
+    PlanBuild(&a, 0, VOXEL_SOLID_BASE, 0, 0, 0);
+    PlanBuild(&b, 0, 10, 0, 0, 0);
+    assert(VoxelAtlas_PageCount(&b) == 1);
+    memset(sUsed, 0, sizeof(sUsed));
+    for (unsigned m = 0; m < 10; ++m) sUsed[m] = 1;
+    sUsed[700] = 1;
+    d = b;
+    assert(VoxelAtlas_Build(&inst, sOneGo, &d, true));
+    assert(VoxelAtlas_PageCount(&d) == 1 && d.slotOf[700] != 0 && d.slotOf[700] != VOXEL_SLOT_ABSENT);
+    for (unsigned m = 0; m < VOXEL_METATILE_IDS; ++m)
+        if (b.slotOf[m] != 0 && b.slotOf[m] != VOXEL_SLOT_ABSENT)
+            assert(d.slotOf[m] == b.slotOf[m]);
+    VoxelAtlas_TakePlanCounts(&counts);
+    assert(counts.moved == 1);
+    /* a plan kept for a fresh atlas on one page though it places an id the
+     * atlas does not use on the second: an extension meeting that id moves
+     * it onto the page there is, not opens the second */
+    VoxelAtlas_SetStablePlan(false);
+    VoxelAtlas_SetStablePlan(true);
+    PlanBuild(&a, 0, VOXEL_SOLID_BASE + 10u, 0, 0, 0);
+    assert(VoxelAtlas_PageCount(&a) == 2);
+    PlanBuild(&b, 0, 10, 0, 0, 0);
+    VoxelAtlas_TakePlanCounts(&counts);
+    assert(counts.relayouts == 0 && VoxelAtlas_PageCount(&b) == 1);
+    for (unsigned m = 0; m < 10; ++m)
+        assert(b.slotOf[m] == a.slotOf[m]);
+    memset(sUsed, 0, sizeof(sUsed));
+    for (unsigned m = 0; m < 10; ++m) sUsed[m] = 1;
+    sUsed[VOXEL_SOLID_BASE + 5u] = 1;
+    d = b;
+    assert(VoxelAtlas_Build(&inst, sOneGo, &d, true));
+    assert(VoxelAtlas_PageCount(&d) == 1 && d.slotOf[VOXEL_SOLID_BASE + 5u] != 0
+           && d.slotOf[VOXEL_SOLID_BASE + 5u] != VOXEL_SLOT_ABSENT
+           && d.slotOf[VOXEL_SOLID_BASE + 5u] != a.slotOf[VOXEL_SOLID_BASE + 5u]);
+    VoxelAtlas_TakePlanCounts(&counts);
+    assert(counts.moved == 1 && counts.reseeds == 0);
+    VoxelAtlas_SetStablePlan(false);
+}
+
 int main(void)
 {
     struct AtlasSource src;
     unsigned blacks = 0;
+
+    /* The cases below are of the order of meeting; the plan is its own. */
+    VoxelAtlas_SetStablePlan(false);
 
     memset(&src, 0, sizeof(src));
     src.primaryTiles = sPrimaryTiles;
@@ -784,7 +869,8 @@ int main(void)
     PagedAtlases();
     DerivedPages();
     UnchangedExtension();
+    StablePlans();
     printf("PASS voxel atlas: block composer equals per-texel reference (%u black), "
-           "sliced atlases equal one-go ones, fresh and extended; unchanged extensions skipped, selective animation, four pages with variants and visible priority\n", blacks);
+           "sliced atlases equal one-go ones, fresh and extended; unchanged extensions skipped, selective animation, four pages with variants and visible priority, stable plans\n", blacks);
     return 0;
 }

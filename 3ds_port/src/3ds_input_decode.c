@@ -23,8 +23,6 @@ void CtrInput_Update(CtrInput *state, const CtrInputSample *sample)
     state->physicalDown = buttons & ~state->physicalHeld;
     state->physicalUp = state->physicalHeld & ~buttons;
     state->physicalHeld = buttons;
-    if (state->physicalDown) state->lastDown = state->physicalDown;
-    if (state->physicalUp) state->lastUp = state->physicalUp;
     for (unsigned i = 0; i < 12; ++i)
         if (state->physicalDown & (1u << i)) ++state->presses[i];
     state->circleX = sample->circleX;

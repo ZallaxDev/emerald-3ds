@@ -46,9 +46,10 @@ function pointers (callbacks, native script commands) are guarded for
    instead, whenever NDSP has fewer than three frames queued, and
    `FrameShown` in `3ds_platform.c` runs a hidden frame when the game has
    fallen a frame behind the display - in the field only: a battle keeps
-   the GBA's timing, save under its party menu, summary and bag, where
-   hidden frames keep real time with the engine still on the game's frames;
-   without a DSP the clock mode mixes once per frame as before);
+   its frames as on the GBA, save under its party menu, summary and bag,
+   where hidden frames keep real time; the sound engine stays on the DSP's
+   clock in a battle too, except a link battle's, so a late frame costs no
+   click; without a DSP the clock mode mixes once per frame as before);
 2. latches the GBA registers, OAM and palettes and presents: the compositor
    decodes changed tiles into an RGBA5551 atlas and draws BG/OBJ layers with
    the PICA200 at native 400x240 on the top screen; the voxel overworld, when
@@ -124,7 +125,9 @@ to the action and move menus.
 objects. Chunks are built in slices across frames, uploads per frame are
 capped by the GX queue (32 entries), building textures stream from a worker
 thread, and a fixed sun with baked shade and cast sprite shadows grades the
-scene (`VOXEL_LIGHTING`). Buildings, trees, signposts and drawn terrain relief
+scene (`VOXEL_LIGHTING`); OPTIONS' SHADOW QUALITY HIGH (the New 3DS default)
+casts the sun's shadows from a PICA200 shadow map drawn once a frame
+instead. Buildings, trees, signposts and drawn terrain relief
 are modelled on the host from each map's own art (`3ds_port/scripts/gen_voxel_*.py`)
 and read at runtime from `voxel/*.bin`. How to work on them:
 [VOXEL_GUIDE.md](VOXEL_GUIDE.md).
@@ -136,7 +139,7 @@ shared, so the second eye costs its draw calls and fill. The plane of zero
 parallax stands just in front of the player; the game's text and weather are
 composed on it, the same in both eyes. A New 3DS has the frame for the second
 pass; on an Old 3DS the world stays flat unless OPTIONS' 3D WORLD says ON
-(`sVoxelStereo` in `3ds_video.c`), and 3D DEPTH scales the slider. Both are
+(`sVoxelStereo` in `src/video/frame.inc`), and 3D DEPTH scales the slider. Both are
 extras on the SETTINGS tab's second screen (`3ds_extras.c`).
 
 ## The camera at a map's edge

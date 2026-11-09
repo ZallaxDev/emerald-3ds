@@ -7,7 +7,8 @@
  *   map_encounters  the name plate under the map toggles the window between
  *                   the map and the current area's wild Pokemon, one page a
  *                   method (grass, surfing, Rock Smash, each rod); a tap on
- *                   the list turns the page. Species not seen are "???".
+ *                   the list turns the page. Species not seen are "???", those
+ *                   caught carry the Pokedex's ball mark.
  *   repel_steps     a Repel's remaining steps on the name plate, read from
  *                   VAR_REPEL_STEP_COUNT (never written).
  *   clock_notice    a banner over the map, dismissed with a tap, when an existing

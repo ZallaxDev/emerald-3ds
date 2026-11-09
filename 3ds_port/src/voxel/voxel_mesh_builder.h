@@ -58,6 +58,15 @@ typedef struct
     const struct VoxelAtlasMap *atlas;
     unsigned uncovered;
     /*
+     * The ids whose slots were read, when not NULL (a chunk's UV key,
+     * ctr_voxel.c): a bit each in `readIds`, the slot read in `readSlots`,
+     * and `readMixed` if a later read of one found another slot - the
+     * table changed under the build.
+     */
+    uint32_t *readIds;
+    uint16_t *readSlots;
+    bool readMixed;
+    /*
      * Terrain relief (voxel_relief.h): whatever is emitted while this is set
      * stands on a cell lifted by `lift` tiles, and is displaced as the cell
      * is, by (0, lift, shift): shift is the lift again but on a drawn map

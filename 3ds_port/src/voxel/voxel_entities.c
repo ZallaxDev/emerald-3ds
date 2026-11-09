@@ -13,11 +13,13 @@
 #include "sprite.h"
 #include "event_object_movement.h"
 #include "field_player_avatar.h"
+#include "constants/event_objects.h"
 #include "constants/field_effects.h"
 #include "constants/event_object_movement.h"
 #include "gba/io_reg.h"
 #include "port_platform.h"
 #include "3ds_log.h"
+#include "port_prof.h"
 
 #include "3ds_video.h"
 #include "voxel_building.h"
@@ -43,7 +45,9 @@ static const int sStepFrames[] = { 16, 8, 6, 4, 2 };
  * rewrites the tiles *behind* a fixed tileNum, so the descriptor alone cannot
  * detect a frame change: the source bytes and the palette are kept and
  * compared. That is ~2 KiB of memcmp per object per frame, which is far
- * cheaper than re-decoding one.
+ * cheaper than re-decoding one - and is itself skipped while the renderer
+ * says none of the slot's OBJ VRAM changed since it was gathered (the slot's
+ * token, RefreshSlot).
  */
 typedef struct
 {
@@ -53,6 +57,14 @@ typedef struct
     u8 extPalette;
     u8 shape, size;
     bool flipX, flipY, color256;
+    /* DISPCNT's OBJ character mapping it was gathered with (GatherSource). */
+    bool mapping1d;
+    /* The OBJ VRAM its tiles came from, [rangeFirst, rangeFirst + rangeBytes),
+     * and the renderer's token at which every block of it was compared
+     * (CtrVideo_ObjVramSyncChanged); without one, it is gathered again. */
+    bool tokenHeld;
+    uint32_t token;
+    unsigned rangeFirst, rangeBytes;
     int width, height;
     /* Texels across the atlas cell: `width`, or half of it for a picture
      * wider than the cell (every second column, VoxelSlots_AtlasWidth). The
@@ -186,7 +198,7 @@ static float GetMovementProgress(const struct ObjectEvent *obj, const struct Spr
     return t;
 }
 
-static bool GetObjectWorldPos(const struct ObjectEvent *obj, const struct Sprite *sprite,
+static void GetObjectWorldPos(const struct ObjectEvent *obj, const struct Sprite *sprite,
                               float *outX, float *outZ)
 {
     float prevX = (float)(obj->previousCoords.x - MAP_OFFSET);
@@ -197,7 +209,6 @@ static bool GetObjectWorldPos(const struct ObjectEvent *obj, const struct Sprite
 
     *outX = prevX + (curX - prevX) * t;
     *outZ = prevZ + (curZ - prevZ) * t;
-    return true;
 }
 
 /*
@@ -283,13 +294,16 @@ void VoxelEntities_GetPlayerWorldPos(float *worldX, float *worldZ)
 /*
  * Gathers the source tiles of a sprite into `dest`, in reading order, using
  * the same address arithmetic the 2D compositor uses for OBJ: 1D or 2D
- * character mapping per DISPCNT bit 6, two VRAM units per tile at 8bpp.
+ * character mapping per DISPCNT bit 6, two VRAM units per tile at 8bpp. The
+ * OBJ VRAM read spans [*first, *first + *bytes): a range around every tile,
+ * so it may hold bytes between them that are not read.
  */
-static u32 GatherSource(const struct Sprite *sprite, int w, int h, bool color256, u8 *dest)
+static u32 GatherSource(const struct Sprite *sprite, int w, int h, bool color256, bool mapping1d,
+                        u8 *dest, unsigned *first, unsigned *bytes)
 {
     const u8 *vram = VRAM_ + 0x10000;
-    bool mapping1d = (REG_DISPCNT & DISPCNT_OBJ_1D_MAP) != 0;
     unsigned bytesPerTile = color256 ? 64u : 32u;
+    unsigned low = 0x8000, high = 0;
     u32 written = 0;
 
     for (int ty = 0; ty < h / 8; ++ty)
@@ -305,8 +319,12 @@ static u32 GatherSource(const struct Sprite *sprite, int w, int h, bool color256
                 offset = 0;
             memcpy(dest + written, vram + offset, bytesPerTile);
             written += bytesPerTile;
+            if (offset < low) low = offset;
+            if (offset + bytesPerTile > high) high = offset + bytesPerTile;
         }
     }
+    *first = low < high ? low : 0;
+    *bytes = low < high ? high - low : 0;
     return written;
 }
 
@@ -493,54 +511,152 @@ static void PictureSize(const struct Sprite *sprite, const struct ObjectEvent *o
 }
 
 /*
+ * What the slots did, for the log (VoxelEntities_TakeCounts), and the ticks
+ * the gathering took (VoxelEntities_TakeGatherTicks): read only with the
+ * profiler on (Port_ProfTick), and only on that path.
+ */
+static VoxelBillboardCounts sCounts;
+static uint32_t sGatherTicks, sStaleLogged;
+/* The slot gathered this frame even if it could be kept (RefreshSlot), one a
+ * frame in turn: a write to OBJ VRAM the renderer was not told of and did
+ * not compare is then shown at most VOXEL_SPRITE_SLOTS frames late, and is
+ * counted (auditStale). */
+static unsigned sAuditSlot;
+
+void VoxelEntities_TakeCounts(VoxelBillboardCounts *counts)
+{
+    *counts = sCounts;
+    memset(&sCounts, 0, sizeof(sCounts));
+}
+
+uint32_t VoxelEntities_TakeGatherTicks(void)
+{
+    uint32_t ticks = sGatherTicks;
+
+    sGatherTicks = 0;
+    return ticks;
+}
+
+/* Whether a slot whose OBJ VRAM did not change keeps its picture without
+ * gathering it (VoxelEntities_SetKeep). */
+static bool sKeep = true;
+
+void VoxelEntities_SetKeep(bool keep)
+{
+    sKeep = keep;
+}
+
+/*
  * Brings a slot up to date with its sprite (an object's, or NULL for a field
  * effect). Returns true if it was re-decoded, which only happens when
  * something the picture depends on actually changed.
+ *
+ * The picture depends on the descriptor (size, bpp, flips, tileNum, palette
+ * bank and ext palette), DISPCNT's OBJ mapping, the bytes of the tiles and
+ * the palette's colours; the grading table is fixed. With the same
+ * descriptor and mapping the tiles are read from the same addresses, so
+ * while the renderer finds none of those blocks changed after the slot's
+ * token (compared now if they may have: CtrVideo_ObjVramSyncChanged) the
+ * bytes are the ones the slot holds and are not gathered. The palette, 32
+ * bytes (512 at 8bpp), is compared every time, against PLTT or the ext
+ * palette's own colours: an ext palette not in use has no version that
+ * follows its colours. Anything else, or no token the renderer can answer
+ * for, and the tiles are gathered and compared as before.
  */
-static bool RefreshSlot(unsigned index, const struct Sprite *sprite, const struct ObjectEvent *obj,
+static void RefreshSlot(unsigned index, const struct Sprite *sprite, const struct ObjectEvent *obj,
                         uint16_t *atlas)
 {
     VoxelSpriteSlot *slot = &sSlots[index];
-    /* Static, not automatic: this runs in the VBlank handler and 4.5 KiB of
-     * stack frame there is not worth the convenience. */
+    /* Static, not automatic: 4.5 KiB of stack frame is not worth the
+     * convenience. */
     static u8 source[VOXEL_SPRITE_MAX_BYTES];
-    static u16 palette[256];
     int w, h;
     bool color256 = sprite->oam.bpp != 0;
     bool flipX = sprite->oam.affineMode == ST_OAM_AFFINE_OFF
               && (sprite->oam.matrixNum & 0x08) != 0;
     bool flipY = sprite->oam.affineMode == ST_OAM_AFFINE_OFF
               && (sprite->oam.matrixNum & 0x10) != 0;
+    bool mapping1d = (REG_DISPCNT & DISPCNT_OBJ_1D_MAP) != 0;
     u32 sourceBytes, paletteBytes;
     u8 extPalette = color256 ? 0xFF : GetSpriteExtPalette(sprite);
-    bool changed;
+    const u16 *palette;
+    bool described, changed, audit, synced, moved;
+    unsigned first, bytes;
+    uint32_t token, start;
 
     PictureSize(sprite, obj, &w, &h);
     if (!VoxelSlots_Fits((unsigned)w, (unsigned)h, color256, VOXEL_SPRITE_SLOT_DIM,
                          VOXEL_SPRITE_MAX_BYTES))
-        return false;
+        return;
+    ++sCounts.refreshes;
 
-    sourceBytes = GatherSource(sprite, w, h, color256, source);
     paletteBytes = color256 ? 256 * 2 : 16 * 2;
     /* OBJ palettes are the second half of PLTT; 8bpp uses it as one bank.
      * One given an ext palette shows that, as the 2D compositor does. */
-    if (extPalette != 0xFF)
-        memcpy(palette, CtrVideo_ExtPalette(extPalette), paletteBytes);
-    else
-        memcpy(palette, PLTT + 0x200 + (color256 ? 0 : sprite->oam.paletteNum * 32), paletteBytes);
+    palette = extPalette != 0xFF ? CtrVideo_ExtPalette(extPalette)
+            : (const u16 *)(PLTT + 0x200 + (color256 ? 0 : sprite->oam.paletteNum * 32));
 
-    changed = !slot->valid
-           || slot->width != w || slot->height != h
-           || slot->color256 != color256
-           || slot->flipX != flipX || slot->flipY != flipY
-           || slot->tileNum != sprite->oam.tileNum
-           || slot->paletteNum != sprite->oam.paletteNum
-           || slot->extPalette != extPalette
+    described = slot->valid
+             && slot->width == w && slot->height == h
+             && slot->color256 == color256
+             && slot->flipX == flipX && slot->flipY == flipY
+             && slot->tileNum == sprite->oam.tileNum
+             && slot->paletteNum == sprite->oam.paletteNum
+             && slot->extPalette == extPalette;
+    audit = index == sAuditSlot;
+    if (described && slot->mapping1d == mapping1d && slot->tokenHeld && sKeep
+     && CtrVideo_ObjVramSyncChanged(slot->rangeFirst, slot->rangeBytes, slot->token, &moved) && !moved)
+    {
+        if (!audit)
+        {
+            ++sCounts.kept;
+            if (memcmp(slot->palette, palette, paletteBytes) == 0)
+                return;
+            /* The colours alone: the tiles are the slot's. Its token stays
+             * good - compared now, unchanged - and becomes this one. */
+            ++sCounts.keptPalette;
+            slot->token = CtrVideo_VramToken();
+            memcpy(slot->palette, palette, paletteBytes);
+            DecodeSlot(slot, index, atlas);
+            return;
+        }
+        ++sCounts.audits;
+    }
+    else
+        audit = false;
+
+    /* As before: gathered and compared. */
+    start = Port_ProfTick();
+    ++sCounts.raw;
+    token = CtrVideo_VramToken();
+    sourceBytes = GatherSource(sprite, w, h, color256, mapping1d, source, &first, &bytes);
+    /* Every block of the range compared at this token, so that it holds. */
+    synced = CtrVideo_ObjVramSyncChanged(first, bytes, token, &moved);
+
+    changed = !described
            || slot->sourceBytes != sourceBytes
            || memcmp(slot->source, source, sourceBytes) != 0
            || memcmp(slot->palette, palette, paletteBytes) != 0;
+    slot->tokenHeld = synced;
+    slot->token = token;
+    slot->rangeFirst = first;
+    slot->rangeBytes = bytes;
+    slot->mapping1d = mapping1d;
     if (!changed)
-        return false;
+    {
+        sGatherTicks += Port_ProfTick() - start;
+        return;
+    }
+    /* Kept, the slot would have shown its old tiles: a write to OBJ VRAM
+     * neither announced nor compared (CONTRACT in the renderer's terms). */
+    if (audit && memcmp(slot->source, source, sourceBytes) != 0)
+    {
+        ++sCounts.auditStale;
+        if (sStaleLogged++ < 20)
+            CtrLog_Write(CTR_LOG_ERROR, "CONTRACT voxel billboard slot %u: OBJ VRAM %04x+%u changed unseen "
+                         "(%lu so far)", index, first, bytes, (unsigned long)sStaleLogged);
+    }
+    ++sCounts.regathered;
 
     slot->valid = true;
     slot->width = w;
@@ -559,7 +675,7 @@ static bool RefreshSlot(unsigned index, const struct Sprite *sprite, const struc
     memcpy(slot->source, source, sourceBytes);
     memcpy(slot->palette, palette, paletteBytes);
     DecodeSlot(slot, index, atlas);
-    return true;
+    sGatherTicks += Port_ProfTick() - start;
 }
 
 /* ── Billboards ─────────────────────────────────────────────────────────── */
@@ -769,6 +885,60 @@ static void EmitDecal(VoxelBuilder *builder, const VoxelSpriteSlot *slot, unsign
 }
 
 /*
+ * A rotating gate (rotating_gate.c) turns about its middle on an OAM matrix, and
+ * only a picture lying on the ground can show that: its arms are what says which
+ * way it can be pushed, and they have to lie over the cells they block. The
+ * matrix maps the screen onto the picture, so the corners go through its inverse.
+ * The tile tags are ROTATING_GATE_TILE_TAG plus one of its eight shapes.
+ */
+#define VOXEL_GATE_TAG_FIRST 0x1300u
+#define VOXEL_GATE_TAG_LAST (VOXEL_GATE_TAG_FIRST + 7u)
+
+static bool IsRotatingGate(const struct Sprite *sprite)
+{
+    unsigned tag;
+
+    if (!(sprite->oam.affineMode & ST_OAM_AFFINE_ON_MASK))
+        return false;
+    tag = GetSpriteTileTagByTileStart(sprite->sheetTileStart);
+    return tag >= VOXEL_GATE_TAG_FIRST && tag <= VOXEL_GATE_TAG_LAST;
+}
+
+static void EmitTurnedDecal(VoxelBuilder *builder, const VoxelSpriteSlot *slot, unsigned index,
+                            const struct Sprite *sprite, float cx, float cz, float shade)
+{
+    const struct OamMatrix *matrix = &gOamMatrices[sprite->oam.matrixNum & (OAM_MATRIX_COUNT - 1)];
+    int a = (s16)matrix->a, b = (s16)matrix->b, c = (s16)matrix->c, d = (s16)matrix->d;
+    int det = a * d - b * c;
+
+    if (det == 0)
+    {
+        EmitDecal(builder, slot, index, cx, cz, 0.0f, shade);
+        return;
+    }
+
+    unsigned baseX = (index % VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
+    unsigned baseY = (index / VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
+    float u0 = baseX / (float)VOXEL_SPRITE_ATLAS_W;
+    float u1 = (baseX + slot->atlasWidth) / (float)VOXEL_SPRITE_ATLAS_W;
+    float v0 = 1.0f - baseY / (float)VOXEL_SPRITE_ATLAS_H;
+    float v1 = 1.0f - (baseY + slot->height) / (float)VOXEL_SPRITE_ATLAS_H;
+    float halfW = slot->width / VOXEL_PIXELS_PER_TILE * 0.5f;
+    float halfH = slot->height / VOXEL_PIXELS_PER_TILE * 0.5f;
+    float y = VoxelRelief_LiftAt(cx, cz) + VOXEL_DECAL_LIFT;
+    float z = cz + VoxelRelief_ShiftAt(cx, cz);
+    /* The inverse's four terms; matrices are 8.8, so det is 16.16. */
+    float ia = d * 256.0f / det, ib = -b * 256.0f / det;
+    float ic = -c * 256.0f / det, id = a * 256.0f / det;
+
+    VoxelBuilder_Quad(builder,
+        &(VoxelVertex){cx - ia * halfW + ib * halfH, y, z - ic * halfW + id * halfH, u0, v1, shade},
+        &(VoxelVertex){cx + ia * halfW + ib * halfH, y, z + ic * halfW + id * halfH, u1, v1, shade},
+        &(VoxelVertex){cx + ia * halfW - ib * halfH, y, z + ic * halfW - id * halfH, u1, v0, shade},
+        &(VoxelVertex){cx - ia * halfW - ib * halfH, y, z - ic * halfW - id * halfH, u0, v0, shade});
+}
+
+/*
  * A door opening or closing. The game draws its frames on the tilemap, which
  * this view does not show: the walker went through a door that stayed shut,
  * card and all. Here the frame the game draws (field_door.c, the same tiles
@@ -822,9 +992,9 @@ static void FindDoorWall(VoxelDoor *door, const VoxelMapInstance *inst, unsigned
  * again only when it is another: the frame's tiles, the door's palettes or
  * the map's. Its colours are the tilesets' own, as the atlas the walls were
  * drawn from has them (voxel_atlas.c): index 0 is the backdrop, opaque, as
- * the GBA shows it under the door's tiles. Returns whether it was decoded.
+ * the GBA shows it under the door's tiles.
  */
-static bool FindDoors(VoxelDoor doors[VOXEL_DOORS], uint16_t *atlas)
+static void FindDoors(VoxelDoor doors[VOXEL_DOORS], uint16_t *atlas)
 {
     static const u8 *lastTiles, *lastPalettes;
     static const uint16_t *lastPrimary, *lastSecondary;
@@ -840,12 +1010,12 @@ static bool FindDoors(VoxelDoor doors[VOXEL_DOORS], uint16_t *atlas)
     for (unsigned d = 0; d < VOXEL_DOORS; ++d)
         doors[d].on = false;
     if (VoxelWorld_InstanceCount() == 0 || !PortDoor_Get(&x, &y, &width, &tiles, &palettes))
-        return false;
+        return;
     inst = VoxelWorld_Instance(0);
     primary = Voxel_ResolvePalettes(inst->primaryTileset);
     secondary = Voxel_ResolvePalettes(inst->secondaryTileset);
     if (primary == NULL || secondary == NULL)
-        return false;
+        return;
     for (unsigned d = 0; d < VOXEL_DOORS; ++d)
     {
         if (d > 0 && !PortDoor_GetTwin(&x, &y))
@@ -858,7 +1028,7 @@ static bool FindDoors(VoxelDoor doors[VOXEL_DOORS], uint16_t *atlas)
     }
     if (!sDoorStale && tiles == lastTiles && palettes == lastPalettes && primary == lastPrimary
      && secondary == lastSecondary && width == lastWidth)
-        return false;
+        return;
     sDoorStale = false;
     lastTiles = tiles;
     lastPalettes = palettes;
@@ -881,7 +1051,6 @@ static bool FindDoors(VoxelDoor doors[VOXEL_DOORS], uint16_t *atlas)
             }
             atlas[CtrVideo_Texel(baseX + px, baseY + py, VOXEL_SPRITE_ATLAS_W)] = texel;
         }
-    return true;
 }
 
 /* In a doorway's column: 0 through it, up to 1 a little way before it. */
@@ -1321,6 +1490,7 @@ typedef struct
     bool front, decal, tile;
     bool surf;               /* the surf mon: lying on the water, ridden */
     bool cloud;              /* a cloud, laid on the water (EmitCloud) */
+    bool gate;               /* a rotating gate, turned on the ground (EmitTurnedDecal) */
 } VoxelEffectCard;
 
 static bool IsTemplate(const struct SpriteTemplate *template, unsigned first, unsigned last)
@@ -1423,8 +1593,15 @@ static int EffectOwner(const struct Sprite *sprite, const VoxelObjectCard *objec
     return best;
 }
 
-unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamera *camera,
-                            VoxelBuilder *shadows, VoxelBuilder *reflections)
+static unsigned sSpritesLeftOut;
+
+unsigned VoxelEntities_SpritesLeftOut(void)
+{
+    return sSpritesLeftOut;
+}
+
+void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamera *camera,
+                        VoxelBuilder *shadows, VoxelBuilder *reflections)
 {
     /* The billboards turn about the vertical axis to face the camera. With the
      * default yaw of 0 this is (1,0,0), the same plane the reference uses.
@@ -1462,9 +1639,10 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
     bool claimed[VOXEL_SPRITE_SLOTS] = {false};
     bool reset[VOXEL_SPRITE_SLOTS] = {false};
     unsigned objectTileCount = 0, effectCount = 0, candidateCount = 0, dropped;
-    unsigned updates = 0;
     VoxelDoor doors[VOXEL_DOORS];
     sPlayerVertexFirst = -1;
+    /* The next slot audited (RefreshSlot): one a frame, in turn. */
+    sAuditSlot = (sAuditSlot + 1) % VOXEL_SPRITE_SLOTS;
 
     /* The lighting caches are the chunks' own, valid until the world
      * changes (ctr_voxel.c resets them then), so they are not reset here. */
@@ -1504,6 +1682,11 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
          */
         if (obj->invisible)
             continue;
+        /* A trainer buried in the ash or sand: on the GBA its priority puts it
+         * under the map's top layer until it jumps out (trainer_see.c gives it
+         * priority 2 at that moment). This renderer has no such layer. */
+        if (obj->movementType == MOVEMENT_TYPE_BURIED && sprite->oam.priority == 3)
+            continue;
         /* Carried on the screen instead of the map - the rider of Fly's
          * bird - it is drawn with the screen's sprites, over the view. */
         if (!sprite->coordOffsetEnabled)
@@ -1524,8 +1707,7 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
         if (fabsf(worldX - camera->targetX) > 24.0f
          || fabsf(worldZ - camera->targetZ) > 24.0f)
             continue;
-        if (RefreshSlot(i, sprite, obj, atlas))
-            ++updates;
+        RefreshSlot(i, sprite, obj, atlas);
         if (!sSlots[i].valid)
             continue;
         {
@@ -1613,7 +1795,8 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
         effect->slot = 0;
         effect->surf = sprite->template == gFieldEffectObjectTemplatePointers[FLDEFFOBJ_SURF_BLOB];
         effect->cloud = cloud;
-        effect->decal = IsDecal(sprite->template) || cloud;
+        effect->gate = IsRotatingGate(sprite);
+        effect->decal = effect->gate || IsDecal(sprite->template) || cloud;
         effect->tile = IsTileEffect(sprite->template);
         /* A visible wild Pokemon stands on its own tile, never on an object:
          * a tile south of the player, owned by it, it sank under the ground. */
@@ -1672,6 +1855,7 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
     /* All but the door's slot. */
     dropped = VoxelSlots_Assign(requests, candidateCount, sSlotEffect, claimed, reset,
                                 VOXEL_DOOR_SLOT, OBJECT_EVENTS_COUNT);
+    sSpritesLeftOut += dropped;
     if (dropped > 0)
     {
         /* Not drawn this frame: logged, at most every ten seconds. */
@@ -1726,17 +1910,21 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
         sSlots[s].valid = false;
     }
 
-    if (FindDoors(doors, atlas))
-        ++updates;
+    FindDoors(doors, atlas);
     for (unsigned d = 0; d < VOXEL_DOORS; ++d)
         EmitDoor(builder, &doors[d]);
     for (unsigned i = 0; i < OBJECT_EVENTS_COUNT; ++i)
     {
         VoxelObjectCard *card = &objects[i];
         float rise, dusk;
+        bool underBridge;
 
         if (!card->drawn)
             continue;
+        /* Route 120's unseen Kecleon: the object at the bridge's lower level
+         * that the GBA draws under the deck, only its reflection showing in
+         * the water. The Kecleon itself is another object, invisible. */
+        underBridge = gObjectEvents[i].graphicsId == OBJ_EVENT_GFX_KECLEON_BRIDGE_SHADOW;
         /* Through an open door: gone, shadow and all. */
         dusk = DoorLight(doors, card->worldX + 0.5f, card->worldZ + 0.5f);
         if (dusk <= 0.0f)
@@ -1750,13 +1938,15 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
         /* Riding, it is off the ground: its shadow falls from its feet,
          * moved along the sun by how high they are, onto the water past
          * the mon's back. */
-        if (shadows != NULL && card->outdoor)
+        if (shadows != NULL && card->outdoor && !underBridge)
             EmitCastShadow(shadows, &sSlots[i], i, card->worldX, card->worldZ, rightX, rightZ,
                            stretch, card->shade, card->rise > 0.0f ? rise : 0.0f, card->deck);
 #endif
         if (reflections != NULL && gObjectEvents[i].hasReflection)
             EmitReflection(reflections, &sSlots[i], i, card->worldX, card->worldZ,
                            rightX, rightZ, stretch);
+        if (underBridge)
+            continue;
         unsigned first = builder->count;
         EmitBillboard(builder, &sSlots[i], i, card->worldX + 0.5f, card->worldZ + 0.5f,
                       0.0f, 0.0f, rise, card->deck, rightX, rightZ, stretch, card->shade * dusk, 1.0f);
@@ -1771,8 +1961,7 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
         const VoxelObjectCard *reference;
         int h, x, base;
 
-        if (RefreshSlot(effect->slot, sprite, NULL, atlas))
-            ++updates;
+        RefreshSlot(effect->slot, sprite, NULL, atlas);
         if (!sSlots[effect->slot].valid)
             continue;
         h = sSlots[effect->slot].height;
@@ -1848,6 +2037,12 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
                    + (base - h / 2 - (reference->base - 8)) / VOXEL_PIXELS_PER_TILE;
                 if (fabsf(cx - camera->targetX) > 24.0f || fabsf(cz - camera->targetZ) > 24.0f)
                     continue;
+                if (effect->gate)
+                {
+                    EmitTurnedDecal(builder, &sSlots[effect->slot], effect->slot, sprite, cx, cz,
+                                    reference->shade);
+                    continue;
+                }
                 if (effect->surf)
                 {
                     /* Up and down with the GBA's bob, its rider with it. */
@@ -1881,5 +2076,4 @@ unsigned VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelC
                           reference->shade, SpriteScale(sprite));
         }
     }
-    return updates;
 }

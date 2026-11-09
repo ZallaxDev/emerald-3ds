@@ -82,13 +82,11 @@ float CtrVoxel_OverlayParallax(void);
 
 typedef struct
 {
-    unsigned instances;
     unsigned chunks;
     unsigned visibleChunks;
     unsigned vertices;
     unsigned atlasRebuilds;
     unsigned meshRebuilds;
-    unsigned spriteUpdates;
     unsigned animationUploads, animatedMetatiles;
     /* Animated tile passes written out, the frames the longest took from its
      * first write to its last copy, and the frames passes waited, composed,
@@ -115,27 +113,45 @@ typedef struct
      * reset that follows a change to them (region layouts come off RomFS
      * there), the atlas job, and the billboards. */
     float worldMs, atlasMs, spritesMs;
+    /* Of spritesMs: the slots gathered from OBJ VRAM, compared and decoded
+     * (voxel_entities.c), and the packing of the frame's dynamic vertices.
+     * Measured with the profiler on only (Port_ProfTick); 0 without. */
+    float gatherMs, packMs;
+    /* The CPU time of this frame's Draws, both eyes summed, and of their
+     * passes: the chunks (terrain, trees, buildings, static models), the
+     * dynamic buffer (lamps, reflections, shadows, cards), the light in the
+     * air (fog and sand banks, motes, rays) and the weather's particles.
+     * Measure only, with the profiler on; 0 without (weather aside). */
+    float drawMs, drawChunksMs, drawCardsMs, drawAirMs, drawWeatherMs;
     /* ... and of what no other figure holds: the building pages' stream, the
      * animated tiles' recomposition, the drafts. */
     float streamMs, animMs, draftMs;
     /* Spent building after the last FrameEnd (CtrVoxel_AfterSubmit), and the
      * budget it had. */
     float afterMs, afterBudgetMs;
+    /* Of afterMs, the slice owed a static model missing from the picture,
+     * run first whatever the budget: the draw that found it missing once
+     * converted it inside the frame, so it is the drawn path's work rather
+     * than the builds' elastic time. 0 when no such slice ran. */
+    float afterOwedMs;
     /* From the end of those builds to the next FrameBegin (the game, the
      * audio, the bottom screen, and whatever else ran), and what the budget
      * expected of it. */
     float tailMs, tailExpectedMs;
-    /* Chunks built this frame, and still waiting for a later one. */
-    unsigned frameBuilds, pendingBuilds;
+    /* Chunks still waiting for a later frame. */
+    unsigned pendingBuilds;
     /* Squares drawn this frame as their draft only, and drafts made in all. */
     unsigned draftsVisible, draftsMade;
-    /* Bytes still free in the two pools this competes for. VRAM is here
-     * because it is almost entirely unused, which is the whole argument for
-     * moving the mesh into it. */
-    unsigned long linearFree, vramFree;
+    /* In all: chunks built ahead of time and thrown away for want of VRAM
+     * (BUILD_NO_VRAM), and builds ahead of time not started because the
+     * arena could not have made room for the smallest of those either. */
+    unsigned aheadLost, aheadSkipped;
 } CtrVoxelStats;
 
 const CtrVoxelStats *CtrVoxel_GetStats(void);
+/* For the frame profiler, counts in all: model draws left out because the
+ * model was not ready, and sprites in sight left out for want of a slot. */
+void CtrVoxel_FrameCounts(unsigned *modelsSkipped, unsigned *spritesLeftOut);
 
 /*
  * Gives back the VRAM of atlases the overworld is not using right now - every
@@ -151,6 +167,8 @@ unsigned long CtrVoxel_ReleaseIdleVram(void);
  * was not enough. Returns the bytes released.
  */
 unsigned long CtrVoxel_ReleaseIdleVramFor(uint32_t bytes, bool inView);
+/* One atlas out of view, only if its going makes a block of bytes alone. */
+unsigned long CtrVoxel_ReleaseAtlasMaking(uint32_t bytes);
 
 /*
  * All the world's VRAM - arenas, chunks, building pages, atlases - given back
@@ -160,9 +178,34 @@ unsigned long CtrVoxel_ReleaseIdleVramFor(uint32_t bytes, bool inView);
  */
 bool CtrVoxel_HoldsVram(void);
 void CtrVoxel_ParkVram(void);
+/* The chunks' cold meshes given back to the heap: none is kept through a
+ * battle (the voxel world's own update does it for one over the world). */
+void CtrVoxel_ColdRelease(void);
 bool CtrVoxel_UnparkVram(void);
+/*
+ * The world up without its building pages (the unpark gave up on them after
+ * a few tries): the arena still wanted, and asked for again with the world
+ * up (true once nothing is missing any more, false while there is no room).
+ */
+bool CtrVoxel_PagesMissing(void);
+bool CtrVoxel_ClaimPages(void);
 /* Bytes used and largest gap of the chunk and building-page arenas. */
 void CtrVoxel_ArenaUse(uint32_t *chunkUsed, uint32_t *chunkLargest, uint32_t *pageUsed, uint32_t *pageLargest);
+/*
+ * A gap of the building pages' arena lent to the battle, for a large layer's
+ * texture or, without the world, its kept scenery (3ds_video.c, BattleLayerMake,
+ * SlotsMakeForKeeper), as an atlas page borrows one: memory the world holds
+ * anyway, so a voxel battle may have it too. One at a time, NULL without a gap
+ * of `bytes`. It stays where it is (no slide moves it). The arena wants it back
+ * (CtrVoxel_PagesGapWanted) once a page drawn from, a window mask or an atlas
+ * page finds no room and the gap is what would make it; the borrower gives it
+ * back outside the frame, after the GPU has stopped reading it
+ * (CtrVoxel_ReturnPagesGap). Parking the world asks for it first
+ * (CtrVideo_PagesGapRevoke).
+ */
+void *CtrVoxel_LendPagesGap(uint32_t bytes);
+bool CtrVoxel_PagesGapWanted(void);
+void CtrVoxel_ReturnPagesGap(void *block);
 
 /* A map just entered by a cut is still being built (see VOXEL_WARMUP_MS). */
 bool CtrVoxel_IsWarmingUp(void);

@@ -109,12 +109,15 @@
 #include "constants/trainers.h"
 #include "port_platform.h"
 
+#include "3ds_audio.h"
 #include "3ds_data.h"
+#include "3ds_assets.h"
 #include "3ds_bottom.h"
 #include "3ds_extras.h"
 #include "3ds_bottom_art.h"
 #include "3ds_clock_store.h"
 #include "3ds_input.h"
+#include "3ds_local.h"
 #include "3ds_nuzlocke_ui.h"
 #include "3ds_game_views.h"
 #include "3ds_log.h"
@@ -425,7 +428,7 @@ static void *UnlzFile(const char *path, u32 *outSize)
     {
         memcpy(plain, path, n - 3);
         plain[n - 3] = '\0';
-        Port_TransformAsset(plain, data, size);
+        CtrAssets_TransformAsset(plain, data, size);
     }
     if (outSize != NULL)
         *outSize = size;
@@ -2099,7 +2102,6 @@ static int SmoothInkWidth(const Font *font, const u8 *str, int k)
 
 /* Text colours from the message box palette. */
 #define TXT(i) (sRes.text.c[(i)])
-#define TXT_WHITE TXT(TEXT_COLOR_WHITE)
 #define TXT_DARK TXT(TEXT_COLOR_DARK_GRAY)
 #define TXT_LIGHT TXT(TEXT_COLOR_LIGHT_GRAY)
 #define TXT_RED TXT(TEXT_COLOR_RED)
@@ -2252,6 +2254,10 @@ enum { HELD_NONE, HELD_ITEM, HELD_MAIL };
 /* A row of the map's wild Pokemon list (map extras): a species of one
  * method's table, its slots' levels and chances added up. */
 #define ENC_ROWS 12   /* a method's rows, at most */
+/* What the Pokedex knows of a row's species: its seen field. No field of its
+ * own for caught: the rows are copied from the stack and compared with memcmp,
+ * and one more u8 would add a padding byte that holds whatever was there. */
+enum { ENC_UNSEEN, ENC_SEEN, ENC_CAUGHT };
 typedef struct
 {
     u16 species;
@@ -2303,6 +2309,8 @@ typedef struct
     /* Trainer card, its back with cardBack. */
     u8 name[PLAYER_NAME_LENGTH + 1];
     u8 hasDex, stars, badges, minutes, cardBack, hofMinutes;
+    /* The Frontier Pass held, for PASS under FLIP. */
+    u8 hasPass;
     u16 id, dex, hours, hofHours, linkWins, linkLosses, trades, pokeblocks, contests;
     u32 money;
     /* Save and options. */
@@ -2351,6 +2359,16 @@ enum { BAG_VIEW_NONE, BAG_VIEW_SECTION, BAG_VIEW_WHOLE };
 static bool8 BagShown(u8 mode)
 {
     return mode == MODE_BAG_MENU;
+}
+
+/* The bag to deposit from at the PC or to sell from at a shop: in the window,
+ * but it goes back to the PC's or the shop's menu as it closes, never to
+ * another screen (CtrBottom_LeaveTo), so the dock is locked to its own BAG,
+ * which closes it as B does. */
+static bool8 BagReturnsToMenu(u8 mode)
+{
+    return mode == MODE_BAG_MENU
+        && (gBagPosition.location == ITEMMENULOCATION_ITEMPC || gBagPosition.location == ITEMMENULOCATION_SHOP);
 }
 
 /* Whether the shop's BUY screen is what the whole screen shows. */
@@ -3080,6 +3098,7 @@ static void SnapshotCard(ViewState *s)
     s->hours = gSaveBlock2Ptr->playTimeHours > 999 ? 999 : gSaveBlock2Ptr->playTimeHours;
     s->minutes = gSaveBlock2Ptr->playTimeMinutes > 59 ? 59 : gSaveBlock2Ptr->playTimeMinutes;
     s->hasDex = FlagGet(FLAG_SYS_POKEDEX_GET);
+    s->hasPass = FlagGet(FLAG_SYS_FRONTIER_PASS);
     /* Counting the Pokédex walks every species; twice a second is plenty. */
     if ((frames++ % 30) == 0)
     {
@@ -3489,9 +3508,18 @@ static void SnapshotEncounters(ViewState *s)
         memcpy(s->enc, rows + page * ENC_SHOWN, s->encCount * sizeof(EncRow));
         break;
     }
-    /* Only what the Pokedex has seen is named. */
+    /* Only what the Pokedex has seen is named, and what it has caught marked.
+     * FLAG_GET_CAUGHT clears the species' flags when they disagree: asked only
+     * of a species seen, whose flags agree, it reads and changes nothing. */
     for (u8 i = 0; i < s->encCount; ++i)
-        s->enc[i].seen = GetSetPokedexFlag(SpeciesToNationalPokedexNum(s->enc[i].species), FLAG_GET_SEEN) != 0;
+    {
+        u16 national = SpeciesToNationalPokedexNum(s->enc[i].species);
+
+        if (GetSetPokedexFlag(national, FLAG_GET_SEEN) == 0)
+            s->enc[i].seen = ENC_UNSEEN;
+        else
+            s->enc[i].seen = GetSetPokedexFlag(national, FLAG_GET_CAUGHT) != 0 ? ENC_CAUGHT : ENC_SEEN;
+    }
 }
 
 static void SnapshotMapExtras(ViewState *s)
@@ -3585,7 +3613,7 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
                || ((mode == MODE_PARTY_MENU || mode == MODE_BAG_MENU) && s->bagView == BAG_VIEW_SECTION));
     /* The Fly map: only MAP, which cancels it, as in a battle's menus. */
     s->mapFly = sMapFly && mode == MODE_FIELD && s->screen == SCR_MAP && s->dock;
-    s->dockLocked = s->dock && (s->inBattle || s->mapFly);
+    s->dockLocked = s->dock && (s->inBattle || s->mapFly || BagReturnsToMenu(mode));
     StringCopy(s->name, gSaveBlock2Ptr->playerName);
     /* The header's Y and RUN, and the focus on the dock or the header; in a
      * battle neither is for now. */
@@ -5055,9 +5083,11 @@ static struct
 } sIntro;
 
 /*
- * Under the title screen: the developer's logo in the bottom-left corner and
- * the build's version (CTR_APP_VERSION, the Makefile's APP_VERSION) in the
- * bottom-right one, both in the logo's own grey over black.
+ * Under the title screen: the developer's logo in the bottom-left corner, the
+ * build's id above it (engine/build_id.bin: two systems with the same one can
+ * play together over local wireless) and the build's version (CTR_APP_VERSION,
+ * the Makefile's APP_VERSION) in the bottom-right corner, all in the logo's
+ * own grey over black.
  */
 #ifndef CTR_APP_VERSION
 #define CTR_APP_VERSION "dev"
@@ -5068,7 +5098,7 @@ static struct
 
 static void DrawTitleCredit(void)
 {
-    int x0 = TITLE_MARGIN_X, y0 = H - TITLE_MARGIN_Y - ART_LOGO_H;
+    int x0 = TITLE_MARGIN_X, y0 = H - TITLE_MARGIN_Y - ART_LOGO_H, ink = ART_LOGO_W;
     u16 grey = PackRgb(TITLE_GREY, TITLE_GREY, TITLE_GREY);
 
     for (int y = 0; y < ART_LOGO_H; ++y)
@@ -5077,7 +5107,11 @@ static void DrawTitleCredit(void)
             u8 a = sArtLogo[y * ART_LOGO_W + x];
 
             if (a)
+            {
                 Put(x0 + x, y0 + y, PackRgb(a, a, a));
+                if (x < ink)
+                    ink = x;
+            }
         }
     /* Its capitals level with the logo's lettering (the logo's rows 8 to 20). */
     {
@@ -5089,6 +5123,21 @@ static void DrawTitleCredit(void)
         InkColumns(&sNormal, str, &ix0, &ix1);
         CapRows(&sNormal, &top, &bottom);
         DrawStr(&sNormal, str, W - TITLE_MARGIN_X - ix1, y0 + 8 + (12 - (bottom - top)) / 2 - top, grey, 0);
+    }
+    /* The id's capitals 4 pixels over the logo, its first ink on the logo's. */
+    if (LocalLink_BuildName() && sSmall.glyphs)
+    {
+        char text[40];
+        const u8 *str;
+        int ix0, ix1, top, bottom;
+
+        snprintf(text, sizeof(text), "%s %s",
+                 CTR_TEXT("Build", "Compilación", "Build", "Build", "Build", "Build", "ビルド"),
+                 LocalLink_BuildName());
+        str = Ascii(text);
+        InkColumns(&sSmall, str, &ix0, &ix1);
+        CapRows(&sSmall, &top, &bottom);
+        DrawStr(&sSmall, str, x0 + ink - ix0, y0 - 4 - bottom, grey, 0);
     }
 }
 
@@ -6406,8 +6455,9 @@ static void Activate(u8 id, u8 mode)
                 CancelFlyMap();
             return;
         }
-        /* A battle's party menu, summary or bag: only its own button, their B. */
-        if (gMain.inBattle && screen != sShown.screen)
+        /* A battle's party menu, summary or bag, or the bag at the PC or a
+         * shop: only its own button, their B. */
+        if ((gMain.inBattle || sShown.dockLocked) && screen != sShown.screen)
             return;
 
         if (mode == MODE_POKENAV)
@@ -6550,6 +6600,14 @@ static void Activate(u8 id, u8 mode)
         {
             sCardBack = !sCardBack;
             PlaySE(SE_SELECT);
+        }
+        /* PASS, the game's Frontier Pass, opened as PLAYER opens it
+         * (start_menu.c CtrShowCardOrPass). */
+        else if (id == HIT_YES && sShown.hasPass && FieldIdle() && CtrStartMenu_Available())
+        {
+            PlaySE(SE_SELECT);
+            StartPlan(PLAN_START, START_PLAYER);
+            BeginSession(FALSE);
         }
         break;
     case SCR_NUZLOCKE:
@@ -6852,7 +6910,7 @@ static bool8 ColumnShown(u8 mode)
     case MODE_PARTY_MENU:
         return gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD;
     case MODE_BAG_MENU:
-        return CtrBag_InWindow();
+        return CtrBag_InWindow() && !BagReturnsToMenu(mode);
     }
     return FALSE;
 }
@@ -7103,7 +7161,6 @@ void CtrBattleMenu_HoldScene(void)
         BeginSession(TRUE);
     sSession.awaitMenu = TRUE;
     CtrVideo_HoldTop(TRUE);
-    CtrVideo_DimHeldTop();
 }
 
 /*
@@ -7575,7 +7632,7 @@ void CtrBottom_Frame(void)
     static u32 frames;
     static bool8 iconsPending, held;
     u8 mode, pressed;
-    bool8 hold;
+    bool8 hold, look;
     uint64_t ticks[3];
 
     if (!sRes.ready)
@@ -7641,9 +7698,14 @@ void CtrBottom_Frame(void)
         CtrVideo_HoldTop(hold);
         held = hold;
     }
-    /* A battle's menus: its scene stays up there, darkened. */
-    if (hold && sSession.battle)
-        CtrVideo_DimHeldTop();
+    /* The column in focus, or a section of its own up on the field (the
+     * card, SAVE, OPTIONS, the Nuzlocke tracker): the top screen points
+     * down here meanwhile; with the top held too, the music a little
+     * quieter. */
+    look = sFocus != FOCUS_NONE || sInside != INSIDE_NONE
+        || (mode == MODE_FIELD && sScreen >= SCR_CARD && sScreen < SCR_COUNT);
+    CtrVideo_LookDown(look);
+    CtrAudio_DuckMusic(hold || look);
     if (hold && mode != MODE_POKENAV && mode != MODE_STORAGE && mode != MODE_PARTY_MENU && mode != MODE_SUMMARY
      && mode != MODE_CARD
      && !BagShown(mode)

@@ -4,7 +4,14 @@
 
 #include "3ds_pak.h"
 
-static uint32_t sCrcTable[256];
+/*
+ * CRC-32 (zlib's), four bytes a step ("slicing by 4"): every payload read
+ * from the pack is checked, on the game's thread too, and a byte at a time
+ * was some 9 cycles a byte on an ARM11. The tables are made on first use,
+ * published to the other threads by sCrcReady; made twice, by two threads
+ * at once, they come out the same.
+ */
+static uint32_t sCrcTable[4][256];
 static int sCrcReady;
 
 static void BuildCrcTable(void)
@@ -14,20 +21,39 @@ static void BuildCrcTable(void)
         uint32_t c = i;
         for (int k = 0; k < 8; ++k)
             c = (c & 1) ? 0xEDB88320u ^ (c >> 1) : c >> 1;
-        sCrcTable[i] = c;
+        sCrcTable[0][i] = c;
     }
-    sCrcReady = 1;
+    for (int t = 1; t < 4; ++t)
+        for (uint32_t i = 0; i < 256; ++i)
+            sCrcTable[t][i] = (sCrcTable[t - 1][i] >> 8) ^ sCrcTable[0][sCrcTable[t - 1][i] & 0xFF];
+    __atomic_store_n(&sCrcReady, 1, __ATOMIC_RELEASE);
 }
 
 uint32_t CtrPak_Crc32(uint32_t crc, const void *data, size_t size)
 {
     const uint8_t *p = data;
 
-    if (!sCrcReady)
+    if (!__atomic_load_n(&sCrcReady, __ATOMIC_ACQUIRE))
         BuildCrcTable();
     crc = ~crc;
-    while (size--)
-        crc = sCrcTable[(crc ^ *p++) & 0xFF] ^ (crc >> 8);
+    /* A byte at a time up to a word's boundary, then a word at a time. */
+    for (; size != 0 && ((uintptr_t)p & 3) != 0; --size)
+        crc = sCrcTable[0][(crc ^ *p++) & 0xFF] ^ (crc >> 8);
+    for (; size >= 4; size -= 4, p += 4)
+    {
+        uint32_t word;
+
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        memcpy(&word, p, 4);
+#else
+        word = (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
+#endif
+        word ^= crc;
+        crc = sCrcTable[3][word & 0xFF] ^ sCrcTable[2][(word >> 8) & 0xFF]
+            ^ sCrcTable[1][(word >> 16) & 0xFF] ^ sCrcTable[0][word >> 24];
+    }
+    for (; size != 0; --size)
+        crc = sCrcTable[0][(crc ^ *p++) & 0xFF] ^ (crc >> 8);
     return ~crc;
 }
 

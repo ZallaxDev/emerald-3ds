@@ -23,18 +23,36 @@
 ; position, slid along the sun by its height, rotated and scaled into the
 ; pattern, which the world and sprites sample (and the rays, turned).
 ;   dapple = (dappleU . position, dappleV . position)
+;
+; SHADOW QUALITY HIGH samples the sun's shadow map on texture unit 0, the only
+; unit that reads one (see "Shadow map" in ctr_voxel.c). Its coordinates come
+; from the view-space position, the same for every draw of an eye:
+;   shadow = (shadowU . view, shadowV . view, w = shadowW . view)
+; and shadowSel moves the texture's own coordinates: x is how much of them
+; texcoord0 keeps, y how much texcoord1 takes (0, 1 with the map, the atlas
+; then on unit 1; 1, 0 without it, the shadow uniforms all 0).
+; Drawing the map itself, z and w set how much further from the sun a lit
+; vertex is put - z the most, in clip depth, w the ambient shade from which
+; it starts (it is all there 1/50 above):
+;   depth += shadowSel.z * clamp((shade - shadowSel.w) * 50, 0, 1)
+; so a lit surface does not shadow itself, while one the sun does not reach -
+; which the map cannot change, and where the sun's ray enters what shades the
+; ground - stays where it is and the shadow keeps to the foot of its caster.
 
 .fvec projection[4], modelView[4], origin
 .fvec shadeTint, tintDiff, grade, fog
 .fvec dappleU, dappleV
+.fvec shadowU, shadowV, shadowW, shadowSel
 
 ; x: position scale, y: shade scale, z: 0, w: 1
 .constf ctrVoxelConst(0.001953125, 0.00006103515625, 0.0, 1.0)
+.constf ctrShadowConst(50.0, 0.0, 0.0, 0.0)
 .alias  ones  ctrVoxelConst.wwww
 .alias  zeros ctrVoxelConst.zzzz
 
 .out outpos position
 .out outtc0 texcoord0
+.out outtc0w texcoord0w
 .out outtc1 texcoord1
 .out outtc2 texcoord2
 .out outclr color
@@ -55,23 +73,45 @@
 	dp4 r1.z, modelView[2], r7
 	dp4 r1.w, modelView[3], r7
 
-	; outpos = projection * r1
-	dp4 outpos.x, projection[0], r1
-	dp4 outpos.y, projection[1], r1
-	dp4 outpos.z, projection[2], r1
-	dp4 outpos.w, projection[3], r1
+	; r2 = shade
+	mul r2, ctrVoxelConst.yyyy, inpos.wwww
 
-	mov outtc0, intex
+	; outpos = projection * r1, a lit vertex put back in the map's pass
+	dp4 r10.x, projection[0], r1
+	dp4 r10.y, projection[1], r1
+	dp4 r10.z, projection[2], r1
+	dp4 r10.w, projection[3], r1
+	add r11, -shadowSel.wwww, r2
+	mul r11, ctrShadowConst.xxxx, r11
+	max r11, zeros, r11
+	min r11, ones, r11
+	mul r11, shadowSel.zzzz, r11
+	add r10.z, r10.z, -r11.x
+	mov outpos, r10
+
 	mov outtc2, intex
 
-	; r6 = the dapple pattern's coordinates
+	; r8 = the shadow map's coordinates (+ the atlas', without the map)
+	mov r8, zeros
+	dp4 r8.x, shadowU, r1
+	dp4 r8.y, shadowV, r1
+	mul r9, shadowSel.xxxx, intex
+	add r8, r8, r9
+	mov outtc0, r8
+
+	; texcoord0w = the map's depth
+	dp4 r9.x, shadowW, r1
+	mov outtc0w, r9.xxxx
+
+	; r6 = the dapple pattern's coordinates (+ the atlas', with the map)
 	mov r6, zeros
 	dp4 r6.x, dappleU, r0
 	dp4 r6.y, dappleV, r0
+	mul r9, shadowSel.yyyy, intex
+	add r6, r6, r9
 	mov outtc1, r6
 
-	; r2 = shade, r3 = t
-	mul r2, ctrVoxelConst.yyyy, inpos.wwww
+	; r3 = t
 	mul r3, grade.xxxx, r2
 	add r3, grade.yyyy, r3
 	max r3, zeros, r3

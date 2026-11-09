@@ -17,7 +17,6 @@ enum
     PORT_PROF_SPRITES,    /* AnimateSprites + BuildOamBuffer */
     PORT_PROF_FADE,       /* UpdatePaletteFade */
     PORT_PROF_VBLANK,     /* the game's VBlank handler */
-    PORT_PROF_VBLANK_CB,  /* gMain.vblankCallback */
     PORT_PROF_DMA3,       /* ProcessDma3Requests */
     PORT_PROF_MIX,        /* m4aSoundMain */
     PORT_PROF_IO,         /* asset payloads read from storage */
@@ -38,13 +37,36 @@ enum
     PORT_PROF_BS_TEXT,    /* the text box composed once */
     PORT_PROF_BS_EYES,    /* both eyes put together */
     PORT_PROF_BS_WHOLE,   /* both eyes composed whole (groups not apart) */
+    /* The game thread waiting on the asset table: for its lock, or for a
+     * payload another thread is reading (3ds_assets.c GetPayload). */
+    PORT_PROF_IO_WAIT,
+    /* Inside draw, a battle's picture composed flat (RenderBattleScene and what
+     * follows it); inside bw.scene over the world, inside bs.whole per eye: */
+    PORT_PROF_BM_SCENE,   /* the scenery and the sprites composed, or kept */
+    PORT_PROF_BM_PLACE,   /* the scene on the logical surface, and its edges */
+    PORT_PROF_BM_TEXT,    /* the text box composed */
     PORT_PROF_COUNT
 };
 
+/* The table a battle animation was launched from (Port_ProfBattle). */
+enum
+{
+    PORT_ANIM_NONE, PORT_ANIM_MOVE, PORT_ANIM_GENERAL, PORT_ANIM_SPECIAL, PORT_ANIM_STATUS,
+};
+/* What the game is in, for the frame's record. */
+#define PORT_BATTLE_IN 1u       /* gMain.inBattle */
+#define PORT_BATTLE_DOUBLE 2u   /* BATTLE_TYPE_DOUBLE */
+
+/* Whether anything is measured: there is a log to report to. */
+unsigned Port_ProfOn(void);
 uint32_t Port_ProfTick(void);
 void Port_ProfAdd(unsigned section, uint32_t start);
 /* The screen the frame belongs to, named in the log by its callback. */
 void Port_ProfScene(const void *callback2);
+/* The frame being made, as the game has it: the animation playing (its table
+ * PORT_ANIM_*, 0 for none, and its index there), PORT_BATTLE_* and the
+ * sprites in use. Read by the record, never by anything that draws. */
+void Port_ProfBattle(unsigned animKind, unsigned animId, unsigned battle, unsigned sprites);
 
 #define PORT_PROF_BEGIN(name) uint32_t portProf_##name = Port_ProfTick()
 #define PORT_PROF_END(name, section) Port_ProfAdd((section), portProf_##name)

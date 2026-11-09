@@ -184,6 +184,19 @@ int main(int argc, char **argv)
     VoxelRegions_Init();
     VoxelBuildings_Init();
     VoxelSign_Init();
+#if CTR_VOXEL_LIGHTING
+    /* SHADOW QUALITY: VOXEL_SHADOWS=1 builds as HIGH (0, or unset, LOW) */
+    if (getenv("VOXEL_SHADOWS") != NULL)
+        VoxelLighting_SetQuality(atoi(getenv("VOXEL_SHADOWS")));
+    /* VOXEL_SUN="dx,dz[,strength]": the clock's sun instead of the fixed one */
+    if (getenv("VOXEL_SUN") != NULL)
+    {
+        float dx, dz, strength = 1.0f;
+
+        if (sscanf(getenv("VOXEL_SUN"), "%f,%f,%f", &dx, &dz, &strength) >= 2)
+            VoxelLighting_SetSun(dx, dz, strength, 0x5A11u);
+    }
+#endif
     if ((out = fopen(argv[2], "wb")) == NULL)
         return 2;
     countAt = ftell(out);

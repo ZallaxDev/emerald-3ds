@@ -1,5 +1,74 @@
 # Changelog
 
+## Unreleased
+
+- Voxel: trainers buried in the ash or sand and the unseen Kecleon on Route
+  120's bridge stay out of sight until they appear, as in 2D (issue #237). By
+  @Johannes-Sch.
+- Voxel: rotating gates in Fortree Gym and the Trick House lie on the ground,
+  turned as in 2D, so the puzzles can be read (issue #238). By @Johannes-Sch.
+- Voxel: the orbs' light in the Magma Hideout and the Seafloor Cavern is
+  translucent as in 2D, no longer a solid box hiding the legendary as it wakes
+  (issue #236). By @Johannes-Sch.
+- The Frontier Pass: PLAYER opens it again once the player has it, and the
+  bottom screen's trainer card has a PASS plate under FLIP. By @DannyM90
+  (pull request #212).
+- OPTIONS: SPEED EFFECTS (SCENE) turns off the speed lines and the zoom blur
+  of the 3D battle's entrance. By @DannyM90 (pull request #232).
+- German: the Frontier map screen gets its own tiles, not the pass's picture.
+  By @DannyM90 (pull request #228).
+- Touch bottom screen: choosing the move to forget for a new one happens in
+  the bottom screen wherever a move is learned (pull request #223), and the
+  bag deposits in the PC and sells in the shop there too (pull request #224).
+  By @luksgrin.
+- Battle HUD: no dark block next to a status badge. By @luksgrin (pull
+  request #225).
+- Japanese: the PC item storage no longer crashes (pull request #219); the
+  bag's return line (#220), the berry names (#221) and the level-up box's
+  numbers (#226) as in BPEJ, and the 3D battle keeps the level-up box's top
+  rows (#226). By @luksgrin.
+- Voxel: Lilycove's beacon is modelled, and bare cells keep their own
+  drawing. By @luksgrin (pull request #227).
+- Local wireless: every language of one release links. The build's id, which
+  two systems must share to play together, is now made from the patch set
+  and the port's code rather than the ROM-derived executable and data, so
+  English, Spanish, French, Italian, German and Japanese builds of one
+  release share it. The title screen shows it at the bottom left of the
+  bottom screen, above the logo. By @eathanpage.
+- Hall of Fame: shown centred as a GBA screen instead of in the top screen's
+  top left corner, with black and falling confetti beside it. Its stripes
+  and dark bands carry on to the edges, and its texts (each Pokémon's
+  number, name and level, "Welcome to the HALL OF FAME!", "LEAGUE CHAMPION!
+  CONGRATULATIONS!") are back in the dark band where the GBA shows them;
+  the game prints them in the standard text box, which this screen lowers
+  for the overworld. By @eathanpage.
+- Wide screen and GBA screens: every other screen laid out for the GBA is
+  shown centred instead of in the top screen's top left corner: the Battle
+  Dome's tourney tree, the Battle Factory's rental and swap screens, the
+  Battle Pyramid's bag, Trainer Hill's records, Berry Crush, a berry's tag,
+  the clear-save and reset-clock screens, the museum's paintings, the
+  diploma, Easy Chat, the Frontier Pass, mail, the move relearner, the
+  PokéBlock case, feeding a PokéBlock, the condition screen, the save error
+  screen, the Union Room chat and the wireless status screen. The tourney
+  tree no longer has two black bars down its middle: its windows, which the
+  game moves line by line, are drawn line by line. The swap menu's bar no
+  longer lies across the margin past the picture. By @eathanpage.
+- Bottom screen: while it has the player's attention (a menu it runs with the
+  top screen held, such as the party or the bag, one of its own sections such
+  as SAVE or OPTIONS, or its button column in focus with X), the top screen
+  darkens towards its foot under an arrow pointing down at it, as on the DS
+  games, and the music plays at half its volume. By @eathanpage.
+- 3D world: SHADOW QUALITY option (OPTIONS, and GRAPHICS on the bottom
+  screen). HIGH, the default on New 3DS, draws the sun's shadows from a GPU
+  shadow map: every house, cliff, lamp and tree casts its exact outline on
+  the ground, walls and roofs, with a soft edge, and trees cast the shape of
+  their own crowns. LOW, the default on Old 3DS, keeps the shadows baked into
+  the world as before. Signposts' shadows no longer float off the sign on
+  drawn terrain. The option changes without a restart, the world redrawing
+  itself a piece at a time.
+- Area wild list: a species already caught carries the Pokédex list's ball
+  mark, so the list tells caught from only seen. By @Johannes-Sch.
+
 ## 0.5.0 — 2026-10-29
 
 The first beta.

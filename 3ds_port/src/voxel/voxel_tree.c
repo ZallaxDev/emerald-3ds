@@ -314,6 +314,85 @@ static void EmitGround(VoxelBuilder *builder, const VoxelMapInstance *inst, int 
  * its floor (96,32), every cell of a patch alike. The tuft of the cell south
  * of a walker stands in front of it up to its shoulders, as the GBA's grass
  * covers all but its head. */
+static VoxelTreeCard *sCards, *sNoted;
+static unsigned sCardCapacity, sCardCount;
+
+void VoxelTree_NoteCards(VoxelTreeCard *cards, unsigned capacity)
+{
+    if (cards != NULL)
+    {
+        sNoted = cards;
+        sCardCount = 0;
+    }
+    sCards = cards;
+    sCardCapacity = cards != NULL ? capacity : 0;
+}
+
+unsigned VoxelTree_CardsNoted(void)
+{
+    return sNoted != NULL ? sCardCount : 0;
+}
+
+const VoxelTreeCard *VoxelTree_NotedCards(void)
+{
+    return sNoted;
+}
+
+void VoxelTree_EmitNotedCards(VoxelBuilder *builder)
+{
+    float lift = builder->lift, shift = builder->shift, base = builder->base;
+
+    for (unsigned k = 0; sNoted != NULL && k < sCardCount; ++k)
+    {
+        const VoxelTreeCard *card = &sNoted[k];
+
+        builder->lift = card->lift;
+        builder->shift = card->shift;
+        builder->base = card->base;
+        builder->rounded = true;
+        VoxelBuilder_Quad(builder, &card->raw[0], &card->raw[1], &card->raw[2], &card->raw[3]);
+        builder->rounded = false;
+    }
+    builder->lift = lift;
+    builder->shift = shift;
+    builder->base = base;
+}
+
+/* A crown card, a b c d: noted (and emitted later, VoxelTree_EmitNotedCards)
+ * where VoxelBuilder_Tri will write it, or emitted now. */
+static void CrownCard(VoxelBuilder *builder, const VoxelVertex *a, const VoxelVertex *b,
+                      const VoxelVertex *c, const VoxelVertex *d, float footX, float footY, float footZ)
+{
+    const VoxelVertex foot = {footX, footY, footZ, 0.0f, 0.0f, 0.0f};
+    const VoxelVertex *in[5] = {a, b, c, d, &foot};
+    VoxelTreeCard *card;
+
+    if (sCards == NULL || sCardCount >= sCardCapacity)
+    {
+        builder->rounded = true;
+        VoxelBuilder_Quad(builder, a, b, c, d);
+        builder->rounded = false;
+        return;
+    }
+    card = &sCards[sCardCount++];
+    card->raw[0] = *a;
+    card->raw[1] = *b;
+    card->raw[2] = *c;
+    card->raw[3] = *d;
+    card->lift = builder->lift;
+    card->shift = builder->shift;
+    card->base = builder->base;
+    for (int i = 0; i < 5; ++i)
+    {
+        VoxelVertex *out = i < 4 ? &card->corner[i] : &card->foot;
+
+        *out = *in[i];
+        out->x -= builder->originX;
+        out->y += builder->lift + builder->base;
+        out->z = VoxelBuilder_StretchZ(builder, out->z + builder->shift) - builder->originZ;
+    }
+}
+
 static void EmitSmallCell(VoxelBuilder *builder, const VoxelMapInstance *inst, int x, int y,
                           const void *secondaryTileset, int metatileId, int part, bool rock)
 {
@@ -341,13 +420,23 @@ static void EmitSmallCell(VoxelBuilder *builder, const VoxelMapInstance *inst, i
     float baseZ = wz + (dewford ? 0.975f : 0.825f);
 
     EmitGround(builder, inst, x, y, TEX_U(tx), TEX_V(ty), TEX_U(tx + 16), TEX_V(ty + 16));
-    builder->rounded = true;
-    VoxelBuilder_Quad(builder,
-        &(VoxelVertex){wx,        baseHeight + rise, baseZ - run, TEX_U(cx),      TEX_V(cy),      1.0f},
-        &(VoxelVertex){wx + 1.0f, baseHeight + rise, baseZ - run, TEX_U(cx + 16), TEX_V(cy),      1.0f},
-        &(VoxelVertex){wx + 1.0f, baseHeight,        baseZ,       TEX_U(cx + 16), TEX_V(cy + 32), 1.0f},
-        &(VoxelVertex){wx,        baseHeight,        baseZ,       TEX_U(cx),      TEX_V(cy + 32), 1.0f});
-    builder->rounded = false;
+    {
+        VoxelVertex card[4] = {
+            {wx,        baseHeight + rise, baseZ - run, TEX_U(cx),      TEX_V(cy),      1.0f},
+            {wx + 1.0f, baseHeight + rise, baseZ - run, TEX_U(cx + 16), TEX_V(cy),      1.0f},
+            {wx + 1.0f, baseHeight,        baseZ,       TEX_U(cx + 16), TEX_V(cy + 32), 1.0f},
+            {wx,        baseHeight,        baseZ,       TEX_U(cx),      TEX_V(cy + 32), 1.0f},
+        };
+
+        if (grass)
+        {
+            builder->rounded = true;
+            VoxelBuilder_Quad(builder, &card[0], &card[1], &card[2], &card[3]);
+            builder->rounded = false;
+        }
+        else
+            CrownCard(builder, &card[0], &card[1], &card[2], &card[3], wx + 0.5f, baseHeight, baseZ);
+    }
 }
 
 /* A 2x2 tree's art: its crown (rows of `rowPx` texels), its trunk's ground,
@@ -420,13 +509,15 @@ static void EmitCrownCard(VoxelBuilder *builder, const LargeArt *art, int x, int
     float top = 1.0f - row * 0.5f, bottom = top - 0.5f;
 
     /* A crown card: lit as the rounded crown it stands for. */
-    builder->rounded = true;
-    VoxelBuilder_Quad(builder,
-        &(VoxelVertex){wx,        baseHeight + top * rise,    baseZ - top * run,    u0, v0, 1.0f},
-        &(VoxelVertex){wx + 1.0f, baseHeight + top * rise,    baseZ - top * run,    u1, v0, 1.0f},
-        &(VoxelVertex){wx + 1.0f, baseHeight + bottom * rise, baseZ - bottom * run, u1, v1, 1.0f},
-        &(VoxelVertex){wx,        baseHeight + bottom * rise, baseZ - bottom * run, u0, v1, 1.0f});
-    builder->rounded = false;
+    VoxelVertex card[4] = {
+        {wx,        baseHeight + top * rise,    baseZ - top * run,    u0, v0, 1.0f},
+        {wx + 1.0f, baseHeight + top * rise,    baseZ - top * run,    u1, v0, 1.0f},
+        {wx + 1.0f, baseHeight + bottom * rise, baseZ - bottom * run, u1, v1, 1.0f},
+        {wx,        baseHeight + bottom * rise, baseZ - bottom * run, u0, v1, 1.0f},
+    };
+
+    /* the tree's foot: its middle, two cells across, on the trunk row */
+    CrownCard(builder, &card[0], &card[1], &card[2], &card[3], wx - col + 1.0f, baseHeight, baseZ);
 }
 
 static void EmitCell(VoxelBuilder *builder, const VoxelMapInstance *inst, const void *secondaryTileset,

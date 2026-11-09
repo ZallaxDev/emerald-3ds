@@ -938,7 +938,7 @@ index c3658da89f92f6dccddeb5bc30465b13301a6874..6fd3cdad8e5809fa36d018f608ae46f2
          AI_THINKING_STRUCT->funcResult = AI_WEATHER_RAIN;
      if (gBattleWeather & B_WEATHER_SANDSTORM)
 diff --git a/src/battle_anim.c b/src/battle_anim.c
-index fb2817af992d03c73137f68500e831714b09cc5f..694136255ff490575163d13ef1cb07ec0e127839 100644
+index fb2817af992d03c73137f68500e831714b09cc5f..cf71973ddca81bcf3c07a7d9d7bdbea37db37c7d 100644
 --- a/src/battle_anim.c
 +++ b/src/battle_anim.c
 @@ -28,6 +28,10 @@
@@ -962,7 +962,45 @@ index fb2817af992d03c73137f68500e831714b09cc5f..694136255ff490575163d13ef1cb07ec
  
  EWRAM_DATA static const u8 *sBattleAnimScriptPtr = NULL;
  EWRAM_DATA static const u8 *sBattleAnimScriptRetAddr = NULL;
-@@ -237,6 +244,10 @@ void LaunchBattleAnimation(const u8 *const animsTable[], u16 tableId, bool8 isMo
+@@ -108,6 +115,13 @@ EWRAM_DATA static u8 sMonAnimTaskIdArray[2] = {0};
+ EWRAM_DATA u8 gAnimMoveTurn = 0;
+ EWRAM_DATA static u8 sAnimBackgroundFadeState = 0;
+ EWRAM_DATA static u16 sAnimMoveIndex = 0; // Set but unused.
++#ifdef PLATFORM_3DS
++// What was launched last, for the port's frame record (3ds_port/src/3ds_prof.c):
++// sAnimMoveIndex leaves out the general, special and status animations.
++// Nothing of the game reads these, and they are not saved.
++static const u8 *const *sPortAnimTable;
++static u16 sPortAnimId;
++#endif
+ EWRAM_DATA u8 gBattleAnimAttacker = 0;
+ EWRAM_DATA u8 gBattleAnimTarget = 0;
+ EWRAM_DATA u16 gAnimBattlerSpecies[MAX_BATTLERS_COUNT] = {0};
+@@ -205,10 +219,23 @@ void DoMoveAnim(u16 move)
+     LaunchBattleAnimation(gBattleAnims_Moves, move, TRUE);
+ }
+ 
++#ifdef PLATFORM_3DS
++// The table of the animation playing (NULL for none) and its index there.
++const u8 *const *Port_BattleAnimPlaying(u16 *id)
++{
++    *id = sPortAnimId;
++    return gAnimScriptActive ? sPortAnimTable : NULL;
++}
++#endif
++
+ void LaunchBattleAnimation(const u8 *const animsTable[], u16 tableId, bool8 isMoveAnim)
+ {
+     s32 i;
+ 
++#ifdef PLATFORM_3DS
++    sPortAnimTable = animsTable;
++    sPortAnimId = tableId;
++#endif
+     if (!IsContest())
+     {
+         InitPrioritiesForVisibleBattlers();
+@@ -237,6 +264,10 @@ void LaunchBattleAnimation(const u8 *const animsTable[], u16 tableId, bool8 isMo
  
      sMonAnimTaskIdArray[0] = TASK_NONE;
      sMonAnimTaskIdArray[1] = TASK_NONE;
@@ -973,7 +1011,7 @@ index fb2817af992d03c73137f68500e831714b09cc5f..694136255ff490575163d13ef1cb07ec
      sBattleAnimScriptPtr = animsTable[tableId];
      gAnimScriptActive = TRUE;
      sAnimFramesToWait = 0;
-@@ -247,9 +258,14 @@ void LaunchBattleAnimation(const u8 *const animsTable[], u16 tableId, bool8 isMo
+@@ -247,9 +278,14 @@ void LaunchBattleAnimation(const u8 *const animsTable[], u16 tableId, bool8 isMo
  
      if (isMoveAnim)
      {
@@ -990,7 +1028,7 @@ index fb2817af992d03c73137f68500e831714b09cc5f..694136255ff490575163d13ef1cb07ec
              {
                  m4aMPlayVolumeControl(&gMPlayInfo_BGM, TRACKS_ALL, 128);
                  break;
-@@ -327,6 +343,11 @@ static void RunAnimScriptCommand(void)
+@@ -327,6 +363,11 @@ static void RunAnimScriptCommand(void)
  {
      do
      {
@@ -1002,7 +1040,7 @@ index fb2817af992d03c73137f68500e831714b09cc5f..694136255ff490575163d13ef1cb07ec
          sScriptCmdTable[sBattleAnimScriptPtr[0]]();
      } while (sAnimFramesToWait == 0 && gAnimScriptActive);
  }
-@@ -1200,6 +1221,9 @@ static void LoadMoveBg(u16 bgId)
+@@ -1200,6 +1241,9 @@ static void LoadMoveBg(u16 bgId)
      }
      else
      {
@@ -1376,10 +1414,10 @@ index 22bd41fd25069e56571f5f38ab1594223f113dda..36cf862784b356b62698a6b7f79d950f
      gSprites[spriteId].sTargetX = GetBattlerSpriteCoord(gBattleAnimTarget, BATTLER_COORD_X);
      gSprites[spriteId].sTargetY = GetBattlerSpriteCoord(gBattleAnimTarget, BATTLER_COORD_Y) - 16;
 diff --git a/src/battle_bg.c b/src/battle_bg.c
-index a1ce702c5948964aed3b07827739189a80082812..6b1e6b2f38f7176fb459783263c596446217e974 100644
+index a1ce702c5948964aed3b07827739189a80082812..7b476ea8bc09bf2e6ae41b517101fae484026d4b 100644
 --- a/src/battle_bg.c
 +++ b/src/battle_bg.c
-@@ -757,8 +757,28 @@ void LoadBattleMenuWindowGfx(void)
+@@ -757,8 +757,39 @@ void LoadBattleMenuWindowGfx(void)
      }
  }
  
@@ -1388,6 +1426,10 @@ index a1ce702c5948964aed3b07827739189a80082812..6b1e6b2f38f7176fb459783263c59644
 +// BG3. A move's background is loaded into the same BG3 (LoadMoveBg) and has to
 +// be shown instead, so the renderer asks which of the two BG3 holds.
 +static bool8 sCtrMoveBgShown;
++// The battle's scenery as loaded, a number that changes with each load: the
++// terrain, its entry picture and a move's background. The renderer adds it to
++// the key it keeps the composed scenery by (3ds_video.c, SceneCacheKey).
++static u32 sCtrSceneryVersion;
 +
 +bool8 CtrBattleBg_MoveBgShown(void)
 +{
@@ -1397,6 +1439,12 @@ index a1ce702c5948964aed3b07827739189a80082812..6b1e6b2f38f7176fb459783263c59644
 +void CtrBattleBg_SetMoveBgShown(bool8 shown)
 +{
 +    sCtrMoveBgShown = shown;
++    sCtrSceneryVersion++;
++}
++
++u32 CtrBattleBg_SceneryVersion(void)
++{
++    return sCtrSceneryVersion;
 +}
 +#endif
 +
@@ -1404,11 +1452,33 @@ index a1ce702c5948964aed3b07827739189a80082812..6b1e6b2f38f7176fb459783263c59644
  {
 +#ifdef PLATFORM_3DS
 +    sCtrMoveBgShown = FALSE;
++    sCtrSceneryVersion++;
 +#endif
      if (gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER | BATTLE_TYPE_EREADER_TRAINER | BATTLE_TYPE_RECORDED_LINK))
      {
          LZDecompressVram(gBattleEnvironmentTiles_Building, (void *)(BG_CHAR_ADDR(2)));
-@@ -1282,6 +1302,9 @@ bool8 LoadChosenBattleElement(u8 caseId)
+@@ -1123,6 +1154,9 @@ void InitLinkBattleVsScreen(u8 taskId)
+ 
+ void DrawBattleEntryBackground(void)
+ {
++#ifdef PLATFORM_3DS
++    sCtrSceneryVersion++;
++#endif
+     if (gBattleTypeFlags & BATTLE_TYPE_LINK)
+     {
+         LZDecompressVram(gBattleVSFrame_Gfx, (void *)(BG_CHAR_ADDR(1)));
+@@ -1210,6 +1244,10 @@ bool8 LoadChosenBattleElement(u8 caseId)
+ {
+     bool8 ret = FALSE;
+ 
++#ifdef PLATFORM_3DS
++    sCtrSceneryVersion++;
++#endif
++
+     switch (caseId)
+     {
+     case 0:
+@@ -1282,6 +1320,9 @@ bool8 LoadChosenBattleElement(u8 caseId)
          }
          break;
      case 4:
@@ -4622,22 +4692,32 @@ index f09425720ab4ceb002215d1d01c27b5f3d365369..32e5800a8c110aa2b0d251548cc6e7a5
      }
  }
 diff --git a/src/field_camera.c b/src/field_camera.c
-index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d21b5b300f 100644
+index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..ae97f4cab64e4b7f036d64749495d4af7c57d715 100644
 --- a/src/field_camera.c
 +++ b/src/field_camera.c
-@@ -12,29 +12,81 @@
+@@ -12,29 +12,107 @@
  #include "sprite.h"
  #include "text.h"
  
 +#ifdef PORT_BRIDGE
 +#include "port_log.h"
 +#include "port_platform.h"
++
++// fieldmap.c: the drawing's asset lookups, resolved once a stretch of it.
++void FieldMap_BeginDrawBatch(void);
++void FieldMap_EndDrawBatch(void);
++const void *FieldMap_ResolveForDrawing(const void *ptr);
 +#endif
 +#if defined(PLATFORM_3DS)
++#include "bg.h"
 +#include "constants/maps.h"
++#include "3ds_field_terrain.h"
 +#include "3ds_field_view.h"
++#include "3ds_log.h"
 +#include "3ds_video.h"
 +#include "3ds_platform.h"
++
++u32 FieldMap_GetBanksDeferred(void); // fieldmap.c
 +#endif
 +
  EWRAM_DATA bool8 gUnusedBikeCameraAheadPanback = FALSE;
@@ -4703,11 +4783,27 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
 +// of the metatile DrawMetatile is drawing.
 +static u8 sTileBanks[3][BG_SCREEN_SIZE];
 +static u8 sDrawBank;
++// The terrain left undrawn while the voxel world was drawn alone
++// (3ds_field_terrain.h): set by the first metatile not drawn, cleared by the
++// next whole view drawn.
++static bool8 sTerrainStale;
++// The door frames the tilemap holds (DrawDoorMetatileAt), until the map is
++// drawn over them: the whole view drawn again for a 2D frame puts them back,
++// where the game's own whole view draws every door shut. Two doors at most
++// (the multi corridor's twin), two metatiles tall and as many wide.
++#define DOOR_CELLS 8
++static struct
++{
++    s16 x, y;
++    u16 tiles[NUM_TILES_PER_METATILE];
++} sDoorCells[DOOR_CELLS];
++static u8 sDoorCellCount;
++static CtrFieldTerrainStats sTerrainStats;
 +#endif
  static s16 sVerticalCameraPan;
  static bool8 sBikeCameraPanFlag;
  static void (*sFieldCameraPanningCallback)(void);
-@@ -55,27 +107,45 @@ static void ResetCameraOffset(struct FieldCameraOffset *cameraOffset)
+@@ -55,27 +133,45 @@ static void ResetCameraOffset(struct FieldCameraOffset *cameraOffset)
  static void AddCameraTileOffset(struct FieldCameraOffset *cameraOffset, u32 xOffset, u32 yOffset)
  {
      cameraOffset->xTileOffset += xOffset;
@@ -4756,7 +4852,7 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
  
      SetGpuReg(REG_OFFSET_BG1HOFS, r5);
      SetGpuReg(REG_OFFSET_BG1VOFS, r4);
-@@ -87,39 +157,315 @@ void FieldUpdateBgTilemapScroll(void)
+@@ -87,39 +183,393 @@ void FieldUpdateBgTilemapScroll(void)
  
  void GetCameraOffsetWithPan(s16 *x, s16 *y)
  {
@@ -4770,17 +4866,71 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
 +    *x += sEdgeShiftX;
 +    *y += sEdgeShiftY;
 +#endif
- }
- 
++}
++
 +#if defined(PLATFORM_3DS)
 +static void GetMapWindow(s16 *x, s16 *y);
++
++// Whether the camera draws the terrain now (3ds_field_terrain.h). Not while
++// the voxel world is drawn alone: the terrain is stale from then on, until a
++// whole view is drawn again.
++static bool8 TerrainDrawn(void)
++{
++    if (CtrFieldTerrain_Wanted())
++        return TRUE;
++    sTerrainStale = TRUE;
++    return FALSE;
++}
++
++// The door frames within these metatiles (inclusive) are drawn over.
++static void ForgetDoorCells(int left, int right, int top, int bottom)
++{
++    int i = 0;
++
++    while (i < sDoorCellCount)
++    {
++        if (sDoorCells[i].x >= left && sDoorCells[i].x <= right
++         && sDoorCells[i].y >= top && sDoorCells[i].y <= bottom)
++            sDoorCells[i] = sDoorCells[--sDoorCellCount];
++        else
++            i++;
++    }
+ }
+ 
++static void RememberDoorCell(int x, int y, const u16 *tiles)
++{
++    int i;
++
++    for (i = 0; i < sDoorCellCount && (sDoorCells[i].x != x || sDoorCells[i].y != y); i++)
++        ;
++    if (i == sDoorCellCount)
++    {
++        // Never more than two doors' worth: should more come, one gives way.
++        if (sDoorCellCount == DOOR_CELLS)
++            i = 0;
++        else
++            sDoorCellCount++;
++        sDoorCells[i].x = x;
++        sDoorCells[i].y = y;
++    }
++    memcpy(sDoorCells[i].tiles, tiles, sizeof(sDoorCells[i].tiles));
++}
 +#endif
 +
  void DrawWholeMapView(void)
  {
 +#if defined(PLATFORM_3DS)
 +    GetMapWindow(&sMapWindowX, &sMapWindowY);
-+    DrawWholeMapViewInternal(sMapWindowX, sMapWindowY, gMapHeader.mapLayout);
++    sDoorCellCount = 0;
++    if (TerrainDrawn())
++    {
++        DrawWholeMapViewInternal(sMapWindowX, sMapWindowY, gMapHeader.mapLayout);
++        sTerrainStale = FALSE;
++    }
++    else
++    {
++        sTerrainStats.viewsSkipped++;
++    }
 +#else
      DrawWholeMapViewInternal(gSaveBlock1Ptr->pos.x, gSaveBlock1Ptr->pos.y, gMapHeader.mapLayout);
 +#endif
@@ -4804,14 +4954,12 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
 +    int tileX = sFieldCameraOffset.xTileOffset;
 +    int tileY = sFieldCameraOffset.yTileOffset;
 +#endif
- 
-     for (i = 0; i < 32; i += 2)
-     {
--        temp = sFieldCameraOffset.yTileOffset + i;
--        if (temp >= 32)
--            temp -= 32;
--        r6 = temp * 32;
--        for (j = 0; j < 32; j += 2)
++
++#ifdef PORT_BRIDGE
++    FieldMap_BeginDrawBatch();
++#endif
++    for (i = 0; i < 32; i += 2)
++    {
 +        for (j = FIELD_CAMERA_VIEW_LEFT; j < FIELD_CAMERA_VIEW_RIGHT; j += 2)
 +            DrawMetatileAtTilemapPos(mapLayout,
 +                                     tileX + j,
@@ -4819,6 +4967,9 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
 +                                     x + j / 2,
 +                                     y + i / 2);
 +    }
++#ifdef PORT_BRIDGE
++    FieldMap_EndDrawBatch();
++#endif
 +}
 +
 +#if defined(PLATFORM_3DS)
@@ -4864,55 +5015,78 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
 +    // and its top edge from the first row (FieldUpdateBgTilemapScroll).
 +    int left = CameraStepX() + sHorizontalCameraPan + sEdgeShiftX;
 +    int top = CameraStepY() + sVerticalCameraPan + 8 - FIELD_VIEW_OFFSET_Y + sEdgeShiftY;
-+
+ 
 +    *x = gSaveBlock1Ptr->pos.x + FloorDiv16(left + 8);
 +    *y = gSaveBlock1Ptr->pos.y + FloorDiv16(top);
 +}
 +
-+static void DrawMapWindowColumn(int x)
++// The column x of the window, drawn - or, left undrawn (TerrainDrawn), only
++// moved over the door frames in it.
++static void DrawMapWindowColumn(int x, bool8 drawn)
 +{
 +    int tileX = sFieldCameraOffset.xTileOffset + (x - gSaveBlock1Ptr->pos.x) * 2;
 +    int tileY = sFieldCameraOffset.yTileOffset + (sMapWindowY - gSaveBlock1Ptr->pos.y) * 2;
 +    int i;
 +
-+    for (i = 0; i < 32; i += 2)
++    ForgetDoorCells(x, x, sMapWindowY, sMapWindowY + 15);
++    if (!drawn)
++        return;
++    FieldMap_BeginDrawBatch();
+     for (i = 0; i < 32; i += 2)
 +        DrawMetatileAtTilemapPos(gMapHeader.mapLayout, tileX, tileY + i, x, sMapWindowY + i / 2);
++    FieldMap_EndDrawBatch();
 +}
 +
-+static void DrawMapWindowRow(int y)
++static void DrawMapWindowRow(int y, bool8 drawn)
 +{
 +    int tileX = sFieldCameraOffset.xTileOffset + (sMapWindowX - gSaveBlock1Ptr->pos.x) * 2;
 +    int tileY = sFieldCameraOffset.yTileOffset + (y - gSaveBlock1Ptr->pos.y) * 2;
 +    int j;
 +
++    ForgetDoorCells(sMapWindowX + FIELD_CAMERA_VIEW_LEFT / 2, sMapWindowX + (FIELD_CAMERA_VIEW_RIGHT - 1) / 2, y, y);
++    if (!drawn)
++        return;
++    FieldMap_BeginDrawBatch();
 +    for (j = FIELD_CAMERA_VIEW_LEFT; j < FIELD_CAMERA_VIEW_RIGHT; j += 2)
 +        DrawMetatileAtTilemapPos(gMapHeader.mapLayout, tileX + j, tileY, sMapWindowX + j / 2, y);
++    FieldMap_EndDrawBatch();
 +}
 +
-+// Moves the window to the picture, drawing what comes into it.
++// Moves the window to the picture, drawing what comes into it. While the
++// voxel world is drawn alone the window moves all the same and nothing is
++// drawn: the terrain is drawn whole again before it is shown.
 +static void UpdateMapWindow(void)
 +{
 +    s16 x, y;
 +    s16 oldX = sMapWindowX, oldY = sMapWindowY;
++    bool8 drawn;
 +
 +    GetMapWindow(&x, &y);
 +    if (x == oldX && y == oldY)
 +        return;
 +    if (x - oldX > 1 || oldX - x > 1 || y - oldY > 1 || oldY - y > 1)
-+    {
+     {
+-        temp = sFieldCameraOffset.yTileOffset + i;
+-        if (temp >= 32)
+-            temp -= 32;
+-        r6 = temp * 32;
+-        for (j = 0; j < 32; j += 2)
 +        DrawWholeMapView();
 +        return;
 +    }
 +    sMapWindowX = x;
 +    sMapWindowY = y;
++    drawn = TerrainDrawn();
 +    if (x > oldX)
-+        DrawMapWindowColumn(x + FIELD_CAMERA_VIEW_RIGHT / 2 - 1);
++        DrawMapWindowColumn(x + FIELD_CAMERA_VIEW_RIGHT / 2 - 1, drawn);
 +    else if (x < oldX)
-+        DrawMapWindowColumn(x + FIELD_CAMERA_VIEW_LEFT / 2);
++        DrawMapWindowColumn(x + FIELD_CAMERA_VIEW_LEFT / 2, drawn);
 +    if (y > oldY)
-+        DrawMapWindowRow(y + 15);
++        DrawMapWindowRow(y + 15, drawn);
 +    else if (y < oldY)
-+        DrawMapWindowRow(y);
++        DrawMapWindowRow(y, drawn);
++    if (!drawn)
++        sTerrainStats.slicesSkipped++;
 +    sFieldCameraOffset.copyBGToVRAM = TRUE;
 +}
 +
@@ -5036,8 +5210,8 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
 +static int EdgeTarget(int at, int length, int low, int high, unsigned closed)
 +{
 +    return (int)CtrFieldView_Limit((float)at, 0.0f, (float)length, (float)low, (float)high, closed) - at;
-+}
-+
+ }
+ 
 +static int EdgeStep(int shift, int target, int speed)
 +{
 +    int most = (speed < 0 ? -speed : speed) + EDGE_SHIFT_EASE;
@@ -5047,8 +5221,8 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
 +    if (target < shift - most)
 +        return shift - most;
 +    return target;
- }
- 
++}
++
 +/*
 + * Where the picture belongs: the map's own pixels (its grid starts MAP_OFFSET
 + * metatiles in) and the picture's place without the shift, the GBA's view
@@ -5087,14 +5261,15 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
  static void RedrawMapSlicesForCameraUpdate(struct FieldCameraOffset *cameraOffset, int x, int y)
  {
      const struct MapLayout *mapLayout = gMapHeader.mapLayout;
-@@ -137,69 +483,54 @@ static void RedrawMapSlicesForCameraUpdate(struct FieldCameraOffset *cameraOffse
+@@ -137,69 +587,54 @@ static void RedrawMapSlicesForCameraUpdate(struct FieldCameraOffset *cameraOffse
  
  static void RedrawMapSliceNorth(struct FieldCameraOffset *cameraOffset, const struct MapLayout *mapLayout)
  {
 -    u8 i;
 -    u8 temp;
 -    u32 r7;
--
++    int i;
+ 
 -    temp = cameraOffset->yTileOffset + 28;
 -    if (temp >= 32)
 -        temp -= 32;
@@ -5106,8 +5281,6 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
 -            temp -= 32;
 -        DrawMetatileAt(mapLayout, r7 + temp, gSaveBlock1Ptr->pos.x + i / 2, gSaveBlock1Ptr->pos.y + 14);
 -    }
-+    int i;
-+
 +    for (i = FIELD_CAMERA_VIEW_LEFT; i < FIELD_CAMERA_VIEW_RIGHT; i += 2)
 +        DrawMetatileAtTilemapPos(mapLayout,
 +                                 cameraOffset->xTileOffset + i,
@@ -5121,7 +5294,8 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
 -    u8 i;
 -    u8 temp;
 -    u32 r7 = cameraOffset->yTileOffset * 32;
--
++    int i;
+ 
 -    for (i = 0; i < 32; i += 2)
 -    {
 -        temp = cameraOffset->xTileOffset + i;
@@ -5129,8 +5303,6 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
 -            temp -= 32;
 -        DrawMetatileAt(mapLayout, r7 + temp, gSaveBlock1Ptr->pos.x + i / 2, gSaveBlock1Ptr->pos.y);
 -    }
-+    int i;
-+
 +    for (i = FIELD_CAMERA_VIEW_LEFT; i < FIELD_CAMERA_VIEW_RIGHT; i += 2)
 +        DrawMetatileAtTilemapPos(mapLayout,
 +                                 cameraOffset->xTileOffset + i,
@@ -5186,7 +5358,39 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
  
  void CurrentMapDrawMetatileAt(int x, int y)
  {
-@@ -225,11 +556,30 @@ void DrawDoorMetatileAt(int x, int y, u16 *tiles)
+@@ -207,6 +642,14 @@ void CurrentMapDrawMetatileAt(int x, int y)
+ 
+     if (offset >= 0)
+     {
++#if defined(PLATFORM_3DS)
++        ForgetDoorCells(x, x, y, y);
++        if (!TerrainDrawn())
++        {
++            sTerrainStats.cellsSkipped++;
++            return;
++        }
++#endif
+         DrawMetatileAt(gMapHeader.mapLayout, offset, x, y);
+         sFieldCameraOffset.copyBGToVRAM = TRUE;
+     }
+@@ -218,6 +661,16 @@ void DrawDoorMetatileAt(int x, int y, u16 *tiles)
+ 
+     if (offset >= 0)
+     {
++#if defined(PLATFORM_3DS)
++        // The voxel world shows the door from its own record (field_door.c,
++        // PortDoor_Get); the tilemap's frame is kept for when it is drawn.
++        RememberDoorCell(x, y, tiles);
++        if (!TerrainDrawn())
++        {
++            sTerrainStats.cellsSkipped++;
++            return;
++        }
++#endif
+         DrawMetatile(METATILE_LAYER_TYPE_COVERED, tiles, offset);
+         sFieldCameraOffset.copyBGToVRAM = TRUE;
+     }
+@@ -225,11 +678,30 @@ void DrawDoorMetatileAt(int x, int y, u16 *tiles)
  
  static void DrawMetatileAt(const struct MapLayout *mapLayout, u16 offset, int x, int y)
  {
@@ -5217,7 +5421,7 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
      if (metatileId < NUM_METATILES_IN_PRIMARY)
      {
          metatiles = mapLayout->primaryTileset->metatiles;
-@@ -239,7 +589,54 @@ static void DrawMetatileAt(const struct MapLayout *mapLayout, u16 offset, int x,
+@@ -239,7 +711,54 @@ static void DrawMetatileAt(const struct MapLayout *mapLayout, u16 offset, int x,
          metatiles = mapLayout->secondaryTileset->metatiles;
          metatileId -= NUM_METATILES_IN_PRIMARY;
      }
@@ -5227,7 +5431,7 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
 +        static bool8 sLoggedPrimaryMetatile;
 +        const u16 *source = metatiles;
 +
-+        metatiles = Port_ResolveAssetPointer(metatiles);
++        metatiles = FieldMap_ResolveForDrawing(metatiles);
 +        if (!sLoggedPrimaryMetatile && isPrimary)
 +        {
 +            const u16 *tiles = metatiles + metatileId * NUM_TILES_PER_METATILE;
@@ -5272,7 +5476,7 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
  }
  
  static void DrawMetatile(s32 metatileLayerType, const u16 *tiles, u16 offset)
-@@ -304,20 +701,59 @@ static void DrawMetatile(s32 metatileLayerType, const u16 *tiles, u16 offset)
+@@ -304,20 +823,124 @@ static void DrawMetatile(s32 metatileLayerType, const u16 *tiles, u16 offset)
          gOverworldTilemapBuffer_Bg1[offset + 0x21] = tiles[7];
          break;
      }
@@ -5311,6 +5515,71 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
 +    CtrVideo_UnregisterTilemapBanks(gOverworldTilemapBuffer_Bg2);
 +    CtrVideo_UnregisterTilemapBanks(gOverworldTilemapBuffer_Bg3);
 +}
++
++// The field's tilemaps are the ones BG1-BG3 show.
++static bool8 FieldTilemapsBound(void)
++{
++    return gOverworldTilemapBuffer_Bg1 != NULL && gOverworldTilemapBuffer_Bg2 != NULL
++        && gOverworldTilemapBuffer_Bg3 != NULL
++        && GetBgTilemapBuffer(1) == gOverworldTilemapBuffer_Bg1
++        && GetBgTilemapBuffer(2) == gOverworldTilemapBuffer_Bg2
++        && GetBgTilemapBuffer(3) == gOverworldTilemapBuffer_Bg3;
++}
++
++bool FieldCamera_TerrainStale(void)
++{
++    return sTerrainStale && FieldTilemapsBound();
++}
++
++/*
++ * The terrain drawn again for a frame that shows the 2D field (3ds_field_terrain.h),
++ * in the VBlank before the game's handler, whose DMA then takes the three
++ * tilemaps to VRAM ahead of the present. The window is where the camera kept
++ * it; this is not the game's DrawWholeMapView, so no door is drawn shut: the
++ * frames the doors showed are put back. The tile banks of the neighbours are
++ * given out again as their metatiles are drawn (fieldmap.c).
++ *
++ * Only on the field's own tilemaps, its map in play: anywhere else (a load, a
++ * battle, a menu) the field is drawn whole again as it comes back.
++ */
++void FieldCamera_SyncTerrain(void)
++{
++    static unsigned sLogged;
++    u64 started;
++    int i;
++
++    if (!sTerrainStale || !CtrFieldTerrain_Wanted() || !CtrGame_IsOverworld() || !FieldTilemapsBound())
++        return;
++    started = CtrPlatform_Ticks();
++    DrawWholeMapViewInternal(sMapWindowX, sMapWindowY, gMapHeader.mapLayout);
++    for (i = 0; i < sDoorCellCount; i++)
++    {
++        int offset = MapPosToBgTilemapOffset(&sFieldCameraOffset, sDoorCells[i].x, sDoorCells[i].y);
++
++        if (offset >= 0)
++            DrawMetatile(METATILE_LAYER_TYPE_COVERED, sDoorCells[i].tiles, offset);
++    }
++    CopyBgTilemapBufferToVram(1);
++    CopyBgTilemapBufferToVram(2);
++    CopyBgTilemapBufferToVram(3);
++    sTerrainStale = FALSE;
++    sTerrainStats.resyncs++;
++    sTerrainStats.lastResyncMs = (float)CtrPlatform_TickMs(CtrPlatform_Ticks() - started);
++    if (sLogged < 64)
++    {
++        sLogged++;
++        CtrLog_Write(CTR_LOG_GAME, "2D terrain drawn again for the 2D field: %.2f ms (%lu so far; left undrawn: "
++                     "%lu views, %lu slices, %lu cells)", (double)sTerrainStats.lastResyncMs,
++                     (unsigned long)sTerrainStats.resyncs, (unsigned long)sTerrainStats.viewsSkipped,
++                     (unsigned long)sTerrainStats.slicesSkipped, (unsigned long)sTerrainStats.cellsSkipped);
++    }
++}
++
++void FieldCamera_GetTerrainStats(CtrFieldTerrainStats *stats)
++{
++    *stats = sTerrainStats;
++    stats->banksDeferred = FieldMap_GetBanksDeferred();
++}
 +#endif
 +
  static s32 MapPosToBgTilemapOffset(struct FieldCameraOffset *cameraOffset, s32 x, s32 y)
@@ -5335,7 +5604,7 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
  
      y = (y - gSaveBlock1Ptr->pos.y) * 2;
      if (y >= 32 || y < 0)
-@@ -325,7 +761,12 @@ static s32 MapPosToBgTilemapOffset(struct FieldCameraOffset *cameraOffset, s32 x
+@@ -325,7 +948,12 @@ static s32 MapPosToBgTilemapOffset(struct FieldCameraOffset *cameraOffset, s32 x
      y = y + cameraOffset->yTileOffset;
      if (y >= 32)
          y -= 32;
@@ -5348,7 +5617,7 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
      return y * 32 + x;
  }
  
-@@ -400,9 +841,9 @@ void CameraUpdate(void)
+@@ -400,9 +1028,9 @@ void CameraUpdate(void)
      if (curMovementOffsetY != 0 && curMovementOffsetY == -movementSpeedY)
      {
          if (movementSpeedY > 0)
@@ -5360,7 +5629,7 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
      }
  
      gFieldCamera.x += movementSpeedX;
-@@ -417,10 +858,40 @@ void CameraUpdate(void)
+@@ -417,10 +1045,40 @@ void CameraUpdate(void)
          RotatingGatePuzzleCameraUpdate(deltaX, deltaY);
          SetBerryTreesSeen();
          AddCameraTileOffset(&sFieldCameraOffset, deltaX * 2, deltaY * 2);
@@ -5401,7 +5670,7 @@ index e76ba3d855cd6ce38aa5e73006701a17f10ddfe4..4a5e341978adc7c5eda388d91a8511d2
      gTotalCameraPixelOffsetX -= movementSpeedX;
      gTotalCameraPixelOffsetY -= movementSpeedY;
  }
-@@ -458,8 +929,15 @@ void UpdateCameraPanning(void)
+@@ -458,8 +1116,15 @@ void UpdateCameraPanning(void)
      if (sFieldCameraPanningCallback != NULL)
          sFieldCameraPanningCallback();
      //Update sprite offset of overworld objects
@@ -6424,7 +6693,7 @@ index 10ce1bc37a9bdbd78c1601ca857fe67bf6fbac69..821dc7edce6e0b0262b8c72ac8f20a0e
 +}
 +#endif
 diff --git a/src/fieldmap.c b/src/fieldmap.c
-index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea30078992129341efd7d1 100644
+index 97db758caac9fefa27d6c2809df48086dc4ef4e1..149c51e050df1e890cc90f02697b407bcdbe224b 100644
 --- a/src/fieldmap.c
 +++ b/src/fieldmap.c
 @@ -6,6 +6,7 @@
@@ -6435,7 +6704,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
  #include "mirage_tower.h"
  #include "overworld.h"
  #include "palette.h"
-@@ -17,6 +18,22 @@
+@@ -17,6 +18,86 @@
  #include "constants/rgb.h"
  #include "constants/metatile_behaviors.h"
  
@@ -6448,6 +6717,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
 +#include "3ds_platform.h"
 +#include "3ds_tile_banks.h"
 +#include "3ds_video.h"
++#include "3ds_field_terrain.h"
 +#endif
 +#ifdef PORT_BRIDGE
 +#define PORT_PROF(label) Port_ProfileMark(label)
@@ -6455,10 +6725,73 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
 +#define PORT_PROF(label) ((void)0)
 +#endif
 +
++#ifdef PORT_BRIDGE
++// The asset pointers the camera's drawing resolves (tilesets' metatiles and
++// attributes, the neighbours' blocks and borders), each resolved once for a
++// whole stretch of it - a whole view, a column or a row of the window
++// (FieldMap_BeginDrawBatch) - instead of two or three times a metatile. Only
++// within one stretch: a payload is retired only between main-loop callbacks
++// (Port_RecordMainLoopIteration), never while the camera draws, but one
++// unused for a while may be once the stretch is over, so nothing is kept
++// past it. Keyed by the pointer the game holds, a new layout or tileset is a
++// new key.
++#define DRAW_RESOLVE_SLOTS 8
++
++static u8 sDrawBatch;
++static u8 sDrawResolveNext;
++static const void *sDrawResolveKey[DRAW_RESOLVE_SLOTS];
++static const void *sDrawResolveValue[DRAW_RESOLVE_SLOTS];
++
++void FieldMap_BeginDrawBatch(void)
++{
++    if (sDrawBatch++ == 0)
++    {
++        memset(sDrawResolveKey, 0, sizeof(sDrawResolveKey));
++        sDrawResolveNext = 0;
++    }
++}
++
++void FieldMap_EndDrawBatch(void)
++{
++    if (sDrawBatch != 0)
++        sDrawBatch--;
++}
++
++// Port_ResolveAssetPointer, from the stretch's memo when one is open.
++const void *FieldMap_ResolveForDrawing(const void *ptr)
++{
++    const void *resolved;
++    int i;
++
++    if (sDrawBatch == 0 || ptr == NULL)
++        return Port_ResolveAssetPointer(ptr);
++    for (i = 0; i < DRAW_RESOLVE_SLOTS; i++)
++    {
++        if (sDrawResolveKey[i] == ptr)
++            return sDrawResolveValue[i];
++    }
++    resolved = Port_ResolveAssetPointer(ptr);
++    sDrawResolveKey[sDrawResolveNext] = ptr;
++    sDrawResolveValue[sDrawResolveNext] = resolved;
++    sDrawResolveNext = (sDrawResolveNext + 1) % DRAW_RESOLVE_SLOTS;
++    return resolved;
++}
++#endif
++#ifdef PLATFORM_3DS
++// Crossings whose outgoing tileset was not kept as a bank: the voxel world
++// drew the field alone (3ds_field_terrain.h).
++static u32 sBanksDeferred;
++
++u32 FieldMap_GetBanksDeferred(void)
++{
++    return sBanksDeferred;
++}
++#endif
++
  struct ConnectionFlags
  {
      u8 south:1;
-@@ -48,16 +65,20 @@ static const struct MapConnection *GetIncomingConnection(u8 direction, int x, in
+@@ -48,16 +129,20 @@ static const struct MapConnection *GetIncomingConnection(u8 direction, int x, in
  static bool8 IsPosInIncomingConnectingMap(u8 direction, int x, int y, const struct MapConnection *connection);
  static bool8 IsCoordInIncomingConnectingMap(int coord, int srcMax, int destMax, int offset);
  
@@ -6489,7 +6822,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
  
  #define AreCoordsWithinMapGridBounds(x, y) (x >= 0 && x < gBackupMapLayout.width && y >= 0 && y < gBackupMapLayout.height)
  
-@@ -120,6 +141,11 @@ static void InitBackupMapLayoutData(const u16 *map, u16 width, u16 height)
+@@ -120,6 +205,11 @@ static void InitBackupMapLayoutData(const u16 *map, u16 width, u16 height)
  {
      u16 *dest;
      int y;
@@ -6501,7 +6834,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
      dest = gBackupMapLayout.map;
      dest += gBackupMapLayout.width * 7 + MAP_OFFSET;
      for (y = 0; y < height; y++)
-@@ -176,7 +202,11 @@ static void FillConnection(int x, int y, struct MapHeader const *connectedMapHea
+@@ -176,7 +266,11 @@ static void FillConnection(int x, int y, struct MapHeader const *connectedMapHea
      int mapWidth;
  
      mapWidth = connectedMapHeader->mapLayout->width;
@@ -6514,7 +6847,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
      dest = &gBackupMapLayout.map[gBackupMapLayout.width * y + x];
  
      for (i = 0; i < height; i++)
-@@ -362,9 +392,527 @@ u8 MapGridGetCollisionAt(int x, int y)
+@@ -362,9 +456,527 @@ u8 MapGridGetCollisionAt(int x, int y)
      return UNPACK_COLLISION(block);
  }
  
@@ -6762,7 +7095,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
 +static u16 GetNearestBorderBlockAt(int x, int y)
 +{
 +    u8 index;
-+    const u16 *border = Port_ResolveAssetPointer(MapGridGetCameraBorderAt(x, y, &index));
++    const u16 *border = FieldMap_ResolveForDrawing(MapGridGetCameraBorderAt(x, y, &index));
 +
 +    return border[index] | MAPGRID_IMPASSABLE;
 +}
@@ -6960,7 +7293,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
 +        return 0;
 +    if (metatile >= NUM_METATILES_IN_PRIMARY)
 +        metatile -= NUM_METATILES_IN_PRIMARY;
-+    attributes = Port_ResolveAssetPointer(tileset->metatileAttributes);
++    attributes = FieldMap_ResolveForDrawing(tileset->metatileAttributes);
 +    return attributes != NULL ? attributes[metatile] : 0;
 +}
 +#endif
@@ -6993,7 +7326,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
 +#endif
 +        if (drawn && mapX >= 0 && mapX < layout->width && mapY >= 0 && mapY < layout->height)
 +        {
-+            const u16 *blocks = Port_ResolveAssetPointer(layout->map);
++            const u16 *blocks = FieldMap_ResolveForDrawing(layout->map);
 +            return blocks[mapY * layout->width + mapX];
 +        }
 +    }
@@ -7042,7 +7375,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
  
      if (block == MAPGRID_UNDEFINED)
          return UNPACK_METATILE(GetBorderBlockAt(x, y));
-@@ -375,6 +923,9 @@ u32 MapGridGetMetatileIdAt(int x, int y)
+@@ -375,6 +987,9 @@ u32 MapGridGetMetatileIdAt(int x, int y)
  u32 MapGridGetMetatileBehaviorAt(int x, int y)
  {
      u16 metatile = MapGridGetMetatileIdAt(x, y);
@@ -7052,7 +7385,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
      return UNPACK_BEHAVIOR(GetMetatileAttributesById(metatile));
  }
  
-@@ -412,11 +963,47 @@ u16 GetMetatileAttributesById(u16 metatile)
+@@ -412,11 +1027,47 @@ u16 GetMetatileAttributesById(u16 metatile)
      if (metatile < NUM_METATILES_IN_PRIMARY)
      {
          attributes = gMapHeader.mapLayout->primaryTileset->metatileAttributes;
@@ -7062,7 +7395,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
 +                            0,
 +                            (u16)((uintptr_t)attributes >> 16),
 +                            (u16)(uintptr_t)attributes);
-+        attributes = Port_ResolveAssetPointer(attributes);
++        attributes = FieldMap_ResolveForDrawing(attributes);
 +        Port_SetAssetDebugEx(0x0334,
 +                            metatile,
 +                            0,
@@ -7083,7 +7416,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
 +                            1,
 +                            (u16)((uintptr_t)attributes >> 16),
 +                            (u16)(uintptr_t)attributes);
-+        attributes = Port_ResolveAssetPointer(attributes);
++        attributes = FieldMap_ResolveForDrawing(attributes);
 +        Port_SetAssetDebugEx(0x0337,
 +                            metatile,
 +                            1,
@@ -7100,7 +7433,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
          return attributes[metatile - NUM_METATILES_IN_PRIMARY];
      }
      else
-@@ -660,19 +1247,26 @@ bool8 CameraMove(int x, int y)
+@@ -660,19 +1311,32 @@ bool8 CameraMove(int x, int y)
      }
      else
      {
@@ -7113,7 +7446,13 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
          connection = GetIncomingConnection(direction, gSaveBlock1Ptr->pos.x, gSaveBlock1Ptr->pos.y);
          SetPositionFromConnection(connection, direction, x, y);
 +#ifdef PLATFORM_3DS
-+        KeepOutgoingTileset(connection != NULL ? GetMapHeaderFromConnection(connection) : NULL);
++        // Only for a 2D field to draw the map left behind with: the voxel
++        // world drawn alone leaves the banks to be given out when the
++        // terrain is next drawn (AssignCameraBanks, as the camera draws).
++        if (CtrFieldTerrain_Wanted())
++            KeepOutgoingTileset(connection != NULL ? GetMapHeaderFromConnection(connection) : NULL);
++        else
++            sBanksDeferred++;
 +#endif
          LoadMapFromCameraTransition(connection->mapGroup, connection->mapNum);
 +        PORT_PROF("LoadMapFromCameraTransition");
@@ -7127,7 +7466,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
      }
      return gCamera.active;
  }
-@@ -854,10 +1448,22 @@ static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTil
+@@ -854,10 +1518,22 @@ static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTil
  {
      if (tileset)
      {
@@ -7150,7 +7489,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
      }
  }
  
-@@ -878,20 +1484,53 @@ static void LoadTilesetPalette(struct Tileset const *tileset, u16 destOffset, u1
+@@ -878,20 +1554,53 @@ static void LoadTilesetPalette(struct Tileset const *tileset, u16 destOffset, u1
  
      if (tileset)
      {
@@ -7207,7 +7546,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..5ebd6a32c262d0f0f2ea300789921293
              ApplyGlobalTintToPaletteEntries(destOffset, size >> 1);
          }
      }
-@@ -926,8 +1565,20 @@ void CopyMapTilesetsToVram(struct MapLayout const *mapLayout)
+@@ -926,8 +1635,20 @@ void CopyMapTilesetsToVram(struct MapLayout const *mapLayout)
  {
      if (mapLayout)
      {
@@ -7741,7 +8080,7 @@ index 169ef002a665712e92f6fec36a86ee7888067a17..a154bacf5122bbebb940f2bc4240811e
 diff --git a/src/item_menu.c b/src/item_menu.c
 old mode 100755
 new mode 100644
-index 09bc25c90b99e98c0097771871daa4384159047c..544808ab555e2e6df5611f3c6254c1f8e2aa5d50
+index 09bc25c90b99e98c0097771871daa4384159047c..ecab82d0f2b231ef29a470ac3abf16723afd9c3a
 --- a/src/item_menu.c
 +++ b/src/item_menu.c
 @@ -24,6 +24,7 @@
@@ -8085,7 +8424,7 @@ index 09bc25c90b99e98c0097771871daa4384159047c..544808ab555e2e6df5611f3c6254c1f8
      if (*windowId == WINDOW_NONE)
      {
          *windowId = AddWindow(&sContextMenuWindowTemplates[windowType]);
-@@ -2594,3 +2696,610 @@ static void PrintTMHMMoveData(u16 itemId)
+@@ -2594,3 +2696,657 @@ static void PrintTMHMMoveData(u16 itemId)
          CopyWindowToVram(WIN_TMHM_INFO, COPYWIN_GFX);
      }
  }
@@ -8144,12 +8483,16 @@ index 09bc25c90b99e98c0097771871daa4384159047c..544808ab555e2e6df5611f3c6254c1f8
 +}
 +
 +// The bag in the bottom screen's window: from the field, from the field's
-+// party menu (GIVE), or from a battle's own menu; from a shop, the PC or a
-+// berry machine it has the whole screen.
++// party menu (GIVE), from a battle's own menu, from the PC to deposit and
++// from a shop to sell (the dock locked for these two, 3ds_bottom_ui.c: the
++// bag goes back to the PC or the shop); from a berry machine and the rest it
++// has the whole screen.
 +bool8 CtrBag_InWindow(void)
 +{
 +    return gBagPosition.location == ITEMMENULOCATION_FIELD
 +        || gBagPosition.location == ITEMMENULOCATION_BATTLE
++        || gBagPosition.location == ITEMMENULOCATION_ITEMPC
++        || gBagPosition.location == ITEMMENULOCATION_SHOP
 +        || (gBagPosition.location == ITEMMENULOCATION_PARTY && !gMain.inBattle);
 +}
 +
@@ -8568,6 +8911,25 @@ index 09bc25c90b99e98c0097771871daa4384159047c..544808ab555e2e6df5611f3c6254c1f8
 +    }
 +}
 +
++// The game's money text ("¥{STR_VAR_1}") with the amount in it, without
++// touching gStringVar1, which the bag's own tasks use.
++static void CtrBag_Money(u8 *dst, s32 amount)
++{
++    const u8 *src = gText_PokedollarVar1;
++
++    while (*src != EOS)
++    {
++        if (src[0] == PLACEHOLDER_BEGIN && src[1] == PLACEHOLDER_ID_STRING_VAR_1)
++        {
++            dst = ConvertIntToDecimalStringN(dst, amount, STR_CONV_MODE_LEFT_ALIGN, 6);
++            src += 2;
++        }
++        else
++            *dst++ = *src++;
++    }
++    *dst = EOS;
++}
++
 +// What a message shows last: the text after its last \p.
 +static void CtrBag_LastPage(u8 *dst, const u8 *src)
 +{
@@ -8587,8 +8949,8 @@ index 09bc25c90b99e98c0097771871daa4384159047c..544808ab555e2e6df5611f3c6254c1f8
 +
 +// Where the bag is, for the bottom screen to draw it itself. FALSE while
 +// there is nothing to read (a pocket switching, the bag coming or going):
-+// the bottom screen keeps what it showed. The bag from anywhere but the
-+// field is not one it draws (state NONE).
++// the bottom screen keeps what it showed. The bag from anywhere it does not
++// have in its window (CtrBag_InWindow) is not one it draws (state NONE).
 +bool8 CtrBag_GetView(struct CtrBagView *view)
 +{
 +    u8 taskId;
@@ -8613,19 +8975,38 @@ index 09bc25c90b99e98c0097771871daa4384159047c..544808ab555e2e6df5611f3c6254c1f8
 +        if (gBagMenu->windowIds[ITEMWIN_MESSAGE] != WINDOW_NONE)
 +            CtrBag_LastPage(view->text, sCtrBagMsg);
 +    }
++    else if ((taskId = FindTaskIdByFunc(Task_ChooseHowManyToSell)) != TASK_NONE)
++    {
++        // How many to sell, its question still in the message window: the
++        // item and what that many fetch, as the game's window beside the
++        // count shows it.
++        u8 *end;
++
++        view->state = CTR_BAG_VIEW_QUANTITY;
++        view->count = gTasks[taskId].tItemCount;
++        view->max = gTasks[taskId].tQuantity;
++        CopyItemName(gSpecialVar_ItemId, view->text);
++        end = view->text + StringLength(view->text);
++        *end++ = CHAR_NEWLINE;
++        CtrBag_Money(end, (GetItemPrice(gSpecialVar_ItemId) / 2) * view->count);
++    }
 +    else if (gBagMenu->windowIds[ITEMWIN_MESSAGE] != WINDOW_NONE)
 +    {
 +        view->state = CTR_BAG_VIEW_MESSAGE;
 +        memcpy(view->msg, sCtrBagMsg, sizeof(view->msg));
 +    }
-+    else if (FuncIsActiveTask(Task_RemoveItemFromBag))
++    else if (FuncIsActiveTask(Task_RemoveItemFromBag) || FuncIsActiveTask(WaitDepositErrorMessage))
 +    {
-+        // "Threw away...", in the description window, waiting for A.
++        // "Threw away...", "Deposited...", or why it could not be
++        // deposited, in the description window, waiting for A.
 +        view->state = CTR_BAG_VIEW_MESSAGE;
 +        memcpy(view->msg, sCtrBagText, sizeof(view->msg));
 +    }
-+    else if ((taskId = FindTaskIdByFunc(Task_ChooseHowManyToToss)) != TASK_NONE)
++    else if ((taskId = FindTaskIdByFunc(Task_ChooseHowManyToToss)) != TASK_NONE
++          || (taskId = FindTaskIdByFunc(Task_ChooseHowManyToDeposit)) != TASK_NONE)
 +    {
++        // Its question ("Toss out how many...?", "Deposit how many...?") is
++        // in the description window.
 +        view->state = CTR_BAG_VIEW_QUANTITY;
 +        view->count = gTasks[taskId].tItemCount;
 +        view->max = gTasks[taskId].tQuantity;
@@ -8682,8 +9063,13 @@ index 09bc25c90b99e98c0097771871daa4384159047c..544808ab555e2e6df5611f3c6254c1f8
 +
 +void CtrBag_TapCount(bool8 ok)
 +{
-+    u8 windowId = gBagMenu != NULL ? gBagMenu->windowIds[ITEMWIN_QUANTITY] : WINDOW_NONE;
++    u8 windowId = WINDOW_NONE;
 +
++    // Tossing or depositing, the count's window; selling, the wide one with
++    // the price.
++    if (gBagMenu != NULL)
++        windowId = gBagMenu->windowIds[ITEMWIN_QUANTITY] != WINDOW_NONE ? gBagMenu->windowIds[ITEMWIN_QUANTITY]
++                                                                        : gBagMenu->windowIds[ITEMWIN_QUANTITY_WIDE];
 +    if (ok && windowId != WINDOW_NONE)
 +        CtrMenu_PostTap(GetWindowAttribute(windowId, WINDOW_TILEMAP_LEFT) * 8 + GetWindowAttribute(windowId, WINDOW_WIDTH) * 4,
 +                        GetWindowAttribute(windowId, WINDOW_TILEMAP_TOP) * 8 + GetWindowAttribute(windowId, WINDOW_HEIGHT) * 4);
@@ -16541,7 +16927,7 @@ index 19541d88d810356d59f29b0029babb7da6dc9415..696f799fb0c0b8a4fa8cdc6326fb7e4a
      for (i = 0; i < sTilemapUtil[id].cur.height; i++)
      {
 diff --git a/src/pokemon_summary_screen.c b/src/pokemon_summary_screen.c
-index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe96736bb1b35 100644
+index 21109f9c3cb325fa4da3d05145833f7341c26f65..b46021b6da97cdbd5e490e2034749125e1194934 100644
 --- a/src/pokemon_summary_screen.c
 +++ b/src/pokemon_summary_screen.c
 @@ -2,6 +2,9 @@
@@ -16755,7 +17141,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          SetMainCallback2(sMonSummaryScreen->callback);
          gLastViewedMonIndex = sMonSummaryScreen->curMonIndex;
          SummaryScreen_DestroyAnimDelayTask();
-@@ -1529,10 +1550,437 @@ static void CloseSummaryScreen(u8 taskId)
+@@ -1529,10 +1550,445 @@ static void CloseSummaryScreen(u8 taskId)
      }
  }
  
@@ -16979,12 +17365,16 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
 +    }
 +}
 +
-+// The summary in the bottom screen's window: the field party menu's, and a
-+// battle's own (its moves locked); from the boxes it has the whole screen.
++// The summary in the bottom screen's window: the field party menu's, a
++// battle's own (its moves locked), and the move to forget for a new one
++// wherever that is learned (a level up in a battle, an evolution, a TM or a
++// tutor, the move relearner); from the boxes it has the whole screen.
 +bool8 CtrSummary_InWindow(void)
 +{
 +    if (sMonSummaryScreen == NULL || sMonSummaryScreen->isBoxMon || sMonSummaryScreen->monList.mons != gPlayerParty)
 +        return FALSE;
++    if (sMonSummaryScreen->mode == SUMMARY_MODE_SELECT_MOVE)
++        return TRUE;
 +    return gMain.inBattle ? sMonSummaryScreen->mode == SUMMARY_MODE_LOCK_MOVES
 +                          : gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD;
 +}
@@ -17008,6 +17398,10 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
 +    view->page = sMonSummaryScreen->currPageIndex;
 +    view->minPage = sMonSummaryScreen->minPageIndex;
 +    view->maxPage = sMonSummaryScreen->maxPageIndex;
++    // Replacing a move from the start: no leave for another screen from the
++    // dock while it loads (only one from the moves as they are).
++    if (sMonSummaryScreen->mode == SUMMARY_MODE_SELECT_MOVE)
++        view->movesMode = CTR_SUM_MOVES_REPLACE;
 +    if (gMain.callback2 == CB2_InitSummaryScreen && gMain.state <= 10)
 +    {
 +        view->loading = TRUE;
@@ -17193,7 +17587,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          if (JOY_NEW(DPAD_UP))
          {
              ChangeSummaryPokemon(taskId, -1);
-@@ -1616,7 +2064,7 @@ static void ChangeSummaryPokemon(u8 taskId, s8 delta)
+@@ -1616,7 +2072,7 @@ static void ChangeSummaryPokemon(u8 taskId, s8 delta)
                  SetSpriteInvisibility(SPRITE_ARR_ID_STATUS, TRUE);
                  ClearWindowTilemap(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS);
                  ScheduleBgCopyTilemapToVram(0);
@@ -17202,7 +17596,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
              }
              sMonSummaryScreen->curMonIndex = monId;
              gTasks[taskId].data[0] = 0;
-@@ -1657,7 +2105,7 @@ static void Task_ChangeSummaryMon(u8 taskId)
+@@ -1657,7 +2113,7 @@ static void Task_ChangeSummaryMon(u8 taskId)
          break;
      case 7:
          if (sMonSummaryScreen->summary.ailment != AILMENT_NONE)
@@ -17211,7 +17605,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          DrawPokerusCuredSymbol(&sMonSummaryScreen->currentMon);
          data[1] = 0;
          break;
-@@ -1683,7 +2131,7 @@ static void Task_ChangeSummaryMon(u8 taskId)
+@@ -1683,7 +2139,7 @@ static void Task_ChangeSummaryMon(u8 taskId)
          gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_MON]].data[2] = 0;
          break;
      default:
@@ -17220,7 +17614,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          {
              data[0] = 0;
              gTasks[taskId].func = Task_HandleInput;
-@@ -1782,6 +2230,56 @@ static void ChangePage(u8 taskId, s8 delta)
+@@ -1782,6 +2238,56 @@ static void ChangePage(u8 taskId, s8 delta)
      HidePageSpecificSprites();
  }
  
@@ -17277,7 +17671,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
  static void PssScrollRight(u8 taskId) // Scroll right
  {
      s16 *data = gTasks[taskId].data;
-@@ -1816,6 +2314,26 @@ static void PssScrollRightEnd(u8 taskId) // display right
+@@ -1816,6 +2322,26 @@ static void PssScrollRightEnd(u8 taskId) // display right
  {
      s16 *data = gTasks[taskId].data;
      sMonSummaryScreen->bgDisplayOrder ^= 1;
@@ -17304,7 +17698,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      data[1] = 0;
      data[0] = 0;
      DrawPagination();
-@@ -1889,8 +2407,8 @@ static void SwitchToMoveSelection(u8 taskId)
+@@ -1889,8 +2415,8 @@ static void SwitchToMoveSelection(u8 taskId)
      ClearWindowTilemap(PSS_LABEL_WINDOW_PORTRAIT_SPECIES);
      if (!gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_STATUS]].invisible)
          ClearWindowTilemap(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS);
@@ -17315,7 +17709,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      if (!sMonSummaryScreen->lockMovesFlag)
      {
          ClearWindowTilemap(PSS_LABEL_WINDOW_PROMPT_INFO);
-@@ -1914,6 +2432,17 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
+@@ -1914,6 +2440,17 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
  
      if (MenuHelpers_ShouldWaitForLinkRecv() != TRUE)
      {
@@ -17333,7 +17727,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          if (JOY_NEW(DPAD_UP))
          {
              data[0] = 4;
-@@ -1924,7 +2453,7 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
+@@ -1924,7 +2461,7 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
              data[0] = 4;
              ChangeSelectedMove(data, 1, &sMonSummaryScreen->firstMoveIndex);
          }
@@ -17342,7 +17736,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          {
              if (sMonSummaryScreen->lockMovesFlag == TRUE
               || (sMonSummaryScreen->newMove == MOVE_NONE && sMonSummaryScreen->firstMoveIndex == MAX_MON_MOVES))
-@@ -1942,11 +2471,13 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
+@@ -1942,11 +2479,13 @@ static void Task_HandleInput_MoveSelect(u8 taskId)
                  PlaySE(SE_FAILURE);
              }
          }
@@ -17357,7 +17751,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      }
  }
  
-@@ -1996,8 +2527,8 @@ static void ChangeSelectedMove(s16 *taskData, s8 direction, u8 *moveIndexPtr)
+@@ -1996,8 +2535,8 @@ static void ChangeSelectedMove(s16 *taskData, s8 direction, u8 *moveIndexPtr)
          if (!gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_STATUS]].invisible)
              ClearWindowTilemap(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS);
          ScheduleBgCopyTilemapToVram(0);
@@ -17368,7 +17762,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      }
      if (*moveIndexPtr != MAX_MON_MOVES
          && newMoveIndex == MAX_MON_MOVES
-@@ -2006,8 +2537,8 @@ static void ChangeSelectedMove(s16 *taskData, s8 direction, u8 *moveIndexPtr)
+@@ -2006,8 +2545,8 @@ static void ChangeSelectedMove(s16 *taskData, s8 direction, u8 *moveIndexPtr)
          ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_POWER_ACC);
          ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_APPEAL_JAM);
          ScheduleBgCopyTilemapToVram(0);
@@ -17379,7 +17773,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      }
  
      *moveIndexPtr = newMoveIndex;
-@@ -2031,8 +2562,8 @@ static void CloseMoveSelectMode(u8 taskId)
+@@ -2031,8 +2570,8 @@ static void CloseMoveSelectMode(u8 taskId)
      {
          ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_POWER_ACC);
          ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_APPEAL_JAM);
@@ -17390,7 +17784,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      }
      ScheduleBgCopyTilemapToVram(0);
      ScheduleBgCopyTilemapToVram(1);
-@@ -2054,6 +2585,17 @@ static void Task_HandleInput_MovePositionSwitch(u8 taskId)
+@@ -2054,6 +2593,17 @@ static void Task_HandleInput_MovePositionSwitch(u8 taskId)
  
      if (MenuHelpers_ShouldWaitForLinkRecv() != TRUE)
      {
@@ -17408,7 +17802,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          if (JOY_NEW(DPAD_UP))
          {
              data[0] = 3;
-@@ -2064,17 +2606,19 @@ static void Task_HandleInput_MovePositionSwitch(u8 taskId)
+@@ -2064,17 +2614,19 @@ static void Task_HandleInput_MovePositionSwitch(u8 taskId)
              data[0] = 3;
              ChangeSelectedMove(&data[0], 1, &sMonSummaryScreen->secondMoveIndex);
          }
@@ -17430,7 +17824,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      }
  }
  
-@@ -2197,6 +2741,17 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
+@@ -2197,6 +2749,17 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
      {
          if (gPaletteFade.active != TRUE)
          {
@@ -17448,7 +17842,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
              if (JOY_NEW(DPAD_UP))
              {
                  data[0] = 4;
-@@ -2215,7 +2770,7 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
+@@ -2215,7 +2778,7 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
              {
                  ChangePage(taskId, 1);
              }
@@ -17457,7 +17851,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
              {
                  if (CanReplaceMove() == TRUE)
                  {
-@@ -2231,7 +2786,7 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
+@@ -2231,7 +2794,7 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
                      ShowCantForgetHMsWindow(taskId);
                  }
              }
@@ -17466,7 +17860,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
              {
                  StopPokemonAnimations();
                  PlaySE(SE_SELECT);
-@@ -2239,6 +2794,8 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
+@@ -2239,6 +2802,8 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
                  gSpecialVar_0x8005 = MAX_MON_MOVES;
                  BeginCloseSummaryScreen(taskId);
              }
@@ -17475,7 +17869,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          }
      }
  }
-@@ -2258,8 +2815,8 @@ static void ShowCantForgetHMsWindow(u8 taskId)
+@@ -2258,8 +2823,8 @@ static void ShowCantForgetHMsWindow(u8 taskId)
      ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_POWER_ACC);
      ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_APPEAL_JAM);
      ScheduleBgCopyTilemapToVram(0);
@@ -17486,7 +17880,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      PrintHMMovesCantBeForgotten();
      gTasks[taskId].func = Task_HandleInputCantForgetHMsMoves;
  }
-@@ -2269,7 +2826,7 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
+@@ -2269,7 +2834,7 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
  {
      s16 *data = gTasks[taskId].data;
      u16 move;
@@ -17495,7 +17889,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      {
          if (JOY_NEW(DPAD_UP))
          {
-@@ -2297,8 +2854,8 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
+@@ -2297,8 +2862,8 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
                  move = sMonSummaryScreen->summary.moves[sMonSummaryScreen->firstMoveIndex];
                  gTasks[taskId].func = Task_HandleReplaceMoveInput;
                  ChangePage(taskId, -1);
@@ -17506,7 +17900,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
              }
          }
          else if (JOY_NEW(DPAD_RIGHT) || GetLRKeysPressed() == MENU_R_PRESSED)
-@@ -2311,11 +2868,11 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
+@@ -2311,11 +2876,11 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
                  move = sMonSummaryScreen->summary.moves[sMonSummaryScreen->firstMoveIndex];
                  gTasks[taskId].func = Task_HandleReplaceMoveInput;
                  ChangePage(taskId, 1);
@@ -17521,7 +17915,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          {
              ClearWindowTilemap(PSS_LABEL_WINDOW_PORTRAIT_SPECIES);
              if (!gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_STATUS]].invisible)
-@@ -2323,8 +2880,8 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
+@@ -2323,8 +2888,8 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
              move = sMonSummaryScreen->summary.moves[sMonSummaryScreen->firstMoveIndex];
              PrintMoveDetails(move);
              ScheduleBgCopyTilemapToVram(0);
@@ -17532,7 +17926,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
              gTasks[taskId].func = Task_HandleReplaceMoveInput;
          }
      }
-@@ -2402,69 +2959,75 @@ static void DrawPagination(void) // Updates the pagination dots at the top of th
+@@ -2402,69 +2967,75 @@ static void DrawPagination(void) // Updates the pagination dots at the top of th
      Free(tilemap);
  }
  
@@ -17641,7 +18035,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          {
              if (sMonSummaryScreen->currPageIndex == PSS_PAGE_BATTLE_MOVES)
                  PutWindowTilemap(PSS_LABEL_WINDOW_MOVES_POWER_ACC);
-@@ -2482,46 +3045,46 @@ static void Task_SlidePowerAccWindow(u8 taskId)
+@@ -2482,46 +3053,46 @@ static void Task_SlidePowerAccWindow(u8 taskId)
      ScheduleBgCopyTilemapToVram(2);
  }
  
@@ -17708,7 +18102,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          }
          else
          {
-@@ -2538,37 +3101,37 @@ static void Task_SlideAppealJamWindow(u8 taskId)
+@@ -2538,37 +3109,37 @@ static void Task_SlideAppealJamWindow(u8 taskId)
      ScheduleBgCopyTilemapToVram(2);
  }
  
@@ -17765,7 +18159,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          {
              CreateSetStatusSprite();
              PutWindowTilemap(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS);
-@@ -2578,33 +3141,36 @@ static void Task_SlideStatusWindow(u8 taskId)
+@@ -2578,33 +3149,36 @@ static void Task_SlideStatusWindow(u8 taskId)
      }
  }
  
@@ -17812,7 +18206,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
          }
      }
  }
-@@ -3167,6 +3733,9 @@ static void BufferMonTrainerMemo(void)
+@@ -3167,6 +3741,9 @@ static void BufferMonTrainerMemo(void)
  
  static void PrintMonTrainerMemo(void)
  {
@@ -17822,7 +18216,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      PrintTextOnWindow(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_MEMO), gStringVar4, 0, 1, 0, 0);
  }
  
-@@ -3271,6 +3840,9 @@ static void PrintEggState(void)
+@@ -3271,6 +3848,9 @@ static void PrintEggState(void)
      else
          text = gText_EggWillTakeALongTime;
  
@@ -17832,7 +18226,7 @@ index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe967
      PrintTextOnWindow(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_ABILITY), text, 0, 1, 0, 0);
  }
  
-@@ -3295,6 +3867,9 @@ static void PrintEggMemo(void)
+@@ -3295,6 +3875,9 @@ static void PrintEggMemo(void)
          text = gText_OddEggFoundByCouple;
      }
  
@@ -20990,15 +21384,16 @@ index 171678cddbf9ef41a725fc8b4c7f4cdc3be1fa18..9d8c85d5cd8c3b47465ee3e6498be9cd
      ClearPokemonCrySongs();
  }
 diff --git a/src/sprite.c b/src/sprite.c
-index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..1aeec5cbc340c6f3c8e46f1ec2d1fb638b43ec9a 100644
+index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..8176b1822917813e358e1bc81fd852172674b80b 100644
 --- a/src/sprite.c
 +++ b/src/sprite.c
-@@ -2,6 +2,18 @@
+@@ -2,6 +2,19 @@
  #include "sprite.h"
  #include "main.h"
  #include "palette.h"
 +#if defined(PLATFORM_3DS)
 +#include "3ds_video.h"
++#include "3ds_obj_list.h"
 +bool8 FieldEffect_IsMachineSprite(const struct Sprite *sprite);   /* field_effect.c */
 +bool8 FieldEffect_IsFlySprite(const struct Sprite *sprite);       /* field_effect.c */
 +#endif
@@ -21012,7 +21407,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..1aeec5cbc340c6f3c8e46f1ec2d1fb63
  
  #define MAX_SPRITE_COPY_REQUESTS 64
  
-@@ -272,6 +284,13 @@ static u16 sSpriteTileRangeTags[MAX_SPRITES];
+@@ -272,6 +285,13 @@ static u16 sSpriteTileRangeTags[MAX_SPRITES];
  static u16 sSpriteTileRanges[MAX_SPRITES * 2];
  static struct AffineAnimState sAffineAnimStates[OAM_MATRIX_COUNT];
  static u16 sSpritePaletteTags[16];
@@ -21026,7 +21421,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..1aeec5cbc340c6f3c8e46f1ec2d1fb63
  
  // iwram common
  COMMON_DATA u32 gOamMatrixAllocBitmap = 0;
-@@ -291,6 +310,34 @@ EWRAM_DATA s16 gSpriteCoordOffsetY = 0;
+@@ -291,6 +311,34 @@ EWRAM_DATA s16 gSpriteCoordOffsetY = 0;
  EWRAM_DATA struct OamMatrix gOamMatrices[OAM_MATRIX_COUNT] = {0};
  EWRAM_DATA bool8 gAffineAnimsDisabled = FALSE;
  
@@ -21061,7 +21456,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..1aeec5cbc340c6f3c8e46f1ec2d1fb63
  void ResetSpriteData(void)
  {
      ResetOamRange(0, 128);
-@@ -479,16 +526,153 @@ void CopyMatricesToOamBuffer(void)
+@@ -479,16 +527,160 @@ void CopyMatricesToOamBuffer(void)
      }
  }
  
@@ -21212,12 +21607,29 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..1aeec5cbc340c6f3c8e46f1ec2d1fb63
 +#else
 +            (void)first;
 +#endif
-+            if (full) return;
++            if (full)
++            {
++#if defined(PLATFORM_3DS)
++                // What this pass wrote, its marks with it (3ds_obj_list.h).
++                CtrObjList_Publish(gMain.oamBuffer);
++#endif
++                return;
++            }
 +        }
          i++;
      }
  
-@@ -544,6 +728,9 @@ u8 CreateSpriteAt(u8 index, const struct SpriteTemplate *template, s16 x, s16 y,
+@@ -497,6 +689,9 @@ void AddSpritesToOamBuffer(void)
+         gMain.oamBuffer[oamIndex] = gDummyOamData;
+         oamIndex++;
+     }
++#if defined(PLATFORM_3DS)
++    CtrObjList_Publish(gMain.oamBuffer);
++#endif
+ }
+ 
+ u8 CreateSprite(const struct SpriteTemplate *template, s16 x, s16 y, u8 subpriority)
+@@ -544,6 +739,9 @@ u8 CreateSpriteAt(u8 index, const struct SpriteTemplate *template, s16 x, s16 y,
      ResetSprite(sprite);
  
      sprite->inUse = TRUE;
@@ -21227,7 +21639,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..1aeec5cbc340c6f3c8e46f1ec2d1fb63
      sprite->animBeginning = TRUE;
      sprite->affineAnimBeginning = TRUE;
      sprite->usingSheet = TRUE;
-@@ -562,8 +749,19 @@ u8 CreateSpriteAt(u8 index, const struct SpriteTemplate *template, s16 x, s16 y,
+@@ -562,8 +760,19 @@ u8 CreateSpriteAt(u8 index, const struct SpriteTemplate *template, s16 x, s16 y,
      if (template->tileTag == TAG_NONE)
      {
          s16 tileNum;
@@ -21248,7 +21660,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..1aeec5cbc340c6f3c8e46f1ec2d1fb63
          if (tileNum == -1)
          {
              ResetSprite(sprite);
-@@ -584,6 +782,12 @@ u8 CreateSpriteAt(u8 index, const struct SpriteTemplate *template, s16 x, s16 y,
+@@ -584,6 +793,12 @@ u8 CreateSpriteAt(u8 index, const struct SpriteTemplate *template, s16 x, s16 y,
  
      if (template->paletteTag != TAG_NONE)
          sprite->oam.paletteNum = IndexOfSpritePaletteTag(template->paletteTag);
@@ -21261,7 +21673,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..1aeec5cbc340c6f3c8e46f1ec2d1fb63
  
      return index;
  }
-@@ -622,7 +826,13 @@ void DestroySprite(struct Sprite *sprite)
+@@ -622,7 +837,13 @@ void DestroySprite(struct Sprite *sprite)
          if (!sprite->usingSheet)
          {
              u16 i;
@@ -21276,7 +21688,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..1aeec5cbc340c6f3c8e46f1ec2d1fb63
              for (i = sprite->oam.tileNum; i < tileEnd; i++)
                  FREE_SPRITE_TILE(i);
          }
-@@ -682,6 +892,9 @@ void SetOamMatrix(u8 matrixNum, u16 a, u16 b, u16 c, u16 d)
+@@ -682,6 +903,9 @@ void SetOamMatrix(u8 matrixNum, u16 a, u16 b, u16 c, u16 d)
  void ResetSprite(struct Sprite *sprite)
  {
      *sprite = sDummySprite;
@@ -21286,7 +21698,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..1aeec5cbc340c6f3c8e46f1ec2d1fb63
  }
  
  void CalcCenterToCornerVec(struct Sprite *sprite, u8 shape, u8 size, u8 affineMode)
-@@ -791,6 +1004,10 @@ void ProcessSpriteCopyRequests(void)
+@@ -791,6 +1015,10 @@ void ProcessSpriteCopyRequests(void)
          while (sSpriteCopyRequestCount > 0)
          {
              CpuCopy16(sSpriteCopyRequests[i].src, sSpriteCopyRequests[i].dest, sSpriteCopyRequests[i].size);
@@ -21297,7 +21709,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..1aeec5cbc340c6f3c8e46f1ec2d1fb63
              sSpriteCopyRequestCount--;
              i++;
          }
-@@ -803,9 +1020,17 @@ void RequestSpriteFrameImageCopy(u16 index, u16 tileNum, const struct SpriteFram
+@@ -803,9 +1031,17 @@ void RequestSpriteFrameImageCopy(u16 index, u16 tileNum, const struct SpriteFram
  {
      if (sSpriteCopyRequestCount < MAX_SPRITE_COPY_REQUESTS)
      {
@@ -21317,7 +21729,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..1aeec5cbc340c6f3c8e46f1ec2d1fb63
          sSpriteCopyRequestCount++;
      }
  }
-@@ -814,6 +1039,9 @@ void RequestSpriteCopy(const u8 *src, u8 *dest, u16 size)
+@@ -814,6 +1050,9 @@ void RequestSpriteCopy(const u8 *src, u8 *dest, u16 size)
  {
      if (sSpriteCopyRequestCount < MAX_SPRITE_COPY_REQUESTS)
      {
@@ -21327,7 +21739,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..1aeec5cbc340c6f3c8e46f1ec2d1fb63
          sSpriteCopyRequests[sSpriteCopyRequestCount].src = src;
          sSpriteCopyRequests[sSpriteCopyRequestCount].dest = dest;
          sSpriteCopyRequests[sSpriteCopyRequestCount].size = size;
-@@ -1485,7 +1713,11 @@ void SetOamMatrixRotationScaling(u8 matrixNum, s16 xScale, s16 yScale, u16 rotat
+@@ -1485,7 +1724,11 @@ void SetOamMatrixRotationScaling(u8 matrixNum, s16 xScale, s16 yScale, u16 rotat
  
  u16 LoadSpriteSheet(const struct SpriteSheet *sheet)
  {
@@ -21340,7 +21752,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..1aeec5cbc340c6f3c8e46f1ec2d1fb63
  
      if (tileStart < 0)
      {
-@@ -1493,8 +1725,12 @@ u16 LoadSpriteSheet(const struct SpriteSheet *sheet)
+@@ -1493,8 +1736,12 @@ u16 LoadSpriteSheet(const struct SpriteSheet *sheet)
      }
      else
      {
@@ -21355,7 +21767,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..1aeec5cbc340c6f3c8e46f1ec2d1fb63
          return (u16)tileStart;
      }
  }
-@@ -1584,6 +1820,9 @@ void FreeAllSpritePalettes(void)
+@@ -1584,6 +1831,9 @@ void FreeAllSpritePalettes(void)
      gReservedSpritePaletteCount = 0;
      for (i = 0; i < 16; i++)
          sSpritePaletteTags[i] = TAG_NONE;
@@ -21365,7 +21777,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..1aeec5cbc340c6f3c8e46f1ec2d1fb63
  }
  
  u8 LoadSpritePalette(const struct SpritePalette *palette)
-@@ -1617,6 +1856,9 @@ void LoadSpritePalettes(const struct SpritePalette *palettes)
+@@ -1617,6 +1867,9 @@ void LoadSpritePalettes(const struct SpritePalette *palettes)
  
  void DoLoadSpritePalette(const u16 *src, u16 paletteOffset)
  {
@@ -21375,7 +21787,7 @@ index 708a3e7fdf5fe77dff62d0e2d908b9e9e089f39a..1aeec5cbc340c6f3c8e46f1ec2d1fb63
      LoadPalette(src, OBJ_PLTT_OFFSET + paletteOffset, PLTT_SIZE_4BPP);
  }
  
-@@ -1654,8 +1896,74 @@ void FreeSpritePaletteByTag(u16 tag)
+@@ -1654,8 +1907,74 @@ void FreeSpritePaletteByTag(u16 tag)
      u8 index = IndexOfSpritePaletteTag(tag);
      if (index != 0xFF)
          sSpritePaletteTags[index] = TAG_NONE;
