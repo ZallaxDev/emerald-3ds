@@ -13,6 +13,11 @@ void LrAddHate(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
                const LrTrainerTraits *traits, int32_t delta, uint16_t nowDay);
 void LrAddFear(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
                const LrTrainerTraits *traits, int32_t delta, uint16_t nowDay);
+/* Event deltas outside -100..100 or invalid causes are rejected without mutation. */
+void LrAddHateCaused(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
+                     const LrTrainerTraits *traits, int32_t delta, uint16_t nowDay, uint8_t cause);
+void LrAddFearCaused(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
+                     const LrTrainerTraits *traits, int32_t delta, uint16_t nowDay, uint8_t cause);
 void LrAddNotoriety(TrainerJourneyCore *core, int32_t delta);
 int32_t LrEffectiveFear(const TrainerJourneyCore *core);
 

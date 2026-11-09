@@ -4,6 +4,7 @@
 #include "lr_affect.h"
 #include "lr_mind.h"
 #include "lr_memory.h"
+#include "lr_goals.h"
 
 /* Put every universal facet exactly on its temperament baseline, so only the
  * multiplier under test is active. */
@@ -19,7 +20,62 @@ static void base(TrainerJourneyCore *c, TrainerJourneyExtended *e, uint8_t temp)
         c->universalFacets[i] = (int8_t)LrComputeBaseline(c, (uint16_t)i);
 }
 
+static void test_world_cause(void) {
+    TrainerJourneyCore c; TrainerJourneyExtended e;
+    base(&c, &e, LR_TEMP_STEADY);
+    LrAddHateCaused(&c, &e, NULL, 100, 1, LR_CAUSE_WORLD);
+    LR_CHECK_EQ_INT(e.memoryCauses[0], LR_CAUSE_WORLD);
+    LR_CHECK_EQ_INT(e.memoryEmotions[0], LR_MEMORY_ANGER);
+    LR_CHECK(!LrHasGoalAgainstPlayer(&c, LR_GOAL_AVENGE));
+}
+
+static void test_other_cause(void) {
+    TrainerJourneyCore c; TrainerJourneyExtended e;
+    base(&c, &e, LR_TEMP_COWARD);
+    LrAddFearCaused(&c, &e, NULL, 100, 1, LR_CAUSE_OTHER_TRAINER);
+    LR_CHECK_EQ_INT(e.memoryCauses[0], LR_CAUSE_OTHER_TRAINER);
+    LR_CHECK(!LrHasGoal(&c, LR_GOAL_SETTLE));
+}
+
+static void test_player_compatibility(void) {
+    TrainerJourneyCore a, b; TrainerJourneyExtended ae, be;
+    base(&a, &ae, LR_TEMP_HOTHEAD); b = a; be = ae;
+    LrAddHate(&a, &ae, NULL, 60, 1);
+    LrAddHateCaused(&b, &be, NULL, 60, 1, LR_CAUSE_PLAYER);
+    LR_CHECK(memcmp(&a, &b, sizeof(a)) == 0);
+    LR_CHECK(memcmp(&ae, &be, sizeof(ae)) == 0);
+    LrAddFear(&a, &ae, NULL, 60, 1);
+    LrAddFearCaused(&b, &be, NULL, 60, 1, LR_CAUSE_PLAYER);
+    LR_CHECK(memcmp(&a, &b, sizeof(a)) == 0);
+    LR_CHECK(memcmp(&ae, &be, sizeof(ae)) == 0);
+}
+
+static void test_negative_cause(void) {
+    TrainerJourneyCore c; TrainerJourneyExtended e;
+    base(&c, &e, LR_TEMP_STEADY); c.fear = 50;
+    LrAddFearCaused(&c, &e, NULL, -20, 1, LR_CAUSE_WORLD);
+    LR_CHECK_EQ_INT(e.memoryEmotions[0], LR_MEMORY_JOY);
+    LR_CHECK_EQ_INT(e.memoryCauses[0], LR_CAUSE_WORLD);
+    LR_CHECK_EQ_INT(c.fear, 30);
+}
+
+static void test_invalid_event_delta(void) {
+    const int32_t deltas[] = {101,-101,INT32_MAX,INT32_MIN};
+    TrainerJourneyCore c, before; TrainerJourneyExtended e, eBefore;
+    base(&c, &e, LR_TEMP_STEADY); before = c; eBefore = e;
+    for (unsigned i = 0; i < 4; i++) {
+        LrAddFearCaused(&c, &e, NULL, deltas[i], 1, LR_CAUSE_WORLD);
+        LrAddHateCaused(&c, &e, NULL, deltas[i], 1, LR_CAUSE_WORLD);
+        LR_CHECK(memcmp(&c, &before, sizeof(c)) == 0);
+        LR_CHECK(memcmp(&e, &eBefore, sizeof(e)) == 0);
+    }
+    LrAddHateCaused(&c, &e, NULL, 100, 1, 255);
+    LR_CHECK(memcmp(&c, &before, sizeof(c)) == 0);
+}
+
 int main(void) {
+    test_world_cause(); test_other_cause(); test_player_compatibility();
+    test_negative_cause(); test_invalid_event_delta();
     TrainerJourneyCore c;
     TrainerJourneyExtended e;
     LrTrainerTraits t;

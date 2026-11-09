@@ -84,8 +84,8 @@ int32_t LrCalculateFearDelta(int32_t base, const TrainerJourneyCore *core, const
     return round_div(base * mult, 1000);
 }
 
-void LrAddHate(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
-               const LrTrainerTraits *traits, int32_t delta, uint16_t nowDay) {
+static void add_hate(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
+                     const LrTrainerTraits *traits, int32_t delta, uint16_t nowDay, uint8_t cause) {
     if (delta > 0) delta = LrCalculateHateDelta(delta, core, traits);
 
     int32_t next = clamp32((int32_t)core->hate + delta, 0, 100);
@@ -95,12 +95,12 @@ void LrAddHate(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
     if (magnitude >= 10) {
         uint8_t emotion = delta > 0 ? (uint8_t)LR_MEMORY_ANGER : (uint8_t)LR_MEMORY_JOY;
         uint8_t intensity = (uint8_t)(magnitude > 100 ? 100 : magnitude);
-        LrRemember(core, ext, emotion, intensity, LR_CAUSE_PLAYER, nowDay, LR_FACET_ANGER);
+        LrRemember(core, ext, emotion, intensity, cause, nowDay, LR_FACET_ANGER);
     }
 }
 
-void LrAddFear(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
-               const LrTrainerTraits *traits, int32_t delta, uint16_t nowDay) {
+static void add_fear(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
+                     const LrTrainerTraits *traits, int32_t delta, uint16_t nowDay, uint8_t cause) {
     if (delta > 0) delta = LrCalculateFearDelta(delta, core, traits);
 
     int32_t next = clamp32((int32_t)core->fear + delta, 0, 100);
@@ -110,8 +110,30 @@ void LrAddFear(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
     if (magnitude >= 10) {
         uint8_t emotion = delta > 0 ? (uint8_t)LR_MEMORY_FEAR : (uint8_t)LR_MEMORY_JOY;
         uint8_t intensity = (uint8_t)(magnitude > 100 ? 100 : magnitude);
-        LrRemember(core, ext, emotion, intensity, LR_CAUSE_PLAYER, nowDay, LR_FACET_BRAVERY);
+        LrRemember(core, ext, emotion, intensity, cause, nowDay, LR_FACET_BRAVERY);
     }
+}
+
+void LrAddHate(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
+               const LrTrainerTraits *traits, int32_t delta, uint16_t nowDay) {
+    add_hate(core, ext, traits, delta, nowDay, LR_CAUSE_PLAYER);
+}
+
+void LrAddFear(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
+               const LrTrainerTraits *traits, int32_t delta, uint16_t nowDay) {
+    add_fear(core, ext, traits, delta, nowDay, LR_CAUSE_PLAYER);
+}
+
+void LrAddHateCaused(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
+                     const LrTrainerTraits *traits, int32_t delta, uint16_t nowDay, uint8_t cause) {
+    if (!core || !ext || delta < -100 || delta > 100 || cause > LR_CAUSE_OTHER_TRAINER) return;
+    add_hate(core, ext, traits, delta, nowDay, cause);
+}
+
+void LrAddFearCaused(TrainerJourneyCore *core, TrainerJourneyExtended *ext,
+                     const LrTrainerTraits *traits, int32_t delta, uint16_t nowDay, uint8_t cause) {
+    if (!core || !ext || delta < -100 || delta > 100 || cause > LR_CAUSE_OTHER_TRAINER) return;
+    add_fear(core, ext, traits, delta, nowDay, cause);
 }
 
 void LrAddNotoriety(TrainerJourneyCore *core, int32_t delta) {
