@@ -13,6 +13,7 @@ typedef struct {
     int8_t lawFacet;
     int8_t spiritFacet;
     int8_t moneyFacet;
+    int8_t prideFacet;
 } LrRegionProfile;
 
 typedef struct {

@@ -16,7 +16,7 @@ static const int8_t sUniversalOffsets[LR_TEMPERAMENT_COUNT][LR_UNIVERSAL_FACET_C
 static const int8_t sZeroOffsets[LR_UNIVERSAL_FACET_COUNT] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 static const LrRegionProfile sNeutralRegion = {
-    "Neutral", 0, { 0 }, { { 0 } }, -1, -1, -1, -1
+    "Neutral", 0, { 0 }, { { 0 } }, -1, -1, -1, -1, -1
 };
 
 static const LrRegionProfile sRegions[LR_REGION_COUNT] = {
@@ -34,7 +34,7 @@ static const LrRegionProfile sRegions[LR_REGION_COUNT] = {
             [LR_TEMP_DRIFTER] = { -10, 5,  0 },
             [LR_TEMP_STEADY]  = {  0,  0,  0 },
         },
-        .familyFacet = -1, .lawFacet = 0, .spiritFacet = -1, .moneyFacet = 2,
+        .familyFacet = -1, .lawFacet = 0, .spiritFacet = -1, .moneyFacet = 2, .prideFacet = 0,
     },
     [LR_REGION_JOHTO] = {
         .name = "Johto",
@@ -50,7 +50,7 @@ static const LrRegionProfile sRegions[LR_REGION_COUNT] = {
             [LR_TEMP_DRIFTER] = { -10, 0, 0, 5 },
             [LR_TEMP_STEADY]  = {  0,  0, 0, 0 },
         },
-        .familyFacet = 1, .lawFacet = 0, .spiritFacet = 3, .moneyFacet = -1,
+        .familyFacet = 1, .lawFacet = 0, .spiritFacet = 3, .moneyFacet = -1, .prideFacet = 0,
     },
     [LR_REGION_HOENN] = {
         .name = "Hoenn",
@@ -66,7 +66,7 @@ static const LrRegionProfile sRegions[LR_REGION_COUNT] = {
             [LR_TEMP_DRIFTER] = {  5,  5,  0 },
             [LR_TEMP_STEADY]  = {  0,  0,  0 },
         },
-        .familyFacet = 0, .lawFacet = -1, .spiritFacet = 2, .moneyFacet = -1,
+        .familyFacet = 0, .lawFacet = -1, .spiritFacet = 2, .moneyFacet = -1, .prideFacet = 1,
     },
     [LR_REGION_SINNOH] = {
         .name = "Sinnoh",
@@ -82,7 +82,7 @@ static const LrRegionProfile sRegions[LR_REGION_COUNT] = {
             [LR_TEMP_DRIFTER] = { 5,  0, -5 },
             [LR_TEMP_STEADY]  = { 0,  0,  0 },
         },
-        .familyFacet = -1, .lawFacet = -1, .spiritFacet = 0, .moneyFacet = -1,
+        .familyFacet = -1, .lawFacet = -1, .spiritFacet = 0, .moneyFacet = -1, .prideFacet = 0,
     },
     [LR_REGION_UNOVA] = {
         .name = "Unova",
@@ -98,7 +98,7 @@ static const LrRegionProfile sRegions[LR_REGION_COUNT] = {
             [LR_TEMP_DRIFTER] = {  0, -5, 5 },
             [LR_TEMP_STEADY]  = {  0,  0, 0 },
         },
-        .familyFacet = -1, .lawFacet = -1, .spiritFacet = 2, .moneyFacet = 1,
+        .familyFacet = -1, .lawFacet = -1, .spiritFacet = 2, .moneyFacet = 1, .prideFacet = 0,
     },
 };
 

@@ -91,8 +91,8 @@ int main(void) {
         for (int t = 0; t < LR_TEMPERAMENT_COUNT; t++)
             for (int f = 0; f < LR_MAX_REGION_FACETS; f++)
                 LR_CHECK(p->temperamentOffsets[t][f] >= -40 && p->temperamentOffsets[t][f] <= 40);
-        int8_t sel[4] = { p->familyFacet, p->lawFacet, p->spiritFacet, p->moneyFacet };
-        for (int i = 0; i < 4; i++)
+        int8_t sel[5] = { p->familyFacet, p->lawFacet, p->spiritFacet, p->moneyFacet, p->prideFacet };
+        for (int i = 0; i < 5; i++)
             LR_CHECK(sel[i] >= -1 && sel[i] < p->facetCount);
     }
     for (int f = 0; f < LR_FACTION_COUNT; f++) {
@@ -102,6 +102,28 @@ int main(void) {
             for (int i = 0; i < LR_MAX_FACTION_FACETS; i++)
                 LR_CHECK(p->archetypeOffsets[a][i] >= -40 && p->archetypeOffsets[a][i] <= 40);
     }
+
+    /* Memory/intent enums are save-format values. */
+    LR_CHECK_EQ_INT(LR_MEMORY_ANGER, 0);
+    LR_CHECK_EQ_INT(LR_MEMORY_FEAR, 1);
+    LR_CHECK_EQ_INT(LR_MEMORY_SHAME, 2);
+    LR_CHECK_EQ_INT(LR_MEMORY_GRIEF, 3);
+    LR_CHECK_EQ_INT(LR_MEMORY_JOY, 4);
+    LR_CHECK_EQ_INT(LR_MEMORY_PRIDE, 5);
+    LR_CHECK_EQ_INT(LR_CAUSE_WORLD, 0);
+    LR_CHECK_EQ_INT(LR_CAUSE_PLAYER, 1);
+    LR_CHECK_EQ_INT(LR_CAUSE_OTHER_TRAINER, 2);
+    LR_CHECK_EQ_INT(LR_INTENT_NONE, 0);
+    LR_CHECK_EQ_INT(LR_INTENT_HUNTS, 1);
+    LR_CHECK_EQ_INT(LR_INTENT_WONT_HUNT, 2);
+    LR_CHECK_EQ_INT(LR_TRAINER_PLAYER, 0xFFFE);
+
+    /* Pride selectors. */
+    LR_CHECK_EQ_INT(LrGetRegionProfile(LR_REGION_KANTO)->prideFacet, 0);
+    LR_CHECK_EQ_INT(LrGetRegionProfile(LR_REGION_JOHTO)->prideFacet, 0);
+    LR_CHECK_EQ_INT(LrGetRegionProfile(LR_REGION_HOENN)->prideFacet, 1);
+    LR_CHECK_EQ_INT(LrGetRegionProfile(LR_REGION_SINNOH)->prideFacet, 0);
+    LR_CHECK_EQ_INT(LrGetRegionProfile(LR_REGION_UNOVA)->prideFacet, 0);
 
     return lr_test_summary("test_tables");
 }
