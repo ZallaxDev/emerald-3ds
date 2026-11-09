@@ -473,7 +473,15 @@ static void DrawBattleTextLayer(unsigned bg)
     if (bg == 0)
         DrawBattleText(bg);
     else
+    {
+        uint32_t before = sStats.tiles;
+
         DrawBattleCut(bg, VIEW_RIGHT - 240, VIEW_RIGHT, 0, 160, VIEW_RIGHT - 240);
+        /* The level-up box starts well above the text box: the 3D battle
+         * puts the whole surface on each eye then, not the text box's lines
+         * alone, which cut the box's top rows off (RenderBattleStereo). */
+        if (sStats.tiles != before) sTextAbove = true;
+    }
     C2D_Flush();
     sZoom = zoom;
     sOffX = offX;

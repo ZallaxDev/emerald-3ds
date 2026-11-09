@@ -227,6 +227,8 @@ are retained; only ray-result caches expire. There are no new shadow textures,
 framebuffers, draw passes or shader instructions. Direction changes are
 discrete and chunk updates are staggered: this is not continuous per-pixel
 shadow motion, and its visual pacing still needs console testing.
+With SHADOW QUALITY HIGH the cast shadows come from a shadow map drawn each
+frame from the current sun, so they follow it without waiting for the chunks.
 
 Disabling day/night restores the legacy northwest sun even when the clock
 or timed encounters remain enabled. Indoors and invalid RTC also retain

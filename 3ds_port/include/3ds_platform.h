@@ -174,6 +174,8 @@ bool CtrSettings_VoxelBlur(void);
 int CtrSettings_VoxelBlurStrength(void);
 void CtrSettings_StepVoxelBlur(int direction);
 void CtrSettings_SetVoxelBlur(bool on);
+/* SHADOW QUALITY: HIGH as chosen, or the console's default (New 3DS). */
+bool CtrSettings_VoxelShadowsHigh(void);
 /* Battles in front of the voxel world (3ds_video.c), off by default. */
 bool CtrSettings_VoxelBattle(void);
 void CtrSettings_SetVoxelBattle(bool on);

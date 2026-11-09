@@ -32,4 +32,28 @@ void VoxelTree_EmitInstance(VoxelBuilder *builder, const VoxelMapInstance *inst,
                             int x0, int y0, int x1, int y1);
 void VoxelTree_EmitBorder(VoxelBuilder *builder, int x0, int y0, int x1, int y1);
 
+/*
+ * While a list is given, the crown cards are noted instead of emitted (long
+ * grass is no crown): VoxelTree_EmitNotedCards emits them all at the end, in
+ * one run after the trees' grounds, which the shadow map shades and the
+ * crowns not (ctr_voxel.c). Each as it will be written (in the builder's
+ * frame, lifted and drawn south as the card is): corners top left, top
+ * right, bottom right, bottom left, and the foot of the tree it is part of
+ * (all its cards share it) - HIGH's shadow map draws them turned to the sun
+ * round it (TreeShadowCards). Past `capacity` a card is emitted at once.
+ * NULL stops noting (the noted ones stay readable).
+ */
+typedef struct
+{
+    VoxelVertex corner[4];
+    VoxelVertex foot;
+    /* as emitted: the corners given, the builder's relief then */
+    VoxelVertex raw[4];
+    float lift, shift, base;
+} VoxelTreeCard;
+void VoxelTree_NoteCards(VoxelTreeCard *cards, unsigned capacity);
+unsigned VoxelTree_CardsNoted(void);
+const VoxelTreeCard *VoxelTree_NotedCards(void);
+void VoxelTree_EmitNotedCards(VoxelBuilder *builder);
+
 #endif

@@ -1,8 +1,8 @@
 /*
  * The Frontier Pass as the top screen draws it natively
  * (3ds_bottom_pass.inc), handed over by frontier_pass.c
- * (0084-frontier-pass-top.patch), and the trainer card it opens, handed over
- * by trainer_card.c (0085-trainer-card-top.patch). The game still runs the
+ * (0086-frontier-pass-top.patch), and the trainer card it opens, handed over
+ * by trainer_card.c (0087-trainer-card-top.patch). The game still runs the
  * pass, its map, the card and their input; this is only what is on show.
  */
 #ifndef CTR_PASS_VIEW_H

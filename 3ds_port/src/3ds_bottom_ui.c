@@ -2254,6 +2254,10 @@ enum { HELD_NONE, HELD_ITEM, HELD_MAIL };
 /* A row of the map's wild Pokemon list (map extras): a species of one
  * method's table, its slots' levels and chances added up. */
 #define ENC_ROWS 12   /* a method's rows, at most */
+/* What the Pokedex knows of a row's species: its seen field. No field of its
+ * own for caught: the rows are copied from the stack and compared with memcmp,
+ * and one more u8 would add a padding byte that holds whatever was there. */
+enum { ENC_UNSEEN, ENC_SEEN, ENC_CAUGHT };
 typedef struct
 {
     u16 species;
@@ -2355,6 +2359,16 @@ enum { BAG_VIEW_NONE, BAG_VIEW_SECTION, BAG_VIEW_WHOLE };
 static bool8 BagShown(u8 mode)
 {
     return mode == MODE_BAG_MENU;
+}
+
+/* The bag to deposit from at the PC or to sell from at a shop: in the window,
+ * but it goes back to the PC's or the shop's menu as it closes, never to
+ * another screen (CtrBottom_LeaveTo), so the dock is locked to its own BAG,
+ * which closes it as B does. */
+static bool8 BagReturnsToMenu(u8 mode)
+{
+    return mode == MODE_BAG_MENU
+        && (gBagPosition.location == ITEMMENULOCATION_ITEMPC || gBagPosition.location == ITEMMENULOCATION_SHOP);
 }
 
 /* Whether the shop's BUY screen is what the whole screen shows. */
@@ -3494,9 +3508,18 @@ static void SnapshotEncounters(ViewState *s)
         memcpy(s->enc, rows + page * ENC_SHOWN, s->encCount * sizeof(EncRow));
         break;
     }
-    /* Only what the Pokedex has seen is named. */
+    /* Only what the Pokedex has seen is named, and what it has caught marked.
+     * FLAG_GET_CAUGHT clears the species' flags when they disagree: asked only
+     * of a species seen, whose flags agree, it reads and changes nothing. */
     for (u8 i = 0; i < s->encCount; ++i)
-        s->enc[i].seen = GetSetPokedexFlag(SpeciesToNationalPokedexNum(s->enc[i].species), FLAG_GET_SEEN) != 0;
+    {
+        u16 national = SpeciesToNationalPokedexNum(s->enc[i].species);
+
+        if (GetSetPokedexFlag(national, FLAG_GET_SEEN) == 0)
+            s->enc[i].seen = ENC_UNSEEN;
+        else
+            s->enc[i].seen = GetSetPokedexFlag(national, FLAG_GET_CAUGHT) != 0 ? ENC_CAUGHT : ENC_SEEN;
+    }
 }
 
 static void SnapshotMapExtras(ViewState *s)
@@ -3590,7 +3613,7 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
                || ((mode == MODE_PARTY_MENU || mode == MODE_BAG_MENU) && s->bagView == BAG_VIEW_SECTION));
     /* The Fly map: only MAP, which cancels it, as in a battle's menus. */
     s->mapFly = sMapFly && mode == MODE_FIELD && s->screen == SCR_MAP && s->dock;
-    s->dockLocked = s->dock && (s->inBattle || s->mapFly);
+    s->dockLocked = s->dock && (s->inBattle || s->mapFly || BagReturnsToMenu(mode));
     StringCopy(s->name, gSaveBlock2Ptr->playerName);
     /* The header's Y and RUN, and the focus on the dock or the header; in a
      * battle neither is for now. */
@@ -6433,8 +6456,9 @@ static void Activate(u8 id, u8 mode)
                 CancelFlyMap();
             return;
         }
-        /* A battle's party menu, summary or bag: only its own button, their B. */
-        if (gMain.inBattle && screen != sShown.screen)
+        /* A battle's party menu, summary or bag, or the bag at the PC or a
+         * shop: only its own button, their B. */
+        if ((gMain.inBattle || sShown.dockLocked) && screen != sShown.screen)
             return;
 
         if (mode == MODE_POKENAV)
@@ -6887,7 +6911,7 @@ static bool8 ColumnShown(u8 mode)
     case MODE_PARTY_MENU:
         return gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD;
     case MODE_BAG_MENU:
-        return CtrBag_InWindow();
+        return CtrBag_InWindow() && !BagReturnsToMenu(mode);
     }
     return FALSE;
 }

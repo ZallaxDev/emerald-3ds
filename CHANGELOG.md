@@ -2,6 +2,33 @@
 
 ## Unreleased
 
+- Voxel: trainers buried in the ash or sand and the unseen Kecleon on Route
+  120's bridge stay out of sight until they appear, as in 2D (issue #237). By
+  @Johannes-Sch.
+- Voxel: rotating gates in Fortree Gym and the Trick House lie on the ground,
+  turned as in 2D, so the puzzles can be read (issue #238). By @Johannes-Sch.
+- Voxel: the orbs' light in the Magma Hideout and the Seafloor Cavern is
+  translucent as in 2D, no longer a solid box hiding the legendary as it wakes
+  (issue #236). By @Johannes-Sch.
+- The Frontier Pass: PLAYER opens it again once the player has it, and the
+  bottom screen's trainer card has a PASS plate under FLIP. By @DannyM90
+  (pull request #212).
+- OPTIONS: SPEED EFFECTS (SCENE) turns off the speed lines and the zoom blur
+  of the 3D battle's entrance. By @DannyM90 (pull request #232).
+- German: the Frontier map screen gets its own tiles, not the pass's picture.
+  By @DannyM90 (pull request #228).
+- Touch bottom screen: choosing the move to forget for a new one happens in
+  the bottom screen wherever a move is learned (pull request #223), and the
+  bag deposits in the PC and sells in the shop there too (pull request #224).
+  By @luksgrin.
+- Battle HUD: no dark block next to a status badge. By @luksgrin (pull
+  request #225).
+- Japanese: the PC item storage no longer crashes (pull request #219); the
+  bag's return line (#220), the berry names (#221) and the level-up box's
+  numbers (#226) as in BPEJ, and the 3D battle keeps the level-up box's top
+  rows (#226). By @luksgrin.
+- Voxel: Lilycove's beacon is modelled, and bare cells keep their own
+  drawing. By @luksgrin (pull request #227).
 - Local wireless: every language of one release links. The build's id, which
   two systems must share to play together, is now made from the patch set
   and the port's code rather than the ROM-derived executable and data, so
@@ -31,6 +58,16 @@
   as SAVE or OPTIONS, or its button column in focus with X), the top screen
   darkens towards its foot under an arrow pointing down at it, as on the DS
   games, and the music plays at half its volume. By @eathanpage.
+- 3D world: SHADOW QUALITY option (OPTIONS, and GRAPHICS on the bottom
+  screen). HIGH, the default on New 3DS, draws the sun's shadows from a GPU
+  shadow map: every house, cliff, lamp and tree casts its exact outline on
+  the ground, walls and roofs, with a soft edge, and trees cast the shape of
+  their own crowns. LOW, the default on Old 3DS, keeps the shadows baked into
+  the world as before. Signposts' shadows no longer float off the sign on
+  drawn terrain. The option changes without a restart, the world redrawing
+  itself a piece at a time.
+- Area wild list: a species already caught carries the Pokédex list's ball
+  mark, so the list tells caught from only seen. By @Johannes-Sch.
 
 ## 0.5.0 — 2026-10-29
 

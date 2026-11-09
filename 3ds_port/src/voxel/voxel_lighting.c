@@ -74,6 +74,22 @@ static uint32_t sSampleGeneration;
 static uint16_t sSunGeneration = 1;
 VoxelSun gVoxelSun = {0.85f, 0.55f, 1.0f, 0};
 static float sAmbient = VOXEL_AMBIENT;
+/*
+ * SHADOW QUALITY HIGH (VoxelLighting_SetQuality): the GPU's shadow map
+ * (ctr_voxel.c "Shadow map") casts every shadow, the trees' too (their
+ * crowns turned to the sun, TreeShadowCards): no ray is cast here, every
+ * sample is in the sun and keeps its contact shade, and a face turned from
+ * the sun takes HIGH's ambient. LOW is the lighting as it always was.
+ */
+static bool sHigh;
+
+/* LOW's ambient, or HIGH's under the shadow map, for a sun this strong. */
+static float AmbientOf(float strength)
+{
+    float ambient = sHigh ? VOXEL_SHADOW_MAP_DARK : VOXEL_AMBIENT;
+
+    return 1.0f - (1.0f - ambient) * strength;
+}
 static float sStepInverseX = 4.0f / 0.85f, sStepInverseZ = 4.0f / 0.55f;
 static unsigned sRays;
 /* Lit without the blocks' bound (VoxelLighting_SampleAlone). */
@@ -291,7 +307,7 @@ bool VoxelLighting_SetSun(float dx, float dz, float strength, uint32_t key)
      && gVoxelSun.strength == strength && gVoxelSun.key == key)
         return false;
     gVoxelSun = (VoxelSun){dx, dz, strength, key};
-    sAmbient = 1.0f - (1.0f - VOXEL_AMBIENT) * strength;
+    sAmbient = AmbientOf(strength);
     sStepInverseX = fabsf(dx) > 0.0001f ? 4.0f / dx : 0.0f;
     sStepInverseZ = fabsf(dz) > 0.0001f ? 4.0f / dz : 0.0f;
     /* Every ray is cast again, but not the contacts: they test the casters
@@ -305,6 +321,29 @@ bool VoxelLighting_SetSun(float dx, float dz, float strength, uint32_t key)
         sSunGeneration = 1;
     }
     return true;
+}
+
+bool VoxelLighting_SetQuality(int quality)
+{
+    bool high = quality == VOXEL_SHADOWS_HIGH;
+
+    if (high == sHigh)
+        return false;
+    sHigh = high;
+    sAmbient = AmbientOf(gVoxelSun.strength);
+    /* every sample's ray was cast, or not */
+    ResetSamples();
+    return true;
+}
+
+int VoxelLighting_Quality(void)
+{
+    return sHigh ? VOXEL_SHADOWS_HIGH : VOXEL_SHADOWS_LOW;
+}
+
+float VoxelLighting_Ambient(void)
+{
+    return sAmbient;
 }
 
 void VoxelLighting_Reset(void)
@@ -957,9 +996,10 @@ static const LightSample *CachedSample(float x, float y, float z)
 
     if (sample->sun != sSunGeneration)
     {
-        if (gVoxelSun.strength > 0.0f)
+        if (gVoxelSun.strength > 0.0f && !sHigh)
             ++sRays;
-        sample->lit = Lit(x, y, z);
+        /* HIGH: the shadow map shades it, crowns and all */
+        sample->lit = sHigh || Lit(x, y, z);
         sample->sun = sSunGeneration;
     }
     return sample;
@@ -1024,7 +1064,8 @@ uint32_t VoxelLighting_Hash(int x0, int z0, int x1, int z1)
     int hz1 = z1 + (VOXEL_SUN_DZ < 0.0f ? reachZ : 0) + 2;
     uint32_t hash = VoxelWorld_BlockHash(hx0, hz0, hx1, hz1);
 
-    hash = (hash ^ gVoxelSun.key) * 16777619u;
+    /* (HIGH bakes other shades: its chunks are other chunks) */
+    hash = (hash ^ gVoxelSun.key ^ (sHigh ? 0x9E3779B9u : 0u)) * 16777619u;
 
     /* Equal tile IDs in a different tileset/layout do not mean equal casters.
      * Relative origins preserve the hash when the entire world is rebased. */

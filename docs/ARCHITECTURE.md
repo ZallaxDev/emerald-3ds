@@ -125,7 +125,9 @@ to the action and move menus.
 objects. Chunks are built in slices across frames, uploads per frame are
 capped by the GX queue (32 entries), building textures stream from a worker
 thread, and a fixed sun with baked shade and cast sprite shadows grades the
-scene (`VOXEL_LIGHTING`). Buildings, trees, signposts and drawn terrain relief
+scene (`VOXEL_LIGHTING`); OPTIONS' SHADOW QUALITY HIGH (the New 3DS default)
+casts the sun's shadows from a PICA200 shadow map drawn once a frame
+instead. Buildings, trees, signposts and drawn terrain relief
 are modelled on the host from each map's own art (`3ds_port/scripts/gen_voxel_*.py`)
 and read at runtime from `voxel/*.bin`. How to work on them:
 [VOXEL_GUIDE.md](VOXEL_GUIDE.md).

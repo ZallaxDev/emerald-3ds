@@ -216,6 +216,7 @@ static shaderProgram_s sProgram;
 static int sUniProjection = -1, sUniModelView = -1, sUniOrigin = -1;
 static int sUniShadeTint = -1, sUniTintDiff = -1, sUniGrade = -1, sUniFog = -1;
 static int sUniDappleU = -1, sUniDappleV = -1;
+static int sUniShadowU = -1, sUniShadowV = -1, sUniShadowW = -1, sUniShadowSel = -1;
 /* The tree crowns' brightness against the rest of the art, applied once as
  * the tree texture loads (BrightenCrowns). */
 #define VOXEL_TREE_BRIGHTNESS 1.12f
@@ -668,6 +669,24 @@ static void PackRange(VoxelVertex *vertices, unsigned first, unsigned count, Pac
  */
 #define VOXEL_CHUNK_VRAM_BUDGET (1536u * 1024u)
 
+/* A chunk build's crown cards, for its trees' shadows (TreeShadowCards). */
+#define VOXEL_JOB_CARDS 768u
+static VoxelTreeCard sJobCards[VOXEL_JOB_CARDS];
+
+static unsigned TreeShadowCards(VoxelBuilder *builder);
+
+/* HIGH notes the crowns (VoxelTree_NoteCards): the room for them, else 0. */
+static unsigned TreeCardsWanted(void)
+{
+#if CTR_VOXEL_LIGHTING
+    return VoxelLighting_Quality() == VOXEL_SHADOWS_HIGH && sBuilder.lighting ? VOXEL_JOB_CARDS : 0u;
+#else
+    return 0u;
+#endif
+}
+
+static void TreeCrowns(void);
+
 typedef struct
 {
     bool used, border;
@@ -690,6 +709,12 @@ typedef struct
     unsigned bytes, count, terrainCount;
     unsigned terrainFirst[VOXEL_ATLAS_PAGES + 1u];
     unsigned buildingFirst; /* trees are [terrainCount, buildingFirst) */
+    /* the last of the trees' vertices: their crowns turned to the sun, drawn
+     * only into HIGH's shadow map (TreeShadowCards) */
+    unsigned treeShadow;
+    /* ... and before those, HIGH's crowns, after their grounds: drawn out of
+     * the map's reach (VoxelTree_NoteCards) */
+    unsigned treeCrowns;
     int buildingPage;       /* texture page of [buildingFirst, count) */
     uint32_t stamp;         /* last frame the view or the prefetch ring saw it */
     uint32_t viewStamp;     /* last frame it was on screen */
@@ -2739,9 +2764,14 @@ bool CtrVoxel_Init(void)
     sUniFog = shaderInstanceGetUniformLocation(sProgram.vertexShader, "fog");
     sUniDappleU = shaderInstanceGetUniformLocation(sProgram.vertexShader, "dappleU");
     sUniDappleV = shaderInstanceGetUniformLocation(sProgram.vertexShader, "dappleV");
+    sUniShadowU = shaderInstanceGetUniformLocation(sProgram.vertexShader, "shadowU");
+    sUniShadowV = shaderInstanceGetUniformLocation(sProgram.vertexShader, "shadowV");
+    sUniShadowW = shaderInstanceGetUniformLocation(sProgram.vertexShader, "shadowW");
+    sUniShadowSel = shaderInstanceGetUniformLocation(sProgram.vertexShader, "shadowSel");
     if (sUniProjection < 0 || sUniModelView < 0 || sUniOrigin < 0 || sUniShadeTint < 0
      || sUniTintDiff < 0 || sUniGrade < 0 || sUniFog < 0
-     || sUniDappleU < 0 || sUniDappleV < 0)
+     || sUniDappleU < 0 || sUniDappleV < 0
+     || sUniShadowU < 0 || sUniShadowV < 0 || sUniShadowW < 0 || sUniShadowSel < 0)
     {
         step = "locate shader uniforms";
         goto fail;
@@ -3794,7 +3824,7 @@ static struct
     int phase, row, col;
     unsigned waitIndex;
     bool overdue;
-    unsigned terrainCount, buildingFirst;
+    unsigned terrainCount, buildingFirst, treeShadow, treeCrowns;
     unsigned terrainFirst[VOXEL_ATLAS_PAGES + 1u];
     unsigned sortPage, sortScan, sortWrite;
     VoxelBuildingCursor models;
@@ -4044,7 +4074,10 @@ static void JobStep(void)
     }
     case JOB_TREES:
         if (sJob.row == site->y0 && sJob.col == site->x0)
+        {
             sJob.terrainCount = sBuilder.count;
+            VoxelTree_NoteCards(sJobCards, TreeCardsWanted());
+        }
         VoxelTree_EmitInstance(&sBuilder, inst, sJob.col, sJob.row, sJob.col + 1, sJob.row + 1);
         if (++sJob.col < site->x1)
             return;
@@ -4052,6 +4085,7 @@ static void JobStep(void)
         if (++sJob.row < site->y1)
             return;
         sJob.row = site->y0;
+        TreeCrowns();
         sJob.buildingFirst = sBuilder.count;
         sJob.phase = sHaveBuildings ? JOB_MODELS : JOB_SORT;
         return;
@@ -4070,6 +4104,7 @@ static void JobStep(void)
             return;
         sJob.row = site->y0;
         sJob.terrainCount = sBuilder.count;
+        VoxelTree_NoteCards(sJobCards, TreeCardsWanted());
         sJob.phase = JOB_BORDER_TREES;
         return;
     case JOB_BORDER_TREES:
@@ -4081,6 +4116,7 @@ static void JobStep(void)
         if (++sJob.row < site->y1)
             return;
         sJob.row = site->y0;
+        TreeCrowns();
         sJob.buildingFirst = sBuilder.count;
         sJob.phase = JOB_SORT;
         return;
@@ -4255,6 +4291,8 @@ static BuildResult JobFinish(VoxelChunk *chunk)
     chunk->count = sBuilder.count;
     chunk->terrainCount = sJob.terrainCount;
     chunk->buildingFirst = sJob.buildingFirst;
+    chunk->treeShadow = sJob.treeShadow;
+    chunk->treeCrowns = sJob.treeCrowns;
     memcpy(chunk->terrainFirst, sJob.terrainFirst, sizeof(chunk->terrainFirst));
     chunk->gx0 = sJob.gx0;
     chunk->gz0 = sJob.gz0;
@@ -4349,7 +4387,7 @@ typedef struct
     bool buildings;
     int buildingPage;
     int x, y;           /* its square's place in the world as it was built */
-    unsigned count, terrainCount, buildingFirst, staticCount;
+    unsigned count, terrainCount, buildingFirst, treeShadow, treeCrowns, staticCount;
     unsigned terrainFirst[VOXEL_ATLAS_PAGES + 1u];
     int gx0, gz0, gx1, gz1;
     float gy0, gy1;
@@ -4358,6 +4396,115 @@ typedef struct
 } ColdMesh;
 
 static ColdMesh sCold[VOXEL_COLD_MESHES];
+
+/*
+ * HIGH's tree shadows. A crown is a card leant back towards the camera, and
+ * seen from the sun it is a sliver: its shadow on the shadow map would be a
+ * line. Each card the trees emitted (VoxelTree_NoteCards) is copied, its art
+ * and its size kept, onto the plane across the sun through its middle - a
+ * sprite's shadow, the crown's own outline, laid along the sun - after the
+ * trees' vertices, where only the shadow map draws it (treeShadow). Shade 0:
+ * not pushed back as a lit caster is (voxel.v.pica). The baked rays cast no
+ * crown in HIGH any more (voxel_lighting.c): a crown's shadow is the map's,
+ * a pixel wide, where the rays' lattice left a lone corner shaded, a blob.
+ * The vertices it adds; 0 in LOW, at night, or with no lighting.
+ */
+/* tiles the turned trees stand north of their feet (TreeShadowCards) */
+#define VOXEL_TREE_SHADOW_NORTH 0.4f
+
+static unsigned TreeShadowCards(VoxelBuilder *builder)
+{
+    unsigned noted = VoxelTree_CardsNoted(), first = builder->count;
+    const VoxelTreeCard *cards = VoxelTree_NotedCards();
+#if CTR_VOXEL_LIGHTING
+    float l[3] = {gVoxelSun.dx, -1.0f, gVoxelSun.dz};
+    float n = sqrtf(l[0] * l[0] + 1.0f + l[2] * l[2]);
+    float across[3], up[3];
+#endif
+
+#if CTR_VOXEL_LIGHTING
+    if (cards == NULL || VoxelLighting_Quality() != VOXEL_SHADOWS_HIGH || !builder->lighting || gVoxelSun.strength <= 0.0f)
+        return 0;
+    for (int i = 0; i < 3; ++i)
+        l[i] /= n;
+    /* across: level and square to the sun; up: square to it and to that */
+    {
+        float len = sqrtf(l[2] * l[2] + l[0] * l[0]);
+
+        if (len < 0.0001f)
+        {
+            across[0] = 1.0f; across[1] = across[2] = 0.0f;
+        }
+        else
+        {
+            across[0] = l[2] / len; across[1] = 0.0f; across[2] = -l[0] / len;
+        }
+        up[0] = l[1] * across[2] - l[2] * across[1];
+        up[1] = l[2] * across[0] - l[0] * across[2];
+        up[2] = l[0] * across[1] - l[1] * across[0];
+        if (up[1] < 0.0f)
+            for (int i = 0; i < 3; ++i)
+                up[i] = -up[i];
+    }
+    for (unsigned k = 0; k < noted && builder->count + 6u <= builder->capacity; ++k)
+    {
+        const VoxelTreeCard *card = &cards[k];
+        const VoxelVertex *c = card->corner, *foot = &card->foot;
+        float w[3] = {c[1].x - c[0].x, c[1].y - c[0].y, c[1].z - c[0].z};
+        float h[3] = {c[0].x - c[3].x, c[0].y - c[3].y, c[0].z - c[3].z};
+        float wl = sqrtf(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
+        float hl = sqrtf(h[0] * h[0] + h[1] * h[1] + h[2] * h[2]);
+        float side = 1.0f;
+        VoxelVertex out[4];
+
+        if (wl < 0.0001f || hl < 0.0001f)
+            continue;
+        /* the art the way round it is drawn, as far as the sun allows */
+        if (across[0] * w[0] + across[2] * w[2] < 0.0f)
+            side = -1.0f;
+        /* each corner: as far across and up from the tree's foot as on its
+         * card, the whole tree turned at once about its foot */
+        for (int j = 0; j < 4; ++j)
+        {
+            float d[3] = {c[j].x - foot->x, c[j].y - foot->y, c[j].z - foot->z};
+            float a = (d[0] * w[0] + d[1] * w[1] + d[2] * w[2]) / wl * side;
+            float b = (d[0] * h[0] + d[1] * h[1] + d[2] * h[2]) / hl;
+
+            out[j] = c[j];
+            out[j].x = foot->x + across[0] * a + up[0] * b;
+            out[j].y = foot->y + across[1] * a + up[1] * b;
+            /* pivoted a little north of the foot, under the crown: the trunk
+             * is drawn flat on the ground, and a shadow begun at its foot
+             * let the sun through beside it */
+            out[j].z = foot->z - VOXEL_TREE_SHADOW_NORTH + across[2] * a + up[2] * b;
+            out[j].shade = 0.0f;
+        }
+        builder->vertices[builder->count++] = out[0];
+        builder->vertices[builder->count++] = out[1];
+        builder->vertices[builder->count++] = out[2];
+        builder->vertices[builder->count++] = out[0];
+        builder->vertices[builder->count++] = out[2];
+        builder->vertices[builder->count++] = out[3];
+    }
+#else
+    (void)noted;
+    (void)cards;
+#endif
+    return builder->count - first;
+}
+
+/* The trees done: the crowns noted after their grounds, then their turned
+ * copies for the shadow map. */
+static void TreeCrowns(void)
+{
+    unsigned first;
+
+    VoxelTree_NoteCards(NULL, 0);
+    first = sBuilder.count;
+    VoxelTree_EmitNotedCards(&sBuilder);
+    sJob.treeCrowns = sBuilder.count - first;
+    sJob.treeShadow = TreeShadowCards(&sBuilder);
+}
 static void *sColdBlock;
 static VoxelArena sColdArena;
 static VoxelArenaPiece sColdPieces[VOXEL_COLD_MESHES + 1];
@@ -4603,6 +4750,8 @@ static void ColdOffer(const VoxelChunk *c)
         p->count = c->count;
         p->terrainCount = c->terrainCount;
         p->buildingFirst = c->buildingFirst;
+        p->treeShadow = c->treeShadow;
+        p->treeCrowns = c->treeCrowns;
         p->staticCount = c->staticCount;
         memcpy(p->terrainFirst, c->terrainFirst, sizeof(p->terrainFirst));
         p->gx0 = c->gx0;
@@ -4760,6 +4909,8 @@ static bool ColdTake(const ChunkSite *site, uint32_t hash, const VoxelAtlasSlot 
     sBuilder.staticCount = m->staticCount;
     sJob.terrainCount = m->terrainCount;
     sJob.buildingFirst = m->buildingFirst;
+    sJob.treeShadow = m->treeShadow;
+    sJob.treeCrowns = m->treeCrowns;
     memcpy(sJob.terrainFirst, m->terrainFirst, sizeof(sJob.terrainFirst));
     sJob.gx0 = m->gx0;
     sJob.gz0 = m->gz0;
@@ -5077,6 +5228,7 @@ static VoxelChunk *DraftChunk(const ChunkSite *site, VoxelAtlasSlot *atlas, Voxe
     chunk->atlasExtension = atlas->extension;
     chunk->uncovered = uncovered != 0;
     chunk->count = chunk->terrainCount = chunk->buildingFirst = total;
+    chunk->treeShadow = chunk->treeCrowns = 0;
     memcpy(chunk->terrainFirst, terrainFirst, sizeof(chunk->terrainFirst));
     chunk->gx0 = chunk->gz0 = 0;
     chunk->gx1 = chunk->gz1 = VOXEL_CHUNK;
@@ -8036,6 +8188,24 @@ bool CtrVoxel_Update(void)
     {
         const CtrDayNightSun *sun = CtrDayNight_GetSun();
 
+        /*
+         * SHADOW QUALITY (OPTIONS), read every few frames: another quality is
+         * another signature for every chunk (VoxelLighting_Hash), so they are
+         * built again a few a frame as for a new sun, each drawn as it was
+         * until then; the job under way was cast the other way and goes.
+         */
+        static uint32_t sShadowsRead;
+        bool readShadows = sFrame >= sShadowsRead || sShadowsRead - sFrame > 8u;
+
+        if (readShadows)
+            sShadowsRead = sFrame + 8u;
+        if (readShadows
+         && VoxelLighting_SetQuality(CtrSettings_VoxelShadowsHigh() ? VOXEL_SHADOWS_HIGH : VOXEL_SHADOWS_LOW))
+        {
+            ++sEpoch;
+            CtrLog_Write(CTR_LOG_VIDEO, "VOXEL shadows %s",
+                         VoxelLighting_Quality() == VOXEL_SHADOWS_HIGH ? "HIGH" : "LOW");
+        }
         if (VoxelLighting_SetSun(sun->dx, sun->dz, sun->strength, sun->key))
         {
             StaticMeshesRelight();
@@ -9877,10 +10047,381 @@ static uint32_t DappleConstant(const VoxelLight *light)
  * Environment 3 is the haze and 4 the screen fade (FadeFor); one stage later
  * under the windows' glow with the dapples (BuildingGlowEnv).
  */
+/*
+ * Shadow map (SHADOW QUALITY HIGH).
+ *
+ * The sun's view of the world around the camera, drawn once a frame with the
+ * PICA200's shadow mode (ShadowMapRender): every pixel keeps the depth along
+ * the sun of the nearest surface. The world's passes then compare their own
+ * depth with it on texture unit 0, the only unit that reads a shadow map, and
+ * the hardware filters the comparison over 2x2 texels: a shadow's outline is
+ * the caster's own, wherever it falls, on the ground, a wall or a roof, with
+ * a soft edge. The chunks bake no cast shadow then (voxel_lighting.c), only
+ * how each face turns to the sun, so there is no edge to cut and nothing a
+ * ray could miss between two vertices.
+ *
+ * A crown's transparent texels must not cast: shadow mode skips the alpha
+ * test, so they go out as a "soft" write of full light, which the hardware
+ * keeps as the least of what it held (255: no change). Opaque texels write
+ * the depth.
+ *
+ * Off on LOW, indoors and without sun: nothing of it is drawn then, and the
+ * shader's uniforms leave the texture coordinates as they were.
+ */
+#define SHADOW_DEBUG 0
+#define VOXEL_SHADOW_MAP_DIM 256
+/* Tiles from its centre to an edge, across the sun: as much as the view's
+ * ground needs (ShadowMapFit), within these. A caster stands on the sun's
+ * line through what it shades, at the same place in the map, so only what is
+ * seen needs the map, however tall what shades it. */
+#define VOXEL_SHADOW_MAP_HALF 20.0f   /* the swoop's, and the most */
+#define VOXEL_SHADOW_MAP_HALF_MIN 6.0f
+#define VOXEL_SHADOW_MAP_DEPTH 64.0f  /* tiles of depth along the sun */
+/* Tiles: what a shaded point must be past what the sun meets first. The lit
+ * surfaces' own margin is put on them as they are drawn into the map
+ * (sShadowBias); the ones the sun does not reach need none, and so the
+ * ground at their foot shades from right there. */
+#define VOXEL_SHADOW_MAP_SAMPLE_BIAS 0.03f
+/* The soft edge (ShadowMapRender): rings of copies of the casters, this far
+ * across the sun (tiles) for the outermost, this much further from it for
+ * the unlit ones. 0 rings: the filter's one texel alone. */
+#define VOXEL_SHADOW_SOFT_RINGS 0u
+#define VOXEL_SHADOW_SOFT_REACH 0.4f
+#define VOXEL_SHADOW_SOFT_BACK 0.05f
+static C3D_Tex sShadowTex;
+static C3D_RenderTarget *sShadowTarget;
+static bool sShadowFailed;
+/* The world's passes sample it (set by CtrVoxel_Draw around them). */
+static bool sShadowOn;
+/* This frame's map was drawn, from this matrix: anchored world to (u, v,
+ * depth) - the rows the shader is given, times the eye's inverse view. */
+static bool sShadowReady;
+static C3D_Mtx sShadowTexMtx;
+static uint32_t sShadowColour;   /* the shadow's tint, stage 0's constant */
+/* The green of a sunlit level vertex (the shader's colour, halved), which
+ * the blur divides the darkening it reads by (ShadowBlurPass). */
+static float sShadowLitGreen = 0.5f;
+/* This frame's extent across the sun (tiles from the centre to an edge) and
+ * the depth, in tiles, by which a surface does not shadow itself. */
+static float sShadowHalfU = VOXEL_SHADOW_MAP_HALF, sShadowHalfV = VOXEL_SHADOW_MAP_HALF;
+static float sShadowBias = 0.25f;
+/* The atlas is on this unit while the map is on unit 0. */
+static C3D_Tex *sShadowAtlasBound;
+
+static bool ShadowMapMake(void)
+{
+    if (sShadowTarget != NULL)
+        return true;
+    if (sShadowFailed)
+        return false;
+    /* VRAM only (the GPU fills and renders it there), and only with room
+     * to spare: the chunks' arenas come first */
+    if (CtrGpuMem_LargestVram() < 4u * VOXEL_SHADOW_MAP_DIM * VOXEL_SHADOW_MAP_DIM + 128u * 1024u
+     || !C3D_TexInitShadow(&sShadowTex, VOXEL_SHADOW_MAP_DIM, VOXEL_SHADOW_MAP_DIM))
+    {
+        sShadowFailed = true;
+        CtrLog_Write(CTR_LOG_VIDEO, "VOXEL shadow map: no VRAM (%lu largest)",
+                     (unsigned long)CtrGpuMem_LargestVram());
+        return false;
+    }
+    C3D_TexSetFilter(&sShadowTex, GPU_LINEAR, GPU_LINEAR);
+    C3D_TexSetWrap(&sShadowTex, GPU_CLAMP_TO_BORDER, GPU_CLAMP_TO_BORDER);
+    sShadowTex.border = 0xFFFFFFFFu;
+    sShadowTarget = C3D_RenderTargetCreateFromTex(&sShadowTex, GPU_TEXFACE_2D, 0, -1);
+    if (sShadowTarget == NULL)
+    {
+        C3D_TexDelete(&sShadowTex);
+        sShadowFailed = true;
+        return false;
+    }
+    CtrLog_Write(CTR_LOG_VIDEO, "VOXEL shadow map: %dx%d made", VOXEL_SHADOW_MAP_DIM, VOXEL_SHADOW_MAP_DIM);
+    return true;
+}
+
+/* The shader's shadow uniforms: off (the texture coordinates as they were),
+ * or the map's rows through the inverse of `modelView` (a view-space point
+ * to the map). */
+static void ShadowUniforms(const C3D_Mtx *modelView)
+{
+    if (modelView == NULL)
+    {
+        C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowU, 0.0f, 0.0f, 0.0f, 0.0f);
+        C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowV, 0.0f, 0.0f, 0.0f, 0.0f);
+        C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowW, 0.0f, 0.0f, 0.0f, 0.0f);
+        C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowSel, 1.0f, 0.0f, 0.0f, 0.0f);
+        return;
+    }
+    {
+        C3D_Mtx inverse, rows;
+
+        Mtx_Copy(&inverse, modelView);
+        Mtx_Inverse(&inverse);
+        Mtx_Multiply(&rows, &sShadowTexMtx, &inverse);
+        C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowU, rows.r[0].x, rows.r[0].y, rows.r[0].z, rows.r[0].w);
+        C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowV, rows.r[1].x, rows.r[1].y, rows.r[1].z, rows.r[1].w);
+        C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowW, rows.r[2].x, rows.r[2].y, rows.r[2].z, rows.r[2].w);
+        C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowSel, 0.0f, 1.0f, 0.0f, 0.0f);
+        /* the dapples' coordinates are added to the atlas' on texcoord1 */
+        C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleU, 0.0f, 0.0f, 0.0f, 0.0f);
+        C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleV, 0.0f, 0.0f, 0.0f, 0.0f);
+        sDrawSet &= ~(DRAW_SET_DAPPLE_U | DRAW_SET_DAPPLE_V);
+    }
+}
+
+/* The shadow's colour: what the shader makes of a vertex at the ambient light
+ * (VoxelLighting_Ambient, HIGH's), graded as voxel.v.pica grades it and
+ * halved as its colour is. A face the sun does not reach is baked at that
+ * light already, so the map, which never darkens below it, leaves it be. */
+static uint32_t ShadowColour(const VoxelLight *light)
+{
+    float ambient = VoxelLighting_Ambient();
+    float t = (ambient - VOXEL_GRADE_SHADE_LOW) / (1.0f - VOXEL_GRADE_SHADE_LOW);
+    uint32_t colour = 0xFF000000u;
+
+    if (t < 0.0f) t = 0.0f;
+    if (t > 1.0f) t = 1.0f;
+    sShadowLitGreen = light->sun[1] * 0.5f;
+    for (unsigned c = 0; c < 3; ++c)
+    {
+        float k = ambient * (light->shade[c] + (light->sun[c] - light->shade[c]) * t) * 0.5f;
+
+        if (k > 1.0f) k = 1.0f;
+        if (k < 0.0f) k = 0.0f;
+        colour |= (uint32_t)(k * 255.0f + 0.5f) << (c * 8u);
+    }
+    return colour;
+}
+
+/*
+ * The world's environment with the map. The colour is drawn in full sun, as
+ * without the map (the texel, texture1, x the graded colour, doubled, with
+ * the moonlight); the shadow goes to the picture's alpha, for
+ * ShadowBlurPass to soften and take away once the world is drawn. The map
+ * takes away only the sun's own part, never below the shadow's colour A
+ * (ShadowColour), so what was baked at the ambient light already (a face
+ * turned from the sun, a crown's shadow) is the same lit or not:
+ *   alpha = texel alpha x (1 - (1 - s) max(C - A, 0))   (green alone)
+ * with s the filtered comparison: stage 0 is C - A (a subtraction clamps at
+ * 0, A in the constant's alpha), stage 1 x (1 - s), stage 2 the rest. An
+ * opaque texel stays at or above a half and the alpha test still drops
+ * only the clear ones. The haze and the fade stay on 3 and 4 (5 with the
+ * glow, which puts the texel's alpha back: no shadow on a glowing wall).
+ */
+static void ShadowTexEnv(void)
+{
+    C3D_TexEnv *env = C3D_GetTexEnv(0);
+
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_RGB, GPU_TEXTURE1, GPU_PRIMARY_COLOR, GPU_CONSTANT);
+    C3D_TexEnvFunc(env, C3D_RGB, sMoonlight > 0.0f ? GPU_MULTIPLY_ADD : GPU_MODULATE);
+    C3D_TexEnvScale(env, C3D_RGB, GPU_TEVSCALE_2);
+    C3D_TexEnvSrc(env, C3D_Alpha, GPU_PRIMARY_COLOR, GPU_CONSTANT, GPU_CONSTANT);
+    C3D_TexEnvOpAlpha(env, GPU_TEVOP_A_SRC_G, GPU_TEVOP_A_SRC_ALPHA, GPU_TEVOP_A_SRC_ALPHA);
+    C3D_TexEnvFunc(env, C3D_Alpha, GPU_SUBTRACT);
+    C3D_TexEnvColor(env, (sMoonlightColour & 0x00FFFFFFu) | (sShadowColour & 0x0000FF00u) << 16);
+
+    env = C3D_GetTexEnv(1);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_RGB, GPU_PREVIOUS, GPU_PREVIOUS, GPU_PREVIOUS);
+    C3D_TexEnvFunc(env, C3D_RGB, GPU_REPLACE);
+    C3D_TexEnvSrc(env, C3D_Alpha, GPU_TEXTURE0, GPU_PREVIOUS, GPU_PREVIOUS);
+    C3D_TexEnvOpAlpha(env, GPU_TEVOP_A_ONE_MINUS_SRC_R, GPU_TEVOP_A_SRC_ALPHA, GPU_TEVOP_A_SRC_ALPHA);
+    C3D_TexEnvFunc(env, C3D_Alpha, GPU_MODULATE);
+
+    env = C3D_GetTexEnv(2);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_RGB, GPU_PREVIOUS, GPU_PREVIOUS, GPU_PREVIOUS);
+    C3D_TexEnvFunc(env, C3D_RGB, GPU_REPLACE);
+    C3D_TexEnvSrc(env, C3D_Alpha, GPU_TEXTURE1, GPU_PREVIOUS, GPU_PREVIOUS);
+    C3D_TexEnvOpAlpha(env, GPU_TEVOP_A_SRC_ALPHA, GPU_TEVOP_A_ONE_MINUS_SRC_ALPHA, GPU_TEVOP_A_SRC_ALPHA);
+    C3D_TexEnvFunc(env, C3D_Alpha, GPU_MODULATE);
+}
+
+/* Whether what is drawn next takes the map's shadow (ShadowTexEnv's stage
+ * 0): off, its constant's alpha is full and C - A never above 0. */
+static void ShadowReceive(bool on)
+{
+    C3D_TexEnvColor(C3D_GetTexEnv(0), (sMoonlightColour & 0x00FFFFFFu)
+                    | (on ? (sShadowColour & 0x0000FF00u) << 16 : 0xFF000000u));
+}
+
+/* The logical surface the world is drawn into (3ds_video.c). */
+C3D_Tex *CtrVideo_LogicalTexture(void);
+
+/*
+ * The shadow softened on the picture: once the world is drawn, its alpha
+ * holds each pixel's shadow (ShadowTexEnv). A quad over the whole surface
+ * reads it back three times round each pixel, filtered (two taps
+ * VOXEL_SHADOW_BLUR pixels off, across each other, and the centre), and
+ * multiplies the colour by 1 - their mean over the sunlit green: the shadow,
+ * soft at its edge over a few pixels, the map's texels no longer showing.
+ * Only the colour is written, so the alpha it reads stays as it was; a
+ * second quad then puts the alpha back to full, as the world without the
+ * map leaves it (the picture is laid on the screen with it). Two quads of
+ * the picture, no more geometry.
+ */
+#define VOXEL_SHADOW_BLUR 1.25f
+static void ShadowBlurPass(void)
+{
+    C3D_Tex *surface = CtrVideo_LogicalTexture();
+    uint32_t *flags = (uint32_t *)(void *)(__C3D_Context + C3DI_CONTEXT_FLAGS);
+    C3D_Tex **bound = (C3D_Tex **)(void *)(__C3D_Context + C3DI_CONTEXT_TEX);
+    C3D_Mtx one;
+    float du = VOXEL_SHADOW_BLUR / VOXEL_SURFACE_W, dv = VOXEL_SHADOW_BLUR / VOXEL_SURFACE_H;
+    /* the darkening read, (1 - alpha), over the sunlit green: x 4 below */
+    float k = sShadowLitGreen > 0.0625f ? 0.25f / sShadowLitGreen : 1.0f;
+    C3D_TexEnv *env;
+
+    /* corners in clip space (x 512: the shader's position scale), the
+     * texture's coordinates the same corners in 0..1; a buffer of its own,
+     * as every draw of the world is (no immediate mode in its state) */
+    static VoxelGpuVertex *quadVertices;
+
+    if (surface == NULL || surface->data == NULL)
+        return;
+    if (quadVertices == NULL)
+    {
+        static const VoxelGpuVertex corners[4] = {
+            {0.0f, 0.0f, -512, -512, -256, 8192}, {1.0f, 0.0f, 512, -512, -256, 8192},
+            {0.0f, 1.0f, -512, 512, -256, 8192}, {1.0f, 1.0f, 512, 512, -256, 8192},
+        };
+
+        quadVertices = linearAlloc(sizeof(corners));
+        if (quadVertices == NULL)
+            return;
+        memcpy(quadVertices, corners, sizeof(corners));
+        GSPGPU_FlushDataCache(quadVertices, sizeof(corners));
+    }
+    /* the world's alpha to memory before it is read */
+    C3D_FrameSplit(0);
+    Mtx_Identity(&one);
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniProjection, &one);
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniModelView, &one);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniOrigin, 0.0f, 0.0f, 0.0f, 0.0f);
+    /* texcoord0, texcoord1: the corner's own, moved by these; texcoord2 the
+     * corner's own (voxel.v.pica: shadowSel 1, 1 adds them up) */
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowU, 0.0f, 0.0f, 0.0f, du);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowV, 0.0f, 0.0f, 0.0f, -0.5f * dv);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowW, 0.0f, 0.0f, 0.0f, 0.0f);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleU, 0.0f, 0.0f, 0.0f, -0.5f * du);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleV, 0.0f, 0.0f, 0.0f, dv);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowSel, 1.0f, 1.0f, 0.0f, 0.0f);
+    sDrawSet = 0;
+
+    C3D_TexSetFilter(surface, GPU_LINEAR, GPU_LINEAR);
+    C3D_TexBind(0, surface);
+    C3D_TexBind(1, surface);
+    C3D_TexBind(2, surface);
+
+    /* the three taps' mean (in alpha), then the colour: 1 - 4k (1 - mean) */
+    env = C3D_GetTexEnv(0);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_TEXTURE1, GPU_CONSTANT);
+    C3D_TexEnvFunc(env, C3D_Both, GPU_INTERPOLATE);
+    C3D_TexEnvColor(env, 0x80808080u);
+    env = C3D_GetTexEnv(1);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_Both, GPU_PREVIOUS, GPU_TEXTURE2, GPU_CONSTANT);
+    C3D_TexEnvFunc(env, C3D_Both, GPU_INTERPOLATE);
+    C3D_TexEnvColor(env, 0xAAAAAAAAu);
+    /* never lighter than the pixel's own shadow: min(own, mean) =
+     * own - max(own - mean, 0), two clamped subtractions. A face turned
+     * from the sun reads "no shadow" (baked dark already); averaged into the
+     * shadowed ground at its foot it would leave a light rim there. The
+     * edge still softens outwards, over what is lit. */
+    env = C3D_GetTexEnv(2);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_RGB, GPU_PREVIOUS, GPU_PREVIOUS, GPU_PREVIOUS);
+    C3D_TexEnvFunc(env, C3D_RGB, GPU_REPLACE);
+    C3D_TexEnvSrc(env, C3D_Alpha, GPU_TEXTURE2, GPU_PREVIOUS, GPU_PREVIOUS);
+    C3D_TexEnvFunc(env, C3D_Alpha, GPU_SUBTRACT);
+    env = C3D_GetTexEnv(3);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_RGB, GPU_PREVIOUS, GPU_PREVIOUS, GPU_PREVIOUS);
+    C3D_TexEnvFunc(env, C3D_RGB, GPU_REPLACE);
+    C3D_TexEnvSrc(env, C3D_Alpha, GPU_TEXTURE2, GPU_PREVIOUS, GPU_PREVIOUS);
+    C3D_TexEnvFunc(env, C3D_Alpha, GPU_SUBTRACT);
+    env = C3D_GetTexEnv(4);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_RGB, GPU_PREVIOUS, GPU_CONSTANT, GPU_CONSTANT);
+    C3D_TexEnvOpRgb(env, GPU_TEVOP_RGB_ONE_MINUS_SRC_ALPHA, GPU_TEVOP_RGB_SRC_COLOR, GPU_TEVOP_RGB_SRC_COLOR);
+    C3D_TexEnvFunc(env, C3D_RGB, GPU_MODULATE);
+    C3D_TexEnvScale(env, C3D_RGB, GPU_TEVSCALE_4);
+    {
+        uint32_t c = (uint32_t)(k * 255.0f + 0.5f);
+
+        C3D_TexEnvColor(env, 0xFF000000u | c * 0x010101u);
+    }
+    env = C3D_GetTexEnv(5);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_RGB, GPU_PREVIOUS, GPU_PREVIOUS, GPU_PREVIOUS);
+    C3D_TexEnvOpRgb(env, GPU_TEVOP_RGB_ONE_MINUS_SRC_COLOR, GPU_TEVOP_RGB_SRC_COLOR, GPU_TEVOP_RGB_SRC_COLOR);
+    C3D_TexEnvFunc(env, C3D_RGB, GPU_REPLACE);
+
+    C3D_AlphaTest(false, GPU_ALWAYS, 0);
+    C3D_DepthTest(false, GPU_ALWAYS, (GPU_WRITEMASK)(GPU_WRITE_RED | GPU_WRITE_GREEN | GPU_WRITE_BLUE));
+    C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, GPU_ZERO, GPU_SRC_COLOR, GPU_ZERO, GPU_ONE);
+    for (int quad = 0; quad < 2; ++quad)
+    {
+        if (quad == 1)
+        {
+            /* the alpha back to full: the constant, alone */
+            env = C3D_GetTexEnv(0);
+            C3D_TexEnvInit(env);
+            C3D_TexEnvSrc(env, C3D_Both, GPU_CONSTANT, GPU_CONSTANT, GPU_CONSTANT);
+            C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
+            C3D_TexEnvColor(env, 0xFFFFFFFFu);
+            for (int i = 1; i < 6; ++i)
+                C3D_TexEnvInit(C3D_GetTexEnv(i));
+            C3D_DepthTest(false, GPU_ALWAYS, GPU_WRITE_ALPHA);
+            C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, GPU_ZERO, GPU_ONE, GPU_ONE, GPU_ZERO);
+        }
+        BindVertices(quadVertices);
+        C3D_DrawArrays(GPU_TRIANGLE_STRIP, 0, 4);
+    }
+
+    /* as the world's passes leave things: no blending, the surface nearest
+     * for the compositor, the tree atlas on unit 2, unit 1 free, the
+     * uniforms written again */
+    C3D_ColorLogicOp(GPU_LOGICOP_COPY);
+    C3D_DepthTest(true, GPU_GREATER, GPU_WRITE_ALL);
+    C3D_AlphaTest(true, GPU_GREATER, 0);
+    C3D_TexSetFilter(surface, GPU_NEAREST, GPU_NEAREST);
+    C3D_TexBind(2, &sTreeAtlas);
+    if (bound[1] == surface)
+    {
+        bound[1] = NULL;
+        *flags |= C3DI_FLAG_TEX(1);
+    }
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowSel, 1.0f, 0.0f, 0.0f, 0.0f);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowU, 0.0f, 0.0f, 0.0f, 0.0f);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowV, 0.0f, 0.0f, 0.0f, 0.0f);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleU, 0.0f, 0.0f, 0.0f, 0.0f);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleV, 0.0f, 0.0f, 0.0f, 0.0f);
+    sDrawSet = 0;
+}
+
+/* The world's texel on the unit it is read from: 1 under the map. */
+static void BindAtlas(C3D_Tex *tex)
+{
+    if (sShadowOn)
+    {
+        C3D_TexBind(1, tex);
+        sShadowAtlasBound = tex;
+    }
+    else
+        C3D_TexBind(0, tex);
+}
+
 static void TerrainTexEnv(const VoxelLight *dapples)
 {
     C3D_TexEnv *env = C3D_GetTexEnv(0);
 
+    if (sShadowOn)
+    {
+        ShadowTexEnv();
+        return;
+    }
     C3D_TexEnvInit(env);
     if (dapples == NULL)
     {
@@ -10121,9 +10662,14 @@ static void BuildingGlowEnv(C3D_Tex *mask, float strength, const VoxelLight *dap
 {
     C3D_TexEnv *env;
     bool glow = mask != NULL && strength > 0.0f;
+    /* stages 0-2 taken (the dapples', or the map's), and the texel's unit */
+    bool three = dapples != NULL || sShadowOn;
+    GPU_TEVSRC texel = sShadowOn ? GPU_TEXTURE1 : GPU_TEXTURE0;
 
+    if (sShadowOn)
+        dapples = NULL;
     TerrainTexEnv(dapples);
-    if (dapples != NULL)
+    if (three)
     {
         HazeTexEnv(FadeColour(1.0f, sHazeRgb), glow ? 4 : 3);
         FadeTexEnv(&sWorldFade, glow ? 5 : 4);
@@ -10143,13 +10689,13 @@ static void BuildingGlowEnv(C3D_Tex *mask, float strength, const VoxelLight *dap
     C3D_TexEnvFunc(env, C3D_Alpha, GPU_MODULATE);
     C3D_TexEnvColor(env, (uint32_t)(strength * 255.0f + 0.5f) << 24);
     /* With the dapples stage 2 passes stage 1's alpha on (TerrainTexEnv). */
-    env = C3D_GetTexEnv(dapples != NULL ? 3 : 2);
-    if (dapples != NULL)
+    env = C3D_GetTexEnv(three ? 3 : 2);
+    if (three)
         C3D_TexEnvInit(env);
     C3D_TexEnvSrc(env, C3D_RGB, GPU_CONSTANT, GPU_PREVIOUS, GPU_PREVIOUS);
     C3D_TexEnvOpRgb(env, GPU_TEVOP_RGB_SRC_COLOR, GPU_TEVOP_RGB_SRC_COLOR, GPU_TEVOP_RGB_SRC_ALPHA);
     C3D_TexEnvFunc(env, C3D_RGB, GPU_INTERPOLATE);
-    C3D_TexEnvSrc(env, C3D_Alpha, GPU_TEXTURE0, GPU_TEXTURE0, GPU_TEXTURE0);
+    C3D_TexEnvSrc(env, C3D_Alpha, texel, texel, texel);
     C3D_TexEnvFunc(env, C3D_Alpha, GPU_REPLACE);
     C3D_TexEnvColor(env, 0xFFA0D8FFu);
 }
@@ -10671,6 +11217,7 @@ typedef struct StaticMesh
      * is until its replacement is converted, which then takes its slot - one
      * slot a (page model, lit), stale or not. */
     float sunDx, sunDz, sunStrength;
+    int sunQuality; /* SHADOW QUALITY: HIGH signs the faces turned away */
 } StaticMesh;
 
 static StaticMesh sStaticMeshes[VOXEL_STATIC_MESHES];
@@ -10716,7 +11263,8 @@ static bool StaticMeshFresh(const StaticMesh *mesh)
 {
 #if CTR_VOXEL_LIGHTING
     return !mesh->lit || (mesh->sunDx == gVoxelSun.dx && mesh->sunDz == gVoxelSun.dz
-                          && mesh->sunStrength == gVoxelSun.strength);
+                          && mesh->sunStrength == gVoxelSun.strength
+                          && mesh->sunQuality == VoxelLighting_Quality());
 #else
     (void)mesh;
     return true;
@@ -10828,6 +11376,7 @@ static struct
     unsigned count, done, unique, buckets;
     float ox, oy, su, sv;
     float sunDx, sunDz, sunStrength; /* the sun it is lit under (StaticMesh) */
+    int sunQuality;
     VoxelGpuVertex *packed;
     uint16_t *index;
     int32_t *table;
@@ -10891,6 +11440,7 @@ static bool StaticBuildStart(unsigned pageModel, bool lit)
     sStaticBuild.sunDx = gVoxelSun.dx;
     sStaticBuild.sunDz = gVoxelSun.dz;
     sStaticBuild.sunStrength = gVoxelSun.strength;
+    sStaticBuild.sunQuality = VoxelLighting_Quality();
 #endif
     if (!VoxelBuildings_StaticModel(pageModel, &sStaticBuild.src, &count, &sStaticBuild.ox,
                                     &sStaticBuild.oy, &sStaticBuild.su, &sStaticBuild.sv)
@@ -11085,6 +11635,7 @@ static const StaticMesh *StaticBuildFinish(bool update)
     mesh->sunDx = sStaticBuild.sunDx;
     mesh->sunDz = sStaticBuild.sunDz;
     mesh->sunStrength = sStaticBuild.sunStrength;
+    mesh->sunQuality = sStaticBuild.sunQuality;
     CtrLog_Write(CTR_LOG_VIDEO, "VOXEL static model %u: %u vertices, %u indices (%u KiB linear)",
                  mesh->pageModel, unique, count, bytes >> 10);
     StaticBuildEnd(false);
@@ -11271,7 +11822,7 @@ static void DrawStatics(const C3D_Mtx *view, const VoxelLight *dapples, bool glo
         else
         {
             bound = tex;
-            C3D_TexBind(0, tex);
+            BindAtlas(tex);
             if (glowing)
             {
                 BuildingPageSlot *page = FindPage(chunk->buildingPage);
@@ -11307,6 +11858,399 @@ static void DrawStatics(const C3D_Mtx *view, const VoxelLight *dapples, bool glo
             C3D_DrawElements(GPU_TRIANGLES, (int)mesh->count, C3D_UNSIGNED_SHORT, mesh->indices);
         }
     }
+}
+
+/*
+ * The shadow map for this frame (see "Shadow map"), from the sun, around the
+ * camera's target: the chunks to draw, their ranges and textures, as the
+ * world's passes have them, and the static models. Its own target with no
+ * depth buffer, cleared to the farthest depth and full light; the program
+ * and the vertex layout are the Draw's. Leaves the GPU in GL mode and the
+ * Draw's target to be put back.
+ */
+/*
+ * The map's extent: the middle camera's corner rays to the ground a little
+ * below and above the target (where they rise or reach past the far plane,
+ * as far as it), across the sun. Its half extents grow at once and shrink
+ * only by whole tiles past two, so that its texels keep their size - and
+ * the shadows' edges stand still - while the camera walks.
+ */
+#define VOXEL_SHADOW_FIT_BELOW 3.0f
+#define VOXEL_SHADOW_FIT_ABOVE 4.0f
+#define VOXEL_SHADOW_FIT_MARGIN 1.5f   /* the eyes see past the middle */
+#define VOXEL_SHADOW_FIT_REACH 60.0f
+/* for the log: the extent the rays asked for, and how far the window slid */
+static float sShadowFitWanted[2], sShadowFitSlid[2];
+static void ShadowMapFit(const float U[3], const float V[3], float *centreU, float *centreV)
+{
+    float eye[3] = {sCamera.x, sCamera.y, sCamera.z};
+    float f[3] = {sCamera.targetX - eye[0], sCamera.targetY - eye[1], sCamera.targetZ - eye[2]};
+    float r[3], up[3], length = sqrtf(f[0] * f[0] + f[1] * f[1] + f[2] * f[2]);
+    float tanX = CameraTanX();
+    float tanY = tanX * (float)CTR_GAME_HEIGHT / (float)CTR_GAME_WIDTH;
+    float minU = 1e9f, maxU = -1e9f, minV = 1e9f, maxV = -1e9f;
+    /* what the bottom of the screen sees, and the target: kept in the map
+     * when the far rays need more than it holds */
+    float nearMin[2] = {1e9f, 1e9f}, nearMax[2] = {-1e9f, -1e9f};
+    float halves[2];
+
+    if (sSwoop > 0.0f || length < 0.001f)
+    {
+        sShadowHalfU = sShadowHalfV = VOXEL_SHADOW_MAP_HALF;
+        *centreU = U[0] * sCamera.targetX + U[1] * sCamera.targetY + U[2] * sCamera.targetZ;
+        *centreV = V[0] * sCamera.targetX + V[1] * sCamera.targetY + V[2] * sCamera.targetZ;
+        return;
+    }
+    for (int i = 0; i < 3; ++i)
+        f[i] /= length;
+    /* right = forward x up, the camera's up = right x forward */
+    r[0] = -f[2]; r[1] = 0.0f; r[2] = f[0];
+    length = sqrtf(r[0] * r[0] + r[2] * r[2]);
+    if (length < 0.001f)
+    {
+        r[0] = 1.0f; r[2] = 0.0f; length = 1.0f;
+    }
+    r[0] /= length; r[2] /= length;
+    up[0] = r[1] * f[2] - r[2] * f[1];
+    up[1] = r[2] * f[0] - r[0] * f[2];
+    up[2] = r[0] * f[1] - r[1] * f[0];
+    for (int corner = 0; corner < 4; ++corner)
+    {
+        float sx = (corner & 1) ? 1.0f : -1.0f, sy = (corner & 2) ? 1.0f : -1.0f;
+        float d[3];
+
+        for (int i = 0; i < 3; ++i)
+            d[i] = f[i] + sx * tanX * r[i] + sy * tanY * up[i];
+        for (int k = 0; k < 2; ++k)
+        {
+            float y = sCamera.targetY + (k ? VOXEL_SHADOW_FIT_ABOVE : -VOXEL_SHADOW_FIT_BELOW);
+            float s = VOXEL_SHADOW_FIT_REACH, p[3], u, v;
+
+            if (d[1] < -0.0001f && y < eye[1])
+            {
+                s = (y - eye[1]) / d[1];
+                if (s > VOXEL_SHADOW_FIT_REACH)
+                    s = VOXEL_SHADOW_FIT_REACH;
+            }
+            for (int i = 0; i < 3; ++i)
+                p[i] = eye[i] + d[i] * s;
+            u = U[0] * p[0] + U[1] * p[1] + U[2] * p[2];
+            v = V[0] * p[0] + V[1] * p[1] + V[2] * p[2];
+            if (u < minU) minU = u;
+            if (u > maxU) maxU = u;
+            if (v < minV) minV = v;
+            if (v > maxV) maxV = v;
+            if (sy < 0.0f)
+            {
+                if (u < nearMin[0]) nearMin[0] = u;
+                if (u > nearMax[0]) nearMax[0] = u;
+                if (v < nearMin[1]) nearMin[1] = v;
+                if (v > nearMax[1]) nearMax[1] = v;
+            }
+        }
+    }
+    {
+        float tu = U[0] * sCamera.targetX + U[1] * sCamera.targetY + U[2] * sCamera.targetZ;
+        float tv = V[0] * sCamera.targetX + V[1] * sCamera.targetY + V[2] * sCamera.targetZ;
+
+        if (tu < nearMin[0]) nearMin[0] = tu;
+        if (tu > nearMax[0]) nearMax[0] = tu;
+        if (tv < nearMin[1]) nearMin[1] = tv;
+        if (tv > nearMax[1]) nearMax[1] = tv;
+    }
+    *centreU = (minU + maxU) * 0.5f;
+    *centreV = (minV + maxV) * 0.5f;
+    halves[0] = (maxU - minU) * 0.5f + VOXEL_SHADOW_FIT_MARGIN;
+    halves[1] = (maxV - minV) * 0.5f + VOXEL_SHADOW_FIT_MARGIN;
+    for (int a = 0; a < 2; ++a)
+    {
+        float *half = a ? &sShadowHalfV : &sShadowHalfU;
+        float need = ceilf(halves[a]);
+
+        if (need < VOXEL_SHADOW_MAP_HALF_MIN) need = VOXEL_SHADOW_MAP_HALF_MIN;
+        if (need > VOXEL_SHADOW_MAP_HALF) need = VOXEL_SHADOW_MAP_HALF;
+        if (need > *half || need < *half - 2.0f)
+            *half = need;
+    }
+    /*
+     * More than the map holds (the top of the screen reaching far): it was
+     * centred half way, and the ground nearest the camera - the bottom of
+     * the screen - fell out of it, its cliffs casting nothing. The window
+     * slides back over it: the near side and the target always in, the far
+     * side as much as is left.
+     */
+    for (int a = 0; a < 2; ++a)
+    {
+        float half = (a ? sShadowHalfV : sShadowHalfU) - VOXEL_SHADOW_FIT_MARGIN;
+        float *centre = a ? centreV : centreU;
+        float lo = nearMax[a] - half, hi = nearMin[a] + half;
+        float was = *centre;
+
+        sShadowFitWanted[a] = halves[a] * 2.0f;
+
+        if (lo > hi) /* the near side alone wider than the map: its middle */
+            *centre = (nearMin[a] + nearMax[a]) * 0.5f;
+        else if (*centre < lo)
+            *centre = lo;
+        else if (*centre > hi)
+            *centre = hi;
+        sShadowFitSlid[a] = *centre - was;
+    }
+}
+
+/* Everything that shades into the map: the world's passes - of the tree
+ * material only the crowns turned to the sun (TreeShadowCards) - then the
+ * statics. */
+static void ShadowMapCasters(const C3D_Mtx *identity)
+{
+    for (unsigned pass = 0; pass < VOXEL_ATLAS_PAGES + 2u; ++pass)
+    {
+        const C3D_Tex *boundTex = NULL;
+        bool trees = pass == VOXEL_ATLAS_PAGES;
+
+        /* the crowns' turned cards only, their clear texels dropped: a
+         * card's corner writing full light over a roof's shadow */
+        C3D_AlphaTest(trees, GPU_GREATER, 0);
+        for (unsigned i = 0; i < sDrawCount; ++i)
+        {
+            const VoxelChunk *chunk = sDraws[i].chunk;
+            unsigned first = pass < VOXEL_ATLAS_PAGES ? chunk->terrainFirst[pass]
+                           : trees ? chunk->buildingFirst - chunk->treeShadow : chunk->buildingFirst;
+            unsigned count = pass < VOXEL_ATLAS_PAGES ? chunk->terrainFirst[pass + 1u] - first
+                           : trees ? chunk->treeShadow : chunk->count - first;
+            C3D_Tex *tex;
+
+            if (count == 0)
+                continue;
+            tex = pass < VOXEL_ATLAS_PAGES ? AtlasTex(chunk->atlas, pass)
+                : trees ? &sTreeAtlas : BuildingPage(chunk->buildingPage);
+            if (tex == NULL)
+                continue;
+            SetModelView(sDraws[i].worldX, sDraws[i].worldZ);
+            if (boundTex != tex)
+            {
+                boundTex = tex;
+                C3D_TexBind(0, tex);
+            }
+            C3D_DrawArrays(GPU_TRIANGLES, BindChunkVertices(chunk, first, count), (int)count);
+        }
+        if (pass == VOXEL_ATLAS_PAGES + 1u && sHaveBuildings)
+            DrawStatics(identity, NULL, false);
+    }
+    C3D_AlphaTest(false, GPU_ALWAYS, 0);
+}
+
+static void ShadowMapRender(void)
+{
+    float dx = VOXEL_SUN_DX, dz = VOXEL_SUN_DZ;
+    float n = sqrtf(dx * dx + 1.0f + dz * dz), h = sqrtf(dx * dx + dz * dz);
+    /* along the light (down), and two axes across it */
+    float D[3] = {dx / n, -1.0f / n, dz / n}, U[3], V[3];
+    float texelU, texelV, slope, worldU, worldV;
+    /* the target from the Draw's anchor, for the depth's centre */
+    float c[3] = {sCamera.targetX - (float)sDrawAnchorX, sCamera.targetY,
+                  sCamera.targetZ - (float)sDrawAnchorZ};
+    float cu, cv, cd;
+    C3D_Mtx projection, identity;
+
+    if (h > 0.0001f)
+    {
+        U[0] = -dz / h; U[1] = 0.0f; U[2] = dx / h;
+    }
+    else
+    {
+        U[0] = 1.0f; U[1] = 0.0f; U[2] = 0.0f;
+    }
+    /* V = D x U */
+    V[0] = D[1] * U[2] - D[2] * U[1];
+    V[1] = D[2] * U[0] - D[0] * U[2];
+    V[2] = D[0] * U[1] - D[1] * U[0];
+    ShadowMapFit(U, V, &worldU, &worldV);
+    texelU = 2.0f * sShadowHalfU / VOXEL_SHADOW_MAP_DIM;
+    texelV = 2.0f * sShadowHalfV / VOXEL_SHADOW_MAP_DIM;
+    /*
+     * The lit casters' margin: the filter compares with the next texel too,
+     * where a lit surface's own depth is a texel's width x its slope to the
+     * sun further on - the ground's is h, a wall facing the sun 1 / h; walls
+     * more nearly along the light are within the shadow's light
+     * (ShadowTexEnv) and cannot show it.
+     */
+    slope = h > 1.0f ? h : 1.0f;
+    if (h > 0.0001f && 1.0f / h > slope)
+        slope = 1.0f / h;
+    if (slope > 2.0f)
+        slope = 2.0f;
+    sShadowBias = slope * (texelU > texelV ? texelU : texelV) * 1.05f + 0.02f;
+    /* the centre on whole texels of the world - not of the anchor, which is
+     * whole tiles but not whole texels across the sun: snapped from it, the
+     * texels moved under the shadows at each crossing and their edges
+     * shimmered - so that the texels lie still on the ground while the
+     * camera moves */
+    {
+        double ax = sDrawAnchorX, az = sDrawAnchorZ;
+        double au = U[0] * ax + U[2] * az, av = V[0] * ax + V[2] * az;
+
+        cu = (float)(floor((double)worldU / texelU + 0.5) * texelU - au);
+        cv = (float)(floor((double)worldV / texelV + 0.5) * texelV - av);
+    }
+    cd = D[0] * c[0] + D[1] * c[1] + D[2] * c[2];
+
+    /* clip: x, y = across / half, z = -depth (0 nearest the sun), w = 1 */
+    Mtx_Zeros(&projection);
+    projection.r[0].x = U[0] / sShadowHalfU;
+    projection.r[0].y = U[1] / sShadowHalfU;
+    projection.r[0].z = U[2] / sShadowHalfU;
+    projection.r[0].w = -cu / sShadowHalfU;
+    projection.r[1].x = V[0] / sShadowHalfV;
+    projection.r[1].y = V[1] / sShadowHalfV;
+    projection.r[1].z = V[2] / sShadowHalfV;
+    projection.r[1].w = -cv / sShadowHalfV;
+    projection.r[2].x = -D[0] / VOXEL_SHADOW_MAP_DEPTH;
+    projection.r[2].y = -D[1] / VOXEL_SHADOW_MAP_DEPTH;
+    projection.r[2].z = -D[2] / VOXEL_SHADOW_MAP_DEPTH;
+    projection.r[2].w = cd / VOXEL_SHADOW_MAP_DEPTH - 0.5f;
+    projection.r[3].w = 1.0f;
+
+    /* the map's coordinates of the same point: u, v in 0..1, w the depth */
+    Mtx_Zeros(&sShadowTexMtx);
+    sShadowTexMtx.r[0].x = projection.r[0].x * 0.5f;
+    sShadowTexMtx.r[0].y = projection.r[0].y * 0.5f;
+    sShadowTexMtx.r[0].z = projection.r[0].z * 0.5f;
+    sShadowTexMtx.r[0].w = projection.r[0].w * 0.5f + 0.5f;
+    sShadowTexMtx.r[1].x = projection.r[1].x * 0.5f;
+    sShadowTexMtx.r[1].y = projection.r[1].y * 0.5f;
+    sShadowTexMtx.r[1].z = projection.r[1].z * 0.5f;
+    sShadowTexMtx.r[1].w = projection.r[1].w * 0.5f + 0.5f;
+    sShadowTexMtx.r[2].x = -projection.r[2].x;
+    sShadowTexMtx.r[2].y = -projection.r[2].y;
+    sShadowTexMtx.r[2].z = -projection.r[2].z;
+    sShadowTexMtx.r[2].w = -projection.r[2].w;
+    sShadowTexMtx.r[3].w = 1.0f;
+
+    C3D_FrameSplit(0);
+    C3D_RenderTargetClear(sShadowTarget, C3D_CLEAR_COLOR, 0xFFFFFFFFu, 0);
+    C3D_FrameDrawOn(sShadowTarget);
+#if SHADOW_DEBUG >= 3
+    {
+        /* DEBUG: clear by drawing white in GL mode */
+        C3D_Mtx one;
+        C3D_TexEnv *env = C3D_GetTexEnv(0);
+
+        Mtx_Identity(&one);
+        C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniProjection, &one);
+        C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniModelView, &one);
+        C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniOrigin, 0.0f, 0.0f, 0.0f, 0.0f);
+        C3D_DepthTest(false, GPU_ALWAYS, GPU_WRITE_COLOR);
+        C3D_AlphaTest(false, GPU_ALWAYS, 0);
+        C3D_ColorLogicOp(GPU_LOGICOP_COPY);
+        C3D_TexEnvInit(env);
+        C3D_TexEnvSrc(env, C3D_Both, GPU_CONSTANT, GPU_CONSTANT, GPU_CONSTANT);
+        C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
+        C3D_TexEnvColor(env, 0xFFFFFFFFu);
+        for (int i = 1; i < 6; ++i)
+            C3D_TexEnvInit(C3D_GetTexEnv(i));
+        C3D_ImmDrawBegin(GPU_TRIANGLE_STRIP);
+        C3D_ImmSendAttrib(-512.0f, -512.0f, -256.0f, 8192.0f); C3D_ImmSendAttrib(0, 0, 0, 1);
+        C3D_ImmSendAttrib(512.0f, -512.0f, -256.0f, 8192.0f); C3D_ImmSendAttrib(0, 0, 0, 1);
+        C3D_ImmSendAttrib(-512.0f, 512.0f, -256.0f, 8192.0f); C3D_ImmSendAttrib(0, 0, 0, 1);
+        C3D_ImmSendAttrib(512.0f, 512.0f, -256.0f, 8192.0f); C3D_ImmSendAttrib(0, 0, 0, 1);
+        C3D_ImmDrawEnd();
+        sDrawSet = 0;
+    }
+#endif
+    C3D_FragOpMode(GPU_FRAGOPMODE_SHADOW);
+    /* a soft write is kept as s / (constant + linear d / stored), and
+     * citro3d's (scale, bias) are constant = scale + bias, linear = -scale:
+     * (0, 1) keeps s as written. (1, 0) divided it by 1 - d / stored, near
+     * 0, and every partial light came out full. */
+    C3D_FragOpShadow(0.0f, 1.0f);
+    C3D_DepthTest(false, GPU_ALWAYS, GPU_WRITE_COLOR);
+    C3D_AlphaTest(false, GPU_ALWAYS, 0);
+    C3D_CullFace(GPU_CULL_NONE);
+    ShadowUniforms(NULL);
+    /* lit casters put sShadowBias further from the sun (voxel.v.pica) */
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowSel, 1.0f, 0.0f,
+                  sShadowBias / VOXEL_SHADOW_MAP_DEPTH, VoxelLighting_Ambient());
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniProjection, &projection);
+
+    /* green 0 writes the depth, else full light: 1 - the texel's alpha */
+    {
+        C3D_TexEnv *env = C3D_GetTexEnv(0);
+
+        C3D_TexEnvInit(env);
+        C3D_TexEnvSrc(env, C3D_RGB, GPU_TEXTURE0, GPU_TEXTURE0, GPU_TEXTURE0);
+        C3D_TexEnvOpRgb(env, GPU_TEVOP_RGB_ONE_MINUS_SRC_ALPHA, GPU_TEVOP_RGB_SRC_COLOR,
+                        GPU_TEVOP_RGB_SRC_COLOR);
+        C3D_TexEnvFunc(env, C3D_RGB, GPU_REPLACE);
+        C3D_TexEnvSrc(env, C3D_Alpha, GPU_TEXTURE0, GPU_TEXTURE0, GPU_TEXTURE0);
+        C3D_TexEnvFunc(env, C3D_Alpha, GPU_REPLACE);
+        for (int i = 1; i < 6; ++i)
+            C3D_TexEnvInit(C3D_GetTexEnv(i));
+    }
+
+    /* the anchored world as it is: the eye's model-view without its view */
+    Mtx_Identity(&sDrawModelView);
+    Mtx_Identity(&identity);
+    Mtx_Translate(&identity, -(float)sDrawAnchorX, 0.0f, -(float)sDrawAnchorZ, true);
+    if (SHADOW_DEBUG != 3)
+        ShadowMapCasters(&identity);
+#if VOXEL_SHADOW_SOFT_RINGS > 0
+    /*
+     * The soft edge, a blur outward from every shadow: the casters again,
+     * moved across the sun, written as partial light (green) where they are
+     * nearer the sun than what the map holds, and kept as the least of all -
+     * after every depth, since a later depth keeps the light written under
+     * it. Ring k of VOXEL_SHADOW_SOFT_RINGS is four copies moved k / rings of
+     * the reach (diagonally, then along the axes, by turns, so that the
+     * blur is round), leaving k / (rings + 1) of the light: the nearer the
+     * shadow, the less light, in steps a filter's texel apart which it
+     * smooths into one slope. The ground at a corner's foot is within the
+     * first. Not on a caster's own lit surface: those copies go further
+     * back by their slope across the move, and the unlit ones, which the map
+     * does not change, a little.
+     */
+    {
+        static const float diagonal[4][2] = {{0.7071f, 0.7071f}, {-0.7071f, 0.7071f},
+                                             {0.7071f, -0.7071f}, {-0.7071f, -0.7071f}};
+        static const float axes[4][2] = {{1.0f, 0.0f}, {-1.0f, 0.0f}, {0.0f, 1.0f}, {0.0f, -1.0f}};
+        C3D_TexEnv *env;
+        C3D_Mtx copy = projection;
+
+        env = C3D_GetTexEnv(1);
+        C3D_TexEnvInit(env);
+        C3D_TexEnvSrc(env, C3D_Both, GPU_PREVIOUS, GPU_PREVIOUS, GPU_PREVIOUS);
+        C3D_TexEnvOpRgb(env, GPU_TEVOP_RGB_ONE_MINUS_SRC_COLOR, GPU_TEVOP_RGB_SRC_COLOR, GPU_TEVOP_RGB_SRC_COLOR);
+        C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
+        copy.r[2].w = projection.r[2].w - VOXEL_SHADOW_SOFT_BACK / VOXEL_SHADOW_MAP_DEPTH;
+        for (unsigned ring = 1; ring <= VOXEL_SHADOW_SOFT_RINGS && SHADOW_DEBUG != 3; ++ring)
+        {
+            float reach = VOXEL_SHADOW_SOFT_REACH * (float)ring / (float)VOXEL_SHADOW_SOFT_RINGS;
+            float light = (float)ring / (float)(VOXEL_SHADOW_SOFT_RINGS + 1u);
+            const float (*dirs)[2] = (ring & 1u) ? diagonal : axes;
+
+            /* green = 1 - alpha (1 - light): a clear texel writes full light */
+            env = C3D_GetTexEnv(0);
+            C3D_TexEnvInit(env);
+            C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_CONSTANT, GPU_CONSTANT);
+            C3D_TexEnvOpRgb(env, GPU_TEVOP_RGB_SRC_ALPHA, GPU_TEVOP_RGB_SRC_COLOR, GPU_TEVOP_RGB_SRC_COLOR);
+            C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
+            C3D_TexEnvColor(env, 0xFF000000u | (uint32_t)((1.0f - light) * 255.0f + 0.5f) * 0x010101u);
+            C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowSel, 1.0f, 0.0f,
+                          (sShadowBias + slope * reach) / VOXEL_SHADOW_MAP_DEPTH, VoxelLighting_Ambient());
+            for (unsigned k = 0; k < 4u; ++k)
+            {
+                copy.r[0].w = projection.r[0].w + dirs[k][0] * reach / sShadowHalfU;
+                copy.r[1].w = projection.r[1].w + dirs[k][1] * reach / sShadowHalfV;
+                C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniProjection, &copy);
+                ShadowMapCasters(&identity);
+            }
+        }
+    }
+#endif
+    C3D_FragOpMode(GPU_FRAGOPMODE_GL);
+    /* rendered to a texture, then sampled: a split between */
+    C3D_FrameSplit(0);
+    sShadowReady = true;
 }
 
 void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
@@ -11369,7 +12313,16 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
 #endif
 
     sBloomStrength = light.bloom;
-    C3D_FrameDrawOn(target);
+    /* The shadow map: wanted in HIGH, outdoors, in sunlight; drawn by the
+     * first eye of a frame, kept for the second. */
+    sShadowOn = false;
+    bool shadowMap = false;
+#if CTR_VOXEL_LIGHTING
+    shadowMap = VoxelLighting_Quality() == VOXEL_SHADOWS_HIGH && !indoor
+             && gVoxelSun.strength > 0.0f && neutral <= 0.0f && ShadowMapMake();
+#endif
+    if (!shadowMap)
+        sShadowReady = false;
 
     /* The camera the frustum was cut from in the update (UpdateFrustum).
      * The gloom is placed on the logical surface, before the fit to it. */
@@ -11384,8 +12337,6 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
     CameraMatrices(&projection, &view, true, eye);
     sDrawAnchorX = (int)floorf(sCamera.targetX);
     sDrawAnchorZ = (int)floorf(sCamera.targetZ);
-    Mtx_Copy(&sDrawModelView, &view);
-    Mtx_Translate(&sDrawModelView, (float)sDrawAnchorX, 0.0f, (float)sDrawAnchorZ, true);
     /* Each value written once in this Draw before any is left as it stands. */
     sDrawSet = 0;
 
@@ -11396,6 +12347,56 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
     AttrInfo_Init(attr);
     AttrInfo_AddLoader(attr, 1, GPU_FLOAT, 2);
     AttrInfo_AddLoader(attr, 0, GPU_SHORT, 4);
+
+    if (shadowMap && (eye != 1 || !sShadowReady))
+    {
+        uint32_t shadowStart = Port_ProfTick();
+        static uint64_t shadowTicks;
+        static unsigned shadowFrames;
+
+        ShadowMapRender();
+        shadowTicks += Port_ProfTick() - shadowStart;
+        if (++shadowFrames == 600)
+        {
+            CtrLog_Write(CTR_LOG_VIDEO, "VOXEL shadow map cpu=%.3f ms a frame, %.0fx%.0f tiles (wanted %.0fx%.0f, slid %.1f %.1f), bias %.3f",
+                         (float)shadowTicks * 1000.0f / SYSCLOCK_ARM11 / shadowFrames,
+                         sShadowHalfU * 2.0f, sShadowHalfV * 2.0f, sShadowFitWanted[0], sShadowFitWanted[1],
+                         sShadowFitSlid[0], sShadowFitSlid[1], sShadowBias);
+            shadowTicks = 0;
+            shadowFrames = 0;
+        }
+        sDrawSet = 0;
+    }
+    C3D_FrameDrawOn(target);
+    Mtx_Copy(&sDrawModelView, &view);
+    Mtx_Translate(&sDrawModelView, (float)sDrawAnchorX, 0.0f, (float)sDrawAnchorZ, true);
+    sShadowOn = shadowMap && sShadowReady;
+    sShadowColour = ShadowColour(&light);
+    if (sShadowOn)
+    {
+        dapples = false;
+        ShadowUniforms(&sDrawModelView);
+#if SHADOW_DEBUG == 5
+        {
+            static C3D_Tex lin;
+            if (lin.data == NULL)
+            {
+                C3D_TexInitWithParams(&lin, NULL, (C3D_TexInitParams){ 8, 8, 0, GPU_RGBA8, GPU_TEX_SHADOW_2D, false });
+                memset(lin.data, 0xFF, 8 * 8 * 4);
+                GSPGPU_FlushDataCache(lin.data, 8 * 8 * 4);
+            }
+            C3D_TexBind(0, &lin);
+            C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowU, 0.0f, 0.0f, 0.0f, 0.5f);
+            C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowV, 0.0f, 0.0f, 0.0f, 0.5f);
+            C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowW, 0.0f, 0.0f, 0.0f, 0.5f);
+        }
+#else
+        C3D_TexBind(0, &sShadowTex);
+#endif
+        C3D_TexShadowParams(false, VOXEL_SHADOW_MAP_SAMPLE_BIAS / VOXEL_SHADOW_MAP_DEPTH);
+    }
+    else
+        ShadowUniforms(NULL);
 
     /* texture0 x graded colour (dappled), then the distance haze, then the fade. */
     PrepareFades();
@@ -11435,6 +12436,8 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
         bool glowing = pass == VOXEL_ATLAS_PAGES + 1u && !indoor && sGlowWanted;
 
         C3D_AlphaTest(true, GPU_GREATER, 0);
+        if (sShadowOn)
+            ShadowReceive(true);
 
         for (unsigned i = 0; i < sDrawCount; ++i)
         {
@@ -11442,7 +12445,7 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
             unsigned first = pass < VOXEL_ATLAS_PAGES ? chunk->terrainFirst[pass]
                            : pass == VOXEL_ATLAS_PAGES ? chunk->terrainCount : chunk->buildingFirst;
             unsigned count = pass < VOXEL_ATLAS_PAGES ? chunk->terrainFirst[pass + 1u] - first
-                           : pass == VOXEL_ATLAS_PAGES ? chunk->buildingFirst - first
+                           : pass == VOXEL_ATLAS_PAGES ? chunk->buildingFirst - chunk->treeShadow - first
                            : chunk->count - first;
             C3D_Tex *tex;
 
@@ -11461,7 +12464,7 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
             if (boundTex != tex)
             {
                 boundTex = tex;
-                C3D_TexBind(0, tex);
+                BindAtlas(tex);
                 if (glowing)
                 {
                     BuildingPageSlot *page = FindPage(chunk->buildingPage);
@@ -11469,6 +12472,21 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
                     BuildingGlowEnv(GlowTex(page),
                                     CtrDayNight_Get()->glow, dapples ? &light : NULL);
                 }
+            }
+            if (pass == VOXEL_ATLAS_PAGES && sShadowOn && chunk->treeCrowns != 0)
+            {
+                /* the crowns keep their own light under the map: their
+                 * shadows are on the ground, and a crown behind its own (or
+                 * a neighbour's) turned card would read as shaded */
+                unsigned grounds = count - chunk->treeCrowns;
+
+                if (grounds != 0)
+                    C3D_DrawArrays(GPU_TRIANGLES, BindChunkVertices(chunk, first, grounds), (int)grounds);
+                ShadowReceive(false);
+                C3D_DrawArrays(GPU_TRIANGLES, BindChunkVertices(chunk, first + grounds, chunk->treeCrowns),
+                               (int)chunk->treeCrowns);
+                ShadowReceive(true);
+                continue;
             }
             C3D_DrawArrays(GPU_TRIANGLES, BindChunkVertices(chunk, first, count), (int)count);
         }
@@ -11478,10 +12496,35 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
     ReleaseGlowUnit();
     /* The glow over the dapples moved the haze and the fade a stage on
      * (BuildingGlowEnv): back where every later pass has them. */
-    if (dapples)
+    if (dapples || sShadowOn)
     {
         FadeFor(false);
         C3D_TexEnvInit(C3D_GetTexEnv(5));
+    }
+    if (sShadowOn)
+    {
+        /* The map off for the rest; the atlas back on unit 0, where the
+         * passes after read whatever is bound, and unit 1 free (as the
+         * dapples' is freed, ReleaseDappleUnit). */
+        uint32_t *flags = (uint32_t *)(void *)(__C3D_Context + C3DI_CONTEXT_FLAGS);
+        C3D_Tex **bound = (C3D_Tex **)(void *)(__C3D_Context + C3DI_CONTEXT_TEX);
+
+        sShadowOn = false;
+        ShadowUniforms(NULL);
+        ShadowBlurPass();
+        C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniProjection, &projection);
+        FadeFor(false);
+        C3D_TexEnvInit(C3D_GetTexEnv(5));
+        if (sShadowAtlasBound != NULL)
+        {
+            C3D_TexBind(0, sShadowAtlasBound);
+            if (bound[1] == sShadowAtlasBound)
+            {
+                bound[1] = NULL;
+                *flags |= C3DI_FLAG_TEX(1);
+            }
+        }
+        sShadowAtlasBound = NULL;
     }
     {
         uint32_t now = Port_ProfTick();

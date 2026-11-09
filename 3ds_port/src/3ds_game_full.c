@@ -395,9 +395,9 @@ void CtrCentredTrade_SetVBlankCallback(IntrCallback callback)
 
 bool8 CtrBag_InWindow(void);
 
-/* The bag from the field, its party menu or a battle goes in the game
- * screen's window (or is drawn natively, 3ds_bottom_game.inc), from anywhere
- * else over the whole bottom screen. */
+/* The bag from the field, its party menu, a battle, the PC or a shop's SELL
+ * goes in the game screen's window (or is drawn natively,
+ * 3ds_bottom_game.inc), from anywhere else over the whole bottom screen. */
 void CtrCentredBag_SetVBlankCallback(IntrCallback callback)
 {
     SetCentredCallback(callback, CtrBag_InWindow() ? CTR_CENTRED_BAG : CTR_CENTRED_BAG_WHOLE);

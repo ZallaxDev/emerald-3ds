@@ -46,6 +46,7 @@ enum
     ART_HP_TRACK = 8,
     ART_HP_FILL = 9,         /* + colour */
     ART_EXP_FILL = 12,
+    ART_HP_TRACK_CAPPED = 13, /* no "HP" label's end: a status pill's place */
     ART_PILL = 16,           /* + status - 1 */
     ART_BALL = 21,
     ART_BOX_CAP = 24,
@@ -902,10 +903,18 @@ static void Compose(int index, int top, int bottom)
         {
             const Art *fill = &sArt[ART_HP_FILL + (slot->hpColour > 2 ? 0 : slot->hpColour)];
 
-            Blit(pic, &sArt[ART_HP_TRACK], barX, barY);
+            /* A status pill takes the "HP" label's place but on the player's
+             * singles box, whose pill is under its bar: the bar's dark left
+             * end goes with the label, the box's panel left between the pill
+             * and the track's round cap, as the GBA's HEALTHBOX_GFX_0 and _65
+             * (UpdateStatusIconInHealthbox). */
+            bool pill = slot->status != CTR_HUD_STATUS_NONE && slot->status <= CTR_HUD_STATUS_BRN
+                     && slot->kind != CTR_HUD_SINGLE_PLAYER;
+
+            Blit(pic, &sArt[pill && sArt[ART_HP_TRACK_CAPPED].pixels ? ART_HP_TRACK_CAPPED : ART_HP_TRACK],
+                 barX, barY);
             BlitFill(pic, fill, barX, barY, slot->hpPixels, 48);
-            /* The "HP" label, but where a status pill takes its place. */
-            if (slot->status == CTR_HUD_STATUS_NONE || slot->kind == CTR_HUD_SINGLE_PLAYER)
+            if (!pill)
                 /* Centred in the bar's dark left end: GBA x 0-15, y 0-6 of the bar. */
                 BlitLabelCentred(pic, &sHpLabel, barX + 7.5f * ZOOM, barY + 3.0f * ZOOM, 0xFFC48CFF, 0xE26254FF);
         }

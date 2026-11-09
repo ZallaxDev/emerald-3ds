@@ -120,6 +120,14 @@ static float BattleScenerySway(unsigned reg)
 #define BATTLE_INTRO_BAR_EDGE 10.0f /* its soft edge */
 #define BATTLE_INTRO_STREAKS 12u
 
+/* OPTIONS > SCENE > SPEED EFFECTS (3ds_extras.c): the zoom blur and the speed
+ * lines of the entrance, on unless turned off. The flight, the vignette, the
+ * bars and the flash stay either way. */
+static bool BattleIntroSpeedEffects(void)
+{
+    return CtrSettings_GetInt("battle_speed_fx", 1) != 0;
+}
+
 /* One copy of the world magnified about the target (the screen's middle,
  * where the camera looks), see-through: a step of the zoom blur. */
 static void BattleIntroZoomTap(float scale, float alpha)
@@ -139,7 +147,7 @@ static void BattleIntroBlur(const CtrVoxelBattleIntro *intro)
 {
     float s = intro->speed;
 
-    if (s < 0.04f || (Reg(0) & 128))
+    if (s < 0.04f || (Reg(0) & 128) || !BattleIntroSpeedEffects())
         return;
     Blend(5, false, false);
     SurfaceFilter(GPU_LINEAR);
@@ -154,7 +162,7 @@ static void BattleIntroAtmosphere(const CtrVoxelBattleIntro *intro)
     const float w = CTR_GAME_WIDTH, bottom = BATTLE_INTRO_FLOOR;
     float shade = fmaxf(0.60f * intro->flight, 0.30f * intro->bars);
 
-    if (intro->speed > 0.04f)
+    if (intro->speed > 0.04f && BattleIntroSpeedEffects())
     {
         /* Streaks racing right to left, none across the middle band where
          * the battlers stand; each its own height, length and pace. */

@@ -305,7 +305,9 @@ static void ComposeVoxelOverlay(void)
     BlendForget();
     /* Text windows and prompts must stay above the precipitation. */
     sLayerOrigin = (sFieldBanner ? 0.0f : CTR_FIELD_UI_SHIFT) + (float)eyeShift;
-    Layers(1u << 0);
+    /* With the blending: the orbs' light (DoOrbEffect) is this layer, tinted
+     * and laid over the map, and drawn without it the light hid the world. */
+    Layers(1u << 0 | 32u);
     sLayerOrigin = 0.0f;
     sOverlayEyeShift = eyeShift;
     sVoxelObjPass = VOXEL_OBJ_SCREEN;
