@@ -88,7 +88,9 @@ def bash(script: str, cwd: Path = TREE) -> None:
     # voxel_engine_view.py checks only C:\msys64\mingw64\bin\gcc.exe by default;
     # this machine's host compiler lives elsewhere.
     hostcc = next((p / "gcc.exe" for p in MINGW_HINTS if (p / "gcc.exe").exists()), None)
-    env = ("export HOSTCC='%s'; " % posix(hostcc)) if hostcc else ""
+    env = "export PYTHONUTF8=1; "
+    if hostcc:
+        env += "export HOSTCC='%s'; " % posix(hostcc)
     command = "%sexport PATH='%s':$PATH; cd '%s' && %s" % (env, prefix, posix(cwd), script)
     run([str(BASH), "-lc", command])
 

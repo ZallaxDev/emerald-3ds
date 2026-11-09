@@ -16,8 +16,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cc', default='gcc')
     args = parser.parse_args()
-    voxel = (ROOT / 'src/voxel/ctr_voxel.c').read_text()
-    video = (ROOT / 'src/3ds_video.c').read_text()
+    voxel = (ROOT / 'src/voxel/ctr_voxel.c').read_text(encoding='utf-8')
+    video = (ROOT / 'src/3ds_video.c').read_text(encoding='utf-8')
     source = r'''
 #include <assert.h>
 #include <math.h>

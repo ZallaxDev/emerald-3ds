@@ -801,7 +801,7 @@ verify-pokedex-capture:
 	"$(PYTHON)" -B tests/pokedex_capture_test.py --tree "$(ROOT)" --cc "$(HOSTCC)" --sanitize
 
 verify-voxel-dewford:
-	"$(PYTHON)" -B tests/voxel_dewford_test.py --tree "$(ROOT)"
+	HOSTCC="$(HOSTCC)" "$(PYTHON)" -B tests/voxel_dewford_test.py --tree "$(ROOT)"
 
 # What the console builds of every map, checked by the engine's own code over
 # the shipped data (scripts/voxel_engine_view.py check, tests/voxel_scene_dump.c):

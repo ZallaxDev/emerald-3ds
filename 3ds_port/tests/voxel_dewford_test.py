@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import os
 import pathlib
 import shutil
 import struct
@@ -93,7 +94,7 @@ def check_sign_fixture(tree):
         assert event_board_masks(pair, layout, 11, 16) is None
     with patch.object(layout, "outdoor", False):
         assert event_board_masks(pair, layout, 11, 16) is None
-    compiler = shutil.which("cc")
+    compiler = shutil.which(os.environ.get("HOSTCC") or os.environ.get("CC") or "cc")
     assert compiler, "A host C compiler is required for the sign runtime fixture"
     with tempfile.TemporaryDirectory(prefix="dewford-sign-") as temporary:
         binary = pathlib.Path(temporary) / "signposts.bin"
