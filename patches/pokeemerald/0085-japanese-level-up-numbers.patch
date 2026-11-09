@@ -1,0 +1,73 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: Japanese level-up box number places
+Applies after 0082-japanese-pokedex-units.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/menu_specialized.c b/src/menu_specialized.c
+--- a/src/menu_specialized.c
++++ b/src/menu_specialized.c
+@@ -1543,6 +1543,15 @@
+     gText_Speed
+ };
+ 
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_JAPANESE
++// The level-up box's numbers where the Japanese game puts them (BPEJ's
++// DrawLevelUpWindowPg1 and Pg2): its glyphs are 8 pixels wide, and at the
++// English places the last digit went past the window's 80 pixels.
++#define LEVEL_UP_NUMBERS_X 54
++#else
++#define LEVEL_UP_NUMBERS_X 56
++#endif
++
+ void DrawLevelUpWindowPg1(u16 windowId, u16 *statsBefore, u16 *statsAfter, u8 bgClr, u8 fgClr, u8 shadowClr)
+ {
+     u16 i, x;
+@@ -1577,20 +1586,27 @@
+         StringCopy(text, (statsDiff[i] >= 0) ? gText_Plus : gText_Dash);
+         AddTextPrinterParameterized3(windowId,
+                                      FONT_NORMAL,
+-                                     56,
++                                     LEVEL_UP_NUMBERS_X,
+                                      15 * i,
+                                      color,
+                                      TEXT_SKIP_DRAW,
+                                      text);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_JAPANESE
++        if (abs(statsDiff[i]) <= 9)
++            x = 16;
++        else
++            x = 8;
++#else
+         if (abs(statsDiff[i]) <= 9)
+             x = 18;
+         else
+             x = 12;
++#endif
+ 
+         ConvertIntToDecimalStringN(text, abs(statsDiff[i]), STR_CONV_MODE_LEFT_ALIGN, 2);
+         AddTextPrinterParameterized3(windowId,
+                                      FONT_NORMAL,
+-                                     56 + x,
++                                     LEVEL_UP_NUMBERS_X + x,
+                                      15 * i,
+                                      color,
+                                      TEXT_SKIP_DRAW,
+@@ -1628,7 +1644,11 @@
+             numDigits = 1;
+ 
+         ConvertIntToDecimalStringN(text, stats[i], STR_CONV_MODE_LEFT_ALIGN, numDigits);
++#if defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_JAPANESE
++        x = 8 * (3 - numDigits);
++#else
+         x = 6 * (4 - numDigits);
++#endif
+ 
+         AddTextPrinterParameterized3(windowId,
+                                      FONT_NORMAL,
+@@ -1640,7 +1660,7 @@
+ 
+         AddTextPrinterParameterized3(windowId,
+                                      FONT_NORMAL,
+-                                     56 + x,
++                                     LEVEL_UP_NUMBERS_X + x,
+                                      15 * i,
+                                      color,
+                                      TEXT_SKIP_DRAW,

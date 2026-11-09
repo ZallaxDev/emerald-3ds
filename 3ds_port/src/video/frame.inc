@@ -150,7 +150,8 @@ static bool sObjMaskOn;
  * mask, then the layers it shows over that mask. */
 enum { OBJWIN_NONE, OBJWIN_MASK, OBJWIN_LAYERS };
 static unsigned sObjWinPass;
-/* The battle's BG0 drew something above its text box (DrawBattleText). */
+/* The battle's BG0 drew something above its text box (DrawBattleText), or
+ * the level-up box was drawn (DrawBattleTextLayer). */
 static bool sTextAbove;
 static uint32_t sObjMask[4];
 /*
