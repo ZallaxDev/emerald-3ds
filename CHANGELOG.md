@@ -5,10 +5,8 @@
 - Voxel: trainers buried in the ash or sand and the unseen Kecleon on Route
   120's bridge stay out of sight until they appear, as in 2D (issue #237). By
   @Johannes-Sch.
-||||||| 413b916
 - Voxel: rotating gates in Fortree Gym and the Trick House lie on the ground,
   turned as in 2D, so the puzzles can be read (issue #238). By @Johannes-Sch.
-||||||| 413b916
 - Voxel: the orbs' light in the Magma Hideout and the Seafloor Cavern is
   translucent as in 2D, no longer a solid box hiding the legendary as it wakes
   (issue #236). By @Johannes-Sch.
@@ -49,7 +47,6 @@
   the world as before. Signposts' shadows no longer float off the sign on
   drawn terrain. The option changes without a restart, the world redrawing
   itself a piece at a time.
-||||||| 413b916
 - Area wild list: a species already caught carries the Pokédex list's ball
   mark, so the list tells caught from only seen. By @Johannes-Sch.
 

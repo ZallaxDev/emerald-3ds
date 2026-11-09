@@ -1,5 +1,5 @@
 Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: Japanese level-up box number places
-Applies after 0082-japanese-pokedex-units.patch; apply with tools/bootstrap.py.
+Applies after 0084-japanese-berry-names.patch; apply with tools/bootstrap.py.
 
 diff --git a/src/menu_specialized.c b/src/menu_specialized.c
 --- a/src/menu_specialized.c

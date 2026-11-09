@@ -1,5 +1,5 @@
 Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: Japanese berry names
-Applies after 0082-japanese-pokedex-units.patch; apply with tools/bootstrap.py.
+Applies after 0083-frontier-pass.patch; apply with tools/bootstrap.py.
 
 BPEJ has no plural item names: an item is named as in the bag (ヒメリのみ), and
 the berry tree texts write のみ after the berry's bare name ({STR_VAR_1}のみを

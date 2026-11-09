@@ -8080,7 +8080,7 @@ index 169ef002a665712e92f6fec36a86ee7888067a17..a154bacf5122bbebb940f2bc4240811e
 diff --git a/src/item_menu.c b/src/item_menu.c
 old mode 100755
 new mode 100644
-index 09bc25c90b99e98c0097771871daa4384159047c..544808ab555e2e6df5611f3c6254c1f8e2aa5d50
+index 09bc25c90b99e98c0097771871daa4384159047c..ecab82d0f2b231ef29a470ac3abf16723afd9c3a
 --- a/src/item_menu.c
 +++ b/src/item_menu.c
 @@ -24,6 +24,7 @@
@@ -16927,7 +16927,7 @@ index 19541d88d810356d59f29b0029babb7da6dc9415..696f799fb0c0b8a4fa8cdc6326fb7e4a
      for (i = 0; i < sTilemapUtil[id].cur.height; i++)
      {
 diff --git a/src/pokemon_summary_screen.c b/src/pokemon_summary_screen.c
-index 21109f9c3cb325fa4da3d05145833f7341c26f65..bb627c75cb996f882a7d64a3e3ffe96736bb1b35 100644
+index 21109f9c3cb325fa4da3d05145833f7341c26f65..b46021b6da97cdbd5e490e2034749125e1194934 100644
 --- a/src/pokemon_summary_screen.c
 +++ b/src/pokemon_summary_screen.c
 @@ -2,6 +2,9 @@
