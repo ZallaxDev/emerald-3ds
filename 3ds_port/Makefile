@@ -346,6 +346,17 @@ build/battle_speed_test$(EXESUFFIX): tests/battle_speed_test.c src/3ds_settings.
 verify-rng-seeding:
 	"$(PYTHON)" tests/rng_seeding_test.py --cc "$(HOSTCC)"
 
+.PHONY: verify-script-extensions
+verify: verify-script-extensions
+verify-script-extensions: build/script_extensions_test$(EXESUFFIX)
+	./build/script_extensions_test$(EXESUFFIX)
+
+build/script_extensions_test$(EXESUFFIX): tests/script_extensions_test.c src/script_extensions.c include/script_extensions.h \
+		tests/script_extensions_host/global.h tests/script_extensions_host/script.h
+	@mkdir -p $(@D)
+	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Itests/script_extensions_host -Iinclude \
+		tests/script_extensions_test.c src/script_extensions.c -o $@
+
 .PHONY: verify-bottom-taps
 verify: verify-bottom-taps
 verify-bottom-taps:

@@ -1,0 +1,272 @@
+diff --git a/data/event_scripts.s b/data/event_scripts.s
+index 4a2593c..ddccb3e 100644
+--- a/data/event_scripts.s
++++ b/data/event_scripts.s
+@@ -1058,3 +1058,13 @@ Common_EventScript_LegendaryFlewAway::
+ 	.include "data/text/frontier_brain.inc"
+ 	.include "data/text/save.inc"
+ 	.include "data/text/birch_speech.inc"
++
++	.global gUpstreamSpecialCount
++gUpstreamSpecialCount:
++	.short __special__
++	.align 2
++
++	.global gUpstreamStdScriptCount
++gUpstreamStdScriptCount:
++	.short (gStdScripts_End - gStdScripts) / 4
++	.align 2
+diff --git a/src/battle_setup.c b/src/battle_setup.c
+index d54b078..77bf561 100644
+--- a/src/battle_setup.c
++++ b/src/battle_setup.c
+@@ -9,6 +9,7 @@
+ #include "task.h"
+ #include "safari_zone.h"
+ #include "script.h"
++#include "script_extensions.h"
+ #include "event_data.h"
+ #include "metatile_behavior.h"
+ #include "field_player_avatar.h"
+@@ -391,6 +392,8 @@ static void CreateBattleStartTask(u8 transition, u16 song)
+ 
+ void BattleSetup_StartWildBattle(void)
+ {
++    BattleHook_Call(BATTLE_HOOK_PRE_WILD);
++
+     if (GetSafariZoneFlag())
+         DoSafariBattle();
+     else
+@@ -491,6 +494,8 @@ void StartWallyTutorialBattle(void)
+ 
+ void BattleSetup_StartScriptedWildBattle(void)
+ {
++    BattleHook_Call(BATTLE_HOOK_PRE_WILD);
++
+     LockPlayerFieldControls();
+     gMain.savedCallback = CB2_EndScriptedWildBattle;
+     gBattleTypeFlags = 0;
+@@ -503,6 +508,8 @@ void BattleSetup_StartScriptedWildBattle(void)
+ 
+ void BattleSetup_StartLatiBattle(void)
+ {
++    BattleHook_Call(BATTLE_HOOK_PRE_WILD);
++
+     LockPlayerFieldControls();
+     gMain.savedCallback = CB2_EndScriptedWildBattle;
+     gBattleTypeFlags = BATTLE_TYPE_LEGENDARY;
+@@ -515,6 +522,8 @@ void BattleSetup_StartLatiBattle(void)
+ 
+ void BattleSetup_StartLegendaryBattle(void)
+ {
++    BattleHook_Call(BATTLE_HOOK_PRE_WILD);
++
+     LockPlayerFieldControls();
+     gMain.savedCallback = CB2_EndScriptedWildBattle;
+     gBattleTypeFlags = BATTLE_TYPE_LEGENDARY;
+@@ -554,6 +563,8 @@ void BattleSetup_StartLegendaryBattle(void)
+ 
+ void StartGroudonKyogreBattle(void)
+ {
++    BattleHook_Call(BATTLE_HOOK_PRE_WILD);
++
+     LockPlayerFieldControls();
+     gMain.savedCallback = CB2_EndScriptedWildBattle;
+     gBattleTypeFlags = BATTLE_TYPE_LEGENDARY | BATTLE_TYPE_KYOGRE_GROUDON;
+@@ -574,6 +585,8 @@ void StartRegiBattle(void)
+     u8 transitionId;
+     u16 species;
+ 
++    BattleHook_Call(BATTLE_HOOK_PRE_WILD);
++
+     LockPlayerFieldControls();
+     gMain.savedCallback = CB2_EndScriptedWildBattle;
+     gBattleTypeFlags = BATTLE_TYPE_LEGENDARY | BATTLE_TYPE_REGI;
+@@ -604,6 +617,8 @@ void StartRegiBattle(void)
+ 
+ static void CB2_EndWildBattle(void)
+ {
++    BattleHook_Call(BATTLE_HOOK_POST_WILD);
++
+     CpuFill16(0, (void *)(BG_PLTT), BG_PLTT_SIZE);
+     ResetOamRange(0, 128);
+ 
+@@ -620,6 +635,8 @@ static void CB2_EndWildBattle(void)
+ 
+ static void CB2_EndScriptedWildBattle(void)
+ {
++    BattleHook_Call(BATTLE_HOOK_POST_WILD);
++
+     CpuFill16(0, (void *)(BG_PLTT), BG_PLTT_SIZE);
+     ResetOamRange(0, 128);
+ 
+@@ -924,6 +941,7 @@ static void CB2_GiveStarter(void)
+     *GetVarPointer(VAR_STARTER_MON) = gSpecialVar_Result;
+     starterMon = GetStarterPokemon(gSpecialVar_Result);
+     ScriptGiveMon(starterMon, 5, ITEM_NONE, 0, 0, 0);
++    BattleHook_Call(BATTLE_HOOK_GIVE_STARTER);
+     ResetTasks();
+     PlayBattleBGM();
+     SetMainCallback2(CB2_StartFirstBattle);
+@@ -952,6 +970,8 @@ static void CB2_StartFirstBattle(void)
+ 
+ static void CB2_EndFirstBattle(void)
+ {
++    BattleHook_Call(BATTLE_HOOK_POST_WILD);
++
+     Overworld_ClearSavedMusic();
+     SetMainCallback2(CB2_ReturnToFieldContinueScriptPlayMapMusic);
+ }
+@@ -1292,6 +1312,8 @@ void ClearTrainerFlag(u16 trainerId)
+ 
+ void BattleSetup_StartTrainerBattle(void)
+ {
++    BattleHook_Call(BATTLE_HOOK_PRE_TRAINER);
++
+     if (gNoOfApproachingTrainers == 2)
+         gBattleTypeFlags = (BATTLE_TYPE_DOUBLE | BATTLE_TYPE_TWO_OPPONENTS | BATTLE_TYPE_TRAINER);
+     else
+@@ -1347,6 +1369,8 @@ void BattleSetup_StartTrainerBattle(void)
+ 
+ static void CB2_EndTrainerBattle(void)
+ {
++    BattleHook_Call(BATTLE_HOOK_POST_TRAINER);
++
+     if (gTrainerBattleOpponent_A == TRAINER_SECRET_BASE)
+     {
+         SetMainCallback2(CB2_ReturnToFieldContinueScriptPlayMapMusic);
+diff --git a/src/field_control_avatar.c b/src/field_control_avatar.c
+index 1f6b735..7f1d199 100644
+--- a/src/field_control_avatar.c
++++ b/src/field_control_avatar.c
+@@ -22,6 +22,7 @@
+ #include "pokemon.h"
+ #include "safari_zone.h"
+ #include "script.h"
++#include "script_extensions.h"
+ #include "secret_base.h"
+ #include "sound.h"
+ #include "start_menu.h"
+@@ -157,6 +158,8 @@ int ProcessPlayerFieldInput(struct FieldInput *input)
+     if (TryRunOnFrameMapScript() == TRUE)
+         return TRUE;
+ 
++    FrameCallback_RunAll();
++
+     if (input->pressedBButton && TrySetupDiveEmergeScript() == TRUE)
+         return TRUE;
+     if (input->tookStep)
+diff --git a/src/scrcmd.c b/src/scrcmd.c
+index 6fbd6c7..bb326a6 100644
+--- a/src/scrcmd.c
++++ b/src/scrcmd.c
+@@ -39,6 +39,7 @@
+ #include "rotating_tile_puzzle.h"
+ #include "rtc.h"
+ #include "script.h"
++#include "script_extensions.h"
+ #include "script_menu.h"
+ #include "script_movement.h"
+ #include "script_pokemon_util.h"
+@@ -125,6 +126,18 @@ bool8 ScrCmd_gotonative(struct ScriptContext *ctx)
+ bool8 ScrCmd_special(struct ScriptContext *ctx)
+ {
+     u16 index = ScriptReadHalfword(ctx);
++    u16 extBase = ScriptExt_GetUpstreamSpecialCount();
++
++    if (index >= extBase)
++    {
++        u16 slot = index - extBase;
++
++        if (!ScriptExt_IsSpecialRegistered(slot))
++            StopScript(ctx);
++        else
++            ScriptExt_CallSpecial(slot); // like stock: the special sets gSpecialVar_Result
++        return FALSE;
++    }
+ 
+     gSpecials[index]();
+     return FALSE;
+@@ -133,8 +146,26 @@ bool8 ScrCmd_special(struct ScriptContext *ctx)
+ bool8 ScrCmd_specialvar(struct ScriptContext *ctx)
+ {
+     u16 *var = GetVarPointer(ScriptReadHalfword(ctx));
++    u16 index = ScriptReadHalfword(ctx);
++    u16 extBase = ScriptExt_GetUpstreamSpecialCount();
++
++    if (index >= extBase)
++    {
++        u16 slot = index - extBase;
++
++        if (!ScriptExt_IsSpecialRegistered(slot))
++        {
++            *var = 0;
++            StopScript(ctx);
++        }
++        else
++        {
++            *var = ScriptExt_CallSpecial(slot);
++        }
++        return FALSE;
++    }
+ 
+-    *var = gSpecials[ScriptReadHalfword(ctx)]();
++    *var = gSpecials[index]();
+     return FALSE;
+ }
+ 
+diff --git a/src/script.c b/src/script.c
+index dc56472..f208166 100644
+--- a/src/script.c
++++ b/src/script.c
+@@ -1,5 +1,6 @@
+ #include "global.h"
+ #include "script.h"
++#include "script_extensions.h"
+ #include "event_data.h"
+ #include "mystery_gift.h"
+ #include "util.h"
+@@ -127,6 +128,20 @@ bool8 RunScriptCommand(struct ScriptContext *ctx)
+ 
+             if (func >= ctx->cmdTableEnd)
+             {
++                u8 result;
++
++                if (cmdCode >= SCRIPT_CMD_EXT_SINGLE_BASE && cmdCode < SCRIPT_CMD_EXT_PREFIX)
++                    result = ScriptExt_DispatchCommand(ctx, cmdCode);
++                else if (cmdCode == SCRIPT_CMD_EXT_PREFIX)
++                    result = ScriptExt_DispatchCommand(ctx, SCRIPT_CMD_EXT_EXTENDED_BASE + *(ctx->scriptPtr++));
++                else
++                    result = SCRIPT_EXT_UNHANDLED;
++
++                if (result == SCRIPT_EXT_YIELD)
++                    return TRUE;
++                if (result == SCRIPT_EXT_CONTINUE)
++                    continue;
++
+                 ctx->mode = SCRIPT_MODE_STOPPED;
+                 return FALSE;
+             }
+@@ -325,9 +340,21 @@ u8 *MapHeaderGetScriptTable(u8 tag)
+ 
+ void MapHeaderRunScriptType(u8 tag)
+ {
+-    u8 *ptr = MapHeaderGetScriptTable(tag);
++    u8 *ptr;
++
++    if (tag >= MAP_SCRIPT_EXT_TAG_BASE)
++    {
++        ScriptExt_RunMapScript(tag);
++        return;
++    }
++
++    ptr = MapHeaderGetScriptTable(tag);
+     if (ptr)
+         RunScriptImmediately(ptr);
++
++    // Extension handlers for this lifecycle event live at BASE + the stock tag
++    // (0x80 = ON_LOAD, 0x81 = ON_TRANSITION, ...).
++    ScriptExt_RunMapScript(MAP_SCRIPT_EXT_TAG_BASE + tag);
+ }
+ 
+ u8 *MapHeaderCheckScriptTable(u8 tag)

@@ -13,7 +13,8 @@
 
 1. Reads upstream.lock and fetches exactly that commit of pret/pokeemerald into
    build/upstream (a shallow fetch of one commit).
-2. Applies patches/pokeemerald/*.patch in order. The tree is reset to the
+2. Applies patches/pokeemerald/*.patch in order, then
+   patches/script_extensions.patch. The tree is reset to the
    pinned commit first whenever the patch set changed since the last run.
 3. Places 3ds_port/, builder/ and tools/ inside it, so the Makefile's relative
    paths (../tools/port_common, ../builder) resolve as in development.
@@ -120,6 +121,11 @@ def main() -> int:
         locale = ("japanese", args.japanese_rom, "localize_japanese.py", "japanese.json.gz")
     portuguese = args.port_lang == "pt_br"
     patches = sorted((ROOT / "patches" / "pokeemerald").glob("*.patch"))
+    # The extension layer patches files those patches also touch, so it runs
+    # last and is part of the same digest: a fresh tree must carry it too.
+    extension_patch = ROOT / "patches" / "script_extensions.patch"
+    if extension_patch.exists():
+        patches.append(extension_patch)
     marker = tree / ".emerald3ds-patches"
     digest = patch_digest(patches)
 

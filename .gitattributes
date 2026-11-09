@@ -1,0 +1,2 @@
+# Unified diffs are applied to the LF build tree; keep them LF on checkout.
+patches/*.patch text eol=lf

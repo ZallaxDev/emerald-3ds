@@ -82,6 +82,7 @@
 #include "3ds_bottom.h"
 #include "3ds_dex_top.h"
 #include "3ds_sprite_ids.h"
+#include "script_extensions.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -784,6 +785,7 @@ void CtrGame_Init(void)
     CtrAssets_StartWarmup();
     if (!CtrScripts_Init())
         CtrAssets_Fatal("the script bundle is required before AgbMain");
+    ScriptExt_Init();
     if (!CtrMaps_Init())
         CtrAssets_Fatal("map payloads are required to reach the overworld");
     /* gSongTable already points into this region; without it every song header
