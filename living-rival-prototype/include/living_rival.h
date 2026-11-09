@@ -17,6 +17,7 @@
 #include "lr_absence.h"
 #include "lr_simulation.h"
 #include "lr_snapshot.h"
+#include "lr_gazette.h"
 #include "lr_save.h"
 
 #endif
