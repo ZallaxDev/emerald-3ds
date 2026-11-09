@@ -8424,7 +8424,7 @@ index 09bc25c90b99e98c0097771871daa4384159047c..544808ab555e2e6df5611f3c6254c1f8
      if (*windowId == WINDOW_NONE)
      {
          *windowId = AddWindow(&sContextMenuWindowTemplates[windowType]);
-@@ -2594,3 +2696,610 @@ static void PrintTMHMMoveData(u16 itemId)
+@@ -2594,3 +2696,657 @@ static void PrintTMHMMoveData(u16 itemId)
          CopyWindowToVram(WIN_TMHM_INFO, COPYWIN_GFX);
      }
  }
@@ -8483,12 +8483,16 @@ index 09bc25c90b99e98c0097771871daa4384159047c..544808ab555e2e6df5611f3c6254c1f8
 +}
 +
 +// The bag in the bottom screen's window: from the field, from the field's
-+// party menu (GIVE), or from a battle's own menu; from a shop, the PC or a
-+// berry machine it has the whole screen.
++// party menu (GIVE), from a battle's own menu, from the PC to deposit and
++// from a shop to sell (the dock locked for these two, 3ds_bottom_ui.c: the
++// bag goes back to the PC or the shop); from a berry machine and the rest it
++// has the whole screen.
 +bool8 CtrBag_InWindow(void)
 +{
 +    return gBagPosition.location == ITEMMENULOCATION_FIELD
 +        || gBagPosition.location == ITEMMENULOCATION_BATTLE
++        || gBagPosition.location == ITEMMENULOCATION_ITEMPC
++        || gBagPosition.location == ITEMMENULOCATION_SHOP
 +        || (gBagPosition.location == ITEMMENULOCATION_PARTY && !gMain.inBattle);
 +}
 +
@@ -8907,6 +8911,25 @@ index 09bc25c90b99e98c0097771871daa4384159047c..544808ab555e2e6df5611f3c6254c1f8
 +    }
 +}
 +
++// The game's money text ("¥{STR_VAR_1}") with the amount in it, without
++// touching gStringVar1, which the bag's own tasks use.
++static void CtrBag_Money(u8 *dst, s32 amount)
++{
++    const u8 *src = gText_PokedollarVar1;
++
++    while (*src != EOS)
++    {
++        if (src[0] == PLACEHOLDER_BEGIN && src[1] == PLACEHOLDER_ID_STRING_VAR_1)
++        {
++            dst = ConvertIntToDecimalStringN(dst, amount, STR_CONV_MODE_LEFT_ALIGN, 6);
++            src += 2;
++        }
++        else
++            *dst++ = *src++;
++    }
++    *dst = EOS;
++}
++
 +// What a message shows last: the text after its last \p.
 +static void CtrBag_LastPage(u8 *dst, const u8 *src)
 +{
@@ -8926,8 +8949,8 @@ index 09bc25c90b99e98c0097771871daa4384159047c..544808ab555e2e6df5611f3c6254c1f8
 +
 +// Where the bag is, for the bottom screen to draw it itself. FALSE while
 +// there is nothing to read (a pocket switching, the bag coming or going):
-+// the bottom screen keeps what it showed. The bag from anywhere but the
-+// field is not one it draws (state NONE).
++// the bottom screen keeps what it showed. The bag from anywhere it does not
++// have in its window (CtrBag_InWindow) is not one it draws (state NONE).
 +bool8 CtrBag_GetView(struct CtrBagView *view)
 +{
 +    u8 taskId;
@@ -8952,19 +8975,38 @@ index 09bc25c90b99e98c0097771871daa4384159047c..544808ab555e2e6df5611f3c6254c1f8
 +        if (gBagMenu->windowIds[ITEMWIN_MESSAGE] != WINDOW_NONE)
 +            CtrBag_LastPage(view->text, sCtrBagMsg);
 +    }
++    else if ((taskId = FindTaskIdByFunc(Task_ChooseHowManyToSell)) != TASK_NONE)
++    {
++        // How many to sell, its question still in the message window: the
++        // item and what that many fetch, as the game's window beside the
++        // count shows it.
++        u8 *end;
++
++        view->state = CTR_BAG_VIEW_QUANTITY;
++        view->count = gTasks[taskId].tItemCount;
++        view->max = gTasks[taskId].tQuantity;
++        CopyItemName(gSpecialVar_ItemId, view->text);
++        end = view->text + StringLength(view->text);
++        *end++ = CHAR_NEWLINE;
++        CtrBag_Money(end, (GetItemPrice(gSpecialVar_ItemId) / 2) * view->count);
++    }
 +    else if (gBagMenu->windowIds[ITEMWIN_MESSAGE] != WINDOW_NONE)
 +    {
 +        view->state = CTR_BAG_VIEW_MESSAGE;
 +        memcpy(view->msg, sCtrBagMsg, sizeof(view->msg));
 +    }
-+    else if (FuncIsActiveTask(Task_RemoveItemFromBag))
++    else if (FuncIsActiveTask(Task_RemoveItemFromBag) || FuncIsActiveTask(WaitDepositErrorMessage))
 +    {
-+        // "Threw away...", in the description window, waiting for A.
++        // "Threw away...", "Deposited...", or why it could not be
++        // deposited, in the description window, waiting for A.
 +        view->state = CTR_BAG_VIEW_MESSAGE;
 +        memcpy(view->msg, sCtrBagText, sizeof(view->msg));
 +    }
-+    else if ((taskId = FindTaskIdByFunc(Task_ChooseHowManyToToss)) != TASK_NONE)
++    else if ((taskId = FindTaskIdByFunc(Task_ChooseHowManyToToss)) != TASK_NONE
++          || (taskId = FindTaskIdByFunc(Task_ChooseHowManyToDeposit)) != TASK_NONE)
 +    {
++        // Its question ("Toss out how many...?", "Deposit how many...?") is
++        // in the description window.
 +        view->state = CTR_BAG_VIEW_QUANTITY;
 +        view->count = gTasks[taskId].tItemCount;
 +        view->max = gTasks[taskId].tQuantity;
@@ -9021,8 +9063,13 @@ index 09bc25c90b99e98c0097771871daa4384159047c..544808ab555e2e6df5611f3c6254c1f8
 +
 +void CtrBag_TapCount(bool8 ok)
 +{
-+    u8 windowId = gBagMenu != NULL ? gBagMenu->windowIds[ITEMWIN_QUANTITY] : WINDOW_NONE;
++    u8 windowId = WINDOW_NONE;
 +
++    // Tossing or depositing, the count's window; selling, the wide one with
++    // the price.
++    if (gBagMenu != NULL)
++        windowId = gBagMenu->windowIds[ITEMWIN_QUANTITY] != WINDOW_NONE ? gBagMenu->windowIds[ITEMWIN_QUANTITY]
++                                                                        : gBagMenu->windowIds[ITEMWIN_QUANTITY_WIDE];
 +    if (ok && windowId != WINDOW_NONE)
 +        CtrMenu_PostTap(GetWindowAttribute(windowId, WINDOW_TILEMAP_LEFT) * 8 + GetWindowAttribute(windowId, WINDOW_WIDTH) * 4,
 +                        GetWindowAttribute(windowId, WINDOW_TILEMAP_TOP) * 8 + GetWindowAttribute(windowId, WINDOW_HEIGHT) * 4);
