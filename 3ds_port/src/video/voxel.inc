@@ -49,10 +49,25 @@ static float DioramaStrength(void)
     return CtrSettings_VoxelBlurStrength() / 100.0f;
 }
 
+/* The blur's strength now: the swoop takes it off with the grade
+ * (CtrVoxel_SwoopNeutral). */
+static float DioramaAmount(void)
+{
+    return DioramaStrength() * (1.0f - CtrVoxel_SwoopNeutral());
+}
+
+/* A part of the logical picture laid on the target where it was, NEAREST. */
+static void PictureRegion(int x, int y, int w, int h)
+{
+    const Tex3DS_SubTexture region = {(u16)w, (u16)h,
+        x / 512.0f, 1.0f - y / 256.0f, (x + w) / 512.0f, 1.0f - (y + h) / 256.0f};
+
+    C2D_DrawImageAt((C2D_Image){&sSurface, &region}, (float)x, (float)y, 0, NULL, 1, 1);
+}
+
 static void VoxelDiorama(void)
 {
-    /* The swoop takes the blur off with the grade (CtrVoxel_SwoopNeutral). */
-    float strength = DioramaStrength() * (1.0f - CtrVoxel_SwoopNeutral());
+    float strength = DioramaAmount();
 
     if (strength <= 0.005f) return;
 
@@ -334,6 +349,7 @@ static void RenderVoxelTo(C3D_RenderTarget *target, int eye, uint32_t clear, boo
     const Tex3DS_SubTexture logical = {CTR_GAME_WIDTH, CTR_GAME_HEIGHT, 0, 1,
         CTR_GAME_WIDTH / 512.0f, 1 - CTR_GAME_HEIGHT / 256.0f};
     float bloom;
+    unsigned cut = CtrVoxel_MeasureCut();
 
     /* C2D_TargetClear clears colour and depth, which the 3D pass needs. */
     C2D_TargetClear(sLogical, clear);
@@ -361,21 +377,57 @@ static void RenderVoxelTo(C3D_RenderTarget *target, int eye, uint32_t clear, boo
     C2D_Prepare();
     C3D_DepthTest(false, GPU_ALWAYS, GPU_WRITE_COLOR);
     BlendForget();
-    bloom = sBloom != NULL ? CtrVoxel_Bloom() : 0.0f;
+    bloom = sBloom != NULL && !(cut & CTR_VOXEL_CUT_BLOOM) ? CtrVoxel_Bloom() : 0.0f;
     if (bloom > 0.005f)
         VoxelBloomPrepare();
     C2D_TargetClear(target, C2D_Color32(0, 0, 0, 255));
     SceneOn(target);
     C2D_ViewReset();
     Blend(5, false, false);
-    C2D_DrawImageAt((C2D_Image){&sSurface, &logical}, 0, 0, 0, NULL, 1, 1);
-    if (CtrSettings_VoxelBlur())
+    /* With the blur on, the bands are drawn once by CtrVoxel_DioramaFused
+     * (the picture and its taps together); here only what they do not cover:
+     * the rows between them and the two columns at the picture's sides, which
+     * the taps leave alone. Where that cannot be (the target is not the
+     * 400-wide screen, or the pass declines) the bands are laid on as the
+     * taps' base, and the taps over them. */
+    bool blur = CtrSettings_VoxelBlur() && !(cut & CTR_VOXEL_CUT_DIORAMA);
+    float diorama = blur ? DioramaAmount() : 0.0f;
+    bool fused = diorama > 0.005f && CtrVoxel_FusedBlurOn() && target->frameBuf.height == CTR_GAME_WIDTH;
+
+    if (fused)
+    {
+        PictureRegion(0, 0, 1, CTR_GAME_HEIGHT);
+        PictureRegion(CTR_GAME_WIDTH - 1, 0, 1, CTR_GAME_HEIGHT);
+        PictureRegion(1, DIORAMA_TOP, CTR_GAME_WIDTH - 2, CTR_GAME_HEIGHT - DIORAMA_TOP - DIORAMA_BOTTOM);
+        C2D_Flush();
+        if (CtrVoxel_DioramaFused(&sSurface, diorama, DIORAMA_TOP, DIORAMA_BOTTOM))
+        {
+            /* Back to the 2D compositor, as after the world: its program, no
+             * depth, its blend state forgotten, and the scene begun again so
+             * its projection is sent anew. */
+            C2D_Prepare();
+            C3D_DepthTest(false, GPU_ALWAYS, GPU_WRITE_COLOR);
+            BlendForget();
+            SceneOn(target);
+            C2D_ViewReset();
+            Blend(5, false, false);
+        }
+        else
+        {
+            fused = false;
+            PictureRegion(1, 0, CTR_GAME_WIDTH - 2, DIORAMA_TOP);
+            PictureRegion(1, CTR_GAME_HEIGHT - DIORAMA_BOTTOM, CTR_GAME_WIDTH - 2, DIORAMA_BOTTOM);
+        }
+    }
+    else
+        C2D_DrawImageAt((C2D_Image){&sSurface, &logical}, 0, 0, 0, NULL, 1, 1);
+    if (!fused && blur)
         VoxelDiorama();
     if (bloom > 0.005f)
         VoxelBloomCompose(bloom);
     VoxelGloom();
     VoxelFlashLight();
-    if (!(Reg(0) & 128)) ComposeVoxelOverlay();
+    if (!(Reg(0) & 128) && !(cut & CTR_VOXEL_CUT_OVERLAY)) ComposeVoxelOverlay();
     C2D_Flush();
     C3D_SetScissor(GPU_SCISSOR_DISABLE, 0, 0, 0, 0);
     GpuSplit();
