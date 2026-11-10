@@ -25,6 +25,11 @@ clones pret/pokeemerald at the commit pinned in `upstream.lock` into
 decomp tools and the 3DSX there (`--jobs N`). Re-running it refreshes the
 port files without touching the upstream checkout unless `--clean` is given.
 
+For the experimental Ruby/Sapphire **source-only** setup, see
+[RUBY_SAPPHIRE.md](RUBY_SAPPHIRE.md). Emerald remains the priority for active
+development and testing; this optional path is for contributors specifically
+interested in exploring Ruby/Sapphire.
+
 ## Building
 
 From `build/upstream/3ds_port` (devkitPro's shell on Windows, or `build.ps1`):

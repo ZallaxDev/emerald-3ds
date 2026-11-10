@@ -2,6 +2,15 @@
 
 Thanks for your interest. A few rules keep this repository publishable.
 
+## Project focus
+
+Emerald remains the priority. Contributors are encouraged to help develop,
+test and improve the existing Emerald port first. The experimental
+[Ruby/Sapphire source setup](docs/RUBY_SAPPHIRE.md) opens a starting point for
+people specifically interested in that work; it does not promise playable
+support or a release date. Please keep Ruby/Sapphire exploration in separate,
+focused contributions linked to issue #247.
+
 ## Branches and pull requests
 
 [Guía rápida en español](#guía-rápida-en-español).

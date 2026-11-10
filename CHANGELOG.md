@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Development: optional, pinned Ruby/Sapphire source-only checkouts via
+  `bootstrap.py --game ruby|sapphire`, isolated from Emerald's port and patches.
+  Emerald remains the priority; no playable support is added (#247).
+  By @mkrieger95.
+
 - Voxel: trainers buried in the ash or sand and the unseen Kecleon on Route
   120's bridge stay out of sight until they appear, as in 2D (issue #237). By
   @Johannes-Sch.

@@ -4,6 +4,8 @@
     python tools/bootstrap.py                 # -> build/upstream
     python tools/bootstrap.py --make -j8      # and build the 3DSX there
     python tools/bootstrap.py --clean         # start again from the pinned commit
+    python tools/bootstrap.py --game ruby     # experimental source only, no 3DS build
+    python tools/bootstrap.py --game sapphire # experimental source only, no 3DS build
     python tools/bootstrap.py --make --spanish-rom esmeralda.gba   # Spanish (BPES) build
     python tools/bootstrap.py --make --french-rom emeraude.gba     # French (BPEF) build
     python tools/bootstrap.py --make --italian-rom smeraldo.gba    # Italian (BPEI) build
@@ -41,6 +43,7 @@ import subprocess
 import sys
 import os
 import tomllib
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -82,9 +85,46 @@ def fetch(tree: Path, repo: str, commit: str) -> None:
     run(["git", "checkout", "-q", "--force", "--detach", commit], cwd=tree)
 
 
+def prepare_pokeruby(tree: Path, repo: str, commit: str, game: str) -> None:
+    """Prepare an isolated source checkout without resetting contributor work."""
+    emerald = (ROOT / "build" / "upstream").resolve()
+    if tree == ROOT.resolve() or tree in ROOT.resolve().parents or tree == emerald or emerald in tree.parents:
+        raise ValueError("Choose a separate Ruby/Sapphire directory, outside the Emerald checkout.")
+    marker = tree / ".git" / "emerald3ds-source-game"
+    if tree.exists():
+        if not marker.is_file() or marker.read_text().strip() != game:
+            raise ValueError("Destination is not this game's source-only checkout; choose a new directory.")
+
+        def git(*args):
+            return subprocess.check_output(["git", *args], cwd=tree, text=True).strip()
+
+        if git("remote", "get-url", "origin") != repo or git("rev-parse", "HEAD") != commit:
+            raise ValueError("Checkout differs from the pinned upstream; preserve it and choose a new directory.")
+        if git("status", "--porcelain", "--untracked-files=all"):
+            raise ValueError("Checkout contains local changes; preserve them and choose a new directory.")
+    else:
+        tree.parent.mkdir(parents=True, exist_ok=True)
+        # A failed download must not leave a half-prepared destination.
+        with tempfile.TemporaryDirectory(prefix=".pokeruby-source-", dir=tree.parent) as temporary:
+            staged = Path(temporary) / "source"
+            run(["git", "init", "-q", staged])
+            run(["git", "remote", "add", "origin", repo], cwd=staged)
+            run(["git", "fetch", "-q", "--depth", "1", "origin", commit], cwd=staged)
+            run(["git", "checkout", "-q", "--detach", commit], cwd=staged)
+            (staged / ".git" / "emerald3ds-source-game").write_text(game + "\n")
+            staged.rename(tree)
+    print("bootstrap: experimental %s source ready at %s" % (game, tree))
+    print("Emerald remains the priority for contributions. This source-only path is for "
+          "contributors specifically interested in exploring Ruby/Sapphire.")
+    print("No 3DS patches, port files, recipes or executable were prepared. "
+          "Ruby/Sapphire are not yet playable; see docs/RUBY_SAPPHIRE.md.")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--dir", type=Path, default=ROOT / "build" / "upstream")
+    ap.add_argument("--game", choices=["emerald", "ruby", "sapphire"], default="emerald",
+                    help="Emerald by default; Ruby/Sapphire prepare experimental source only")
+    ap.add_argument("--dir", type=Path, help="destination (default: build/upstream, or build/upstream-<game>)")
     ap.add_argument("--clean", action="store_true", help="reset the tree to the pinned commit first")
     ap.add_argument("--spanish-rom", type=Path, help="stage the Spanish data from a clean BPES ROM")
     ap.add_argument("--french-rom", type=Path, help="stage the French data from a clean BPEF ROM")
@@ -97,14 +137,29 @@ def main() -> int:
     ap.add_argument("-j", "--jobs", type=int, default=4)
     ap.add_argument("--python", default=sys.executable, help="Python the build calls (PYTHON=)")
     args = ap.parse_args()
+    if args.game != "emerald" and (args.make or args.clean or args.port_lang != "en"
+                                    or args.spanish_rom or args.french_rom or args.italian_rom
+                                    or args.german_rom or args.japanese_rom):
+        ap.error("Ruby/Sapphire are source-only: --make, --clean and localization options are unavailable.")
     if args.port_lang == "pt_br" and (args.spanish_rom or args.french_rom or args.italian_rom
                                       or args.german_rom or args.japanese_rom):
         ap.error("--port-lang pt_br goes over the English game, not the Spanish, French, Italian, "
                  "German or Japanese one")
 
     lock = tomllib.loads((ROOT / "upstream.lock").read_text(encoding="utf-8"))
+    destination = "upstream" if args.game == "emerald" else "upstream-" + args.game
+    tree = (args.dir or ROOT / "build" / destination).resolve()
+    if any((parent / ".git" / "emerald3ds-source-game").is_file() for parent in tree.parents):
+        ap.error("Choose a destination outside the existing Ruby/Sapphire source checkout.")
+    if args.game != "emerald":
+        try:
+            prepare_pokeruby(tree, lock["pokeruby"]["repository"], lock["pokeruby"]["commit"], args.game)
+        except ValueError as exc:
+            ap.error(str(exc))
+        return 0
+    if (tree / ".git" / "emerald3ds-source-game").is_file():
+        ap.error("This is a Ruby/Sapphire source-only checkout; choose a separate Emerald directory.")
     repo, commit = lock["pokeemerald"]["repository"], lock["pokeemerald"]["commit"]
-    tree = args.dir.resolve()
     previous_locale = (tree / ".emerald3ds-locale").exists()
     previous_name = (tree / ".emerald3ds-locale").read_text(encoding="utf-8").strip() if previous_locale else ""
     locale = None
