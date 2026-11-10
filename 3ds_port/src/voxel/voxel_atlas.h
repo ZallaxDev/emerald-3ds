@@ -80,6 +80,12 @@ typedef struct VoxelAtlasMap
 {
     uint16_t slotOf[VOXEL_METATILE_IDS];
     uint8_t tileMask[VOXEL_ATLAS_PAGES][128]; /* source tiles referenced per page */
+    /* The mean colour of each id's drawing, RGBA5551 as the texels are, the
+     * alpha bit set once it is known (0: not composed): what a square of the
+     * view that has neither mesh nor draft yet is filled with (ctr_voxel.c,
+     * FillHoles), read off the composition for nothing. The still frame of
+     * an animated id; the animation pass does not move it. */
+    uint16_t mean[VOXEL_METATILE_IDS];
     /* Slots spanned: one past the furthest given out. With the pair's plan
      * (below) some of them may be left empty, kept for ids not in view. */
     unsigned used;

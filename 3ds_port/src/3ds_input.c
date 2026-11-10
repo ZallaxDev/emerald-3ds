@@ -9,6 +9,13 @@ void CtrInput_Clear(void)
     memset(&sInput, 0, sizeof(sInput));
 }
 
+static uint16_t sInjected;
+
+void CtrInput_Inject(uint16_t buttons)
+{
+    sInjected |= buttons;
+}
+
 void CtrInput_Scan(void)
 {
     static const uint32_t keys[] =
@@ -29,6 +36,8 @@ void CtrInput_Scan(void)
     for (unsigned i = 0; i < sizeof(keys) / sizeof(keys[0]); ++i)
         if (raw & keys[i])
             sample.buttons |= 1u << i;
+    sample.buttons |= sInjected;
+    sInjected = 0;
     circlePosition circle;
     hidCircleRead(&circle);
     sample.circleX = circle.dx;

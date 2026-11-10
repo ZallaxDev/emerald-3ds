@@ -177,7 +177,7 @@ static void VoxelMesh_DraftCell(VoxelBuilder *b, const VoxelMapInstance *inst, i
         source += function(voxel, signature)
     # The linear table RequestWait replaced, for the equivalence run.
     source += r'''
-static struct { int group, map, cx, cy; bool border, used; uint32_t seen, progress, noRoomUntil; } sRequestWait[VOXEL_REQUESTS_MAX];
+static struct { int group, map, cx, cy; bool border, used; uint32_t seen, progress, noRoomUntil; uint32_t fill, fillEpoch, fillExtension; } sRequestWait[VOXEL_REQUESTS_MAX];
 static struct { int group, map, cx, cy; bool border, used; uint32_t seen, progress; } sOld[VOXEL_REQUESTS_MAX];
 static uint8_t sWaitHead[128], sWaitNext[VOXEL_REQUESTS_MAX];
 '''
