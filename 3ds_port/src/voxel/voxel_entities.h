@@ -54,6 +54,19 @@
 void VoxelEntities_Reset(void);
 
 /*
+ * The world the cards stand in changed in a way the cards cannot see for
+ * themselves: the placements of the buildings (a script's setmetatile, a
+ * building loaded or dropped), the lighting reset, a new sun or shadow
+ * quality. The answers the slots kept about their ground, push and light are
+ * then asked again (voxel_entities.c, the placement memo). The map instances,
+ * the map version, the sun and the shadow quality are also compared there
+ * every update; this is for the rest.
+ */
+void VoxelEntities_WorldChanged(void);
+/* The cards' memo forced on (1) or off (0), or left to settings.txt (-1). */
+void VoxelEntities_SetMemo(int on);
+
+/*
  * The player's world position with sub-tile interpolation applied, which is
  * what the camera has to follow: VoxelWorld_GetPlayerWorldCoords reports whole
  * tiles, and a follow camera fed a target that jumps a tile at a time lurches

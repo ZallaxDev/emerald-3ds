@@ -3,6 +3,7 @@
  */
 
 /* Before global.h, which redefines abs() as a macro over stdlib's prototype. */
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -19,6 +20,8 @@
 #include "gba/io_reg.h"
 #include "port_platform.h"
 #include "3ds_log.h"
+#include "3ds_platform.h"
+#include "3ds_map_events.h"
 #include "port_prof.h"
 
 #include "3ds_video.h"
@@ -98,8 +101,133 @@ static bool sDoorStale = true;
 
 int VoxelEntities_PlayerVertexFirst(void) { return sPlayerVertexFirst; }
 
+/*
+ * What a card's place in the world costs to find - the ground's height and
+ * depth under it, the push off a slope or a model's front, the light it
+ * stands in, a bridge's deck - is a pure function of where it stands and of
+ * the world, and the world rarely changes: an object that stands still asked
+ * the same questions of it every frame. Each slot keeps its last answers with
+ * the exact inputs they were found for (floats by their bits) and the world's
+ * epoch; the same inputs in the same epoch give the same answers, which are
+ * handed back without a lookup. A walking object's inputs change and it finds
+ * them as before.
+ *
+ * The epoch moves whenever an answer could: the map instances (a crossing, a
+ * lift), the map's version (3ds_map_events.c: a script's setmetatile, which is
+ * what switches a building's placement), the sun and the shadow quality, all
+ * seen here, and whatever ctr_voxel.c announces with VoxelEntities_WorldChanged
+ * at the points it resets the lighting and the building front cache.
+ * settings "voxel_card_memo=0" turns the memo off, and a build with
+ * CTR_VOXEL_CARD_AUDIT finds every answer again on each hit and logs one that
+ * differs.
+ */
+static uint32_t sMemoEpoch = 1, sWorldHook;
+static bool sMemoOn = true;
+/* The memo on or off whatever the setting (ctr_voxel.c's A/B round); -1 by
+ * the setting. */
+static int sMemoForced = -1;
+
+void VoxelEntities_SetMemo(int on)
+{
+    sMemoForced = on;
+}
+
+typedef struct
+{
+    uint32_t hook, mapVersion;
+    int32_t quality;
+    uint32_t sun[4];
+    unsigned count;
+    uint32_t instance[MAX_VOXEL_MAP_INSTANCES][11];
+} WorldPrint;
+
+/* Static, not automatic: the print is a kilobyte of stack otherwise. */
+static WorldPrint sPrintNow, sPrintThen;
+
+void VoxelEntities_WorldChanged(void)
+{
+    ++sWorldHook;
+}
+
+static uint32_t FloatBits(float value)
+{
+    uint32_t bits;
+
+    memcpy(&bits, &value, sizeof(bits));
+    return bits;
+}
+
+/* Moves the epoch if anything the memo's answers read has changed since the
+ * last update. */
+static void MemoWorldCheck(void)
+{
+    WorldPrint *now = &sPrintNow;
+    unsigned count = VoxelWorld_InstanceCount();
+    size_t used;
+
+    if (count > MAX_VOXEL_MAP_INSTANCES)
+        count = MAX_VOXEL_MAP_INSTANCES;
+    now->hook = sWorldHook;
+    now->mapVersion = CtrMap_Version();
+#if CTR_VOXEL_LIGHTING
+    now->quality = VoxelLighting_Quality();
+    now->sun[0] = FloatBits(gVoxelSun.dx);
+    now->sun[1] = FloatBits(gVoxelSun.dz);
+    now->sun[2] = FloatBits(gVoxelSun.strength);
+    now->sun[3] = gVoxelSun.key;
+#else
+    now->quality = 0;
+    memset(now->sun, 0, sizeof(now->sun));
+#endif
+    now->count = count;
+    for (unsigned i = 0; i < count; ++i)
+    {
+        const VoxelMapInstance *inst = VoxelWorld_Instance(i);
+        uint32_t *row = now->instance[i];
+
+        row[0] = (uint32_t)inst->mapGroup;
+        row[1] = (uint32_t)inst->mapNum;
+        row[2] = (uint32_t)inst->originX;
+        row[3] = (uint32_t)inst->originY;
+        row[4] = (uint32_t)inst->width;
+        row[5] = (uint32_t)inst->height;
+        row[6] = (uint32_t)(uintptr_t)inst->layout;
+        row[7] = (uint32_t)(uintptr_t)inst->primaryTileset;
+        row[8] = (uint32_t)(uintptr_t)inst->secondaryTileset;
+        row[9] = (uint32_t)inst->layoutId | (inst->indoor ? 0x80000000u : 0u);
+        row[10] = (uint32_t)inst->lift;
+    }
+    used = offsetof(WorldPrint, instance) + count * sizeof(now->instance[0]);
+    if (memcmp(now, &sPrintThen, used) != 0)
+    {
+        ++sMemoEpoch;
+        if (sMemoEpoch == 0)
+            sMemoEpoch = 1;
+        memcpy(&sPrintThen, now, used);
+    }
+}
+
+#ifdef CTR_VOXEL_CARD_AUDIT
+static unsigned sAuditHits, sAuditStale;
+
+/* A memo hit whose answers differ from the ones found again: a dependency
+ * the key or the epoch does not have. */
+static void AuditCompare(const char *what, unsigned slot, const float *kept, const float *fresh,
+                         unsigned count)
+{
+    ++sAuditHits;
+    if (memcmp(kept, fresh, count * sizeof(float)) == 0)
+        return;
+    if (sAuditStale++ < 8)
+        CtrLog_Write(CTR_LOG_VIDEO, "VOXEL card memo stale: %s slot %u first %08x/%08x (%u of %u hits)",
+                     what, slot, (unsigned)FloatBits(kept[0]), (unsigned)FloatBits(fresh[0]),
+                     sAuditStale, sAuditHits);
+}
+#endif
+
 void VoxelEntities_Reset(void)
 {
+    ++sWorldHook;
     sDoorStale = true;
     for (unsigned i = 0; i < VOXEL_SPRITE_SLOTS; ++i)
     {
@@ -805,6 +933,183 @@ static float SpriteScale(const struct Sprite *sprite)
 
 /* How far the cards lie down this update (VoxelCamera.lay), 0 upright. */
 static float sLay;
+/* What a card's tilt makes of its height, once for each value of sLay
+ * (VoxelEntities_Emit): cos and sin of the angle it lies back by, and the
+ * squat that keeps it the sprite's size to the swoop's camera. */
+static float sTiltCos, sTiltSin, sTiltSquat;
+
+/* The ground under a point: its height and, as far south as it is drawn, its
+ * depth. The answers of the lookups, which the slot keeps (see the memo's
+ * comment above VoxelEntities_Reset). */
+typedef struct
+{
+    uint32_t epoch, cx, cz;
+    float lift, shift;
+} PointMemo;
+static PointMemo sPointMemo[VOXEL_SPRITE_SLOTS];
+
+static void PointCompute(float cx, float cz, float *lift, float *shift)
+{
+    *lift = VoxelRelief_LiftAt(cx, cz);
+    *shift = VoxelRelief_ShiftAt(cx, cz);
+}
+
+static void PointAt(unsigned slot, float cx, float cz, float *lift, float *shift)
+{
+    PointMemo *memo = &sPointMemo[slot];
+    uint32_t bx = FloatBits(cx), bz = FloatBits(cz);
+
+    if (sMemoOn && memo->epoch == sMemoEpoch && memo->cx == bx && memo->cz == bz)
+    {
+        *lift = memo->lift;
+        *shift = memo->shift;
+#ifdef CTR_VOXEL_CARD_AUDIT
+        {
+            float kept[2] = { memo->lift, memo->shift }, fresh[2];
+
+            PointCompute(cx, cz, &fresh[0], &fresh[1]);
+            AuditCompare("point", slot, kept, fresh, 2);
+        }
+#endif
+        return;
+    }
+    PointCompute(cx, cz, lift, shift);
+    if (sMemoOn)
+    {
+        memo->epoch = sMemoEpoch;
+        memo->cx = bx;
+        memo->cz = bz;
+        memo->lift = *lift;
+        memo->shift = *shift;
+    }
+}
+
+/* How far the card is moved towards the camera, off a slope and off a
+ * model's front: the larger of the two. */
+typedef struct
+{
+    uint32_t epoch, cx, cz, halfW, height;
+    float push;
+} PushMemo;
+static PushMemo sPushMemo[VOXEL_SPRITE_SLOTS];
+
+static float PushCompute(float cx, float cz, float halfW, float height)
+{
+    float push = CardPush(cx, cz, halfW, height);
+    float model = ModelPush(cx, cz, halfW);
+
+    return model > push ? model : push;
+}
+
+static float PushAt(unsigned slot, float cx, float cz, float halfW, float height)
+{
+    PushMemo *memo = &sPushMemo[slot];
+    uint32_t bx = FloatBits(cx), bz = FloatBits(cz), bw = FloatBits(halfW), bh = FloatBits(height);
+    float push;
+
+    if (sMemoOn && memo->epoch == sMemoEpoch && memo->cx == bx && memo->cz == bz
+     && memo->halfW == bw && memo->height == bh)
+    {
+#ifdef CTR_VOXEL_CARD_AUDIT
+        {
+            float fresh = PushCompute(cx, cz, halfW, height);
+
+            AuditCompare("push", slot, &memo->push, &fresh, 1);
+        }
+#endif
+        return memo->push;
+    }
+    push = PushCompute(cx, cz, halfW, height);
+    if (sMemoOn)
+    {
+        memo->epoch = sMemoEpoch;
+        memo->cx = bx;
+        memo->cz = bz;
+        memo->halfW = bw;
+        memo->height = bh;
+        memo->push = push;
+    }
+    return push;
+}
+
+/* What an object event's place gives its card: the bridge's deck under it
+ * and, in the light, the shade of where it stands. */
+typedef struct
+{
+    uint32_t epoch, worldX, worldZ;
+    uint8_t elevation;
+    bool outdoor;
+    float deck, shade;
+} PlaceMemo;
+static PlaceMemo sPlaceMemo[OBJECT_EVENTS_COUNT];
+
+static void PlaceCompute(unsigned slot, const struct ObjectEvent *obj, float worldX, float worldZ,
+                         float *deck, bool *outdoor, float *shade)
+{
+    *deck = ObjectDeck(obj, worldX, worldZ);
+    *outdoor = false;
+    *shade = 1.0f;
+#if CTR_VOXEL_LIGHTING
+    {
+        const VoxelMapInstance *inst = VoxelWorld_GetInstanceAt((int)floorf(worldX + 0.5f),
+                                                               (int)floorf(worldZ + 0.5f));
+        *outdoor = inst != NULL && !inst->indoor;
+        /* Where the card stands (EmitBillboard): on its cell's relief and
+         * its map's base, and up on a bridge's deck, the light over the
+         * deck, not under it. At 0.75 over the world's zero, a sprite on
+         * a raised map or a mountain was sampled inside the rock and
+         * drawn in its shadow. One sample, as ever: this runs every
+         * frame. */
+        if (*outdoor)
+        {
+            float cx = worldX + 0.5f, cz = worldZ + 0.5f, lift, shift;
+
+            PointAt(slot, cx, cz, &lift, &shift);
+            *shade = VoxelLighting_SampleAlone(cx, lift + 0.75f + *deck, cz + shift + *deck);
+        }
+    }
+#else
+    (void)slot;
+#endif
+}
+
+static void PlaceAt(unsigned slot, const struct ObjectEvent *obj, float worldX, float worldZ,
+                    float *deck, bool *outdoor, float *shade)
+{
+    PlaceMemo *memo = &sPlaceMemo[slot];
+    uint32_t bx = FloatBits(worldX), bz = FloatBits(worldZ);
+    uint8_t elevation = (uint8_t)obj->currentElevation;
+
+    if (sMemoOn && memo->epoch == sMemoEpoch && memo->worldX == bx && memo->worldZ == bz
+     && memo->elevation == elevation)
+    {
+        *deck = memo->deck;
+        *outdoor = memo->outdoor;
+        *shade = memo->shade;
+#ifdef CTR_VOXEL_CARD_AUDIT
+        {
+            float kept[3] = { memo->deck, memo->outdoor ? 1.0f : 0.0f, memo->shade }, fresh[3];
+            bool o;
+
+            PlaceCompute(slot, obj, worldX, worldZ, &fresh[0], &o, &fresh[2]);
+            fresh[1] = o ? 1.0f : 0.0f;
+            AuditCompare("place", slot, kept, fresh, 3);
+        }
+#endif
+        return;
+    }
+    PlaceCompute(slot, obj, worldX, worldZ, deck, outdoor, shade);
+    if (sMemoOn)
+    {
+        memo->epoch = sMemoEpoch;
+        memo->worldX = bx;
+        memo->worldZ = bz;
+        memo->elevation = elevation;
+        memo->deck = *deck;
+        memo->outdoor = *outdoor;
+        memo->shade = *shade;
+    }
+}
 
 static void EmitBillboard(VoxelBuilder *builder, const VoxelSpriteSlot *slot, unsigned index,
                           float cx, float cz, float offX, float offZ, float rise, float deck,
@@ -822,15 +1127,15 @@ static void EmitBillboard(VoxelBuilder *builder, const VoxelSpriteSlot *slot, un
     float height = rows / VOXEL_PIXELS_PER_TILE * stretch * scale;
     /* On relief the sprite stands where its cell was lifted to, and rides
      * the lattice between cells, so a flight of stairs is climbed. */
-    float lift = VoxelRelief_LiftAt(cx, cz) + rise + deck;
-    float shift = VoxelRelief_ShiftAt(cx, cz) + deck;
+    float ground, groundShift;
+
+    PointAt(index, cx, cz, &ground, &groundShift);
+    float lift = ground + rise + deck;
+    float shift = groundShift + deck;
     /* Up on a deck nothing of the ground or of a model's front is before
      * it: the deck is under its feet. */
-    float push = deck > 0.0f ? 0.0f : CardPush(cx, cz, halfW, height);
-    float model = deck > 0.0f ? 0.0f : ModelPush(cx, cz, halfW);
+    float push = deck > 0.0f ? 0.0f : PushAt(index, cx, cz, halfW, height);
 
-    if (model > push)
-        push = model;
     /* Towards the camera: the right vector turned a quarter, unit length. */
     float along = push > 0.0f ? push / sqrtf(rightX * rightX + rightZ * rightZ) : 0.0f;
     float px = cx + offX - rightZ * along, pz = cz + offZ + shift + rightX * along;
@@ -838,16 +1143,13 @@ static void EmitBillboard(VoxelBuilder *builder, const VoxelSpriteSlot *slot, un
     lift += push;
     float ax = px - rightX * halfW, az = pz - rightZ * halfW;
     float bx = px + rightX * halfW, bz = pz + rightZ * halfW;
-    /* Tilting back (sLay) to face the swoop's end camera, square on: the
-     * top of the card swings north by the camera's pitch off vertical. */
-    float angle = sLay * (90.0f - VOXEL_SWOOP_PITCH) * (3.14159265358979323846f / 180.0f);
-    /* That camera stretches its picture by 1/sin(pitch) to square the
-     * ground and squashes the world's height to VOXEL_SWOOP_HEIGHT
-     * (ctr_voxel.c): a card facing it comes out cos(pitch) x (height + 1)
-     * of its size, so it is made the inverse of that, the 2D sprite, 1:1. */
-    float pitchRad = VOXEL_SWOOP_PITCH * (3.14159265358979323846f / 180.0f);
-    float squat = 1.0f + sLay * (1.0f / (cosf(pitchRad) * (VOXEL_SWOOP_HEIGHT + 1.0f)) - 1.0f);
-    float topY = height * squat * cosf(angle), topZ = -height * squat * sinf(angle);
+    /* Tilting back (sLay), the top of the card swings north by the camera's
+     * pitch off vertical (sTiltCos, sTiltSin; VoxelEntities_Emit). The swoop's
+     * camera stretches its picture by 1/sin(pitch) to square the ground and
+     * squashes the world's height to VOXEL_SWOOP_HEIGHT (ctr_voxel.c): a card
+     * facing it comes out cos(pitch) x (height + 1) of its size, so it is made
+     * the inverse of that (sTiltSquat), the 2D sprite, 1:1. */
+    float topY = height * sTiltSquat * sTiltCos, topZ = -height * sTiltSquat * sTiltSin;
 
     VoxelBuilder_Quad(builder,
         &(VoxelVertex){ax, lift,        az,        u0, v1, shade},
@@ -1157,6 +1459,61 @@ static void EmitDoor(VoxelBuilder *builder, const VoxelDoor *door)
 #define VOXEL_CAST_SHADOW_LIFT 0.03f    /* over decals (0.02) */
 #define VOXEL_CAST_SHADOW_LIT 0.70f     /* sample at or below: no sun */
 
+/* The ground under the four corners of a cast shadow: heights, then depths
+ * (the slot keeps them with the corners and the deck they were found for). */
+typedef struct
+{
+    uint32_t epoch, key[7];
+    float ground[8];
+} ShadowMemo;
+static ShadowMemo sShadowMemo[OBJECT_EVENTS_COUNT];
+
+static void ShadowGroundCompute(float ax, float az, float bx, float bz, float sx, float sz,
+                                float deck, float ground[8])
+{
+    /* Each corner on the ground under it: at a face's foot the ground under
+     * the shadow's far end is not the ground under the feet. */
+    /* On a deck, on the deck: as high, and as far south (the 45-degree
+     * rule, as the walker). */
+    ground[0] = VoxelRelief_LiftAt(ax, az) + VOXEL_CAST_SHADOW_LIFT + deck;
+    ground[1] = VoxelRelief_LiftAt(bx, bz) + VOXEL_CAST_SHADOW_LIFT + deck;
+    ground[2] = VoxelRelief_LiftAt(bx + sx, bz + sz) + VOXEL_CAST_SHADOW_LIFT + deck;
+    ground[3] = VoxelRelief_LiftAt(ax + sx, az + sz) + VOXEL_CAST_SHADOW_LIFT + deck;
+    ground[4] = VoxelRelief_ShiftAt(ax, az) + deck;
+    ground[5] = VoxelRelief_ShiftAt(bx, bz) + deck;
+    ground[6] = VoxelRelief_ShiftAt(bx + sx, bz + sz) + deck;
+    ground[7] = VoxelRelief_ShiftAt(ax + sx, az + sz) + deck;
+}
+
+static void ShadowGroundAt(unsigned slot, float ax, float az, float bx, float bz, float sx, float sz,
+                           float deck, float ground[8])
+{
+    ShadowMemo *memo = &sShadowMemo[slot];
+    uint32_t key[7] = { FloatBits(ax), FloatBits(az), FloatBits(bx), FloatBits(bz),
+                        FloatBits(sx), FloatBits(sz), FloatBits(deck) };
+
+    if (sMemoOn && memo->epoch == sMemoEpoch && memcmp(memo->key, key, sizeof(key)) == 0)
+    {
+        memcpy(ground, memo->ground, sizeof(memo->ground));
+#ifdef CTR_VOXEL_CARD_AUDIT
+        {
+            float fresh[8];
+
+            ShadowGroundCompute(ax, az, bx, bz, sx, sz, deck, fresh);
+            AuditCompare("shadow", slot, ground, fresh, 8);
+        }
+#endif
+        return;
+    }
+    ShadowGroundCompute(ax, az, bx, bz, sx, sz, deck, ground);
+    if (sMemoOn)
+    {
+        memo->epoch = sMemoEpoch;
+        memcpy(memo->key, key, sizeof(key));
+        memcpy(memo->ground, ground, sizeof(memo->ground));
+    }
+}
+
 static void EmitCastShadow(VoxelBuilder *shadows, const VoxelSpriteSlot *slot, unsigned index,
                            float worldX, float worldZ, float rightX, float rightZ, float stretch,
                            float light, float lift, float deck)
@@ -1180,24 +1537,20 @@ static void EmitCastShadow(VoxelBuilder *shadows, const VoxelSpriteSlot *slot, u
     float ax = cx - rightX * halfW, az = cz - rightZ * halfW;
     float bx = cx + rightX * halfW, bz = cz + rightZ * halfW;
     float sx = VOXEL_SUN_DX * height, sz = VOXEL_SUN_DZ * height;
-    /* Each corner on the ground under it: at a face's foot the ground under
-     * the shadow's far end is not the ground under the feet. */
-    /* On a deck, on the deck: as high, and as far south (the 45-degree
-     * rule, as the walker). */
-    float ya = VoxelRelief_LiftAt(ax, az) + VOXEL_CAST_SHADOW_LIFT + deck;
-    float yb = VoxelRelief_LiftAt(bx, bz) + VOXEL_CAST_SHADOW_LIFT + deck;
-    float yc = VoxelRelief_LiftAt(bx + sx, bz + sz) + VOXEL_CAST_SHADOW_LIFT + deck;
-    float yd = VoxelRelief_LiftAt(ax + sx, az + sz) + VOXEL_CAST_SHADOW_LIFT + deck;
-    float za = VoxelRelief_ShiftAt(ax, az) + deck, zb = VoxelRelief_ShiftAt(bx, bz) + deck;
-    float zc = VoxelRelief_ShiftAt(bx + sx, bz + sz) + deck;
-    float zd = VoxelRelief_ShiftAt(ax + sx, az + sz) + deck;
     float strength = (light - VOXEL_CAST_SHADOW_LIT) / (1.0f - VOXEL_CAST_SHADOW_LIT);
+    float ground[8];
 
+    /* Too much in shade for a sun to cast with: nothing to look the ground
+     * up for. */
     if (strength <= 0.0f)
         return;
     if (strength > 1.0f)
         strength = 1.0f;
     strength *= VOXEL_CAST_SHADOW_ALPHA * gVoxelSun.strength;
+    ShadowGroundAt(index, ax, az, bx, bz, sx, sz, deck, ground);
+    float ya = ground[0], yb = ground[1], yc = ground[2], yd = ground[3];
+    float za = ground[4], zb = ground[5], zc = ground[6], zd = ground[7];
+
     VoxelBuilder_Quad(shadows,
         &(VoxelVertex){ax,      ya, az + za,      u0, v1, strength},
         &(VoxelVertex){bx,      yb, bz + zb,      u1, v1, strength},
@@ -1265,6 +1618,78 @@ static bool IsReflectiveFootprint(float ax, float az, float bx, float bz, float 
     return true;
 }
 
+/* What a reflection finds under its card: the ground's depth and height at
+ * its near edge and how far the water runs under each strip, kept with the
+ * inputs they were found for. */
+typedef struct
+{
+    uint32_t epoch, key[6];
+    float shift, y, lengths[VOXEL_REFLECTION_STRIPS];
+} ReflectionMemo;
+static ReflectionMemo sReflectionMemo[OBJECT_EVENTS_COUNT];
+
+static void ReflectionGroundCompute(float cx, float nearZ, float rightX, float rightZ, float halfW,
+                                    float fullLength, float *shift, float *y, float *lengths)
+{
+    const unsigned strips = VOXEL_REFLECTION_STRIPS;
+
+    *shift = VoxelRelief_ShiftAt(cx, nearZ + 0.5f);
+    *y = VoxelRelief_LiftAt(cx, nearZ + 0.5f) + 0.035f;
+    for (unsigned s = 0; s < strips; ++s)
+    {
+        /* across the card: t = 0 at its left edge (u0), 1 at its right (u1) */
+        float a = halfW * (2.0f * s / strips - 1.0f), b = halfW * (2.0f * (s + 1) / strips - 1.0f);
+        /* (the water under it by its cells, not where they are drawn) */
+        float ax = cx + rightX * a, az = nearZ + rightZ * a;
+        float bx = cx + rightX * b, bz = nearZ + rightZ * b;
+
+        lengths[s] = 0.0f;
+        for (float next = 0.25f; next <= fullLength + 0.0001f; next += 0.25f)
+        {
+            if (!IsReflectiveFootprint(ax, az, bx, bz, next))
+                break;
+            lengths[s] = next;
+        }
+    }
+}
+
+static void ReflectionGroundAt(unsigned slot, float cx, float nearZ, float rightX, float rightZ,
+                               float halfW, float fullLength, float *shift, float *y, float *lengths)
+{
+    ReflectionMemo *memo = &sReflectionMemo[slot];
+    uint32_t key[6] = { FloatBits(cx), FloatBits(nearZ), FloatBits(rightX), FloatBits(rightZ),
+                        FloatBits(halfW), FloatBits(fullLength) };
+
+    if (sMemoOn && memo->epoch == sMemoEpoch && memcmp(memo->key, key, sizeof(key)) == 0)
+    {
+        *shift = memo->shift;
+        *y = memo->y;
+        memcpy(lengths, memo->lengths, sizeof(memo->lengths));
+#ifdef CTR_VOXEL_CARD_AUDIT
+        {
+            float kept[2 + VOXEL_REFLECTION_STRIPS], fresh[2 + VOXEL_REFLECTION_STRIPS];
+
+            kept[0] = memo->shift;
+            kept[1] = memo->y;
+            memcpy(&kept[2], memo->lengths, sizeof(memo->lengths));
+            ReflectionGroundCompute(cx, nearZ, rightX, rightZ, halfW, fullLength,
+                                    &fresh[0], &fresh[1], &fresh[2]);
+            AuditCompare("reflection", slot, kept, fresh, 2 + VOXEL_REFLECTION_STRIPS);
+        }
+#endif
+        return;
+    }
+    ReflectionGroundCompute(cx, nearZ, rightX, rightZ, halfW, fullLength, shift, y, lengths);
+    if (sMemoOn)
+    {
+        memo->epoch = sMemoEpoch;
+        memcpy(memo->key, key, sizeof(key));
+        memo->shift = *shift;
+        memo->y = *y;
+        memcpy(memo->lengths, lengths, sizeof(memo->lengths));
+    }
+}
+
 /* A reflected object's quad. Grow only through cells that the world marks as
  * water or ice; the original ground effect merely says water is nearby. It is
  * cut across the card in VOXEL_REFLECTION_STRIPS strips, each grown over the
@@ -1287,27 +1712,11 @@ static void EmitReflection(VoxelBuilder *reflections, const VoxelSpriteSlot *slo
     float fullLength = cardLength;
     float lengths[VOXEL_REFLECTION_STRIPS];
     float cx = worldX + 0.5f, nearZ = worldZ + 1.0f;
-    float shift = VoxelRelief_ShiftAt(cx, nearZ + 0.5f);
-    float y = VoxelRelief_LiftAt(cx, nearZ + 0.5f) + 0.035f;
+    float shift, y;
     const unsigned strips = VOXEL_REFLECTION_STRIPS;
 
     if (fullLength > 1.75f) fullLength = 1.75f;
-    for (unsigned s = 0; s < strips; ++s)
-    {
-        /* across the card: t = 0 at its left edge (u0), 1 at its right (u1) */
-        float a = halfW * (2.0f * s / strips - 1.0f), b = halfW * (2.0f * (s + 1) / strips - 1.0f);
-        /* (the water under it by its cells, not where they are drawn) */
-        float ax = cx + rightX * a, az = nearZ + rightZ * a;
-        float bx = cx + rightX * b, bz = nearZ + rightZ * b;
-
-        lengths[s] = 0.0f;
-        for (float next = 0.25f; next <= fullLength + 0.0001f; next += 0.25f)
-        {
-            if (!IsReflectiveFootprint(ax, az, bx, bz, next))
-                break;
-            lengths[s] = next;
-        }
-    }
+    ReflectionGroundAt(index, cx, nearZ, rightX, rightZ, halfW, fullLength, &shift, &y, lengths);
     for (unsigned s = 0, e; s < strips; s = e)
     {
         float length = lengths[s];
@@ -1614,19 +2023,57 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
      * characters small, all of it on the height big. Still upright, so it
      * sorts against walls as before. Shadow and reflection are the card's
      * own, so they take the same size. */
-    float yawRad = camera->yaw * (3.14159265358979323846f / 180.0f);
-    float narrow = sqrtf(cosf(camera->pitch * (3.14159265358979323846f / 180.0f)));
-    float stretch;
+    /* The camera's yaw, pitch and lay rarely change: the trigonometry of
+     * them is found again only when one does (compared by bits). */
+    static struct
+    {
+        bool valid;
+        uint32_t yaw, pitch, lay;
+        float rightX, rightZ, towardX, towardZ, stretch, pixel;
+        float tiltCos, tiltSin, tiltSquat;
+    } view;
+    float stretch, rightX, rightZ, towardX, towardZ, pixel;
 
+    sMemoOn = sMemoForced >= 0 ? sMemoForced != 0 : CtrSettings_GetInt("voxel_card_memo", 1) != 0;
+    MemoWorldCheck();
     /* A card tilted to face the swoop's camera is seen square on: nothing
      * to make up (upright at a top-down pose it was a hair wide, seven tall). */
     sLay = camera->lay;
-    narrow = 1.0f + (narrow - 1.0f) * (1.0f - sLay);
-    stretch = 1.0f / narrow;
-    float rightX = cosf(yawRad) * narrow, rightZ = -sinf(yawRad) * narrow;
-    /* Towards the camera, along the ground. */
-    float towardX = sinf(yawRad), towardZ = cosf(yawRad);
-    float pixel = stretch / VOXEL_PIXELS_PER_TILE;
+    if (!view.valid || view.yaw != FloatBits(camera->yaw) || view.pitch != FloatBits(camera->pitch)
+     || view.lay != FloatBits(camera->lay))
+    {
+        float yawRad = camera->yaw * (3.14159265358979323846f / 180.0f);
+        float narrow = sqrtf(cosf(camera->pitch * (3.14159265358979323846f / 180.0f)));
+        /* Tilting back to face the swoop's end camera, square on: the top of
+         * the card swings north by the camera's pitch off vertical. */
+        float angle = sLay * (90.0f - VOXEL_SWOOP_PITCH) * (3.14159265358979323846f / 180.0f);
+        float pitchRad = VOXEL_SWOOP_PITCH * (3.14159265358979323846f / 180.0f);
+
+        narrow = 1.0f + (narrow - 1.0f) * (1.0f - sLay);
+        view.stretch = 1.0f / narrow;
+        view.rightX = cosf(yawRad) * narrow;
+        view.rightZ = -sinf(yawRad) * narrow;
+        /* Towards the camera, along the ground. */
+        view.towardX = sinf(yawRad);
+        view.towardZ = cosf(yawRad);
+        view.pixel = view.stretch / VOXEL_PIXELS_PER_TILE;
+        view.tiltCos = cosf(angle);
+        view.tiltSin = sinf(angle);
+        view.tiltSquat = 1.0f + sLay * (1.0f / (cosf(pitchRad) * (VOXEL_SWOOP_HEIGHT + 1.0f)) - 1.0f);
+        view.yaw = FloatBits(camera->yaw);
+        view.pitch = FloatBits(camera->pitch);
+        view.lay = FloatBits(camera->lay);
+        view.valid = true;
+    }
+    stretch = view.stretch;
+    rightX = view.rightX;
+    rightZ = view.rightZ;
+    towardX = view.towardX;
+    towardZ = view.towardZ;
+    pixel = view.pixel;
+    sTiltCos = view.tiltCos;
+    sTiltSin = view.tiltSin;
+    sTiltSquat = view.tiltSquat;
     /* Static, not automatic: this runs in the VBlank handler. */
     static VoxelObjectCard objects[OBJECT_EVENTS_COUNT];
     static VoxelEffectCard effects[VOXEL_EFFECTS_MAX];
@@ -1728,27 +2175,9 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
                 sSlots[i].footPadExact = exact;
             }
         }
-        card->deck = ObjectDeck(obj, worldX, worldZ);
-#if CTR_VOXEL_LIGHTING
-        {
-            const VoxelMapInstance *inst = VoxelWorld_GetInstanceAt((int)floorf(worldX + 0.5f),
-                                                                   (int)floorf(worldZ + 0.5f));
-            outdoor = inst != NULL && !inst->indoor;
-            /* Where the card stands (EmitBillboard): on its cell's relief and
-             * its map's base, and up on a bridge's deck, the light over the
-             * deck, not under it. At 0.75 over the world's zero, a sprite on
-             * a raised map or a mountain was sampled inside the rock and
-             * drawn in its shadow. One sample, as ever: this runs every
-             * frame. */
-            if (outdoor)
-            {
-                float cx = worldX + 0.5f, cz = worldZ + 0.5f;
-
-                shade = VoxelLighting_SampleAlone(cx, VoxelRelief_LiftAt(cx, cz) + 0.75f + card->deck,
-                                             cz + VoxelRelief_ShiftAt(cx, cz) + card->deck);
-            }
-        }
-#endif
+        /* The deck under it and, outdoors, the light where it stands (the
+         * place memo's comment, PlaceCompute). */
+        PlaceAt(i, obj, worldX, worldZ, &card->deck, &outdoor, &shade);
         card->drawn = true;
         card->worldX = worldX;
         card->worldZ = worldZ;

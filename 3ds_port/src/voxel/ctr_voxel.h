@@ -44,6 +44,28 @@ void CtrVoxel_SetSwoop(float t, float height, bool cards, bool shadows);
 /* How far the swoop has taken the world's light to neutral, 0..1 (the
  * grade, haze and bloom gone with it): 3ds_video.c eases its blur the same way. */
 float CtrVoxel_SwoopNeutral(void);
+/* The screen's tilt-shift bands (`topRows` rows from the top, `bottomRows`
+ * from the bottom, the picture's columns 1 to 398) drawn in one pass into the
+ * current screen target, from the logical surface, at blur `strength` 0..1;
+ * what the compositor's four blended taps over the picture come to. False,
+ * with nothing drawn, if it cannot (the caller composes the old way).
+ * CtrVoxel_FusedBlurOn: the settings switch voxel_fused_blur (default 0). */
+bool CtrVoxel_DioramaFused(C3D_Tex *surface, float strength, int topRows, int bottomRows);
+bool CtrVoxel_FusedBlurOn(void);
+/* settings.txt voxel_cut=N, a measure for the console: the parts of the
+ * picture left out of this frame, to tell what each costs the GPU. Zero
+ * unless the setting is there. */
+enum
+{
+    CTR_VOXEL_CUT_GROUND = 1,     /* the terrain's pages */
+    CTR_VOXEL_CUT_TREES = 2,
+    CTR_VOXEL_CUT_BUILDINGS = 4,  /* and the static models */
+    CTR_VOXEL_CUT_HALF = 8,       /* the world scissored to the picture's left half */
+    CTR_VOXEL_CUT_DIORAMA = 16,
+    CTR_VOXEL_CUT_BLOOM = 32,
+    CTR_VOXEL_CUT_OVERLAY = 64,   /* the game's layers over the world */
+};
+unsigned CtrVoxel_MeasureCut(void);
 /* The GBA brightness effect (BLDY) of the frame about to be drawn, as the
  * compositor reads it: on the backgrounds and on the sprites, towards white
  * or black. The palette fade is read by the voxel module itself. */

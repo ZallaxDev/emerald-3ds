@@ -322,6 +322,16 @@ VIDEO_PIECE void FrameDump(void)
                      (unsigned long)sStats.frames, (unsigned long)CtrPlatform_FrameCount(), (unsigned)sStats.route,
                      (unsigned)sStats.mode, sFieldMode, (unsigned)sSwoop.phase, sSwoop.frame);
     if (dumping && dumped++ < 1600)
+#elif defined(CTR_DUMP_GAME_FRAMES)
+    /* By the game's frame, not the picture's count: two runs whose pacing
+     * hid different pictures still dump, and pair, the same moments. Every
+     * CTR_DUMP_GAME_FRAMES frames of the game, up to 60 pictures. */
+    static unsigned dumped;
+    static uint32_t lastGame;
+    uint32_t game = (uint32_t)CtrPlatform_FrameCount();
+    bool due = game != lastGame && game % CTR_DUMP_GAME_FRAMES == 0;
+    lastGame = game;
+    if (due && dumped++ < 60)
 #else
     if (sStats.frames >= 150 && (sStats.frames - 150) % 150 == 0 && sStats.frames <= 6000)
 #endif
@@ -335,7 +345,7 @@ VIDEO_PIECE void FrameDump(void)
 
 #if defined(CTR_DUMP_BATTLE) && !defined(CTR_DUMP_OBJWIN)
             frame -= battleStart;
-#elif defined(CTR_DUMP_SWOOP)
+#elif defined(CTR_DUMP_SWOOP) || defined(CTR_DUMP_GAME_FRAMES)
             frame = (uint32_t)CtrPlatform_FrameCount();
 #endif
             fwrite(&frame, 4, 1, dump);

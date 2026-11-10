@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Voxel on Old 3DS: the world's GPU frame is shorter, measured on the console
+  on Route 112 - from 14.8 to 10.0 ms with one picture and from 26.1 to
+  17.6 ms with the 3D slider up, where far fewer refreshes now show the same
+  picture twice (57% to 11%). The world is drawn with a shorter vertex program
+  where the sun's shadow map is not in use, the ground is sent by the quarters
+  of each chunk that are in the picture (three quarters of its vertices were
+  off screen), and the characters' places are not worked out again while the
+  world holds still.
 - Voxel: trainers buried in the ash or sand and the unseen Kecleon on Route
   120's bridge stay out of sight until they appear, as in 2D (issue #237). By
   @Johannes-Sch.

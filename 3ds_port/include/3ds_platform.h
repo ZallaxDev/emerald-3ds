@@ -126,6 +126,8 @@ void CtrScenario_Init(void);
 void CtrScenario_Close(void);
 bool CtrScenario_Active(void);
 bool CtrScenario_Playing(void);
+/* settings.txt gpu_ops: the GPU's time by kind of work, logged now (3ds_video.c) */
+void CtrVideo_GpuOpsFlush(void);
 /* The frame's input: recorded, or replaced by the recording. */
 void CtrScenario_Input(CtrInputSample *sample);
 /* The game clock while a scenario runs, in seconds since 1970. */
