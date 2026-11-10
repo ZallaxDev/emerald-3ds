@@ -175,7 +175,13 @@ thread cost 50–500 ms on hardware.
 original language. The validator's `ROM_PROFILES` fingerprint mapping and
 web release metadata use these records. `KNOWN_CODES` also names unsupported
 games for error messages; a recognised header alone never enables a build.
-Web payload publication rejects an unregistered recipe fingerprint.
+`UNSUPPORTED_PROFILES` separately records the verified English Ruby/Sapphire
+revisions 0, 1 and 2 from pret/pokeruby's checksum files at
+[`5784633`](https://github.com/pret/pokeruby/tree/5784633ce4ef7ade1a7f2d2d0c288e3d5e6cdd7f).
+These fingerprints produce a "recognised but not yet supported" error for ROM
+input and release recipes. They never enter the build allowlist, even if passed
+explicitly to the validator. Other regions remain header-only recognition.
+Web payload publication also rejects an unregistered recipe fingerprint.
 Translations can keep one input profile while choosing another output language.
 
 This is a preparatory step for [Ruby/Sapphire support (issue #247)](https://github.com/ZallaxDev/emerald-3ds/issues/247).

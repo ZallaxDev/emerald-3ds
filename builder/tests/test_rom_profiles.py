@@ -1,6 +1,12 @@
 """ROM profile and release metadata checks; synthetic bytes only."""
 
+import hashlib
+import io
 import sys
+import tempfile
+import zipfile
+from dataclasses import replace
+from unittest.mock import patch
 import unittest
 from pathlib import Path
 
@@ -10,6 +16,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import build_web_payload
 from emerald3ds_builder import rom
+from emerald3ds_builder.build import Payload, build_pack
 from emerald3ds_builder.errors import BuilderError
 from emerald3ds_builder.recipe import Recipe
 
@@ -44,6 +51,57 @@ class RomProfileTests(unittest.TestCase):
                 files.update(self.files("00" * 20, folder))
                 with self.assertRaisesRegex(ValueError, "No supported ROM profile"):
                     build_web_payload.make_manifest(files, "1.0.0", "v1.0.0")
+
+    def test_known_unsupported_recipes_cannot_be_published(self):
+        for profile in rom.UNSUPPORTED_PROFILES:
+            self.assertNotIn(profile.sha1, rom.ROM_PROFILES.values())
+            for folder in (None, "es"):
+                with self.subTest(rom=profile.name, folder=folder):
+                    files = self.files(rom.SUPPORTED_SHA1) if folder else {}
+                    files.update(self.files(profile.sha1, folder))
+                    with self.assertRaisesRegex(ValueError, "recognised but not yet supported"):
+                        build_web_payload.make_manifest(files, "1.0.0", "v1.0.0")
+
+    def fixture(self, profile):
+        # Substitute fingerprints, never real game data or the validation logic.
+        data = bytearray(b"\xff" * rom.ROM_SIZE)
+        data[0xAC:0xB0] = profile.code.encode("ascii")
+        return bytes(data), replace(profile, sha1=hashlib.sha1(data).hexdigest())
+
+    def test_known_unsupported_roms_are_blocked_even_when_explicitly_allowed(self):
+        for profile in rom.UNSUPPORTED_PROFILES:
+            data, fixture = self.fixture(profile)
+            archive = io.BytesIO()
+            with zipfile.ZipFile(archive, "w") as zf:
+                zf.writestr("game.gba", data[:0xC0])
+            with patch.object(rom, "UNSUPPORTED_PROFILES", (fixture,)):
+                for raw, name in ((data, "full.gba"), (data[:0xC0], "trimmed.gba"),
+                                  (archive.getvalue(), "game.zip")):
+                    for allowed in (None, (fixture.sha1,)):
+                        with self.subTest(rom=profile.name, source=name, allowed=allowed):
+                            with self.assertRaises(BuilderError) as ctx:
+                                rom.check_rom_bytes(raw, Path(name), supported=allowed)
+                            self.assertEqual(ctx.exception.code, "rom_not_yet_supported")
+                            self.assertIn(profile.name, ctx.exception.message)
+
+    def test_matching_unsupported_recipe_does_not_create_a_pack(self):
+        for profile in rom.UNSUPPORTED_PROFILES:
+            data, fixture = self.fixture(profile)
+            with tempfile.TemporaryDirectory() as tmp, \
+                    patch.object(rom, "UNSUPPORTED_PROFILES", (fixture,)):
+                root = Path(tmp)
+                source = root / "game.gba"
+                source.write_bytes(data)
+                Recipe(engine_abi=1, rom_sha1=fixture.sha1, release="test", entries=[]).save(
+                    root / "emerald3ds.recipe")
+                output = root / "output.pak"
+                checked = rom.Rom(data, fixture.sha1, "SYNTHETIC", fixture.code, source)
+                for supplied in (None, checked):
+                    with self.subTest(rom=profile.name, supplied=supplied is not None):
+                        with self.assertRaises(BuilderError) as ctx:
+                            build_pack(source, Payload(root), output, rom=supplied, follower_fetcher=False)
+                        self.assertEqual(ctx.exception.code, "rom_not_yet_supported")
+                        self.assertFalse(output.exists())
 
     def test_ruby_sapphire_headers_do_not_enable_building(self):
         for code in ("AXVE", "AXVJ", "AXVS", "AXVD", "AXVF", "AXVI",

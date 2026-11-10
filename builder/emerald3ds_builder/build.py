@@ -13,7 +13,7 @@ from pathlib import Path
 from . import followers, pak, precompiled
 from .errors import BuilderError
 from .recipe import Recipe, RecipeError, build_entry, recipe_rom_sha1
-from .rom import Rom, load_rom
+from .rom import Rom, load_rom, reject_unsupported_rom
 from .voxel import LABELS, STEPS, run_generators
 from .vtree import build_tree
 
@@ -265,6 +265,7 @@ def build_pack(rom_path: Path, payload: Payload, out_pak: Path, progress=None,
     report(0.0, "Checking the ROM")
     if rom is None:
         rom = load_rom(rom_path)
+    reject_unsupported_rom(rom.sha1)
     payload = select_payload(payload, rom.sha1, need_executables, language)
     try:
         recipe = Recipe.load(payload.recipe)

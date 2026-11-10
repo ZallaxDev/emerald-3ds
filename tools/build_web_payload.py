@@ -35,7 +35,7 @@ sys.path.insert(0, str(ROOT / "builder"))
 
 from emerald3ds_builder import __version__ as BUILDER_VERSION, pak  # noqa: E402
 from emerald3ds_builder.recipe import Recipe  # noqa: E402
-from emerald3ds_builder.rom import ROM_SIZE, SUPPORTED_PROFILES  # noqa: E402
+from emerald3ds_builder.rom import ROM_SIZE, SUPPORTED_PROFILES, unsupported_profile  # noqa: E402
 from emerald3ds_builder.webmanifest import (ENTRYPOINT, INSTALL_DIR, INSTALL_FILES, KIND,  # noqa: E402
                                             MANIFEST_NAME, PAYLOAD_NAME, SCHEMA_VERSION, validate)
 
@@ -96,6 +96,10 @@ def make_manifest(files: dict[str, bytes], version: str, tag: str, cia_forwarder
         if synthetic:
             return {"sha1": sha1, "name": "Synthetic test ROM (not a game)", "code": "TEST",
                     "region": "", "language": folder or ""}
+        recognised = unsupported_profile(sha1)
+        if recognised is not None:
+            raise ValueError("%s is recognised but not yet supported; "
+                             "its recipe cannot be published." % recognised.name)
         profile = next((p for p in SUPPORTED_PROFILES if p.sha1 == sha1), None)
         if profile is None:
             raise ValueError("No supported ROM profile for recipe SHA-1 %s. "

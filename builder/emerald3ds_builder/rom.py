@@ -4,7 +4,8 @@ Clean English (BPEE), Spanish (BPES), French (BPEF), Italian (BPEI), German (BPE
 Japanese (BPEJ) Pokémon Emerald dumps are recognised (16 MiB, by SHA-1). Building still requires a recipe and
 executable made for the same ROM. A trimmed dump (trailing 0xFF removed) is padded back before it is checked; a .zip holding a single .gba is
 opened directly. The ROM is only ever read into memory: it is never copied,
-written or sent anywhere.
+written or sent anywhere. Clean English Ruby/Sapphire revisions 0-2 are
+identified by fingerprint but always rejected as not yet supported.
 """
 
 from __future__ import annotations
@@ -49,6 +50,39 @@ SUPPORTED_PROFILES = (
     RomProfile("BPED", "Pokemon Emerald (Germany)", GERMAN_SHA1, "Germany", "de", "emerald"),
     RomProfile("BPEJ", "Pokemon Emerald (Japan)", JAPANESE_SHA1, "Japan", "ja", "emerald"),
 )
+# Recognition only: these must never enter ROM_PROFILES or a supported release.
+# Source: pret/pokeruby at 5784633ce4ef7ade1a7f2d2d0c288e3d5e6cdd7f,
+# ruby{,_rev1,_rev2}.sha1 and sapphire{,_rev1,_rev2}.sha1.
+UNSUPPORTED_PROFILES = (
+    RomProfile("AXVE", "Pokemon Ruby (English, Rev 0)",
+               "f28b6ffc97847e94a6c21a63cacf633ee5c8df1e", "", "en", "ruby"),
+    RomProfile("AXVE", "Pokemon Ruby (English, Rev 1)",
+               "610b96a9c9a7d03d2bafb655e7560ccff1a6d894", "", "en", "ruby"),
+    RomProfile("AXVE", "Pokemon Ruby (English, Rev 2)",
+               "5b64eacf892920518db4ec664e62a086dd5f5bc8", "", "en", "ruby"),
+    RomProfile("AXPE", "Pokemon Sapphire (English, Rev 0)",
+               "3ccbbd45f8553c36463f13b938e833f652b793e4", "", "en", "sapphire"),
+    RomProfile("AXPE", "Pokemon Sapphire (English, Rev 1)",
+               "4722efb8cd45772ca32555b98fd3b9719f8e60a9", "", "en", "sapphire"),
+    RomProfile("AXPE", "Pokemon Sapphire (English, Rev 2)",
+               "89b45fb172e6b55d51fc0e61989775187f6fe63c", "", "en", "sapphire"),
+)
+
+
+def unsupported_profile(sha1: str) -> RomProfile | None:
+    """Identify a verified ROM without granting permission to build it."""
+    return next((profile for profile in UNSUPPORTED_PROFILES if profile.sha1 == sha1), None)
+
+
+def reject_unsupported_rom(sha1: str) -> None:
+    """Keep recognition separate from both validation and pack construction."""
+    recognised = unsupported_profile(sha1)
+    if recognised is not None:
+        raise BuilderError("This ROM is %s, which is recognised but not yet supported." % recognised.name,
+                           "Ruby/Sapphire support requires its own game engine and data recipe. "
+                           "An Emerald recipe cannot be used with this ROM.", code="rom_not_yet_supported")
+
+
 # Keep the fingerprint mapping used by the builder and staging tools.
 ROM_PROFILES = {profile.code: profile.sha1 for profile in SUPPORTED_PROFILES}
 ROM_SIZE = 16 * 1024 * 1024
@@ -121,6 +155,7 @@ def check_rom_bytes(data: bytes, source: Path, supported: tuple[str, ...] | None
         data = data + b"\xff" * (ROM_SIZE - len(data))
     title, code = header(data)
     sha1 = hashlib.sha1(data).hexdigest()
+    reject_unsupported_rom(sha1)
     if supported is None:
         supported = tuple(ROM_PROFILES.values())
     if sha1 not in supported:
