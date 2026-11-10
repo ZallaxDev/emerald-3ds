@@ -22,6 +22,12 @@ from emerald3ds_builder.recipe import Recipe
 
 
 class RomProfileTests(unittest.TestCase):
+    def status(self, profile):
+        return "not yet supported" if profile.code.startswith("AX") else "not supported"
+
+    def error_code(self, profile):
+        return "rom_not_yet_supported" if profile.code.startswith("AX") else "rom_not_supported"
+
     def files(self, sha1, folder=None):
         prefix = "payload/" + (folder + "/" if folder else "")
         return {prefix + "emerald3ds.recipe": Recipe(
@@ -59,7 +65,7 @@ class RomProfileTests(unittest.TestCase):
                 with self.subTest(rom=profile.name, folder=folder):
                     files = self.files(rom.SUPPORTED_SHA1) if folder else {}
                     files.update(self.files(profile.sha1, folder))
-                    with self.assertRaisesRegex(ValueError, "recognised but not yet supported"):
+                    with self.assertRaisesRegex(ValueError, "recognised but " + self.status(profile)):
                         build_web_payload.make_manifest(files, "1.0.0", "v1.0.0")
 
     def fixture(self, profile):
@@ -81,8 +87,9 @@ class RomProfileTests(unittest.TestCase):
                         with self.subTest(rom=profile.name, source=name, allowed=allowed):
                             with self.assertRaises(BuilderError) as ctx:
                                 rom.check_rom_bytes(raw, Path(name), supported=allowed)
-                            self.assertEqual(ctx.exception.code, "rom_not_yet_supported")
+                            self.assertEqual(ctx.exception.code, self.error_code(profile))
                             self.assertIn(profile.name, ctx.exception.message)
+                            self.assertIn("recognised but " + self.status(profile) + ".", ctx.exception.message)
 
     def test_matching_unsupported_recipe_does_not_create_a_pack(self):
         for profile in rom.UNSUPPORTED_PROFILES:
@@ -100,8 +107,20 @@ class RomProfileTests(unittest.TestCase):
                     with self.subTest(rom=profile.name, supplied=supplied is not None):
                         with self.assertRaises(BuilderError) as ctx:
                             build_pack(source, Payload(root), output, rom=supplied, follower_fetcher=False)
-                        self.assertEqual(ctx.exception.code, "rom_not_yet_supported")
+                        self.assertEqual(ctx.exception.code, self.error_code(profile))
                         self.assertFalse(output.exists())
+
+    def test_firered_leafgreen_headers_do_not_suggest_future_support(self):
+        for code in ("BPRE", "BPRJ", "BPRS", "BPRD", "BPRF", "BPRI",
+                     "BPGE", "BPGJ", "BPGS", "BPGD", "BPGF", "BPGI"):
+            with self.subTest(code=code):
+                data = bytearray(0xC0)
+                data[0xAC:0xB0] = code.encode("ascii")
+                with self.assertRaises(BuilderError) as ctx:
+                    rom.check_rom_bytes(bytes(data), Path("game.gba"))
+                self.assertIn(rom.KNOWN_CODES[code], ctx.exception.message)
+                self.assertIn("not supported.", ctx.exception.message)
+                self.assertNotIn("not yet", str(ctx.exception))
 
     def test_ruby_sapphire_headers_do_not_enable_building(self):
         for code in ("AXVE", "AXVJ", "AXVS", "AXVD", "AXVF", "AXVI",

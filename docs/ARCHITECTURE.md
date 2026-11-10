@@ -180,7 +180,11 @@ revisions 0, 1 and 2 from pret/pokeruby's checksum files at
 [`5784633`](https://github.com/pret/pokeruby/tree/5784633ce4ef7ade1a7f2d2d0c288e3d5e6cdd7f).
 These fingerprints produce a "recognised but not yet supported" error for ROM
 input and release recipes. They never enter the build allowlist, even if passed
-explicitly to the validator. Other regions remain header-only recognition.
+explicitly to the validator. The English GBA FireRed/LeafGreen revisions 0 and 1 are also recorded, from
+[`pret/pokefirered ce6406d`](https://github.com/pret/pokefirered/tree/ce6406d8c2eaf46d543c8a2606de0c3cb1951982).
+Their ROM and recipe errors say "not supported", without "yet": FRLG is
+outside the current scope of this port. Regional FRLG header recognition uses
+the same wording. Other regions remain header-only recognition.
 Web payload publication also rejects an unregistered recipe fingerprint.
 Translations can keep one input profile while choosing another output language.
 

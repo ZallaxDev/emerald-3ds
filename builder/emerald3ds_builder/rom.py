@@ -5,7 +5,8 @@ Japanese (BPEJ) Pokémon Emerald dumps are recognised (16 MiB, by SHA-1). Buildi
 executable made for the same ROM. A trimmed dump (trailing 0xFF removed) is padded back before it is checked; a .zip holding a single .gba is
 opened directly. The ROM is only ever read into memory: it is never copied,
 written or sent anywhere. Clean English Ruby/Sapphire revisions 0-2 are
-identified by fingerprint but always rejected as not yet supported.
+identified by fingerprint but always rejected as not yet supported. English
+FireRed/LeafGreen revisions 0-1 are identified and rejected as not supported.
 """
 
 from __future__ import annotations
@@ -66,7 +67,23 @@ UNSUPPORTED_PROFILES = (
                "4722efb8cd45772ca32555b98fd3b9719f8e60a9", "", "en", "sapphire"),
     RomProfile("AXPE", "Pokemon Sapphire (English, Rev 2)",
                "89b45fb172e6b55d51fc0e61989775187f6fe63c", "", "en", "sapphire"),
+
+    # Source: pret/pokefirered at ce6406d8c2eaf46d543c8a2606de0c3cb1951982,
+    # firered{,_rev1}.sha1 and leafgreen{,_rev1}.sha1 (English GBA releases).
+    RomProfile("BPRE", "Pokemon FireRed (English, Rev 0)",
+               "41cb23d8dccc8ebd7c649cd8fbb58eeace6e2fdc", "", "en", "firered"),
+    RomProfile("BPRE", "Pokemon FireRed (English, Rev 1)",
+               "dd5945db9b930750cb39d00c84da8571feebf417", "", "en", "firered"),
+    RomProfile("BPGE", "Pokemon LeafGreen (English, Rev 0)",
+               "574fa542ffebb14be69902d1d36f1ec0a4afd71e", "", "en", "leafgreen"),
+    RomProfile("BPGE", "Pokemon LeafGreen (English, Rev 1)",
+               "7862c67bdecbe21d1d69ce082ce34327e1c6ed5e", "", "en", "leafgreen"),
 )
+
+
+def unsupported_status(profile: RomProfile) -> str:
+    """Only Ruby/Sapphire are candidates for the expansion in issue #247."""
+    return "not yet supported" if profile.game in ("ruby", "sapphire") else "not supported"
 
 
 def unsupported_profile(sha1: str) -> RomProfile | None:
@@ -78,9 +95,15 @@ def reject_unsupported_rom(sha1: str) -> None:
     """Keep recognition separate from both validation and pack construction."""
     recognised = unsupported_profile(sha1)
     if recognised is not None:
-        raise BuilderError("This ROM is %s, which is recognised but not yet supported." % recognised.name,
-                           "Ruby/Sapphire support requires its own game engine and data recipe. "
-                           "An Emerald recipe cannot be used with this ROM.", code="rom_not_yet_supported")
+        status = unsupported_status(recognised)
+        if status == "not yet supported":
+            detail = "Ruby/Sapphire support requires its own game engine and data recipe."
+            error_code = "rom_not_yet_supported"
+        else:
+            detail = "FireRed/LeafGreen are outside the current scope of this port."
+            error_code = "rom_not_supported"
+        raise BuilderError("This ROM is %s, which is recognised but %s." % (recognised.name, status),
+                           detail + " An Emerald recipe cannot be used with this ROM.", code=error_code)
 
 
 # Keep the fingerprint mapping used by the builder and staging tools.
@@ -162,6 +185,10 @@ def check_rom_bytes(data: bytes, source: Path, supported: tuple[str, ...] | None
         codes = [c for c, s in ROM_PROFILES.items() if s in supported] or ["BPEE"]
         names = " or ".join(KNOWN_CODES[c] for c in codes)
         what = KNOWN_CODES.get(code)
+        if what and code.startswith(("BPR", "BPG")):
+            raise BuilderError("This ROM is %s, which is not supported." % what,
+                               "FireRed/LeafGreen are outside the current scope of this port.",
+                               code="rom_wrong_game")
         if what and code not in codes:
             raise BuilderError("This ROM is %s. Only %s is supported." % (what, names),
                                code="rom_wrong_game")
