@@ -213,6 +213,11 @@ static bool sAtlasCapacityBlocked;
 static bool sReady;
 static DVLB_s *sDvlb;
 static shaderProgram_s sProgram;
+/* The world's program without the shadow map's work (voxel_plain.v.pica), for
+ * every Draw that does not sample or draw one. Its `projection` register holds
+ * projection * modelView (SetProjection, UploadModelView). */
+static shaderProgram_s sPlainProgram;
+static bool sHavePlainProgram;
 static int sUniProjection = -1, sUniModelView = -1, sUniOrigin = -1;
 static int sUniShadeTint = -1, sUniTintDiff = -1, sUniGrade = -1, sUniFog = -1;
 static int sUniDappleU = -1, sUniDappleV = -1;
@@ -687,6 +692,36 @@ static unsigned TreeCardsWanted(void)
 
 static void TreeCrowns(void);
 
+/*
+ * A chunk's ground in four parts, a quarter of its square each, by where a
+ * triangle's middle stands: north-west, north-east, south-east, south-west,
+ * in that order within every atlas page, so that the two a screen edge
+ * leaves in sight are one run of vertices (but for the west pair). A chunk
+ * is on the draw list with a corner in the picture, and on an Old 3DS the
+ * ground's vertices are most of what the GPU works on (4 of its 9 ms a
+ * picture on Route 112, three quarters of them out of the picture): only the
+ * parts whose own box meets the frustum are drawn (Draw, ChunkPartsSeen).
+ * `end` is where each of the first three ends, in vertices from the chunk's
+ * start; `box` is each part's, over every page, in tiles from the chunk's
+ * corner and heights in the world (x0 y0 w0 x1 y1 w1; x0 > x1: empty).
+ *
+ * w is z - y, the row a point stands on: the relief sets what is lifted as
+ * far south as it is high, so a hillside is a slab leaning south, a part is
+ * told by its rows and not by its z, and a box of x, y and z round it would
+ * be mostly air (on Route 112 it kept 37k of 50k vertices where this keeps
+ * far fewer). The frustum's planes are linear in x, y and w all the same
+ * (SlabVisible).
+ */
+#define VOXEL_PARTS 4u
+#define VOXEL_PARTS_ALL ((1u << VOXEL_PARTS) - 1u)
+
+typedef struct
+{
+    bool on; /* cut in parts (a draft is not: drawn whole) */
+    uint16_t end[VOXEL_ATLAS_PAGES][VOXEL_PARTS - 1u];
+    float box[VOXEL_PARTS][6];
+} VoxelChunkParts;
+
 typedef struct
 {
     bool used, border;
@@ -708,6 +743,7 @@ typedef struct
     VoxelGpuVertex *vram;
     unsigned bytes, count, terrainCount;
     unsigned terrainFirst[VOXEL_ATLAS_PAGES + 1u];
+    VoxelChunkParts parts;
     unsigned buildingFirst; /* trees are [terrainCount, buildingFirst) */
     /* the last of the trees' vertices: their crowns turned to the sun, drawn
      * only into HIGH's shadow map (TreeShadowCards) */
@@ -789,6 +825,7 @@ typedef struct
 {
     const VoxelChunk *chunk;
     int worldX, worldZ; /* the chunk corner's place in the world this frame */
+    uint8_t parts;      /* which of its ground's parts are in the picture (VoxelChunkParts) */
 } VoxelChunkDraw;
 
 static VoxelChunkDraw sDraws[VOXEL_DRAW_MAX];
@@ -1310,6 +1347,28 @@ static bool sGlowWanted;
  * measure_lamps (on unless set to 0): the night's lit windows and lamps
  * left out, to tell what each costs on the hardware. Read once a second. */
 static bool sMeasureGlow = true, sMeasureLamps = true;
+/* settings.txt voxel_plain_vs=0: the full vertex program always (A/B measure) */
+static bool sMeasurePlain = true;
+/* settings.txt voxel_fused_blur=1: the tilt-shift bands drawn by
+ * CtrVoxel_DioramaFused instead of blended in four passes over the picture.
+ * Off by default: on an Old 3DS (2026-11-10, Route 112) it took 0.2-0.4 ms
+ * off the GPU and put 0.2-0.4 ms on the CPU, and the GPU's queue drained at
+ * the same time (20.50 against 20.45 ms in stereo). */
+static bool sMeasureFusedBlur = false;
+/* settings.txt voxel_cut=N: what each part of the picture costs the GPU, told
+ * by leaving it out (CtrVoxel_Update). The bits of what is left out now. */
+static unsigned sMeasureCutEvery;
+static unsigned sMeasurePartsEvery;
+static unsigned sMeasureCut;
+/* settings.txt voxel_scissor=0: the world drawn over the whole surface, as it
+ * was (A/B measure) */
+static bool sMeasureScissor = true;
+/* The ground drawn by parts (VoxelChunkParts); `voxel_parts=0` draws every
+ * chunk whole, as before. */
+static bool sMeasureParts = true;
+/* settings.txt voxel_ab: frames per configuration of the A/B round, 0 for none */
+static unsigned sMeasureAb;
+#define VOXEL_SCISSOR_MARGIN 4u
 static uint32_t sMeasureRead;
 
 /* A page texture over a piece of the arena. Never C3D_TexDelete'd: that
@@ -2715,6 +2774,52 @@ static void BrightenCrowns(uint16_t *texels)
 static bool ColdYield(void);
 static void ColdDrop(bool global);
 
+/*
+ * The world's program without the shadow map (voxel_plain.v.pica), third in
+ * voxel.shbin. Not fatal: without it every Draw uses the full program, as
+ * before. Its uniforms must sit where the full program's do, since one set of
+ * uploads (sUni*) serves both.
+ */
+static void LoadPlainProgram(void)
+{
+    DVLE_s *plain;
+    const DVLE_s *full = &sDvlb->DVLE[0];
+    shaderInstance_s *vs;
+
+    if (sDvlb->numDVLE < 3)
+    {
+        CtrLog_Write(CTR_LOG_ERROR, "VOXEL: voxel.shbin has no plain program, the full one is used");
+        return;
+    }
+    plain = &sDvlb->DVLE[2];
+    shaderProgramInit(&sPlainProgram);
+    if (R_FAILED(shaderProgramSetVsh(&sPlainProgram, plain)))
+    {
+        CtrLog_Write(CTR_LOG_ERROR, "VOXEL: the plain program does not bind, the full one is used");
+        shaderProgramFree(&sPlainProgram);
+        return;
+    }
+    vs = sPlainProgram.vertexShader;
+    if (shaderInstanceGetUniformLocation(vs, "projection") != sUniProjection
+     || shaderInstanceGetUniformLocation(vs, "modelView") != sUniModelView
+     || shaderInstanceGetUniformLocation(vs, "origin") != sUniOrigin
+     || shaderInstanceGetUniformLocation(vs, "shadeTint") != sUniShadeTint
+     || shaderInstanceGetUniformLocation(vs, "tintDiff") != sUniTintDiff
+     || shaderInstanceGetUniformLocation(vs, "grade") != sUniGrade
+     || shaderInstanceGetUniformLocation(vs, "fog") != sUniFog
+     || shaderInstanceGetUniformLocation(vs, "dappleU") != sUniDappleU
+     || shaderInstanceGetUniformLocation(vs, "dappleV") != sUniDappleV)
+    {
+        CtrLog_Write(CTR_LOG_ERROR, "VOXEL: the plain program's uniforms do not match, the full one is used");
+        shaderProgramFree(&sPlainProgram);
+        return;
+    }
+    sHavePlainProgram = true;
+    CtrLog_Write(CTR_LOG_VIDEO, "VOXEL init: plain vertex program loaded, %u instructions (full: %u)",
+                 (unsigned)(plain->endmainOffset - plain->mainOffset),
+                 (unsigned)(full->endmainOffset - full->mainOffset));
+}
+
 bool CtrVoxel_Init(void)
 {
     sLampReady = false;
@@ -2779,6 +2884,7 @@ bool CtrVoxel_Init(void)
 #if CTR_VOXEL_LIGHTING
     LoadWeatherProgram();
 #endif
+    LoadPlainProgram();
 
     /*
      * The arenas are not claimed here. The world starts parked, as
@@ -3014,6 +3120,11 @@ void CtrVoxel_Shutdown(void)
     {
         shaderProgramFree(&sWeatherProgram);
         sHaveWeatherProgram = false;
+    }
+    if (sHavePlainProgram)
+    {
+        shaderProgramFree(&sPlainProgram);
+        sHavePlainProgram = false;
     }
     if (sDvlb != NULL)
     {
@@ -3827,6 +3938,11 @@ static struct
     unsigned terrainCount, buildingFirst, treeShadow, treeCrowns;
     unsigned terrainFirst[VOXEL_ATLAS_PAGES + 1u];
     unsigned sortPage, sortScan, sortWrite;
+    /* ... then each page's parts (JobSortParts): three splits a page, and
+     * the parts' boxes measured last */
+    unsigned sortStep, boxScan;
+    bool sortOpen;
+    VoxelChunkParts parts;
     VoxelBuildingCursor models;
     unsigned staticIndex;   /* JOB_STATICS: the next of sJobStatics */
     bool lightWarm;         /* JOB_GROUND: its rays' casters read (VoxelLighting_Warm) */
@@ -3954,6 +4070,107 @@ static bool JobValid(void)
 static int PackedFloor(int32_t q) { return q >> 9; }
 static int PackedCeil(int32_t q) { return -((-q) >> 9); }
 
+/* A triangle of the builder's, by its middle: in the chunk's south half (by
+ * the row it stands on, z - y), in its east half? (VoxelChunkParts; measured
+ * from the chunk's corner.) */
+static bool SortSouth(const VoxelVertex *v)
+{
+    return v[0].z - v[0].y + v[1].z - v[1].y + v[2].z - v[2].y >= 1.5f * VOXEL_CHUNK;
+}
+
+static bool SortEast(const VoxelVertex *v)
+{
+    return v[0].x + v[1].x + v[2].x >= 1.5f * VOXEL_CHUNK;
+}
+
+/*
+ * Each page's triangles into its four parts, as JobSort put them by page: in
+ * place and in slices. Three splits a page - north before south, then west
+ * before east in the north and east before west in the south.
+ */
+static bool JobSortParts(unsigned *budget)
+{
+    while (sJob.sortStep < VOXEL_ATLAS_PAGES * 3u)
+    {
+        unsigned page = sJob.sortStep / 3u, step = sJob.sortStep % 3u;
+        uint16_t *ends = sJob.parts.end[page];
+        unsigned lo = step == 2u ? ends[1] : sJob.terrainFirst[page];
+        unsigned hi = step == 1u ? ends[1] : sJob.terrainFirst[page + 1u];
+
+        if (!sJob.sortOpen)
+        {
+            sJob.sortScan = sJob.sortWrite = lo;
+            sJob.sortOpen = true;
+        }
+        while (sJob.sortScan < hi)
+        {
+            VoxelVertex *v = sScratch + sJob.sortScan;
+
+            if (*budget == 0)
+                return false;
+            --*budget;
+            if (step == 0u ? !SortSouth(v) : step == 1u ? !SortEast(v) : SortEast(v))
+            {
+                if (sJob.sortWrite != sJob.sortScan)
+                {
+                    VoxelVertex temp[3];
+
+                    memcpy(temp, v, sizeof(temp));
+                    memcpy(v, sScratch + sJob.sortWrite, sizeof(temp));
+                    memcpy(sScratch + sJob.sortWrite, temp, sizeof(temp));
+                }
+                sJob.sortWrite += 3;
+            }
+            sJob.sortScan += 3;
+        }
+        ends[step == 0u ? 1 : step == 1u ? 0 : 2] = (uint16_t)sJob.sortWrite;
+        sJob.sortOpen = false;
+        ++sJob.sortStep;
+    }
+    return true;
+}
+
+/* ... and the box of each part, over every page. */
+static bool JobSortBoxes(unsigned *budget)
+{
+    unsigned end = sJob.terrainFirst[VOXEL_ATLAS_PAGES];
+
+    if (sJob.boxScan == 0)
+        for (unsigned part = 0; part < VOXEL_PARTS; ++part)
+            for (int a = 0; a < 3; ++a)
+            {
+                sJob.parts.box[part][a] = 1e9f;
+                sJob.parts.box[part][3 + a] = -1e9f;
+            }
+    while (sJob.boxScan < end)
+    {
+        const VoxelVertex *v = sScratch + sJob.boxScan;
+        unsigned page = 0, part = 0;
+        float *box;
+
+        if (*budget == 0)
+            return false;
+        --*budget;
+        while (sJob.boxScan >= sJob.terrainFirst[page + 1u])
+            ++page;
+        while (part < VOXEL_PARTS - 1u && sJob.boxScan >= sJob.parts.end[page][part])
+            ++part;
+        box = sJob.parts.box[part];
+        for (int k = 0; k < 3; ++k)
+        {
+            if (v[k].x < box[0]) box[0] = v[k].x;
+            if (v[k].y < box[1]) box[1] = v[k].y;
+            if (v[k].z - v[k].y < box[2]) box[2] = v[k].z - v[k].y;
+            if (v[k].x > box[3]) box[3] = v[k].x;
+            if (v[k].y > box[4]) box[4] = v[k].y;
+            if (v[k].z - v[k].y > box[5]) box[5] = v[k].z - v[k].y;
+        }
+        sJob.boxScan += 3;
+    }
+    sJob.parts.on = true;
+    return true;
+}
+
 /* Partition triangles in bounded slices, without another vertex buffer.
  * U carries page*2 until packing; the gap avoids ambiguity at texture edges. */
 static bool JobSort(void)
@@ -3979,7 +4196,9 @@ static bool JobSort(void)
         }
         sJob.sortScan += 3;
     }
-    return sJob.sortPage == VOXEL_ATLAS_PAGES;
+    if (sJob.sortPage < VOXEL_ATLAS_PAGES)
+        return false;
+    return JobSortParts(&budget) && JobSortBoxes(&budget);
 }
 
 /* A slice of the packing; true once the whole scratch is packed. */
@@ -4294,6 +4513,7 @@ static BuildResult JobFinish(VoxelChunk *chunk)
     chunk->treeShadow = sJob.treeShadow;
     chunk->treeCrowns = sJob.treeCrowns;
     memcpy(chunk->terrainFirst, sJob.terrainFirst, sizeof(chunk->terrainFirst));
+    chunk->parts = sJob.parts;
     chunk->gx0 = sJob.gx0;
     chunk->gz0 = sJob.gz0;
     chunk->gx1 = sJob.gx1;
@@ -4374,7 +4594,7 @@ static BuildResult JobFinish(VoxelChunk *chunk)
 #define VOXEL_COLD_PENDING 4u
 #define VOXEL_COLD_TRANSIT_MAX (VOXEL_STAGING_VERTICES / 2u)
 /* The format of a mesh: bumped with any change to what a vertex holds. */
-#define VOXEL_COLD_FORMAT 1u
+#define VOXEL_COLD_FORMAT 2u
 
 typedef struct
 {
@@ -4389,6 +4609,7 @@ typedef struct
     int x, y;           /* its square's place in the world as it was built */
     unsigned count, terrainCount, buildingFirst, treeShadow, treeCrowns, staticCount;
     unsigned terrainFirst[VOXEL_ATLAS_PAGES + 1u];
+    VoxelChunkParts parts;
     int gx0, gz0, gx1, gz1;
     float gy0, gy1;
     uint32_t stamp;
@@ -4754,6 +4975,7 @@ static void ColdOffer(const VoxelChunk *c)
         p->treeCrowns = c->treeCrowns;
         p->staticCount = c->staticCount;
         memcpy(p->terrainFirst, c->terrainFirst, sizeof(p->terrainFirst));
+        p->parts = c->parts;
         p->gx0 = c->gx0;
         p->gz0 = c->gz0;
         p->gx1 = c->gx1;
@@ -4912,6 +5134,7 @@ static bool ColdTake(const ChunkSite *site, uint32_t hash, const VoxelAtlasSlot 
     sJob.treeShadow = m->treeShadow;
     sJob.treeCrowns = m->treeCrowns;
     memcpy(sJob.terrainFirst, m->terrainFirst, sizeof(sJob.terrainFirst));
+    sJob.parts = m->parts;
     sJob.gx0 = m->gx0;
     sJob.gz0 = m->gz0;
     sJob.gx1 = m->gx1;
@@ -5230,6 +5453,7 @@ static VoxelChunk *DraftChunk(const ChunkSite *site, VoxelAtlasSlot *atlas, Voxe
     chunk->count = chunk->terrainCount = chunk->buildingFirst = total;
     chunk->treeShadow = chunk->treeCrowns = 0;
     memcpy(chunk->terrainFirst, terrainFirst, sizeof(chunk->terrainFirst));
+    chunk->parts.on = false;
     chunk->gx0 = chunk->gz0 = 0;
     chunk->gx1 = chunk->gz1 = VOXEL_CHUNK;
     chunk->gy0 = chunk->gy1 = 0.0f;
@@ -5430,6 +5654,94 @@ static bool SiteVisible(const ChunkSite *site, const VoxelChunk *chunk)
                       (float)site->x1, base + VOXEL_UNBUILT_HIGH, (float)site->y1 + base);
 }
 
+/* Does the slab meet the frustum? x and y between theirs and z - y between
+ * w0 and w1 (VoxelChunkParts), from (ox, oz). As BoxVisible: outside only if
+ * wholly behind one plane, whose furthest point forward is picked by the
+ * plane's own slopes - along y, its y's and its z's together. */
+static bool SlabVisible(float ox, float oz, float x0, float y0, float w0, float x1, float y1, float w1)
+{
+    if (!sFrustumValid)
+        return true;
+    for (int i = 0; i < 4; ++i)
+    {
+        const VoxelPlane *p = &sFrustum[i];
+        float rise = p->y + p->z;
+        float x = p->x > 0.0f ? x1 : x0, y = rise > 0.0f ? y1 : y0, w = p->z > 0.0f ? w1 : w0;
+
+        if (p->x * (ox + x) + rise * y + p->z * (oz + w) + p->w < 0.0f)
+            return false;
+    }
+    return true;
+}
+
+/* Which parts of the chunk's ground meet the frustum (VoxelChunkParts), as
+ * bits; all of them where it is not cut in parts or the switch is off. */
+static unsigned ChunkPartsSeen(const VoxelChunk *chunk, int worldX, int worldZ)
+{
+    unsigned seen = 0;
+
+    if (!chunk->parts.on || !sMeasureParts)
+        return VOXEL_PARTS_ALL;
+    for (unsigned part = 0; part < VOXEL_PARTS; ++part)
+    {
+        const float *box = chunk->parts.box[part];
+
+        /* (the margins: a packed vertex is rounded to 1/512 of a tile) */
+        if (box[0] <= box[3]
+         && SlabVisible((float)worldX, (float)worldZ, box[0] - 0.01f, box[1] - 0.05f, box[2] - 0.06f,
+                        box[3] + 0.01f, box[4] + 0.05f, box[5] + 0.06f))
+            seen |= 1u << part;
+    }
+    return seen;
+}
+
+/* A page's ground in the chunk: where part `part` begins (4: where the page ends). */
+static unsigned ChunkPartFirst(const VoxelChunk *chunk, unsigned page, unsigned part)
+{
+    return part == 0 ? chunk->terrainFirst[page]
+         : part < VOXEL_PARTS ? chunk->parts.end[page][part - 1u] : chunk->terrainFirst[page + 1u];
+}
+
+/* The ground's vertices the parts not in `seen` hold. */
+static unsigned ChunkPartsLeftOut(const VoxelChunk *chunk, unsigned seen)
+{
+    unsigned out = 0;
+
+    if (seen == VOXEL_PARTS_ALL)
+        return 0;
+    for (unsigned page = 0; page < VOXEL_ATLAS_PAGES; ++page)
+        for (unsigned part = 0; part < VOXEL_PARTS; ++part)
+            if (!(seen >> part & 1u))
+                out += ChunkPartFirst(chunk, page, part + 1u) - ChunkPartFirst(chunk, page, part);
+    return out;
+}
+
+/*
+ * Which parts of each chunk on the list are in the picture: told at the
+ * draw and not when the chunk went on the list, because a build finished
+ * later in the same update is adopted into the slot of the chunk it
+ * replaces, with parts of its own (the audit caught a part in sight left
+ * out that way). The frustum is still the update's. The vertices left out
+ * come off the update's count once, however many pictures are drawn of it.
+ */
+static void DrawParts(void)
+{
+    static uint32_t counted = ~0u;
+    bool count = counted != sFrame;
+
+    counted = sFrame;
+    for (unsigned i = 0; i < sDrawCount; ++i)
+    {
+        sDraws[i].parts = (uint8_t)ChunkPartsSeen(sDraws[i].chunk, sDraws[i].worldX, sDraws[i].worldZ);
+        if (count)
+        {
+            unsigned out = ChunkPartsLeftOut(sDraws[i].chunk, sDraws[i].parts);
+
+            sStats.vertices -= out < sStats.vertices ? out : sStats.vertices;
+        }
+    }
+}
+
 static void Draw(VoxelChunk *chunk, int worldX, int worldZ)
 {
     if (chunk->count == 0)
@@ -5453,9 +5765,167 @@ static void Draw(VoxelChunk *chunk, int worldX, int worldZ)
     sDraws[sDrawCount].chunk = chunk;
     sDraws[sDrawCount].worldX = worldX;
     sDraws[sDrawCount].worldZ = worldZ;
+    sDraws[sDrawCount].parts = VOXEL_PARTS_ALL; /* told at the draw (DrawParts) */
     ++sDrawCount;
     sStats.vertices += chunk->count;
     sStats.draftsVisible += chunk->draft;
+}
+
+/*
+ * `voxel_view_audit=N` in settings.txt: every N frames, how much of the
+ * ground the chunks on the draw list hold is out of the picture, and how much
+ * of that a finer pick would leave out - by whole triangles (the most there
+ * is to gain), and by blocks of 4, 2 and 1 cells boxed as the chunks are.
+ * One line in the log. Reads the chunks' vertices back: a diagnostic.
+ */
+static void ViewAudit(void)
+{
+    static const int sizes[3] = {4, 2, 1};
+    unsigned total = 0, outTri = 0, outBlock[3] = {0, 0, 0}, chunks = 0, wrong = 0;
+
+    for (unsigned i = 0; i < sDrawCount; ++i)
+    {
+        const VoxelChunk *chunk = sDraws[i].chunk;
+        const VoxelGpuVertex *v = chunk->vram;
+        unsigned count = chunk->terrainCount;
+        float ox = (float)sDraws[i].worldX, oz = (float)sDraws[i].worldZ;
+
+        if (v == NULL || count == 0)
+            continue;
+        ++chunks;
+        total += count;
+        if (count != chunk->terrainFirst[VOXEL_ATLAS_PAGES])
+        {
+            CtrLog_Write(CTR_LOG_VIDEO, "VOXEL VIEW AUDIT odd: draw %u chunk %d,%d draft %d border %d parts %d terrain %u "
+                         "pages end %u count %u", i, chunk->cx, chunk->cy, chunk->draft, chunk->border, chunk->parts.on,
+                         count, chunk->terrainFirst[VOXEL_ATLAS_PAGES], chunk->count);
+            if (count > chunk->terrainFirst[VOXEL_ATLAS_PAGES])
+                count = chunk->terrainFirst[VOXEL_ATLAS_PAGES];
+        }
+        for (unsigned t = 0; t + 2 < count; t += 3)
+        {
+            bool out = false;
+
+            for (int p = 0; p < 4 && !out; ++p)
+            {
+                const VoxelPlane *pl = &sFrustum[p];
+                int behind = 0;
+
+                for (int k = 0; k < 3; ++k)
+                    behind += pl->x * (ox + v[t + k].x / 512.0f) + pl->y * (v[t + k].y / 512.0f)
+                            + pl->z * (oz + v[t + k].z / 512.0f) + pl->w < 0.0f;
+                out = behind == 3;
+            }
+            outTri += out ? 3u : 0u;
+            if (!out && sDraws[i].parts != VOXEL_PARTS_ALL)
+            {
+                /* in the picture: its part must be drawn */
+                unsigned page = 0, part = 0;
+
+                while (t >= chunk->terrainFirst[page + 1u])
+                    ++page;
+                while (part < VOXEL_PARTS - 1u && t >= chunk->parts.end[page][part])
+                    ++part;
+                if (!(sDraws[i].parts >> part & 1u))
+                {
+                    const float *b = chunk->parts.box[part];
+
+                    if (wrong == 0)
+                        CtrLog_Write(CTR_LOG_VIDEO, "VOXEL VIEW AUDIT wrong: draw %u at %d,%d chunk %d,%d draft %d border %d t %u "
+                                     "page %u part %u seen %x firsts %u %u ends %u %u %u count %u box %.2f %.2f %.2f .. %.2f "
+                                     "%.2f %.2f tri %d,%d,%d %d,%d,%d %d,%d,%d", i, sDraws[i].worldX, sDraws[i].worldZ,
+                                     chunk->cx, chunk->cy, chunk->draft, chunk->border, t, page, part, sDraws[i].parts,
+                                     chunk->terrainFirst[page], chunk->terrainFirst[page + 1u], chunk->parts.end[page][0],
+                                     chunk->parts.end[page][1], chunk->parts.end[page][2], chunk->terrainCount,
+                                     (double)b[0], (double)b[1], (double)b[2], (double)b[3], (double)b[4], (double)b[5],
+                                     v[t].x, v[t].y, v[t].z, v[t + 1].x, v[t + 1].y, v[t + 1].z,
+                                     v[t + 2].x, v[t + 2].y, v[t + 2].z);
+                    wrong += 3u;
+                }
+            }
+        }
+        for (int s = 0; s < 3; ++s)
+        {
+            /* cells by the triangle's middle on the ground plan, 24 a side
+             * with the margins a chunk's geometry may reach into */
+            enum { SIDE = 24 };
+            static float box[SIDE * SIDE][6];
+            static uint16_t held[SIDE * SIDE];
+            int size = sizes[s], side = SIDE / size;
+
+            memset(held, 0, sizeof(held));
+            for (unsigned t = 0; t + 2 < count; t += 3)
+            {
+                float mx = (v[t].x + v[t + 1].x + v[t + 2].x) / (3.0f * 512.0f);
+                float mz = (v[t].z + v[t + 1].z + v[t + 2].z) / (3.0f * 512.0f);
+                int cx = ((int)floorf(mx) + 8) / size, cz = ((int)floorf(mz) + 8) / size, at;
+
+                cx = cx < 0 ? 0 : cx >= side ? side - 1 : cx;
+                cz = cz < 0 ? 0 : cz >= side ? side - 1 : cz;
+                at = cz * side + cx;
+                for (int k = 0; k < 3; ++k)
+                {
+                    float x = ox + v[t + k].x / 512.0f, y = v[t + k].y / 512.0f, z = oz + v[t + k].z / 512.0f;
+
+                    if (held[at] == 0 && k == 0)
+                    {
+                        box[at][0] = box[at][3] = x;
+                        box[at][1] = box[at][4] = y;
+                        box[at][2] = box[at][5] = z;
+                    }
+                    if (x < box[at][0]) box[at][0] = x;
+                    if (y < box[at][1]) box[at][1] = y;
+                    if (z < box[at][2]) box[at][2] = z;
+                    if (x > box[at][3]) box[at][3] = x;
+                    if (y > box[at][4]) box[at][4] = y;
+                    if (z > box[at][5]) box[at][5] = z;
+                }
+                held[at] += 3;
+            }
+            for (int at = 0; at < side * side; ++at)
+                if (held[at] != 0 && !BoxVisible(box[at][0], box[at][1], box[at][2], box[at][3], box[at][4], box[at][5]))
+                    outBlock[s] += held[at];
+        }
+    }
+    {
+        unsigned outside = 0, wide = 0, partsOut = 0, hist[6] = {0};
+
+        for (unsigned i = 0; i < sDrawCount; ++i)
+        {
+            const VoxelChunk *chunk = sDraws[i].chunk;
+            const VoxelGpuVertex *v = chunk->vram;
+
+            if (v == NULL)
+                continue;
+            partsOut += ChunkPartsLeftOut(chunk, sDraws[i].parts);
+            for (unsigned t = 0; t + 2 < chunk->terrainCount; t += 3)
+            {
+                int lo[2] = {32767, 32767}, hi[2] = {-32768, -32768}, mx, mz, span;
+
+                for (int k = 0; k < 3; ++k)
+                {
+                    if (v[t + k].x < lo[0]) lo[0] = v[t + k].x;
+                    if (v[t + k].z < lo[1]) lo[1] = v[t + k].z;
+                    if (v[t + k].x > hi[0]) hi[0] = v[t + k].x;
+                    if (v[t + k].z > hi[1]) hi[1] = v[t + k].z;
+                }
+                mx = v[t].x + v[t + 1].x + v[t + 2].x;
+                mz = v[t].z + v[t + 1].z + v[t + 2].z;
+                outside += mx < 0 || mz < 0 || mx >= 3 * 8 * 512 || mz >= 3 * 8 * 512 ? 3u : 0u;
+                span = hi[0] - lo[0] > hi[1] - lo[1] ? hi[0] - lo[0] : hi[1] - lo[1];
+                wide += span > 2 * 512 ? 3u : 0u;
+                hist[span <= 512 ? 0 : span <= 1024 ? 1 : span <= 2048 ? 2 : span <= 4096 ? 3 : span <= 8192 ? 4 : 5] += 3u;
+            }
+        }
+        CtrLog_Write(CTR_LOG_VIDEO, "VOXEL VIEW AUDIT parts leave out %u, WRONGLY %u; middles outside the square %u; "
+                     "wider than 2 tiles %u; spans <=1 %u <=2 %u <=4 %u <=8 %u <=16 %u more %u", partsOut, wrong,
+                     outside, wide, hist[0], hist[1], hist[2], hist[3], hist[4], hist[5]);
+        if (wrong != 0)
+            ++sStats.errors;
+    }
+    CtrLog_Write(CTR_LOG_VIDEO, "VOXEL VIEW AUDIT frame %lu: %u chunks, ground %u vertices, out of the picture %u "
+                 "by triangle, %u by 4x4, %u by 2x2, %u by cell", (unsigned long)sFrame, chunks, total, outTri,
+                 outBlock[0], outBlock[1], outBlock[2]);
 }
 
 static void Request(const ChunkSite *site, VoxelAtlasSlot *atlas, VoxelChunk *chunk,
@@ -8166,6 +8636,8 @@ bool CtrVoxel_Update(void)
              * (settings.txt voxel_border_edge=0), read with each new map */
             VoxelMesh_SetBorderFollowsEdge(CtrSettings_GetInt("voxel_border_edge", 1) != 0);
             VoxelBuildings_MapChanged();
+            /* what the cards found of the world is found again */
+            VoxelEntities_WorldChanged();
             ++sEpoch;
 #if CTR_VOXEL_LIGHTING
             VoxelLighting_Reset();
@@ -8179,7 +8651,82 @@ bool CtrVoxel_Update(void)
     {
         sMeasureGlow = CtrSettings_GetInt("measure_glow", 1) != 0;
         sMeasureLamps = CtrSettings_GetInt("measure_lamps", 1) != 0;
+        sMeasurePlain = CtrSettings_GetInt("voxel_plain_vs", 1) != 0;
+        sMeasureFusedBlur = CtrSettings_GetInt("voxel_fused_blur", 0) != 0;
+        sMeasureScissor = CtrSettings_GetInt("voxel_scissor", 1) != 0;
+        sMeasureParts = CtrSettings_GetInt("voxel_parts", 1) != 0;
+        sMeasureAb = (unsigned)CtrSettings_GetInt("voxel_ab", 0);
+        sMeasureCutEvery = (unsigned)CtrSettings_GetInt("voxel_cut", 0);
+        sMeasurePartsEvery = (unsigned)CtrSettings_GetInt("voxel_parts_ab", 0);
+        if (sMeasureAb == 0)
+            VoxelEntities_SetMemo(-1);
         sMeasureRead = sFrame + 64u;
+    }
+    /*
+     * settings.txt voxel_ab=N: the console tells what each of these is worth
+     * by itself. Every N frames the next of five configurations, each adding
+     * one to the last - none, the scissor, the plain program, the cards'
+     * memo, the fused blur - and a line in the log at each change, by which
+     * perf.bin's frames are told apart (the game's frame is its tick).
+     */
+    if (sMeasureAb != 0)
+    {
+        static unsigned sAbConfig = ~0u;
+        unsigned config = sFrame / sMeasureAb % 5u;
+
+        sMeasureScissor = config >= 1u;
+        sMeasurePlain = config >= 2u;
+        VoxelEntities_SetMemo(config >= 3u);
+        sMeasureFusedBlur = config >= 4u;
+        if (config != sAbConfig)
+        {
+            sAbConfig = config;
+            CtrLog_Write(CTR_LOG_VIDEO, "VOXEL A/B config %u (scissor %d plain %d memo %d fused %d) from game frame %lu",
+                         config, sMeasureScissor, sMeasurePlain, config >= 3u, sMeasureFusedBlur,
+                         (unsigned long)CtrPlatform_FrameCount());
+        }
+    }
+    /* settings.txt voxel_parts_ab=N: the ground whole and by parts in turns
+     * of N frames (VoxelChunkParts), told apart as voxel_ab's. */
+    if (sMeasurePartsEvery != 0)
+    {
+        static unsigned sPartsConfig = ~0u;
+        unsigned config = sFrame / sMeasurePartsEvery % 2u;
+
+        sMeasureParts = config != 0;
+        if (config != sPartsConfig)
+        {
+            sPartsConfig = config;
+            CtrVideo_GpuOpsFlush();
+            CtrLog_Write(CTR_LOG_VIDEO, "VOXEL PARTS config %u from game frame %lu", config,
+                         (unsigned long)CtrPlatform_FrameCount());
+        }
+    }
+    /*
+     * settings.txt voxel_cut=N: every N frames the next of nine pictures, each
+     * the whole one less one part - the ground, the trees, the buildings, the
+     * right half of the world's pixels (all its vertices still worked), the
+     * tilt-shift bands, the bloom, the game's layers over the world - and the
+     * last with none of them: what the frame costs with nothing in it. On the
+     * console the time the GPU's queue drains at tells each part's share.
+     */
+    sMeasureCut = 0;
+    if (sMeasureCutEvery != 0)
+    {
+        static const unsigned sCuts[] = {0, CTR_VOXEL_CUT_GROUND, CTR_VOXEL_CUT_TREES, CTR_VOXEL_CUT_BUILDINGS,
+            CTR_VOXEL_CUT_HALF, CTR_VOXEL_CUT_DIORAMA, CTR_VOXEL_CUT_BLOOM, CTR_VOXEL_CUT_OVERLAY,
+            CTR_VOXEL_CUT_GROUND | CTR_VOXEL_CUT_TREES | CTR_VOXEL_CUT_BUILDINGS | CTR_VOXEL_CUT_DIORAMA
+            | CTR_VOXEL_CUT_BLOOM | CTR_VOXEL_CUT_OVERLAY};
+        static unsigned sCutConfig = ~0u;
+        unsigned config = sFrame / sMeasureCutEvery % 9u;
+
+        sMeasureCut = sCuts[config];
+        if (config != sCutConfig)
+        {
+            sCutConfig = config;
+            CtrLog_Write(CTR_LOG_VIDEO, "VOXEL CUT config %u (bits %02x) from game frame %lu", config, sMeasureCut,
+                         (unsigned long)CtrPlatform_FrameCount());
+        }
     }
     sGlowWanted = sMeasureGlow && CtrDayNight_Get()->glow > 0.0f;
     NotePart(PART_CHECK, &partStart);
@@ -8761,6 +9308,7 @@ bool CtrVoxel_UnparkVram(void)
         VoxelBuildings_Shutdown();
         sBuildingsLoaded = false;
         sBuildingsDropped = sBuildingsChanged = true;
+        VoxelEntities_WorldChanged();
         CtrLog_Write(CTR_LOG_ERROR, "VOXEL: no VRAM for the building pages in %u tries (largest=%lu):"
                      " the world comes back without its buildings", sUnparkPageFails,
                      (unsigned long)CtrGpuMem_LargestVram());
@@ -8770,6 +9318,7 @@ bool CtrVoxel_UnparkVram(void)
         sBuildingsLoaded = VoxelBuildings_Init();
         sBuildingsDropped = !sBuildingsLoaded;
         sBuildingsChanged = true;
+        VoxelEntities_WorldChanged();
         CtrLog_Write(CTR_LOG_VIDEO, "VOXEL: building pages have room again, buildings %s",
                      sBuildingsLoaded ? "loaded" : "still unloaded");
     }
@@ -8849,6 +9398,7 @@ bool CtrVoxel_ClaimPages(void)
     PageRetriesForget();
     sHaveBuildings = true;
     sBuildingsChanged = true;
+    VoxelEntities_WorldChanged();
     if (sStream.buffer == NULL)
         StreamStart();
     CtrLog_Write(CTR_LOG_VIDEO, "VOXEL: building pages claimed with the world up, buildings back (VRAM free=%lu)",
@@ -8938,6 +9488,56 @@ typedef struct
 } DrawSetupCounts;
 static DrawSetupCounts sSetupAsked, sSetupKept;
 
+/*
+ * The plain program takes projection * modelView in `projection` (one matrix
+ * a vertex rather than two) and still reads modelView's third row for the
+ * haze, so both are uploaded together and every write of either goes through
+ * here, which remembers them: the folded matrix is made only when one of them
+ * is written, never per draw. With any other program bound the two are
+ * uploaded as they are.
+ */
+static C3D_Mtx sProjectionNow, sModelViewNow;
+static bool sPlainBound;  /* the plain program is the one bound */
+static bool sPlainDraw;   /* this Draw's program (BindWorldProgram) */
+
+static void FoldProjection(void)
+{
+    C3D_Mtx folded;
+
+    Mtx_Multiply(&folded, &sProjectionNow, &sModelViewNow);
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniProjection, &folded);
+}
+
+static void SetProjection(const C3D_Mtx *projection)
+{
+    sProjectionNow = *projection;
+    if (sPlainBound)
+        FoldProjection();
+    else
+        C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniProjection, projection);
+}
+
+static void UploadModelView(const C3D_Mtx *model)
+{
+    sModelViewNow = *model;
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniModelView, model);
+    if (sPlainBound)
+        FoldProjection();
+}
+
+/*
+ * The world's program, the plain one where the Draw has no shadow map. Binding
+ * leaves the projection register as another program last had it, so a plain
+ * program's is folded again from what is remembered.
+ */
+static void BindWorldProgram(bool plain)
+{
+    sPlainDraw = sPlainBound = plain && sHavePlainProgram;
+    C3D_BindProgram(sPlainBound ? &sPlainProgram : &sProgram);
+    if (sPlainBound)
+        FoldProjection();
+}
+
 /* A vertex uniform of `count` registers, unless it already holds `value`. */
 static bool UniformKept(unsigned flag, int id, const C3D_FVec *value, int count)
 {
@@ -8977,7 +9577,7 @@ static void SetModelViewMatrix(const C3D_Mtx *model)
     if (UniformKept(DRAW_SET_MODELVIEW, sUniModelView, model->r, 4))
         ++sSetupKept.modelViews;
     else
-        C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniModelView, model);
+        UploadModelView(model);
 }
 
 /* A draw measured from (worldX, worldZ), in whole tiles, from the Draw's view. */
@@ -9602,8 +10202,8 @@ static void DrawRays(const VoxelLight *light, const VoxelLight *unlit)
     Mtx_Ortho(&ortho, 0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 10.0f, false);
     FitToLogicalSurface(&ortho);
     Mtx_Identity(&identity);
-    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniProjection, &ortho);
-    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniModelView, &identity);
+    SetProjection(&ortho);
+    UploadModelView(&identity);
     SetOrigin(0.0f, 0.0f);
     /* The pattern in pixels, turned to the rays. */
     C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleU,
@@ -10295,8 +10895,8 @@ static void ShadowBlurPass(void)
     /* the world's alpha to memory before it is read */
     C3D_FrameSplit(0);
     Mtx_Identity(&one);
-    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniProjection, &one);
-    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniModelView, &one);
+    SetProjection(&one);
+    UploadModelView(&one);
     C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniOrigin, 0.0f, 0.0f, 0.0f, 0.0f);
     /* texcoord0, texcoord1: the corner's own, moved by these; texcoord2 the
      * corner's own (voxel.v.pica: shadowSel 1, 1 adds them up) */
@@ -10399,6 +10999,212 @@ static void ShadowBlurPass(void)
     C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleU, 0.0f, 0.0f, 0.0f, 0.0f);
     C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleV, 0.0f, 0.0f, 0.0f, 0.0f);
     sDrawSet = 0;
+}
+
+/* Whether the screen's tilt-shift bands are drawn by CtrVoxel_DioramaFused
+ * (settings voxel_fused_blur, off by default). */
+unsigned CtrVoxel_MeasureCut(void)
+{
+    return sMeasureCut;
+}
+
+bool CtrVoxel_FusedBlurOn(void)
+{
+    return sMeasureFusedBlur;
+}
+
+/* One band's quad: x from 1 to the picture's last column but one, y0..y1, the
+ * texture coordinates the picture's own pixels have on the surface (one texel
+ * a pixel, v counted from the bottom as citro2d does) and the gradient in
+ * `shade`: shade0 on the y0 corners, shade1 on the y1 ones. The shader scales
+ * positions by 1/512 and the pass multiplies them by 8 again (its model-view),
+ * so a pixel is 64 units: 399 pixels still fit a short. */
+static void FusedBandQuad(VoxelGpuVertex *quad, int y0, int y1, int16_t shade0, int16_t shade1)
+{
+    const int columns[2] = {1, CTR_GAME_WIDTH - 1};
+
+    for (int i = 0; i < 4; ++i)
+    {
+        int px = columns[i & 1], py = i < 2 ? y0 : y1;
+
+        quad[i].u = (float)px / VOXEL_SURFACE_W;
+        quad[i].v = 1.0f - (float)py / VOXEL_SURFACE_H;
+        quad[i].x = (int16_t)(px * 64);
+        quad[i].y = (int16_t)(py * 64);
+        quad[i].z = 0;
+        quad[i].shade = i < 2 ? shade0 : shade1;
+    }
+}
+
+/*
+ * The screen's tilt-shift bands in one pass. The compositor blended each band
+ * four times over the picture (two taps, each LINEAR half a texel off one way
+ * or the other, each over the base), so every band pixel was shaded three
+ * times in all. Here each is shaded once, from three texture units that read
+ * the same surface:
+ *   unit 2: the picture's own texel (an alias of `surface`, NEAREST),
+ *   unit 0: the +0.5, +0.5 tap (an alias, LINEAR), unit 1: the -0.5, -0.5 tap
+ * and the texture environment makes lerp(lerp(base, tapB, a1), tapC, a2), what
+ * two src-alpha blends of the taps over the base come to. a1 and a2 come out
+ * of the vertex program as the primary colour's red and green: with grade 0
+ * (t = 0) and no tint difference, colour = shade * shadeTint, shade the
+ * band's gradient (1 at the screen's edge, 0 at its inner edge, linear across
+ * the quad as the compositor's vertex alphas are) and shadeTint (a1, a2) at
+ * full strength; no halving, as the environment does not double it here.
+ *
+ * Drawn into the render target already current (the screen's, 400x240 of
+ * pixels, tilted as citro2d's scene), over the rows the caller left undrawn,
+ * with the world's program and no blending. `topRows` and `bottomRows` are the
+ * bands' heights; `strength` the blur's, 0..1. False, with nothing drawn, if
+ * the pass cannot be made: the caller then composes the old way.
+ */
+bool CtrVoxel_DioramaFused(C3D_Tex *surface, float strength, int topRows, int bottomRows)
+{
+    /* each band's tap weights: the +0.5 tap's, then the -0.5 tap's */
+    static const float weights[2][2] = {{0.67f, 0.50f}, {0.60f, 0.45f}};
+    /* the surface under two filters: a C3D_Tex has one, and the taps are
+     * LINEAR where the picture itself stays NEAREST. Never deleted: they only
+     * point at the surface's memory. */
+    static C3D_Tex nearest, linear;
+    static VoxelGpuVertex *bands;
+    static int builtTop = -1, builtBottom = -1;
+    uint32_t *flags = (uint32_t *)(void *)(__C3D_Context + C3DI_CONTEXT_FLAGS);
+    C3D_Tex **bound = (C3D_Tex **)(void *)(__C3D_Context + C3DI_CONTEXT_TEX);
+    C3D_Mtx ortho, pixels;
+    C3D_TexEnv *env;
+    const float du = 0.5f / VOXEL_SURFACE_W, dv = 0.5f / VOXEL_SURFACE_H;
+
+    if (!sReady || surface == NULL || surface->data == NULL || topRows <= 0 || bottomRows <= 0
+     || topRows + bottomRows > CTR_GAME_HEIGHT
+     || sUniProjection < 0 || sUniModelView < 0 || sUniOrigin < 0 || sUniShadeTint < 0
+     || sUniTintDiff < 0 || sUniGrade < 0 || sUniDappleU < 0 || sUniDappleV < 0
+     || sUniShadowU < 0 || sUniShadowV < 0 || sUniShadowW < 0 || sUniShadowSel < 0)
+        return false;
+    if (bands == NULL)
+    {
+        bands = linearAlloc(8 * sizeof(VoxelGpuVertex));
+        if (bands == NULL)
+            return false;
+    }
+    if (builtTop != topRows || builtBottom != bottomRows)
+    {
+        /* top band: full at row 0, clear at its inner edge; the bottom one the
+         * other way round. Written once for the sizes it is asked for, so the
+         * second eye's pass reads what the first drew from. */
+        FusedBandQuad(bands, 0, topRows, 16384, 0);
+        FusedBandQuad(bands + 4, CTR_GAME_HEIGHT - bottomRows, CTR_GAME_HEIGHT, 0, 16384);
+        GSPGPU_FlushDataCache(bands, 8 * sizeof(VoxelGpuVertex));
+        builtTop = topRows;
+        builtBottom = bottomRows;
+    }
+    /* Copies of the surface, taken again each time: its memory and format are
+     * what they are now, and only the filter differs. */
+    nearest = *surface;
+    linear = *surface;
+    C3D_TexSetFilter(&nearest, GPU_NEAREST, GPU_NEAREST);
+    C3D_TexSetFilter(&linear, GPU_LINEAR, GPU_LINEAR);
+
+    BindWorldProgram(false);
+    {
+        C3D_AttrInfo *attr = C3D_GetAttrInfo();
+
+        /* VoxelGpuVertex: texcoord (2 floats), then position + shade (4 shorts) */
+        AttrInfo_Init(attr);
+        AttrInfo_AddLoader(attr, 1, GPU_FLOAT, 2);
+        AttrInfo_AddLoader(attr, 0, GPU_SHORT, 4);
+    }
+    sDrawSet = 0;
+
+    /* The target's own pixels: 400x240, x right, y down, tilted for the
+     * screen as citro2d's scene is. The model-view takes the shader's 1/512
+     * back to 1/64 of a unit, 64 to a pixel. */
+    Mtx_OrthoTilt(&ortho, 0.0f, (float)CTR_GAME_WIDTH, (float)CTR_GAME_HEIGHT, 0.0f, 1.0f, -1.0f, true);
+    Mtx_Identity(&pixels);
+    pixels.r[0].x = 8.0f;
+    pixels.r[1].y = 8.0f;
+    pixels.r[2].z = 8.0f;
+    SetProjection(&ortho);
+    UploadModelView(&pixels);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniOrigin, 0.0f, 0.0f, 0.0f, 0.0f);
+    /* texcoord0 = the corner + (du, -dv): the +0.5, +0.5 tap, v running the
+     * other way to the rows; texcoord1 = the corner - (du, -dv); texcoord2 =
+     * the corner (voxel.v.pica: shadowSel 1, 1 adds the corner's own to each
+     * of the first two). The w of a row is its constant: the view's w is 1. */
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowU, 0.0f, 0.0f, 0.0f, du);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowV, 0.0f, 0.0f, 0.0f, -dv);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowW, 0.0f, 0.0f, 0.0f, 0.0f);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleU, 0.0f, 0.0f, 0.0f, -du);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleV, 0.0f, 0.0f, 0.0f, dv);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowSel, 1.0f, 1.0f, 0.0f, 0.0f);
+    /* t = clamp(shade * 0 + 0) = 0 and no tint difference: colour.rgb =
+     * shade * shadeTint, which each band sets to its two weights below */
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniTintDiff, 0.0f, 0.0f, 0.0f, 0.0f);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniGrade, 0.0f, 0.0f, 0.0f, 0.0f);
+
+    C3D_TexBind(0, &linear);
+    C3D_TexBind(1, &linear);
+    C3D_TexBind(2, &nearest);
+
+    /* tapB x a1 + base x (1 - a1), a1 the primary colour's red; the alpha
+     * full, the picture's alpha being what the screen does without */
+    env = C3D_GetTexEnv(0);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_RGB, GPU_TEXTURE0, GPU_TEXTURE2, GPU_PRIMARY_COLOR);
+    C3D_TexEnvOpRgb(env, GPU_TEVOP_RGB_SRC_COLOR, GPU_TEVOP_RGB_SRC_COLOR, GPU_TEVOP_RGB_SRC_R);
+    C3D_TexEnvFunc(env, C3D_RGB, GPU_INTERPOLATE);
+    C3D_TexEnvSrc(env, C3D_Alpha, GPU_CONSTANT, GPU_CONSTANT, GPU_CONSTANT);
+    C3D_TexEnvFunc(env, C3D_Alpha, GPU_REPLACE);
+    C3D_TexEnvColor(env, 0xFFFFFFFFu);
+    /* tapC x a2 + that x (1 - a2), a2 the primary colour's green */
+    env = C3D_GetTexEnv(1);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_RGB, GPU_TEXTURE1, GPU_PREVIOUS, GPU_PRIMARY_COLOR);
+    C3D_TexEnvOpRgb(env, GPU_TEVOP_RGB_SRC_COLOR, GPU_TEVOP_RGB_SRC_COLOR, GPU_TEVOP_RGB_SRC_G);
+    C3D_TexEnvFunc(env, C3D_RGB, GPU_INTERPOLATE);
+    C3D_TexEnvSrc(env, C3D_Alpha, GPU_PREVIOUS, GPU_PREVIOUS, GPU_PREVIOUS);
+    C3D_TexEnvFunc(env, C3D_Alpha, GPU_REPLACE);
+    for (int i = 2; i < 6; ++i)
+        C3D_TexEnvInit(C3D_GetTexEnv(i));
+
+    /* No blending, alpha test or depth: the colour replaces what the picture
+     * under the bands would have been (the caller left them undrawn) */
+    C3D_CullFace(GPU_CULL_NONE);
+    C3D_AlphaTest(false, GPU_ALWAYS, 0);
+    C3D_DepthTest(false, GPU_ALWAYS, GPU_WRITE_COLOR);
+    C3D_ColorLogicOp(GPU_LOGICOP_COPY);
+    for (int band = 0; band < 2; ++band)
+    {
+        C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadeTint,
+                      weights[band][0] * strength, weights[band][1] * strength, 0.0f, 0.0f);
+        BindVertices(bands);
+        C3D_DrawArrays(GPU_TRIANGLE_STRIP, band * 4, 4);
+    }
+
+    /* As the world's passes leave things for the compositor: every stage
+     * plain (the first two are the pass's), the tree atlas on unit 2, unit 1
+     * free, the uniforms written again. */
+    for (int i = 0; i < 2; ++i)
+        C3D_TexEnvInit(C3D_GetTexEnv(i));
+    C3D_ColorLogicOp(GPU_LOGICOP_COPY);
+    if (sTreeAtlas.data != NULL)
+        C3D_TexBind(2, &sTreeAtlas);
+    else if (bound[2] == &nearest)
+    {
+        bound[2] = NULL;
+        *flags |= C3DI_FLAG_TEX(2);
+    }
+    if (bound[1] == &linear)
+    {
+        bound[1] = NULL;
+        *flags |= C3DI_FLAG_TEX(1);
+    }
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowSel, 1.0f, 0.0f, 0.0f, 0.0f);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowU, 0.0f, 0.0f, 0.0f, 0.0f);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowV, 0.0f, 0.0f, 0.0f, 0.0f);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleU, 0.0f, 0.0f, 0.0f, 0.0f);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleV, 0.0f, 0.0f, 0.0f, 0.0f);
+    sDrawSet = 0;
+    return true;
 }
 
 /* The world's texel on the unit it is read from: 1 under the map. */
@@ -10773,7 +11579,7 @@ static void DrawBanks(const C3D_Mtx *view, const VoxelLight *light, const FogBan
         Mtx_Translate(&model, floorf(sCamera.targetX / period) * period + dx,
                       sCamera.ground + banks[bank].height,
                       floorf(sCamera.targetZ / period) * period + dz, true);
-        C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniModelView, &model);
+        UploadModelView(&model);
         SetOrigin(0.0f, 0.0f);
 
         /* 0: the fog colour, coverage = texture x shade, doubled. */
@@ -11069,6 +11875,7 @@ static void DrawWeather(const C3D_Mtx *projection, const C3D_Mtx *view, const Vo
     if (flash > 0.0f)
         colour = 0xFFFFFFFFu;
     C3D_BindProgram(&sWeatherProgram);
+    sPlainBound = false;
     attr = C3D_GetAttrInfo();
     AttrInfo_Init(attr);
     AttrInfo_AddLoader(attr, 1, GPU_BYTE, 4);
@@ -11078,10 +11885,10 @@ static void DrawWeather(const C3D_Mtx *projection, const C3D_Mtx *view, const Vo
     BufInfo_Add(buf, vertices, sizeof(WeatherVertex), 2, 0x10);
 
     /* The rays left their own projection and model-view behind. */
-    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniProjection, projection);
+    SetProjection(projection);
     Mtx_Copy(&model, view);
     Mtx_Translate(&model, (float)sDrawAnchorX, 0.0f, (float)sDrawAnchorZ, true);
-    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniModelView, &model);
+    UploadModelView(&model);
     /* The haze as the world's, with no grade: only fog is read. */
     for (int c = 0; c < 3; ++c)
         graded.sun[c] = graded.shade[c] = 1.0f;
@@ -11164,7 +11971,7 @@ static void DrawWeather(const C3D_Mtx *projection, const C3D_Mtx *view, const Vo
 
     /* The world's program and vertices back, for what draws after. */
     C3D_DepthTest(true, GPU_GREATER, GPU_WRITE_ALL);
-    C3D_BindProgram(&sProgram);
+    BindWorldProgram(sPlainDraw);
     attr = C3D_GetAttrInfo();
     AttrInfo_Init(attr);
     AttrInfo_AddLoader(attr, 1, GPU_FLOAT, 2);
@@ -12137,8 +12944,8 @@ static void ShadowMapRender(void)
         C3D_TexEnv *env = C3D_GetTexEnv(0);
 
         Mtx_Identity(&one);
-        C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniProjection, &one);
-        C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniModelView, &one);
+        SetProjection(&one);
+        UploadModelView(&one);
         C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniOrigin, 0.0f, 0.0f, 0.0f, 0.0f);
         C3D_DepthTest(false, GPU_ALWAYS, GPU_WRITE_COLOR);
         C3D_AlphaTest(false, GPU_ALWAYS, 0);
@@ -12171,7 +12978,7 @@ static void ShadowMapRender(void)
     /* lit casters put sShadowBias further from the sun (voxel.v.pica) */
     C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowSel, 1.0f, 0.0f,
                   sShadowBias / VOXEL_SHADOW_MAP_DEPTH, VoxelLighting_Ambient());
-    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniProjection, &projection);
+    SetProjection(&projection);
 
     /* green 0 writes the depth, else full light: 1 - the texel's alpha */
     {
@@ -12241,7 +13048,7 @@ static void ShadowMapRender(void)
             {
                 copy.r[0].w = projection.r[0].w + dirs[k][0] * reach / sShadowHalfU;
                 copy.r[1].w = projection.r[1].w + dirs[k][1] * reach / sShadowHalfV;
-                C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniProjection, &copy);
+                SetProjection(&copy);
                 ShadowMapCasters(&identity);
             }
         }
@@ -12340,7 +13147,9 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
     /* Each value written once in this Draw before any is left as it stands. */
     sDrawSet = 0;
 
-    C3D_BindProgram(&sProgram);
+    /* The plain program needs nothing of the shadow map, and only a Draw with
+     * no map has no caster pass (ShadowMapRender) or blur pass either. */
+    BindWorldProgram(sMeasurePlain && !shadowMap);
 
     /* VoxelGpuVertex: texcoord (2 floats), then position + shade (4 shorts). */
     attr = C3D_GetAttrInfo();
@@ -12368,6 +13177,17 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
         sDrawSet = 0;
     }
     C3D_FrameDrawOn(target);
+    /* The picture is the surface's top-left 400x240 (FitToLogicalSurface) and
+     * the viewport all 512x256 of it: without a scissor the world past the
+     * picture's right and bottom edges was drawn into the margin, up to a
+     * quarter of the fill, where nothing reads it. A few columns and rows are
+     * kept past the edge for the taps that blur the picture (SwoopBlur). The
+     * GPU's rows count from the bottom, so the picture's are the upper 240.
+     * The callers turn the scissor off after the Draw, as they did. */
+    if (sMeasureScissor)
+        C3D_SetScissor(GPU_SCISSOR_NORMAL, 0, (u32)(VOXEL_SURFACE_H - CTR_GAME_HEIGHT) - VOXEL_SCISSOR_MARGIN,
+                       (sMeasureCut & CTR_VOXEL_CUT_HALF) ? (u32)CTR_GAME_WIDTH / 2u
+                       : (u32)CTR_GAME_WIDTH + VOXEL_SCISSOR_MARGIN, (u32)VOXEL_SURFACE_H);
     Mtx_Copy(&sDrawModelView, &view);
     Mtx_Translate(&sDrawModelView, (float)sDrawAnchorX, 0.0f, (float)sDrawAnchorZ, true);
     sShadowOn = shadowMap && sShadowReady;
@@ -12416,7 +13236,7 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
     C3D_DepthTest(true, GPU_GREATER, GPU_WRITE_ALL);
     C3D_ColorLogicOp(GPU_LOGICOP_COPY);
 
-    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniProjection, &projection);
+    SetProjection(&projection);
     SetGrade(&light);
 
     /*
@@ -12429,6 +13249,13 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
      * Draw's, SetModelView) and is drawn from the chunks' shared buffer table
      * (BindChunkVertices).
      */
+    DrawParts();
+    {
+        static int every = -1;
+
+        if (every < 0) every = CtrSettings_GetInt("voxel_view_audit", 0);
+        if (every > 0 && sFrame % (unsigned)every == (unsigned)every / 2u && eye <= 0) ViewAudit();
+    }
     partStart = Port_ProfTick();
     for (unsigned pass = 0; pass < VOXEL_ATLAS_PAGES + 2u; ++pass)
     {
@@ -12438,6 +13265,9 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
         C3D_AlphaTest(true, GPU_GREATER, 0);
         if (sShadowOn)
             ShadowReceive(true);
+        if (sMeasureCut & (pass < VOXEL_ATLAS_PAGES ? CTR_VOXEL_CUT_GROUND
+                           : pass == VOXEL_ATLAS_PAGES ? CTR_VOXEL_CUT_TREES : CTR_VOXEL_CUT_BUILDINGS))
+            continue;
 
         for (unsigned i = 0; i < sDrawCount; ++i)
         {
@@ -12488,6 +13318,28 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
                 ShadowReceive(true);
                 continue;
             }
+            if (pass < VOXEL_ATLAS_PAGES && sDraws[i].parts != VOXEL_PARTS_ALL)
+            {
+                /* the parts in the picture, each run of them one draw */
+                for (unsigned part = 0; part < VOXEL_PARTS;)
+                {
+                    unsigned next = part + 1u, from, run;
+
+                    if (!(sDraws[i].parts >> part & 1u))
+                    {
+                        part = next;
+                        continue;
+                    }
+                    while (next < VOXEL_PARTS && (sDraws[i].parts >> next & 1u))
+                        ++next;
+                    from = ChunkPartFirst(chunk, pass, part);
+                    run = ChunkPartFirst(chunk, pass, next) - from;
+                    if (run != 0)
+                        C3D_DrawArrays(GPU_TRIANGLES, BindChunkVertices(chunk, from, run), (int)run);
+                    part = next;
+                }
+                continue;
+            }
             C3D_DrawArrays(GPU_TRIANGLES, BindChunkVertices(chunk, first, count), (int)count);
         }
         if (pass == VOXEL_ATLAS_PAGES + 1u && sHaveBuildings)
@@ -12512,7 +13364,7 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
         sShadowOn = false;
         ShadowUniforms(NULL);
         ShadowBlurPass();
-        C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, sUniProjection, &projection);
+        SetProjection(&projection);
         FadeFor(false);
         C3D_TexEnvInit(C3D_GetTexEnv(5));
         if (sShadowAtlasBound != NULL)

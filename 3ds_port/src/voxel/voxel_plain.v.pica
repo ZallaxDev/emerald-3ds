@@ -1,0 +1,92 @@
+; Voxel terrain vertex shader without the shadow map: voxel.v.pica for every
+; Draw that neither samples a shadow map nor draws one (always on the Old 3DS
+; at LOW, and at HIGH indoors, at night, or when the map cannot be made).
+;
+; It is voxel.v.pica with shadowU = shadowV = shadowW = 0 and shadowSel =
+; (1, 0, 0, w), worked out once instead of at every vertex: no shadow
+; coordinates, no depth bias, the atlas' texcoord straight to texcoord0 and
+; the dapples alone in texcoord1. The kept arithmetic is the same operations in
+; the same order, so colour and coordinates come out as the full program's.
+;
+; `projection` is projection * modelView here, folded on the CPU
+; (SetProjection and UploadModelView in ctr_voxel.c): the position goes through
+; one matrix instead of two. modelView is still uploaded, for the third row,
+; the view-space depth the haze needs. The uniforms are declared as the full
+; program declares them, in the same order, so every register is where the
+; uploads put it; the shadow ones are never read.
+;
+; texcoord0 is the texture's own (u, v, 0, 1): its z and w, the full program's
+; 0 + 0 and 0 + 1 from the missing components of a two-float attribute, are
+; the attribute's own defaults.
+
+.fvec projection[4], modelView[4], origin
+.fvec shadeTint, tintDiff, grade, fog
+.fvec dappleU, dappleV
+.fvec shadowU, shadowV, shadowW, shadowSel
+
+; x: position scale, y: shade scale, z: 0, w: 1
+.constf ctrVoxelConst(0.001953125, 0.00006103515625, 0.0, 1.0)
+.alias  ones  ctrVoxelConst.wwww
+.alias  zeros ctrVoxelConst.zzzz
+
+.out outpos position
+.out outtc0 texcoord0
+.out outtc0w texcoord0w
+.out outtc1 texcoord1
+.out outtc2 texcoord2
+.out outclr color
+
+.alias inpos v0 ; x, y, z, shade
+.alias intex v1 ; u, v
+
+.entry plainMain
+.proc plainMain
+	mul r0.xyz, ctrVoxelConst.xxxx, inpos
+	mov r0.w,   ones
+
+	; r7 = position from the anchor (origin.w is 0)
+	add r7, origin, r0
+
+	; outpos = (projection * modelView) * r7
+	dp4 outpos.x, projection[0], r7
+	dp4 outpos.y, projection[1], r7
+	dp4 outpos.z, projection[2], r7
+	dp4 outpos.w, projection[3], r7
+
+	; r1.z = view-space depth, for the haze
+	dp4 r1.z, modelView[2], r7
+
+	; r2 = shade
+	mul r2, ctrVoxelConst.yyyy, inpos.wwww
+
+	mov outtc2, intex
+	mov outtc0, intex
+	mov outtc0w, zeros
+
+	; r6 = the dapple pattern's coordinates
+	mov r6, zeros
+	dp4 r6.x, dappleU, r0
+	dp4 r6.y, dappleV, r0
+	mov outtc1, r6
+
+	; r3 = t
+	mul r3, grade.xxxx, r2
+	add r3, grade.yyyy, r3
+	max r3, zeros, r3
+	min r3, ones, r3
+
+	; r4 = shade * lerp(shadeTint, sunTint, t)
+	mul r4, tintDiff, r3
+	add r4, shadeTint, r4
+	mul r4, r2, r4
+	mov outclr.xyz, r4
+
+	; r5 = haze from view-space depth (the camera looks down -Z)
+	mul r5, fog.xxxx, r1.zzzz
+	add r5, fog.yyyy, r5
+	max r5, zeros, r5
+	min r5, fog.zzzz, r5
+	add outclr.w, ones, -r5
+
+	end
+.end
