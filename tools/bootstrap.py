@@ -98,7 +98,8 @@ def prepare_pokeruby(tree: Path, repo: str, commit: str, game: str) -> None:
         def git(*args):
             return subprocess.check_output(["git", *args], cwd=tree, text=True).strip()
 
-        if git("remote", "get-url", "origin") != repo or git("rev-parse", "HEAD") != commit:
+        # get-url applies insteadOf rewrites; compare what remote add stored.
+        if git("config", "--local", "--get", "remote.origin.url") != repo or git("rev-parse", "HEAD") != commit:
             raise ValueError("Checkout differs from the pinned upstream; preserve it and choose a new directory.")
         if git("status", "--porcelain", "--untracked-files=all"):
             raise ValueError("Checkout contains local changes; preserve them and choose a new directory.")

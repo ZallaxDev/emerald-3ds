@@ -79,6 +79,26 @@ class PokerubyBootstrapTests(unittest.TestCase):
             self.assertEqual(self.invoke("--game", "ruby", "--dir", tree)[0], 0)
             run.assert_not_called()
 
+    def test_repeat_compares_stored_url_without_instead_of_rewrites(self):
+        tree = self.prepare()
+        mirror = "https://example.invalid/mirror.git"
+        self.git(tree, "config", "url.%s.insteadOf" % mirror, str(self.upstream))
+        self.assertEqual(self.git(tree, "remote", "get-url", "origin"), mirror)
+        self.assertEqual(self.git(tree, "config", "--get", "remote.origin.url"), str(self.upstream))
+        with patch.object(bootstrap, "run") as run:
+            self.assertEqual(self.invoke("--game", "ruby")[0], 0)
+            run.assert_not_called()
+
+    def test_rewrite_does_not_hide_a_changed_stored_remote(self):
+        tree = self.prepare()
+        other = "https://example.invalid/other.git"
+        self.git(tree, "remote", "set-url", "origin", other)
+        self.git(tree, "config", "url.%s.insteadOf" % self.upstream, other)
+        self.assertEqual(self.git(tree, "remote", "get-url", "origin"), str(self.upstream))
+        with self.assertRaises(SystemExit):
+            self.invoke("--game", "ruby")
+        self.assertEqual(self.git(tree, "config", "--get", "remote.origin.url"), other)
+
     def test_build_cleanup_and_locale_options_fail_before_preparation(self):
         options = (("--make",), ("--clean",), ("--port-lang", "pt_br")) + tuple(
             ("--" + language + "-rom", "unused.gba")
