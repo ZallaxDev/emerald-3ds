@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Development: compile the pinned English Ruby/Sapphire task and RNG modules
+  for the 3DS ABI in a separate CI check. This is a compile-only milestone,
+  not a playable port (#247). By @mkrieger95.
+
 - Development: optional, pinned Ruby/Sapphire source-only checkouts via
   `bootstrap.py --game ruby|sapphire`, isolated from Emerald's port and patches.
   Emerald remains the priority; no playable support is added (#247).

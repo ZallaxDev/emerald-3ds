@@ -5,6 +5,21 @@ on:
   pull_request:
 
 jobs:
+  pokeruby-compile:
+    # Experimental compile-only milestone, independent of Emerald's build.
+    runs-on: ubuntu-24.04
+    container: devkitpro/devkitarm:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Host tools for the upstream charmap preprocessor
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends build-essential python3 git
+      - name: Prepare pinned Ruby/Sapphire source only
+        run: python3 tools/bootstrap.py --game ruby
+      - name: Compile real task and RNG modules for both English games
+        run: python3 tools/check_pokeruby_3ds.py
+
   audit-and-python:
     runs-on: ubuntu-latest
     steps:

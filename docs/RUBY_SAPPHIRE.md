@@ -51,6 +51,41 @@ The player-facing builder and release pipeline still do not support
 Ruby/Sapphire. This developer option does not enable either ROM or change
 the support messages for other games. FireRed/LeafGreen are outside this work.
 
+## First 3DS compile checks
+
+With devkitARM (including binutils and newlib) and a host C++ compiler installed:
+
+```sh
+python tools/bootstrap.py --game ruby
+python tools/check_pokeruby_3ds.py
+```
+
+The check uses that one shared upstream checkout to compile the actual
+`src/task.c` and `src/random.c` for both Ruby and Sapphire, English revision 0.
+It uses ARMv6K, ARM instruction mode and the hard-float calling convention,
+matching Emerald's 3DS target. The task size, data offsets, integer widths and
+pointer sizes are checked against the real game headers. A relocatable link
+checks that the compiled game symbols are present; it does not produce a
+complete executable or resolve all runtime dependencies.
+
+The upstream charmap preprocessor is built and run, so task text is processed
+normally. No replacement game headers, placeholder strings or IDE-only macros
+are used to make compilation pass. The include path uses `-iquote` so the
+game's `strings.h` cannot shadow newlib's system header. Warnings are errors,
+apart from unused parameters in the upstream game's callback interfaces.
+
+`DEVKITARM` selects the toolchain; `--cc` can explicitly name its
+`arm-none-eabi-gcc`. `--host-cxx` selects the host C++ compiler. `--tree` accepts
+another clean checkout at the locked origin and revision; no checkout is
+reset or patched. `--game ruby` or `--game sapphire` limits the compile check to
+one game (both by default).
+
+All generated files live in a temporary directory and are removed afterward.
+The source checkout is not modified. CI's separate `pokeruby-compile` job
+repeats the check without changing Emerald's build path or ROM acceptance.
+This is compile-time evidence only: scheduling, RNG behavior and game boot
+have not been tested on the 3DS, and Ruby/Sapphire remain unplayable.
+
 ## Next development work
 
 A playable port still needs game-specific bridge hooks and patches, a 3DS build
