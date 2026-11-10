@@ -409,8 +409,9 @@ build/ctr_voxel.o: src/voxel/ctr_voxel.c Makefile full.mk
 	@mkdir -p $(dir $@)
 	"$(CC)" $(CPPFLAGS) $(CFLAGS) -Isrc/voxel -MMD -MP -c $< -o $@
 
-# The world's program first, the weather particles' second (DVLE 0 and 1).
-romfs/shaders/voxel.shbin: src/voxel/voxel.v.pica src/voxel/voxel_weather.v.pica
+# The world's program first, the weather particles' second, the world's without
+# the shadow map third (DVLE 0, 1 and 2).
+romfs/shaders/voxel.shbin: src/voxel/voxel.v.pica src/voxel/voxel_weather.v.pica 		src/voxel/voxel_plain.v.pica
 	@mkdir -p $(dir $@)
 	$(DEVKITPRO)/tools/bin/picasso -o $@ $^
 

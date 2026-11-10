@@ -11332,7 +11332,7 @@ index 665cccec3cbc145722424b75b73a4c526b565b25..09992f8b2d825d423c8c7947e56624dd
      PutWindowTilemap(popupWindowId);
      if (gMapHeader.weather == WEATHER_UNDERWATER_BUBBLES)
 diff --git a/src/match_call.c b/src/match_call.c
-index 41188f51bbc5fd25e401b58c86c95b538a5b5750..0757196633156479c7b22e9cd264426f6a67e9bc 100644
+index 41188f51bbc5fd25e401b58c86c95b538a5b5750..4409f62fc15c61c23aa6558efb15b09ea6209616 100644
 --- a/src/match_call.c
 +++ b/src/match_call.c
 @@ -134,7 +134,7 @@ static u32 GetCurrentTotalMinutes(struct Time *);
@@ -11344,7 +11344,27 @@ index 41188f51bbc5fd25e401b58c86c95b538a5b5750..0757196633156479c7b22e9cd264426f
  static bool32 TrainerIsEligibleForRematch(int);
  static void StartMatchCall(void);
  static void ExecuteMatchCall(u8);
-@@ -1237,11 +1237,27 @@ static const struct WindowTemplate sMatchCallTextWindow =
+@@ -1153,8 +1153,19 @@ static u32 GetActiveMatchCallTrainerId(u32 activeMatchCallId)
+     - If in a valid outdoor map (not Safari Zone, not underwater, not Mt Chimney with Team Magma, not Sootopolis with legendaries)
+     - If an eligible trainer to call the player is selected
+ */
++#ifdef PLATFORM_3DS
++// A recorded scenario replays its buttons blind: a call opens a box the
++// recording never answers. Whether one comes depends on the real clock
++// (the ten minutes), so it differed between the emulator and the console.
++_Bool CtrScenario_Playing(void);
++#endif
++
+ bool32 TryStartMatchCall(void)
+ {
++#ifdef PLATFORM_3DS
++    if (CtrScenario_Playing())
++        return FALSE;
++#endif
+     if (FlagGet(FLAG_HAS_MATCH_CALL)
+         && UpdateMatchCallStepCounter()
+         && UpdateMatchCallMinutesCounter()
+@@ -1237,11 +1248,27 @@ static const struct WindowTemplate sMatchCallTextWindow =
      .width = 28,
      .height = 4,
      .paletteNum = 15,
@@ -11372,7 +11392,7 @@ index 41188f51bbc5fd25e401b58c86c95b538a5b5750..0757196633156479c7b22e9cd264426f
  
  static bool32 MatchCall_LoadGfx(u8 taskId)
  {
-@@ -1253,7 +1269,12 @@ static bool32 MatchCall_LoadGfx(u8 taskId)
+@@ -1253,7 +1280,12 @@ static bool32 MatchCall_LoadGfx(u8 taskId)
          return FALSE;
      }
  
@@ -11385,7 +11405,7 @@ index 41188f51bbc5fd25e401b58c86c95b538a5b5750..0757196633156479c7b22e9cd264426f
      {
          RemoveWindow(tWindowId);
          DestroyTask(taskId);
-@@ -1463,7 +1484,7 @@ static bool32 TrainerIsEligibleForRematch(int matchCallId)
+@@ -1463,7 +1495,7 @@ static bool32 TrainerIsEligibleForRematch(int matchCallId)
      return gSaveBlock1Ptr->trainerRematches[matchCallId] > 0;
  }
  

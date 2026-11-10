@@ -441,6 +441,98 @@ static void SurfaceDenied(unsigned bits)
  */
 static volatile uint8_t sGpuStage;
 
+/*
+ * settings.txt gpu_ops=N (measure only): what the GPU's time in a frame goes
+ * on, by the kind of work. The queue runs its commands one at a time and each
+ * ends in an interrupt - a memory fill (a clear), a transfer (a picture to
+ * the screen, a copy) or a list of drawing commands (one per split of the
+ * frame) - so with the queue never empty, which is the Old 3DS in the voxel
+ * field, the time between two interrupts is the command that ended at the
+ * second. Summed from the frame's early start (GpuStartEarly) and logged as
+ * means every N frames of them, or when the voxel module asks
+ * (CtrVideo_GpuOpsFlush: at each change of an A/B round). The lists are told
+ * apart by their order in the frame: in the voxel field the world, then its
+ * picture to the screen with what is laid over it, for each eye, then the
+ * rest.
+ */
+enum { OPS_FILL, OPS_COPY, OPS_LIST, OPS_KINDS, OPS_LISTS = 8 };
+
+static struct
+{
+    volatile bool live;
+    uint32_t last;
+    unsigned list;
+    uint32_t frames;
+    uint64_t ticks[OPS_KINDS];
+    uint32_t count[OPS_KINDS];
+    uint64_t lists[OPS_LISTS];
+} sOps;
+static int sOpsEvery = -1;
+
+static void OpsEvent(void *arg)
+{
+    unsigned kind = (unsigned)(uintptr_t)arg;
+    uint32_t now = (uint32_t)svcGetSystemTick(), spent;
+
+    if (!sOps.live) return;
+    spent = now - sOps.last;
+    sOps.last = now;
+    sOps.ticks[kind] += spent;
+    sOps.count[kind]++;
+    if (kind == OPS_LIST)
+    {
+        sOps.lists[sOps.list < OPS_LISTS ? sOps.list : OPS_LISTS - 1] += spent;
+        sOps.list++;
+    }
+}
+
+void CtrVideo_GpuOpsFlush(void)
+{
+    char lists[OPS_LISTS * 8 + 1];
+    double ms = 1000.0 / SYSCLOCK_ARM11;
+    unsigned at = 0;
+
+    if (sOpsEvery <= 0 || sOps.frames == 0) return;
+    sOps.live = false;
+    ms /= sOps.frames;
+    lists[0] = 0;
+    for (unsigned i = 0; i < OPS_LISTS; ++i)
+        at += (unsigned)snprintf(lists + at, sizeof(lists) - at, " %.2f", (double)sOps.lists[i] * ms);
+    CtrLog_Write(CTR_LOG_VIDEO, "GPU OPS %lu frames to game frame %lu, ms a frame (commands): fills %.2f (%.1f) "
+                 "transfers %.2f (%.1f) lists %.2f (%.1f), by list:%s",
+                 (unsigned long)sOps.frames, (unsigned long)CtrPlatform_FrameCount(),
+                 (double)sOps.ticks[OPS_FILL] * ms, (double)sOps.count[OPS_FILL] / sOps.frames,
+                 (double)sOps.ticks[OPS_COPY] * ms, (double)sOps.count[OPS_COPY] / sOps.frames,
+                 (double)sOps.ticks[OPS_LIST] * ms, (double)sOps.count[OPS_LIST] / sOps.frames, lists);
+    sOps.frames = 0;
+    memset(sOps.ticks, 0, sizeof(sOps.ticks));
+    memset(sOps.count, 0, sizeof(sOps.count));
+    memset(sOps.lists, 0, sizeof(sOps.lists));
+}
+
+/* The frame's queue is about to run. */
+static void OpsFrameStart(void)
+{
+    if (sOpsEvery < 0)
+    {
+        sOpsEvery = CtrSettings_GetInt("gpu_ops", 0);
+        if (sOpsEvery > 0)
+        {
+            gspSetEventCallback(GSPGPU_EVENT_PSC0, OpsEvent, (void *)(uintptr_t)OPS_FILL, false);
+            gspSetEventCallback(GSPGPU_EVENT_PSC1, OpsEvent, (void *)(uintptr_t)OPS_FILL, false);
+            gspSetEventCallback(GSPGPU_EVENT_PPF, OpsEvent, (void *)(uintptr_t)OPS_COPY, false);
+            gspSetEventCallback(GSPGPU_EVENT_P3D, OpsEvent, (void *)(uintptr_t)OPS_LIST, false);
+        }
+    }
+    if (sOpsEvery <= 0) return;
+    if (sOps.frames >= (uint32_t)sOpsEvery) CtrVideo_GpuOpsFlush();
+    sOps.live = false;
+    sOps.list = 0;
+    sOps.frames++;
+    sOps.last = (uint32_t)svcGetSystemTick();
+    sOps.live = true;
+}
+
 static void GpuStartEarly(unsigned at)
 {
     if (!GpuEarlyThisFrame() || sGpuEarly || sFrameQueue == NULL) return;
@@ -450,6 +542,7 @@ static void GpuStartEarly(unsigned at)
     sGpuEarly = true;
     sGpuEarlyAt = (uint8_t)at;
     sGpuEarlyStart = svcGetSystemTick();
+    OpsFrameStart();
     gxCmdQueueRun(sFrameQueue);
 }
 

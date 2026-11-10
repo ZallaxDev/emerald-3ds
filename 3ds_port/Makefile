@@ -148,6 +148,8 @@ GAMECFLAGS += -Wno-error=incompatible-pointer-types -Wno-error=int-conversion -W
 #   CTR_AUDIO_DUMP          3ds_audio.c: the mixer's output, 600-2400 frames, to sdmc:/3ds/emerald3ds/audio.raw.
 #   CTR_STEREO_ZERO         3ds_video.c: the battle's 3D depths all 0 (the stereo path, no displacement).
 #   CTR_DUMP_OBJWIN         3ds_video.c, with FRAME_DUMP=1: frames with the OBJ window up to frames.raw.
+#   CTR_DUMP_GAME_FRAMES=n  3ds_video.c, with FRAME_DUMP=1: a picture every n frames of the game, numbered
+#                           by the game's frame, so two runs paced differently pair the same moments.
 #   CTR_DUMP_BATTLE         3ds_video.c, with FRAME_DUMP=1: battle frames to frames.raw;
 #                           CTR_DUMP_FROM=n with CTR_DUMP_STEP=m picks from which battle frame, every m.
 #   CTR_GPU_EARLY=0         3ds_video.c: the GPU is not started early within a frame (on by default).
