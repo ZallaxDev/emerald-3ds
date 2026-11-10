@@ -23,17 +23,37 @@ FRENCH_SHA1 = "ca666651374d89ca439007bed54d839eb7bd14d0"
 ITALIAN_SHA1 = "1692db322400c3141c5de2db38469913ceb1f4d4"
 GERMAN_SHA1 = "61c2eb2b380b1a75f0c94b767a2d4c26cd7ce4e3"
 JAPANESE_SHA1 = "d7cf8f156ba9c455d164e1ea780a6bf1945465c2"
+
+
+@dataclass(frozen=True)
+class RomProfile:
+    """Verified input identity, separate from a payload's output language.
+
+    A profile does not supply an engine: a matching recipe and executable
+    are still required. Keep header-only recognition in KNOWN_CODES.
+    """
+    code: str
+    name: str
+    sha1: str
+    region: str
+    language: str
+    game: str
+
+
 # Fingerprints: libretro-database/metadat/no-intro/Nintendo - Game Boy Advance.dat
-ROM_PROFILES = {"BPEE": SUPPORTED_SHA1, "BPES": SPANISH_SHA1, "BPEF": FRENCH_SHA1,
-                "BPEI": ITALIAN_SHA1, "BPED": GERMAN_SHA1, "BPEJ": JAPANESE_SHA1}
+SUPPORTED_PROFILES = (
+    RomProfile("BPEE", "Pokemon Emerald (USA, Europe)", SUPPORTED_SHA1, "USA, Europe", "en", "emerald"),
+    RomProfile("BPES", "Pokemon Emerald (Spain)", SPANISH_SHA1, "Spain", "es", "emerald"),
+    RomProfile("BPEF", "Pokemon Emerald (France)", FRENCH_SHA1, "France", "fr", "emerald"),
+    RomProfile("BPEI", "Pokemon Emerald (Italy)", ITALIAN_SHA1, "Italy", "it", "emerald"),
+    RomProfile("BPED", "Pokemon Emerald (Germany)", GERMAN_SHA1, "Germany", "de", "emerald"),
+    RomProfile("BPEJ", "Pokemon Emerald (Japan)", JAPANESE_SHA1, "Japan", "ja", "emerald"),
+)
+# Keep the fingerprint mapping used by the builder and staging tools.
+ROM_PROFILES = {profile.code: profile.sha1 for profile in SUPPORTED_PROFILES}
 ROM_SIZE = 16 * 1024 * 1024
 KNOWN_CODES = {
-    "BPEE": "Pokemon Emerald (USA, Europe)",
-    "BPEJ": "Pokemon Emerald (Japan)",
-    "BPES": "Pokemon Emerald (Spain)",
-    "BPED": "Pokemon Emerald (Germany)",
-    "BPEF": "Pokemon Emerald (France)",
-    "BPEI": "Pokemon Emerald (Italy)",
+    **{profile.code: profile.name for profile in SUPPORTED_PROFILES},
     "AXVE": "Pokemon Ruby",
     "AXVJ": "Pokemon Ruby (Japan)",
     "AXVS": "Pokemon Ruby (Spain)",

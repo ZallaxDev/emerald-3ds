@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Builder: share verified ROM profiles with web release metadata and reject
+  unregistered recipe fingerprints instead of labelling them English Emerald.
+  Preparation for issue #247; Ruby/Sapphire remain unsupported. By @mkrieger95.
+
 - Voxel: trainers buried in the ash or sand and the unseen Kecleon on Route
   120's bridge stay out of sight until they appear, as in 2D (issue #237). By
   @Johannes-Sch.

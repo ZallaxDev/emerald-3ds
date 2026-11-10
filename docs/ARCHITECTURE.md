@@ -167,3 +167,19 @@ The 128 KiB flash image is mirrored in RAM and written range by range to
 `sdmc:/3ds/emerald3ds/port.log` (the previous session is kept as
 `port-prev.log`) from a background thread, because SD writes on the render
 thread cost 50–500 ms on hardware.
+
+## ROM profiles and other games
+
+`builder/emerald3ds_builder/rom.py` keeps verified input identities in
+`SUPPORTED_PROFILES`: game, cartridge code, fingerprint, name, region and
+original language. The validator's `ROM_PROFILES` fingerprint mapping and
+web release metadata use these records. `KNOWN_CODES` also names unsupported
+games for error messages; a recognised header alone never enables a build.
+Web payload publication rejects an unregistered recipe fingerprint.
+Translations can keep one input profile while choosing another output language.
+
+This is a preparatory step for [Ruby/Sapphire support (issue #247)](https://github.com/ZallaxDev/emerald-3ds/issues/247).
+Only Emerald is supported. Adding Ruby/Sapphire requires a separately pinned
+upstream game tree, compatible bridge hooks and patches, game-specific asset
+and map extraction, voxel data, and matching recipes and executables. Adding a
+profile alone does not supply those pieces or make either game playable.
