@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Tests: complete the sign and city-lamp fixtures' terrain relief stubs and
+  update the night renderer's shadow declarations so CI can run these tests
+  again. By @mkrieger95.
+
 - Voxel: trainers buried in the ash or sand and the unseen Kecleon on Route
   120's bridge stay out of sight until they appear, as in 2D (issue #237). By
   @Johannes-Sch.

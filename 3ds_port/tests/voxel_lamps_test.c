@@ -5,6 +5,7 @@
 #include "voxel_building.h"
 #include "voxel_sign.h"
 #include "voxel_regions.h"
+#include "voxel_relief.h"
 
 #ifndef SIGN_MASK_PATH
 #define SIGN_MASK_PATH "build/voxel_lamps_fixture.bin"
@@ -53,6 +54,25 @@ const int16_t *VoxelRelief_Cell(const VoxelMapInstance *inst, int xpos, int zpos
 {
     (void)inst; (void)xpos; (void)zpos;
     return NULL;
+}
+
+/* These fixtures have no relief grid, depth map or drawn slopes. */
+const int16_t *VoxelRelief_Depth(const VoxelMapInstance *inst, int x, int y)
+{
+    (void)inst; (void)x; (void)y;
+    return NULL;
+}
+
+bool VoxelRelief_IsDrawn(const VoxelMapInstance *inst)
+{
+    (void)inst;
+    return false;
+}
+
+bool VoxelRelief_IsSlope(const int16_t *grid)
+{
+    (void)grid;
+    return false;
 }
 
 /* No lamp stands on a bridge's deck. */

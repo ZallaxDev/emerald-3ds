@@ -408,7 +408,7 @@ build/encounters_test.exe: tests/encounters_test.c src/3ds_encounters.c include/
 verify-night-lamps: build/voxel_lamps_test$(EXESUFFIX)
 	./build/voxel_lamps_test$(EXESUFFIX)
 
-build/voxel_lamps_test$(EXESUFFIX): tests/voxel_lamps_test.c src/voxel/voxel_sign.c src/voxel/voxel_sign.h
+build/voxel_lamps_test$(EXESUFFIX): tests/voxel_lamps_test.c src/voxel/voxel_sign.c src/voxel/voxel_sign.h src/voxel/voxel_relief.h
 	@mkdir -p build
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude -Isrc/voxel -DVOXEL_HOST_FILES -DSIGN_MASK_PATH='"build/voxel_lamps_fixture.bin"' tests/voxel_lamps_test.c src/voxel/voxel_sign.c -lm -o $@
 

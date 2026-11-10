@@ -386,6 +386,7 @@ def renderer_tests(cc):
 #include <stddef.h>
 #include <string.h>
 #include <stdbool.h>
+typedef int GPU_TEVSRC;
 typedef struct { unsigned placeholder; } C3D_Tex;
 typedef struct { int rgb[3], alpha[3], alphaOp[3], rgbOp[3], rgbFunc, alphaFunc; uint32_t colour; } C3D_TexEnv;
 enum { C3D_RGB, C3D_Alpha, GPU_TEXTURE0, GPU_TEXTURE2, GPU_CONSTANT, GPU_PREVIOUS,
@@ -400,6 +401,9 @@ static void C3D_AlphaBlend(int colorEq, int alphaEq, int srcClr, int dstClr, int
     sBlend[3] = dstClr; sBlend[4] = srcAlpha; sBlend[5] = dstAlpha;
 }
 typedef struct { float dappleLow, dappleHigh; } VoxelLight;
+/* These texture-stage cases exercise rendering with shadow maps off. */
+static bool sShadowOn;
+static void ShadowTexEnv(void) { assert(0 && "unexpected shadow-map path"); }
 static float sMoonlight;
 static uint32_t sMoonlightColour;
 static uint32_t DappleConstant(const VoxelLight *light) { (void)light; return 0x12345678u; }
