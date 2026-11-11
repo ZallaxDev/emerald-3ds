@@ -20,6 +20,9 @@
  * costs a recomputation, never a wrong answer. Ordinary RAM, not linear.
  */
 #define CELL_CACHE_SIZE 4096u
+/* At most this many cells drawn across one (Drawn): a cell's own row and
+ * its neighbours' where the relief steps, a fold where it steps down. */
+#define DRAWN_FROM 4
 typedef struct
 {
     int16_t x, z;
@@ -39,11 +42,31 @@ typedef struct
     /* A shifted cell (shift not 0): the height past which nothing
      * ObjectAt tests in it can stop a ray (ShiftedClear), once known. */
     float clear;
+    /* A drawn map's relief over the cell's own ground, whatever else stands
+     * on the cell: a wood on a terrace is its crowns, drawn `shift` rows
+     * south, and the terrace under them, which casts as the bare rock beside
+     * it does. 0 where there is none. */
+    float relief, reliefBottom;
+    float reliefTop;  /* its highest, kept where `relief` is too low to cast */
+    /* For the rays that start over the cell (RayBounds), once known: the
+     * height past which they meet nothing, and whether they may cross a
+     * map's eased rows. */
+    float rayCeiling;
+    uint8_t rayKnown; /* 0: not yet; 1: known; 2: known, and stretched */
+    const VoxelMapInstance *reliefOn; /* the map whose table it is read from */
     uint32_t generation;
     int8_t crownPart; /* VoxelTree_Part when the cell is a crown, else -1 */
     bool surface;     /* a drawn map's relief: tested as a height field */
     bool sign;        /* a sign or a lamp: tested against its drawing */
-    bool clearKnown;  /* `clear` worked out (ShiftedClear) */
+    bool clearKnown;  /* `clear` and `from` worked out (Drawn) */
+    /* On a drawn map (or one off the world's level): what is drawn over the
+     * cell comes from other cells, ObjectAt. */
+    bool drawn;
+    uint8_t fromCount;
+    /* The cells whose casters are drawn across this one's row, `from[i]`
+     * rows north of it (negative: south) - each drawn as far south as its
+     * own lift and base, which on relief is not this cell's. */
+    int8_t from[DRAWN_FROM];
     const uint16_t *mask; /* a model over part of the cell: its footprint */
 } LightCell;
 static LightCell sCells[CELL_CACHE_SIZE];
@@ -244,7 +267,8 @@ static bool RayStretched(float x, float z)
 static float CasterCeiling(void)
 {
     float ceiling = PROP_TOP > CROWN_TOP ? PROP_TOP : CROWN_TOP;
-    float buildings = VoxelBuildings_MaxTop(), highest = 0.0f;
+    /* (what stands on a drawn map's terrace stands that much higher) */
+    float buildings = VoxelBuildings_MaxTop(), highest = 0.0f, relief = 0.0f;
 
     if (buildings > ceiling)
         ceiling = buildings;
@@ -255,12 +279,12 @@ static float CasterCeiling(void)
 
         if (inst == NULL || inst->indoor)
             continue;
-        if (VoxelRelief_DrawnTop(inst) > ceiling)
-            ceiling = VoxelRelief_DrawnTop(inst);
+        if (VoxelRelief_DrawnTop(inst) > relief)
+            relief = VoxelRelief_DrawnTop(inst);
         if (VoxelRelief_Base(inst) > highest)
             highest = VoxelRelief_Base(inst);
     }
-    return ceiling + highest;
+    return ceiling + relief + highest;
 }
 
 static void MapCeilings(void)
@@ -281,9 +305,8 @@ static void MapCeilings(void)
         {
             if (VoxelBuildings_LayoutTop(inst) > top)
                 top = VoxelBuildings_LayoutTop(inst);
-            if (VoxelRelief_DrawnTop(inst) > top)
-                top = VoxelRelief_DrawnTop(inst);
-            top += VoxelRelief_Base(inst);
+            /* a crown, a model or a sign on its highest terrace */
+            top += VoxelRelief_DrawnTop(inst) + VoxelRelief_Base(inst);
         }
         sMapCeiling[sMapCeilings++] = top;
     }
@@ -389,6 +412,67 @@ static float RayCeiling(float x, float z)
     return ceiling < sCeiling ? ceiling : sCeiling;
 }
 
+static const LightCell *Cell(int x, int z);
+
+/*
+ * RayCeiling and RayStretched for every ray that starts over cell (tx, tz),
+ * kept with the cell: both walk the maps on screen, a hundred comparisons a
+ * ray, and the rays of a cell's ground all start over it. The cell's whole
+ * square is asked, so the bound is a little wider than a point's own: no
+ * lower, and a ray it calls stretched that is not marches point by point to
+ * the same answer.
+ */
+static void RayBounds(float x, float z, float *ceiling, bool *stretched)
+{
+    int tx = Tile(x), tz = Tile(z);
+    LightCell *cell = (LightCell *)Cell(tx, tz);
+    float x0, x1, z0, z1, top = -1000.0f;
+    unsigned count = VoxelWorld_InstanceCount();
+    bool eased = false;
+
+    /* Maps put on screen since the last reset: the global bound. */
+    if (count != sMapCeilings)
+    {
+        *ceiling = sCeiling;
+        *stretched = RayStretched(x, z);
+        return;
+    }
+    if (cell->rayKnown != 0)
+    {
+        *ceiling = cell->rayCeiling;
+        *stretched = cell->rayKnown == 2;
+        return;
+    }
+    x0 = fminf((float)tx, (float)tx - VOXEL_SUN_DX * VOXEL_LIGHT_REACH) - 1.0f;
+    x1 = fmaxf((float)tx, (float)tx - VOXEL_SUN_DX * VOXEL_LIGHT_REACH) + 2.0f;
+    z0 = fminf((float)tz, (float)tz - VOXEL_SUN_DZ * VOXEL_LIGHT_REACH) - 1.0f;
+    z1 = fmaxf((float)tz, (float)tz - VOXEL_SUN_DZ * VOXEL_LIGHT_REACH) + 2.0f;
+    for (unsigned i = 0; i < count; ++i)
+    {
+        const VoxelMapInstance *inst = VoxelWorld_Instance(i);
+
+        if ((float)inst->originX < x1 && (float)(inst->originX + inst->width) > x0
+         && (float)inst->originY < z1 && (float)(inst->originY + inst->height) > z0
+         && sMapCeiling[i] > top)
+            top = sMapCeiling[i];
+    }
+    if (top > sCeiling)
+        top = sCeiling;
+    if (sStretchMaps != count)
+        ReadStretches();
+    for (unsigned i = 0; i < sStretchCount; ++i)
+    {
+        const LightStretch *s = &sStretches[i];
+
+        if (x1 > s->x0 && x0 < s->x1 && z1 > s->from && z0 < s->to + s->add)
+            eased = true;
+    }
+    cell->rayCeiling = top;
+    cell->rayKnown = eased ? 2 : 1;
+    *ceiling = top;
+    *stretched = eased;
+}
+
 static const LightCell *Cell(int x, int z)
 {
     unsigned key = ((uint32_t)x * 73856093u ^ (uint32_t)z * 19349663u)
@@ -407,6 +491,12 @@ static const LightCell *Cell(int x, int z)
     cell->surface = false;
     cell->sign = false;
     cell->clearKnown = false;
+    cell->rayKnown = 0;
+    cell->drawn = false;
+    cell->fromCount = 0;
+    cell->relief = 0.0f;
+    cell->reliefBottom = 0.0f;
+    cell->reliefTop = 0.0f;
     cell->mask = NULL;
     inst = VoxelWorld_GetInstanceAt(x, z);
     cell->base = VoxelRelief_Base(inst);
@@ -431,6 +521,16 @@ static const LightCell *Cell(int x, int z)
             {
                 cell->base = VoxelRelief_Base(north);
                 cell->shift = reach;
+                cell->drawn = true;
+                /* and its relief, drawn as far: its table runs on here */
+                if (VoxelRelief_IsDrawn(north))
+                {
+                    cell->relief = VoxelRelief_SurfaceTop(north, x, z, &cell->reliefBottom);
+                    cell->reliefOn = north;
+                    cell->reliefTop = cell->relief;
+                    if (cell->relief <= 0.05f)
+                        cell->relief = 0.0f;
+                }
             }
             break;
         }
@@ -441,6 +541,15 @@ static const LightCell *Cell(int x, int z)
     if (VoxelRelief_IsDrawn(inst))
         cell->lift = VoxelRelief_CellShift(inst, x, z);
     cell->shift = cell->lift + cell->base;
+    cell->drawn = cell->shift != 0.0f || VoxelRelief_IsDrawn(inst);
+    if (VoxelRelief_IsDrawn(inst))
+    {
+        cell->relief = VoxelRelief_SurfaceTop(inst, x, z, &cell->reliefBottom);
+        cell->reliefOn = inst;
+        cell->reliefTop = cell->relief;
+        if (cell->relief <= 0.05f)
+            cell->relief = 0.0f;
+    }
     metatile = VoxelWorld_GetMetatileId(x, z);
     if (VoxelWorld_UsesTreeSprites(inst))
     {
@@ -489,8 +598,9 @@ static const LightCell *Cell(int x, int z)
      * field, so a slope facing the sun is not shadowed by its own cell. */
     if (VoxelRelief_IsDrawn(inst))
     {
-        cell->top = VoxelRelief_SurfaceTop(inst, x, z, &cell->bottom);
-        cell->surface = cell->top > 0.05f;
+        cell->top = cell->relief;
+        cell->bottom = cell->reliefBottom;
+        cell->surface = cell->top > 0.0f;
         return cell;
     }
     /* Anything else is ground: relief elsewhere (a rock band, a ledge's lip)
@@ -543,11 +653,17 @@ static float BlockCeiling(int bx, int bz)
         {
             const LightCell *cell = Cell(x, z);
             float lift = cell->surface ? 0.0f : cell->lift;
-            int at = cell->surface ? z : Tile((float)z + 0.5f + cell->shift);
+            /* drawn from z + shift to a row further south (ObjectAt) */
+            int at = cell->surface ? z : Tile((float)z + cell->shift);
+            int last = cell->surface ? z : Tile((float)z + 0.999f + cell->shift);
 
+            /* and the relief, on the cell's own ground */
+            if (z >= z0 && z < z1 && cell->relief > 0.0f
+             && cell->relief + cell->base + BLOCK_MARGIN > ceiling)
+                ceiling = cell->relief + cell->base + BLOCK_MARGIN;
             /* CellOccludes: nothing under its top, and nothing at all from a
              * cell whose top is not above its base (a surface's always is). */
-            if (at < z0 || at >= z1)
+            if (last < z0 || at >= z1)
                 continue;
             if (cell->top > 0.0f && cell->top + cell->base + lift + BLOCK_MARGIN > ceiling)
                 ceiling = cell->top + cell->base + lift + BLOCK_MARGIN;
@@ -609,7 +725,9 @@ static float ReachCeiling(int bx0, int bz0, int bx1, int bz1)
 }
 
 /* A ray this far under a drawn map's surface is under it, not grazing it. */
-#define SURFACE_BIAS 0.06f
+#define SURFACE_BIAS 0.03f
+/* How far over its point a ray starts. */
+#define RAY_BIAS 0.04f
 
 static bool CellOccludes(const LightCell *cell, float x, float y, float z)
 {
@@ -625,8 +743,10 @@ static bool CellOccludes(const LightCell *cell, float x, float y, float z)
          * where (a ray into a mountain, a corner's contact against a wall). */
         if (y < cell->bottom - SURFACE_BIAS)
             return true;
+        if (cell->top - cell->bottom < 1.0f / 64.0f)
+            return false;
         ++sSurfaceTests;
-        return y < VoxelRelief_SurfaceAt(x, z) - SURFACE_BIAS;
+        return y < VoxelRelief_SurfaceOn(cell->reliefOn, x, z) - SURFACE_BIAS;
     }
     if (cell->mask != NULL)
     {
@@ -662,6 +782,103 @@ static bool CellOccludes(const LightCell *cell, float x, float y, float z)
     return true;
 }
 
+/* Under the relief drawn over the cell's ground (`relief`)? */
+static bool ReliefOccludes(const LightCell *cell, float x, float y, float z)
+{
+    y -= cell->base;
+    if (cell->relief <= y)
+        return false;
+    /* Under the lowest of it: inside the rock, with no need to read where. */
+    if (y < cell->reliefBottom - SURFACE_BIAS)
+        return true;
+    /* Level all over (most of a terrace): not under its lowest is over it. */
+    if (cell->relief - cell->reliefBottom < 1.0f / 64.0f)
+        return false;
+    ++sSurfaceTests;
+    return y < VoxelRelief_SurfaceOn(cell->reliefOn, x, z) - SURFACE_BIAS;
+}
+
+/*
+ * A drawn cell's `from` and `clear`: the cells whose drawing lies across its
+ * row, and the height past which nothing ObjectAt tests in it can stop a ray -
+ * its own relief and the tallest of theirs, and the ray only climbs, so past
+ * it none can. A cell of a drawn map is drawn from its row + shift to the row
+ * after, its shift its own (its lift and its map's base): where the relief
+ * steps, the cells drawn over a row are not those the row's own shift points
+ * to - a wood on a terrace was looked for with the shift of the ground under
+ * the ray, three levels off, and cast nothing on the ground below it. Read
+ * once a cell, as rays first need it, and kept with it.
+ */
+static float Drawn(int tx, int tz)
+{
+    LightCell *cell = (LightCell *)Cell(tx, tz);
+    float clear, low, high;
+    const VoxelMapInstance *own;
+    int8_t from[DRAWN_FROM];
+    unsigned count = 0;
+    int lo, hi;
+
+    if (cell->clearKnown)
+        return cell->clear;
+    clear = cell->relief > 0.0f ? cell->relief + cell->base : -1000.0f;
+    /* What is drawn here stands on the ground drawn here: as high as the
+     * relief over this cell, between its lowest and its highest, and so as
+     * many rows south of its own cell, its map's base more. A row either
+     * side for a slope's cell, lifted as its middle is. Every row a cell
+     * could be drawn from was a score of lookups a cell, most of them a
+     * search of the relief's cells: a fifth of a cold chunk's build. */
+    low = cell->base + fminf(cell->reliefBottom, 0.0f);
+    high = cell->base + fmaxf(cell->reliefTop, 0.0f);
+    /* (and, by a seam, what the map past it draws on from its own base) */
+    for (unsigned i = 0; i < VoxelWorld_InstanceCount(); ++i)
+    {
+        const VoxelMapInstance *on = VoxelWorld_Instance(i);
+        float base;
+
+        if (on == NULL || on->indoor || on->originX > tx || on->originX + on->width <= tx)
+            continue;
+        base = VoxelRelief_Base(on);
+        if (base < low) low = base;
+        if (base > high) high = base;
+    }
+    lo = (int)floorf(low) - 1;
+    hi = (int)ceilf(high) + 1;
+    own = VoxelWorld_GetInstanceAt(tx, tz);
+    memset(from, 0, sizeof(from));
+    for (int k = lo; k <= hi; ++k)
+    {
+        /* (its own map's rows without the search for the map) */
+        const VoxelMapInstance *on = own != NULL && tz - k >= own->originY
+                                  && tz - k < own->originY + own->height
+                                   ? own : VoxelWorld_GetInstanceAt(tx, tz - k);
+        const LightCell *o;
+        float at;
+
+        /* (where it is drawn first, from its map alone: a cell is read
+         * whole only if its drawing lies across this row) */
+        if (on == NULL || on->indoor)
+            continue;
+        at = (float)(tz - k) + VoxelRelief_Base(on)
+           + (VoxelRelief_IsDrawn(on) ? VoxelRelief_CellShift(on, tx, tz - k) : 0.0f);
+        if (at >= (float)(tz + 1) || at + 1.0f <= (float)tz)
+            continue;
+        o = Cell(tx, tz - k);
+        if (o->surface || o->top <= 0.0f)
+            continue;
+        if (count < DRAWN_FROM)
+            from[count++] = (int8_t)k;
+        if (o->top + o->base + o->lift > clear)
+            clear = o->top + o->base + o->lift;
+    }
+    /* (the lookups may have reused its bucket: found again) */
+    cell = (LightCell *)Cell(tx, tz);
+    cell->clear = clear;
+    memcpy(cell->from, from, sizeof(from));
+    cell->fromCount = (uint8_t)count;
+    cell->clearKnown = true;
+    return clear;
+}
+
 /*
  * Is the world point (x, y, z) inside a caster? A drawn map's relief stands in
  * the world as it is; a tree, a model or a sign on one of its cells is drawn
@@ -672,51 +889,46 @@ static bool CellOccludes(const LightCell *cell, float x, float y, float z)
  */
 static bool ObjectAt(int tx, float x, float y, float z, const LightCell **seen)
 {
-    const LightCell *cell = Cell(tx, Tile(z)), *o;
+    const LightCell *cell = Cell(tx, Tile(z));
+    int tz;
 
     *seen = cell;
-    /* (a cell drawn in its own row: lifted all the same, if its relief is
-     * as far under its base as the base is high) */
-    if (cell->shift == 0.0f)
+    if (!cell->drawn)
         return CellOccludes(cell, x, y - cell->lift, z);
-    if (cell->surface && CellOccludes(cell, x, y, z))
+    if (cell->relief > 0.0f && ReliefOccludes(cell, x, y, z))
         return true;
-    o = Cell(tx, Tile(z - cell->shift));
-    if (o->surface || o->shift == 0.0f)
-        return false;
-    return CellOccludes(o, x, y - o->lift, z - o->shift);
+    tz = cell->z;
+    if (!cell->clearKnown)
+    {
+        Drawn(tx, tz);
+        cell = Cell(tx, tz);
+        *seen = cell;
+    }
+    if (cell->fromCount != 0)
+    {
+        int8_t from[DRAWN_FROM];
+        unsigned count = cell->fromCount;
+
+        memcpy(from, cell->from, sizeof(from));
+        for (unsigned i = 0; i < count; ++i)
+        {
+            const LightCell *o = Cell(tx, tz - from[i]);
+            float oz = z - o->shift;
+
+            /* only where it is drawn: a point past its row is another's */
+            if (oz >= (float)o->z && oz < (float)(o->z + 1) && CellOccludes(o, x, y - o->lift, oz))
+                return true;
+        }
+    }
+    return false;
 }
 
-/*
- * A cell drawn shifted (cell->shift, on a drawn map's raised ground): the
- * height past which nothing ObjectAt tests in it can stop a ray. That is the
- * cell's own relief and what is drawn into it from the cells whose drawing
- * lies across it - one or two rows, as a point runs down the cell - and the
- * ray only climbs, so past all of them none can. Worked out once a cell, as
- * rays first need it, and kept with it.
- */
-static float ShiftedClear(int tx, int tz)
+/* A drawn cell's `clear` (Drawn). */
+static inline float ShiftedClear(int tx, int tz)
 {
-    LightCell *cell = (LightCell *)Cell(tx, tz);
-    float clear, shift;
+    const LightCell *cell = Cell(tx, tz);
 
-    if (cell->clearKnown)
-        return cell->clear;
-    clear = cell->surface ? cell->top + cell->base : -1000.0f;
-    shift = cell->shift;
-    for (int oz = Tile((float)tz - shift); oz <= Tile((float)(tz + 1) - shift); ++oz)
-    {
-        const LightCell *o = Cell(tx, oz);
-
-        if (!o->surface && o->shift != 0.0f && o->top > 0.0f
-         && o->top + o->base + o->lift > clear)
-            clear = o->top + o->base + o->lift;
-    }
-    /* (the lookups may have reused its bucket: found again) */
-    cell = (LightCell *)Cell(tx, tz);
-    cell->clear = clear;
-    cell->clearKnown = true;
-    return clear;
+    return cell->clearKnown ? cell->clear : Drawn(tx, tz);
 }
 
 static bool Occludes(float x, float y, float z)
@@ -733,10 +945,13 @@ static bool Occludes(float x, float y, float z)
  */
 static void RayPoint(float x, float y, float z, int step, float *rx, float *ry, float *rz)
 {
-    float rise = (float)step * 0.25f;
+    /* Half a step in: the first point stands an eighth over the ground, not
+     * a third - under a low wall's lip, at whose foot the first point used
+     * to be over its top already. */
+    float rise = ((float)step - 0.5f) * 0.25f;
 
     *rx = x - VOXEL_SUN_DX * rise;
-    *ry = y + rise + 0.08f;
+    *ry = y + rise + RAY_BIAS;
     *rz = z - VOXEL_SUN_DZ * rise;
 }
 
@@ -769,8 +984,7 @@ static bool Lit(float x, float y, float z)
         return true;
     if (sGeneration == 0)
         VoxelLighting_Reset();
-    ceiling = RayCeiling(x, z);
-    stretched = RayStretched(x, z);
+    RayBounds(x, z, &ceiling, &stretched);
     blocks = !sAlone && VoxelWorld_InstanceCount() == sMapCeilings;
     for (int step = 1; step <= VOXEL_LIGHT_REACH * 4;)
     {
@@ -818,7 +1032,7 @@ static bool Lit(float x, float y, float z)
          * bucket: found again, or the skip reads the other cell) */
         if (cell->x != tx || cell->z != tz)
             cell = Cell(tx, tz);
-        if (cell->shift != 0.0f)
+        if (cell->drawn)
         {
             /* What is drawn across a shifted cell comes from the rows its
              * drawing lies over: point by point until the ray is over it
@@ -936,6 +1150,30 @@ static float Contact(float x, float y, float z)
 
     if (y - Cell(Tile(x), Tile(Standing(x, z)))->base > 0.41f)
         return 1.0f;
+    /* Nothing round the point stands as high as its tests: the blocks'
+     * bound again, where the rays have read it already (never read for
+     * this: a block is four hundred cells' worth), which on open ground
+     * spares all four. */
+    if (!sAlone && VoxelWorld_InstanceCount() == sMapCeilings)
+    {
+        float sz = Standing(x, z), ceiling = -1000.0f;
+        int bx0 = BlockOf(Tile(x - 0.28f)), bx1 = BlockOf(Tile(x + 0.28f));
+        int bz0 = BlockOf(Tile(sz - 0.28f)), bz1 = BlockOf(Tile(sz + 0.28f));
+        bool known = true;
+
+        for (int bz = bz0; bz <= bz1 && known; ++bz)
+            for (int bx = bx0; bx <= bx1 && known; ++bx)
+            {
+                const LightBlock *block = &sBlocks[((uint32_t)bx * 73856093u ^ (uint32_t)bz * 19349663u)
+                                                   & (BLOCK_CACHE_SIZE - 1)];
+
+                known = block->generation == sGeneration && block->bx == bx && block->bz == bz;
+                if (known && block->ceiling > ceiling)
+                    ceiling = block->ceiling;
+            }
+        if (known && ceiling <= y + 0.3f)
+            return 1.0f;
+    }
     covered += Occludes(x - 0.28f, y + 0.3f, z);
     covered += Occludes(x + 0.28f, y + 0.3f, z);
     covered += Occludes(x, y + 0.3f, z - 0.28f);

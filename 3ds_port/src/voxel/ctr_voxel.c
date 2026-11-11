@@ -13326,6 +13326,71 @@ static void ShadowMapCasters(const C3D_Mtx *identity)
     C3D_AlphaTest(false, GPU_ALWAYS, 0);
 }
 
+/*
+ * The map as it was last drawn, kept while nothing it holds has changed: its
+ * window on the world (whole texels of it, so the texels still lie where
+ * they did), what was cast into it and the sun. A camera standing still drew
+ * the same map again every frame - every chunk on screen a second time - and
+ * one walking, as often as not: the window only has to hold the picture, and
+ * holds it with tiles to spare (ShadowMapFit).
+ */
+static struct
+{
+    bool valid;
+    double texelsU, texelsV; /* the window's centre, texels of the world */
+    double depth;            /* its middle along the sun, world */
+    float halfU, halfV, bias, ambient, dx, dz;
+    uint32_t casters;
+} sShadowKept;
+static unsigned sShadowRedrawn;
+/* How far the middle along the sun may drift before the map is drawn again:
+ * the depth it holds is VOXEL_SHADOW_MAP_DEPTH across. */
+#define VOXEL_SHADOW_KEEP_DEPTH 8.0
+/* And the window across it, when the picture leaves it that much room. */
+#define VOXEL_SHADOW_KEEP_ACROSS 1.0f
+
+/* What ShadowMapCasters would draw: the chunks on screen, where they stand
+ * and what they hold, and the static models found for them. */
+static uint32_t ShadowCasterStamp(void)
+{
+    uint32_t stamp = 2166136261u;
+
+#define STAMP(v) (stamp = (stamp ^ (uint32_t)(v)) * 16777619u)
+    for (unsigned i = 0; i < sDrawCount; ++i)
+    {
+        const VoxelChunk *chunk = sDraws[i].chunk;
+
+        STAMP((uintptr_t)chunk);
+        STAMP(sDraws[i].worldX);
+        STAMP(sDraws[i].worldZ);
+        STAMP((uintptr_t)chunk->vram);
+        STAMP(chunk->count);
+        STAMP(chunk->sum);
+        STAMP(chunk->epoch);
+        STAMP(chunk->buildingFirst);
+        STAMP(chunk->treeShadow);
+        STAMP(chunk->buildingPage);
+        STAMP(chunk->atlasGeneration);
+        if (chunk->staticCount == 0 || chunk->draft || !sHaveBuildings)
+            continue;
+        for (unsigned k = 0; k < chunk->staticCount; ++k)
+        {
+            const VoxelStaticDraw *s = &chunk->statics[k];
+            const StaticMesh *mesh = StaticMeshDrawn(s->pageModel, s->lit);
+
+            STAMP(s->pageModel);
+            STAMP((uintptr_t)mesh);
+            if (mesh != NULL)
+            {
+                STAMP((uintptr_t)mesh->vertices);
+                STAMP(mesh->count);
+            }
+        }
+    }
+#undef STAMP
+    return stamp;
+}
+
 static void ShadowMapRender(void)
 {
     float dx = VOXEL_SUN_DX, dz = VOXEL_SUN_DZ;
@@ -13333,10 +13398,8 @@ static void ShadowMapRender(void)
     /* along the light (down), and two axes across it */
     float D[3] = {dx / n, -1.0f / n, dz / n}, U[3], V[3];
     float texelU, texelV, slope, worldU, worldV;
-    /* the target from the Draw's anchor, for the depth's centre */
-    float c[3] = {sCamera.targetX - (float)sDrawAnchorX, sCamera.targetY,
-                  sCamera.targetZ - (float)sDrawAnchorZ};
     float cu, cv, cd;
+    bool kept;
     C3D_Mtx projection, identity;
 
     if (h > 0.0001f)
@@ -13375,11 +13438,45 @@ static void ShadowMapRender(void)
     {
         double ax = sDrawAnchorX, az = sDrawAnchorZ;
         double au = U[0] * ax + U[2] * az, av = V[0] * ax + V[2] * az;
+        double texelsU = floor((double)worldU / texelU + 0.5), texelsV = floor((double)worldV / texelV + 0.5);
+        double depth = (double)D[0] * sCamera.targetX + (double)D[1] * sCamera.targetY
+                     + (double)D[2] * sCamera.targetZ;
+        /* the room the picture leaves in the window, either side */
+        float roomU = sShadowHalfU - 0.5f * sShadowFitWanted[0] - VOXEL_SHADOW_FIT_MARGIN;
+        float roomV = sShadowHalfV - 0.5f * sShadowFitWanted[1] - VOXEL_SHADOW_FIT_MARGIN;
+        float ambient = VoxelLighting_Ambient();
+        uint32_t casters = ShadowCasterStamp();
 
-        cu = (float)(floor((double)worldU / texelU + 0.5) * texelU - au);
-        cv = (float)(floor((double)worldV / texelV + 0.5) * texelV - av);
+        if (roomU > VOXEL_SHADOW_KEEP_ACROSS) roomU = VOXEL_SHADOW_KEEP_ACROSS;
+        if (roomV > VOXEL_SHADOW_KEEP_ACROSS) roomV = VOXEL_SHADOW_KEEP_ACROSS;
+        if (sSwoop > 0.0f)
+            roomU = roomV = 0.0f;
+        kept = sShadowKept.valid && sShadowKept.casters == casters
+            && sShadowKept.halfU == sShadowHalfU && sShadowKept.halfV == sShadowHalfV
+            && sShadowKept.bias == sShadowBias && sShadowKept.ambient == ambient
+            && sShadowKept.dx == dx && sShadowKept.dz == dz
+            && fabs(texelsU - sShadowKept.texelsU) * texelU <= (roomU > 0.0f ? roomU : 0.0f)
+            && fabs(texelsV - sShadowKept.texelsV) * texelV <= (roomV > 0.0f ? roomV : 0.0f)
+            && fabs(depth - sShadowKept.depth) <= VOXEL_SHADOW_KEEP_DEPTH;
+        if (!kept)
+        {
+            sShadowKept.valid = true;
+            sShadowKept.casters = casters;
+            sShadowKept.texelsU = texelsU;
+            sShadowKept.texelsV = texelsV;
+            sShadowKept.depth = depth;
+            sShadowKept.halfU = sShadowHalfU;
+            sShadowKept.halfV = sShadowHalfV;
+            sShadowKept.bias = sShadowBias;
+            sShadowKept.ambient = ambient;
+            sShadowKept.dx = dx;
+            sShadowKept.dz = dz;
+        }
+        /* the window the map was drawn for, from this Draw's anchor */
+        cu = (float)(sShadowKept.texelsU * texelU - au);
+        cv = (float)(sShadowKept.texelsV * texelV - av);
+        cd = (float)(sShadowKept.depth - ((double)D[0] * ax + (double)D[2] * az));
     }
-    cd = D[0] * c[0] + D[1] * c[1] + D[2] * c[2];
 
     /* clip: x, y = across / half, z = -depth (0 nearest the sun), w = 1 */
     Mtx_Zeros(&projection);
@@ -13413,6 +13510,13 @@ static void ShadowMapRender(void)
     sShadowTexMtx.r[2].w = -projection.r[2].w;
     sShadowTexMtx.r[3].w = 1.0f;
 
+    /* the map still holds this window: read as it is, from this anchor */
+    if (kept)
+    {
+        sShadowReady = true;
+        return;
+    }
+    ++sShadowRedrawn;
     C3D_FrameSplit(0);
     C3D_RenderTargetClear(sShadowTarget, C3D_CLEAR_COLOR, 0xFFFFFFFFu, 0);
     C3D_FrameDrawOn(sShadowTarget);
@@ -13608,7 +13712,10 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
              && gVoxelSun.strength > 0.0f && neutral <= 0.0f && ShadowMapMake();
 #endif
     if (!shadowMap)
+    {
         sShadowReady = false;
+        sShadowKept.valid = false;
+    }
 
     /* The camera the frustum was cut from in the update (UpdateFrustum).
      * The gloom is placed on the logical surface, before the fit to it. */
@@ -13646,12 +13753,14 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
         shadowTicks += Port_ProfTick() - shadowStart;
         if (++shadowFrames == 600)
         {
-            CtrLog_Write(CTR_LOG_VIDEO, "VOXEL shadow map cpu=%.3f ms a frame, %.0fx%.0f tiles (wanted %.0fx%.0f, slid %.1f %.1f), bias %.3f",
+            CtrLog_Write(CTR_LOG_VIDEO, "VOXEL shadow map cpu=%.3f ms a frame, drawn %u of %u, %.0fx%.0f tiles (wanted %.0fx%.0f, slid %.1f %.1f), bias %.3f",
                          (float)shadowTicks * 1000.0f / SYSCLOCK_ARM11 / shadowFrames,
+                         sShadowRedrawn, shadowFrames,
                          sShadowHalfU * 2.0f, sShadowHalfV * 2.0f, sShadowFitWanted[0], sShadowFitWanted[1],
                          sShadowFitSlid[0], sShadowFitSlid[1], sShadowBias);
             shadowTicks = 0;
             shadowFrames = 0;
+            sShadowRedrawn = 0;
         }
         sDrawSet = 0;
     }

@@ -128,6 +128,9 @@ float VoxelRelief_StretchZ(const VoxelMapInstance *inst, float z);
  * map.
  */
 float VoxelRelief_SurfaceAt(float worldX, float worldZ);
+/* The same from the map the point is known to be drawn by (the lighting
+ * keeps it with the cell): no search for it at every point of a ray. */
+float VoxelRelief_SurfaceOn(const VoxelMapInstance *inst, float worldX, float worldZ);
 float VoxelRelief_SurfaceTop(const VoxelMapInstance *inst, int x, int z, float *bottom);
 float VoxelRelief_DrawnTop(const VoxelMapInstance *inst);
 

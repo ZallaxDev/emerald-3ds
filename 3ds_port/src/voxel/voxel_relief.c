@@ -81,17 +81,28 @@ typedef struct
     uint8_t stride;        /* bytes a cell: CELL_BYTES, or WIDE_CELL_BYTES */
     int16_t *heights;      /* GRID per cell, pixels */
     /* A drawn map's surface where it stands, for the sun to be stopped by:
-     * its height (pixels) every lattice step of world X and Z, not of the
-     * drawing's rows - a point of the drawing lies as far south as it is
-     * high, so the table runs past the map's south edge as many cells as its
-     * highest point is tall (SURFACE_SPAN at least). */
+     * its height (pixels) at the middle of every lattice step of world X and
+     * Z, not of the drawing's rows - a point of the drawing lies as far
+     * south as it is high, so the table runs past the map's south edge as
+     * many cells as its highest point is tall (SURFACE_SPAN at least). The
+     * middles, not the lattice points: a block's wall stands on a lattice
+     * line, and a point on it held one side's height or the other's, so
+     * between it and the next the block's edge sloped a quarter tile into
+     * the block or out of it (a shadow a quarter tile short, or long). */
     int8_t *surface;       /* in units of surfaceUnit pixels */
     uint8_t surfaceUnit;   /* 2, or 4 where 2 do not reach its top */
     uint16_t surfaceW, surfaceH;
+    /* The highest and the lowest of it over each world cell, two bytes a
+     * cell in the table's units (VoxelRelief_SurfaceTop): the lighting asks
+     * for every cell its rays cross, and read them off thirty-six samples. */
+    int8_t *surfaceCell;
     float top;             /* its highest point, tiles */
 } ReliefLayout;
 
 #define SURFACE_SPAN 6
+/* How far north of a row past every map's cells SurfaceAt looks for the map
+ * whose table reaches it (as the lighting's DRAWN_PAST_ROWS). */
+#define SURFACE_PAST_ROWS 16
 /* A rise between two lattice points of a drawing's column this high (pixels)
  * is a wall, not a slope (BuildSurface): half a level. */
 #define SURFACE_WALL 8
@@ -328,6 +339,7 @@ void VoxelRelief_Shutdown(void)
     for (unsigned i = 0; sLayouts != NULL && i < sLayoutCount; ++i)
     {
         free(sLayouts[i].surface);
+        free(sLayouts[i].surfaceCell);
         free(sLayouts[i].heights);
     }
     memset(sFindMemo, 0, sizeof(sFindMemo));
@@ -1004,33 +1016,77 @@ static float Sample(const int16_t *g, float worldX, float worldZ)
     return (a * (1 - fy) + b * fy) / 16.0f;
 }
 
-/* A lattice point of a layout's drawing: its height over the base and its
- * depth, pixels - as far south as it stands high in the world. */
-static void Point(const ReliefLayout *l, unsigned i, unsigned j, int *h, int *d)
+/* A cell's lattice point as it is drawn: on a cut tile (VoxelRelief_Cut) the
+ * points over its clear background are the ground at its foot, drawn flat
+ * under the rock - the lattice lifts them with the rock, and a ramp's cut
+ * corner shaded the open ground beside it. */
+static int DrawnHeight(const ReliefLayout *l, const VoxelMapInstance *inst, int k,
+                       unsigned x, unsigned y, unsigned a, unsigned b)
+{
+    /* (the table is built a column of cells at a time: one cell's record,
+     * read once, answers its twenty-five points) */
+    static const ReliefLayout *sOf;
+    static unsigned sX, sY;
+    static const uint8_t *sRows;
+    static int sFoot;
+    unsigned px = a * 4u, py = b * 4u;
+
+    if (sOf != l || sX != x || sY != y)
+    {
+        float foot;
+        int ground, wall, cut;
+        unsigned sides, layout, metatile;
+
+        sOf = l;
+        sX = x;
+        sY = y;
+        sRows = NULL;
+        cut = VoxelRelief_Cut(inst, (int)x, (int)y, &foot, &ground, &wall, &sides);
+        if (cut >= 0 && cut != VOXEL_RELIEF_NO_VARIANT
+         && VoxelRelief_CutVariant((unsigned)cut, &layout, &metatile, &sRows))
+            sFoot = (int)lroundf(foot * 16.0f);
+        else
+            sRows = NULL;
+    }
+    if (sRows != NULL)
+    {
+        if (px > 15u) px = 15u;
+        if (py > 15u) py = 15u;
+        if ((((unsigned)sRows[2 * py] | ((unsigned)sRows[2 * py + 1] << 8)) >> px) & 1u)
+            return sFoot;
+    }
+    return l->heights[(unsigned)k * GRID + b * VOXEL_RELIEF_SIDE + a];
+}
+
+/* Halfway between lattice columns a and a + 1 of cell column x, at lattice
+ * row j: the middle of a quarter tile, never on a wall (a lattice point
+ * is, between one side's height and the other's). */
+static void MidPoint(const ReliefLayout *l, unsigned x, unsigned a, unsigned j, int *h, int *d)
 {
     const unsigned n = VOXEL_RELIEF_SIDE - 1;
-    unsigned x = i / n, y = j / n, a, b;
+    unsigned y = j / n, b;
     int k;
     VoxelMapInstance inst;
 
     if (x >= l->width) x = l->width - 1u;
     if (y >= l->height) y = l->height - 1u;
-    a = i - x * n;
     b = j - y * n;
     memset(&inst, 0, sizeof(inst));
     inst.layoutId = l->layoutId;
     k = Find(l, &inst, (int)x, (int)y);
-    *h = k >= 0 ? l->heights[(unsigned)k * GRID + b * VOXEL_RELIEF_SIDE + a] : 0;
+    *h = k >= 0 ? (DrawnHeight(l, &inst, k, x, y, a, b)
+                 + DrawnHeight(l, &inst, k, x, y, a + 1, b) + 1) / 2 : 0;
     *d = l->base + *h;
 }
 
 /* Each column of the drawing, walked down its rows, runs south through the
- * world as v + d: the height at every world lattice row it passes is read off
- * between the two points either side of it (the drawing never folds over). */
+ * world as v + d: the height at the middle of every world lattice step it
+ * passes is read off between the two points either side of it (the drawing
+ * never folds over). */
 static bool BuildSurface(ReliefLayout *l)
 {
     const unsigned n = VOXEL_RELIEF_SIDE - 1, step = 16 / n;
-    unsigned w = l->width * n + 1u, rows, span = SURFACE_SPAN;
+    unsigned w = l->width * n, rows, span = SURFACE_SPAN;
     int top = 0, most = 0, deepest = l->base;
 
     /* The highest point stands as many cells south of its row as it is tall
@@ -1045,7 +1101,7 @@ static bool BuildSurface(ReliefLayout *l)
     if (deepest > 0 && (unsigned)(deepest + 15) / 16u + 1u > span)
         span = (unsigned)(deepest + 15) / 16u + 1u;
     l->surfaceUnit = most > 254 ? 4 : 2;
-    rows = (l->height + span) * n + 1u;
+    rows = (l->height + span) * n;
     l->surface = calloc((size_t)w * rows, 1);
     if (l->surface == NULL)
         return false;
@@ -1056,17 +1112,18 @@ static bool BuildSurface(ReliefLayout *l)
         int h0, d0;
         unsigned k = 0;
 
-        Point(l, i, 0, &h0, &d0);
+        MidPoint(l, i / n, i % n, 0, &h0, &d0);
         for (unsigned j = 1; j <= l->height * n; ++j)
         {
             int h1, d1;
             float z0 = (float)((j - 1) * step) + d0, z1;
 
-            Point(l, i, j, &h1, &d1);
+            MidPoint(l, i / n, i % n, j, &h1, &d1);
             z1 = (float)(j * step) + d1;
-            for (; k < rows && (float)(k * step) <= z1; ++k)
+            for (; k < rows && ((float)k + 0.5f) * step <= z1; ++k)
             {
-                float t = z1 > z0 ? ((float)(k * step) - z0) / (z1 - z0) : 1.0f;
+                float at = ((float)k + 0.5f) * step;
+                float t = z1 > z0 ? (at - z0) / (z1 - z0) : 1.0f;
                 int v;
 
                 if (t < 0.0f) t = 0.0f;
@@ -1081,7 +1138,7 @@ static bool BuildSurface(ReliefLayout *l)
                  * rises across that row's step, never under the block's
                  * edge, which would let the sun through its top's lip. */
                 if (h1 - h0 >= SURFACE_WALL)
-                    t = (float)((k + 1) * step) > z1 ? 1.0f : 0.0f;
+                    t = at >= z1 ? 1.0f : 0.0f;
                 v = (int)(h0 + (h1 - h0) * t + 0.5f);
                 {
                     int u = l->surfaceUnit;
@@ -1094,7 +1151,42 @@ static bool BuildSurface(ReliefLayout *l)
         }
     }
     l->top = top / 16.0f;
+    {
+        unsigned cellRows = rows / n;
+
+        l->surfaceCell = malloc((size_t)l->width * cellRows * 2u);
+        if (l->surfaceCell == NULL)
+            return false;
+        for (unsigned z = 0; z < cellRows; ++z)
+            for (unsigned x = 0; x < l->width; ++x)
+            {
+                int high = 0, low = INT16_MAX;
+
+                /* (SurfaceAt reads a sample past the cell's edge, half a
+                 * step out) */
+                for (int k = (int)(z * n) - 1; k <= (int)(z * n + n); ++k)
+                    for (int i = (int)(x * n) - 1; i <= (int)(x * n + n); ++i)
+                    {
+                        int v = i < 0 || k < 0 || i >= (int)w || k >= (int)rows
+                              ? 0 : l->surface[(unsigned)k * w + (unsigned)i];
+
+                        if (v > high) high = v;
+                        if (v < low) low = v;
+                    }
+                l->surfaceCell[(z * l->width + x) * 2u] = (int8_t)high;
+                l->surfaceCell[(z * l->width + x) * 2u + 1u] = (int8_t)low;
+            }
+    }
     return true;
+}
+
+/* Between two samples of the surface `t` of the way: a slope, or a wall
+ * (SURFACE_WALL) standing halfway between them, on the edge of their steps. */
+static inline float Blend(float a, float b, float t)
+{
+    if (fabsf(b - a) >= (float)SURFACE_WALL)
+        return t < 0.5f ? a : b;
+    return a + (b - a) * t;
 }
 
 static float SurfacePoint(const ReliefLayout *l, int i, int k)
@@ -1106,24 +1198,36 @@ static float SurfacePoint(const ReliefLayout *l, int i, int k)
 
 float VoxelRelief_SurfaceAt(float worldX, float worldZ)
 {
-    const int n = VOXEL_RELIEF_SIDE - 1;
     int x = FloorI(worldX), z = FloorI(worldZ);
     const VoxelMapInstance *inst = VoxelWorld_GetInstanceAt(x, z);
+
+    /* past every map's cells: the map north of it, whose drawing (and table)
+     * runs on as far south as it stands high (the lighting's Cell) */
+    for (int up = 1; inst == NULL && up <= SURFACE_PAST_ROWS; ++up)
+        inst = VoxelWorld_GetInstanceAt(x, z - up);
+    return VoxelRelief_SurfaceOn(inst, worldX, worldZ);
+}
+
+float VoxelRelief_SurfaceOn(const VoxelMapInstance *inst, float worldX, float worldZ)
+{
+    const int n = VOXEL_RELIEF_SIDE - 1;
     const ReliefLayout *l = LayoutOf(inst);
     float fx, fz;
     int i, k;
 
     if (l == NULL || l->surface == NULL)
         return 0.0f;
-    fx = (worldX - inst->originX) * n;
+    /* (the table's samples are the middles of its steps) */
+    fx = (worldX - inst->originX) * n - 0.5f;
     /* the table is of the drawing on its base: a lift moves it south too */
-    fz = (worldZ - inst->originY) * n - inst->lift / 4.0f;
+    fz = (worldZ - inst->originY) * n - inst->lift / 4.0f - 0.5f;
     i = FloorI(fx);
     k = FloorI(fz);
     fx -= i;
     fz -= k;
-    return ((SurfacePoint(l, i, k) * (1 - fx) + SurfacePoint(l, i + 1, k) * fx) * (1 - fz)
-          + (SurfacePoint(l, i, k + 1) * (1 - fx) + SurfacePoint(l, i + 1, k + 1) * fx) * fz)
+    /* a slope between two samples, a wall halfway (on the step's edge) */
+    return Blend(Blend(SurfacePoint(l, i, k), SurfacePoint(l, i + 1, k), fx),
+                 Blend(SurfacePoint(l, i, k + 1), SurfacePoint(l, i + 1, k + 1), fx), fz)
            / 16.0f;
 }
 
@@ -1138,9 +1242,20 @@ float VoxelRelief_SurfaceTop(const VoxelMapInstance *inst, int x, int z, float *
         return 0.0f;
     x -= inst->originX;
     z -= inst->originY;
-    /* (a lift is in 4-pixel steps, one of the table's rows each) */
-    for (int k = z * n - inst->lift / 4; k <= z * n + n - inst->lift / 4; ++k)
-        for (int i = x * n; i <= x * n + n; ++i)
+    if (inst->lift == 0 && l->surfaceCell != NULL)
+    {
+        const int8_t *cell;
+
+        if (x < 0 || z < 0 || x >= l->width || z >= l->surfaceH / n)
+            return 0.0f;
+        cell = l->surfaceCell + ((unsigned)z * l->width + (unsigned)x) * 2u;
+        *bottom = (float)(l->surfaceUnit * cell[1]) / 16.0f;
+        return (float)(l->surfaceUnit * cell[0]) / 16.0f;
+    }
+    /* (a lift is in 4-pixel steps, one of the table's rows each; SurfaceAt
+     * reads a sample past the cell's edge, half a step out) */
+    for (int k = z * n - 1 - inst->lift / 4; k <= z * n + n - inst->lift / 4; ++k)
+        for (int i = x * n - 1; i <= x * n + n; ++i)
         {
             float v = SurfacePoint(l, i, k);
 
