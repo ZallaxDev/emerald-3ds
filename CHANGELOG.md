@@ -2,18 +2,29 @@
 
 ## Unreleased
 
-- Builder: share verified ROM profiles with web release metadata and reject
-  unregistered recipe fingerprints instead of labelling them English Emerald.
-  Recognise clean English Ruby/Sapphire revisions 0-2 by fingerprint, with an
-  explicit "not yet supported" error for ROMs and release recipes. Recognise
-  English GBA FireRed/LeafGreen revisions 0-1 as "not supported" without
-  implying future support. Preparation for
-  issue #247; Ruby/Sapphire remain unsupported. By @mkrieger95.
-
-- Tests: complete the sign and city-lamp fixtures' terrain relief stubs and
-  update the night renderer's shadow declarations so CI can run these tests
-  again. By @mkrieger95.
-
+- Battle: the bag, the switch after a faint and the summary to forget a move
+  keep the battle scene on the top screen instead of a black one. By
+  @luksgrin (pull request #222).
+- Follower: leaving a building in the voxel field, the Pokémon stays in its
+  ball until it is off the door, not standing in the wall. By @DannyM90 (pull
+  request #246).
+- Bottom screen: the party list shows the status icon (PSN, PAR, SLP, FRZ,
+  BRN, FNT) where the level is, as the game's party menu does. By @DannyM90
+  (pull request #253).
+- Bottom screen: a tap goes on with a message in the field, as it does in a
+  battle. By @DannyM90 (pull request #260).
+- Options: EXP SHARE has a BALANCED setting besides OFF and GEN VI: the
+  Pokémon that fought share the EXP, the rest share half of it. By
+  @Stumblef00l (pull request #249).
+- Builder: a zipped ROM is checked before it is read (size, password,
+  compression), so a bad or oversized archive gives a clear error. By
+  @mkrieger95 (pull request #248).
+- Builder: one table of verified ROM profiles for the builder and the web
+  release; Ruby, Sapphire, FireRed and LeafGreen are named in the error as
+  games this Emerald-only port does not support. By @mkrieger95 (pull request
+  #256).
+- Tests: the sign, city-lamp and night-renderer host tests link again. By
+  @mkrieger95 (pull request #257).
 - Voxel: Fly as a flight. With OPTIONS > ENHANCEMENTS > ENHANCED FLYING on,
   Fly in the voxel overworld climbs out of the map into the clouds and comes
   down over the destination, on the Pokémon that knows Fly; FULL also shows

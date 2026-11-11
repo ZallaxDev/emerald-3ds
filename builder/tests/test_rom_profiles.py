@@ -23,10 +23,10 @@ from emerald3ds_builder.recipe import Recipe
 
 class RomProfileTests(unittest.TestCase):
     def status(self, profile):
-        return "not yet supported" if profile.code.startswith("AX") else "not supported"
+        return "not supported"
 
     def error_code(self, profile):
-        return "rom_not_yet_supported" if profile.code.startswith("AX") else "rom_not_supported"
+        return "rom_not_supported"
 
     def files(self, sha1, folder=None):
         prefix = "payload/" + (folder + "/" if folder else "")

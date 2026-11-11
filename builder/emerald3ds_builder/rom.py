@@ -4,9 +4,9 @@ Clean English (BPEE), Spanish (BPES), French (BPEF), Italian (BPEI), German (BPE
 Japanese (BPEJ) Pokémon Emerald dumps are recognised (16 MiB, by SHA-1). Building still requires a recipe and
 executable made for the same ROM. A trimmed dump (trailing 0xFF removed) is padded back before it is checked; a .zip holding a single .gba, .agb or .bin is
 opened directly. The ROM is only ever read into memory: it is never copied,
-written or sent anywhere. Clean English Ruby/Sapphire revisions 0-2 are
-identified by fingerprint but always rejected as not yet supported. English
-FireRed/LeafGreen revisions 0-1 are identified and rejected as not supported.
+written or sent anywhere. Clean English Ruby/Sapphire revisions 0-2 and
+FireRed/LeafGreen revisions 0-1 are identified by fingerprint and rejected:
+Emerald 3DS is an Emerald-only port.
 """
 
 from __future__ import annotations
@@ -82,11 +82,6 @@ UNSUPPORTED_PROFILES = (
 )
 
 
-def unsupported_status(profile: RomProfile) -> str:
-    """Only Ruby/Sapphire are candidates for the expansion in issue #247."""
-    return "not yet supported" if profile.game in ("ruby", "sapphire") else "not supported"
-
-
 def unsupported_profile(sha1: str) -> RomProfile | None:
     """Identify a verified ROM without granting permission to build it."""
     return next((profile for profile in UNSUPPORTED_PROFILES if profile.sha1 == sha1), None)
@@ -96,15 +91,9 @@ def reject_unsupported_rom(sha1: str) -> None:
     """Keep recognition separate from both validation and pack construction."""
     recognised = unsupported_profile(sha1)
     if recognised is not None:
-        status = unsupported_status(recognised)
-        if status == "not yet supported":
-            detail = "Ruby/Sapphire support requires its own game engine and data recipe."
-            error_code = "rom_not_yet_supported"
-        else:
-            detail = "FireRed/LeafGreen are outside the current scope of this port."
-            error_code = "rom_not_supported"
-        raise BuilderError("This ROM is %s, which is recognised but %s." % (recognised.name, status),
-                           detail + " An Emerald recipe cannot be used with this ROM.", code=error_code)
+        raise BuilderError("This ROM is %s, which is recognised but not supported." % recognised.name,
+                           "Emerald 3DS is an Emerald-only port: an Emerald recipe cannot be used "
+                           "with this ROM.", code="rom_not_supported")
 
 
 # Keep the fingerprint mapping used by the builder and staging tools.
@@ -204,7 +193,7 @@ def check_rom_bytes(data: bytes, source: Path, supported: tuple[str, ...] | None
         what = KNOWN_CODES.get(code)
         if what and code.startswith(("BPR", "BPG")):
             raise BuilderError("This ROM is %s, which is not supported." % what,
-                               "FireRed/LeafGreen are outside the current scope of this port.",
+                               "Emerald 3DS is an Emerald-only port.",
                                code="rom_wrong_game")
         if what and code not in codes:
             raise BuilderError("This ROM is %s. Only %s is supported." % (what, names),
