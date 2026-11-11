@@ -265,7 +265,7 @@ diff --git a/src/follower_mon.c b/src/follower_mon.c
 new file mode 100644
 --- /dev/null
 +++ b/src/follower_mon.c
-@@ -0,0 +1,1612 @@
+@@ -0,0 +1,1638 @@
 +#include <stdio.h>
 +#include <stdlib.h>
 +#include <string.h>
@@ -275,6 +275,7 @@ new file mode 100644
 +#include "3ds_daynight.h"
 +#include "3ds_extras.h" // optional settings (OPTIONS pages)
 +#include "3ds_log.h"
++#include "3ds_platform.h"
 +#include "event_data.h"
 +#include "event_object_lock.h"
 +#include "event_object_movement.h"
@@ -929,6 +930,30 @@ new file mode 100644
 +    return PalettesSettled();
 +}
 +
++/*
++ * Out of a building the player is put on the door and steps off it, and the
++ * follower comes out of its ball on the door. In voxel mode the door is in
++ * the house's wall, so it stood in the wall until the player walked on. There
++ * it stays in its ball until it has walked off the door.
++ */
++static bool8 IsDoorAt(s16 x, s16 y)
++{
++    u32 behavior = MapGridGetMetatileBehaviorAt(x, y);
++
++    return MetatileBehavior_IsDoor(behavior) || MetatileBehavior_IsNonAnimDoor(behavior);
++}
++
++static bool8 InDoorway(const struct ObjectEvent *follower)
++{
++    if (!CtrSettings_Voxel())
++        return FALSE;
++    if (IsDoorAt(follower->currentCoords.x, follower->currentCoords.y))
++        return TRUE;
++    /* The step off it: out once it is over, next to the door. */
++    return follower->heldMovementActive
++        && IsDoorAt(follower->previousCoords.x, follower->previousCoords.y);
++}
++
 +/* Where it cannot follow: it waits on the player's tile, unseen. */
 +static bool8 MustHide(struct ObjectEvent *player)
 +{
@@ -1248,13 +1273,14 @@ new file mode 100644
 +        Advance(follower);
 +
 +    /* In its ball on the player's tile (after a warp, a surf, a ride) until
-+     * the player steps off, then out of it; gone in a door at its last step's
-+     * end. Standing, it stands still. */
++     * the player steps off, then out of it (in voxel mode, off the door too:
++     * InDoorway); gone in a door at its last step's end. Standing, it stands
++     * still. */
 +    {
 +        bool8 onPlayer = follower->currentCoords.x == player->currentCoords.x
 +                      && follower->currentCoords.y == player->currentCoords.y;
 +
-+        if (!hide && sFollower.inBall && !onPlayer && !sFollower.door)
++        if (!hide && sFollower.inBall && !onPlayer && !sFollower.door && !InDoorway(follower))
 +        {
 +            ShowBall(follower, TRUE);
 +            sFollower.popTimer = POP_FRAMES;
