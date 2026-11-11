@@ -6,6 +6,17 @@
   update the night renderer's shadow declarations so CI can run these tests
   again. By @mkrieger95.
 
+- Voxel: Fly as a flight. With OPTIONS > ENHANCEMENTS > ENHANCED FLYING on,
+  Fly in the voxel overworld climbs out of the map into the clouds and comes
+  down over the destination, on the Pokémon that knows Fly; FULL also shows
+  the trip above the clouds with the region's flying Pokémon and its weather.
+  The bottom screen's map gets a FLY button. OFF (the default) is the GBA's
+  Fly, as is any Fly from the 2D field. By @darkmattericecoffee (pull request
+  #213).
+- Voxel: a camera that sees further than the world can build in a frame (the
+  swoop to and from the 2D field, Fly's high camera) shows rough or flat
+  ground in its own colour instead of black squares. By @darkmattericecoffee
+  (pull request #214).
 - Voxel on Old 3DS: the world's GPU frame is shorter, measured on the console
   on Route 112 - from 14.8 to 10.0 ms with one picture and from 26.1 to
   17.6 ms with the 3D slider up, where far fewer refreshes now show the same

@@ -17,6 +17,12 @@
  * to where the camera sees the player (the GBA's (120, 80), as the circle of
  * a dark cave) - not projected, which would bend the bird's arc.
  */
+/* Fly's picture sprites in the voxel field are zoomed about the player's
+ * spot by how large the world draws a map sprite there (sizes and places
+ * alike, so the rider keeps its seat): set by PlaceScreenObject for the
+ * sprite being drawn, taken by DrawObjectAt. */
+static float sFlyZoom = 1.0f, sFlyZoomX, sFlyZoomY;
+
 static void PlaceScreenObject(int i, unsigned boxW, unsigned boxH, bool voxel, int *x, int *y)
 {
     if (sFlyOam[i >> 5] & (1u << (i & 31)))
@@ -27,6 +33,11 @@ static void PlaceScreenObject(int i, unsigned boxW, unsigned boxH, bool voxel, i
         {
             *x += (int)lroundf(px) - 120;
             *y += (int)lroundf(py) - 80;
+            /* The player's sprite's centre, GBA (120, 72), is the zoom's
+             * fixed point. */
+            sFlyZoom = fminf(fmaxf(scaleX, 0.5f), 2.5f);
+            sFlyZoomX = px;
+            sFlyZoomY = py - 8.0f;
             return;
         }
         *x += CTR_STAGE_X;
@@ -190,6 +201,39 @@ static void DrawObjectAt(int x, int y, unsigned attr1, unsigned attr2, unsigned 
                          unsigned height, unsigned boxW, unsigned boxH, bool affine, bool color256, bool effects,
                          unsigned mode)
 {
+    float zoom = sFlyZoom;
+
+    sFlyZoom = 1.0f;
+    if (zoom != 1.0f && !affine)
+    {
+        /* Fly's sprite, zoomed about the player's spot: drawn through a
+         * matrix as an affine one is, its tiles from the origin. */
+        float cx = sFlyZoomX + ((float)x + boxW * 0.5f - sFlyZoomX) * zoom;
+        float cy = sFlyZoomY + ((float)y + boxH * 0.5f - sFlyZoomY) * zoom;
+        bool flipX = (attr1 & 0x1000) != 0, flipY = (attr1 & 0x2000) != 0;
+        C3D_Mtx matrix;
+
+        if (cx + width * zoom * 0.5f <= sClipX0 || cx - width * zoom * 0.5f >= sClipX1
+         || cy + height * zoom * 0.5f <= sClipY0 || cy - height * zoom * 0.5f >= sClipY1) return;
+        ++sStats.sprites;
+        SpriteBatchFlush();
+        Blend(4, effects, mode == 1);
+        ViewBase();
+        Mtx_Identity(&matrix);
+        matrix.r[0] = FVec4_New(zoom, 0, 0, cx + CTR_VIEW_X + sLayerShift - width * zoom * 0.5f);
+        matrix.r[1] = FVec4_New(0, zoom, 0, cy + CTR_VIEW_Y - height * zoom * 0.5f);
+        ViewAffine(&matrix);
+        for (unsigned ty = 0; ty < height / 8; ++ty)
+            for (unsigned tx = 0; tx < width / 8; ++tx)
+            {
+                unsigned sx = flipX ? width / 8 - 1 - tx : tx;
+                unsigned sy = flipY ? height / 8 - 1 - ty : ty;
+                unsigned tile = CtrVideo_ObjTile(attr2 & 1023, sx, sy, width, color256, Reg(0) & 0x40);
+
+                DrawTile(0x10000 + tile * 32, bank, color256, (int)tx * 8, (int)ty * 8, flipX, flipY);
+            }
+        return;
+    }
     if (x >= sClipX1 || x + (int)boxW <= sClipX0
      || y >= sClipY1 || y + (int)boxH <= sClipY0) return;
     ++sStats.sprites;

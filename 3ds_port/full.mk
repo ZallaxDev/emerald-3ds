@@ -68,6 +68,8 @@ FULL_DATA_OBJS += build/root/3ds_script_blob.o build/root/3ds_script_keep.o
 FULL_DATA_OBJS += build/root/3ds_song_blob.o
 BACKEND_SRCS := src/3ds_assets.c src/3ds_map_loader.c src/3ds_compat.c
 BACKEND_SRCS += src/3ds_game_full.c src/3ds_game_bridge.c src/3ds_script_loader.c
+# The Fly sky scene's supply from the game (include/3ds_fly_sky.h).
+BACKEND_SRCS += src/3ds_fly_sky.c
 BACKEND_SRCS += src/3ds_bottom_ui.c
 # The Pokédex on the top screen: which Pokémon, its picture and terrain.
 BACKEND_SRCS += src/3ds_dex_top_game.c
@@ -124,7 +126,7 @@ VOXEL_GAME_SRCS := src/voxel/voxel_world.c src/voxel/voxel_camera.c \
 	src/voxel/voxel_regions.c src/voxel/voxel_tree.c src/voxel/voxel_sign.c \
 	src/voxel/voxel_building.c src/voxel/voxel_relief.c \
 	src/voxel/voxel_arena.c src/voxel/voxel_grade.c src/voxel/voxel_battle.c \
-	src/voxel/voxel_sprite_slots.c src/voxel/voxel_swoop.c
+	src/voxel/voxel_sprite_slots.c src/voxel/voxel_swoop.c src/voxel/voxel_fly.c
 ifeq ($(VOXEL_LIGHTING),1)
 VOXEL_GAME_SRCS += src/voxel/voxel_lighting.c
 endif
