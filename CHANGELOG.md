@@ -10,6 +10,10 @@
   implying future support. Preparation for
   issue #247; Ruby/Sapphire remain unsupported. By @mkrieger95.
 
+- Tests: complete the sign and city-lamp fixtures' terrain relief stubs and
+  update the night renderer's shadow declarations so CI can run these tests
+  again. By @mkrieger95.
+
 - Voxel: Fly as a flight. With OPTIONS > ENHANCEMENTS > ENHANCED FLYING on,
   Fly in the voxel overworld climbs out of the map into the clouds and comes
   down over the destination, on the Pokémon that knows Fly; FULL also shows

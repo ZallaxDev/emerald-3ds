@@ -50,6 +50,25 @@ const int16_t *VoxelRelief_Cell(const VoxelMapInstance *inst, int x, int y)
     (void)inst; (void)x; (void)y;
     return NULL;
 }
+/* These fixtures have no relief grid, depth map or drawn slopes. */
+const int16_t *VoxelRelief_Depth(const VoxelMapInstance *inst, int x, int y)
+{
+    (void)inst; (void)x; (void)y;
+    return NULL;
+}
+
+bool VoxelRelief_IsDrawn(const VoxelMapInstance *inst)
+{
+    (void)inst;
+    return false;
+}
+
+bool VoxelRelief_IsSlope(const int16_t *grid)
+{
+    (void)grid;
+    return false;
+}
+
 /* Nor on a bridge's deck. */
 bool VoxelBuildings_DeckAt(const VoxelMapInstance *inst, float worldX, float worldZ,
                            unsigned elevation, float *lift)
