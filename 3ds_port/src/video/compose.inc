@@ -39,6 +39,90 @@ enum { FIELD_MODE_NONE, FIELD_MODE_PIXEL, FIELD_MODE_VOXEL };
 #define VOXEL_SWOOP_STEPS_MAX 4u
 static unsigned sFieldMode;
 static VoxelSwoop sSwoop;
+/*
+ * The Fly cinematic (voxel_fly.c), started by the game's Fly through
+ * 3ds_game_full.c (CtrVideo_FlyBegin) once the player is on the bird, and
+ * stepped here beside the swoop. Only from a voxel field frame: in the 2D
+ * field, or with the option off, Fly plays as the GBA's.
+ */
+static VoxelFly sFly;
+/* The map's version (CtrMap_Version) as the flight began: the warp loads
+ * the map again, whatever the frames in between show (the load's frame is
+ * often dropped, so a frame with no field is not to be counted on). */
+static uint32_t sFlyMapVersion;
+/* The game frame the cinematic was last stepped on (FrameFly), 0 as a
+ * flight begins: its first frame is one step, not the gap since the last. */
+static uint64_t sFlyLastGameFrame;
+/* The flight's sky scene was drawn (the landing's weather is the sky's,
+ * CtrFlySky_Arrive): set by FrameFly as it draws it, kept past the scene's
+ * end, cleared as the next Fly begins or the cinematic is cancelled. */
+static bool sFlySkyShown;
+
+static bool SkySceneLoad(float dirX, float dirZ);
+static void SkySceneFree(void);
+
+bool CtrVideo_FlyPossible(void)
+{
+    return sFieldMode == FIELD_MODE_VOXEL && !VoxelFly_Active(&sFly) && !VoxelSwoop_Active(&sSwoop)
+        && CtrVoxel_CloudTexture() != NULL;
+}
+
+bool CtrVideo_FlyBegin(float dirX, float dirZ)
+{
+    bool sky;
+
+    sFlySkyShown = false;
+    if (!CtrVideo_FlyPossible())
+        return false;
+    sky = CtrFlySky_Enabled() && SkySceneLoad(dirX, dirZ);
+    if (!sky)
+        SkySceneFree(); /* the files read for a scene that did not load */
+    VoxelFly_Begin(&sFly, dirX, dirZ, sky);
+    sFlyLastGameFrame = 0;
+    sFlyMapVersion = CtrMap_Version();
+    CtrLog_Write(CTR_LOG_VIDEO, "FLY cinematic begins towards (%.2f, %.2f)%s", (double)sFly.dirX, (double)sFly.dirZ,
+                 sky ? " with the sky scene" : "");
+    return true;
+}
+
+bool CtrVideo_FlyHovers(void)
+{
+    return VoxelFly_Hovers(&sFly);
+}
+
+bool CtrVideo_FlyBusy(void)
+{
+    return VoxelFly_Busy(&sFly);
+}
+
+bool CtrVideo_FlyLanding(float *share)
+{
+    return VoxelFly_Landing(&sFly, share);
+}
+
+bool CtrVideo_FlyProgress(float *share)
+{
+    return VoxelFly_Progress(&sFly, share);
+}
+
+bool CtrVideo_FlyActive(void)
+{
+    return VoxelFly_Active(&sFly);
+}
+
+bool CtrVideo_FlySkyShown(void)
+{
+    return sFlySkyShown;
+}
+
+void CtrVideo_FlyCancel(void)
+{
+    if (VoxelFly_Active(&sFly))
+        CtrLog_Write(CTR_LOG_VIDEO, "FLY cinematic cancelled in phase %u", (unsigned)sFly.phase);
+    VoxelFly_Cancel(&sFly);
+    SkySceneFree();
+    sFlySkyShown = false;
+}
 
 void CtrVideo_SetFieldLight(bool on, int x, int y, int radius)
 {

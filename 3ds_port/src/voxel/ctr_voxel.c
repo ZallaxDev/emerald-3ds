@@ -286,10 +286,72 @@ static VoxelCamera sCamera;
 static float sSwoop;
 static float sSwoopHeight = 1.0f;
 static bool sSwoopCards = true, sSwoopShadows = true;
+/* The Fly cinematic's share of the camera this frame (CtrVoxel_SetFly). */
+static CtrVoxelFly sFly;
 /* Flattening, height becomes distance up the picture, as the GBA's art
  * draws a tall thing in the tiles above its base: tiles north per tile of
  * height lost. 1 puts a two-tall crown on the tile above its trunk. */
 #define VOXEL_SWOOP_SHEAR 0.0f /* 0 since the oblique end camera does this itself */
+
+/*
+ * ── The wide view ───────────────────────────────────────────────────────────
+ * A camera that sees more squares than a frame can build: the swoop's
+ * top-down framing (sSwoop > 0: its view rectangle is grown to the 2D field's
+ * whole extent, UpdateFrustum), a camera a caller holds high
+ * (CtrVoxel_SetWideView: the Fly's). Under it the streaming does not leave
+ * black squares but degrades in rings around the camera's target: the
+ * nearest squares get their full build, the ring beyond stays on drafts
+ * (DraftChunk: eight a frame within VOXEL_WIDE_DRAFT_MS), and past that a
+ * square the frame has nothing for is a flat quad in the colour of its
+ * ground (FillHoles: the atlas's mean of each metatile) - and the backdrop
+ * under all of it is the map's own colour (CtrVoxel_WideBackdrop), not the
+ * GBA's black. The rings close in as the frames go by: a hole is drafted the
+ * frame after it appears, and the builds take the drafts nearest the target
+ * as soon as no hole in the draft ring is left. The walking view never meets
+ * these gates - everything it wants fits the frame - and is left as it was;
+ * nor does the warm-up behind a cut, which builds the whole view before
+ * showing it.
+ */
+/* Full builds, in tiles from the camera's target (the larger axis: the rings
+ * are squares, as the chunks are). The settled walking view is about 20 x 15
+ * tiles round the player plus a chunk of slack, so a square whose centre is
+ * within 12 tiles is one the camera will show when it lands: built for real
+ * during the swoop, it does not pop in afterwards. */
+#define VOXEL_BAND_FULL 12.0f
+/* Drafts. The swoop's framing is the 2D field, 30 x 20 tiles plus the slack,
+ * so 28 tiles from the target covers all of it; a camera that sees further
+ * (the Fly's ninety squares) drafts this ring - (56/8)^2 = 49 squares, two
+ * or three frames of drafts - and fills the rest flat. */
+#define VOXEL_BAND_DRAFT 28.0f
+/* The drafts' budget a frame under the wide view (VOXEL_DRAFT_PER_FRAME and
+ * VOXEL_DRAFT_MS otherwise): eight is the frame's ceiling of chunk uploads,
+ * and three milliseconds is what eight cost at most. */
+#define VOXEL_WIDE_DRAFT_PER_FRAME VOXEL_CHUNK_UPLOADS_MAX
+#define VOXEL_WIDE_DRAFT_MS 3.0f
+/* The squares a view spans are logged ("VOXEL drafts:", "VOXEL wide:"): the
+ * walking view is a dozen to twenty, the swoop's about twenty-five, the
+ * Fly's ninety. Only the camera decides the wide view (CameraHigh): a big
+ * walking view (zoomed out, pitched up) keeps the walking streaming. */
+static bool sWideViewAsked;      /* CtrVoxel_SetWideView */
+static bool sWideView;           /* this update's verdict (UpdateView) */
+static unsigned sViewSquares;    /* chunks the view rectangle spans (UpdateFrustum) */
+static unsigned sWideHolesLeft;  /* holes inside the draft ring not drafted this frame */
+/* The fill (see there): the frame's flat squares and their vertices. */
+#define VOXEL_FILL_MAX 128u
+static unsigned sFillCount;
+static VoxelGpuVertex *sFillGpu; /* VOXEL_FILL_MAX * 6, linear */
+
+/* Whether the camera is up: the swoop's share of it, the Fly cinematic's
+ * high pose (CtrVoxel_SetFly), or a caller's word. */
+static bool CameraHigh(void)
+{
+    return sSwoop > 0.0f || sWideViewAsked || (sFly.active && sFly.lift > 0.05f);
+}
+
+void CtrVoxel_SetWideView(bool on)
+{
+    sWideViewAsked = on;
+}
 /*
  * The swoop's colour: as the camera goes to the 2D field's pose the world's
  * light eases to neutral - plain texture colour, no grade, haze, dapples,
@@ -1145,6 +1207,8 @@ static void UpdateFrustum(void)
     sViewRect[1] = (int)floorf(rect[1]) - VOXEL_WINDOW_SLACK;
     sViewRect[2] = (int)ceilf(rect[2]) + VOXEL_WINDOW_SLACK;
     sViewRect[3] = (int)ceilf(rect[3]) + VOXEL_WINDOW_SLACK;
+    sViewSquares = (unsigned)((sViewRect[2] - sViewRect[0] + VOXEL_CHUNK - 1) / VOXEL_CHUNK)
+                 * (unsigned)((sViewRect[3] - sViewRect[1] + VOXEL_CHUNK - 1) / VOXEL_CHUNK);
 }
 
 /* Does the box meet the frustum? Outside only if wholly behind one plane. */
@@ -2921,6 +2985,10 @@ bool CtrVoxel_Init(void)
     sDynamic = linearAlloc(VOXEL_DYNAMIC_VERTICES * sizeof(VoxelGpuVertex));
     if (sDynamic == NULL)
         goto fail;
+    step = "fill buffer in linear memory";
+    sFillGpu = linearAlloc(VOXEL_FILL_MAX * 6u * sizeof(VoxelGpuVertex));
+    if (sFillGpu == NULL)
+        goto fail;
     VoxelRegions_Init();
     VoxelRelief_Init();
     VoxelSign_Init();
@@ -3116,6 +3184,9 @@ void CtrVoxel_Shutdown(void)
     sStaging = NULL;
     linearFree(sDynamic);
     sDynamic = NULL;
+    linearFree(sFillGpu);
+    sFillGpu = NULL;
+    sFillCount = 0;
     if (sHaveWeatherProgram)
     {
         shaderProgramFree(&sWeatherProgram);
@@ -5283,6 +5354,169 @@ static bool ChunkAdopt(VoxelChunk *chunk, VoxelAtlasSlot *atlas)
 #define VOXEL_DRAFT_PER_FRAME 4u
 #define VOXEL_DRAFT_CELLS (VOXEL_CHUNK * VOXEL_CHUNK)
 
+/*
+ * ── The fill ────────────────────────────────────────────────────────────────
+ * A square of the view the frame has neither mesh nor draft for is drawn as
+ * one flat quad at its map's base, in the mean colour of its ground - green
+ * for grass, blue for the sea, sand for the desert - so that the wide view
+ * (see there) never shows the black of the backdrop. The colour comes from
+ * the metatiles, which are known before any build (VoxelAtlasMap.mean, read
+ * off the atlas's composition), and is kept per square in the wait table
+ * until the world changes. Six vertices a square, in a small linear buffer
+ * of their own, packed at the end of the update and drawn first
+ * (DrawFills), under everything.
+ */
+/* The quad lies this far under the ground's level: never level with a
+ * draft or a mesh that lands on the square the same frame. */
+#define VOXEL_FILL_UNDER (1.0f / 16.0f)
+/* Vertices are shorts of a 1/512 tile from the fill's origin: a square
+ * further out than this from it is clipped to it. */
+#define VOXEL_FILL_REACH 60.0f
+
+typedef struct
+{
+    int16_t x0, z0, x1, z1; /* world tiles */
+    float base;             /* the map's base: the quad's level, and rows south (VoxelBuilder_StretchZ) */
+    uint32_t colour;        /* 0xAABBGGRR */
+} FillSquare;
+
+static FillSquare sFills[VOXEL_FILL_MAX];
+static int sFillOriginX, sFillOriginZ;
+/* The current map's own colour: its border block's, 0 while unknown. The
+ * fill of a square whose map has no atlas yet, and the wide view's backdrop. */
+static uint32_t sMapFill;
+
+/* How far a square's centre stands from the camera's target, in tiles, the
+ * larger of the two axes: the wide view's rings. */
+static float SiteReach(const ChunkSite *site)
+{
+    float dx = fabsf((float)(site->x0 + site->x1) * 0.5f - sCamera.targetX);
+    float dz = fabsf((float)(site->y0 + site->y1) * 0.5f - sCamera.targetZ);
+
+    return dx > dz ? dx : dz;
+}
+
+/* The mean of RGBA5551 means (VoxelAtlasMap.mean) as 0xAABBGGRR; 0 for none. */
+static uint32_t MeanColour(unsigned r, unsigned g, unsigned b, unsigned n)
+{
+    if (n == 0)
+        return 0;
+    return 0xFF000000u | (uint32_t)((b * 255u + 15u * n) / (31u * n)) << 16
+         | (uint32_t)((g * 255u + 15u * n) / (31u * n)) << 8
+         | (uint32_t)((r * 255u + 15u * n) / (31u * n));
+}
+
+/* The colour of a square's ground: the mean of its cells' metatiles (of the
+ * belt, the border block that stands there), or 0 while the atlas has not
+ * composed them. 64 lookups: a few microseconds, and kept per square. */
+static uint32_t SquareColour(const ChunkSite *site, const VoxelAtlasSlot *atlas)
+{
+    unsigned r = 0, g = 0, b = 0, n = 0;
+
+    if (atlas == NULL || !atlas->valid)
+        return 0;
+    for (int y = site->y0; y < site->y1; ++y)
+        for (int x = site->x0; x < site->x1; ++x)
+        {
+            int m = site->border ? VoxelWorld_BorderMetatile(x, y) : VoxelWorld_GetMetatileId(x, y);
+            uint16_t t;
+
+            if (m < 0 || m >= (int)VOXEL_METATILE_IDS)
+                continue;
+            t = atlas->map.mean[m];
+            if ((t & 1u) == 0)
+                continue;
+            r += t >> 11;
+            g += (t >> 6) & 31u;
+            b += (t >> 1) & 31u;
+            ++n;
+        }
+    return MeanColour(r, g, b, n);
+}
+
+static void AddFill(const ChunkSite *site, uint32_t colour)
+{
+    FillSquare *f;
+
+    if (!sWideView || colour == 0 || sFillCount >= VOXEL_FILL_MAX)
+        return;
+    f = &sFills[sFillCount++];
+    f->x0 = (int16_t)site->x0;
+    f->z0 = (int16_t)site->y0;
+    f->x1 = (int16_t)site->x1;
+    f->z1 = (int16_t)site->y1;
+    f->base = VoxelRelief_Base(site->inst);
+    f->colour = colour;
+}
+
+/* The current map's colour (sMapFill): its border block's mean, as the atlas
+ * has it. Indoors there is no belt and the void is black: none. */
+static void UpdateMapFill(const VoxelMapInstance *current)
+{
+    const VoxelAtlasSlot *atlas;
+    int m;
+    uint16_t t;
+
+    sMapFill = 0;
+    if (current == NULL || current->indoor)
+        return;
+    atlas = FindAtlas(current);
+    if (atlas == NULL || !atlas->valid)
+        return;
+    m = VoxelWorld_BorderMetatile((int)floorf(sCamera.targetX), (int)floorf(sCamera.targetZ));
+    if (m < 0 || m >= (int)VOXEL_METATILE_IDS)
+        return;
+    t = atlas->map.mean[m];
+    if (t & 1u)
+        sMapFill = MeanColour(t >> 11, (t >> 6) & 31u, (t >> 1) & 31u, 1u);
+}
+
+static float Clamp(float value, float lo, float hi);
+
+/* The frame's fills as vertices, from the camera's tile (DrawFills). */
+static void PackFills(void)
+{
+    VoxelVertex quad[6];
+
+    sFillOriginX = (int)floorf(sCamera.targetX);
+    sFillOriginZ = (int)floorf(sCamera.targetZ);
+    if (sFillGpu == NULL)
+    {
+        sFillCount = 0;
+        return;
+    }
+    /* By colour, so that DrawFills sets the colour and draws once per run
+     * (the sea, a meadow: most of a wide view is a handful of colours). */
+    for (unsigned i = 1; i < sFillCount; ++i)
+    {
+        FillSquare f = sFills[i];
+        unsigned j = i;
+
+        for (; j > 0 && sFills[j - 1u].colour > f.colour; --j)
+            sFills[j] = sFills[j - 1u];
+        sFills[j] = f;
+    }
+    for (unsigned i = 0; i < sFillCount; ++i)
+    {
+        const FillSquare *f = &sFills[i];
+        float x0 = Clamp((float)(f->x0 - sFillOriginX), -VOXEL_FILL_REACH, VOXEL_FILL_REACH);
+        float x1 = Clamp((float)(f->x1 - sFillOriginX), -VOXEL_FILL_REACH, VOXEL_FILL_REACH);
+        float z0 = Clamp((float)f->z0 + f->base - (float)sFillOriginZ, -VOXEL_FILL_REACH, VOXEL_FILL_REACH);
+        float z1 = Clamp((float)f->z1 + f->base - (float)sFillOriginZ, -VOXEL_FILL_REACH, VOXEL_FILL_REACH);
+        float y = f->base - VOXEL_FILL_UNDER;
+
+        quad[0] = (VoxelVertex){x0, y, z0, 0.0f, 0.0f, 1.0f};
+        quad[1] = (VoxelVertex){x1, y, z0, 0.0f, 0.0f, 1.0f};
+        quad[2] = (VoxelVertex){x1, y, z1, 0.0f, 0.0f, 1.0f};
+        quad[3] = quad[0];
+        quad[4] = quad[2];
+        quad[5] = (VoxelVertex){x0, y, z1, 0.0f, 0.0f, 1.0f};
+        Pack(quad, 6, sFillGpu + i * 6u);
+    }
+    if (sFillCount != 0)
+        GSPGPU_FlushDataCache(sFillGpu, sFillCount * 6u * sizeof(VoxelGpuVertex));
+}
+
 static unsigned sDrafts;
 static float sDraftMs;
 
@@ -5525,6 +5759,9 @@ static struct
     bool border, used;
     uint32_t seen, progress;
     uint32_t noRoomUntil; /* not built before this frame (RunJobs, BUILD_NO_VRAM) */
+    /* The square's fill colour (SquareColour), as of this epoch of the world
+     * and this extension of its atlas; 0 unknown. */
+    uint32_t fill, fillEpoch, fillExtension;
 } sRequestWait[VOXEL_REQUESTS_MAX];
 
 /* The wait table is looked up once per request, every frame: chained by hash
@@ -5594,6 +5831,7 @@ static unsigned RequestWait(const ChunkSite *site, int reuse)
     sRequestWait[oldest].cx = site->cx;
     sRequestWait[oldest].cy = site->cy;
     sRequestWait[oldest].border = site->border;
+    sRequestWait[oldest].fill = 0; /* another square's colour */
     sRequestWait[oldest].used = true;
     sRequestWait[oldest].seen = sRequestWait[oldest].progress = sFrame;
     sRequestWait[oldest].noRoomUntil = 0;
@@ -6027,6 +6265,8 @@ static void VisitSite(const ChunkSite *site, VoxelAtlasSlot *atlas,
         if (atlas != NULL)
             Request(site, atlas, NULL, NULL, inView ? NEED_HOLE : NEED_AHEAD,
                     playerX, playerZ);
+        else if (inView)
+            AddFill(site, sMapFill); /* no atlas to read its own colour from */
         if (inView)
             ++*missing;
         return;
@@ -6060,7 +6300,10 @@ static void VisitSite(const ChunkSite *site, VoxelAtlasSlot *atlas,
         if (drawable)
             Draw(chunk, site->baseX, site->baseY);
         else
+        {
+            AddFill(site, sMapFill);
             ++*missing;
+        }
         return;
     }
     if (!drawable || chunk->layout != inst->layout
@@ -6995,6 +7238,20 @@ static bool StartNextJob(float elapsed, float holeMs, float aheadMs, bool forced
 
         if (r->done || sFrame < sRequestWait[r->waitIndex].noRoomUntil)
             continue;
+        /* The wide view: no build while a hole inside the draft ring still
+         * waits for its draft (it is the next frame's draft, and a build
+         * would take the frames the drafts need and the VRAM a view this
+         * size has not got), none past the full ring, none for the prefetch
+         * ring: the squares the camera shows when it settles are the ones
+         * worth 10-30 ms now. */
+        if (sWideView && (sWideHolesLeft != 0 || !forView || SiteReach(&r->site) > VOXEL_BAND_FULL))
+            continue;
+        /* The Fly cinematic's high camera: the drafts alone until the
+         * landing, not even a hole's build (a hole left is the next frame's
+         * draft): full builds under it failed for room and left the square
+         * black for VOXEL_NO_ROOM_FRAMES (Azahar). */
+        if (sWideView && sFly.active && sFly.lift > 0.05f)
+            continue;
         if (sHolesOnly && need != NEED_HOLE && !RequestOverdue(r))
             continue; /* sorted: holes come first */
         if (elapsed >= limit || (!forced && elapsed + StartCost(hashKnown) > limit))
@@ -7334,6 +7591,10 @@ static bool DraftHoles(unsigned *missing)
 {
     uint64_t start = svcGetSystemTick();
     unsigned made = 0;
+    /* The wide view (see there): twice the drafts, inside its draft ring. */
+    unsigned perFrame = sWideView ? VOXEL_WIDE_DRAFT_PER_FRAME : VOXEL_DRAFT_PER_FRAME;
+    float budgetMs = sWideView ? VOXEL_WIDE_DRAFT_MS : VOXEL_DRAFT_MS;
+    bool room = true;
 
     for (unsigned i = 0; i < sRequestCount && sRequests[i].need == NEED_HOLE; ++i)
     {
@@ -7343,8 +7604,17 @@ static bool DraftHoles(unsigned *missing)
 
         if (r->done || r->site.border)
             continue;
-        if (made >= VOXEL_DRAFT_PER_FRAME || (made != 0 && MsSince(start) >= VOXEL_DRAFT_MS))
-            break;
+        if (sWideView && SiteReach(&r->site) > VOXEL_BAND_DRAFT)
+            continue; /* the fill's ring */
+        if (!room)
+            continue; /* no room this frame (below): filled flat */
+        if (made >= perFrame || (made != 0 && MsSince(start) >= budgetMs))
+        {
+            if (!sWideView)
+                break;
+            ++sWideHolesLeft; /* the next frame's draft; no build before it */
+            continue;
+        }
         /* The running job is for this square: let it finish. */
         if (sJob.active && SameSite(&r->site, &sJob.site))
             continue;
@@ -7353,7 +7623,16 @@ static bool DraftHoles(unsigned *missing)
             continue;
         chunk = DraftChunk(&r->site, r->atlas, r->chunk);
         if (chunk == NULL)
-            break; /* no room in the frame's uploads or in VRAM: next frame */
+        {
+            /* No room in the frame's uploads or in VRAM: next frame. Under the
+             * wide view the holes left are filled flat, and they do not hold
+             * the builds back: VRAM that will not take a draft would hold
+             * them for the whole flight. */
+            if (!sWideView)
+                break;
+            room = false;
+            continue;
+        }
         ++made;
         r->chunk = chunk;
         r->hashKnown = false;
@@ -7367,6 +7646,38 @@ static bool DraftHoles(unsigned *missing)
         }
     }
     return made != 0;
+}
+
+/*
+ * Every hole left in the view - undrafted this frame, the belt's (which has no
+ * draft), the running job's - is filled flat in its ground's colour (see the
+ * fill): read once per square from its metatiles, then kept in the wait table
+ * while the world and the atlas stay as they were.
+ */
+static void FillHoles(void)
+{
+    for (unsigned i = 0; i < sRequestCount; ++i)
+    {
+        BuildRequest *r = &sRequests[i];
+        uint32_t colour;
+
+        if (r->need != NEED_HOLE)
+            continue;
+        if (r->waitIndex < VOXEL_REQUESTS_MAX)
+        {
+            if (sRequestWait[r->waitIndex].fill == 0 || sRequestWait[r->waitIndex].fillEpoch != sEpoch
+             || sRequestWait[r->waitIndex].fillExtension != r->atlas->extension)
+            {
+                sRequestWait[r->waitIndex].fill = SquareColour(&r->site, r->atlas);
+                sRequestWait[r->waitIndex].fillEpoch = sEpoch;
+                sRequestWait[r->waitIndex].fillExtension = r->atlas->extension;
+            }
+            colour = sRequestWait[r->waitIndex].fill;
+        }
+        else
+            colour = SquareColour(&r->site, r->atlas);
+        AddFill(&r->site, colour != 0 ? colour : sMapFill);
+    }
 }
 
 static void UpdateView(float playerX, float playerZ, bool cut)
@@ -7393,6 +7704,16 @@ static void UpdateView(float playerX, float playerZ, bool cut)
                 : Clamp(spare - VOXEL_AHEAD_MARGIN_MS, 0.0f, VOXEL_AHEAD_MAX_MS);
     }
     UpdateFrustum();
+    /* The wide view's verdict for this update (see there), never behind the
+     * warm-up's fade (that builds the whole view before it lifts) nor in a
+     * battle (its scenery has a curtain of its own). */
+    sWideView = !warmup && !CtrVoxel_InBattle() && CameraHigh();
+    sWideHolesLeft = 0;
+    sFillCount = 0;
+    if (sWideView)
+        UpdateMapFill(VoxelWorld_Instance(0));
+    else
+        sMapFill = 0;
     VoxelWorld_SetMaterialView(sViewRect, VOXEL_MATERIAL_MARGIN);
     /* The atlas: what was composed after the last FrameEnd is uploaded now;
      * composing inside the frame is for the warm-up alone. No chunk of its
@@ -7446,8 +7767,26 @@ static void UpdateView(float playerX, float playerZ, bool cut)
         {
             lastDraftLog = sFrame;
             CtrLog_Write(CTR_LOG_VIDEO, "VOXEL drafts: %u this frame, %u in all, %.1fms in all, "
-                         "%u holes left, pending=%u", sDrafts - before, sDrafts, sDraftMs,
-                         missing, sRequestCount);
+                         "%u holes left, pending=%u, view=%u squares%s", sDrafts - before, sDrafts, sDraftMs,
+                         missing, sRequestCount, sViewSquares, sWideView ? " (wide)" : "");
+        }
+    }
+    /* What is still a hole after the drafts is filled flat (the fill): under
+     * the wide view only, the walking view's streaming is left as it was. */
+    if (sWideView)
+        FillHoles();
+    if (sWideView)
+    {
+        static uint32_t lastWideLog;
+
+        if (sFrame - lastWideLog >= 20u)
+        {
+            lastWideLog = sFrame;
+            CtrLog_Write(CTR_LOG_VIDEO, "VOXEL wide: view %dx%d tiles (%u squares) swoop=%.2f drawn=%u "
+                         "drafted=%u fills=%u holesLeft=%u missing=%u",
+                         sViewRect[2] - sViewRect[0], sViewRect[3] - sViewRect[1], sViewSquares,
+                         sSwoop, sDrawCount, sDrafts - (sStats.draftsMade), sFillCount,
+                         sWideHolesLeft, missing);
         }
     }
     for (unsigned i = 0; i < sRequestCount; ++i)
@@ -7503,6 +7842,7 @@ static void UpdateView(float playerX, float playerZ, bool cut)
         sInFrameBuildMs = MsSince(buildStart);
     }
     sHolesOnly = false;
+    PackFills();
 
     if (sWarmupUntil != 0 && missing == 0 && !AtlasJobBusy())
         sWarmupUntil = 0;
@@ -7921,6 +8261,63 @@ static void BattleCamera(void)
     x += sBattle.shakeX * k;
     z += sBattle.shakeY * k / sinf(pitch * degrees);
     VoxelCamera_Frame(&sCamera, x, z, ground, pitch, distance);
+}
+
+/* ── The Fly cinematic ─────────────────────────────────────────────────────── */
+
+/*
+ * The camera's high pose over the world (voxel_fly.c, CtrVoxel_SetFly): on
+ * top of the player's pose this frame, the pitch steepened and the camera
+ * dollied out by `lift`, the view led towards the destination on the old map
+ * and trailing behind the player on the new one, and the eye lifted straight
+ * up into the cloud deck by `rise`. The lead goes through the camera's swoop
+ * shift, which the next follow step takes off again, so it never feeds the
+ * damping. The far plane (VOXEL_FAR, 200) and the view's reach
+ * (VOXEL_VIEW_REACH_MAX, 44 tiles) bound the pose: at the deck the eye is
+ * some 70 tiles up, and the far corner of the ground it sees is within both.
+ */
+#define VOXEL_FLY_PITCH 62.0f    /* degrees below the horizon, at the top */
+#define VOXEL_FLY_DISTANCE 24.0f /* tiles of ground from the target to the eye's foot */
+#define VOXEL_FLY_RISE 22.0f     /* tiles the eye goes on up into the deck */
+#define VOXEL_FLY_TRAVEL 14.0f   /* tiles the view goes along the way, ahead over the
+                                  * old map and in from behind over the new one */
+
+static void FlyCamera(void)
+{
+    float lift = Clamp(sFly.lift, 0.0f, 1.0f);
+    float pitch = sCamera.pitch + (VOXEL_FLY_PITCH - sCamera.pitch) * lift;
+    float distance = sCamera.distance + (VOXEL_FLY_DISTANCE - sCamera.distance) * lift;
+
+    /* Below the pose (the bird's dive): drawn in on the player, the pitch kept. */
+    if (sFly.lift < 0.0f)
+        distance = sCamera.distance * (1.0f + Clamp(sFly.lift, -1.0f, 0.0f));
+    /* Under way: the view travels towards the destination, so the whole
+     * flight - out over the old map, in over the new - moves one way. The
+     * share is scaled by the lift so the new map is built on the pose. */
+    float along = VOXEL_FLY_TRAVEL * Clamp(sFly.travel, -1.0f, 1.0f) * lift;
+    float dx = sFly.dirX * along, dz = sFly.dirZ * along;
+
+
+    VoxelCamera_Frame(&sCamera, sCamera.targetX + dx, sCamera.targetZ + dz, sCamera.ground,
+                      pitch, distance);
+    sCamera.swoopX += dx;
+    sCamera.swoopZ += dz;
+    sCamera.y += VOXEL_FLY_RISE * Clamp(sFly.rise, 0.0f, 1.0f);
+}
+
+void CtrVoxel_SetFly(const CtrVoxelFly *fly)
+{
+    if (fly == NULL || !fly->active)
+    {
+        sFly.active = false;
+        return;
+    }
+    sFly = *fly;
+}
+
+C3D_Tex *CtrVoxel_CloudTexture(void)
+{
+    return sHaveFog ? &sFogTex : NULL;
 }
 
 /* The lamps' buffers given back: at once (`now`: nothing queued draws from
@@ -8798,6 +9195,9 @@ bool CtrVoxel_Update(void)
     /* The swoop to or from the 2D field, on top of the player's pose. */
     if (!sBattle.on)
         VoxelCamera_Swoop(&sCamera, sSwoop);
+    /* The Fly cinematic's high camera, on top of it too. */
+    if (!sBattle.on && sFly.active)
+        FlyCamera();
     if (sBattle.on)
     {
         if (!sBattle.chosen)
@@ -9063,6 +9463,14 @@ static void AtlasDrop(VoxelAtlasSlot *slot)
 bool CtrVoxel_IsWarmingUp(void)
 {
     return sReady && sFrame < sWarmupUntil && !sAtlasCapacityBlocked;
+}
+
+bool CtrVoxel_WideBackdrop(uint32_t *rgba)
+{
+    if (!sReady || !sWideView || sMapFill == 0)
+        return false;
+    *rgba = sMapFill;
+    return true;
 }
 
 unsigned long CtrVoxel_ReleaseIdleVram(void)
@@ -10498,6 +10906,18 @@ static const FogBank sSandBanks[2] = {
 };
 
 /*
+ * The Fly cinematic's cloud wisps on the same two sheets, high over the
+ * world under the hovering camera (VOXEL_FLY_PITCH and _DISTANCE put the
+ * eye some 45 tiles up): a thin one and a thicker one, streaming back along
+ * the way of travel (the drift is set as the flight begins, DrawCloudWisps).
+ */
+#define VOXEL_FLY_WISP_SPEED 9.0f /* tiles per second, back along the way */
+static FogBank sCloudBanks[2] = {
+    {12.0f, 24.0f, 0.0f, 0.0f, 0.55f},
+    {7.0f, 33.0f, 0.0f, 0.0f, 0.75f},
+};
+
+/*
  * Wisps rather than a wash: four octaves of the dapples' noise, thresholded
  * so that clear gaps open between the banks. A8: only coverage is stored,
  * the colour is a constant of the frame.
@@ -11268,6 +11688,47 @@ static void TerrainTexEnv(const VoxelLight *dapples)
     C3D_TexEnvFunc(env, C3D_Alpha, GPU_REPLACE);
 }
 
+/* The fills' stage 0: the square's colour where the terrain has its texel,
+ * graded by the vertex colour as the terrain is; the haze and the fade
+ * (stages 3 and 4) stay as the terrain set them. */
+static void FillTexEnv(void)
+{
+    C3D_TexEnv *env = C3D_GetTexEnv(0);
+
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_RGB, GPU_CONSTANT, GPU_PRIMARY_COLOR, GPU_PRIMARY_COLOR);
+    C3D_TexEnvFunc(env, C3D_RGB, GPU_MODULATE);
+    C3D_TexEnvScale(env, C3D_RGB, GPU_TEVSCALE_2);
+    C3D_TexEnvSrc(env, C3D_Alpha, GPU_CONSTANT, GPU_CONSTANT, GPU_CONSTANT);
+    C3D_TexEnvFunc(env, C3D_Alpha, GPU_REPLACE);
+    C3D_TexEnvInit(C3D_GetTexEnv(1));
+    C3D_TexEnvInit(C3D_GetTexEnv(2));
+}
+
+/* The frame's fills (see the fill), under everything else: one quad each,
+ * its colour the stage's constant. Leaves the terrain's stages set. */
+static void DrawFills(const VoxelLight *dapples)
+{
+    if (sFillCount == 0 || sFillGpu == NULL)
+        return;
+    FillTexEnv();
+    C3D_AlphaTest(true, GPU_GREATER, 0);
+    SetModelView(sFillOriginX, sFillOriginZ);
+    BindVertices(sFillGpu);
+    /* sorted by colour (PackFills): one draw per run */
+    for (unsigned i = 0; i < sFillCount;)
+    {
+        unsigned end = i + 1u;
+
+        while (end < sFillCount && sFills[end].colour == sFills[i].colour)
+            ++end;
+        C3D_TexEnvColor(C3D_GetTexEnv(0), sFills[i].colour);
+        C3D_DrawArrays(GPU_TRIANGLES, (int)(i * 6u), (int)((end - i) * 6u));
+        i = end;
+    }
+    TerrainTexEnv(dapples);
+}
+
 static void ReleaseGlowUnit(void)
 {
     uint32_t *flags = (uint32_t *)(void *)(__C3D_Context + C3DI_CONTEXT_FLAGS);
@@ -11414,7 +11875,10 @@ static void PrepareFades(void)
     float target = sBrightWhite ? 1.0f : 0.0f;
 
     sWorldFade = none;
-    VoxelWorld_ScreenFade(&sWorldFade.amount, sWorldFade.rgb);
+    /* Under the Fly cinematic's cloud the new map fades in from black for
+     * the game's sake only: the world is to be seen coming down out of it. */
+    if (!(sFly.active && sFly.noFade))
+        VoxelWorld_ScreenFade(&sWorldFade.amount, sWorldFade.rgb);
     sWorldFade = FadeThen(sWorldFade, sBrightBg, target);
     sSpriteFade = FadeThen(none, sBrightObj, target);
 }
@@ -11611,6 +12075,21 @@ static void DrawBanks(const C3D_Mtx *view, const VoxelLight *light, const FogBan
 static void DrawFogBanks(const C3D_Mtx *view, const VoxelLight *light, bool cave, float density)
 {
     DrawBanks(view, light, sFogBanks, cave ? 0xFFBFAB9Eu : 0xFFF2EBE6u, density); /* 0xAABBGGRR */
+}
+
+/* The Fly cinematic's wisps (sCloudBanks), white, streaming back along the
+ * way of travel: the drift is the direction's, so a change of direction
+ * between two flights steps the pattern, which nobody sees at no strength. */
+static void DrawCloudWisps(const C3D_Mtx *view, const VoxelLight *light, float strength)
+{
+    for (unsigned bank = 0; bank < 2; ++bank)
+    {
+        float speed = VOXEL_FLY_WISP_SPEED * (bank == 0 ? 0.7f : 1.0f);
+
+        sCloudBanks[bank].driftX = -sFly.dirX * speed;
+        sCloudBanks[bank].driftZ = -sFly.dirZ * speed;
+    }
+    DrawBanks(view, light, sCloudBanks, 0xFFFBF8F4u, strength);
 }
 
 /*
@@ -13238,6 +13717,7 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
 
     SetProjection(&projection);
     SetGrade(&light);
+    DrawFills(dapples ? &light : NULL);
 
     /*
      * Ordinary terrain first, then the tree material, then the modelled
@@ -13563,6 +14043,12 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
     {
         FadeFor(false);
         DrawBanks(&view, &light, sSandBanks, 0xFF88BEE0u, weatherAmount);
+    }
+    /* The Fly cinematic's cloud wisps, high over the world. */
+    if (sFly.active && sHaveFog && !indoor && sFly.wisps > 0.005f)
+    {
+        FadeFor(false);
+        DrawCloudWisps(&view, &light, Clamp(sFly.wisps, 0.0f, 1.0f));
     }
     /* Before the rays, which leave the orthographic projection behind. */
     if (sMotes != NULL && light.motes > 0.005f)
