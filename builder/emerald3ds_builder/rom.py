@@ -2,7 +2,7 @@
 
 Clean English (BPEE), Spanish (BPES), French (BPEF), Italian (BPEI), German (BPED) and
 Japanese (BPEJ) Pokémon Emerald dumps are recognised (16 MiB, by SHA-1). Building still requires a recipe and
-executable made for the same ROM. A trimmed dump (trailing 0xFF removed) is padded back before it is checked; a .zip holding a single .gba is
+executable made for the same ROM. A trimmed dump (trailing 0xFF removed) is padded back before it is checked; a .zip holding a single .gba, .agb or .bin is
 opened directly. The ROM is only ever read into memory: it is never copied,
 written or sent anywhere.
 """
@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import io
 import zipfile
+import zlib
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -72,10 +73,26 @@ class Rom:
 
 def _unzip(data: bytes) -> bytes:
     with zipfile.ZipFile(io.BytesIO(data)) as zf:
-        names = [n for n in zf.namelist() if n.lower().endswith((".gba", ".agb", ".bin"))]
-        if len(names) != 1:
-            raise BuilderError("The ZIP file must contain exactly one .gba file.", code="rom_zip_contents")
-        return zf.read(names[0])
+        members = [info for info in zf.infolist()
+                   if not info.is_dir() and info.filename.lower().endswith((".gba", ".agb", ".bin"))]
+        if len(members) != 1:
+            raise BuilderError("The ZIP file must contain exactly one ROM (.gba, .agb or .bin).",
+                               code="rom_zip_contents")
+        member = members[0]
+        if member.file_size > ROM_SIZE:
+            raise BuilderError("The ROM inside the ZIP file is larger than the supported 16 MiB.",
+                               code="rom_too_large")
+        if member.flag_bits & 1:
+            raise BuilderError("The ROM inside the ZIP file is password-protected.",
+                               "Extract it first, then select the ROM file.", code="rom_zip_encrypted")
+        try:
+            # Bound extraction as well as checking the archive's declared size.
+            with zf.open(member) as stream:
+                return stream.read(ROM_SIZE + 1)
+        except (NotImplementedError, RuntimeError) as exc:
+            raise BuilderError("The ZIP file uses an unsupported compression or encryption method.",
+                               "Extract it first, then select the ROM file.",
+                               code="rom_zip_unsupported") from exc
 
 
 def header(data: bytes) -> tuple[str, str]:
@@ -91,7 +108,7 @@ def check_rom_bytes(data: bytes, source: Path, supported: tuple[str, ...] | None
     if source.suffix.lower() == ".zip":
         try:
             data = _unzip(data)
-        except zipfile.BadZipFile as exc:
+        except (zipfile.BadZipFile, EOFError, zlib.error) as exc:
             raise BuilderError("The ROM file could not be read.", str(exc), code="rom_unreadable") from exc
     if len(data) > ROM_SIZE:
         raise BuilderError("This file is larger than a GBA cartridge; it is not the supported ROM.",
