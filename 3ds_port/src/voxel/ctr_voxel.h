@@ -66,6 +66,28 @@ enum
     CTR_VOXEL_CUT_OVERLAY = 64,   /* the game's layers over the world */
 };
 unsigned CtrVoxel_MeasureCut(void);
+/*
+ * The Fly cinematic (voxel_fly.c): the camera's share this frame. `lift` how
+ * far it stands from the player's pose to the high one over the world, 0..1;
+ * `rise` how far on up into the cloud deck; `dirX, dirZ` the unit direction
+ * of travel, which the view leads towards on the old map (`oldMap`) and
+ * trails behind on the new; `wisps` the strength of the cloud sheets in the
+ * scene; `noFade`: the world ignores the palette fade (the new map's fade-in
+ * from black plays under the cloud cover). Before Update; `active` false
+ * hands the camera back.
+ */
+typedef struct
+{
+    bool active, oldMap, noFade;
+    float lift, rise, wisps;
+    float travel; /* ahead of the player (+) or behind them (-), shares of VOXEL_FLY_TRAVEL */
+
+    float dirX, dirZ;
+} CtrVoxelFly;
+void CtrVoxel_SetFly(const CtrVoxelFly *fly);
+/* The tileable cloud (fog) coverage texture, A8, or NULL without one: the
+ * compositor's cloud cover over the picture (3ds_video.c). */
+C3D_Tex *CtrVoxel_CloudTexture(void);
 /* The GBA brightness effect (BLDY) of the frame about to be drawn, as the
  * compositor reads it: on the backgrounds and on the sprites, towards white
  * or black. The palette fade is read by the voxel module itself. */
@@ -231,6 +253,18 @@ void CtrVoxel_ReturnPagesGap(void *block);
 
 /* A map just entered by a cut is still being built (see VOXEL_WARMUP_MS). */
 bool CtrVoxel_IsWarmingUp(void);
+
+/* The wide view (ctr_voxel.c, see there): a caller whose camera sees more
+ * squares than a frame can build - the Fly's high camera - says so, and the
+ * streaming degrades in rings (full builds, drafts, flat fills in the
+ * ground's colour) instead of leaving black squares. The swoop sets it by
+ * itself. Before Update; off again as the camera comes down. */
+void CtrVoxel_SetWideView(bool on);
+/* Under the wide view, the colour the frame should be cleared to behind the
+ * world - the map's own ground, not the GBA's black - as C2D_Color32 packs
+ * it; false (keep the backdrop) when the view is not wide or the colour is
+ * not known yet. After Update. */
+bool CtrVoxel_WideBackdrop(uint32_t *rgba);
 
 /*
  * Where the camera shows a point of the 240x160 picture the game lays out

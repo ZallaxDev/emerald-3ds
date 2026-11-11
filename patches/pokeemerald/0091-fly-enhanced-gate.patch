@@ -1,0 +1,95 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: Fly as the GBA's unless the port's plays
+The port's Fly of patches 0087-0090 (the Pokemon that flies, the mirrored
+flight east, the start out of the ball, the follower waiting in its ball) only
+when the port says this Fly is its own (Port_FlyEnhanced, asked once as the Fly
+begins: the ENHANCED FLYING option on and the voxel field shown). Otherwise,
+and by the weak default, the GBA's Fly exactly: the bird, westwards, the
+banner, the follower walking on.
+Applies after 0090-fly-intro.patch; apply with tools/bootstrap.py.
+
+diff --git a/include/field_effect.h b/include/field_effect.h
+--- a/include/field_effect.h
++++ b/include/field_effect.h
+@@ -71,6 +71,12 @@ bool8 FieldEffect_FlyMon(u16 *species, u32 *personality, bool8 *shiny);
+ // The shadow of the Pokemon doing the Fly (patch 0087): a map sprite the voxel
+ // world lays on its tile's ground as a cast shadow (voxel_entities.c).
+ bool8 FieldEffect_IsFlyShadow(const struct Sprite *sprite);
++// Whether this Fly is the port's (asked once, as it begins): the Pokemon that
++// flies, the mirrored way east, the start out of the ball, the follower in
++// its ball. FALSE (the weak default, the option off, the 2D field): the GBA's
++// Fly as it was. FieldEffect_FlyEnhanced: the answer, for the flight's length.
++bool8 Port_FlyEnhanced(void);
++bool8 FieldEffect_FlyEnhanced(void);
+ 
+ #endif
+ 
+diff --git a/src/field_effect.c b/src/field_effect.c
+--- a/src/field_effect.c
++++ b/src/field_effect.c
+@@ -3321,6 +3321,11 @@ static s8 sFlyRiderX, sFlyRiderY = -8;
+ // begins): the Pokemon and its rider leave to the right and come in from the
+ // left, the GBA's westward Fly mirrored (FLY_MIRROR_X on the 240-wide picture).
+ static bool8 sFlyEast;
++#ifdef PORT_BRIDGE
++// Port: this Fly is the port's (Port_FlyEnhanced, asked as it begins); not,
++// the GBA's exactly: the bird, westwards, the banner, the follower out.
++static bool8 sFlyEnhanced;
++#endif
+ #define FLY_MIRROR_X(x) (sFlyEast ? 240 - (x) : (x))
+ #define FLY_MIRROR_DX(dx) (sFlyEast ? -(dx) : (dx))
+ #ifdef PLATFORM_3DS
+@@ -3442,14 +3447,20 @@ u8 FldEff_UseFly(void)
+ {
+     u8 taskId = CreateTask(Task_FlyOut, 254);
+     gTasks[taskId].tMonId = gFieldEffectArguments[0];
+-#ifdef PLATFORM_3DS
+-    FlyMon_Choose(gFieldEffectArguments[0]);
++#ifdef PORT_BRIDGE
++    sFlyEnhanced = Port_FlyEnhanced();
++#endif
++#if defined(PLATFORM_3DS) && defined(PORT_BRIDGE)
++    if (sFlyEnhanced)
++        FlyMon_Choose(gFieldEffectArguments[0]);
++    else
++        sFlyMonSpecies = SPECIES_NONE;
+ #endif
+ #ifdef PORT_BRIDGE
+-    sFlyEast = Port_FlyEast();
++    sFlyEast = sFlyEnhanced && Port_FlyEast();
+ #endif
+ #if defined(PLATFORM_3DS) && defined(PORT_BRIDGE)
+-    gTasks[taskId].tIntro = sFlyMonSpecies != SPECIES_NONE && Port_FlyIntro();
++    gTasks[taskId].tIntro = sFlyEnhanced && sFlyMonSpecies != SPECIES_NONE && Port_FlyIntro();
+ #endif
+     return 0;
+ }
+@@ -4671,6 +4682,16 @@ bool8 __attribute__((weak)) Port_FlyIntro(void)
+     return FALSE;
+ }
+ 
++bool8 __attribute__((weak)) Port_FlyEnhanced(void)
++{
++    return FALSE;
++}
++
++bool8 FieldEffect_FlyEnhanced(void)
++{
++    return sFlyEnhanced;
++}
++
+ // FieldCallback_UseFly from the field as it is (the bottom screen's Fly map,
+ // party_menu.c's CtrParty_Fly): no fade to come in from, the player perhaps
+ // walking.
+diff --git a/src/follower_mon.c b/src/follower_mon.c
+--- a/src/follower_mon.c
++++ b/src/follower_mon.c
+@@ -886,7 +886,8 @@ static bool8 MustHide(struct ObjectEvent *player)
+         return TRUE;
+     /* Fly: the player goes off on a Pokemon (perhaps this one), and lands
+      * alone; it waits in its ball till the player steps off. */
+-    if (FieldEffectActiveListContains(FLDEFF_USE_FLY) || FieldEffectActiveListContains(FLDEFF_FLY_IN))
++    if (FieldEffect_FlyEnhanced()
++     && (FieldEffectActiveListContains(FLDEFF_USE_FLY) || FieldEffectActiveListContains(FLDEFF_FLY_IN)))
+         return TRUE;
+     return FALSE;
+ }
