@@ -37,7 +37,7 @@ diff --git a/src/battle_message.c b/src/battle_message.c
 diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
 --- a/src/battle_script_commands.c
 +++ b/src/battle_script_commands.c
-@@ -3255,6 +3255,14 @@
+@@ -3255,6 +3255,64 @@
          gBattlescriptCurrInstr += 7;
  }
  
@@ -45,33 +45,76 @@ diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
 +// Modern Exp Share (OPTIONS, ENHANCEMENTS): as in the later games, the whole
 +// party shares - full EXP for who fought, half for the rest - and the rest
 +// gain under one line. The held Exp. Share then adds nothing.
++enum
++{
++    EXP_SHARE_OFF,      // Exp share off
++    EXP_SHARE_GEN_VI,   // full EXP for each that fought, half for each of the rest
++    EXP_SHARE_BALANCED, // who fought split the full EXP, the rest split half of it
++};
++#define PARTY_EXP_SHARE_MODE() CtrExtras_Get("exp_share")
++#define PARTY_EXP_SHARE() (PARTY_EXP_SHARE_MODE() != EXP_SHARE_OFF)
++
 +static bool8 sTeamExpShown;
-+#define PARTY_EXP_SHARE() (CtrExtras_Get("exp_share") != 0)
++
++// Who the party share gives EXP to: not eggs, the fainted or those at Lv. 100.
++static bool8 ShouldGetPartyExp(struct Pokemon *mon)
++{
++    return GetMonData(mon, MON_DATA_SPECIES) != SPECIES_NONE
++        && !GetMonData(mon, MON_DATA_IS_EGG)
++        && GetMonData(mon, MON_DATA_HP) != 0
++        && GetMonData(mon, MON_DATA_LEVEL) != MAX_LEVEL;
++}
++
++// The party share's EXP, at least 1 each: *exp for each that fought,
++// gExpShareExp for each of the rest.
++static void SplitPartyExp(u16 calculatedExp, s32 sentIn, u16 *exp)
++{
++    s32 i, fought = 0, benched = 0;
++
++    switch (PARTY_EXP_SHARE_MODE())
++    {
++    case EXP_SHARE_BALANCED:
++        for (i = 0; i < PARTY_SIZE; i++)
++        {
++            if (!ShouldGetPartyExp(&gPlayerParty[i]))
++                continue;
++            if (gBitTable[i] & sentIn)
++                fought++;
++            else
++                benched++;
++        }
++        *exp = SAFE_DIV(calculatedExp, fought);
++        gExpShareExp = SAFE_DIV(calculatedExp / 2, benched);
++        break;
++    case EXP_SHARE_GEN_VI:
++    default:
++        *exp = calculatedExp;
++        gExpShareExp = calculatedExp / 2;
++        break;
++    }
++    if (*exp == 0)
++        *exp = 1;
++    if (gExpShareExp == 0)
++        gExpShareExp = 1;
++}
 +#endif
 +
  static void Cmd_getexp(void)
  {
      u16 item;
-@@ -3312,6 +3320,18 @@
+@@ -3312,6 +3370,11 @@
  
              calculatedExp = gSpeciesInfo[gBattleMons[gBattlerFainted].species].expYield * gBattleMons[gBattlerFainted].level / 7;
  
 +#ifdef PLATFORM_3DS
 +            if (PARTY_EXP_SHARE())
-+            {
-+                *exp = calculatedExp;
-+                if (*exp == 0)
-+                    *exp = 1;
-+                gExpShareExp = calculatedExp / 2;
-+                if (gExpShareExp == 0)
-+                    gExpShareExp = 1;
-+            }
++                SplitPartyExp(calculatedExp, sentIn, exp);
 +            else
 +#endif
              if (viaExpShare) // at least one mon is getting exp via exp share
              {
                  *exp = SAFE_DIV(calculatedExp / 2, viaSentIn);
-@@ -3333,6 +3353,9 @@
+@@ -3333,6 +3396,9 @@
              gBattleScripting.getexpState++;
              gBattleStruct->expGetterMonId = 0;
              gBattleStruct->sentInPokes = sentIn;
@@ -81,16 +124,15 @@ diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
          }
          // fall through
      case 2: // set exp value to the poke in expgetter_id and print message
-@@ -3345,7 +3368,16 @@
+@@ -3345,7 +3411,15 @@
              else
                  holdEffect = GetItemHoldEffect(item);
  
 +#ifdef PLATFORM_3DS
-+            // Modern Exp Share: everyone but eggs and the fainted.
++            // Party Exp Share: everyone it gives EXP to. Lv. 100 is skipped
++            // here as the next branch would.
 +            if (PARTY_EXP_SHARE()
-+             ? (GetMonData(&gPlayerParty[gBattleStruct->expGetterMonId], MON_DATA_IS_EGG)
-+                || GetMonData(&gPlayerParty[gBattleStruct->expGetterMonId], MON_DATA_HP) == 0
-+                || GetMonData(&gPlayerParty[gBattleStruct->expGetterMonId], MON_DATA_SPECIES) == SPECIES_NONE)
++             ? !ShouldGetPartyExp(&gPlayerParty[gBattleStruct->expGetterMonId])
 +             : (holdEffect != HOLD_EFFECT_EXP_SHARE && !(gBattleStruct->sentInPokes & 1)))
 +#else
              if (holdEffect != HOLD_EFFECT_EXP_SHARE && !(gBattleStruct->sentInPokes & 1))
@@ -98,7 +140,7 @@ diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
              {
                  *(&gBattleStruct->sentInPokes) >>= 1;
                  gBattleScripting.getexpState = 5;
-@@ -3374,6 +3406,15 @@
+@@ -3374,6 +3448,15 @@
                      else
                          gBattleMoveDamage = 0;
  
@@ -114,7 +156,7 @@ diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
                      if (holdEffect == HOLD_EFFECT_EXP_SHARE)
                          gBattleMoveDamage += gExpShareExp;
                      if (holdEffect == HOLD_EFFECT_LUCKY_EGG)
-@@ -3414,12 +3455,27 @@
+@@ -3414,12 +3497,27 @@
                          gBattleStruct->expGetterBattlerId = 0;
                      }
  
