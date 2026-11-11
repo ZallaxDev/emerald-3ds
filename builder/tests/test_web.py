@@ -330,7 +330,8 @@ class ManifestTests(SyntheticPayloadMixin, unittest.TestCase):
 
     def test_cia_forwarder_is_described_when_present(self):
         files = build_web_payload.collect(self.synthetic["payload"])
-        manifest = build_web_payload.make_manifest(files, "1.0.0", "v1.0.0", "Emerald3DS-Forwarder.cia")
+        manifest = build_web_payload.make_manifest(files, "1.0.0", "v1.0.0", "Emerald3DS-Forwarder.cia",
+                                                   synthetic=True)
         self.assertEqual(manifest["assets"]["ciaForwarder"]["releaseAsset"], "Emerald3DS-Forwarder.cia")
         self.assertEqual(manifest["assets"]["ciaForwarder"]["target"], "sdmc:/3ds/emerald3ds/Emerald3DS.3dsx")
 

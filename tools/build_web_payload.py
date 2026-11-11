@@ -35,7 +35,7 @@ sys.path.insert(0, str(ROOT / "builder"))
 
 from emerald3ds_builder import __version__ as BUILDER_VERSION, pak  # noqa: E402
 from emerald3ds_builder.recipe import Recipe  # noqa: E402
-from emerald3ds_builder.rom import KNOWN_CODES, ROM_PROFILES, ROM_SIZE  # noqa: E402
+from emerald3ds_builder.rom import ROM_SIZE, SUPPORTED_PROFILES, unsupported_profile, unsupported_status  # noqa: E402
 from emerald3ds_builder.webmanifest import (ENTRYPOINT, INSTALL_DIR, INSTALL_FILES, KIND,  # noqa: E402
                                             MANIFEST_NAME, PAYLOAD_NAME, SCHEMA_VERSION, validate)
 
@@ -46,8 +46,6 @@ LICENSES = [("LICENSE-PORT.md", "LICENSE-PORT.md"), ("NOTICE.md", "NOTICE.md"),
             ("AI_DISCLOSURE.md", "AI_DISCLOSURE.md"), ("3ds_port/src/voxel/NOTICE.md", "voxel-NOTICE.md")]
 FIXED_TIME = (2020, 1, 1, 0, 0, 0)
 VARIANT_FILES = ("Emerald3DS.3dsx", "Emerald3DS.smdh", "emerald3ds.recipe")
-ROM_REGIONS = {"BPEE": ("USA, Europe", "en"), "BPES": ("Spain", "es"), "BPEF": ("France", "fr"),
-               "BPEI": ("Italy", "it"), "BPED": ("Germany", "de"), "BPEJ": ("Japan", "ja")}
 
 
 def sha256(data: bytes) -> str:
@@ -98,10 +96,16 @@ def make_manifest(files: dict[str, bytes], version: str, tag: str, cia_forwarder
         if synthetic:
             return {"sha1": sha1, "name": "Synthetic test ROM (not a game)", "code": "TEST",
                     "region": "", "language": folder or ""}
-        code = next((c for c, sha in ROM_PROFILES.items() if sha == sha1), "BPEE")
-        region, language = ROM_REGIONS.get(code, ("", ""))
-        return {"sha1": sha1, "name": KNOWN_CODES[code], "code": code, "region": region,
-                "language": folder or language}
+        recognised = unsupported_profile(sha1)
+        if recognised is not None:
+            raise ValueError("%s is recognised but %s; its recipe cannot be published."
+                             % (recognised.name, unsupported_status(recognised)))
+        profile = next((p for p in SUPPORTED_PROFILES if p.sha1 == sha1), None)
+        if profile is None:
+            raise ValueError("No supported ROM profile for recipe SHA-1 %s. "
+                             "Register the ROM before publishing its payload." % sha1)
+        return {"sha1": sha1, "name": profile.name, "code": profile.code, "region": profile.region,
+                "language": folder or profile.language}
 
     def ref(path: str, release_asset: str | None = None) -> dict:
         out = {"path": path, "sha256": sha256(files[path]), "size": len(files[path])}

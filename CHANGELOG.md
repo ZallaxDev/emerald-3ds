@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Builder: share verified ROM profiles with web release metadata and reject
+  unregistered recipe fingerprints instead of labelling them English Emerald.
+  Recognise clean English Ruby/Sapphire revisions 0-2 by fingerprint, with an
+  explicit "not yet supported" error for ROMs and release recipes. Recognise
+  English GBA FireRed/LeafGreen revisions 0-1 as "not supported" without
+  implying future support. Preparation for
+  issue #247; Ruby/Sapphire remain unsupported. By @mkrieger95.
+
 - Voxel: Fly as a flight. With OPTIONS > ENHANCEMENTS > ENHANCED FLYING on,
   Fly in the voxel overworld climbs out of the map into the clouds and comes
   down over the destination, on the Pokémon that knows Fly; FULL also shows
