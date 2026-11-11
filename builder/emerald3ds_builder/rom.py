@@ -27,6 +27,8 @@ JAPANESE_SHA1 = "d7cf8f156ba9c455d164e1ea780a6bf1945465c2"
 ROM_PROFILES = {"BPEE": SUPPORTED_SHA1, "BPES": SPANISH_SHA1, "BPEF": FRENCH_SHA1,
                 "BPEI": ITALIAN_SHA1, "BPED": GERMAN_SHA1, "BPEJ": JAPANESE_SHA1}
 ROM_SIZE = 16 * 1024 * 1024
+# Pokémon Pinball: Ruby & Sapphire GBA header codes (US, Japan, Europe).
+PINBALL_CODES = frozenset({"BPPE", "BPPJ", "BPPP"})
 KNOWN_CODES = {
     "BPEE": "Pokemon Emerald (USA, Europe)",
     "BPEJ": "Pokemon Emerald (Japan)",
@@ -104,6 +106,9 @@ def check_rom_bytes(data: bytes, source: Path, supported: tuple[str, ...] | None
     if supported is None:
         supported = tuple(ROM_PROFILES.values())
     if sha1 not in supported:
+        if code in PINBALL_CODES:
+            raise BuilderError("You were close! But this is Pokémon Pinball: Ruby & Sapphire. "
+                               "Please upload a valid Pokémon Emerald ROM.", code="rom_wrong_game")
         codes = [c for c, s in ROM_PROFILES.items() if s in supported] or ["BPEE"]
         names = " or ".join(KNOWN_CODES[c] for c in codes)
         what = KNOWN_CODES.get(code)
