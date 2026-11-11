@@ -830,14 +830,17 @@ static int VisibleRows(const VoxelSpriteSlot *slot)
  * steeper stands in front of it, so the ground drew over the walker. The card
  * is then moved along the line of sight (as far up as forward), which leaves
  * it where it was on screen and only changes what hides what. Flat ground and
- * walls (a south face lands behind the feet) give nothing.
+ * walls (a south face lands behind the feet) give nothing. With the relief's
+ * lean (VoxelRelief_Lean) the point lands at v + (1 - lean) h: the stairs'
+ * own plane is then a slope of 1 / (1 - lean) in height, and a flight of
+ * stairs, at 1, no longer reaches it.
  */
 #define VOXEL_CARD_CLEAR (1.0f / VOXEL_PIXELS_PER_TILE)
 
 static float CardPush(float cx, float cz, float halfW, float height)
 {
     const VoxelMapInstance *inst = VoxelWorld_GetInstanceAt((int)floorf(cx), (int)floorf(cz));
-    float feet, worst = -1.0f;
+    float feet, lean, worst = -1.0f;
     int x0 = (int)floorf(cx - halfW), x1 = (int)floorf(cx + halfW);
     int y0 = (int)floorf(cz - height), y1 = (int)floorf(cz);
     bool relief = false;
@@ -848,13 +851,16 @@ static float CardPush(float cx, float cz, float halfW, float height)
     if (inst == NULL || !relief)
         return 0.0f;
     feet = VoxelRelief_LiftAt(cx, cz);
+    lean = VoxelRelief_Lean();
     for (int i = -1; i <= 1; ++i)
     {
         float x = cx + i * halfW * 0.75f;
 
         for (float dv = VOXEL_CARD_CLEAR; dv <= height; dv += 2.0f * VOXEL_CARD_CLEAR)
         {
-            float over = VoxelRelief_LiftAt(x, cz - dv) - feet - dv;
+            /* The relief leans (VoxelRelief_Lean): a point of it h higher
+             * than the feet is drawn only (1 - lean) h further south. */
+            float over = (1.0f - lean) * (VoxelRelief_LiftAt(x, cz - dv) - feet) - dv;
 
             if (over > worst)
                 worst = over;
@@ -1065,7 +1071,10 @@ static void PlaceCompute(unsigned slot, const struct ObjectEvent *obj, float wor
             float cx = worldX + 0.5f, cz = worldZ + 0.5f, lift, shift;
 
             PointAt(slot, cx, cz, &lift, &shift);
-            *shade = VoxelLighting_SampleAlone(cx, lift + 0.75f + *deck, cz + shift + *deck);
+            /* (where the sun finds it, VoxelBuilder_SunZ: the shift without
+             * the lean of the ground it stands on) */
+            *shade = VoxelLighting_SampleAlone(cx, lift + 0.75f + *deck,
+                                               cz + shift + VoxelRelief_Lean() * lift + *deck);
         }
     }
 #else

@@ -101,7 +101,8 @@ const int16_t *VoxelRelief_Depth(const VoxelMapInstance *inst, int x, int y);
 /* Height in tiles over the base at the centre of a cell (0 when not lifted). */
 float VoxelRelief_CellLift(const VoxelMapInstance *inst, int x, int y);
 
-/* Its depth, in tiles, at the centre of a cell. */
+/* Its depth, in tiles, at the centre of a cell, as drawn (before the lean:
+ * what VoxelBuilder.shift takes, with the lift beside it). */
 float VoxelRelief_CellShift(const VoxelMapInstance *inst, int x, int y);
 
 /* Height in tiles in the world at a world position, interpolated on the
@@ -109,8 +110,83 @@ float VoxelRelief_CellShift(const VoxelMapInstance *inst, int x, int y);
 float VoxelRelief_LiftAt(float worldX, float worldZ);
 
 /* Depth in tiles in the world at a world position, interpolated on the
- * lattice: the base of the map there and the relief over it. */
+ * lattice: the base of the map there and the relief over it, leant as the
+ * ground there is (VoxelRelief_Lean) - where a thing standing at that point
+ * of the drawing stands in the world, less the point's own z. */
 float VoxelRelief_ShiftAt(float worldX, float worldZ);
+
+/*
+ * The lean of the mountains' south faces. The drawing is the 45-degree view:
+ * a point h up stands at (u, h, v + h), and a face a tile of rock tall takes
+ * no depth at all - a vertical wall, which the voxel view shows as one (and
+ * its stairs as a ladder). Everything in the world is built that way, and
+ * then leant: a point h up in the world is drawn `lean * h` further north,
+ * (u, h, v + h - lean * h). The tops stay level and whole, each further
+ * north the higher it is, and every south face a level tall falls over
+ * `lean` of a tile - a slope, as the west and east flanks are. 0 is the
+ * drawing as it stands (vertical faces); 1 a face as deep as it is tall
+ * (45 degrees, the flanks' own slope). It is one shear of the whole world,
+ * so nothing that met before it parts after it: no height changes, and no
+ * seam between maps.
+ *
+ * What stands on the ground (a tree, a model, a sign, a walker) does not
+ * lean: it moves north with the ground under its foot (VoxelBuilder_StretchZ,
+ * VoxelRelief_ShiftAt). Only the relief's own points lean each by its own
+ * height (VoxelBuilder.slope).
+ */
+#define VOXEL_RELIEF_LEAN_DEFAULT 0.75f
+float VoxelRelief_Lean(void);
+/* settings.txt voxel_face_lean (percent); chunks built before keep theirs. */
+void VoxelRelief_SetLean(float lean);
+/* Openings in a face stood upright (off: they lean with the face). */
+void VoxelRelief_SetUprightOpenings(bool on);
+
+/*
+ * The doors and cave mouths cut into a south face stay upright. Their drawing
+ * is an opening a tile wide and mostly two tall (the warp cell, its foot, and
+ * the cell above it when the drawing goes on up), both lifted as face cells;
+ * leant they would lie on the slope. They stand in one vertical plane instead,
+ * at their foot, where the drawing has them at the foot of the cliff; the
+ * slope higher up has moved back from it, so the upper part stands out of the
+ * rock as a porch, closed by a roof and two cheeks (the mesh builder). The
+ * generator lists them (relief.bin "UPRT", absent: none).
+ *
+ * True when world cell (x, y) of `inst` is one of them and its lattice falls
+ * south (north row above south row, every column). *top is the height, in
+ * tiles over the map's base (VoxelRelief_CellLift's units), of the highest
+ * lattice point of the topmost upright cell of its run up the column, *foot
+ * that of the lowest lattice point of the lowest cell of the run. Either may
+ * be NULL. Cheap: a search of a sorted table behind a memo.
+ * VoxelRelief_LiftAt and VoxelRelief_ShiftAt take `foot` as the height of
+ * the whole cell (a flat floor): a walker in the cell stands behind the plane
+ * (half a tile north of it at the cell's centre) and walks into the opening;
+ * CellLift, CellShift, Depth and the sun's
+ * surface (SurfaceAt, SurfaceTop) stay the lattice.
+ */
+bool VoxelRelief_Upright(const VoxelMapInstance *inst, int x, int y, float *top, float *foot);
+
+/*
+ * Stairs up a south face are drawn as steps. Their cells are face cells (the
+ * lattice falls one level from the north row to the south one), leant a ramp
+ * painted with the stairs' stripes; the generator lists the ones whose drawing
+ * is a clean stripe pattern (relief.bin "STEP", absent: none) with the pixel
+ * rows of it that are risers.
+ *
+ * True when world cell (x, y) of `inst` is in the table, its lattice still is
+ * a plain face (every column falls from the north row to the south row by the
+ * same amount > 0, every row is level across, the rows are equally spaced: a
+ * script that swaps the layout, or an old file paired with new lattices, does
+ * not make it a step) and it is not VoxelRelief_Upright. *risers (may be NULL)
+ * is the 16-bit mask, bit r set when pixel row r of the cell's drawing (0 =
+ * north) is a riser row; it always has risers and treads.
+ *
+ * The mesh builder draws such a cell as treads and risers along the leant
+ * slope: each run of tread rows a level strip, each run of riser rows a
+ * vertical one, the fall shared out over the riser rows and the depth over the
+ * tread rows. Walkers keep the lattice (LiftAt, ShiftAt unchanged): they glide
+ * up the mean slope. Cheap: a search of a sorted table behind a memo.
+ */
+bool VoxelRelief_Steps(const VoxelMapInstance *inst, int x, int y, unsigned *risers);
 
 /*
  * A map's south seam ease (see voxel_relief.c): world z from `from` to `to`

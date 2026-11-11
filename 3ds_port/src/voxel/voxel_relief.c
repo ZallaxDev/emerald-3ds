@@ -35,6 +35,17 @@
  *   all of it), s16 top (pixels over the map's base: where the fill's top
  *   stands), u16 metatiles[4] (the map's own ids: a 2x2 block tiled out as
  *   the game's border block is, VoxelRelief_EdgeFillAt)
+ *   then, if any door or cave mouth of the map's faces stands upright (the
+ *   lean leaves them vertical, at the foot of the face; VoxelRelief_Upright),
+ *   "UPRT", u16 cells, u16 0, cells x 4: u16 layout, u8 x, u8 y, sorted by
+ *   layout, y, x - the opening's cells (its foot, the warp, and the cell above
+ *   it when the drawing goes on up into it); the generator writes it last,
+ *   from the final lattices (gen_voxel_relief.apply_tail_tables)
+ *   then, if any stairs up a face are drawn as steps (VoxelRelief_Steps),
+ *   "STEP", u16 cells, u16 0, cells x 6: u16 layout, u8 x, u8 y, u16 riser
+ *   mask (bit r: pixel row r of the cell's drawing, 0 north, is a riser), sorted
+ *   by layout, y, x; after "UPRT" (any of "EDGE", "UPRT", "STEP" may be
+ *   absent, in this order)
  *   and last u32 the table's offset, "CUTS".
  *
  * A point's depth is its height in the world, its map's base and its own
@@ -126,6 +137,18 @@ static FindMemo sFindMemo[FIND_MEMO_SIDE * FIND_MEMO_SIDE];
 
 static int Find(const ReliefLayout *l, const VoxelMapInstance *inst, int x, int y);
 
+/* The upright cells last asked for (VoxelRelief_Upright), by their place in the
+ * same 8x8 tiling: every relief cell of a chunk and every walker's step asks.
+ * Exact, as the Find memo is: a slot is one layout and cell, a miss searches. */
+typedef struct
+{
+    int layoutId;
+    int16_t x, y;       /* the layout's own cells */
+    bool used, upright;
+    float top, foot;
+} UprightMemo;
+static UprightMemo sUprightMemo[FIND_MEMO_SIDE * FIND_MEMO_SIDE];
+
 /* The rows a south seam's ease is spread over (VoxelRelief_Stretch): six a
  * level, at most half the map; voxel_relief_fixes.py ease_rows. */
 static unsigned EaseRows(const ReliefLayout *l)
@@ -148,6 +171,22 @@ static const uint8_t *sCutVariants, *sCutCells;
 static unsigned sCutVariantCount, sCutCellCount;
 static const uint8_t *sEdges;
 static unsigned sEdgeCount;
+static const uint8_t *sUpright;     /* "UPRT": u16 layout, u8 x, u8 y a cell */
+static unsigned sUprightCount;
+#define UPRIGHT_BYTES 4
+static const uint8_t *sSteps;       /* "STEP": u16 layout, u8 x, u8 y, u16 riser mask a cell */
+static unsigned sStepCount;
+#define STEP_BYTES 6
+
+/* The step cells last asked for (VoxelRelief_Steps), tiled as sFindMemo. */
+typedef struct
+{
+    int layoutId;
+    int16_t x, y;       /* the layout's own cells */
+    bool used;
+    uint16_t mask;      /* 0: not a step cell */
+} StepMemo;
+static StepMemo sStepMemo[FIND_MEMO_SIDE * FIND_MEMO_SIDE];
 #define EDGE_BYTES 18
 #define CUT_VARIANT_BYTES 36
 #define CUT_CELL_BYTES 14
@@ -222,6 +261,22 @@ bool VoxelRelief_Init(void)
                 sEdgeCount = U16(e + 4);
                 sEdges = e + 8;
                 if ((long)(sEdges - sBlob) + (long)(EDGE_BYTES * sEdgeCount) > size - 8)
+                    goto fail;
+                e = sEdges + EDGE_BYTES * sEdgeCount;
+            }
+            if ((long)(e - sBlob) + 8 <= size - 8 && memcmp(e, "UPRT", 4) == 0)
+            {
+                sUprightCount = U16(e + 4);
+                sUpright = e + 8;
+                if ((long)(sUpright - sBlob) + (long)(UPRIGHT_BYTES * sUprightCount) > size - 8)
+                    goto fail;
+                e = sUpright + UPRIGHT_BYTES * sUprightCount;
+            }
+            if ((long)(e - sBlob) + 8 <= size - 8 && memcmp(e, "STEP", 4) == 0)
+            {
+                sStepCount = U16(e + 4);
+                sSteps = e + 8;
+                if ((long)(sSteps - sBlob) + (long)(STEP_BYTES * sStepCount) > size - 8)
                     goto fail;
             }
         }
@@ -357,6 +412,12 @@ void VoxelRelief_Shutdown(void)
     sCutVariantCount = sCutCellCount = 0;
     sEdges = NULL;
     sEdgeCount = 0;
+    sUpright = NULL;
+    sUprightCount = 0;
+    memset(sUprightMemo, 0, sizeof(sUprightMemo));
+    sSteps = NULL;
+    sStepCount = 0;
+    memset(sStepMemo, 0, sizeof(sStepMemo));
 }
 
 bool VoxelRelief_EdgeFill(unsigned layoutId, unsigned edge, int along, unsigned index, VoxelEdgeFill *fill)
@@ -976,11 +1037,303 @@ float VoxelRelief_CellShift(const VoxelMapInstance *inst, int x, int y)
 
 static float Sample(const int16_t *g, float worldX, float worldZ);
 
+static float sLean = VOXEL_RELIEF_LEAN_DEFAULT;
+
+float VoxelRelief_Lean(void)
+{
+#ifdef VOXEL_HOST_FILES
+    /* the host's tools: VOXEL_LEAN=0 draws the faces as they were */
+    static bool read;
+
+    if (!read)
+    {
+        const char *env = getenv("VOXEL_LEAN");
+
+        read = true;
+        if (env != NULL)
+            VoxelRelief_SetLean((float)atof(env));
+    }
+#endif
+    return sLean;
+}
+
+void VoxelRelief_SetLean(float lean)
+{
+    sLean = lean < 0.0f ? 0.0f : lean > 1.0f ? 1.0f : lean;
+}
+
+/* Openings stood upright (VoxelRelief_Upright)? Off: on the console the
+ * porch that closes an upright mouth over a leaning face read as a box stuck
+ * on the slope (user, 2026-11-11), so a mouth leans with its face like any
+ * other drawing. settings.txt's voxel_upright_caves=1 and the host's
+ * VOXEL_UPRIGHT=1 stand them up again, to compare. */
+static bool sUprightOpenings = false;
+
+void VoxelRelief_SetUprightOpenings(bool on)
+{
+    sUprightOpenings = on;
+    memset(sUprightMemo, 0, sizeof(sUprightMemo));
+    memset(sStepMemo, 0, sizeof(sStepMemo));
+}
+
+static bool UprightOpenings(void)
+{
+#ifdef VOXEL_HOST_FILES
+    static bool read;
+
+    if (!read)
+    {
+        const char *env = getenv("VOXEL_UPRIGHT");
+
+        read = true;
+        if (env != NULL)
+            VoxelRelief_SetUprightOpenings(atoi(env) != 0);
+    }
+#endif
+    return sUprightOpenings;
+}
+
+/* Is the cell (layout id, the layout's own x, y) in the "UPRT" table? A
+ * binary search over its sorted records. */
+static bool InUprightTable(int layoutId, int x, int y)
+{
+    unsigned lo = 0, hi = sUprightCount;
+    uint32_t key;
+
+    if (sUprightCount == 0 || x < 0 || y < 0 || x > 0xFF || y > 0xFF || layoutId < 0 || layoutId > 0xFFFF)
+        return false;
+    key = ((uint32_t)layoutId << 16) | ((uint32_t)y << 8) | (uint32_t)x;
+    while (lo < hi)
+    {
+        unsigned mid = (lo + hi) / 2;
+        const uint8_t *c = sUpright + mid * UPRIGHT_BYTES;
+        uint32_t at = ((uint32_t)U16(c) << 16) | ((uint32_t)c[3] << 8) | c[2];
+
+        if (at == key)
+            return true;
+        if (at < key)
+            lo = mid + 1;
+        else
+            hi = mid;
+    }
+    return false;
+}
+
+/* The cell is in the table and its lattice falls south, every column (the
+ * highest and lowest lattice points are returned, pixels). */
+static bool UprightCell(const ReliefLayout *l, const VoxelMapInstance *inst, int x, int y,
+                        int *highest, int *lowest)
+{
+    const int16_t *g;
+    const unsigned south = (VOXEL_RELIEF_SIDE - 1) * VOXEL_RELIEF_SIDE;
+    int k;
+
+    if (!InUprightTable(inst->layoutId, x - inst->originX, y - inst->originY))
+        return false;
+    k = Find(l, inst, x, y);
+    if (k < 0)
+        return false;
+    g = l->heights + (unsigned)k * GRID;
+    for (unsigned i = 0; i < VOXEL_RELIEF_SIDE; ++i)
+        if (g[i] <= g[south + i])
+            return false;
+    *highest = g[0];
+    *lowest = g[south];
+    for (unsigned i = 0; i < VOXEL_RELIEF_SIDE; ++i)
+    {
+        if (g[i] > *highest)
+            *highest = g[i];
+        if (g[south + i] < *lowest)
+            *lowest = g[south + i];
+    }
+    return true;
+}
+
+bool VoxelRelief_Upright(const VoxelMapInstance *inst, int x, int y, float *top, float *foot)
+{
+    const ReliefLayout *l = LayoutOf(inst);
+    UprightMemo *memo;
+    int lx, ly, high, low, top_px, foot_px;
+
+    if (sUprightCount == 0 || !UprightOpenings() || l == NULL)
+        return false;
+    lx = x - inst->originX;
+    ly = y - inst->originY;
+    memo = &sUprightMemo[((unsigned)ly & (FIND_MEMO_SIDE - 1u)) * FIND_MEMO_SIDE
+                         + ((unsigned)lx & (FIND_MEMO_SIDE - 1u))];
+    if (!(memo->used && memo->layoutId == inst->layoutId && memo->x == lx && memo->y == ly))
+    {
+        memo->used = true;
+        memo->layoutId = inst->layoutId;
+        memo->x = (int16_t)lx;
+        memo->y = (int16_t)ly;
+        memo->upright = UprightCell(l, inst, x, y, &high, &low);
+        if (memo->upright)
+        {
+            /* its run along the column: the highest point of the topmost cell
+             * of it, the lowest of the lowest (an opening is two cells; a
+             * run is bounded all the same) */
+            top_px = high;
+            foot_px = low;
+            for (int k = 1; k <= 4 && UprightCell(l, inst, x, y - k, &high, &low); ++k)
+                if (high > top_px)
+                    top_px = high;
+            for (int k = 1; k <= 4 && UprightCell(l, inst, x, y + k, &high, &low); ++k)
+                if (low < foot_px)
+                    foot_px = low;
+            memo->top = top_px / 16.0f;
+            memo->foot = foot_px / 16.0f;
+        }
+    }
+    if (!memo->upright)
+        return false;
+    if (top != NULL)
+        *top = memo->top;
+    if (foot != NULL)
+        *foot = memo->foot;
+    return true;
+}
+
+/* The riser mask of the cell (layout id, the layout's own x, y) in the "STEP"
+ * table, 0 when it is not in it (a mask always has risers). A binary search
+ * over its sorted records. */
+static unsigned StepTableMask(int layoutId, int x, int y)
+{
+    unsigned lo = 0, hi = sStepCount;
+    uint32_t key;
+
+    if (sStepCount == 0 || x < 0 || y < 0 || x > 0xFF || y > 0xFF || layoutId < 0 || layoutId > 0xFFFF)
+        return 0;
+    key = ((uint32_t)layoutId << 16) | ((uint32_t)y << 8) | (uint32_t)x;
+    while (lo < hi)
+    {
+        unsigned mid = (lo + hi) / 2;
+        const uint8_t *c = sSteps + mid * STEP_BYTES;
+        uint32_t at = ((uint32_t)U16(c) << 16) | ((uint32_t)c[3] << 8) | c[2];
+
+        if (at == key)
+            return U16(c + 4);
+        if (at < key)
+            lo = mid + 1;
+        else
+            hi = mid;
+    }
+    return 0;
+}
+
+/* A plain face: every column falls from the north row to the south row by
+ * the same amount > 0, every row is level across, and the rows are equally
+ * spaced (gen_voxel_relief.plain_face, the test the generator lists the table
+ * by). */
+static bool PlainFace(const int16_t *g)
+{
+    const int fall = g[0] - g[GRID - VOXEL_RELIEF_SIDE];
+    const int step = (g[0] - g[GRID - VOXEL_RELIEF_SIDE]) / (int)(VOXEL_RELIEF_SIDE - 1);
+
+    if (fall <= 0 || step * (int)(VOXEL_RELIEF_SIDE - 1) != fall)
+        return false;
+    for (unsigned j = 0; j < VOXEL_RELIEF_SIDE; ++j)
+        for (unsigned i = 0; i < VOXEL_RELIEF_SIDE; ++i)
+            if (g[j * VOXEL_RELIEF_SIDE + i] != g[0] - (int)j * step)
+                return false;
+    return true;
+}
+
+bool VoxelRelief_Steps(const VoxelMapInstance *inst, int x, int y, unsigned *risers)
+{
+    const ReliefLayout *l = LayoutOf(inst);
+    StepMemo *memo;
+    int lx, ly;
+
+    if (sStepCount == 0 || l == NULL)
+        return false;
+    lx = x - inst->originX;
+    ly = y - inst->originY;
+    memo = &sStepMemo[((unsigned)ly & (FIND_MEMO_SIDE - 1u)) * FIND_MEMO_SIDE
+                      + ((unsigned)lx & (FIND_MEMO_SIDE - 1u))];
+    if (!(memo->used && memo->layoutId == inst->layoutId && memo->x == lx && memo->y == ly))
+    {
+        unsigned mask = StepTableMask(inst->layoutId, lx, ly);
+        int k;
+
+        memo->used = true;
+        memo->layoutId = inst->layoutId;
+        memo->x = (int16_t)lx;
+        memo->y = (int16_t)ly;
+        memo->mask = 0;
+        if (mask != 0 && (k = Find(l, inst, x, y)) >= 0
+            && PlainFace(l->heights + (unsigned)k * GRID)
+            && !VoxelRelief_Upright(inst, x, y, NULL, NULL))
+            memo->mask = (uint16_t)mask;
+    }
+    if (memo->mask == 0)
+        return false;
+    if (risers != NULL)
+        *risers = memo->mask;
+    return true;
+}
+
+/* The ground a walker stands on at a point, over the map's base: on a cell
+ * of steps (VoxelRelief_Steps) the tread under it, as the mesh builder's
+ * EmitSteps lays them - the cell's depth is its treads', each by its rows
+ * among the tread rows, and a tread stands under as much of the fall as the
+ * riser rows north of it are of all riser rows. Never under the slope's line:
+ * the mean slope sank a walker's feet in the south half of every tread. */
+static float GroundAt(const VoxelMapInstance *inst, float worldX, float worldZ)
+{
+    const int x = FloorI(worldX), y = FloorI(worldZ);
+    const int16_t *g = VoxelRelief_Cell(inst, x, y);
+    unsigned risers;
+
+    if (g != NULL && VoxelRelief_Lean() > 0.0f && VoxelRelief_Steps(inst, x, y, &risers))
+    {
+        int nR = 0, rc = 0, tc = 0;
+        float at;
+
+        for (int r = 0; r < 16; ++r)
+            nR += (int)((risers >> r) & 1u);
+        at = (worldZ - y) * (float)(16 - nR);
+        for (int r = 0; r < 16; ++r)
+            if ((risers >> r) & 1u)
+                ++rc;
+            else if ((float)++tc > at)
+                break;
+        if (nR > 0 && nR < 16)
+            return (g[0] - (float)(g[0] - g[GRID - VOXEL_RELIEF_SIDE]) * rc / nR) / 16.0f;
+    }
+    return Sample(g, worldX, worldZ);
+}
+
+/* How far north of a walker its ground is read too, tiles: it comes down a
+ * riser over this much of the tread below instead of in one frame. */
+#define STEP_EASE 0.15f
+
 float VoxelRelief_LiftAt(float worldX, float worldZ)
 {
     int x = FloorI(worldX), y = FloorI(worldZ);
     const VoxelMapInstance *inst = VoxelWorld_GetInstanceAt(x, y);
+    float foot;
 
+    /* a walker enters an opening on its floor, not up the slope: its plane
+     * stands at the foot of the face (VoxelRelief_Upright), the floor is
+     * behind it. With no lean the opening is the wall it was */
+    if (VoxelRelief_Lean() > 0.0f && VoxelRelief_Upright(inst, x, y, NULL, &foot))
+        return VoxelRelief_Base(inst) + foot;
+    if (VoxelRelief_Lean() > 0.0f && VoxelRelief_Steps(inst, x, y, NULL))
+    {
+        /* the mean of the ground over the stretch just north: the treads
+         * there are no lower, so the feet are never under a tread */
+        float sum = 0.0f;
+
+        for (int k = 0; k < 4; ++k)
+        {
+            const float z = worldZ - STEP_EASE * k / 3.0f;
+            const VoxelMapInstance *at = VoxelWorld_GetInstanceAt(x, FloorI(z));
+
+            sum += at == inst ? GroundAt(inst, worldX, z) : GroundAt(inst, worldX, (float)y);
+        }
+        return VoxelRelief_Base(inst) + sum / 4.0f;
+    }
     return VoxelRelief_Base(inst) + Sample(VoxelRelief_Cell(inst, x, y), worldX, worldZ);
 }
 
@@ -988,11 +1341,20 @@ float VoxelRelief_ShiftAt(float worldX, float worldZ)
 {
     int x = FloorI(worldX), y = FloorI(worldZ);
     const VoxelMapInstance *inst = VoxelWorld_GetInstanceAt(x, y);
-    float shift = Sample(VoxelRelief_Depth(inst, x, y), worldX, worldZ);
+    float shift, lift, foot;
 
+    /* an opening's floor is flat, at its foot's level (VoxelRelief_LiftAt) */
+    if (VoxelRelief_Lean() > 0.0f && VoxelRelief_Upright(inst, x, y, NULL, &foot))
+        shift = lift = foot;
+    else
+    {
+        shift = Sample(VoxelRelief_Depth(inst, x, y), worldX, worldZ);
+        lift = Sample(VoxelRelief_Cell(inst, x, y), worldX, worldZ);
+    }
     /* where it is drawn: on a map's eased rows, as its ground is, and as far
      * south again as its map's base is high (VoxelBuilder_StretchZ) */
-    return VoxelRelief_StretchZ(inst, worldZ + shift) + VoxelRelief_Base(inst) - worldZ;
+    return VoxelRelief_StretchZ(inst, worldZ + shift) + VoxelRelief_Base(inst) - worldZ
+         - VoxelRelief_Lean() * (VoxelRelief_Base(inst) + lift);
 }
 
 static float Sample(const int16_t *g, float worldX, float worldZ)

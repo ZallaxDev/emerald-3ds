@@ -26,6 +26,18 @@
  * (VoxelRelief_SeamStep), and Lilycove 96 down to meet Route 124; Route 124
  * and Route 126 meet as they are. A lifted map stands that much higher.
  *
+ * The table of upright cells ("UPRT": the doors and cave mouths cut into a
+ * face, which the lean leaves vertical): every cell of it through
+ * VoxelRelief_Upright, LiftAt and ShiftAt; and Route 116's two caves, (47, 8)
+ * and (65, 10), each the foot of an opening with its upper cell above it,
+ * where the cells beside and south of them are not.
+ *
+ * The table of step cells ("STEP": the stairs up a face drawn as treads and
+ * risers): every cell of it through VoxelRelief_Steps with its riser mask,
+ * which has both risers and treads, on a lattice that is a plain face and not
+ * an upright cell; the cells around it that are not in the table are not
+ * steps.
+ *
  * Then every cut cell of the file, asked for through VoxelRelief_Cut's memo
  * in an order that hits and evicts it, against the table read here. */
 #include <assert.h>
@@ -123,6 +135,234 @@ const VoxelMapInstance *VoxelWorld_GetInstanceAt(int x, int y)
     return sOnly;
 }
 
+/* The lowest and highest lattice point (pixels) of a cell, and whether it
+ * falls south in every column. */
+static bool Falls(const int16_t *g, int *high, int *low)
+{
+    const unsigned south = (VOXEL_RELIEF_SIDE - 1) * VOXEL_RELIEF_SIDE;
+    bool falls = g != NULL;
+
+    for (unsigned i = 0; g != NULL && i < VOXEL_RELIEF_SIDE; ++i)
+    {
+        falls = falls && g[i] > g[south + i];
+        if (i == 0 || g[i] > *high)
+            *high = g[i];
+        if (i == 0 || g[south + i] < *low)
+            *low = g[south + i];
+    }
+    return falls;
+}
+
+/* The "UPRT" table of the file, each cell through the runtime. */
+static void CheckUpright(int route116)
+{
+    FILE *f = fopen(VOXEL_RELIEF_PATH, "rb");
+    long size;
+    unsigned char *blob;
+    unsigned at, nv, nc, n, seen = 0;
+    const unsigned char *t;
+    VoxelMapInstance inst = {0};
+    float top, foot;
+    int high, low;
+    static const int kRoute116[][2] = { { 47, 8 }, { 65, 10 } };
+
+    /* off by default (the mouths lean with their faces): the rule is kept */
+    VoxelRelief_SetUprightOpenings(true);
+    assert(f != NULL);
+    fseek(f, 0, SEEK_END);
+    size = ftell(f);
+    rewind(f);
+    blob = malloc((size_t)size);
+    assert(blob != NULL && fread(blob, 1, (size_t)size, f) == (size_t)size);
+    fclose(f);
+    at = Le16(blob + size - 8) | (Le16(blob + size - 6) << 16);
+    nv = Le16(blob + at);
+    nc = Le16(blob + at + 2);
+    t = blob + at + 4 + 36u * nv + 14u * nc;
+    if (memcmp(t, "EDGE", 4) == 0)
+        t += 8 + 18u * Le16(t + 4);
+    assert(memcmp(t, "UPRT", 4) == 0);
+    n = Le16(t + 4);
+    assert(n > 0 && Le16(t + 6) == 0);
+    t += 8;
+    for (unsigned k = 0; k < n; ++k)
+    {
+        unsigned layout = Le16(t + 4 * k), x = t[4 * k + 2], y = t[4 * k + 3];
+        const int16_t *g;
+
+        if (k > 0)      /* sorted by layout, y, x */
+            assert(((layout << 16) | (y << 8) | x) > ((Le16(t + 4 * k - 4) << 16) | ((unsigned)t[4 * k - 1] << 8) | t[4 * k - 2]));
+        inst.layoutId = (int)layout;
+        g = VoxelRelief_Cell(&inst, (int)x, (int)y);
+        assert(g != NULL && Falls(g, &high, &low));
+        for (int pass = 0; pass < 2; ++pass)    /* and again, from the memo */
+        {
+            assert(VoxelRelief_Upright(&inst, (int)x, (int)y, &top, &foot));
+            assert(top >= foot && foot <= low / 16.0f && top >= high / 16.0f);
+            assert(VoxelRelief_Upright(&inst, (int)x, (int)y, NULL, NULL));
+        }
+        sOnly = &inst;
+        if (VoxelRelief_Lean() > 0.0f)  /* with no lean the opening is the wall it was: no flat floor */
+        {
+            assert(VoxelRelief_LiftAt(x + 0.5f, y + 0.1f) == VoxelRelief_Base(&inst) + foot);
+            assert(VoxelRelief_LiftAt(x + 0.9f, y + 0.9f) == VoxelRelief_Base(&inst) + foot);
+            assert(fabsf(VoxelRelief_ShiftAt(x + 0.5f, y + 0.1f)
+                         - (foot + VoxelRelief_Base(&inst) - VoxelRelief_Lean() * (VoxelRelief_Base(&inst) + foot))) < 0.0001f);
+            assert(fabsf(VoxelRelief_ShiftAt(x + 0.5f, y + 0.1f) - VoxelRelief_ShiftAt(x + 0.1f, y + 0.9f)) < 0.001f);   /* flat */
+        }
+        sOnly = NULL;
+        ++seen;
+    }
+    assert(seen == n);
+    /* Route 116's caves: the foot, the cell above it (the drawing goes on up
+     * into it), and what is not an opening beside and under them */
+    inst.layoutId = route116;
+    for (unsigned c = 0; c < 2; ++c)
+    {
+        int x = kRoute116[c][0], y = kRoute116[c][1];
+        float footLow, topHigh, footAbove, topAbove;
+
+        assert(Falls(VoxelRelief_Cell(&inst, x, y), &high, &low));
+        footLow = low / 16.0f;
+        assert(Falls(VoxelRelief_Cell(&inst, x, y - 1), &high, &low));
+        topHigh = high / 16.0f;
+        assert(VoxelRelief_Upright(&inst, x, y, &top, &foot));
+        assert(VoxelRelief_Upright(&inst, x, y - 1, &topAbove, &footAbove));
+        assert(top == topHigh && topAbove == topHigh && foot == footLow && footAbove == footLow);
+        assert(top - foot > 1.9f);       /* two levels: two cells of a level each */
+        assert(!VoxelRelief_Upright(&inst, x, y - 2, &top, &foot));
+        assert(!VoxelRelief_Upright(&inst, x, y + 1, &top, &foot));
+        assert(!VoxelRelief_Upright(&inst, x - 1, y, &top, &foot));
+        assert(!VoxelRelief_Upright(&inst, x + 1, y - 1, &top, &foot));
+    }
+    /* no layout, no cells */
+    inst.layoutId = 0;
+    assert(!VoxelRelief_Upright(&inst, 47, 8, &top, &foot));
+    assert(!VoxelRelief_Upright(NULL, 47, 8, &top, &foot));
+    VoxelRelief_SetUprightOpenings(false);
+    free(blob);
+}
+
+/* A plain face, tested here on its own: every point is the north row's less
+ * the same drop a row. */
+static bool IsPlainFace(const int16_t *g)
+{
+    const unsigned south = (VOXEL_RELIEF_SIDE - 1) * VOXEL_RELIEF_SIDE;
+    int fall;
+
+    if (g == NULL)
+        return false;
+    fall = g[0] - g[south];
+    if (fall <= 0 || fall % (int)(VOXEL_RELIEF_SIDE - 1) != 0)
+        return false;
+    for (unsigned j = 0; j < VOXEL_RELIEF_SIDE; ++j)
+        for (unsigned i = 0; i < VOXEL_RELIEF_SIDE; ++i)
+            if (g[j * VOXEL_RELIEF_SIDE + i] != g[0] - (int)j * (fall / (int)(VOXEL_RELIEF_SIDE - 1)))
+                return false;
+    return true;
+}
+
+/* The "STEP" table of the file, each cell through the runtime. */
+static void CheckSteps(void)
+{
+    FILE *f = fopen(VOXEL_RELIEF_PATH, "rb");
+    long size;
+    unsigned char *blob;
+    unsigned at, nv, nc, n, seen = 0, asked = 0;
+    const unsigned char *t, *up = NULL;
+    unsigned nup = 0;
+    unsigned risers;
+
+    assert(f != NULL);
+    fseek(f, 0, SEEK_END);
+    size = ftell(f);
+    rewind(f);
+    blob = malloc((size_t)size);
+    assert(blob != NULL && fread(blob, 1, (size_t)size, f) == (size_t)size);
+    fclose(f);
+    at = Le16(blob + size - 8) | (Le16(blob + size - 6) << 16);
+    nv = Le16(blob + at);
+    nc = Le16(blob + at + 2);
+    t = blob + at + 4 + 36u * nv + 14u * nc;
+    if (memcmp(t, "EDGE", 4) == 0)
+        t += 8 + 18u * Le16(t + 4);
+    if (memcmp(t, "UPRT", 4) == 0)
+    {
+        nup = Le16(t + 4);
+        up = t + 8;
+        t += 8 + 4u * nup;
+    }
+    assert(memcmp(t, "STEP", 4) == 0);
+    n = Le16(t + 4);
+    assert(n > 0 && Le16(t + 6) == 0);
+    t += 8;
+    for (int pass = 0; pass < 2; ++pass)    /* and in another map's place: world cells */
+        for (unsigned k = 0; k < n; ++k)
+        {
+            unsigned layout = Le16(t + 6 * k), x = t[6 * k + 2], y = t[6 * k + 3], mask = Le16(t + 6 * k + 4);
+            VoxelMapInstance inst = {0};
+            bool neighbour = false;
+
+            if (k > 0)      /* sorted by layout, y, x */
+                assert(((layout << 16) | (y << 8) | x) > ((Le16(t + 6 * k - 6) << 16) | ((unsigned)t[6 * k - 3] << 8) | t[6 * k - 4]));
+            inst.layoutId = (int)layout;
+            inst.originX = pass ? -7 : 0;
+            inst.originY = pass ? 5 : 0;
+            assert(mask != 0 && mask != 0xFFFFu);       /* risers and treads both */
+            assert(IsPlainFace(VoxelRelief_Cell(&inst, (int)x + inst.originX, (int)y + inst.originY)));
+            for (unsigned u = 0; u < nup; ++u)          /* never an upright cell */
+                assert(!(Le16(up + 4 * u) == layout && up[4 * u + 2] == x && up[4 * u + 3] == y));
+            for (int again = 0; again < 2; ++again)     /* and again, from the memo */
+            {
+                risers = 0;
+                assert(VoxelRelief_Steps(&inst, (int)x + inst.originX, (int)y + inst.originY, &risers));
+                assert(risers == mask);
+                assert(VoxelRelief_Steps(&inst, (int)x + inst.originX, (int)y + inst.originY, NULL));
+            }
+            /* the cells around it that are not in the table, and the ones 8
+             * cells away that share its memo slot */
+            for (int dy = -8; dy <= 8; dy += 1)
+                for (int dx = -8; dx <= 8; dx += 1)
+                {
+                    int cx = (int)x + dx, cy = (int)y + dy;
+                    bool listed = false;
+
+                    if (cx < 0 || cy < 0 || (dx != 0 && dy != 0 && (dx > 1 || dx < -1 || dy > 1 || dy < -1)))
+                        continue;
+                    if (dx == 0 && dy == 0)
+                        continue;
+                    for (unsigned q = 0; q < n && !listed; ++q)
+                        listed = Le16(t + 6 * q) == layout && t[6 * q + 2] == (unsigned)cx && t[6 * q + 3] == (unsigned)cy;
+                    risers = 0xBEEFu;
+                    if (!listed)
+                    {
+                        assert(!VoxelRelief_Steps(&inst, cx + inst.originX, cy + inst.originY, &risers));
+                        assert(risers == 0xBEEFu);
+                        neighbour = true;
+                        ++asked;
+                    }
+                    else
+                    {
+                        assert(VoxelRelief_Steps(&inst, cx + inst.originX, cy + inst.originY, &risers) && risers != 0);
+                    }
+                    /* the cell itself again after the evictions */
+                    assert(VoxelRelief_Steps(&inst, (int)x + inst.originX, (int)y + inst.originY, &risers) && risers == mask);
+                }
+            assert(neighbour);
+            ++seen;
+        }
+    assert(seen == 2 * n && asked > 0);
+    /* no layout, no cells */
+    {
+        VoxelMapInstance none = {0};
+
+        none.layoutId = 0;
+        assert(!VoxelRelief_Steps(&none, (int)t[2], (int)t[3], &risers));
+        assert(!VoxelRelief_Steps(NULL, (int)t[2], (int)t[3], &risers));
+    }
+    free(blob);
+}
+
 int main(int argc, char **argv)
 {
     VoxelMapInstance inst = {0};
@@ -153,7 +393,8 @@ int main(int argc, char **argv)
     /* and the sun meets it where it stands, as far south as it is high */
     sOnly = &inst;
     assert(VoxelRelief_DrawnTop(&inst) >= g[0] / 16.0f);
-    assert(fabsf(VoxelRelief_SurfaceAt(60.5f, 2.5f + g[0] / 16.0f) - g[0] / 16.0f) < 0.1f);
+    assert(fabsf(VoxelRelief_SurfaceAt(60.5f, 2.5f + (1.0f - VoxelRelief_Lean()) * g[0] / 16.0f)
+                 - g[0] / 16.0f) < 0.1f);
     sOnly = NULL;
     assert(VoxelRelief_Belt(&inst) == 0);
     /* the carved cave and its belt */
@@ -184,7 +425,8 @@ int main(int argc, char **argv)
             float lift = VoxelRelief_LiftAt(x, 10.5f);
 
             assert(lift >= last && lift - last <= 1.0f / 16.0f + 0.001f);
-            assert(fabsf(VoxelRelief_ShiftAt(x, 10.5f) - lift) < 0.001f);
+            assert(fabsf(VoxelRelief_ShiftAt(x, 10.5f)
+                         - (lift + VoxelRelief_Base(&inst) - VoxelRelief_Lean() * (VoxelRelief_Base(&inst) + lift))) < 0.001f);
             last = lift;
         }
         assert(fabsf(last) < 1.0f / 16.0f + 0.001f);
@@ -211,9 +453,11 @@ int main(int argc, char **argv)
         assert(VoxelRelief_Base(&r124) == base + 6.0f);
     }
     CheckCuts();
+    CheckUpright(atoi(argv[2]));
+    CheckSteps();
     VoxelRelief_Shutdown();
     puts("PASS relief: ledge lip, a drawn terrace, a carved cave's belt and Route 108's leaning sea "
          "from the ROMFS file, searched in row order; Lilycove's seam with Route 124 asks a lift; "
-         "every cut cell through the memo");
+         "every cut cell through the memo; every upright cell of the file, Route 116's caves; every step cell of the file");
     return 0;
 }

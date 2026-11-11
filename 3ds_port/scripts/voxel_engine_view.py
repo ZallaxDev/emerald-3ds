@@ -323,6 +323,39 @@ def scene(layout_id):
     return groups, pages, bld, chunks
 
 
+def unlean(groups, pages, row_of=None, amount=None):
+    """`scene`'s triangles in the drawing's own space, before the engine's
+    lean (voxel_relief.h): same groups, same order, so it lines up with
+    `scene`'s by index. The terrain's points, each h up, were drawn lean * h
+    north (vl.unlean_tri); a tree or a building stands upright on the ground
+    (VoxelBuilder_StretchZ), moved north only as much as the ground at its
+    foot is high, so all of it comes back by that ground's height: found
+    where the terrain, once given back, stands under it. `row_of(z, y)` is
+    the row of the drawing a point at height y drawn at z stands on (the
+    default is a drawn map's, z - y)."""
+    amount = vl.lean() if amount is None else amount
+    if amount == 0.0:
+        return groups, pages
+    row_of = row_of or (lambda z, y: math.floor(z - y))
+    atlas = [vl.unlean_tri(t, amount) for t in groups["atlas"]]
+    ground = {}
+    for t in atlas:
+        for (x, y, z, u, v, s) in t:
+            cell = (int(math.floor(x)), row_of(z, y))
+            if y > ground.get(cell, -1e9):
+                ground[cell] = y
+
+    def stand(t):
+        x = sum(p[0] for p in t) / 3
+        z = sum(p[2] for p in t) / 3
+        g = 0.0
+        for _ in range(4):      # the foot's height moves the row it is looked up on
+            g = ground.get((int(math.floor(x)), row_of(z + amount * g, g)), g)
+        return tuple((p[0], p[1], p[2] + amount * g) + tuple(p[3:]) for p in t)
+    flat = dict(groups, atlas=atlas, trees=[stand(t) for t in groups["trees"]])
+    return flat, {k: [stand(t) for t in tris] for k, tris in pages.items()}
+
+
 def textures(layout_id, groups, bld, pages):
     """(triangles, texture, uv map to texels) for every group of the scene."""
     atlas = vl.Atlas(layout_id)
@@ -343,7 +376,7 @@ def view(args):
     groups, pages, bld, chunks = scene(args.layout)
     at = tuple(int(v) for v in args.at.split(","))
     allt = groups["atlas"] + groups["trees"] + [t for ts in pages.values() for t in ts]
-    cam = vl.camera(allt, at, args.pitch, args.dist, args.yaw)
+    cam = vl.camera(allt, at, args.pitch, args.dist, args.yaw, leant=vl.lean())
     W, H = cam.width * args.scale, cam.height * args.scale
     cam2 = vb.Camera(cam.target, cam.pitch, cam.yaw, cam.distance, cam.fov, W, H)
     ras = vl.Raster(W, H, bg=(255, 0, 255))
@@ -386,6 +419,9 @@ def gba(args):
     (a tree is a model of its own; a cliff's real depth): their cells show
     as differences, the rest should not."""
     groups, pages, bld, chunks = scene(args.layout)
+    # (in the drawing's own space: the engine's lean would shear every
+    # surface off the picture it is compared with)
+    groups, pages = unlean(groups, pages)
     entry, _ = layout_entry(args.layout)
     w, h = entry["width"], entry["height"]
     W, H = w * 16, h * 16
@@ -492,34 +528,39 @@ def under(args):
         return near[(X, Y)]
 
     groups_tex = textures(args.layout, groups, bld, pages)
+    # the same triangles in the drawing's space: where a pixel's ground is
+    # compared with the drawing and which cell a triangle is in; the camera
+    # looks at the leant ones
+    fgroups, fpages = unlean(groups, pages)
+    flat_tex = groups_tex if fgroups is groups else textures(args.layout, fgroups, bld, fpages)
     allt = groups["atlas"] + groups["trees"] + [t for ts in pages.values() for t in ts]
     bad, views = {}, 0
     for cz in range(args.step // 2, h, args.step):
         for cx in range(args.step // 2, w, args.step):
             views += 1
-            cam = vl.camera(allt, (cx, cz), args.pitch, args.dist, 0.0)
+            cam = vl.camera(allt, (cx, cz), args.pitch, args.dist, 0.0, leant=vl.lean())
             W, H = cam.width, cam.height
             cam2 = vb.Camera(cam.target, cam.pitch, cam.yaw, cam.distance, cam.fov, W, H)
             reach = cam.distance * 2.2
             depth, shown = [-1e30] * (W * H), [None] * (W * H)
-            for g, (tris, tex, uvmap) in enumerate(groups_tex):
+            for g, ((tris, tex, uvmap), (flats, _, _)) in enumerate(zip(groups_tex, flat_tex)):
                 tpx = tex.load()
                 tw, th = tex.size
-                for tri in tris:
+                for tri, flat in zip(tris, flats):
                     mx = sum(p[0] for p in tri) / 3
                     mz = sum(p[2] for p in tri) / 3
                     if abs(mx - cam.target[0]) > reach or abs(mz - cam.target[2]) > reach:
                         continue
-                    cell = (int(math.floor(mx)), int(math.floor(mz)))
+                    cell = (int(math.floor(mx)), int(math.floor(sum(p[2] for p in flat) / 3)))
                     mine = g == 0 and cell in owned
                     vs = []
-                    for (x, y, z, u, v, s) in tri:
+                    for (x, y, z, u, v, s), fp in zip(tri, flat):
                         pr = cam2.project((x, y, z))
                         if pr is None:
                             break
                         sx, sy, d, iw = pr
                         tu, tv = uvmap(u, v)
-                        vs.append((sx, sy, d, iw, tu * iw, tv * iw, x * iw, z * iw))
+                        vs.append((sx, sy, d, iw, tu * iw, tv * iw, x * iw, fp[2] * iw))
                     else:
                         (x0, y0, d0, w0, u0, v0, X0, Z0), (x1, y1, d1, w1, u1, v1, X1, Z1), \
                             (x2, y2, d2, w2, u2, v2, X2, Z2) = vs

@@ -4285,6 +4285,237 @@ def export(layout_ids, path):
     print("voxel relief: %d layouts, %.1f KiB -> %s" % (len(tables), len(blob) / 1024.0, path))
 
 
+# --- the doors and cave mouths that stand upright in the leant world ---------------
+#
+# The engine leans the world (VOXEL_RELIEF_LEAN_DEFAULT), so a mountain's south
+# face is a slope. A door or cave mouth drawn in it is an opening one tile wide
+# and, mostly, two tall: the warp cell (its foot) and the cell above, both
+# lifted as face cells. They stay vertical, recessed into the slope (the
+# mesh builder), so they are listed: "UPRT", u16 count, u16 0, count x (u16
+# layout, u8 x, u8 y) by layout, y, x, after "EDGE" (or the cuts) and before the
+# trailer, where readers that do not know it never look.
+#
+# A foot is a warp cell that is a door (the cartridge's behaviour: a door or a
+# cave entrance - not the arrow warps of a flight of planks, which keep leaning
+# like every stair, and not the warps on blocked rock with no opening drawn),
+# not blocked, whose final lattice is a face: every column falls south by the
+# same amount. The cell above joins when it is a face meeting the foot (its
+# south row is the foot's north row) and the drawing continues the opening:
+# where the foot's top pixel row is the opening's dark interior colour, the cell's
+# bottom pixel row is one flat colour over those columns (the opening's dark
+# going on up, or the frame's lintel or edge it sits in: Lilycove's stone
+# arch, Trainer Hill's door), where a face's rock is textured.
+UPRIGHT_TAG = b"UPRT"
+UPRIGHT_DARK_FOOT = 64      # luminance under which the foot's top row's main colour is an opening's
+UPRIGHT_COLUMNS = 12        # opening columns (of 16) the foot's top row has at least
+
+
+def _falls_south(grid):
+    """The drop (pixels) from a flat 25-point lattice's north row to its south
+    row when every column falls by the same amount, else 0."""
+    falls = {grid[i] - grid[20 + i] for i in range(5)}
+    if len(falls) != 1:
+        return 0
+    fall = falls.pop()
+    return fall if fall > 0 else 0
+
+
+def _is_opening_door(roles, x, y):
+    if roles.blocked(x, y):
+        return False
+    name = _BEHAVIOUR_NAMES.get(roles.behaviour(x, y), "")
+    return name.endswith("_DOOR") or name.endswith("_CAVE_ENTRANCE")
+
+
+_BEHAVIOUR_NAMES = {v: k for k, v in vc.MB.items()}
+
+
+def _opening_continues(art, roles, x, y):
+    """The drawing of the cell above (x, y) continues the opening of (x, y)."""
+    def lum(p):
+        return 0.3 * p[0] + 0.59 * p[1] + 0.11 * p[2]
+    foot = art.cell_image(roles.metatile(x, y)).convert("RGB")
+    above = art.cell_image(roles.metatile(x, y - 1)).convert("RGB")
+    row = [foot.getpixel((c, 0)) for c in range(16)]
+    inside = max(set(row), key=row.count)       # the opening's own colour
+    cols = [c for c in range(16) if row[c] == inside] if lum(inside) < UPRIGHT_DARK_FOOT else []
+    return (len(cols) >= UPRIGHT_COLUMNS
+            and len({above.getpixel((c, 15)) for c in cols}) == 1)
+
+
+def upright_cells(relief):
+    """{(layout index, x, y)} of a parsed relief.bin (voxel_relief_fixes.parse)."""
+    names = {i: e["id"] for i, e in enumerate(vb._layouts_json(), 1) if e.get("id")}
+    events = vc.MapEvents()
+    found = set()
+    for index, table in sorted(relief["layouts"].items()):
+        lid = names.get(index)
+        warps = events.warps.get(lid)
+        if not warps:
+            continue
+        cells = table["cells"]
+        roles = None
+        for (x, y) in sorted(warps):
+            grid = cells.get((x, y))
+            if grid is None or _falls_south(grid) <= 0:
+                continue
+            if roles is None:
+                roles = open_roles(lid, connections=False)
+            if not _is_opening_door(roles, x, y):
+                continue
+            found.add((index, x, y))
+            above = cells.get((x, y - 1))
+            if (above is not None and _falls_south(above) > 0
+                    and all(above[20 + i] == grid[i] for i in range(5))
+                    and _opening_continues(layout_art(lid), roles, x, y)):
+                found.add((index, x, y - 1))
+    return found
+
+
+# --- the stairs that are drawn as treads and risers --------------------------------
+#
+# A flight of stairs up a south face is a run of face cells whose lattice falls
+# one level from north to south: leant, a smooth ramp painted with the stairs'
+# stripes. The mesh builder draws them as real steps instead (treads level,
+# risers vertical, along the leant slope), and needs to know which pixel rows
+# of the drawing are risers: "STEP", u16 count, u16 0, count x 6 (u16 layout,
+# u8 x, u8 y, u16 riser mask; bit r = pixel row r, 0 = north, is a riser), by
+# layout, y, x, after "UPRT" and before the trailer.
+#
+# A cell is a step cell when (a) the map's roles say it is a stair, and it is
+# not in "UPRT" (voxel_cells reads Trainer Hill's door as a stair), (b) its
+# final lattice is a plain face: every column falls from the north row to the
+# south row by the same amount, every row is level across and the fall is
+# linear down the rows, and (c) its drawing is a clean stripe pattern of
+# period 8 pixel rows with three riser rows (the General tileset's stairs:
+# two steps a tile, tread 5 rows, riser 3): the rows folded modulo 8 (the
+# mean luminance of the middle columns, so a rail or an edge at the sides is
+# no matter), the three cyclically consecutive darkest rows are the risers.
+# The pattern is clean when every row is a flat stripe (STEP_UNIFORM), the two
+# periods agree (STEP_AGREE) and the darkest tread row is clearly lighter than
+# the lightest riser row (STEP_GAP). Real stairs: spread 0-8, agreement 0, gap
+# 37-55; the tiles that fail (stripes of period 4, bridges, ladders, ramps
+# with a rail across) are at least 16 away from one of those limits.
+STEP_TAG = b"STEP"
+STEP_EDGE = 3           # columns left out at each side of the drawing
+STEP_UNIFORM = 20       # most a row's luminance may vary across the middle columns (std. dev.)
+STEP_AGREE = 16         # most rows r and r + 8 may differ (mean luminance)
+STEP_GAP = 24           # least the lightest riser row is darker than the darkest tread row
+_STEP_MASKS = {}
+_STEP_ROLES = {}
+
+
+def plain_face(grid):
+    """The drop (pixels) of a 25-point lattice that is a plain face (every
+    column falls from the north row to the south row by the same amount > 0,
+    every row is level across, the rows are equally spaced), else 0.
+    voxel_relief.c has the same test (VoxelRelief_Steps)."""
+    fall = grid[0] - grid[20]
+    if fall <= 0:
+        return 0
+    rows = [grid[5 * j] for j in range(5)]
+    if any(grid[5 * j + i] != rows[j] for j in range(5) for i in range(5)):
+        return 0
+    if any(grid[i] - grid[20 + i] != fall for i in range(5)):
+        return 0
+    if len({rows[j] - rows[j + 1] for j in range(4)}) != 1:
+        return 0
+    return fall
+
+
+def riser_mask(img):
+    """(mask, statistics) of a 16 x 16 RGB drawing: the mask is the riser rows
+    of the stair pattern it draws (bit r for pixel row r), 0 when it does not
+    draw one cleanly."""
+    cols = range(STEP_EDGE, 16 - STEP_EDGE)
+    lum = [[0.3 * img.getpixel((c, r))[0] + 0.59 * img.getpixel((c, r))[1] + 0.11 * img.getpixel((c, r))[2]
+            for c in cols] for r in range(16)]
+    mean = [sum(row) / len(row) for row in lum]
+    spread = max((sum((v - mean[r]) ** 2 for v in lum[r]) / len(lum[r])) ** 0.5 for r in range(16))
+    agree = max(abs(mean[r] - mean[r + 8]) for r in range(8))
+    fold = [(mean[r] + mean[r + 8]) / 2 for r in range(8)]
+    start = min(range(8), key=lambda s: (sum(fold[(s + k) % 8] for k in range(3)), s))
+    risers = [(start + k) % 8 for k in range(3)]
+    gap = min(fold[r] for r in range(8) if r not in risers) - max(fold[r] for r in risers)
+    mask = sum(1 << (r + 8 * p) for r in risers for p in (0, 1))
+    clean = spread <= STEP_UNIFORM and agree <= STEP_AGREE and gap >= STEP_GAP
+    return (mask if clean else 0), (round(spread, 1), round(agree, 1), round(gap, 1))
+
+
+def step_cells(relief, upright):
+    """{(layout index, x, y): riser mask} of a parsed relief.bin
+    (voxel_relief_fixes.parse); `upright` is its "UPRT" cells."""
+    names = {i: e["id"] for i, e in enumerate(vb._layouts_json(), 1) if e.get("id")}
+    found = {}
+    for index, table in sorted(relief["layouts"].items()):
+        lid = names.get(index)
+        plain = [c for c, grid in table["cells"].items()
+                 if plain_face(grid) and (index,) + c not in upright]
+        if lid is None or not plain:
+            continue
+        if lid not in _STEP_ROLES:      # kept: the voxel editor stamps the table after every edit
+            _STEP_ROLES[lid] = open_roles(lid, connections=False)
+        roles = _STEP_ROLES[lid]
+        art = None
+        for (x, y) in plain:
+            if roles.role_at(x, y) != "stair":
+                continue
+            if art is None:
+                art = layout_art(lid)
+            m = roles.metatile(x, y)
+            key = (art.primary, art.secondary, m, reading(art))
+            if key not in _STEP_MASKS:
+                _STEP_MASKS[key] = riser_mask(art.cell_image(m).convert("RGB"))
+            mask = _STEP_MASKS[key][0]
+            if mask:
+                found[(index, x, y)] = mask
+    return found
+
+
+def tail_blob(blob):
+    """The relief.bin `blob` with its "UPRT" and "STEP" tables (re)computed
+    from its final lattices; everything before them is untouched, an "EDGE"
+    table stays."""
+    import reliefbin
+    start, end = reliefbin.tail_start(blob)
+    tables = reliefbin.tail_tables(blob)
+    # whatever the other tables are, keep them: drop only an old "UPRT" and "STEP"
+    keep_end = start
+    for tag, (at, raw) in tables.items():
+        if tag not in (UPRIGHT_TAG, STEP_TAG):
+            keep_end = at + len(raw)
+    relief = voxel_relief_fixes.parse(blob)
+    upright = upright_cells(relief)
+    found = sorted(upright, key=lambda c: (c[0], c[2], c[1]))
+    table = b""
+    if found:
+        table = UPRIGHT_TAG + struct.pack("<HH", len(found), 0)
+        for lay, x, y in found:
+            table += struct.pack("<HBB", lay, x, y)
+    steps = step_cells(relief, upright)
+    if steps:
+        table += STEP_TAG + struct.pack("<HH", len(steps), 0)
+        for (lay, x, y), mask in sorted(steps.items(), key=lambda kv: (kv[0][0], kv[0][2], kv[0][1])):
+            table += struct.pack("<HBBH", lay, x, y, mask)
+    return blob[:keep_end] + table + blob[end:]
+
+
+def apply_tail_tables(path, quiet=False):
+    blob = open(path, "rb").read()
+    out = tail_blob(blob)
+    if not quiet:
+        import reliefbin
+        names = {i: e["id"] for i, e in enumerate(vb._layouts_json(), 1) if e.get("id")}
+        for lay, x, y in sorted(reliefbin.load_upright_blob(out)):
+            print("upright %-36s (%3d,%3d)" % (names[lay][7:], x, y))
+        for (lay, x, y), mask in sorted(reliefbin.load_steps_blob(out).items()):
+            print("step    %-36s (%3d,%3d) risers %04x" % (names[lay][7:], x, y, mask))
+    open(path, "wb").write(out)
+
+
+apply_upright = apply_tail_tables   # the name the voxel editor knew it by
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--preview", default=None)
@@ -4333,6 +4564,11 @@ def main():
         # the hand corrections (assets/voxel/relief_fixes.json) over the drawing's
         if not os.environ.get("VOXEL_RELIEF_NO_FIXES"):
             voxel_relief_fixes.apply_file(args.output)
+        # last, from the final lattices: the doors and cave mouths that stand
+        # upright in the leant world ("UPRT") and the stairs drawn as treads
+        # and risers ("STEP"); nothing above rewrites the file after this, or
+        # it would drop the tables
+        apply_tail_tables(args.output)
 
 
 if __name__ == "__main__":

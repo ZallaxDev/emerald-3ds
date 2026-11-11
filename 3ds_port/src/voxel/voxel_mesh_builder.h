@@ -73,6 +73,38 @@ typedef struct
      * (VoxelRelief_Depth). Zero for everything on level ground.
      */
     float lift, shift;
+    /*
+     * The relief itself is being emitted (its lattice, its walls, the fills
+     * under it): each vertex is leant by its own height, as the mountain's
+     * faces are (VoxelRelief_Lean). Clear, what is emitted stands upright on
+     * a cell and is only moved with the ground at its foot (`lift` and the
+     * base): a tree, a sign, a model, a box.
+     */
+    bool slope;
+    /*
+     * With `slope`: what is emitted is the relief of an opening cut in a south
+     * face (VoxelRelief_Upright), which stands in a vertical plane at its foot
+     * instead of lying on the slope: every vertex is leant by `uprightAt` (the
+     * opening's foot over the map's base, tiles) instead of by its own height,
+     * so the old space's vertical plane stays vertical and stands where the
+     * foot of the face meets the ground (VoxelBuilder_PlaceZ); the slope
+     * higher up has moved back from it. Clear for the stitches that close what
+     * that leaves (EmitUprightStitches). Lighting takes the surface for a true
+     * wall: its normal is not tilted by the lean.
+     */
+    bool upright;
+    float uprightAt;
+    /*
+     * With `slope`: the lattice being emitted is a ledge's (EmitGroundRow):
+     * its points are not leant by their own height but by this reference,
+     * per lattice point (tiles over the base): the line from the height of
+     * the column's north point to that of its south point. The cell's north
+     * and south edges land where the leant ground beside them is, a lip
+     * keeps the shape it is drawn with - a berm, not a stretched ramp -, and
+     * a ledge that falls across (profile constant along the column) is leant
+     * as ever. NULL: each point by its own height.
+     */
+    const float *leanRef;
     /* The base of the map being built (VoxelRelief_Base): everything emitted
      * is raised by it and drawn as far south (VoxelBuilder_StretchZ). */
     float base;
@@ -105,8 +137,21 @@ void VoxelBuilder_SetStretch(VoxelBuilder *builder, const VoxelMapInstance *inst
 /* A world z (after the shift) where the builder's map draws it: on its
  * eased rows, and as far south as its base is high - a point stands as far
  * south as it is high in the world, (u, h, v + h), so two maps meeting at one
- * height meet in the same row whatever their bases. */
+ * height meet in the same row whatever their bases - and then leant with the
+ * ground it stands on, the base and `lift` (VoxelRelief_Lean). */
 float VoxelBuilder_StretchZ(const VoxelBuilder *builder, float z);
+/* The same z where the sun finds it: VoxelBuilder_StretchZ without the lean.
+ * The world is lit with its faces upright, as they stood before they leant,
+ * and only drawn leant: a south face leans further than the sun's rays do
+ * (VOXEL_SUN_DZ against VoxelRelief_Lean), so as drawn it would be a slope
+ * in full sun with no shadow at its foot. Every point given to the lighting
+ * (VoxelLighting_Sample, its rays and its casters) is one of these: a drawn
+ * z plus the lean times the height of the ground it stands on. */
+float VoxelBuilder_SunZ(const VoxelBuilder *builder, float z);
+/* Where a vertex given to the builder is drawn in the world (before the
+ * origin): VoxelBuilder_StretchZ of its z and the shift, and with `slope`
+ * leant by its own height too. */
+float VoxelBuilder_PlaceZ(const VoxelBuilder *builder, const VoxelVertex *v);
 void VoxelBuilder_Tri(VoxelBuilder *builder, const VoxelVertex *a,
                       const VoxelVertex *b, const VoxelVertex *c);
 /* A B C / A C D, the winding the reference quads already use. */

@@ -24,6 +24,15 @@ STEP cells, and judges every pixel by the triangle it shows:
   flat      a top where the drawing has rock that falls (a band, a face, a
             corner of the two): the drawing's rock laid flat on the ground
 
+The console's mountains lean (voxel_relief.h: a point h up is drawn lean * h
+further north, so a face a level tall is a slope, not a wall): the views are
+drawn with the real, leant triangles, but every triangle is judged - class,
+cell, the floor under it - in the drawing's own space, with the lean undone
+(vl.unlean_tri), where a face is a face and a top a top for any lean. The
+lean is the engine's: VOXEL_LEAN (0 = the drawing as it stood), else
+VOXEL_RELIEF_LEAN_DEFAULT. The overlay (the drawing's projection) is drawn
+from the un-leant triangles, so it lies on the drawing as it did.
+
 Nothing is left out but ledges and berry soil (never altered) and a map's
 outermost ring (the next map's own). Trees and models hide what they hide,
 as on the console.
@@ -105,6 +114,7 @@ class Scene:
         if relief:
             vl.use_relief(relief)
         self.layout = layout
+        self.lean = vl.lean()
         groups, pages, bld, chunks = ev.scene(layout)
         entry, _ = ev.layout_entry(layout)
         self.w, self.h = entry["width"], entry["height"]
@@ -151,12 +161,18 @@ class Scene:
         face = set(gr.ROCK_FACE) | {own for own, general in getattr(art, "colour", {}).items()
                                     if general in gr.ROCK_FACE}
         self.face = face
-        self.tris, self.tex, self.texs, self.cls, self.cell = [], [], [], [], []
+        # the triangles as the console draws them (leant) and in the
+        # drawing's space (what is judged, and what the overlay draws)
+        fgroups, fpages = ev.unlean(groups, pages, lambda z, y: int(math.floor(
+            z - (y - self.base) if self.depth else z)), self.lean)
+        flat_tex = None if fgroups is groups else ev.textures(layout, fgroups, bld, fpages)
+        self.tris, self.flat, self.tex, self.texs, self.cls, self.cell = [], [], [], [], [], []
         self.judged = []                # a terrain triangle of a cell this judges
         self.kind = []                  # "terrain", "model" or "floor"
         lowest = {}
         tex_index = {}
-        for tris, img, uvmap in ev.textures(layout, groups, bld, pages):
+        real_tex = ev.textures(layout, groups, bld, pages)
+        for (tris, img, uvmap), (ftris, _, _) in zip(real_tex, flat_tex or real_tex):
             rgba = img.convert("RGBA")
             alpha = rgba.split()[3].tobytes()
             k = tex_index.setdefault(id(img), len(self.texs))
@@ -169,18 +185,19 @@ class Scene:
                     mark = bytes(1 if tuple(rgb[i:i + 3]) in face else 0 for i in range(0, len(rgb), 3))
                 self.texs.append((img.size[0], img.size[1], alpha, img, mark))
             terrain = tris is groups["atlas"]
-            for t in tris:
-                verts = []
-                for (x, y, z, u, v, s) in t:
+            for t, ft in zip(tris, ftris):
+                verts, fverts = [], []
+                for (x, y, z, u, v, s), (fx, fy, fz, _, _, _) in zip(t, ft):
                     tu, tv = uvmap(u, v)
                     verts.append((x, y, z, tu, tv))
+                    fverts.append((fx, fy, fz, tu, tv))
                 cls, cell, judged = 0, -1, False
                 if terrain:
-                    cx, cy = self.cell_of(t)
+                    cx, cy = self.cell_of(ft)
                     inside = 0 <= cx < self.w and 0 <= cy < self.h
                     if inside:
                         cell = cy * self.w + cx
-                        h = min(p[1] for p in t)
+                        h = min(p[1] for p in ft)
                         if h < lowest.get((cx, cy), 1e9):
                             lowest[(cx, cy)] = h
                     prop = vl.METATILE_REAL <= vl.atlas_id(t) < vl.CUT_FIRST
@@ -189,12 +206,12 @@ class Scene:
                     ring = cx in (0, self.w - 1) or cy in (0, self.h - 1)
                     if inside and not ring and not prop and (cx, cy) not in keep:
                         judged = True
-                        kind = sc.surface(t)
+                        kind = sc.surface(ft)
                         # a north face behind a back (voxel_mesh_builder.c
                         # EmitNorthFace) lies on one row of the drawing, as a
                         # south step does: from the game it is the slope the
                         # camera sees from above the back, not a fault
-                        if kind == "deformed" and self.south_step(t):
+                        if kind == "deformed" and self.south_step(ft):
                             kind = "top"
                         cls = SIDE if kind == "side" else DEFORMED if kind == "deformed" else 0
                         if kind == "top" and (cx, cy) in falls:
@@ -202,6 +219,7 @@ class Scene:
                         if kind in ("face", "band") and (cx, cy) in self.standing:
                             cls = STANDING
                 self.tris.append(verts)
+                self.flat.append(fverts)
                 self.cls.append(cls)
                 self.cell.append(cell)
                 self.judged.append(judged)
@@ -225,7 +243,7 @@ class Scene:
                     c = (x + 1, low, z + 1, 0, 0)
                     d = (x, low, z + 1, 0, 0)
                     for tri in ((a, b, c), (a, c, d)):
-                        self.tris.append(list(tri))
+                        self._put(list(tri))
                         self.cls.append(0 if edge else HOLE)
                         self.cell.append(y * self.w + x)
                         self.kind.append("floor")
@@ -235,7 +253,7 @@ class Scene:
         self._skirts()
         # where the camera stands on each cell: the top of its terrain
         self.ground = {}
-        for verts, kind in zip(self.tris, self.kind):
+        for verts, kind in zip(self.flat, self.kind):
             if kind != "terrain":
                 continue
             for (x, y, z, u, v) in verts:
@@ -277,7 +295,7 @@ class Scene:
         # at height h stands h - base rows south, so the lowest is the
         # northernmost
         north = {}
-        for verts, kind in zip(self.tris, self.kind):
+        for verts, kind in zip(self.flat, self.kind):
             if kind != "terrain":
                 continue
             for (x, y, z, u, v) in verts:
@@ -307,15 +325,23 @@ class Scene:
                 self._quad((x + side, g, z0), (x + side, g, z0 + 1), (x + side, bottom, z0 + 1),
                            (x + side, bottom, z0))
 
+    def _put(self, flat):
+        """A triangle given in the drawing's space (the floor, the skirts):
+        kept so, and leant as the console's relief is, each point by its own
+        height, for the views."""
+        self.flat.append(flat)
+        self.tris.append([(x, y, z - self.lean * y, u, v) for (x, y, z, u, v) in flat])
+
     def _quad(self, a, b, c, d):
         for tri in ((a, b, c), (a, c, d)):
-            self.tris.append([p + (0, 0) for p in tri])
+            self._put([p + (0, 0) for p in tri])
             self.cls.append(0)
             self.cell.append(-1)
             self.kind.append("floor")
             self.tex.append(-1)
 
-    def write(self, path):
+    def write(self, path, flat=False):
+        """The scene file: the leant triangles, or (`flat`) the drawing's own."""
         with open(path, "wb") as f:
             f.write(struct.pack("<I", len(self.texs)))
             for w, h, alpha, _, mark in self.texs:
@@ -323,7 +349,7 @@ class Scene:
                 f.write(alpha)
                 f.write(mark)
             f.write(struct.pack("<I", len(self.tris)))
-            for verts, k, cls, cell in zip(self.tris, self.tex, self.cls, self.cell):
+            for verts, k, cls, cell in zip(self.flat if flat else self.tris, self.tex, self.cls, self.cell):
                 f.write(struct.pack("<15f", *[c for p in verts for c in p]))
                 f.write(struct.pack("<iB3xi", k, cls, cell))
 
@@ -359,29 +385,34 @@ class Scene:
 
     def camera(self, at, pitch, dist, yaw=0.0):
         """voxel_relief_lines.camera: the target on the top of the cell."""
+        # (the cell's top is drawn lean * g north of where the drawing has it)
         g = self.ground.get(at, 0.0)
-        return (at[0] + 0.5, g, at[1] + 0.5 + g, pitch, yaw, dist, vl.FOV)
+        return (at[0] + 0.5, g, at[1] + 0.5 + g - self.lean * g, pitch, yaw, dist, vl.FOV)
 
     def drawn(self, box, scale):
         """The drawing's own projection over the cells of `box` (x0, y0,
         x1, y1), 16 * `scale` pixels a cell: every surface where the GBA
         draws it (a point at height h, h rows up), so the relief's shapes lie
-        on the map's own picture."""
+        on the map's own picture - for the scene run `flat`: the engine's
+        lean would shear them off it."""
         x0, y0, x1, y1 = box
         k = 16 * scale
         return ((x0 + x1) / 2.0, self.base, (y0 + y1) / 2.0, 45.0, 0.0, 100.0, -float(k),
                 (x1 - x0) * k, (y1 - y0) * k)
 
 
-def run(scene, cams, owners=False):
+def run(scene, cams, owners=False, flat=False):
     """[{(cell, class): pixels}] per camera (and, with `owners`, per camera
-    the triangle each pixel shows and its texel)."""
+    the triangle each pixel shows and its texel); `flat`: over the scene in
+    the drawing's space instead of as the console draws it."""
     build_raster()
     tmp = os.path.join(PORT, "build", "viewscan_%d" % os.getpid())
-    scene_path = tmp + ".scene"
-    if getattr(scene, "_written", None) != scene_path:
-        scene.write(scene_path)
-        scene._written = scene_path
+    scene_path = tmp + (".flat" if flat else ".scene")
+    if not hasattr(scene, "_written"):
+        scene._written = set()
+    if scene_path not in scene._written:
+        scene.write(scene_path, flat)
+        scene._written.add(scene_path)
     with open(tmp + ".cams", "wb") as f:
         f.write(struct.pack("<I", len(cams)))
         for cam in cams:
@@ -419,9 +450,9 @@ def run(scene, cams, owners=False):
 
 
 def cleanup(scene):
-    path = getattr(scene, "_written", None)
-    if path and os.path.exists(path):
-        os.remove(path)
+    for path in getattr(scene, "_written", ()):
+        if os.path.exists(path):
+            os.remove(path)
 
 
 def scan(layout, relief=None, step=STEP, scene=None, box=None):
@@ -468,15 +499,16 @@ def overview(layout, total, path, scale=3):
     img.save(path)
 
 
-def pictures(scene, at, pitch, dist, cam=None):
+def pictures(scene, at, pitch, dist, cam=None, flat=False):
     """(textured, shapes, {class: pixels}) of one camera (`cam`, or the
     game's at `at`): the scene as the console draws it (unlit) and its
     shapes - each surface by the way it faces, trees and models grey, the
-    floor dark - every fault painted."""
+    floor dark - every fault painted. `flat`: in the drawing's space (the
+    overlay's)."""
     from PIL import Image
     cam = cam or scene.camera(at, pitch, dist)
     W, H = tuple(cam[7:9]) if len(cam) > 7 else (globals()["W"], globals()["H"])
-    views, own = run(scene, [cam], owners=True)
+    views, own = run(scene, [cam], owners=True, flat=flat)
     ids, uv = own[0]
     tex = Image.new("RGB", (W, H))
     shp = Image.new("RGB", (W, H))
@@ -508,7 +540,7 @@ def pictures(scene, at, pitch, dist, cam=None):
         if o not in colour:
             kind = scene.kind[o]
             if kind == "terrain":
-                colour[o] = gc.plain([v + (0,) for v in scene.tris[o]])
+                colour[o] = gc.plain([v + (0,) for v in scene.flat[o]])
                 if colour[o] == (230, 30, 30):
                     colour[o] = (205, 175, 175)     # slanted, not judged (a ledge's lip)
             elif kind == "floor":
@@ -570,7 +602,7 @@ def drawn_faults(scene, layout, box=None):
     x0, y0, x1, y1 = box
     import gen_voxel_relief as gr
     import voxel_terraces as vt
-    _, own = run(scene, [scene.drawn(box, 1)], owners=True)
+    _, own = run(scene, [scene.drawn(box, 1)], owners=True, flat=True)
     ids = own[0][0]
     # each pixel read as the terraces read the drawing: 'F' a face's
     # colours, 'T' a top's, 'G' anything else (grass, sand, water, a path)
@@ -583,7 +615,7 @@ def drawn_faults(scene, layout, box=None):
         if o < 0 or o >= len(scene.judged) or not scene.judged[o]:
             continue
         if o not in surf:
-            surf[o] = sc.surface([v[:3] + (0, 0, 0) for v in scene.tris[o]])
+            surf[o] = sc.surface([v[:3] + (0, 0, 0) for v in scene.flat[o]])
         k = surf[o]
         px, py = i % w, i // w
         cell = (x0 + px // 16, y0 + py // 16)
@@ -615,7 +647,7 @@ def overlay(layout, box, path, relief=None, scale=3, alpha=0.45):
     scene = Scene(layout, relief)
     try:
         cam = scene.drawn(box, scale)
-        tex, shp, seen = pictures(scene, None, 0, 0, cam)
+        tex, shp, seen = pictures(scene, None, 0, 0, cam, flat=True)
         bad = drawn_faults(scene, layout, box)
     finally:
         cleanup(scene)

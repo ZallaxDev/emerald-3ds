@@ -1,5 +1,8 @@
 """Read relief.bin (see src/voxel/voxel_relief.c): per layout its cells'
-lattices in pixels, and the cut records."""
+lattices in pixels, and the cut records. load_upright reads the optional
+"UPRT" table (the doors and cave mouths that stand upright in the leant
+world), load_steps the optional "STEP" one (the stairs drawn as treads and
+risers), tail_tables its raw tables after the cuts."""
 import struct
 
 
@@ -32,6 +35,65 @@ def load(path):
         cuts[(lay, x, y)] = dict(variant=var, foot=foot, ground=ground, wall=wall, sides=sides, flags=flags,
                                  drawing=variants[var] if var < nv else None)
     return out, cuts
+
+
+def tail_start(b):
+    """Offset of what follows the cut records in a relief.bin (the optional
+    tables: "EDGE", "UPRT", "STEP"), and the offset of the trailer (u32, "CUTS")."""
+    assert b[-4:] == b"CUTS"
+    at = struct.unpack_from("<I", b, len(b) - 8)[0]
+    nv, nc = struct.unpack_from("<HH", b, at)
+    return at + 4 + 36 * nv + 14 * nc, len(b) - 8
+
+
+def tail_tables(b):
+    """{tag: (offset of the table, its bytes)} of the optional tables after the
+    cuts, in file order. "EDGE": u16 n, u16 0, n x 18; "UPRT": u16 n, u16 0,
+    n x 4; "STEP": u16 n, u16 0, n x 6 (u16 layout, u8 x, u8 y, u16 riser mask)."""
+    sizes = {b"EDGE": 18, b"UPRT": 4, b"STEP": 6}
+    at, end = tail_start(b)
+    out = {}
+    while at + 8 <= end and b[at:at + 4] in sizes:
+        tag = b[at:at + 4]
+        n = struct.unpack_from("<H", b, at + 4)[0]
+        size = 8 + sizes[tag] * n
+        out[tag] = (at, b[at:at + size])
+        at += size
+    return out
+
+
+def load_upright(path):
+    """{(layout, x, y)} of the "UPRT" table (empty when the file has none)."""
+    return load_upright_blob(open(path, "rb").read())
+
+
+def load_upright_blob(b):
+    t = tail_tables(b).get(b"UPRT")
+    if t is None:
+        return set()
+    at, raw = t
+    n = struct.unpack_from("<H", raw, 4)[0]
+    return {struct.unpack_from("<HBB", raw, 8 + 4 * k) for k in range(n)}
+
+
+def load_steps(path):
+    """{(layout, x, y): riser mask} of the "STEP" table (empty when the file
+    has none): bit r of the mask is set when pixel row r (0 = north) of the
+    cell's drawing is a riser."""
+    return load_steps_blob(open(path, "rb").read())
+
+
+def load_steps_blob(b):
+    t = tail_tables(b).get(b"STEP")
+    if t is None:
+        return {}
+    at, raw = t
+    n = struct.unpack_from("<H", raw, 4)[0]
+    out = {}
+    for k in range(n):
+        lay, x, y, mask = struct.unpack_from("<HBBH", raw, 8 + 6 * k)
+        out[(lay, x, y)] = mask
+    return out
 
 
 if __name__ == "__main__":

@@ -2990,6 +2990,16 @@ bool CtrVoxel_Init(void)
     if (sFillGpu == NULL)
         goto fail;
     VoxelRegions_Init();
+    /* settings.txt voxel_face_lean (percent; VOXEL_RELIEF_LEAN_DEFAULT by default): the lean of the
+     * mountains' south faces (voxel_relief.h). Before the relief's tables are
+     * made and before any chunk is built: the geometry it leans is cached. */
+    {
+        int percent = CtrSettings_GetInt("voxel_face_lean", (int)(VOXEL_RELIEF_LEAN_DEFAULT * 100.0f + 0.5f));
+
+        VoxelRelief_SetLean((float)(percent < 0 ? 0 : percent > 100 ? 100 : percent) / 100.0f);
+        /* voxel_upright_caves=1: cave mouths and doors in a face upright, not leant with it */
+        VoxelRelief_SetUprightOpenings(CtrSettings_GetInt("voxel_upright_caves", 0) != 0);
+    }
     VoxelRelief_Init();
     VoxelSign_Init();
     VoxelCamera_Init(&sCamera);
@@ -3449,14 +3459,24 @@ static void AtlasFailed(int mapGroup, int mapNum, const void *primary, const voi
  * false for a map that is only in the prefetch ring: it may take an empty
  * slot, never the atlas of something else - which could be a map on screen.
  */
-/* How many rows south of its cells a map is drawn: its base (a point stands
- * as far south as it is high in the world, VoxelBuilder_StretchZ). The view
- * (sViewRect) is where things are drawn; a map's chunks are its cells. */
+/* How many rows south of its cells level ground at `base` is drawn: a point
+ * stands as far south as it is high in the world, less the lean of the
+ * ground it stands on (VoxelBuilder_StretchZ, VoxelRelief_Lean). With no
+ * lean, the base itself. */
+static float DrawnBase(float base)
+{
+    return base - VoxelRelief_Lean() * base;
+}
+
+/* How many rows south of its cells a map is drawn: its base, leant. The view
+ * (sViewRect) is where things are drawn; a map's chunks are its cells. Read
+ * unleant, a map whose ground is drawn fewer rows south than its base would
+ * ask for cells too far north, and leave a strip of the view without chunks. */
 static int DrawnRows(const VoxelMapInstance *inst)
 {
     /* floorf without the library call: asked for every map a few times a
      * frame (atlases in view, the ring, the lamps, the near maps). */
-    float rows = VoxelRelief_Base(inst) + 0.5f;
+    float rows = DrawnBase(VoxelRelief_Base(inst)) + 0.5f;
     int i = (int)rows;
 
     return (float)i > rows ? i - 1 : i;
@@ -3950,6 +3970,11 @@ static uint32_t SiteHash(const ChunkSite *site)
     /* the lift its map was placed at (the belt's: the current map's), all
      * of it that much higher (VoxelRelief_Base) */
     standing ^= (uint32_t)site->inst->lift * 0x9E3779B1u;
+    /* and the lean of the faces (VoxelRelief_Lean): a chunk, a cold mesh or a
+     * lighting sample made under another is another chunk. It is read at boot
+     * (CtrVoxel_Init) and does not move in a run, so this only keeps a mesh
+     * from one lean out of the other's slot; 0 xors nothing in. */
+    standing ^= (uint32_t)(VoxelRelief_Lean() * 1000.0f + 0.5f) * 0x7FEB352Du;
 
 #if CTR_VOXEL_LIGHTING
     if (!site->inst->indoor)
@@ -4769,6 +4794,10 @@ static unsigned TreeShadowCards(VoxelBuilder *builder)
              * is drawn flat on the ground, and a shadow begun at its foot
              * let the sun through beside it */
             out[j].z = foot->z - VOXEL_TREE_SHADOW_NORTH + across[2] * a + up[2] * b;
+            /* The map puts every vertex of a chunk back by the lean x its
+             * height (ShadowSunMtx), and a tree stands upright: it moved by
+             * its foot's alone. What is over the foot is taken off here. */
+            out[j].z -= VoxelRelief_Lean() * (out[j].y - foot->y);
             out[j].shade = 0.0f;
         }
         builder->vertices[builder->count++] = out[0];
@@ -5501,8 +5530,10 @@ static void PackFills(void)
         const FillSquare *f = &sFills[i];
         float x0 = Clamp((float)(f->x0 - sFillOriginX), -VOXEL_FILL_REACH, VOXEL_FILL_REACH);
         float x1 = Clamp((float)(f->x1 - sFillOriginX), -VOXEL_FILL_REACH, VOXEL_FILL_REACH);
-        float z0 = Clamp((float)f->z0 + f->base - (float)sFillOriginZ, -VOXEL_FILL_REACH, VOXEL_FILL_REACH);
-        float z1 = Clamp((float)f->z1 + f->base - (float)sFillOriginZ, -VOXEL_FILL_REACH, VOXEL_FILL_REACH);
+        /* (level ground at the base: its rows south are the leant ones) */
+        float rows = DrawnBase(f->base);
+        float z0 = Clamp((float)f->z0 + rows - (float)sFillOriginZ, -VOXEL_FILL_REACH, VOXEL_FILL_REACH);
+        float z1 = Clamp((float)f->z1 + rows - (float)sFillOriginZ, -VOXEL_FILL_REACH, VOXEL_FILL_REACH);
         float y = f->base - VOXEL_FILL_UNDER;
 
         quad[0] = (VoxelVertex){x0, y, z0, 0.0f, 0.0f, 1.0f};
@@ -5879,7 +5910,7 @@ static bool Overlaps(int ax0, int ay0, int ax1, int ay1, int bx0, int by0, int b
  */
 static bool SiteVisible(const ChunkSite *site, const VoxelChunk *chunk)
 {
-    float base;
+    float base, rows;
 
     if (chunk != NULL && chunk->count != 0)
         return BoxVisible((float)(site->baseX + chunk->gx0), chunk->gy0 - 0.05f,
@@ -5887,9 +5918,11 @@ static bool SiteVisible(const ChunkSite *site, const VoxelChunk *chunk)
                           (float)(site->baseX + chunk->gx1), chunk->gy1 + 0.05f,
                           (float)(site->baseY + chunk->gz1));
     base = VoxelRelief_Base(site->inst);
-    /* (as high as its base, and as far south: VoxelBuilder_StretchZ) */
-    return BoxVisible((float)site->x0, base + VOXEL_UNBUILT_LOW, (float)site->y0 + base,
-                      (float)site->x1, base + VOXEL_UNBUILT_HIGH, (float)site->y1 + base);
+    rows = DrawnBase(base);
+    /* (as high as its base, and as far south as the lean leaves it:
+     * VoxelBuilder_StretchZ) */
+    return BoxVisible((float)site->x0, base + VOXEL_UNBUILT_LOW, (float)site->y0 + rows,
+                      (float)site->x1, base + VOXEL_UNBUILT_HIGH, (float)site->y1 + rows);
 }
 
 /* Does the slab meet the frustum? x and y between theirs and z - y between
@@ -11158,6 +11191,38 @@ static bool ShadowMapMake(void)
     return true;
 }
 
+/*
+ * The sun's world. The mountains' south faces are drawn leant
+ * (VoxelRelief_Lean), further than the sun's rays lean: as drawn they are
+ * slopes in full sun with no shadow at their feet. The world is lit with its
+ * faces upright instead, as they stood before they leant (VoxelBuilder_SunZ
+ * for the baked light), and so is the map: a point of the relief is put back
+ * as far south as the lean moved it north, lean x its height, when it is
+ * drawn into the map and when it reads it. What stands upright on the ground
+ * (a static model) moved north whole, by the lean x the height of its foot,
+ * and goes back by that (ShadowUprightAt, DrawStatics).
+ */
+static void ShadowSunMtx(C3D_Mtx *sun)
+{
+    Mtx_Identity(sun);
+    sun->r[2].y = VoxelRelief_Lean();
+}
+
+/* The map's rows from a view-space point with no lean undone: ShadowUniforms
+ * keeps them for the models that stand upright. */
+static C3D_Mtx sShadowUprightRows;
+
+/* The shadow uniforms for a model standing upright on ground at `height`. */
+static void ShadowUprightAt(float height)
+{
+    float back = VoxelRelief_Lean() * height;
+    const C3D_Mtx *r = &sShadowUprightRows, *t = &sShadowTexMtx;
+
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowU, r->r[0].x, r->r[0].y, r->r[0].z, r->r[0].w + back * t->r[0].z);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowV, r->r[1].x, r->r[1].y, r->r[1].z, r->r[1].w + back * t->r[1].z);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowW, r->r[2].x, r->r[2].y, r->r[2].z, r->r[2].w + back * t->r[2].z);
+}
+
 /* The shader's shadow uniforms: off (the texture coordinates as they were),
  * or the map's rows through the inverse of `modelView` (a view-space point
  * to the map). */
@@ -11172,11 +11237,16 @@ static void ShadowUniforms(const C3D_Mtx *modelView)
         return;
     }
     {
-        C3D_Mtx inverse, rows;
+        C3D_Mtx inverse, rows, sun, leant;
 
         Mtx_Copy(&inverse, modelView);
         Mtx_Inverse(&inverse);
-        Mtx_Multiply(&rows, &sShadowTexMtx, &inverse);
+        /* what stands upright on its ground (ShadowUprightAt) */
+        Mtx_Multiply(&sShadowUprightRows, &sShadowTexMtx, &inverse);
+        /* the relief: each point where the sun finds it (ShadowSunMtx) */
+        ShadowSunMtx(&sun);
+        Mtx_Multiply(&leant, &sShadowTexMtx, &sun);
+        Mtx_Multiply(&rows, &leant, &inverse);
         C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowU, rows.r[0].x, rows.r[0].y, rows.r[0].z, rows.r[0].w);
         C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowV, rows.r[1].x, rows.r[1].y, rows.r[1].z, rows.r[1].w);
         C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowW, rows.r[2].x, rows.r[2].y, rows.r[2].z, rows.r[2].w);
@@ -13086,8 +13156,10 @@ void CtrVoxel_FrameCounts(unsigned *modelsSkipped, unsigned *spritesLeftOut)
     *spritesLeftOut = VoxelEntities_SpritesLeftOut();
 }
 
-static void DrawStatics(const C3D_Mtx *view, const VoxelLight *dapples, bool glowing)
+/* `casting`: into the shadow map, each where the sun finds it. */
+static void DrawStatics(const C3D_Mtx *view, const VoxelLight *dapples, bool glowing, bool casting)
 {
+    const float lean = casting ? VoxelRelief_Lean() : 0.0f;
     const C3D_Tex *bound = NULL;
 
     for (unsigned i = 0; i < sDrawCount; ++i)
@@ -13132,7 +13204,9 @@ static void DrawStatics(const C3D_Mtx *view, const VoxelLight *dapples, bool glo
                 StaticWant(s->pageModel, s->lit, true);
                 continue;
             }
-            SetModelViewAt(view, x, s->y, z);
+            SetModelViewAt(view, x, s->y, z + lean * s->y);
+            if (sShadowOn && !casting)
+                ShadowUprightAt(s->y);
 #if CTR_VOXEL_LIGHTING
             /* The dapples are worked out from the model's own frame: whole
              * tiles of its spot (a model stands on a whole cell), slid along
@@ -13169,6 +13243,10 @@ static void DrawStatics(const C3D_Mtx *view, const VoxelLight *dapples, bool glo
 static float sShadowFitWanted[2], sShadowFitSlid[2];
 static void ShadowMapFit(const float U[3], const float V[3], float *centreU, float *centreV)
 {
+    /* (every point across the sun is one of the sun's world, ShadowSunMtx:
+     * as far south again as the lean drew it north) */
+    const float lean = VoxelRelief_Lean();
+    const float targetSunZ = sCamera.targetZ + lean * sCamera.targetY;
     float eye[3] = {sCamera.x, sCamera.y, sCamera.z};
     float f[3] = {sCamera.targetX - eye[0], sCamera.targetY - eye[1], sCamera.targetZ - eye[2]};
     float r[3], up[3], length = sqrtf(f[0] * f[0] + f[1] * f[1] + f[2] * f[2]);
@@ -13183,8 +13261,8 @@ static void ShadowMapFit(const float U[3], const float V[3], float *centreU, flo
     if (sSwoop > 0.0f || length < 0.001f)
     {
         sShadowHalfU = sShadowHalfV = VOXEL_SHADOW_MAP_HALF;
-        *centreU = U[0] * sCamera.targetX + U[1] * sCamera.targetY + U[2] * sCamera.targetZ;
-        *centreV = V[0] * sCamera.targetX + V[1] * sCamera.targetY + V[2] * sCamera.targetZ;
+        *centreU = U[0] * sCamera.targetX + U[1] * sCamera.targetY + U[2] * targetSunZ;
+        *centreV = V[0] * sCamera.targetX + V[1] * sCamera.targetY + V[2] * targetSunZ;
         return;
     }
     for (int i = 0; i < 3; ++i)
@@ -13220,6 +13298,7 @@ static void ShadowMapFit(const float U[3], const float V[3], float *centreU, flo
             }
             for (int i = 0; i < 3; ++i)
                 p[i] = eye[i] + d[i] * s;
+            p[2] += lean * p[1];
             u = U[0] * p[0] + U[1] * p[1] + U[2] * p[2];
             v = V[0] * p[0] + V[1] * p[1] + V[2] * p[2];
             if (u < minU) minU = u;
@@ -13236,8 +13315,8 @@ static void ShadowMapFit(const float U[3], const float V[3], float *centreU, flo
         }
     }
     {
-        float tu = U[0] * sCamera.targetX + U[1] * sCamera.targetY + U[2] * sCamera.targetZ;
-        float tv = V[0] * sCamera.targetX + V[1] * sCamera.targetY + V[2] * sCamera.targetZ;
+        float tu = U[0] * sCamera.targetX + U[1] * sCamera.targetY + U[2] * targetSunZ;
+        float tv = V[0] * sCamera.targetX + V[1] * sCamera.targetY + V[2] * targetSunZ;
 
         if (tu < nearMin[0]) nearMin[0] = tu;
         if (tu > nearMax[0]) nearMax[0] = tu;
@@ -13321,7 +13400,7 @@ static void ShadowMapCasters(const C3D_Mtx *identity)
             C3D_DrawArrays(GPU_TRIANGLES, BindChunkVertices(chunk, first, count), (int)count);
         }
         if (pass == VOXEL_ATLAS_PAGES + 1u && sHaveBuildings)
-            DrawStatics(identity, NULL, false);
+            DrawStatics(identity, NULL, false, true);
     }
     C3D_AlphaTest(false, GPU_ALWAYS, 0);
 }
@@ -13440,7 +13519,7 @@ static void ShadowMapRender(void)
         double au = U[0] * ax + U[2] * az, av = V[0] * ax + V[2] * az;
         double texelsU = floor((double)worldU / texelU + 0.5), texelsV = floor((double)worldV / texelV + 0.5);
         double depth = (double)D[0] * sCamera.targetX + (double)D[1] * sCamera.targetY
-                     + (double)D[2] * sCamera.targetZ;
+                     + (double)D[2] * ((double)sCamera.targetZ + (double)VoxelRelief_Lean() * sCamera.targetY);
         /* the room the picture leaves in the window, either side */
         float roomU = sShadowHalfU - 0.5f * sShadowFitWanted[0] - VOXEL_SHADOW_FIT_MARGIN;
         float roomV = sShadowHalfV - 0.5f * sShadowFitWanted[1] - VOXEL_SHADOW_FIT_MARGIN;
@@ -13579,7 +13658,9 @@ static void ShadowMapRender(void)
     }
 
     /* the anchored world as it is: the eye's model-view without its view */
-    Mtx_Identity(&sDrawModelView);
+    /* (the relief where the sun finds it, ShadowSunMtx; the statics each by
+     * their own foot, DrawStatics) */
+    ShadowSunMtx(&sDrawModelView);
     Mtx_Identity(&identity);
     Mtx_Translate(&identity, -(float)sDrawAnchorX, 0.0f, -(float)sDrawAnchorZ, true);
     if (SHADOW_DEBUG != 3)
@@ -13932,7 +14013,7 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
             C3D_DrawArrays(GPU_TRIANGLES, BindChunkVertices(chunk, first, count), (int)count);
         }
         if (pass == VOXEL_ATLAS_PAGES + 1u && sHaveBuildings)
-            DrawStatics(&view, dapples ? &light : NULL, glowing);
+            DrawStatics(&view, dapples ? &light : NULL, glowing, false);
     }
     ReleaseGlowUnit();
     /* The glow over the dapples moved the haze and the fade a stage on

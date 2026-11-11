@@ -540,7 +540,7 @@ void VoxelSign_Emit(VoxelBuilder *b, float wx, float wz, float baseY,
     if (b->lighting && constant < 0.0f)
         b->lightingConstant = VoxelLighting_Sample(
             wx + 0.5f, baseY + 0.5f + b->lift + b->base,
-            VoxelBuilder_StretchZ(b, wz + 0.5f + b->shift));
+            VoxelBuilder_SunZ(b, wz + 0.5f + b->shift));
     EmitSign(b, wx, wz, baseY, m, depthPixels, shade);
     b->lightingConstant = constant;
 #else

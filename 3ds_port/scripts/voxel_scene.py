@@ -10,10 +10,13 @@ draws a pixel, the cells' readings).
                           [--pitch 43] [--yaw 0] [--scale 3] [--only tex|shape]
         the game's camera on cell X,Y: the textured view over the shapes
         (each surface by the way it faces, each level of top its colour,
-        W/E walls dark brown, slants red) - it matches Azahar
+        W/E walls dark brown, slants red) - it matches Azahar. Drawn as the
+        engine draws it, leant (voxel_relief.h; VOXEL_LEAN=0: the faces
+        vertical); the shapes are judged with the lean undone
     python voxel_scene.py probe LAYOUT X,Y R.bin PX,PY [PX,PY ...]
         which triangle that view (--scale 3) shows at screen pixels: atlas
-        id, cell, vertices - to name the cell behind a fault in a shot
+        id, cell, vertices (in the drawing's space, the lean undone) - to
+        name the cell behind a fault in a shot
     python voxel_scene.py cells LAYOUT x0,y0,x1,y1 [--relief R]
         per cell: metatile, kind (G/T/R/?), band side, the piece the solve
         chose (F/S/W/E/W2/E2/cSE/cSW/vSE/vSW + level) and the lattice
@@ -44,10 +47,13 @@ def view(args):
     from PIL import Image
     if args.relief:
         vl.use_relief(args.relief)
-    tris, _ = vl.dump(args.layout)
+    # what the console draws (leant) is what is seen; what it is judged by
+    # is the same triangles in the drawing's space
+    drawn, _ = vl.dump(args.layout, leant=True)
+    tris = [vl.unlean_tri(t) for t in drawn]
     at = tuple(int(v) for v in args.at.split(","))
-    cam = vl.camera(tris, at, args.pitch, args.dist, args.yaw)
-    ras = vl.render(tris, vl.Atlas(args.layout), cam, args.scale)
+    cam = vl.camera(drawn, at, args.pitch, args.dist, args.yaw, leant=vl.lean())
+    ras = vl.render(drawn, vl.Atlas(args.layout), cam, args.scale)
     tex = ras.image()
     shape = tex.copy()
     px = shape.load()
@@ -75,10 +81,11 @@ def probe(args):
     import voxel_relief_lines as vl
     import voxel_grid_check as gc
     vl.use_relief(args.relief)
-    tris, _ = vl.dump(args.layout)
+    drawn, _ = vl.dump(args.layout, leant=True)
+    tris = [vl.unlean_tri(t) for t in drawn]
     at = tuple(int(v) for v in args.at.split(","))
-    cam = vl.camera(tris, at, args.pitch, args.dist, args.yaw)
-    ras = vl.render(tris, vl.Atlas(args.layout), cam, args.scale)
+    cam = vl.camera(drawn, at, args.pitch, args.dist, args.yaw, leant=vl.lean())
+    ras = vl.render(drawn, vl.Atlas(args.layout), cam, args.scale)
     for spec in args.pixels:
         x, y = map(int, spec.split(","))
         o = ras.tri[y * ras.w + x]
