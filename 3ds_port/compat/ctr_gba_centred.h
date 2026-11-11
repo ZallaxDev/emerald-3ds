@@ -8,7 +8,8 @@
  * GBA screens (full.mk lists them);
  * and into pokenav.c, pokemon_storage_system.c (the PC's boxes),
  * pokemon_summary_screen.c, item_menu.c (the bag), pokedex.c, trade.c and
- * trainer_card.c (the field's card, with the classic menus),
+ * trainer_card.c (the field's card, with the classic menus) and
+ * frontier_pass.c (the Frontier Pass PLAYER opens then),
  * whose screens are shown on the bottom screen instead.
  *
  * Unlike a stage (ctr_gba_stage.h) nothing is invented around the picture:
@@ -59,6 +60,8 @@
 #define SetVBlankCallback CtrCentredFactory_SetVBlankCallback
 #elif defined(CTR_CENTRED_CARD)
 #define SetVBlankCallback CtrCentredCard_SetVBlankCallback
+#elif defined(CTR_CENTRED_PASS)
+#define SetVBlankCallback CtrCentredPass_SetVBlankCallback
 #else
 #define SetVBlankCallback CtrCentred_SetVBlankCallback
 #endif

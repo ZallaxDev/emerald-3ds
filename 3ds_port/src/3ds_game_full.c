@@ -25,6 +25,7 @@
 #include "item_menu.h"
 #include "party_menu.h"
 #include "battle.h"
+#include "constants/moves.h"
 #include "battle_main.h"
 #include "fldeff_misc.h"
 #include "field_effect.h"
@@ -71,13 +72,18 @@
 #include "script.h"
 #include "constants/maps.h"
 #endif
+#include "region_map.h"
+#include "constants/region_map_sections.h"
 #include "port_platform.h"
 #include "port_log.h"
 #include "port_prof.h"
 
 #include "3ds_battle_hud.h"
 #include "3ds_platform.h"
+#include "3ds_input.h"
 #include "3ds_video.h"
+#include "3ds_fly_sky.h"
+
 #include "3ds_assets.h"
 #include "3ds_audio.h"
 #include "3ds_bottom.h"
@@ -181,6 +187,9 @@ void __attribute__((weak)) FollowerMon_ReleaseAll(void)
 {
 }
 
+static bool sFlyAsked; /* the Fly cinematic's (below) */
+static unsigned sFlyBusyFrames;
+
 void CtrGame_SoftReset(void)
 {
     if (sGameAtStart == NULL)
@@ -191,6 +200,12 @@ void CtrGame_SoftReset(void)
     /* Port state that belongs to the running game lives outside the restored
      * sections: the bottom screen's would keep acting as if in the field. */
     CtrBottom_SoftReset();
+    /* A Fly under way is dropped with the game it belonged to: its cover,
+     * its sky scene and the landing's weather. */
+    CtrVideo_FlyCancel();
+    CtrFlySky_Reset();
+    sFlyAsked = false;
+    sFlyBusyFrames = 0;
     /* The follower's buffers are malloc'd and only pointed to from the game's
      * data, which the copy below puts back to NULL: freed first, or leaked. */
     FollowerMon_ReleaseAll();
@@ -420,6 +435,15 @@ bool8 CtrTrainerCard_FieldOpen(void);
 void CtrCentredCard_SetVBlankCallback(IntrCallback callback)
 {
     SetCentredCallback(callback, CtrTrainerCard_FieldOpen() ? CTR_CENTRED_CARD : CTR_CENTRED_PLAIN);
+}
+
+/* frontier_pass.c: the pass PLAYER opens with the classic menus, its map and
+ * the card it opens, in the bottom screen's window as the card. */
+bool8 CtrFrontierPass_FieldOpen(void);
+
+void CtrCentredPass_SetVBlankCallback(IntrCallback callback)
+{
+    SetCentredCallback(callback, CtrFrontierPass_FieldOpen() ? CTR_CENTRED_CARD : CTR_CENTRED_PLAIN);
 }
 
 IntrCallback CtrPokedex_VBlankCallback(void);
@@ -1324,6 +1348,189 @@ bool8 Port_HoldPaletteFade(void)
     return sFadeHeld && gPaletteFade.active && gPaletteFade.yDec;
 }
 
+/*
+ * The Fly cinematic (3ds_video.c, voxel_fly.c). The game's Fly asks, from
+ * the bird's swoop with the player on it (field_effect.c), whether the bird
+ * is to hover: the first ask of a flight starts the cinematic, with the way
+ * from this map's region-map place to the destination's, and the bird hangs
+ * on while the camera climbs into the cloud. Only Fly out: the bird of the
+ * landing (FLDEFF_FLY_IN) swoops in the same way and is never held. Then the
+ * landing asks whether to wait (Task_FlyIntoMap) while the camera comes down
+ * out of the cloud over the new map.
+ */
+static void FlyDirection(float *dirX, float *dirZ)
+{
+    const struct MapHeader *to = GetDestinationWarpMapHeader();
+    u8 from = gMapHeader.regionMapSectionId;
+    u8 dest = to != NULL ? to->regionMapSectionId : MAPSEC_NONE;
+
+    *dirX = 0.0f;
+    *dirZ = -1.0f;
+    if (from >= MAPSEC_NONE || dest >= MAPSEC_NONE)
+        return;
+    /* Region-map cells, x east and y south: the voxel world's +X and +Z. */
+    *dirX = ((float)gRegionMapEntries[dest].x + gRegionMapEntries[dest].width * 0.5f)
+          - ((float)gRegionMapEntries[from].x + gRegionMapEntries[from].width * 0.5f);
+    *dirZ = ((float)gRegionMapEntries[dest].y + gRegionMapEntries[dest].height * 0.5f)
+          - ((float)gRegionMapEntries[from].y + gRegionMapEntries[from].height * 0.5f);
+}
+
+bool8 Port_FlyHover(void)
+{
+    if (!FieldEffectActiveListContains(FLDEFF_USE_FLY) || FieldEffectActiveListContains(FLDEFF_FLY_IN))
+        return FALSE;
+    if (!sFlyAsked)
+    {
+        float dirX, dirZ;
+
+        sFlyAsked = true;
+        if (!FieldEffect_FlyEnhanced())
+            return FALSE; /* ENHANCED FLYING off, or the 2D field: the GBA's Fly */
+        FlyDirection(&dirX, &dirZ);
+        if (!CtrVideo_FlyBegin(dirX, dirZ))
+            return FALSE;
+    }
+    return CtrVideo_FlyHovers();
+}
+
+/* The landing waits on the camera, which the video steps as it draws: if
+ * that stopped (no picture made for that long), the game is not held for
+ * ever - the cinematic is dropped and the bird lands as the GBA's. Past the
+ * longest stay a flight can have (the sky scene, then the cloud's limit). */
+#define FLY_BUSY_MAX_FRAMES 1200u
+
+bool8 Port_FlyBusy(void)
+{
+    if (!CtrVideo_FlyBusy())
+    {
+        sFlyBusyFrames = 0;
+        return FALSE;
+    }
+    if (++sFlyBusyFrames < FLY_BUSY_MAX_FRAMES)
+        return TRUE;
+    CtrLog_Write(CTR_LOG_GAME, "fly: the landing waited %u frames, the cinematic is dropped", sFlyBusyFrames);
+    sFlyBusyFrames = 0;
+    CtrVideo_FlyCancel();
+    return FALSE;
+}
+
+/* The port's Fly (field_effect.c, asked once as the Fly begins): with the
+ * ENHANCED FLYING option on, and only where the cinematic can play - the
+ * voxel field, nothing else under way. Otherwise the GBA's Fly, all of it:
+ * the bird, westwards, the banner, the follower walking on. */
+bool8 Port_FlyEnhanced(void)
+{
+    return CtrFlySky_Cinematic() && CtrVideo_FlyPossible();
+}
+
+/* The destination lies east: the Pokemon and its rider go out to the right
+ * and come in from the left (the GBA's Fly always goes west). Asked as the
+ * flight out begins, while the destination warp is set. */
+bool8 Port_FlyEast(void)
+{
+    float dirX, dirZ;
+
+    FlyDirection(&dirX, &dirZ);
+    return dirX > 0.0f;
+}
+
+bool8 Port_FlyLanding(u8 *share)
+{
+    float s;
+
+    if (!CtrVideo_FlyLanding(&s))
+        return FALSE;
+    *share = (u8)(s * 255.0f + 0.5f);
+    return TRUE;
+}
+
+/* The flight's start as the port plays it (field_effect.c: the Pokemon out
+ * of its ball beside the player, the hop onto its back, the take-off) in
+ * place of the GBA's banner and bird out of the ball: with the port's Fly
+ * (field_effect.c asks it only then). */
+bool8 Port_FlyIntro(void)
+{
+    return TRUE;
+}
+
+
+/* settings.txt fly_demo=1: the game flies on its own, to two places in turn,
+ * a few seconds after each landing - for watching the start and the landing
+ * frame by frame from outside (no hands needed). */
+static void FlyDemo(void)
+{
+    static const u16 sPlaces[][2] = {{13, 0}, {10, 1}};
+    static unsigned sNext, sWait;
+    static int sOn = -1; /* the setting, read once */
+    u8 slot;
+
+    if (sOn < 0)
+        sOn = CtrSettings_GetInt("fly_demo", 0) != 0;
+    if (!sOn)
+        return;
+    /* Not in the field yet (the title, the menu): A, now and then, through
+     * to the saved game. */
+    if (gMain.callback2 != CB2_Overworld && !FieldEffectActiveListContains(FLDEFF_USE_FLY)
+     && !FieldEffectActiveListContains(FLDEFF_FLY_IN))
+    {
+        if (++sWait % 40 == 0)
+            CtrInput_Inject(1); /* A */
+        return;
+    }
+    if (gMain.callback2 != CB2_Overworld
+     || FieldEffectActiveListContains(FLDEFF_USE_FLY) || FieldEffectActiveListContains(FLDEFF_FLY_IN)
+     || gPaletteFade.active || ArePlayerFieldControlsLocked())
+    {
+        sWait = 0;
+        return;
+    }
+    if (++sWait < 240)
+        return;
+    sWait = 0;
+    for (slot = 0; slot < PARTY_SIZE; slot++)
+        if (MonKnowsMove(&gPlayerParty[slot], MOVE_FLY))
+            break;
+    if (slot >= PARTY_SIZE)
+        return;
+    CtrLog_Write(CTR_LOG_GAME, "fly demo: to %u (%u) by %u", sPlaces[sNext][0], sPlaces[sNext][1], slot);
+    CtrParty_Fly(slot, sPlaces[sNext][0], (u8)sPlaces[sNext][1]);
+    sNext = (sNext + 1) % ARRAY_COUNT(sPlaces);
+}
+
+static void FlyFrame(void)
+{
+    static bool sFlyInSeen;
+    bool flyIn = FieldEffectActiveListContains(FLDEFF_FLY_IN);
+
+    FlyDemo();
+
+    /* Asked once a flight: the next Fly asks again. The sky scene's files
+     * are read as the flight starts, under the field move's banner. */
+    {
+        static bool sUseFlySeen;
+        bool useFly = FieldEffectActiveListContains(FLDEFF_USE_FLY);
+
+        if (!useFly)
+            sFlyAsked = false;
+        else if (!sUseFlySeen && FieldEffect_FlyEnhanced())
+            CtrFlySky_Prefetch();
+        sUseFlySeen = useFly;
+    }
+
+    /* The landing's first frame: the region's weather over the new map,
+     * only after a sky that showed it - this flight's (the port's Fly; a
+     * GBA's never asks the video, whose answer is the last flight's). */
+    if (flyIn && !sFlyInSeen && FieldEffect_FlyEnhanced() && CtrVideo_FlySkyShown())
+        CtrFlySky_Arrive();
+    /* The landing over: files read for a scene that never played go too. */
+    if (!flyIn && sFlyInSeen && !CtrVideo_FlyActive())
+        CtrFlySky_Release();
+
+    sFlyInSeen = flyIn;
+    CtrFlySky_ArriveTick();
+}
+
+
 static void HoldFieldFade(void)
 {
     const CtrVideoStats *video = CtrVideo_GetStats();
@@ -1396,6 +1603,7 @@ void CtrGame_WaitFrame(void)
     CtrPlatform_EndFrame();
     /* What the frame just shown was decides the game's next fade step. */
     HoldFieldFade();
+    FlyFrame();
     if (sFrames < 4)
     {
         CtrPlatform_ReportMemory("after present");

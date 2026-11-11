@@ -167,15 +167,18 @@ static const u8 *LargeCursor(void)
     return sCursorLarge;
 }
 
+static void MarkCentre(const ViewState *s, int *sx, int *sy);
+
 /* The player's mark and a picked cell's cursor, inside the window. */
 static void DrawMapMarks(const ViewState *s)
+
 {
     int saved[4], x, y;
 
     ClipToMapWindow(saved);
     if (s->mapsec != MAPSEC_NONE && sRes.playerIcon[s->gender])
     {
-        CellCentre(s, s->cursorX, s->cursorY, &x, &y);
+        MarkCentre(s, &x, &y);
         DrawSprite(sRes.playerIcon[s->gender], 2, 2, x - 8, y - 8, sRes.playerIconPal[s->gender].c);
     }
     if (s->pickMapsec != MAPSEC_NONE)
@@ -189,12 +192,22 @@ static void DrawMapMarks(const ViewState *s)
     RestoreClip(saved);
 }
 
-/* The mark's 2x2 tiles at a cursor cell, clipped to the map's picture. */
-static void MarkRect(const ViewState *s, u8 cx, u8 cy, int *x0, int *y0, int *x1, int *y1)
+/* Where the player's mark is: on its cell, or along the Fly's route
+ * (MapFlyGlide) while the cinematic flies it. */
+static void MarkCentre(const ViewState *s, int *sx, int *sy)
+{
+    if (s->flyGlide)
+        MapToScreen(s, s->flyMx, s->flyMy, sx, sy);
+    else
+        CellCentre(s, s->cursorX, s->cursorY, sx, sy);
+}
+
+/* The mark's 2x2 tiles where the state has it, clipped to the map's picture. */
+static void MarkRectOf(const ViewState *s, int *x0, int *y0, int *x1, int *y1)
 {
     int x, y;
 
-    CellCentre(s, cx, cy, &x, &y);
+    MarkCentre(s, &x, &y);
     *x0 = x - 8;
     *y0 = y - 8;
     *x1 = *x0 + 16;
@@ -206,6 +219,7 @@ static void MarkRect(const ViewState *s, u8 cx, u8 cy, int *x0, int *y0, int *x1
     if (*x1 < *x0) *x1 = *x0;
     if (*y1 < *y0) *y1 = *y0;
 }
+
 
 /*
  * The Fly map's icons (CreateFlyDestIcons, TryCreateRedOutlineFlyDestIcons):
@@ -389,8 +403,74 @@ static void DrawZoomButton(const ViewState *s)
     AddHit(ZOOM_X - 2, ZOOM_Y - 2, ZOOM_W + 4, ZOOM_H + 4, HIT_MAP_ZOOM);
 }
 
+/*
+ * Who flies from the map's own FLY, when more than one Pokemon knows it:
+ * their icons along the picture's bottom, in the band under the last row of
+ * places, from its left; the one that would fly emerald.
+ */
+#define FLYER_W 30
+#define FLYER_H 22
+#define FLYER_X (MAP_ORIGIN_X + 4)
+#define FLYER_Y (MAP_ORIGIN_Y + MAP_PIC_H - 2 - FLYER_H)
+
+static int MapFlyerCount(const ViewState *s)
+{
+    int n = 0;
+
+    for (int i = 0; i < PARTY_SIZE; ++i)
+        n += (s->flyers >> i) & 1;
+    return n;
+}
+
+static bool8 MapFlyersShown(const ViewState *s)
+{
+    return s->flyNow == MAP_FLY_READY && MapFlyerCount(s) > 1;
+}
+
+/* A party icon's body centred in a plate's face, cut to it. */
+static void FlyerIcon(const ViewState *s, u8 slot, int x, int oy, int w, int h, bool8 grey)
+{
+    const MonView *mon = slot < PARTY_SIZE ? &s->party[slot] : NULL;
+    const u8 *tiles;
+    u8 pal;
+    int saved[4];
+
+    if (mon == NULL || !mon->species)
+        return;
+    tiles = MonIcon(mon->iconSpecies, mon->deoxys);
+    pal = gMonIconPaletteIndices[mon->iconSpecies];
+    if (!tiles || pal >= ARRAY_COUNT(sRes.monIconPal))
+        return;
+    ClipPush(saved, x + 1, oy + 1, x + w - 1, oy + h - 1);
+    IconCentred(tiles, 4, 2 * x + w, 2 * oy + h, sRes.monIconPal[pal].c, grey);
+    ClipPop(saved);
+}
+
+static void DrawMapFlyers(const ViewState *s)
+{
+    int n = 0;
+
+    if (!MapFlyersShown(s))
+        return;
+    for (int i = 0; i < PARTY_SIZE; ++i)
+    {
+        int x, oy;
+        bool8 pressed, chosen;
+
+        if (!((s->flyers >> i) & 1))
+            continue;
+        x = FLYER_X + n++ * (FLYER_W + 2);
+        pressed = s->pressed == HIT_MAP_FLYER + i;
+        chosen = s->flyPick == i;
+        oy = Plate(x, FLYER_Y, FLYER_W, FLYER_H, chosen || pressed ? sEmerald : sLight,
+                   pressed ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+        FlyerIcon(s, i, x, oy, FLYER_W, FLYER_H, FALSE);
+        AddHit(x - 1, FLYER_Y - 2, FLYER_W + 2, FLYER_H + 4, HIT_MAP_FLYER + i);
+    }
+}
+
 /* Whether a rectangle of the screen meets what is drawn over the map and is
- * not in its cache: the zoom button, the place panel. */
+ * not in its cache: the zoom button, the place panel, who flies. */
 static bool8 MapOverlayMeets(const ViewState *s, int x0, int y0, int x1, int y1)
 {
     int px, pw, ph, b[4];
@@ -398,6 +478,12 @@ static bool8 MapOverlayMeets(const ViewState *s, int x0, int y0, int x1, int y1)
     PlateBounds(ZOOM_X, ZOOM_Y, ZOOM_W, ZOOM_H, &b[0], &b[1], &b[2], &b[3]);
     if (RectsMeet(x0, y0, x1, y1, b[0], b[1], b[2], b[3]))
         return TRUE;
+    if (MapFlyersShown(s))
+    {
+        PlateBounds(FLYER_X, FLYER_Y, MapFlyerCount(s) * (FLYER_W + 2) - 2, FLYER_H, &b[0], &b[1], &b[2], &b[3]);
+        if (RectsMeet(x0, y0, x1, y1, b[0], b[1], b[2], b[3]))
+            return TRUE;
+    }
     if (!MapPanelWidth(s))
         return FALSE;
     MapPanelRect(s, &px, &pw, &ph);
@@ -578,6 +664,7 @@ static void DrawRegionMap(const ViewState *s)
         AddHit(MAP_ORIGIN_X, MAP_ORIGIN_Y, MAP_PIC_W, MAP_PIC_H, HIT_MAP);
         DrawMapPanel(s);
         DrawZoomButton(s);
+        DrawMapFlyers(s);
     }
     if (s->clockNotice)
     {
@@ -631,6 +718,28 @@ static void DrawFlyHeader(const ViewState *s)
     AddHit(FLY_CANCEL_X, HEAD_Y - 2, W - FLY_CANCEL_X, HEAD_H + 4, HIT_MAP_FLY_CANCEL);
 }
 
+/*
+ * The map's own FLY, a town one can fly to picked: in the header beside its
+ * name, where the Repel and the clock were, the icon of who would fly on
+ * it; grey where the field does not let Fly be used now.
+ */
+#define MAP_FLY_X REPEL_X
+#define MAP_FLY_W (CLOCK_X + CLOCK_W - REPEL_X)
+#define MAP_FLY_ICON_W 36
+
+static void DrawMapFlyButton(const ViewState *s)
+{
+    bool8 ready = s->flyNow == MAP_FLY_READY, pressed = ready && s->pressed == HIT_MAP_FLY_NOW;
+    int oy = Plate(MAP_FLY_X, HEAD_Y, MAP_FLY_W, HEAD_H, !ready ? sOffGrey : pressed ? sEmerald : sFieldBlue,
+                   pressed ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+
+    FlyerIcon(s, s->flyPick, MAP_FLY_X + 4, oy, MAP_FLY_ICON_W, HEAD_H, !ready);
+    TextIn(gMoveNames[MOVE_FLY], MAP_FLY_X + MAP_FLY_ICON_W, oy, MAP_FLY_W - MAP_FLY_ICON_W - 8, HEAD_H, &sNormal, 'c',
+           ready ? STYLE_WHITE : STYLE_GRAY, 4);
+    if (ready)
+        AddHit(MAP_FLY_X, HEAD_Y - 2, MAP_FLY_W, HEAD_H + 4, HIT_MAP_FLY_NOW);
+}
+
 /* ------------------------------------------------------------------------ */
 /* The trainer card                                                         */
 /* ------------------------------------------------------------------------ */
@@ -667,6 +776,185 @@ static const u8 *HoursMinutes(unsigned hours, unsigned minutes)
     return text;
 }
 
+/* ------------------------------------------------------------------------ */
+/* The Frontier Pass (the new menus)                                        */
+/* ------------------------------------------------------------------------ */
+
+/*
+ * The game's Frontier Pass (frontier_pass.c) as the card's screen has it:
+ * a blue plate with the symbols won and the Battle Points on its cream end
+ * and the trainer on the blue, MAP and the recorded battle (RECORD) down
+ * the right; under them what the last thing touched is, as the game's
+ * description window says it, and BACK to the card. MAP shows the game's
+ * map of the Battle Frontier, the facility chosen marked on it and the
+ * player's head where the game puts it, the facilities listed beside it
+ * and the chosen one's description under them.
+ */
+#define PASS_MAIN_W (AREA_W - CARD_FLIP_W - 4)
+#define PASS_SIDE_X (AREA_X + AREA_W - CARD_FLIP_W)
+#define PASS_BUTTON_H ((CARD_H - 4) / 2)
+#define PASS_CREAM_W 150
+#define PASS_SYMBOL_X (AREA_X + 14)
+#define PASS_SYMBOL_PITCH 18
+/* The map's picture: frontier_pass.c's map_screen tiles that hold it. */
+#define PASS_MAP_COL 2
+#define PASS_MAP_ROW 4
+#define PASS_MAP_COLS 16
+#define PASS_MAP_ROWS 9
+#define PASS_MAP_W 144
+#define PASS_LIST_X (AREA_X + PASS_MAP_W + 4)
+#define PASS_LIST_W (AREA_W - PASS_MAP_W - 4)
+#define PASS_ROW_PITCH 17
+
+static const u8 *PassBackText(void)
+{
+    return Ascii(CTR_TEXT("BACK", "VOLVER", "RETOUR", "INDIETRO", "VOLTAR", "ZURÜCK", "もどる"));
+}
+
+/* The lower strip: a description on a cream plate, BACK beside it. */
+static void PassFooter(const ViewState *s, const u8 *text)
+{
+    bool8 pressed = s->pressed == HIT_PASS_BACK;
+    int oy = Plate(AREA_X, CARD_BADGES_Y, PASS_MAIN_W, CARD_BADGES_H, sLight, PLATE_STATE_NORMAL);
+
+    if (text)
+    {
+        int lines = TextLines(text, 0, 0, PASS_MAIN_W - 20, 15, 2, &sNormal, STYLE_INK, FALSE);
+
+        TextLines(text, AREA_X + 10, oy + (CARD_BADGES_H - 6 - lines * 15) / 2, PASS_MAIN_W - 20, 15, 2, &sNormal,
+                  STYLE_INK, TRUE);
+    }
+    oy = Plate(PASS_SIDE_X, CARD_BADGES_Y, CARD_FLIP_W, CARD_BADGES_H, pressed ? sEmerald : sCancelGrey,
+               pressed ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+    TextIn(PassBackText(), PASS_SIDE_X, oy, CARD_FLIP_W, CARD_BADGES_H, &sNormal, 'c', STYLE_WHITE, 4);
+    AddHit(PASS_SIDE_X, CARD_BADGES_Y, CARD_FLIP_W, CARD_BADGES_H, HIT_PASS_BACK);
+}
+
+/* A facility's symbol: gold or silver as won, a dim shape where it is not. */
+static void PassSymbol(int i, u8 won, int x, int y)
+{
+    u16 dim[16];
+    const u16 *pal = won == 2 ? sRes.medalPal[1].c : sRes.medalPal[0].c;
+
+    if (!sRes.medalTiles)
+        return;
+    if (!won)
+    {
+        for (int k = 0; k < 16; ++k)
+            dim[k] = k ? PackRgb(196, 200, 210) : 0;
+        pal = dim;
+    }
+    DrawSprite(sRes.medalTiles + i * 4 * 32, 2, 2, x, y, pal);
+}
+
+static void DrawFrontierPass(const ViewState *s)
+{
+    static const u8 *const symbolTexts[NUM_FRONTIER_FACILITIES] = {
+        gText_BattleTowerAbilitySymbol, gText_BattleDomeTacticsSymbol, gText_BattlePalaceSpiritsSymbol,
+        gText_BattleArenaGutsSymbol, gText_BattleFactoryKnowledgeSymbol, gText_BattlePikeLuckSymbol,
+        gText_BattlePyramidBraveSymbol,
+    };
+    bool8 mapPressed = s->pressed == HIT_PASS_MAP, recordPressed = s->pressed == HIT_PASS_RECORD;
+    const u8 *text;
+    int oy = PlateEx(AREA_X, AREA_Y, PASS_MAIN_W, CARD_H, sFieldBlue, PLATE_STATE_NORMAL, PASS_CREAM_W, 25,
+                     PlateCut(CARD_H), 0);
+
+    /* The symbols: a zigzag of seven, as on the game's pass. */
+    StyledStr(&sSmall, gText_SymbolsEarned, AREA_X + 10, TextY(oy + 6, 20, &sSmall), STYLE_GRAY);
+    AddHit(AREA_X, AREA_Y, PASS_CREAM_W - 10, 28, HIT_PASS_SYMBOLS);
+    for (int i = 0; i < NUM_FRONTIER_FACILITIES; ++i)
+    {
+        int x = PASS_SYMBOL_X + i * PASS_SYMBOL_PITCH, y = oy + 32 + (i & 1) * 20;
+
+        PassSymbol(i, (s->symbols >> (2 * i)) & 3, x, y);
+        if ((s->symbols >> (2 * i)) & 3)
+            AddHit(x - 2, y - 2, 20, 20, HIT_PASS_SYMBOL + i);
+    }
+    /* The Battle Points. */
+    FillRgb(AREA_X + 8, oy + 79, PASS_CREAM_W - 26, 1, sRule);
+    StyledStr(FitFont(&sSmall, gText_BattlePoints, PASS_CREAM_W - 70), gText_BattlePoints, AREA_X + 10,
+              TextY(oy + 82, 24, &sSmall), STYLE_GRAY);
+    StyledRight(&sNormal, Number(s->battlePoints, 5, STR_CONV_MODE_LEFT_ALIGN), AREA_X + PASS_CREAM_W - 20,
+                TextY(oy + 82, 24, &sNormal), STYLE_INK);
+    AddHit(AREA_X, oy + 78, PASS_CREAM_W - 10, 30, HIT_PASS_POINTS);
+    /* The trainer on the blue end, as on the card. */
+    if (sRes.trainerPic[s->gender])
+        DrawSprite(sRes.trainerPic[s->gender], 8, 8, AREA_X + PASS_MAIN_W - 76, oy + 28,
+                   sRes.trainerPicPal[s->gender].c);
+
+    /* MAP and RECORD; RECORD grey with none, telling so when touched. */
+    oy = Plate(PASS_SIDE_X, AREA_Y, CARD_FLIP_W, PASS_BUTTON_H, mapPressed ? sEmerald : sFieldBlue,
+               mapPressed ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+    TextIn(SectionName(SCR_MAP), PASS_SIDE_X, oy, CARD_FLIP_W, PASS_BUTTON_H, &sNormal, 'c', STYLE_WHITE, 4);
+    AddHit(PASS_SIDE_X, AREA_Y, CARD_FLIP_W, PASS_BUTTON_H, HIT_PASS_MAP);
+    oy = Plate(PASS_SIDE_X, AREA_Y + CARD_H - PASS_BUTTON_H, CARD_FLIP_W, PASS_BUTTON_H,
+               recordPressed && s->passRecord ? sEmerald : s->passRecord ? sSlate : sOffGrey,
+               recordPressed && s->passRecord ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+    TextLines(gText_BattleRecord, PASS_SIDE_X + 6, oy + (PASS_BUTTON_H - 6 - 2 * 14) / 2, CARD_FLIP_W - 12, 14, 2,
+              &sSmall, s->passRecord ? STYLE_WHITE : STYLE_GRAY, TRUE);
+    AddHit(PASS_SIDE_X, AREA_Y + CARD_H - PASS_BUTTON_H, CARD_FLIP_W, PASS_BUTTON_H, HIT_PASS_RECORD);
+
+    if (s->passPick >= PASS_PICK_SYMBOL && s->passPick < PASS_PICK_SYMBOL + NUM_FRONTIER_FACILITIES)
+        text = symbolTexts[s->passPick - PASS_PICK_SYMBOL];
+    else if (s->passPick == PASS_PICK_POINTS)
+        text = gText_CurrentBattlePoints;
+    else if (s->passPick == PASS_PICK_NO_RECORD)
+        text = gText_ThereIsNoBattleRecord;
+    else
+        text = gText_CollectedSymbols;
+    PassFooter(s, text);
+}
+
+static void DrawFrontierMap(const ViewState *s)
+{
+    const u8 *description = NULL;
+    int oy = Plate(AREA_X, AREA_Y, PASS_MAP_W, CARD_H, sFieldBlue, PLATE_STATE_NORMAL);
+    int mx = AREA_X + (PASS_MAP_W - PASS_MAP_COLS * 8) / 2, my = oy + (CARD_H - 6 - PASS_MAP_ROWS * 8) / 2;
+    /* A point of the game's screen on the picture here. */
+    int dx = mx - PASS_MAP_COL * 8, dy = my - PASS_MAP_ROW * 8;
+
+    /* The map, as the game draws it from its tiles. */
+    if (sRes.passMapTiles && sRes.passMapMap)
+        for (int r = 0; r < PASS_MAP_ROWS; ++r)
+            for (int c = 0; c < PASS_MAP_COLS; ++c)
+                DrawMapEntry(sRes.passMapTiles, sRes.passMapTileCount,
+                             sRes.passMapMap[(PASS_MAP_ROW + r) * 32 + PASS_MAP_COL + c], mx + c * 8, my + r * 8,
+                             sRes.passPal);
+
+    for (int i = 0; i < NUM_FRONTIER_FACILITIES; ++i)
+    {
+        const u8 *desc;
+        s16 x, y;
+        bool8 square;
+        const u8 *name = CtrFrontierPass_Facility(i, &desc, &x, &y, &square);
+        bool8 chosen = i == s->passMapPos, pressed = s->pressed == HIT_PASS_FACILITY + i;
+        int ry = AREA_Y + i * PASS_ROW_PITCH, py;
+
+        if (!name)
+            continue;
+        /* The facility's building on the map, to touch it there too. */
+        AddHit(dx + x - 12, dy + y - 10, 24, 20, HIT_PASS_FACILITY + i);
+        /* Its name in the list. */
+        py = Plate(PASS_LIST_X, ry, PASS_LIST_W, PASS_ROW_PITCH - 1, chosen || pressed ? sEmerald : sSlate,
+                   pressed ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+        TextIn(name, PASS_LIST_X, py, PASS_LIST_W, PASS_ROW_PITCH - 1, &sSmall, 'l', STYLE_WHITE, 8);
+        AddHit(PASS_LIST_X, ry, PASS_LIST_W, PASS_ROW_PITCH, HIT_PASS_FACILITY + i);
+        if (chosen)
+        {
+            /* The game's mark on it, its first frame: a rectangle or a square. */
+            if (sRes.passMarkTiles)
+                DrawSprite(sRes.passMarkTiles + (square ? 16 : 0) * 32, 4, 2, dx + x - 16, dy + y - 8,
+                           sRes.passMarkPal.c);
+            description = desc;
+        }
+    }
+    /* The player, at the Battle Frontier. */
+    if (s->passHead && sRes.passHeadTiles)
+        DrawSprite(sRes.passHeadTiles + (s->gender == FEMALE ? 4 : 0) * 32, 2, 2, dx + s->passHeadX - 8,
+                   dy + s->passHeadY - 8, sRes.passHeadPal[s->gender].c);
+    PassFooter(s, description);
+}
+
 static void DrawTrainerCard(const ViewState *s)
 {
     u8 text[32];
@@ -674,6 +962,14 @@ static void DrawTrainerCard(const ViewState *s)
                      PlateCut(CARD_H), 0);
     int row = 0;
 
+    if (s->cardView == CARD_VIEW_PASS || s->cardView == CARD_VIEW_MAP)
+    {
+        if (s->cardView == CARD_VIEW_PASS)
+            DrawFrontierPass(s);
+        else
+            DrawFrontierMap(s);
+        return;
+    }
     if (!s->cardBack)
     {
         CardRow(row++, oy, Ascii(CTR_TEXT("NAME", "NOMBRE", "NOM", "NOME", "NOME", "NAME", "なまえ")), s->name);

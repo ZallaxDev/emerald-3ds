@@ -68,6 +68,8 @@ FULL_DATA_OBJS += build/root/3ds_script_blob.o build/root/3ds_script_keep.o
 FULL_DATA_OBJS += build/root/3ds_song_blob.o
 BACKEND_SRCS := src/3ds_assets.c src/3ds_map_loader.c src/3ds_compat.c
 BACKEND_SRCS += src/3ds_game_full.c src/3ds_game_bridge.c src/3ds_script_loader.c
+# The Fly sky scene's supply from the game (include/3ds_fly_sky.h).
+BACKEND_SRCS += src/3ds_fly_sky.c
 BACKEND_SRCS += src/3ds_bottom_ui.c
 # The Pokédex on the top screen: which Pokémon, its picture and terrain.
 BACKEND_SRCS += src/3ds_dex_top_game.c
@@ -124,7 +126,7 @@ VOXEL_GAME_SRCS := src/voxel/voxel_world.c src/voxel/voxel_camera.c \
 	src/voxel/voxel_regions.c src/voxel/voxel_tree.c src/voxel/voxel_sign.c \
 	src/voxel/voxel_building.c src/voxel/voxel_relief.c \
 	src/voxel/voxel_arena.c src/voxel/voxel_grade.c src/voxel/voxel_battle.c \
-	src/voxel/voxel_sprite_slots.c src/voxel/voxel_swoop.c
+	src/voxel/voxel_sprite_slots.c src/voxel/voxel_swoop.c src/voxel/voxel_fly.c
 ifeq ($(VOXEL_LIGHTING),1)
 VOXEL_GAME_SRCS += src/voxel/voxel_lighting.c
 endif
@@ -187,7 +189,7 @@ $(CTR_GBA_STAGE_OBJS): compat/ctr_gba_stage.h $(ROOT)/include/gba/defines.h
 # (compat/ctr_gba_centred.h).
 CTR_GBA_CENTRED_SRCS := region_map field_region_map main_menu option_menu naming_screen wallclock \
 	pokemon_summary_screen starter_choose shop link berry_blender pokemon_jump dodrio_berry_picking \
-	contest contest_util slot_machine roulette hall_of_fame battle_dome battle_factory_screen 	battle_pyramid_bag battle_records berry_crush berry_tag_screen clear_save_data_screen contest_painting 	diploma easy_chat frontier_pass mail move_relearner pokeblock pokeblock_feed reset_rtc_screen 	save_failed_screen union_room_chat use_pokeblock wireless_communication_status_screen
+	contest contest_util slot_machine roulette hall_of_fame battle_dome battle_factory_screen 	battle_pyramid_bag battle_records berry_crush berry_tag_screen clear_save_data_screen contest_painting 	diploma easy_chat mail move_relearner pokeblock pokeblock_feed reset_rtc_screen 	save_failed_screen union_room_chat use_pokeblock wireless_communication_status_screen
 CTR_GBA_CENTRED_OBJS := $(patsubst %,build/root/src/%.o,$(CTR_GBA_CENTRED_SRCS))
 $(CTR_GBA_CENTRED_OBJS): FULLCFLAGS += -DCTR_GBA_STAGE -include $(abspath compat/ctr_gba_centred.h)
 $(CTR_GBA_CENTRED_OBJS): compat/ctr_gba_centred.h $(ROOT)/include/gba/defines.h
@@ -219,7 +221,7 @@ $(CTR_GBA_CENTRED_OBJS): compat/ctr_gba_centred.h $(ROOT)/include/gba/defines.h
 # tourney tree, the Battle Factory's rental and swap screens, the Battle
 # Pyramid's bag, Trainer Hill's records (battle_records.c), Berry Crush, a
 # berry's tag, the clear-save and reset-clock screens, the museum's
-# paintings, the diploma, Easy Chat, the Frontier Pass, mail, the move
+# paintings, the diploma, Easy Chat, mail, the move
 # relearner, the PokéBlock case, feeding a PokéBlock and the condition screen
 # (use_pokeblock.c), the save error screen, the Union Room chat and the
 # wireless status screen.
@@ -269,6 +271,10 @@ build/root/src/party_menu.o: compat/ctr_gba_centred.h $(ROOT)/include/gba/define
 build/root/src/trainer_card.o: FULLCFLAGS += -DCTR_GBA_STAGE -DCTR_CENTRED_CARD \
 	-include $(abspath compat/ctr_gba_centred.h)
 build/root/src/trainer_card.o: compat/ctr_gba_centred.h $(ROOT)/include/gba/defines.h
+# The Frontier Pass, its map and the card it opens: with the classic menus
+# PLAYER opens it in the bottom screen's window, as the card.
+build/root/src/frontier_pass.o: FULLCFLAGS += -DCTR_GBA_STAGE -DCTR_CENTRED_PASS 	-include $(abspath compat/ctr_gba_centred.h)
+build/root/src/frontier_pass.o: compat/ctr_gba_centred.h $(ROOT)/include/gba/defines.h
 # The Pokédex as the game draws it, left of the column: its list, search,
 # entries, area, cry and size screens. pokedex.c installs their VBlank
 # callbacks.
@@ -405,8 +411,9 @@ build/ctr_voxel.o: src/voxel/ctr_voxel.c Makefile full.mk
 	@mkdir -p $(dir $@)
 	"$(CC)" $(CPPFLAGS) $(CFLAGS) -Isrc/voxel -MMD -MP -c $< -o $@
 
-# The world's program first, the weather particles' second (DVLE 0 and 1).
-romfs/shaders/voxel.shbin: src/voxel/voxel.v.pica src/voxel/voxel_weather.v.pica
+# The world's program first, the weather particles' second, the world's without
+# the shadow map third (DVLE 0, 1 and 2).
+romfs/shaders/voxel.shbin: src/voxel/voxel.v.pica src/voxel/voxel_weather.v.pica 		src/voxel/voxel_plain.v.pica
 	@mkdir -p $(dir $@)
 	$(DEVKITPRO)/tools/bin/picasso -o $@ $^
 

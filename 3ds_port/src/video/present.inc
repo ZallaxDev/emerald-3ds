@@ -36,6 +36,7 @@ typedef struct
     bool wanted, native; /* a bottom screen asked for, and drawn by its own code */
     bool bottom, down;   /* its surface ready, and the top drawn as with it there */
     uint32_t clear;
+    uint32_t voxelClear; /* the voxel world's clear: the map's ground under a wide camera */
     float slider;
     bool field, overworld, voxel, blank, warmupBlack, battleUpdated;
     bool voxelStereoWanted, voxelStereo, battleStereo, worldStereo;
@@ -322,6 +323,16 @@ VIDEO_PIECE void FrameDump(void)
                      (unsigned long)sStats.frames, (unsigned long)CtrPlatform_FrameCount(), (unsigned)sStats.route,
                      (unsigned)sStats.mode, sFieldMode, (unsigned)sSwoop.phase, sSwoop.frame);
     if (dumping && dumped++ < 1600)
+#elif defined(CTR_DUMP_GAME_FRAMES)
+    /* By the game's frame, not the picture's count: two runs whose pacing
+     * hid different pictures still dump, and pair, the same moments. Every
+     * CTR_DUMP_GAME_FRAMES frames of the game, up to 60 pictures. */
+    static unsigned dumped;
+    static uint32_t lastGame;
+    uint32_t game = (uint32_t)CtrPlatform_FrameCount();
+    bool due = game != lastGame && game % CTR_DUMP_GAME_FRAMES == 0;
+    lastGame = game;
+    if (due && dumped++ < 60)
 #else
     if (sStats.frames >= 150 && (sStats.frames - 150) % 150 == 0 && sStats.frames <= 6000)
 #endif
@@ -335,7 +346,7 @@ VIDEO_PIECE void FrameDump(void)
 
 #if defined(CTR_DUMP_BATTLE) && !defined(CTR_DUMP_OBJWIN)
             frame -= battleStart;
-#elif defined(CTR_DUMP_SWOOP)
+#elif defined(CTR_DUMP_SWOOP) || defined(CTR_DUMP_GAME_FRAMES)
             frame = (uint32_t)CtrPlatform_FrameCount();
 #endif
             fwrite(&frame, 4, 1, dump);
@@ -421,6 +432,23 @@ VIDEO_PIECE void FrameVoxel(PresentFrame *f)
         CtrVoxel_SetSwoop(swoop.camera, swoop.height, swoop.cards, swoop.shadows);
         sSwoopFieldObjs = !swoop.cards;
     }
+    /* The Fly cinematic's camera, before the update too. */
+    {
+        VoxelFlyFrame fly;
+        CtrVoxelFly share;
+
+        VoxelFly_Frame(&sFly, &fly);
+        share.active = VoxelFly_Active(&sFly);
+        share.oldMap = fly.oldMap;
+        share.noFade = fly.noFade;
+        share.lift = fly.lift;
+        share.rise = fly.rise;
+        share.wisps = fly.wisps;
+        share.travel = fly.travel;
+        share.dirX = fly.dirX;
+        share.dirZ = fly.dirZ;
+        CtrVoxel_SetFly(&share);
+    }
     /* The slider before the update: the world's eyes are set, and its
      * frustum widened to what they see, before it picks this frame's chunks.
      * Per eye the frame clears and splits twice: the chunk uploads leave the
@@ -429,6 +457,17 @@ VIDEO_PIECE void FrameVoxel(PresentFrame *f)
     CtrVoxel_SetStereo(f->voxelStereoWanted ? VoxelStereoSlider(slider) : 0.0f);
     if (f->voxelStereoWanted) sRenderReserve = RENDER_RESERVE_MOST;
     f->voxel = f->overworld && CtrVoxel_Update();
+    /* Under a wide camera (the swoop's, the Fly's) the world is cleared to
+     * the map's own ground colour, not the backdrop's black: what lies past
+     * the squares the frame could build or fill passes for ground. The voxel
+     * picture's clear only: the bottom screen and the 2D field keep theirs. */
+    f->voxelClear = f->clear;
+    if (f->voxel)
+    {
+        uint32_t ground;
+
+        if (CtrVoxel_WideBackdrop(&ground)) f->voxelClear = ground;
+    }
     /* A new map still being made - a frame or two, behind the fade - is
      * black rather than the 2D picture flashing up before the 3D one. */
     /* ... unless the 2D field was up: it stays until the voxel world is
@@ -689,7 +728,7 @@ VIDEO_PIECE void FrameDraw(const PresentFrame *f)
     else if (sTransition && !f->blank) RenderTransition(f->voxel, f->clear);
     else if (f->voxel)
     {
-        RenderVoxel(f->clear, f->voxelStereo && f->stereo ? f->slider : 0.0f);
+        RenderVoxel(f->voxelClear, f->voxelStereo && f->stereo ? f->slider : 0.0f);
         if (f->fade2d > 0.004f)
         {
             /* The 2D field's own stereo pixels, as its planes would shift
@@ -720,6 +759,74 @@ VIDEO_PIECE void FrameDraw(const PresentFrame *f)
     }
 }
 
+/* The Fly cinematic over the finished picture, on each eye, and its step
+ * (voxel_fly.c), paced by the game's frames as the swoop is. */
+VIDEO_PIECE void FrameFly(const PresentFrame *f)
+{
+    if (!f->down && VoxelFly_Active(&sFly))
+    {
+        VoxelFlyFrame fly;
+        uint64_t gameFrame = CtrPlatform_FrameCount();
+        unsigned steps = sFlyLastGameFrame != 0 && gameFrame > sFlyLastGameFrame
+                       ? (unsigned)(gameFrame - sFlyLastGameFrame) : 1u;
+
+        VoxelFly_Frame(&sFly, &fly);
+        /* The wind over the world while the camera is up, under the cover;
+         * then the cloud cover over whatever the frame is - the world, the
+         * warp's black - its sheets in front of the screen in 3D. */
+        if (f->voxel && fly.lift > 0.005f && fly.whiteout < 0.995f)
+        {
+            float rush = fminf(fmaxf(fly.lift, 0.0f), 1.0f) * (1.0f - fly.whiteout);
+
+            DrawWind(sTop, rush, f->stereo ? 0 : -1);
+            if (f->stereo) DrawWind(sTopRight, rush, 1);
+        }
+        if (fly.whiteout > 0.005f)
+        {
+            DrawCloudCover(sTop, fly.whiteout, f->stereo ? 0 : -1);
+            if (f->stereo) DrawCloudCover(sTopRight, fly.whiteout, 1);
+        }
+        /* The sky scene over the closed cover. */
+        {
+            unsigned skyFrame;
+
+            if (VoxelFly_Sky(&sFly, &skyFrame) && sSky.loaded)
+            {
+                sFlySkyShown = true;
+                SkySounds(skyFrame);
+                DrawSkyScene(sTop, f->stereo ? 0 : -1, skyFrame);
+                if (f->stereo) DrawSkyScene(sTopRight, 1, skyFrame);
+            }
+        }
+        /* Paced by the game's frames, as the swoop is. Over the old map the
+         * world must be there to fly over: gone early (the field left for
+         * something else), the cinematic is dropped and Fly plays on as the
+         * GBA's. Inside the cloud a frame with no field is the warp. */
+        if (steps > VOXEL_SWOOP_STEPS_MAX) steps = VOXEL_SWOOP_STEPS_MAX;
+        sFlyLastGameFrame = gameFrame;
+        if (VoxelFly_Hovers(&sFly) && !f->voxel)
+        {
+            CtrLog_Write(CTR_LOG_VIDEO, "FLY cinematic dropped: no voxel field in phase %u", (unsigned)sFly.phase);
+            VoxelFly_Cancel(&sFly);
+        }
+        else
+        {
+            VoxelFlyPhase was = sFly.phase;
+
+            bool gone = !f->field || CtrMap_Version() != sFlyMapVersion;
+
+            while (steps-- != 0 && VoxelFly_Active(&sFly))
+                VoxelFly_Step(&sFly, f->voxel, gone);
+            if (sFly.phase != was)
+                CtrLog_Write(CTR_LOG_VIDEO, "FLY cinematic phase %u -> %u (frame %lu)", (unsigned)was,
+                             (unsigned)sFly.phase, (unsigned long)sStats.frames);
+        }
+    }
+    /* The scene's sprites, once the flight is over (or dropped). */
+    if (sSky.loaded && !VoxelFly_Active(&sFly))
+        SkySceneFree();
+}
+
 /* What goes over the finished picture, on each eye, and the swoop's step. */
 VIDEO_PIECE void FrameOverlays(const PresentFrame *f)
 {
@@ -733,6 +840,7 @@ VIDEO_PIECE void FrameOverlays(const PresentFrame *f)
         DrawPoisonVeil(sTop, PoisonVeil());
         if (f->stereo) DrawPoisonVeil(sTopRight, PoisonVeil());
     }
+    FrameFly(f);
     if (!f->down && VoxelSwoop_Active(&sSwoop))
     {
         VoxelSwoopFrame swoop;

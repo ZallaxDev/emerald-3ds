@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+- Voxel: Fly as a flight. With OPTIONS > ENHANCEMENTS > ENHANCED FLYING on,
+  Fly in the voxel overworld climbs out of the map into the clouds and comes
+  down over the destination, on the Pokémon that knows Fly; FULL also shows
+  the trip above the clouds with the region's flying Pokémon and its weather.
+  The bottom screen's map gets a FLY button. OFF (the default) is the GBA's
+  Fly, as is any Fly from the 2D field. By @darkmattericecoffee (pull request
+  #213).
+- Voxel: a camera that sees further than the world can build in a frame (the
+  swoop to and from the 2D field, Fly's high camera) shows rough or flat
+  ground in its own colour instead of black squares. By @darkmattericecoffee
+  (pull request #214).
+- Voxel on Old 3DS: the world's GPU frame is shorter, measured on the console
+  on Route 112 - from 14.8 to 10.0 ms with one picture and from 26.1 to
+  17.6 ms with the 3D slider up, where far fewer refreshes now show the same
+  picture twice (57% to 11%). The world is drawn with a shorter vertex program
+  where the sun's shadow map is not in use, the ground is sent by the quarters
+  of each chunk that are in the picture (three quarters of its vertices were
+  off screen), and the characters' places are not worked out again while the
+  world holds still.
 - Voxel: trainers buried in the ash or sand and the unseen Kecleon on Route
   120's bridge stay out of sight until they appear, as in 2D (issue #237). By
   @Johannes-Sch.
@@ -12,7 +31,13 @@
   (issue #236). By @Johannes-Sch.
 - The Frontier Pass: PLAYER opens it again once the player has it, and the
   bottom screen's trainer card has a PASS plate under FLIP. By @DannyM90
-  (pull request #212).
+  (pull request #212). The pass then opened on the top screen and left the
+  menus stuck: with the classic menus PLAYER now opens the game's pass in
+  the bottom screen's window, as the card, its map and its card included,
+  worked by touch; with the new menus PASS shows the pass on the bottom
+  screen in their style - the symbols and Battle Points with what each one
+  is, the Battle Frontier's map with its facilities, and the recorded
+  battle.
 - OPTIONS: SPEED EFFECTS (SCENE) turns off the speed lines and the zoom blur
   of the 3D battle's entrance. By @DannyM90 (pull request #232).
 - German: the Frontier map screen gets its own tiles, not the pass's picture.

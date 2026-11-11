@@ -98,6 +98,7 @@
 #include "text_window.h"
 #include "util.h"
 #include "wild_encounter.h"
+#include "constants/battle_frontier.h"
 #include "constants/items.h"
 #include "constants/maps.h"
 #include "constants/moves.h"
@@ -177,6 +178,15 @@ extern const struct PokedexEntry gPokedexEntries[];
 enum { START_POKEDEX, START_POKEMON, START_BAG, START_POKENAV, START_PLAYER, START_NONE = 0xFF };
 bool8 CtrTrainerCard_FieldOpen(void);
 u8 CtrTrainerCard_Side(void);
+/* frontier_pass.c: the game's pass with the classic menus; the bottom
+ * screen's own pass with the new ones (3ds_bottom_field.inc). */
+bool8 CtrFrontierPass_FieldOpen(void);
+u8 CtrFrontierPass_Waiting(void);
+void CtrFrontierPass_Tap(int x, int y);
+const u8 *CtrFrontierPass_Facility(u8 id, const u8 **description, s16 *x, s16 *y, bool8 *square);
+bool8 CtrFrontierPass_PlayerHead(s16 *x, s16 *y);
+void CtrFrontierPass_PlayRecord(void);
+bool32 CanCopyRecordedBattleSaveData(void);
 bool8 CtrBottom_NativeMenus(void);
 
 #define W CTR_BOTTOM_WIDTH
@@ -525,6 +535,18 @@ static struct
     u8 *badgeTiles;
     u8 *trainerPic[2];
     Pal trainerPicPal[2];
+    /* The Frontier Pass (the new menus'): its map's picture, the mark on a
+     * facility, the player's head, the symbols. */
+    u8 *passMapTiles;
+    u32 passMapTileCount;
+    u16 *passMapMap;
+    Pal passPal[8];
+    u8 *passMarkTiles;
+    Pal passMarkPal;
+    u8 *passHeadTiles;
+    Pal passHeadPal[2];
+    u8 *medalTiles;
+    Pal medalPal[2];
 } sRes;
 
 static void LoadItemIcon(Icon *icon, const void *tiles, const void *pal)
@@ -636,6 +658,19 @@ static void LoadResources(void)
 
     PalFile("trainer_card/badges.gbapal", &sRes.badgePal, 1, FALSE);
     sRes.badgeTiles = UnlzFile("trainer_card/badges.4bpp.lz", NULL);
+
+    sRes.passMapTiles = UnlzFile("frontier_pass/map_screen.4bpp.lz", &size);
+    sRes.passMapTileCount = size / 32;
+    sRes.passMapMap = UnlzFile("frontier_pass/map_screen.bin.lz", NULL);
+    PalFile("frontier_pass/bg.gbapal", sRes.passPal, 8, FALSE);
+    sRes.passMarkTiles = UnlzFile("frontier_pass/map_cursor.4bpp.lz", NULL);
+    PalFile("frontier_pass/map_cursor.gbapal", &sRes.passMarkPal, 1, FALSE);
+    sRes.passHeadTiles = UnlzFile("frontier_pass/map_heads.4bpp.lz", NULL);
+    PalFile("frontier_pass/map_heads.gbapal", &sRes.passHeadPal[MALE], 1, FALSE);
+    PalFile("frontier_pass/map_heads_female.gbapal", &sRes.passHeadPal[FEMALE], 1, FALSE);
+    sRes.medalTiles = UnlzFile("frontier_pass/medals.4bpp.lz", NULL);
+    PalFile("frontier_pass/silver.gbapal", &sRes.medalPal[0], 1, FALSE);
+    PalFile("frontier_pass/gold.gbapal", &sRes.medalPal[1], 1, FALSE);
 
     LoadGenderResources();
     LoadBattleArt();
@@ -2294,6 +2329,14 @@ typedef struct
     s16 mapViewX, mapViewY;
     u8 mapFly, flyFrontier, flyCanFly;
     u16 flyVisited;
+    /* FLY on the map itself (a town picked one can fly to): MAP_FLY_* for
+     * the header's FLY, the party slots that know Fly (a bit each) and the
+     * one that would fly. */
+    u8 flyNow, flyers, flyPick;
+    /* The Fly cinematic under way: the player's mark glides along the route
+     * instead of standing on its cell, at this map pixel. */
+    u8 flyGlide;
+    s16 flyMx, flyMy;
     u8 clockShown, clockValid, clockRate, clockPhase;
     u16 clockMinute;
     /* Map extras (3ds_field_qol_extras.inc), all zero with them off: the
@@ -2312,6 +2355,14 @@ typedef struct
     u8 hasDex, stars, badges, minutes, cardBack, hofMinutes;
     /* The Frontier Pass held, for PASS under FLIP. */
     u8 hasPass;
+    /* The card's screen with the new menus: the card, the Frontier Pass or
+     * its map (CARD_VIEW_*); what the pass describes (PASS_PICK_*), the
+     * facility on its map, whether a battle is recorded, the Battle Points,
+     * the symbols (two bits a facility: none, silver, gold) and the player's
+     * head on the map (passHead, the GBA screen's coordinates). */
+    u8 cardView, passPick, passMapPos, passRecord, passHead;
+    s16 passHeadX, passHeadY;
+    u16 battlePoints, symbols;
     u16 id, dex, hours, hofHours, linkWins, linkLosses, trades, pokeblocks, contests;
     u32 money;
     /* Save and options. */
@@ -2423,6 +2474,23 @@ static u8 sOptPage;
 static u8 sOptSub;
 /* The trainer card's back is up. */
 static bool8 sCardBack;
+/*
+ * The card's screen with the new menus: the card, or the Frontier Pass
+ * (PASS under FLIP) drawn here as the game's has it - its symbols and
+ * Battle Points, its MAP of the Battle Frontier and the recorded battle -
+ * or that map. What the pass describes, the map's facility, and whether a
+ * battle is recorded (read from the save as the pass opens, not every frame).
+ */
+enum { CARD_VIEW_CARD, CARD_VIEW_PASS, CARD_VIEW_MAP };
+enum
+{
+    PASS_PICK_SYMBOLS,
+    PASS_PICK_POINTS,
+    PASS_PICK_NO_RECORD,
+    PASS_PICK_SYMBOL,   /* + facility */
+};
+static u8 sCardView, sPassPick, sPassMapPos;
+static bool8 sPassRecord;
 
 /* What a row shows, for the redraw to notice a change: its value, or for
  * one with its own text, a sum of that text. */
@@ -2457,6 +2525,11 @@ static u8 sPickMapsec = MAPSEC_NONE, sPickX, sPickY, sPickPos;
  * if cancelled. While it is up the game sees no buttons. */
 static bool8 sMapZoom, sMapFly;
 static u8 sFlySlot, sFlyFrom;
+/* Who flies from the map's own FLY: the one last chosen or flown with (its
+ * personality), else the first that knows Fly. */
+static u32 sFlyerPersonality;
+static bool8 sFlyerKnown;
+enum { MAP_FLY_NONE, MAP_FLY_GREY, MAP_FLY_READY };
 static s16 sMapViewX, sMapViewY;
 /* Map extras: the wild list instead of the map, its page; the load
  * (CtrClockStore_LoadSerial) whose clock banner was dismissed. */
@@ -2484,6 +2557,13 @@ enum
     HIT_OK,
     HIT_YES,
     HIT_NO,
+    HIT_PASS_MAP,          /* the Frontier Pass's MAP */
+    HIT_PASS_RECORD,       /* its recorded battle */
+    HIT_PASS_BACK,         /* back to the card, or from the map to the pass */
+    HIT_PASS_POINTS,       /* its Battle Points: what they are */
+    HIT_PASS_SYMBOLS,      /* its symbols' title: what they are */
+    HIT_PASS_SYMBOL = 0x40,   /* + facility: its symbol */
+    HIT_PASS_FACILITY = 0x48, /* + facility: on its map */
     HIT_ROW = 0x50,        /* + visible list row */
     HIT_ACTION = 0x60,     /* + action cursor */
     HIT_MOVE = 0x70,       /* + move slot */
@@ -2499,6 +2579,8 @@ enum
     HIT_MAP_PANEL,         /* the place's panel: nothing under it */
     HIT_MAP_FLY,           /* the Fly map's FLY */
     HIT_MAP_FLY_CANCEL,    /* the Fly map's CANCEL */
+    HIT_MAP_FLY_NOW,       /* the map's own FLY, a town picked */
+    HIT_MAP_FLYER,         /* + party slot: who flies */
     HIT_OPTION = 0xC0,     /* + option row; +HIT_OPTION_BACK for its back half */
     HIT_PAGE = 0xE0,       /* + OPTIONS category tab; + 8 + group tab */
 };
@@ -2539,6 +2621,63 @@ static bool8 FieldIdle(void)
 static bool8 FieldMessageUp(void)
 {
     return gMain.callback2 == CB2_Overworld && !IsFieldMessageBoxHidden() && !gPaletteFade.active;
+}
+
+/*
+ * FLY on the map itself, as the party menu would let Fly be used: the
+ * party's Pokemon that know it (not an egg), the Feather Badge, a map whose
+ * type allows it (SetUpFieldMove_Fly), and the field free - no script, no
+ * fade, nothing holding the player. A step under way is no bar: the flight
+ * from the field ends it first (CtrFly_Start).
+ */
+static u8 MapFlyers(void)
+{
+    u8 flyers = 0;
+
+    for (int i = 0; i < PARTY_SIZE && i < gPlayerPartyCount; ++i)
+    {
+        struct Pokemon *mon = &gPlayerParty[i];
+
+        if (GetMonData(mon, MON_DATA_SPECIES) == SPECIES_NONE || GetMonData(mon, MON_DATA_IS_EGG))
+            continue;
+        for (int j = 0; j < MAX_MON_MOVES; ++j)
+            if (GetMonData(mon, MON_DATA_MOVE1 + j) == MOVE_FLY)
+            {
+                flyers |= 1 << i;
+                break;
+            }
+    }
+    return flyers;
+}
+
+static bool8 MapFlyField(void)
+{
+    return !gMain.inBattle && gMain.callback2 == CB2_Overworld && !ArePlayerFieldControlsLocked()
+        && !ScriptContext_IsEnabled() && !gPaletteFade.active && !CtrStartMenu_Busy()
+        && Overworld_MapTypeAllowsTeleportAndFly(gMapHeader.mapType);
+}
+
+/* Of the ones that know Fly, the one chosen or last flown with, else the first. */
+static u8 MapFlyerSlot(u8 flyers)
+{
+    if (flyers == 0)
+        return PARTY_SIZE;
+    if (sFlyerKnown)
+        for (int i = 0; i < PARTY_SIZE; ++i)
+            if (((flyers >> i) & 1) && GetMonData(&gPlayerParty[i], MON_DATA_PERSONALITY) == sFlyerPersonality)
+                return i;
+    for (int i = 0; i < PARTY_SIZE; ++i)
+        if ((flyers >> i) & 1)
+            return i;
+    return PARTY_SIZE;
+}
+
+static void RememberFlyer(u8 slot)
+{
+    if (slot >= PARTY_SIZE)
+        return;
+    sFlyerPersonality = GetMonData(&gPlayerParty[slot], MON_DATA_PERSONALITY);
+    sFlyerKnown = TRUE;
 }
 
 static u16 EnabledScreens(void)
@@ -2606,7 +2745,9 @@ static u8 CurrentMode(void)
         return MODE_POKENAV;
     if (CtrPokedex_IsOpen())
         return MODE_POKEDEX;
-    if (CtrTrainerCard_FieldOpen())
+    /* The game's card, or its Frontier Pass (PLAYER with the pass): the
+     * classic menus' own screens, in the window. */
+    if (CtrTrainerCard_FieldOpen() || CtrFrontierPass_FieldOpen())
         return MODE_CARD;
     /* The summary from the field's or a battle's party menu, drawn here; a
      * classic one has the whole screen, as from the boxes (MODE_STORAGE). */
@@ -3075,6 +3216,47 @@ static u8 PlayerRegionPosition(u8 *outX, u8 *outY)
     return mapsec;
 }
 
+/*
+ * The Fly cinematic (CtrVideo_FlyProgress): the player's mark leaves its
+ * cell as the flight begins and glides to the destination's, arriving as
+ * the camera lands, so the map below shows the journey. The route is taken
+ * once, as the flight starts (before the warp moves the player).
+ */
+static struct { bool8 on; int fromMx, fromMy, toMx, toMy; } sFlyRoute;
+
+static void MapFlyGlide(ViewState *s)
+{
+    float share, t;
+
+    s->flyGlide = 0;
+    s->flyMx = s->flyMy = 0;
+    if (!CtrVideo_FlyProgress(&share))
+    {
+        sFlyRoute.on = FALSE;
+        return;
+    }
+    if (!sFlyRoute.on)
+    {
+        const struct MapHeader *dest = GetDestinationWarpMapHeader();
+        u8 to = dest != NULL ? dest->regionMapSectionId : MAPSEC_NONE;
+        const struct RegionMapLocation *e;
+
+        if (s->mapsec == MAPSEC_NONE || to >= MAPSEC_NONE)
+            return;
+        e = &gRegionMapEntries[to];
+        sFlyRoute.fromMx = s->cursorX * 8 + 4;
+        sFlyRoute.fromMy = s->cursorY * 8 + 4;
+        /* The destination's middle, in PlayerRegionPosition's cell space. */
+        sFlyRoute.toMx = (e->x + 1) * 8 + e->width * 4;
+        sFlyRoute.toMy = (e->y + 2) * 8 + e->height * 4;
+        sFlyRoute.on = TRUE;
+    }
+    t = share * share * (3.0f - 2.0f * share);
+    s->flyGlide = 1;
+    s->flyMx = (s16)(sFlyRoute.fromMx + (sFlyRoute.toMx - sFlyRoute.fromMx) * t + 0.5f);
+    s->flyMy = (s16)(sFlyRoute.fromMy + (sFlyRoute.toMy - sFlyRoute.fromMy) * t + 0.5f);
+}
+
 static void CopyText(u8 *dst, int size, const u8 *src)
 {
     int n = 0;
@@ -3125,6 +3307,22 @@ static u16 CappedStat(u8 stat, u32 cap)
     u32 value = GetGameStat(stat);
 
     return value > cap ? cap : value;
+}
+
+/* The Frontier Pass, as frontier_pass.c's AllocateFrontierPassData fills
+ * it in; on its map, where the player's head is. */
+static void SnapshotPass(ViewState *s)
+{
+    s->hasPass = TRUE;
+    s->cardView = sCardView;
+    s->passPick = sPassPick;
+    s->passMapPos = sPassMapPos;
+    s->passRecord = sPassRecord;
+    s->battlePoints = gSaveBlock2Ptr->frontier.battlePoints;
+    for (int i = 0; i < NUM_FRONTIER_FACILITIES; ++i)
+        s->symbols |= (FlagGet(FLAG_SYS_TOWER_SILVER + i * 2) + FlagGet(FLAG_SYS_TOWER_GOLD + i * 2)) << (2 * i);
+    if (sCardView == CARD_VIEW_MAP)
+        s->passHead = CtrFrontierPass_PlayerHead(&s->passHeadX, &s->passHeadY);
 }
 
 /* The card's back, as trainer_card.c's SetPlayerCardData fills it in. */
@@ -3567,6 +3765,27 @@ static void SnapshotClock(ViewState *s)
 static void SnapshotOptionRows(ViewState *s);
 static u8 MapLandmarks(u8 mapsec, u8 type, u8 pos);
 
+/* The map's own FLY: with a town picked one can fly to, the Feather Badge
+ * and a Pokemon that knows Fly, ready where the field lets Fly be used and
+ * grey where it does not (indoors, a script); the party's icons for the
+ * choice of who flies. */
+static void SnapshotMapFly(ViewState *s)
+{
+    u8 flyers;
+
+    if (s->mode != MODE_FIELD || s->inBattle || s->encView || s->pickMapsec == MAPSEC_NONE
+     || (s->pickType != MAPSECTYPE_CITY_CANFLY && s->pickType != MAPSECTYPE_BATTLE_FRONTIER)
+     || !FlagGet(FLAG_BADGE06_GET))
+        return;
+    flyers = MapFlyers();
+    if (flyers == 0)
+        return;
+    s->flyers = flyers;
+    s->flyPick = MapFlyerSlot(flyers);
+    s->flyNow = MapFlyField() ? MAP_FLY_READY : MAP_FLY_GREY;
+    SnapshotParty(s);
+}
+
 static void Snapshot(ViewState *s, u8 mode, u8 pressed)
 {
     memset(s, 0, sizeof(*s));
@@ -3634,6 +3853,7 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
         /* The header: the area's name and the map extras' toggle with it,
          * the Repel, the clock. */
         s->mapsec = PlayerRegionPosition(&s->cursorX, &s->cursorY);
+        MapFlyGlide(s);
         if (s->screen == SCR_MAP)
         {
             s->pickMapsec = sPickMapsec;
@@ -3661,7 +3881,10 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
                 s->flyCanFly = s->pickType == MAPSECTYPE_CITY_CANFLY || s->pickType == MAPSECTYPE_BATTLE_FRONTIER;
             }
             else
+            {
                 SnapshotMapExtras(s);
+                SnapshotMapFly(s);
+            }
         }
         else
             s->cursorX = s->cursorY = 0;
@@ -3681,9 +3904,16 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
         switch (s->screen)
         {
         case SCR_CARD:
-            SnapshotCard(s);
-            if (sCardBack)
-                SnapshotCardBack(s);
+            /* The pass drawn here is the new menus'; the classic ones open
+             * the game's. */
+            if (sCardView != CARD_VIEW_CARD && !sClassicMenus)
+                SnapshotPass(s);
+            else
+            {
+                SnapshotCard(s);
+                if (sCardBack)
+                    SnapshotCardBack(s);
+            }
             break;
         case SCR_SAVE:
             SnapshotSave(s);
@@ -6240,6 +6470,66 @@ MainCallback CtrBottom_LeaveTo(MainCallback field)
 }
 
 
+/* The Frontier Pass, from PASS on the card: whether a battle is recorded is
+ * read from the save now, once, as the game's pass does as it opens. */
+static void OpenPass(void)
+{
+    sCardView = CARD_VIEW_PASS;
+    sPassPick = PASS_PICK_SYMBOLS;
+    sPassRecord = CanCopyRecordedBattleSaveData() != FALSE;
+    PlaySE(SE_SELECT);
+}
+
+/* BACK, B or the card's own button: the map to the pass, the pass to the card. */
+static void PassBack(void)
+{
+    sCardView = sCardView == CARD_VIEW_MAP ? CARD_VIEW_PASS : CARD_VIEW_CARD;
+    PlaySE(SE_PC_OFF);
+}
+
+/* A touch on the pass or its map, as the game's cursor and A would have it. */
+static void PassTap(u8 id)
+{
+    if (id == HIT_PASS_BACK)
+        PassBack();
+    else if (sShown.cardView == CARD_VIEW_MAP)
+    {
+        if (id >= HIT_PASS_FACILITY && id < HIT_PASS_FACILITY + NUM_FRONTIER_FACILITIES
+         && id - HIT_PASS_FACILITY != sPassMapPos)
+        {
+            sPassMapPos = id - HIT_PASS_FACILITY;
+            PlaySE(SE_DEX_SCROLL);
+        }
+    }
+    else if (id == HIT_PASS_MAP)
+    {
+        /* The map opens on its first facility, as the game's does. */
+        sCardView = CARD_VIEW_MAP;
+        sPassMapPos = 0;
+        PlaySE(SE_SELECT);
+    }
+    else if (id == HIT_PASS_RECORD)
+    {
+        if (!sShown.passRecord)
+        {
+            sPassPick = PASS_PICK_NO_RECORD;
+            PlaySE(SE_SELECT);
+        }
+        else if (FieldIdle())
+        {
+            PlaySE(SE_SELECT);
+            CtrFrontierPass_PlayRecord();
+        }
+    }
+    else if (id == HIT_PASS_POINTS || id == HIT_PASS_SYMBOLS
+          || (id >= HIT_PASS_SYMBOL && id < HIT_PASS_SYMBOL + NUM_FRONTIER_FACILITIES))
+    {
+        sPassPick = id == HIT_PASS_POINTS ? PASS_PICK_POINTS : id == HIT_PASS_SYMBOLS ? PASS_PICK_SYMBOLS
+                  : PASS_PICK_SYMBOL + (id - HIT_PASS_SYMBOL);
+        PlaySE(SE_SELECT);
+    }
+}
+
 /* Touches use the displayed snapshot and only act on enabled controls. */
 static void MapExtrasTap(u8 id)
 {
@@ -6321,8 +6611,37 @@ static void FlyFromMap(void)
     }
     PlaySE(SE_SELECT);
     CtrLog_Write(CTR_LOG_INPUT, "bottom screen: fly to %u (%u) by %u", sPickMapsec, sPickPos, sFlySlot);
+    RememberFlyer(sFlySlot);
     CtrParty_Fly(sFlySlot, sPickMapsec, sPickPos);
     EndFlyMap();
+}
+
+/* The map's own FLY: the destination as the Fly map's A would take it, and
+ * the flight from the field with the Pokemon shown (CtrParty_Fly). Tapping
+ * the town and then FLY is the choice; there is nothing more to confirm. */
+static void MapFlyNow(void)
+{
+    u8 slot;
+
+    if (sShown.flyNow != MAP_FLY_READY || sShown.mapFly || sPickMapsec == MAPSEC_NONE)
+        return;
+    slot = MapFlyerSlot(MapFlyers());
+    /* The tap itself only with the player standing still, as the Fly map's
+     * FLY (FlyFromMap): not mid-hop on a ledge, on ice or a spinner. */
+    if (slot >= PARTY_SIZE || !FlagGet(FLAG_BADGE06_GET) || !MapFlyField()
+     || gPlayerAvatar.tileTransitionState != T_NOT_MOVING
+     || (CtrRegionMap_MapSecType(sPickMapsec) != MAPSECTYPE_CITY_CANFLY
+      && CtrRegionMap_MapSecType(sPickMapsec) != MAPSECTYPE_BATTLE_FRONTIER))
+    {
+        PlaySE(SE_FAILURE);
+        return;
+    }
+    PlaySE(SE_SELECT);
+    CtrLog_Write(CTR_LOG_INPUT, "bottom screen: map FLY to %u (%u) by %u", sPickMapsec, sPickPos, slot);
+    RememberFlyer(slot);
+    CtrParty_Fly(slot, sPickMapsec, sPickPos);
+    sPickMapsec = MAPSEC_NONE;
+    sMapZoom = FALSE;
 }
 
 static void MapTap(u8 id)
@@ -6355,9 +6674,21 @@ static void MapTap(u8 id)
     case HIT_MAP_FLY_CANCEL:
         CancelFlyMap();
         break;
+    case HIT_MAP_FLY_NOW:
+        MapFlyNow();
+        break;
     case HIT_MAP_PANEL:
         break;
     default:
+        if (id >= HIT_MAP_FLYER && id < HIT_MAP_FLYER + PARTY_SIZE)
+        {
+            if (sShown.flyNow == MAP_FLY_READY && ((sShown.flyers >> (id - HIT_MAP_FLYER)) & 1))
+            {
+                RememberFlyer(id - HIT_MAP_FLYER);
+                PlaySE(SE_SELECT);
+            }
+            break;
+        }
         MapExtrasTap(id);
         break;
     }
@@ -6483,7 +6814,10 @@ static void Activate(u8 id, u8 mode)
             return;
         }
         /* The game's card: its own button closes it (B on its front, A on
-         * its back); any other closes it for that screen. */
+         * its back); any other closes it for that screen. The pass the
+         * same with B, which on its map goes back to the pass first: the
+         * map closing for another screen goes straight to it
+         * (CtrFrontierPass_Leave). */
         if (mode == MODE_CARD)
         {
             u8 side = CtrTrainerCard_Side();
@@ -6491,6 +6825,12 @@ static void Activate(u8 id, u8 mode)
             if (side != 2)
             {
                 PressOnce(side == 0 ? B_BUTTON : A_BUTTON);
+                if (screen != SCR_CARD)
+                    LeaveForScreen(screen);
+            }
+            else if (!CtrTrainerCard_FieldOpen() && CtrFrontierPass_Waiting())
+            {
+                PressOnce(B_BUTTON);
                 if (screen != SCR_CARD)
                     LeaveForScreen(screen);
             }
@@ -6574,7 +6914,16 @@ static void Activate(u8 id, u8 mode)
         if (screen == SCR_SAVE && sScreen != SCR_SAVE)
             OpenSave();
         if (screen == SCR_CARD && sScreen != SCR_CARD)
+        {
             sCardBack = FALSE;
+            sCardView = CARD_VIEW_CARD;
+        }
+        /* Its own button on the pass or its map: back a step, as B. */
+        else if (screen == SCR_CARD && sCardView != CARD_VIEW_CARD)
+        {
+            PassBack();
+            return;
+        }
         if (screen != sScreen)
             PlaySE(SE_SELECT);
         sScreen = screen;
@@ -6608,14 +6957,11 @@ static void Activate(u8 id, u8 mode)
             sCardBack = !sCardBack;
             PlaySE(SE_SELECT);
         }
-        /* PASS, the game's Frontier Pass, opened as PLAYER opens it
-         * (start_menu.c CtrShowCardOrPass). */
-        else if (id == HIT_YES && sShown.hasPass && FieldIdle() && CtrStartMenu_Available())
-        {
-            PlaySE(SE_SELECT);
-            StartPlan(PLAN_START, START_PLAYER);
-            BeginSession(FALSE);
-        }
+        /* PASS: the Frontier Pass, drawn here. */
+        else if (id == HIT_YES && sShown.hasPass && sShown.cardView == CARD_VIEW_CARD)
+            OpenPass();
+        else if (sShown.cardView != CARD_VIEW_CARD)
+            PassTap(id);
         break;
     case SCR_NUZLOCKE:
         NuzlockeTap(id);
@@ -6836,8 +7182,14 @@ static u8 ProcessTouch(u8 mode)
         {
             u8 side = CtrTrainerCard_Side();
 
-            if (!sTouch.dragged && side != 2)
-                PressOnce(side == 0 ? A_BUTTON : B_BUTTON);
+            if (CtrTrainerCard_FieldOpen())
+            {
+                if (!sTouch.dragged && side != 2)
+                    PressOnce(side == 0 ? A_BUTTON : B_BUTTON);
+            }
+            /* The pass and its map take the tap where it is. */
+            else if (!sTouch.dragged)
+                CtrFrontierPass_Tap(sTouch.lastX - CTR_BOTTOM_WIN_X, sTouch.lastY - CTR_BOTTOM_WIN_Y);
             return HIT_NONE;
         }
         if (mode == MODE_POKENAV && InGameWindow(sTouch.startX, sTouch.startY))
@@ -7177,12 +7529,16 @@ static bool8 MapCursorOnlyMoved(const ViewState *now, const ViewState *shown)
      /* Nothing walks on the Fly map; its icons are not in the cache. */
      || now->mapFly || shown->mapFly
      || (now->cursorX == shown->cursorX && now->cursorY == shown->cursorY
-         && now->mapsec == shown->mapsec))
+         && now->mapsec == shown->mapsec && now->flyGlide == shown->flyGlide
+         && now->flyMx == shown->flyMx && now->flyMy == shown->flyMy))
         return FALSE;
     moved = *now;
     moved.cursorX = shown->cursorX;
     moved.cursorY = shown->cursorY;
     moved.mapsec = shown->mapsec;
+    moved.flyGlide = shown->flyGlide;
+    moved.flyMx = shown->flyMx;
+    moved.flyMy = shown->flyMy;
     /* A step that moves the mark also takes one off a Repel: MoveMapCursor
      * redraws its plate for it. */
     moved.repelSteps = shown->repelSteps;
@@ -7202,8 +7558,9 @@ static bool8 MoveMapCursor(const ViewState *from, const ViewState *to)
 
     if (sCache[CACHE_MAP] == NULL || icon == NULL || CtrVideo_BottomInUse() || CtrVideo_BottomWhole())
         return FALSE;
-    MarkRect(from, from->cursorX, from->cursorY, &r[0][0], &r[0][1], &r[0][2], &r[0][3]);
-    MarkRect(to, to->cursorX, to->cursorY, &r[1][0], &r[1][1], &r[1][2], &r[1][3]);
+    MarkRectOf(from, &r[0][0], &r[0][1], &r[0][2], &r[0][3]);
+    MarkRectOf(to, &r[1][0], &r[1][1], &r[1][2], &r[1][3]);
+
     /* The zoom button and the place panel are drawn over the map, not in its
      * cache: a mark under them is a whole redraw. */
     for (int k = 0; k < 2; ++k)
@@ -7397,6 +7754,7 @@ void CtrBottom_SoftReset(void)
     sOptSub = 0;
     sOptFocus = 0;
     sCardBack = FALSE;
+    sCardView = CARD_VIEW_CARD;
     sPickMapsec = MAPSEC_NONE;
     sEncView = FALSE;
     sEncPage = 0;
