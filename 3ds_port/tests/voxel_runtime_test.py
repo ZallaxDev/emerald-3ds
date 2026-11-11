@@ -34,6 +34,8 @@ def main():
 #include <stdlib.h>
 #include <string.h>
 #define VOXEL_REQUESTS_MAX 192u
+#define VOXEL_CHUNK 8
+#define VOXEL_PARTS 4u
 #define VOXEL_STARVE_FRAMES 4u
 #define VOXEL_ATLAS_PAGES 4u
 #define VOXEL_ATLAS_SLOTS 6u
@@ -76,7 +78,7 @@ static bool AtlasPageBorrow(C3D_Tex *tex) { (void)tex; return false; }
 typedef struct { bool draft; void *vram; unsigned audit; } VoxelChunk;
 typedef struct { ChunkSite site; VoxelAtlasSlot *atlas; VoxelChunk *chunk; uint32_t hash;
     bool hashKnown, done; unsigned key, need, waitIndex; } BuildRequest;
-static struct { int group, map, cx, cy; bool border, used; uint32_t seen, progress, noRoomUntil; } sRequestWait[VOXEL_REQUESTS_MAX];
+static struct { int group, map, cx, cy; bool border, used; uint32_t seen, progress, noRoomUntil, fill; } sRequestWait[VOXEL_REQUESTS_MAX];
 static BuildRequest sRequests[VOXEL_REQUESTS_MAX];
 static uint8_t sWaitHead[128], sWaitNext[VOXEL_REQUESTS_MAX];
 #define VOXEL_DRAFT_STARVE_FRAMES 90u
@@ -87,10 +89,17 @@ enum { JOB_GROUND, JOB_TREES, JOB_MODELS, JOB_BORDER, JOB_BORDER_TREES, JOB_SORT
 #define VOXEL_STATIC_SLICE_TRIANGLES 64
 #define VOXEL_SLICE_CAP_MS 5.0f
 static bool sHolesOnly = true, validJob = true;
+static bool sWideView;
+static unsigned sWideHolesLeft;
+static struct { bool active; float lift; } sFly;
+static struct { float targetX, targetZ; } sCamera;
 static struct { bool active, forView, hole, overdue; unsigned waitIndex; ChunkSite site;
     int phase, row, col, models; unsigned buildingFirst;
-    unsigned sortPage, sortScan, sortWrite, terrainCount, terrainFirst[5], staticIndex; uint64_t ticks; } sJob;
-typedef struct { float u, marker; } VoxelVertex;
+    unsigned sortPage, sortScan, sortWrite, sortStep, boxScan, terrainCount, terrainFirst[5], staticIndex;
+    bool sortOpen;
+    struct { bool on; uint16_t end[VOXEL_ATLAS_PAGES][VOXEL_PARTS - 1u]; float box[VOXEL_PARTS][6]; } parts;
+    uint64_t ticks; } sJob;
+typedef struct { float u, marker, x, y, z; } VoxelVertex;
 static VoxelVertex sScratch[6000];
 static bool JobValid(void) { return validJob; }
 static void JobCancel(void) { sJob.active = false; }
@@ -122,7 +131,10 @@ static bool ChunkRoomPossible(unsigned bytes, bool forView) {
         source += function(voxel, signature)
     source += through(voxel, '#define VOXEL_START_COST_MAX_MS', 'static void NoteStartCost(')
     source += through(voxel, 'static unsigned sAheadRoomBytes;', 'static bool AheadRoomNone(')
-    for signature in ['static bool StartNextJob(', 'static bool JobSort(']:
+    source += next(line + '\n' for line in voxel.splitlines() if line.startswith('#define VOXEL_BAND_FULL '))
+    for signature in ['static float SiteReach(', 'static bool StartNextJob(',
+                      'static bool SortSouth(', 'static bool SortEast(', 'static bool JobSortParts(',
+                      'static bool JobSortBoxes(', 'static bool JobSort(']:
         source += function(voxel, signature)
     source += through(voxel, 'static float sPhaseMs[JOB_DONE + 1];', 'static void NotePhaseCost(')
     for signature in ['static C3D_Tex *AtlasTex(', 'static void FreeAtlasTextures(', 'static unsigned CountAllocatedAtlases(', 'static int DrawnRows(', 'static bool AtlasInView(const VoxelAtlasSlot *slot)\n{', 'static bool AllocateAtlasPage(']:
@@ -155,6 +167,11 @@ static void EmitCells(bool trees, int x0, int y0, int x1, int y1) {
 #define VoxelMesh_EmitBorder(b, x0, y0, x1, y1) ((void)(b), EmitCells(false, x0, y0, x1, y1))
 #define VoxelTree_EmitBorder(b, x0, y0, x1, y1) ((void)(b), EmitCells(true, x0, y0, x1, y1))
 #define VoxelBuildings_EmitSome(...) true
+/* This harness emits simple tree cells without lighting or crown cards. */
+static void *sJobCards;
+static unsigned TreeCardsWanted(void) { return 0; }
+static void VoxelTree_NoteCards(void *cards, unsigned count) { assert(!cards && count == 0); }
+static void TreeCrowns(void) {}
 static bool JobPack(void) { return true; }
 '''
     source += r'''
@@ -375,7 +392,7 @@ int main(void) {
     assert(sRequests[0].need == NEED_HOLE && sRequests[1].need == NEED_STALE);
     memset(&sJob, 0, sizeof(sJob)); sJob.terrainCount = 6000;
     for (unsigned t = 0; t < 2000; ++t)
-        for (unsigned v = 0; v < 3; ++v) sScratch[t*3+v] = (VoxelVertex){2.0f*(t%4)+v*0.5f, (float)t};
+        for (unsigned v = 0; v < 3; ++v) sScratch[t*3+v] = (VoxelVertex){.u = 2.0f*(t%4)+v*0.5f, .marker = (float)t};
     unsigned steps = 1; while (!JobSort()) { assert(++steps < 100); }
     assert(steps > 1 && sJob.terrainFirst[4] == 6000);
     bool seen[2000] = {0};
@@ -752,6 +769,8 @@ typedef struct { float dx, dz, strength; uint32_t key; } VoxelSun;
 static VoxelSun gVoxelSun = {0.85f, 0.55f, 1.0f, 0};
 /* A triangle's lit shade: under a sun from the east one for every triangle,
  * from the west each its own, so that a quad's two then share no corner. */
+/* These cache cases keep the shadow quality fixed while moving the sun. */
+static int VoxelLighting_Quality(void) { return 0; }
 static float VoxelLighting_ModelShade(const VoxelVertex *a, const VoxelVertex *b, const VoxelVertex *c, float shade) {
     (void)b; (void)c;
     return gVoxelSun.dx >= 0.0f ? shade * gVoxelSun.dx : shade * 0.5f + a->z * 0.25f;
