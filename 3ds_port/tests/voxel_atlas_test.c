@@ -203,7 +203,7 @@ static void Run(struct AtlasSource *src, unsigned trials, unsigned *blacks)
             entries[Random() % 8] = (uint16_t)((Random() & 0xF000) | 7); /* blank tile */
         memset(sNew, 0x5A, sizeof(sNew));
         memset(sOld, 0x5A, sizeof(sOld));
-        black = ComposeMetatile(src, entries, sNew, slot, 0, NULL);
+        black = ComposeMetatile(src, entries, sNew, slot, 0, NULL, NULL);
         ReferenceCompose(src, entries, sOld, slot);
         assert(memcmp(sNew, sOld, sizeof(sNew)) == 0);
         assert(black == ReferenceBlack(src, entries));
@@ -731,8 +731,8 @@ static void CutPlans(const struct AtlasSource *src)
     {
         memset(plain, 0, sizeof(plain));
         memset(cut, 0, sizeof(cut));
-        ComposeAt(src, entries, plain, 0, 0, 16, 0, NULL);
-        ComposeAt(src, entries, cut, 0, 0, 16, 0, rows);
+        ComposeAt(src, entries, plain, 0, 0, 16, 0, NULL, NULL);
+        ComposeAt(src, entries, cut, 0, 0, 16, 0, rows, NULL);
         plain[CtrVideo_Texel(0, 0, 16)] &= (uint16_t)~1u;
         plain[CtrVideo_Texel(1, 0, 16)] = plain[CtrVideo_Texel(1, 1, 16)];
         assert(memcmp(plain, cut, sizeof(cut)) == 0);

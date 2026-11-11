@@ -38,6 +38,23 @@
 #include "voxel/ctr_voxel.h"
 #include "voxel/voxel_battle.h"
 #include "voxel/voxel_swoop.h"
+#include "voxel/voxel_fly.h"
+#include "3ds_fly_sky.h"
+
+/* The sky scene's supply (3ds_fly_sky.c, a game translation unit): absent
+ * from a build without the game, the scene stays off. */
+__attribute__((weak)) bool CtrFlySky_Enabled(void) { return false; }
+__attribute__((weak)) bool CtrFlySky_MonSprite(uint16_t species, uint32_t personality, bool shiny, CtrSkySprite *out)
+{ (void)species; (void)personality; (void)shiny; (void)out; return false; }
+__attribute__((weak)) bool CtrFlySky_FlyerSprite(CtrSkySprite *out, int8_t *seatX, int8_t *seatY)
+{ (void)out; (void)seatX; (void)seatY; return false; }
+__attribute__((weak)) bool CtrFlySky_RiderSprite(CtrSkySprite *out) { (void)out; return false; }
+__attribute__((weak)) unsigned CtrFlySky_Natives(uint16_t *species, unsigned max) { (void)species; (void)max; return 0; }
+__attribute__((weak)) void CtrFlySky_Release(void) {}
+__attribute__((weak)) void CtrFlySky_Weather(uint8_t *from, uint8_t *to) { *from = *to = CTR_SKY_CLEAR; }
+__attribute__((weak)) void CtrFlySky_Cry(uint16_t species, int8_t pan, uint8_t volume) { (void)species; (void)pan; (void)volume; }
+static bool SkyPuffTexture(void); /* the sky scene's cloud dollops, made at start-up */
+#include "3ds_map_events.h"
 
 #include "video/view.inc"
 
@@ -159,6 +176,7 @@ bool CtrVideo_Init(void)
         sMortonPair[i / 2] = sMorton[i] / 2;
         if ((sMorton[i] & 1) || sMorton[i + 1] != sMorton[i] + 1) sMortonPairs = false;
     }
+    SkyPuffTexture();
     for (unsigned i = 0; i < sizeof(sPalette) / sizeof(sPalette[0]); ++i)
         sTexturePalette[i] = CtrVideo_RGBA5551(sPalette[i]);
     C2D_Prepare();
