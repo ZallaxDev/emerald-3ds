@@ -1,0 +1,29 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: a tap goes on with a field message's last page
+Applies after 0091-fly-enhanced-gate.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/scrcmd.c b/src/scrcmd.c
+--- a/src/scrcmd.c
++++ b/src/scrcmd.c
+@@ -1415,12 +1415,22 @@
+     return FALSE;
+ }
+ 
++#ifdef PLATFORM_3DS
++// menu.c: a tap on the 3DS bottom screen that goes on with a message, as A
++// would (a field message's last page waits here, its others in text.c).
++bool8 CtrMenu_TakeAck(void);
++#endif
++
+ static bool8 WaitForAorBPress(void)
+ {
+     if (JOY_NEW(A_BUTTON))
+         return TRUE;
+     if (JOY_NEW(B_BUTTON))
+         return TRUE;
++#ifdef PLATFORM_3DS
++    if (CtrMenu_TakeAck())
++        return TRUE;
++#endif
+     return FALSE;
+ }
+ 
