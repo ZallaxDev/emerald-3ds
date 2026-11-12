@@ -315,10 +315,12 @@ void VoxelSign_EmitNight(VoxelBuilder *glass, VoxelBuilder *ground,
 {
     if (glass == NULL || inst == NULL || inst->indoor)
         return;
-    EmitWindowLights(ground, inst, x0, y0, x1, y1);
-    if (!LoadMasks())
-        return;
-    for (unsigned index = 0; index < sCount; ++index)
+    /* The lamps first, then the windows' light with what is left of the
+     * ground's reserve: a town of lit houses took it all, and the lamps'
+     * own pools were the ones left out. */
+    bool masks = LoadMasks();
+
+    for (unsigned index = 0; masks && index < sCount; ++index)
     {
         const SignRecord *record = &sIndex[index];
         int xpos = inst->originX + record->x, zpos = inst->originY + record->y;
@@ -348,7 +350,7 @@ void VoxelSign_EmitNight(VoxelBuilder *glass, VoxelBuilder *ground,
             if (left > right)
                 continue;
             if (glass->capacity - glass->count < 12u)
-                return;
+                goto windows;
             float leftX = xpos + left / 16.0f, rightX = xpos + (right + 1) / 16.0f;
             float bottom = (last - (int)row) / 16.0f, top = bottom + 1.0f / 16.0f;
             for (unsigned face = 0; face < 2; ++face)
@@ -363,6 +365,8 @@ void VoxelSign_EmitNight(VoxelBuilder *glass, VoxelBuilder *ground,
         }
         LampGround(ground, inst, xpos + 0.5f, (front + back) * 0.5f);
     }
+windows:
+    EmitWindowLights(ground, inst, x0, y0, x1, y1);
 }
 
 static void PixelUV(const VoxelSignMask *m, unsigned x, unsigned y, float *u, float *v)

@@ -236,7 +236,8 @@ bool CtrVoxel_ClaimPages(void);
 /* SHADOW QUALITY HIGH chosen with the world up, its map still to be made:
  * claimed outside the frame (false while there is no room). */
 bool CtrVoxel_ShadowMapMissing(void);
-bool CtrVoxel_ClaimShadowMap(void);
+bool CtrVoxel_ClaimShadowMap(bool hard);
+void CtrVoxel_DropShadowMap(void);
 /* Bytes used and largest gap of the chunk and building-page arenas. */
 void CtrVoxel_ArenaUse(uint32_t *chunkUsed, uint32_t *chunkLargest, uint32_t *pageUsed, uint32_t *pageLargest);
 /*

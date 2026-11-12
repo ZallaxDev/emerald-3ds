@@ -57,6 +57,8 @@ VoxelVisualShape VoxelWorld_ClassifyTile(int x, int y)
     return VoxelWorld_GetInstanceAt(x, y) ? VOXEL_SHAPE_FLAT : VOXEL_SHAPE_VOID;
 }
 
+/* (never the same twice: the belt keeps nothing from one case to the next) */
+unsigned VoxelWorld_InstanceBuilds(void) { static unsigned builds; return ++builds; }
 int VoxelWorld_BorderMetatile(int x, int y)
 {
     const int pattern[] = {0x1D4, 0x1D5, 0x1DC, 0x1DD};

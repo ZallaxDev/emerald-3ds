@@ -215,7 +215,8 @@ lighting share that direction. Shadows are longer near dawn/dusk and shorter
 at midday. Direct sunlight fades near the horizon and is absent at night,
 while contact shading remains. This is an artistic bounded solar path, not
 an astronomical latitude/season simulation. Warm windows do not cast new
-shadows or illuminate nearby ground.
+shadows; since November 2026 they do light the ground in front of them (see
+"November 2026" below).
 
 For Old 3DS, the sun advances in 15-game-minute steps (7.5 real seconds at
 120X), not a full shadow rebuild each frame. A changed solar key invalidates
@@ -326,6 +327,58 @@ did not supply `gTileset_Dewford`, which the unchanged tree code references.
 The CI repair now supplies that symbol and updates stale tree/settings fixtures;
 the complete staged `make verify` passes. This is not a GPU performance
 measurement; hardware acceptance is the user's report above.
+
+## November 2026: richer hours, lit glass everywhere, the night's veil
+
+Voxel mode only; classic 2D keeps the global colour transitions above. None
+of this has measured Old 3DS frame times yet: it was reviewed in the Azahar
+emulator and on the user's console by eye.
+
+- **Hours.** The cycle has 14 keys instead of four bands. Each gives the sun's
+  tint on what is lit, the sky's on what is shaded and the horizon's on the
+  distance, and how strong the haze, the bloom and the rays are, so dawn and
+  sunset are warm on the lit side and cool in the shade instead of one tint
+  over everything, and the night is deeper. With DAY / NIGHT off every value
+  is neutral and the picture is the one it always was.
+- **Sun rays.** They come from where the sun is: from the east in the
+  morning, overhead at noon, from the west in the evening, tinted by the
+  hour. With DAY / NIGHT off they keep the fixed corner they had.
+- **Windows.** Glass is found by a classifier over each outdoor model's art
+  (`3ds_port/scripts/voxel_windows.py`) instead of a hand-kept list: 53 models
+  have lit windows and glass doors, not 22. The glow is a warmer yellow. Each
+  lit pane also throws a soft pool of light on the ground before it, drawn
+  with the street lamps' pools (`voxel/windowlights.bin`, made with
+  `buildings.bin`; without the file the windows glow and nothing else
+  changes). Buildings drawn as terrain tiles rather than as models (some of
+  Rustboro and Mossdeep, the cable car stations) are not covered yet.
+- **Water.** The low sun's and the moon's glitter on water, a path of light
+  towards the light, shore cells included (`voxel_glitter=0` in
+  `settings.txt` turns it off). Its mesh is rebuilt when the camera crosses
+  a cell with water in view; that cost is not measured on an Old 3DS yet.
+- **The night's veil.** A night lit evenly from edge to edge read as a flat
+  picture. The dark now gathers round the edges of the screen and over the
+  distance at its top, towards a deep blue rather than black, and leaves the
+  ground round the player as the moon lights it; the lamps and lit windows
+  stand out of it. It is one screen-space mesh blended over the world, its
+  strength following the hour (none by day, with DAY / NIGHT off, indoors or
+  in caves), with no texture and no extra target
+  (`voxel_night_veil=0` turns it off).
+- **SHADOW QUALITY HIGH.** The quality is the option's alone: the shadow
+  map's 256 KiB of VRAM are claimed with the world's own, so HIGH no longer
+  falls back to LOW when the world has filled the VRAM. At dawn and dusk a
+  building whose windows are lit takes the map's shadow too: the shadow is
+  kept in the texture combiner's buffer while the glow is mixed in
+  (`voxel_glow_shadows=0` goes back to an unshadowed glowing building), except
+  during a screen fade, which needs the sixth combiner stage.
+- **Sprites.** Visible wild Pokémon cast the same shadows as the other
+  overworld sprites, following the hour's sun.
+
+For console review, on top of the lists above: watch a whole sunset and dawn
+at 120X in a town with many windows (Lilycove, Slateport) in LOW and in HIGH,
+check that the windows' ground light does not show through walls, that the
+night's edges do not hide anything the player needs (signs at the screen's
+sides, the route ahead at the top), and compare frame pacing with
+`voxel_glitter` and `voxel_night_veil` on and off.
 
 ## Automated validation
 

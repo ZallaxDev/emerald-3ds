@@ -1273,14 +1273,43 @@ static int EdgeFillAt(int worldX, int worldY)
     return fill.metatile;
 }
 
-/* The edge fills' metatiles for this map, kept in its atlas. */
-static void MarkEdgeFills(const VoxelMapInstance *inst, uint8_t *used)
+/* The edge fills' metatiles for this map under `limit`, kept in the atlas. */
+static void MarkEdgeFills(const VoxelMapInstance *inst, uint8_t *used, int limit)
 {
     int metatile;
 
     for (unsigned i = 0; VoxelRelief_EdgeFills((unsigned)inst->layoutId, i, &metatile); ++i)
-        if (metatile >= 0 && metatile < NUM_METATILES_TOTAL)
+        if (metatile >= 0 && metatile < limit)
             used[metatile] = 2;
+}
+
+/*
+ * What the belt draws that is no cell's and no border's: the fills past the
+ * edges and the cliffs' face, the current map's and those of every map the
+ * belt can go on from (VoxelMesh_BeltFill, BeltFaceUV). The belt is drawn
+ * with the current map's atlas alone, so only for that atlas, and of another
+ * map only what these tilesets hold: the same primary's metatiles, and the
+ * secondary's when it is the same - exactly what those two accept.
+ */
+static void MarkBelt(const void *primaryTileset, const void *secondaryTileset, uint8_t *used)
+{
+    if (sInstanceCount == 0 || sInstances[0].indoor
+     || sInstances[0].primaryTileset != primaryTileset
+     || sInstances[0].secondaryTileset != secondaryTileset)
+        return;
+    for (unsigned i = 0; i < sInstanceCount; ++i)
+    {
+        const VoxelMapInstance *inst = &sInstances[i];
+        int limit, face;
+
+        if (inst->indoor || inst->primaryTileset != primaryTileset)
+            continue;
+        limit = inst->secondaryTileset == secondaryTileset ? NUM_METATILES_TOTAL : NUM_METATILES_IN_PRIMARY;
+        MarkEdgeFills(inst, used, limit);
+        face = VoxelRelief_FaceTile(inst);
+        if (face >= 0 && face < limit && used[face] < 1)
+            used[face] = 1;
+    }
 }
 
 /* The cut records' grounds and walls, in the window MarkUsedMetatiles reads
@@ -1312,6 +1341,7 @@ static void MarkCut(int x, int y, int ground, int wall, void *ctx)
 void VoxelWorld_MarkUsedMetatiles(const void *primaryTileset, const void *secondaryTileset,
                                   uint8_t *used)
 {
+    MarkBelt(primaryTileset, secondaryTileset, used);
     for (unsigned i = 0; i < sInstanceCount; ++i)
     {
         const VoxelMapInstance *inst = &sInstances[i];
@@ -1332,17 +1362,6 @@ void VoxelWorld_MarkUsedMetatiles(const void *primaryTileset, const void *second
                 x1 = sMaterialView[2] + sMaterialMargin - inst->originX;
             if (y1 > sMaterialView[3] + sMaterialMargin - inst->originY)
                 y1 = sMaterialView[3] + sMaterialMargin - inst->originY;
-        }
-        /* (a neighbour's fills are drawn from this side of the crossing
-         * too, and its cliff faces a step of the belt past it:
-         * VoxelMesh_BeltFill, BeltFaceUV) */
-        if (!inst->indoor)
-        {
-            int face = VoxelRelief_FaceTile(inst);
-
-            MarkEdgeFills(inst, used);
-            if (face >= 0 && face < NUM_METATILES_TOTAL && used[face] < 1)
-                used[face] = 1;
         }
         const uint16_t *map = i == 0 ? gBackupMapLayout.map : Voxel_ResolveMap(layout);
         if (map != NULL)

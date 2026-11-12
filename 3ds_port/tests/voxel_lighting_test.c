@@ -132,6 +132,8 @@ uint32_t VoxelWorld_BlockHash(int x0, int z0, int x1, int z1)
             hash = (hash ^ (uint32_t)VoxelWorld_GetMetatileId(x, z)) * 16777619u;
     return hash;
 }
+/* (never the same twice: the belt keeps nothing from one case to the next) */
+unsigned VoxelWorld_InstanceBuilds(void) { static unsigned builds; return ++builds; }
 int VoxelWorld_BorderMetatile(int x, int z) { (void)x; (void)z; return -1; }
 bool VoxelWorld_BorderIsWater(int x, int z) { (void)x; (void)z; return false; }
 void VoxelWorld_GetPlayerWorldCoords(float *x, float *z) { *x = *z = 0; }

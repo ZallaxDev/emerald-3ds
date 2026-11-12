@@ -4642,7 +4642,7 @@ def write_window_lights(models, found, path):
         for (x0, x1, z, low) in getattr(models[index], "spill", ()):
             depth = int(min(28, max(14, 8 + 0.6 * (x1 - x0))))
             out.append((lid, int(round(px * 16 + x0)), int(round(px * 16 + x1)),
-                        int(round(py * 16 + z)), depth, int(low), 0))
+                        int(round(py * 16 + z)), depth, max(0, min(255, int(low))), 0))
     out.sort(key=lambda r: (r[0], r[3], r[1]))
     with open(path, "wb") as f:
         f.write(b"VXW1" + struct.pack("<I", len(out)))

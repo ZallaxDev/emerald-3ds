@@ -3407,8 +3407,10 @@ static float BeltEdgeLevel(const VoxelMapInstance *inst, int ex, int ey)
 /*
  * The answers, kept: a belt cell is asked for its metatile, its level and
  * its faces a dozen times as its square is built, and its neighbours ask
- * again. Good for as long as the same maps stand in the same place - the
- * current map, where it is, and how many stand round it.
+ * again - the owner, its edge cell, and the owner's fill there (a search of
+ * every fill each time). Good until the maps are placed again
+ * (VoxelWorld_InstanceBuilds): the owner, the levels of the edges and the
+ * fills all follow from which maps stand where.
  */
 #define VOXEL_BELT_MEMO 256u
 
@@ -3417,35 +3419,38 @@ typedef struct
     int x, y, edgeX, edgeY;
     const VoxelMapInstance *owner;
     uint32_t stamp;
+    bool hasFill;
+    VoxelEdgeFill fill;
 } BeltMemo;
 static BeltMemo sBeltMemo[VOXEL_BELT_MEMO];
 
 static const VoxelMapInstance *BeltOwnerFind(int x, int y, int *edgeX, int *edgeY);
 
-const VoxelMapInstance *VoxelMesh_BeltOwner(int x, int y, int *edgeX, int *edgeY)
+/* The cell's entry, found now if it was not: NULL with no map at all. */
+static const BeltMemo *BeltLookup(int x, int y)
 {
-    const VoxelMapInstance *ring = VoxelWorld_Instance(0);
     BeltMemo *memo = &sBeltMemo[((unsigned)x * 31u + (unsigned)y) % VOXEL_BELT_MEMO];
-    uint32_t stamp;
-    unsigned count = 1;
-
-    if (ring == NULL)
-        return NULL;
-    while (VoxelWorld_Instance(count) != NULL)
-        ++count;
     /* never 0, the empty slot's */
-    stamp = (((uint32_t)ring->layoutId * 2654435761u) ^ ((uint32_t)ring->originX * 40503u)
-           ^ ((uint32_t)ring->originY * 69069u) ^ (count << 28)) | 1u;
+    uint32_t stamp = (uint32_t)VoxelWorld_InstanceBuilds() << 1 | 1u;
+
+    if (VoxelWorld_Instance(0) == NULL)
+        return NULL;
     if (memo->stamp == stamp && memo->x == x && memo->y == y)
-    {
-        *edgeX = memo->edgeX;
-        *edgeY = memo->edgeY;
-        return memo->owner;
-    }
+        return memo;
     memo->owner = BeltOwnerFind(x, y, &memo->edgeX, &memo->edgeY);
+    memo->hasFill = memo->owner != NULL && VoxelRelief_EdgeFillAt(memo->owner, x, y, &memo->fill);
     memo->x = x;
     memo->y = y;
     memo->stamp = stamp;
+    return memo;
+}
+
+const VoxelMapInstance *VoxelMesh_BeltOwner(int x, int y, int *edgeX, int *edgeY)
+{
+    const BeltMemo *memo = BeltLookup(x, y);
+
+    if (memo == NULL)
+        return NULL;
     *edgeX = memo->edgeX;
     *edgeY = memo->edgeY;
     return memo->owner;
@@ -3545,13 +3550,12 @@ static float BeltRebase(const VoxelMapInstance *owner)
 bool VoxelMesh_BeltFill(int x, int y, VoxelEdgeFill *fill)
 {
     const VoxelMapInstance *ring = VoxelWorld_Instance(0), *owner;
-    int ex, ey;
+    const BeltMemo *memo;
 
-    if (ring == NULL || ring->indoor)
+    if (ring == NULL || ring->indoor || (memo = BeltLookup(x, y)) == NULL || !memo->hasFill)
         return false;
-    owner = VoxelMesh_BeltOwner(x, y, &ex, &ey);
-    if (owner == NULL || !VoxelRelief_EdgeFillAt(owner, x, y, fill))
-        return false;
+    owner = memo->owner;
+    *fill = memo->fill;
     if (owner == ring)
         return true;
     return owner->primaryTileset == ring->primaryTileset
@@ -3761,11 +3765,12 @@ static void EmitBorderSteps(VoxelBuilder *builder, int x, int y, float level, fl
     static const int kDir[3][2] = { {0, 1}, {1, 0}, {-1, 0} };
     float u0, v0, u1, v1, other, otherShift;
     float fu0, fv0, fu1, fv1;
+    /* the faces' drawing, looked up at the first face: most cells have none */
+    bool faced = false;
 
     if (!MetatileUV(builder, VoxelWorld_BorderMetatile(x, y), &u0, &v0, &u1, &v1))
         return;
-    if (!BeltFaceUV(builder, x, y, &fu0, &fv0, &fu1, &fv1))
-        fu0 = u0, fv0 = v0, fu1 = u1, fv1 = v1;
+    fu0 = u0, fv0 = v0, fu1 = u1, fv1 = v1;
     for (int d = 0; d < 3; ++d)
     {
         int nx = x + kDir[d][0], ny = y + kDir[d][1];
@@ -3777,6 +3782,12 @@ static void EmitBorderSteps(VoxelBuilder *builder, int x, int y, float level, fl
             VoxelMesh_BorderLevel(nx, ny, &other, &otherShift);
         if (other >= level - 0.05f)
             continue;
+        if (!faced)
+        {
+            faced = true;
+            if (!BeltFaceUV(builder, x, y, &fu0, &fv0, &fu1, &fv1))
+                fu0 = u0, fv0 = v0, fu1 = u1, fv1 = v1;
+        }
         if (d == 0)
             VoxelMesh_South(builder, (float)x, (float)y + shift, other, level, 0.0f, fu0, fv0, fu1, fv1);
         else if (d == 1)
@@ -3795,6 +3806,10 @@ static void EmitBorderSteps(VoxelBuilder *builder, int x, int y, float level, fl
             VoxelMesh_BorderLevel(x, y - 1, &other, &otherShift);
             low = other + (float)VOXEL_BORDER_COURSES;
         }
+        /* (only where EmitBorderNorth draws a wall: its own test) */
+        if (!faced && level + (float)VOXEL_BORDER_COURSES - low >= 1.0f / 16.0f && shift > otherShift
+         && !BeltFaceUV(builder, x, y, &fu0, &fv0, &fu1, &fv1))
+            fu0 = u0, fv0 = v0, fu1 = u1, fv1 = v1;
         EmitBorderNorth(builder, x, y, low, otherShift, level + (float)VOXEL_BORDER_COURSES, shift,
                         u0, v0, u1, v1, fu0, fv0, fu1, fv1);
     }

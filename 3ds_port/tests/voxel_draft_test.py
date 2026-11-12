@@ -84,6 +84,8 @@ typedef struct { bool valid; uint32_t generation, extension; bool extendPending;
     const void *primaryTileset, *secondaryTileset; } VoxelAtlasSlot;
 typedef struct { float x, y, z, w; } VoxelPlane;
 typedef struct { ChunkSite site; unsigned key, need, waitIndex; } BuildRequest;
+#define VOXEL_PARTS 4u
+typedef struct { bool on; uint16_t end[VOXEL_ATLAS_PAGES][VOXEL_PARTS - 1u]; float box[VOXEL_PARTS][6]; } VoxelChunkParts;
 typedef struct {
     bool used, border;
     int mapGroup, mapNum, cx, cy;
@@ -94,6 +96,8 @@ typedef struct {
     VoxelAtlasSlot *atlas; uint32_t atlasGeneration;
     VoxelGpuVertex *vram;
     unsigned bytes, count, terrainCount, terrainFirst[VOXEL_ATLAS_PAGES + 1u], buildingFirst;
+    VoxelChunkParts parts;
+    unsigned treeShadow, treeCrowns;
     int buildingPage;
     uint32_t stamp, viewStamp;
     int gx0, gz0, gx1, gz1; float gy0, gy1, buildMs;

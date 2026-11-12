@@ -64,6 +64,10 @@ int VoxelTree_GroundMetatile(const void *secondaryTileset, int metatileId)
 bool VoxelRelief_IsDrawn(const VoxelMapInstance *inst) { (void)inst; return false; }
 bool VoxelRelief_EdgeFillAt(const VoxelMapInstance *ring, int worldX, int worldY, VoxelEdgeFill *fill)
 { (void)ring; (void)worldX; (void)worldY; (void)fill; return false; }
+/* (no fills and no cliff face here: the belt's, voxel_mesh_builder.c) */
+bool VoxelMesh_BeltFill(int x, int y, VoxelEdgeFill *fill)
+{ (void)x; (void)y; (void)fill; return false; }
+int VoxelRelief_FaceTile(const VoxelMapInstance *inst) { (void)inst; return -1; }
 bool VoxelRelief_EdgeFills(unsigned layoutId, unsigned i, int *metatile)
 { (void)layoutId; (void)i; (void)metatile; return false; }
 /* The row's seam between maps 3 and 4 asks map 4 a level up (Hoenn's loops

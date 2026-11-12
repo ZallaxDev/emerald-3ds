@@ -76,7 +76,7 @@ static bool AtlasPageBorrow(C3D_Tex *tex) { (void)tex; return false; }
 typedef struct { bool draft; void *vram; unsigned audit; } VoxelChunk;
 typedef struct { ChunkSite site; VoxelAtlasSlot *atlas; VoxelChunk *chunk; uint32_t hash;
     bool hashKnown, done; unsigned key, need, waitIndex; } BuildRequest;
-static struct { int group, map, cx, cy; bool border, used; uint32_t seen, progress, noRoomUntil; } sRequestWait[VOXEL_REQUESTS_MAX];
+static struct { int group, map, cx, cy; bool border, used; uint32_t seen, progress, noRoomUntil, fill, fillEpoch, fillExtension; } sRequestWait[VOXEL_REQUESTS_MAX];
 static BuildRequest sRequests[VOXEL_REQUESTS_MAX];
 static uint8_t sWaitHead[128], sWaitNext[VOXEL_REQUESTS_MAX];
 #define VOXEL_DRAFT_STARVE_FRAMES 90u
@@ -92,6 +92,22 @@ static struct { bool active, forView, hole, overdue; unsigned waitIndex; ChunkSi
     unsigned sortPage, sortScan, sortWrite, terrainCount, terrainFirst[5], staticIndex; uint64_t ticks; } sJob;
 typedef struct { float u, marker; } VoxelVertex;
 static VoxelVertex sScratch[6000];
+/* Not the wide view, no Fly cinematic: the draft ring and its band never hold a build back. */
+#define VOXEL_BAND_FULL 12.0f
+static bool sWideView;
+static unsigned sWideHolesLeft;
+static struct { bool active; float lift; } sFly;
+static float SiteReach(const ChunkSite *site) { (void)site; return 0.0f; }
+/* The crowns' cards (HIGH's shadows) and the sort's parts and boxes are not under test. */
+typedef struct { float x; } VoxelTreeCard;
+static VoxelTreeCard sJobCards[1];
+static unsigned TreeCardsWanted(void) { return 0; }
+static void VoxelTree_NoteCards(const VoxelTreeCard *cards, unsigned room) { (void)cards; (void)room; }
+static void TreeCrowns(void) {}
+static bool JobSortParts(unsigned *budget) { (void)budget; return true; }
+static bool JobSortBoxes(unsigned *budget) { (void)budget; return true; }
+/* Flat maps, no lean: a map is drawn at its base. */
+static float DrawnBase(float base) { return base; }
 static bool JobValid(void) { return validJob; }
 static void JobCancel(void) { sJob.active = false; }
 static bool ColdTake(const ChunkSite *s, uint32_t h, VoxelAtlasSlot *a) { (void)s; (void)h; (void)a; return false; }
@@ -756,6 +772,8 @@ static float VoxelLighting_ModelShade(const VoxelVertex *a, const VoxelVertex *b
     (void)b; (void)c;
     return gVoxelSun.dx >= 0.0f ? shade * gVoxelSun.dx : shade * 0.5f + a->z * 0.25f;
 }
+/* SHADOW QUALITY is not under test: one quality throughout. */
+static int VoxelLighting_Quality(void) { return 0; }
 /* Linear memory: heap blocks, none while `linearFull`. */
 static bool linearFull;
 static unsigned linearLive, linearFrees;

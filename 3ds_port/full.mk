@@ -551,6 +551,7 @@ romfs/voxel/buildings.bin: scripts/gen_voxel_buildings.py scripts/voxel_building
 # by the same run.
 romfs/voxel/windowlights.bin: romfs/voxel/buildings.bin
 	@test -f $@ || { rm -f $<; $(MAKE) $<; }
+	@touch $@
 
 .PHONY: verify-voxel-buildings
 verify-voxel-buildings:

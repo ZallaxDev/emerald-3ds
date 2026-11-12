@@ -93,6 +93,7 @@ typedef struct
     unsigned glowLoaded;
     uint32_t glowUsed, glowRetry, glowDropped;
     bool glowDropping;
+    bool wiped, glowWiped;
     uint64_t requested;
 } BuildingPageSlot;
 typedef struct { C3D_Tex tex, page1; uint32_t stamp; } VoxelAtlasSlot;

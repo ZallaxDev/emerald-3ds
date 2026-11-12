@@ -356,7 +356,18 @@ void CtrDayNight_Update(void)
     sValid = true;
     if (enabled && CtrGame_IsOutdoor())
     {
-        sLight = CtrDayNight_At(sClock.timeMs);
+        /* Asked several times a frame (the video, the berries, the clock on
+         * the bottom screen) and the clock moves once a second at 1X: the
+         * same instant's light is the one worked out for it. */
+        static unsigned sLightMs = ~0u;
+        static CtrDayNightLight sLightAt;
+
+        if (sLightMs != sClock.timeMs)
+        {
+            sLightAt = CtrDayNight_At(sClock.timeMs);
+            sLightMs = sClock.timeMs;
+        }
+        sLight = sLightAt;
         sSun = previousSun.key == SunKey(sClock.timeMs)
              ? previousSun : CtrDayNight_SunAt(sClock.timeMs);
     }
