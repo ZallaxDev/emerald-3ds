@@ -99,6 +99,8 @@ def reject_unsupported_rom(sha1: str) -> None:
 # Keep the fingerprint mapping used by the builder and staging tools.
 ROM_PROFILES = {profile.code: profile.sha1 for profile in SUPPORTED_PROFILES}
 ROM_SIZE = 16 * 1024 * 1024
+# Pokémon Pinball: Ruby & Sapphire GBA header codes (US, Japan, Europe).
+PINBALL_CODES = frozenset({"BPPE", "BPPJ", "BPPP"})
 KNOWN_CODES = {
     **{profile.code: profile.name for profile in SUPPORTED_PROFILES},
     "AXVE": "Pokemon Ruby",
@@ -188,6 +190,9 @@ def check_rom_bytes(data: bytes, source: Path, supported: tuple[str, ...] | None
     if supported is None:
         supported = tuple(ROM_PROFILES.values())
     if sha1 not in supported:
+        if code in PINBALL_CODES:
+            raise BuilderError("You were close! But this is Pokémon Pinball: Ruby & Sapphire. "
+                               "Please upload a valid Pokémon Emerald ROM.", code="rom_wrong_game")
         codes = [c for c, s in ROM_PROFILES.items() if s in supported] or ["BPEE"]
         names = " or ".join(KNOWN_CODES[c] for c in codes)
         what = KNOWN_CODES.get(code)
