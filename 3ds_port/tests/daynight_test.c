@@ -80,17 +80,23 @@ static void ClockTests(void)
 
 static void LightTests(void)
 {
-    const unsigned boundaries[] = {0, 120, 240, 480, 600, 900, 1020, 1080, 1200, 1440};
+    const unsigned boundaries[] = {0, 150, 255, 315, 390, 480, 600, 900, 990, 1050, 1110, 1155, 1200, 1290};
     CtrDayNightLight day = CtrDayNight_At(12 * 3600000), night = CtrDayNight_At(0);
+    CtrDayNightLight neutral = CtrDayNight_At(10 * 3600000);
 
-    Near(day.rgb[0], 1.0f);
-    Near(day.rgb[1], 1.0f);
-    Near(day.rgb[2], 1.0f);
-    Near(day.daylight, 1.0f);
+    for (unsigned channel = 0; channel < 3; ++channel)
+    {
+        /* Noon is the original look, exactly, in every part of it. */
+        assert(day.rgb[channel] == 1.0f && day.sun[channel] == 1.0f);
+        assert(day.shade[channel] == 1.0f && day.haze[channel] == 1.0f);
+        assert(day.rayRgb[channel] == 1.0f);
+    }
+    assert(day.daylight == 1.0f && day.glow == 0.0f);
+    assert(day.hazeAmount == 1.0f && day.bloom == 1.0f);
+    assert(neutral.rgb[0] == 1.0f && neutral.daylight == 1.0f);
     Near(night.daylight, 0.0f);
-    Near(day.glow, 0.0f);
     Near(night.glow, 1.0f);
-    assert(night.rgb[2] > night.rgb[0]);
+    assert(night.rgb[2] > night.rgb[0] && night.rays == 0.0f);
     for (unsigned index = 0; index < sizeof(boundaries) / sizeof(boundaries[0]); ++index)
     {
         unsigned time = boundaries[index] * 60000;
@@ -98,30 +104,83 @@ static void LightTests(void)
         CtrDayNightLight after = CtrDayNight_At(time);
 
         for (unsigned channel = 0; channel < 3; ++channel)
+        {
             Near(before.rgb[channel], after.rgb[channel]);
+            Near(before.sun[channel], after.sun[channel]);
+            Near(before.shade[channel], after.shade[channel]);
+        }
         Near(before.daylight, after.daylight);
         Near(before.glow, after.glow);
-        CtrDayNightLight ahead = CtrDayNight_At(time + 1000);
-        CtrDayNightLight behind = CtrDayNight_At(time + CTR_DAYNIGHT_DAY_MS - 1000);
+    }
+    /* The day closes on itself: midnight has no seam, in value or slope. */
+    for (unsigned channel = 0; channel < 3; ++channel)
+    {
+        CtrDayNightLight behind = CtrDayNight_At(CTR_DAYNIGHT_DAY_MS - 60000);
+        CtrDayNightLight at = CtrDayNight_At(0), ahead = CtrDayNight_At(60000);
 
-        for (unsigned channel = 0; channel < 3; ++channel)
-            assert(fabsf(ahead.rgb[channel] - behind.rgb[channel]) < 0.000001f);
+        assert(fabsf((ahead.sun[channel] - at.sun[channel]) - (at.sun[channel] - behind.sun[channel])) < 0.01f);
     }
     for (unsigned minute = 0; minute < 1440; ++minute)
     {
         CtrDayNightLight light = CtrDayNight_At(minute * 60000);
+        CtrDayNightLight next = CtrDayNight_At((minute + 1) * 60000);
+        float lum;
 
         for (unsigned channel = 0; channel < 3; ++channel)
+        {
             assert(light.rgb[channel] > 0 && light.rgb[channel] <= 1);
+            /* The sun's tint stays under the ceiling the 1.30 texture saturation allows. */
+            assert(light.sun[channel] > 0 && light.sun[channel] <= 1.04f + 0.0001f);
+            assert(light.shade[channel] > 0 && light.shade[channel] <= 1.04f + 0.0001f);
+            assert(light.haze[channel] >= 0 && isfinite(light.haze[channel]));
+            assert(light.rayRgb[channel] > 0 && light.rayRgb[channel] <= 1);
+            /* No visible step at 120X (a game minute is half a real second). */
+            assert(fabsf(next.sun[channel] - light.sun[channel]) < 0.02f);
+            assert(fabsf(next.shade[channel] - light.shade[channel]) < 0.02f);
+            assert(fabsf(next.rgb[channel] - light.rgb[channel]) < 0.02f);
+            assert(fabsf(next.haze[channel] - light.haze[channel]) < 0.25f);
+        }
         assert(light.daylight >= 0 && light.daylight <= 1);
         assert(light.glow >= 0 && light.glow <= 1);
+        assert(fabsf(next.glow - light.glow) < 0.02f && fabsf(next.daylight - light.daylight) < 0.02f);
+        assert(light.rays >= 0 && light.rays <= 2.0f && fabsf(next.rays - light.rays) < 0.05f);
+        assert(light.hazeAmount >= 1.0f && light.bloom >= 1.0f);
+        /* obj.inc tints sprites when daylight is not 1, tiles.inc the world when rgb is not. */
+        if (light.rgb[0] != 1.0f || light.rgb[1] != 1.0f || light.rgb[2] != 1.0f)
+            assert(light.daylight != 1.0f);
+        /* Night stays readable: the 2D tint's luminance never goes under the floor. */
+        lum = 0.299f * light.rgb[0] + 0.587f * light.rgb[1] + 0.114f * light.rgb[2];
+        assert(lum >= 0.50f);
+        lum = 0.299f * light.shade[0] + 0.587f * light.shade[1] + 0.114f * light.shade[2];
+        assert(lum >= 0.50f);
+        /* The sun's rays come from the top edge, leaning the way the light travels. */
+        assert(light.rayX > -0.1f && light.rayX < 1.1f && light.rayWidth >= 1.0f && light.rayLength > 0.0f);
     }
-    CtrDayNightLight early = CtrDayNight_At(121 * 60000);
-    CtrDayNightLight middle = CtrDayNight_At(180 * 60000);
+    /* Lamps come on before the dark and go off after dawn begins. */
+    assert(CtrDayNight_At(17 * 3600000u + 30 * 60000u).glow > 0.0f);
+    assert(CtrDayNight_At(19 * 3600000u).glow > 0.5f);
+    assert(CtrDayNight_At(4 * 3600000u).glow == 1.0f);
+    assert(CtrDayNight_At(5 * 3600000u).glow > 0.5f);
+    assert(CtrDayNight_At(8 * 3600000u).glow == 0.0f);
+    /* Golden hour is warmer than noon and its shadows cooler than its light. */
+    CtrDayNightLight golden = CtrDayNight_At(17 * 3600000u + 30 * 60000u);
 
-    assert(early.rgb[0] - night.rgb[0] < 0.001f);
-    Near(middle.rgb[0], (night.rgb[0] + 0.96f) * 0.5f);
-    Near(middle.glow, 0.5f);
+    assert(golden.sun[0] > golden.sun[2] + 0.3f && golden.shade[2] > golden.shade[0]);
+    assert(golden.rays > day.rays);
+    /* Sunrise light is a different colour from sunset's, and the rays' source
+     * moves from the right (morning, sun in the east) to the left (evening). */
+    CtrDayNightLight seven = CtrDayNight_At(7 * 3600000u), noon = CtrDayNight_At(12 * 3600000u);
+    CtrDayNightLight seventeen = CtrDayNight_At(17 * 3600000u);
+
+    assert(seven.rayX > 0.8f && seven.rayAngle < -30.0f);
+    Near(noon.rayX, 0.5f);
+    Near(noon.rayAngle, 0.0f);
+    assert(noon.rayWidth > seven.rayWidth);
+    assert(seventeen.rayX < 0.2f && seventeen.rayAngle > 30.0f);
+    for (unsigned minute = 241; minute < 1200; ++minute)
+        assert(CtrDayNight_At(minute * 60000u).rayX < CtrDayNight_At((minute - 1) * 60000u).rayX);
+    /* Rays gone with the sun. */
+    assert(CtrDayNight_At(21 * 3600000u).rays == 0.0f && CtrDayNight_At(2 * 3600000u).rays == 0.0f);
 }
 
 static void MoonlightTests(void)
@@ -131,10 +190,10 @@ static void MoonlightTests(void)
     const float white[3] = {1.0f, 1.0f, 1.0f};
     CtrDayNightBlend moon = CtrDayNight_Moonlight(&night, 0.0f, black);
 
-    Near(moon.amount, 0.06f);
+    Near(moon.amount, 0.10f);
     assert(moon.rgb[2] > moon.rgb[1] && moon.rgb[1] > moon.rgb[0]);
     Near(CtrDayNight_Moonlight(&day, 0.0f, black).amount, 0.0f);
-    const float originalNight[3] = {0.55f, 0.62f, 0.82f};
+    const float originalNight[3] = {0.432f, 0.54f, 0.828f}; /* the night tint under the moon blend */
     for (unsigned colour = 0; colour < 32768u; ++colour)
         for (unsigned channel = 0; channel < 3; ++channel)
         {
@@ -151,7 +210,7 @@ static void MoonlightTests(void)
         CtrDayNightBlend blend = CtrDayNight_Moonlight(&light, 0.0f, black);
         CtrDayNightBlend before = CtrDayNight_Moonlight(&previous, 0.0f, black);
 
-        assert(blend.amount >= 0.0f && blend.amount <= 0.06f);
+        assert(blend.amount >= 0.0f && blend.amount <= 0.10f);
         Near(before.amount, blend.amount);
         for (unsigned step = 0; step <= 10u; ++step)
             for (unsigned target = 0; target < 2u; ++target)
@@ -218,7 +277,7 @@ static void RuntimeTests(void)
     sEnabled = 1;
     sLocal = 0;
     CtrDayNight_Update();
-    Near(CtrDayNight_Get()->rgb[0], 0.66f);
+    Near(CtrDayNight_Get()->rgb[0], 0.48f);
     assert(CtrDayNight_GetSun()->key == 1 && CtrDayNight_GetSun()->strength == 0);
     sOutdoor = false;
     CtrDayNight_Update();
@@ -453,7 +512,7 @@ static void SyncRuntimeTests(void)
     sLocal = 23u * 3600u + 59u * 60u + 30u;
     assert(CtrDayNight_SyncToConsole());
     assert(sSpeed == 0 && sSetCalls == calls + 1);
-    Near(CtrDayNight_Get()->rgb[0], 0.66f);
+    Near(CtrDayNight_Get()->rgb[0], 0.48f);
     assert(CtrDayNight_Snapshot(&snapshot) && !snapshot.shifted);
     assert(snapshot.timeMs == 86370000u && snapshot.berryBonusMs == 3808000u);
 

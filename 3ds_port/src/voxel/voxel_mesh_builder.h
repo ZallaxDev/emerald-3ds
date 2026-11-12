@@ -14,6 +14,7 @@
 #include <stdint.h>
 
 #include "voxel_world.h"
+#include "voxel_relief.h"
 
 typedef struct
 {
@@ -253,8 +254,17 @@ void VoxelMesh_DraftCell(VoxelBuilder *b, const VoxelMapInstance *inst, int x, i
 void VoxelMesh_EmitBorder(VoxelBuilder *builder, int x0, int y0, int x1, int y1);
 
 /* The level a cell of the belt of land stands at, in tiles over instance 0's
- * base, and its depth: its map edge's (false, both 0: at the base). */
+ * base, and its depth: the edge's of the map it goes on from, its owner
+ * (false, both 0: at the base). */
 bool VoxelMesh_BorderLevel(int x, int y, float *level, float *shift);
+
+/* The map a cell of the belt goes on from, the outdoor one nearest it, and
+ * that map's edge cell nearest the cell; NULL when there is none. */
+const VoxelMapInstance *VoxelMesh_BeltOwner(int x, int y, int *edgeX, int *edgeY);
+
+/* The fill its owner's fixes put at a cell of the belt, where the current
+ * map's atlas can draw it (voxel_relief.h, VoxelEdgeFill). */
+bool VoxelMesh_BeltFill(int x, int y, VoxelEdgeFill *fill);
 
 /* settings.txt voxel_border_edge: the belt at its edge's level (default) or
  * at the base, as it was. */

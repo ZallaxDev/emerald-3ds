@@ -40,6 +40,7 @@ import voxel_fortree  # noqa: E402
 import voxel_props  # noqa: E402
 import voxel_relief_fixes  # noqa: E402
 import voxel_night
+import voxel_windows  # noqa: E402
 
 PORT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # A placement whose cells keep their own metatile under the model: the
@@ -2806,16 +2807,19 @@ def live_after(model, art, tris):
     model.live = out
 
 
-def glass_after(model, art, tris, mask):
+def glass_after(model, art, tris, mask, tolerant=False):
     """Where compaction moved a model's window glass: by the whole texels
     the faces reading it moved, as live_after. `art`, `tris`, `mask` (an L
     image over `art`): before it. None when two faces would read one texel
-    with different glass."""
+    with different glass - or, `tolerant` (glass the classifier found, not
+    an authored pane), that texel stays dark and the rest moves: a drawing
+    the compaction shrinks must not be kept as drawn for a texel (a Battle
+    Frontier page would no longer fit)."""
     W, H = art.size
     out = Image.new("L", model.art.size)
     NW, NH = out.size
     opx, gpx = out.load(), mask.load()
-    wrote = {}
+    wrote, dark = {}, set()
     for (tri, _, _), (moved, _, _) in zip(tris, model.mesh.tris):
         du = int(round(moved[0][3] - tri[0][3]))
         dv = int(round(moved[0][4] - tri[0][4]))
@@ -2823,8 +2827,12 @@ def glass_after(model, art, tris, mask):
             x, y = u + du, v + dv
             if 0 <= x < NW and 0 <= y < NH:
                 if wrote.setdefault((x, y), gpx[u, v]) != gpx[u, v]:
-                    return None
+                    if not tolerant:
+                        return None
+                    dark.add((x, y))
                 opx[x, y] = gpx[u, v]
+    for xy in dark:
+        opx[xy] = 0
     return out
 
 
@@ -4408,9 +4416,18 @@ def export(models, path):
     # A drawing's window glass (voxel_night) moves with the faces reading it:
     # model.glass, an L image over the drawing as exported (None: no glass).
     glass, as_drawn = 0, []
-    for m in models:
-        mask = voxel_night.building_mask(m.art, m.name)
+    outdoors = voxel_night.outdoor_layouts()
+    outdoor_models = {rec[1] for rec in found if rec[6] in outdoors}
+    for index, m in enumerate(models):
+        # glass is only lit outdoors (CtrGame_IsOutdoor): a drawing that
+        # stands in no outdoor map keeps no mask (a page a mask costs VRAM)
+        if index in outdoor_models:
+            mask = voxel_night.building_mask(m.art, m.name, m.mesh.tris)
+        else:
+            mask = bytearray(m.art.width * m.art.height)
         m.glass = None
+        # where the lit glass throws its light on the ground (windowlights.bin)
+        m.spill = voxel_windows.facade_spans(mask, m.mesh.tris, m.art.size) if any(mask) else []
         kept = (m.art, m.mesh.tris, getattr(m, "live", None))
         before = (m.art.convert("RGBA"), list(m.mesh.tris))
         compact_rows(m)
@@ -4420,7 +4437,7 @@ def export(models, path):
             live_after(m, *before)
         if any(mask):
             mask = Image.frombytes("L", before[0].size, bytes(mask))
-            moved = glass_after(m, *before, mask)
+            moved = glass_after(m, *before, mask, tolerant=m.name.removesuffix("_bare") not in voxel_night.NIGHT_WINDOWS)
             if moved is None:
                 # two faces read one texel with and without glass: the
                 # drawing stays as it was drawn
@@ -4599,11 +4616,39 @@ def export(models, path):
     blob += anim_table(anims, len(blob))
     os.makedirs(os.path.dirname(path), exist_ok=True)
     open(path, "wb").write(blob)
+    write_window_lights(models, found, os.path.join(os.path.dirname(path), "windowlights.bin"))
     print("voxel buildings: %d models, %d pages, %d placements, %d vertices, %d footprints, "
           "%.1f KiB -> %s" % (len(models), len(pages), len(placements), nverts, len(masks),
                               len(blob) / 1024.0, path))
     for (tw, rows), lid in zip(pages, sorted(by_layout)):
         print("  page for layout %3d: %dx%d" % (lid, tw, rows))
+
+
+def write_window_lights(models, found, path):
+    """windowlights.bin (VXW1): the light the lit glass of every outdoor
+    placement throws on the ground in front of it - one pool a window or
+    door (voxel_windows.facade_spans). ctr_voxel's night lamps draw them
+    with the lamps' ground light (voxel_sign.c).
+
+      "VXW1", u32 count, then x 12: u16 layout (the placements'), i16 x0,
+      x1, z (pixels of the map, z the wall's), u8 depth (pixels the pool
+      reaches from the wall), u8 low (the glass's lowest pixel above the
+      ground), u16 0 - sorted by layout, z, x0."""
+    outdoors = voxel_night.outdoor_layouts()
+    out = []
+    for (lid, index, px, py, ground, cells, name) in found:
+        if name not in outdoors:
+            continue
+        for (x0, x1, z, low) in getattr(models[index], "spill", ()):
+            depth = int(min(28, max(14, 8 + 0.6 * (x1 - x0))))
+            out.append((lid, int(round(px * 16 + x0)), int(round(px * 16 + x1)),
+                        int(round(py * 16 + z)), depth, int(low), 0))
+    out.sort(key=lambda r: (r[0], r[3], r[1]))
+    with open(path, "wb") as f:
+        f.write(b"VXW1" + struct.pack("<I", len(out)))
+        for r in out:
+            f.write(struct.pack("<HhhhBBH", *r))
+    print("voxel buildings: %d window light(s) -> %s" % (len(out), path))
 
 
 def ground_variants(models, layouts_json):

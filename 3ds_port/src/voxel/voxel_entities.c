@@ -944,6 +944,240 @@ static float sLay;
  * squat that keeps it the sprite's size to the swoop's camera. */
 static float sTiltCos, sTiltSin, sTiltSquat;
 
+/*
+ * The keystone of a card. The camera looks down at a card that stands upright,
+ * so its top is nearer the eye than its feet: it is drawn wider (about 9 % for
+ * a card two tiles tall) and its sides splay out the further the card is from
+ * the middle of the picture, 17 px over a 43 px sprite at the edge. A sprite
+ * on the GBA is an upright rectangle wherever it is, so each vertex is moved
+ * along the camera's right, about the eye, by the ratio of its depth to the
+ * depth of the card's feet: it then projects exactly where the feet's own x
+ * does, the sides come out vertical and the top as wide as the feet.
+ *
+ * Only x (along the camera's right) moves, and a row of a card is at one
+ * depth, so its picture is mapped as exactly as before; no vertex's depth
+ * changes, so what hides what is unchanged and the card stays upright in the
+ * world. The middle camera's eye is used: the two eyes of the stereo pair are
+ * off it by a few hundredths of a tile and share these vertices.
+ *
+ * The swoop's tilt (sLay) brings the card to face its camera, which is nearly
+ * orthographic at its end, so the compensation fades out with it (1 - lay);
+ * the swoop blends the projection as it blends the tilt.
+ */
+static float sEyeX, sEyeY, sEyeZ;      /* the eye */
+static float sViewX, sViewY, sViewZ;   /* where it looks, unit length */
+static float sSideX, sSideZ;           /* its right, along the ground, unit length */
+static float sKeystone;                /* how much of the compensation: 0 off, 1 all */
+/* The near plane of the projection (VOXEL_NEAR, ctr_voxel.c): nothing nearer
+ * is drawn, and a depth this small is no base to take a ratio against. */
+#define VOXEL_KEYSTONE_NEAR 1.0f
+
+static float KeystoneDepth(float x, float y, float z)
+{
+    return sViewX * (x - sEyeX) + sViewY * (y - sEyeY) + sViewZ * (z - sEyeZ);
+}
+
+/* How far the keystone moves a vertex along the camera's right, tiles, and
+ * 0 for one it leaves alone; `k` is the card's share of it (KeystoneFit). */
+static float KeystoneSide(float anchor, float y, float x, float z, float k)
+{
+    float depth, ratio;
+
+    if (sKeystone <= 0.0f || anchor < VOXEL_KEYSTONE_NEAR)
+        return 0.0f;
+    depth = KeystoneDepth(x, y, z);
+    if (depth < VOXEL_KEYSTONE_NEAR)
+        return 0.0f;
+    ratio = depth / anchor;
+    /* Cards are a few tiles tall at a dozen tiles from the eye: a ratio far
+     * from 1 is a card that is not one, and is left as it is. */
+    if (ratio < 0.5f || ratio > 2.0f)
+        return 0.0f;
+    return ((x - sEyeX) * sSideX + (z - sEyeZ) * sSideZ) * (ratio - 1.0f) * sKeystone * k;
+}
+
+/* A vertex of a card moved to where the card's feet, at depth `anchor`, would
+ * have it at its own depth: (x, y, z) in, x and z out. */
+static void Keystone(float anchor, float y, float k, float *x, float *z)
+{
+    float side = KeystoneSide(anchor, y, *x, *z, k);
+
+    *x += sSideX * side;
+    *z += sSideZ * side;
+}
+
+/*
+ * The keystone moves the top of a card sideways in the world, towards the
+ * middle of the picture (0.35 tile at 100 px off it, 0.7 at the edge). Terrain
+ * is not moved with it, so a card beside something tall on that side - a rock
+ * wall, a building, a counter - would have its head inside the solid, and the
+ * depth test would hide it behind the solid's face. Leant together, as they
+ * were, they never met. The card's share of the keystone (k, 0..1) is cut
+ * down so that nothing of it gets further in than the gap to the solid, plus
+ * a sprite pixel.
+ *
+ * What stands in a cell is read as the lighting reads its casters
+ * (voxel_lighting.c): a modelled building or piece of furniture
+ * (VoxelBuildings_CellAt, over the cell's ground and its map's base) and the
+ * relief (VoxelRelief_LiftAt, at the edge of the cell the card is next to:
+ * that is the height of the wall it faces, where the lattice meets the
+ * grid). A railing's line (a footprint) is not a box and is left out.
+ * A tree's cell is not counted: its crown is a card in an upright plane, as
+ * the sprite's is, so they are sorted by depth and never overlap sideways,
+ * and its trunk is a thin column far under a head (1 tile of a 2-tile card).
+ *
+ * Only the side the card moves towards is looked at, so an obstacle on the
+ * other side never takes anything from it.
+ *
+ * Rows. The card's own row: the card's plane is inside the solid's, and the
+ * head goes into it. The row south of it and the ones after, nearer the
+ * camera: the sight line to a card off the middle runs over the cells south
+ * of it on its inner side, so a tall block there hides the card's inner edge
+ * as a wall beside it does (the block, not the card, being in front). Its
+ * face is taken to where the line from the eye puts it at the card's depth (a
+ * tile nearer is 4 % nearer: 0.2 tile over a 5-tile offset), and it hides the
+ * card up to its top less the climb of the sight line over the rows between
+ * (their distance times the pitch's tangent), which is why only a tall
+ * building does at three rows. The row north of the card: the solid's south
+ * face is drawn that far south again (a wall's height less the lean), so the
+ * card is inside it until it is clear of it, over half a tile.
+ * Each row is counted by how much of it is the card's to meet, and the
+ * weights run to 0 and 1 in step with the card's own z, so the share does not
+ * jump as the card crosses a row.
+ *
+ * The tops of the cells (absolute, not against the card's feet) are kept by the
+ * slot with the cells they were found for; the card's own height and the
+ * camera change every frame and are only arithmetic.
+ */
+#define VOXEL_KEYSTONE_TOLERANCE (1.0f / 16.0f)   /* a sprite pixel */
+#define VOXEL_KEYSTONE_CELLS 3                    /* the edge's own cell and two more */
+#define VOXEL_KEYSTONE_ROWS 5                     /* one north of the card's, its own, three south */
+#define VOXEL_KEYSTONE_NORTH 0.5f                 /* how far south of its row a card is clear of the one before */
+#define VOXEL_SOLID_NONE (-1000.0f)
+
+typedef struct
+{
+    uint32_t epoch;
+    int first, row, dir;
+    float top[VOXEL_KEYSTONE_ROWS][VOXEL_KEYSTONE_CELLS];
+} SolidMemo;
+static SolidMemo sSolidMemo[VOXEL_SPRITE_SLOTS];
+
+/* The height, in the world, of what stands in cell (x, z) on the side of it
+ * that a card coming from `dir` faces. */
+static float SolidTopOf(int x, int z, int dir)
+{
+    const VoxelMapInstance *inst = VoxelWorld_GetInstanceAt(x, z);
+    float top = VOXEL_SOLID_NONE, model;
+
+    if (inst == NULL)
+        return top;
+    top = VoxelRelief_LiftAt((float)x + (dir > 0 ? 0.02f : 0.98f), (float)z + 0.5f);
+    if (VoxelBuildings_CellAt(inst, x, z, NULL, &model) && VoxelBuildings_Footprint(inst, x, z) == NULL)
+    {
+        float over = VoxelRelief_Base(inst) + VoxelRelief_CellLift(inst, x, z) + model;
+
+        if (over > top)
+            top = over;
+    }
+    return top;
+}
+
+static void SolidTopsAt(unsigned slot, int first, int row, int dir,
+                        float tops[VOXEL_KEYSTONE_ROWS][VOXEL_KEYSTONE_CELLS])
+{
+    SolidMemo *memo = &sSolidMemo[slot];
+
+    if (!(sMemoOn && memo->epoch == sMemoEpoch && memo->first == first && memo->row == row
+       && memo->dir == dir))
+    {
+        for (int j = 0; j < VOXEL_KEYSTONE_ROWS; ++j)
+            for (int i = 0; i < VOXEL_KEYSTONE_CELLS; ++i)
+                memo->top[j][i] = SolidTopOf(first + dir * i, row + j - 1, dir);
+        memo->epoch = sMemoEpoch;
+        memo->first = first;
+        memo->row = row;
+        memo->dir = dir;
+        if (!sMemoOn)
+            memo->epoch = 0;
+    }
+    memcpy(tops, memo->top, sizeof(memo->top));
+}
+
+/*
+ * The card's share of the keystone, 0..1. (ax, bx): its feet's x; the top
+ * vertices are given as they stand before it; `feet` is the height its feet
+ * are on and `topY` the height of the card; `cz` the tile row it stands on.
+ * A card at the middle of the picture has nothing to move and gets 1. The
+ * share is continuous in the card's place: the gap to a solid is, a cell the
+ * card's edge is in has none (gap 0, not behind it), and the allowance grows
+ * the lower the solid or the less the card moves.
+ */
+static float KeystoneFit(unsigned slot, float anchor, float cz, float feet, float topY,
+                         float ax, float bx, float tax, float taz, float tbx, float tbz)
+{
+    float shiftA = sSideX * KeystoneSide(anchor, feet + topY, tax, taz, 1.0f);
+    float shiftB = sSideX * KeystoneSide(anchor, feet + topY, tbx, tbz, 1.0f);
+    int dir = shiftA + shiftB >= 0.0f ? 1 : -1;
+    /* the vertex on the side it moves to: its feet's edge and its shift */
+    bool aInner = dir > 0 ? ax > bx : ax < bx;
+    float edge = aInner ? ax : bx, shift = dir * (aInner ? shiftA : shiftB);
+    float tops[VOXEL_KEYSTONE_ROWS][VOXEL_KEYSTONE_CELLS];
+    float k = 1.0f, climb;
+    int first = (int)floorf(edge), row = (int)floorf(cz);
+
+    if (shift <= VOXEL_KEYSTONE_TOLERANCE * 0.25f || topY < 0.01f)
+        return 1.0f;
+    SolidTopsAt(slot, first, row, dir, tops);
+    /* how much higher the sight line is a row (a tile of z) nearer the eye */
+    climb = sViewZ < -0.01f ? fabsf(sViewY / sViewZ) : 0.0f;
+    for (int j = 0; j < VOXEL_KEYSTONE_ROWS; ++j)
+    {
+        /* j = 0 is the row north of the card's, 1 its own: how far the
+         * card is from the near face of the row, south (dz) */
+        float dz = j >= 2 ? (float)(row + j - 1) - cz : 0.0f;
+        float scale = 1.0f, weight = 1.0f, depth = anchor + sViewZ * dz;
+
+        if (j == 0)
+        {
+            weight = 1.0f - (cz - (float)row) / VOXEL_KEYSTONE_NORTH;
+            if (weight <= 0.0f)
+                continue;
+        }
+        else if (j >= 2)
+        {
+            if (depth < VOXEL_KEYSTONE_NEAR)
+                break;
+            scale = anchor / depth;
+            /* The last row comes in as the card nears it (and is the one
+             * before the last, in full, a row on). */
+            if (j == VOXEL_KEYSTONE_ROWS - 1)
+                weight = (float)(VOXEL_KEYSTONE_ROWS - 2) - dz;
+        }
+        for (int i = 0; i < VOXEL_KEYSTONE_CELLS; ++i)
+        {
+            float rel = tops[j][i] - feet - dz * climb, reach, gap, allowed;
+            float boundary = (float)(first + dir * i + (dir > 0 ? 0 : 1));
+
+            if (rel <= 0.0f)
+                continue;
+            boundary = sEyeX + (boundary - sEyeX) * scale;
+            gap = dir > 0 ? boundary - edge : edge - boundary;
+            if (gap < 0.0f)
+                gap = 0.0f;
+            /* how far in the card goes at the height the solid reaches: the
+             * shift is linear in height */
+            reach = shift * (rel < topY ? rel : topY) / topY;
+            allowed = (gap + VOXEL_KEYSTONE_TOLERANCE) / reach;
+            if (allowed < 1.0f)
+                allowed = 1.0f - weight * (1.0f - allowed);
+            if (allowed < k)
+                k = allowed;
+        }
+    }
+    return k > 0.0f ? k : 0.0f;
+}
+
 /* The ground under a point: its height and, as far south as it is drawn, its
  * depth. The answers of the lookups, which the slot keeps (see the memo's
  * comment above VoxelEntities_Reset). */
@@ -1120,9 +1354,87 @@ static void PlaceAt(unsigned slot, const struct ObjectEvent *obj, float worldX, 
     }
 }
 
+/*
+ * The light where a field effect stands that is no object event's: a visible
+ * wild Pokemon, up to eleven tiles from the player and as likely to be under
+ * a tree's shadow as in the sun while the player is in the other. The same
+ * one sample as PlaceCompute's, on the ground at its feet, kept by the slot
+ * with the place it was found for (the world's epoch as ever): a Pokemon
+ * standing still costs nothing, one on the move a sample a frame, as a walking
+ * object does.
+ */
+typedef struct
+{
+    uint32_t epoch, cx, cz, deck;
+    bool outdoor;
+    float shade;
+} SpotMemo;
+static SpotMemo sSpotMemo[VOXEL_SPRITE_SLOTS];
+
+static void SpotCompute(unsigned slot, float cx, float cz, float deck, bool *outdoor, float *shade)
+{
+    *outdoor = false;
+    *shade = 1.0f;
+#if CTR_VOXEL_LIGHTING
+    {
+        const VoxelMapInstance *inst = VoxelWorld_GetInstanceAt((int)floorf(cx), (int)floorf(cz));
+
+        *outdoor = inst != NULL && !inst->indoor;
+        if (*outdoor)
+        {
+            float lift, shift;
+
+            PointAt(slot, cx, cz, &lift, &shift);
+            /* (as PlaceCompute: over a bridge's deck, the light over it) */
+            *shade = VoxelLighting_SampleAlone(cx, lift + 0.75f + deck,
+                                               cz + shift + VoxelRelief_Lean() * lift + deck);
+        }
+    }
+#else
+    (void)slot;
+    (void)cx;
+    (void)cz;
+    (void)deck;
+#endif
+}
+
+static void SpotAt(unsigned slot, float cx, float cz, float deck, bool *outdoor, float *shade)
+{
+    SpotMemo *memo = &sSpotMemo[slot];
+    uint32_t bx = FloatBits(cx), bz = FloatBits(cz), bd = FloatBits(deck);
+
+    if (sMemoOn && memo->epoch == sMemoEpoch && memo->cx == bx && memo->cz == bz && memo->deck == bd)
+    {
+        *outdoor = memo->outdoor;
+        *shade = memo->shade;
+#ifdef CTR_VOXEL_CARD_AUDIT
+        {
+            float kept[2] = { memo->outdoor ? 1.0f : 0.0f, memo->shade }, fresh[2];
+            bool o;
+
+            SpotCompute(slot, cx, cz, deck, &o, &fresh[1]);
+            fresh[0] = o ? 1.0f : 0.0f;
+            AuditCompare("spot", slot, kept, fresh, 2);
+        }
+#endif
+        return;
+    }
+    SpotCompute(slot, cx, cz, deck, outdoor, shade);
+    if (sMemoOn)
+    {
+        memo->epoch = sMemoEpoch;
+        memo->cx = bx;
+        memo->cz = bz;
+        memo->deck = bd;
+        memo->outdoor = *outdoor;
+        memo->shade = *shade;
+    }
+}
+
 static void EmitBillboard(VoxelBuilder *builder, const VoxelSpriteSlot *slot, unsigned index,
                           float cx, float cz, float offX, float offZ, float rise, float deck,
-                          float rightX, float rightZ, float stretch, float shade, float scale)
+                          float rightX, float rightZ, float stretch, float shade, float scale,
+                          float *share)
 {
     unsigned baseX = (index % VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
     unsigned baseY = (index / VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
@@ -1159,12 +1471,40 @@ static void EmitBillboard(VoxelBuilder *builder, const VoxelSpriteSlot *slot, un
      * facing it comes out cos(pitch) x (height + 1) of its size, so it is made
      * the inverse of that (sTiltSquat), the 2D sprite, 1:1. */
     float topY = height * sTiltSquat * sTiltCos, topZ = -height * sTiltSquat * sTiltSin;
+    /* The keystone (sKeystone) is taken against the depth of the ground the
+     * card stands on, not of its own feet: a card that is lifted (riding, a
+     * hop) or that belongs to another (an emote over a walker's head, drawn
+     * through here with the walker's place) keeps the very x the walker's
+     * body has at that height, so the two never slide against each other. */
+    float anchor = KeystoneDepth(px, lift - rise, pz);
+    float tax = ax, taz = az + topZ, tbx = bx, tbz = bz + topZ;
+    float k = 1.0f;
+
+    /* How much of it a solid beside the card leaves (KeystoneFit). What
+     * belongs to an object takes the object's, found with its card (the
+     * emote over a walker's head would otherwise move on its own); the
+     * objects are drawn before every effect. */
+    if (sKeystone > 0.0f)
+    {
+        if (share != NULL && *share >= 0.0f)
+            k = *share;
+        else
+        {
+            k = KeystoneFit(index, anchor, cz + offZ, lift - rise, topY, ax, bx, tax, taz, tbx, tbz);
+            if (share != NULL)
+                *share = k;
+        }
+    }
+    Keystone(anchor, lift, k, &ax, &az);
+    Keystone(anchor, lift, k, &bx, &bz);
+    Keystone(anchor, lift + topY, k, &tax, &taz);
+    Keystone(anchor, lift + topY, k, &tbx, &tbz);
 
     VoxelBuilder_Quad(builder,
-        &(VoxelVertex){ax, lift,        az,        u0, v1, shade},
-        &(VoxelVertex){bx, lift,        bz,        u1, v1, shade},
-        &(VoxelVertex){bx, lift + topY, bz + topZ, u1, v0, shade},
-        &(VoxelVertex){ax, lift + topY, az + topZ, u0, v0, shade});
+        &(VoxelVertex){ax,  lift,        az,  u0, v1, shade},
+        &(VoxelVertex){bx,  lift,        bz,  u1, v1, shade},
+        &(VoxelVertex){tbx, lift + topY, tbz, u1, v0, shade},
+        &(VoxelVertex){tax, lift + topY, taz, u0, v0, shade});
 }
 
 /*
@@ -1475,7 +1815,9 @@ typedef struct
     uint32_t epoch, key[7];
     float ground[8];
 } ShadowMemo;
-static ShadowMemo sShadowMemo[OBJECT_EVENTS_COUNT];
+/* By slot, like the point and push memos: a visible wild Pokemon casts one
+ * from an effect slot, past the object events'. */
+static ShadowMemo sShadowMemo[VOXEL_SPRITE_SLOTS];
 
 static void ShadowGroundCompute(float ax, float az, float bx, float bz, float sx, float sz,
                                 float deck, float ground[8])
@@ -1525,7 +1867,7 @@ static void ShadowGroundAt(unsigned slot, float ax, float az, float bx, float bz
 
 static void EmitCastShadow(VoxelBuilder *shadows, const VoxelSpriteSlot *slot, unsigned index,
                            float worldX, float worldZ, float rightX, float rightZ, float stretch,
-                           float light, float lift, float deck)
+                           float light, float lift, float deck, float scale)
 {
     if (gVoxelSun.strength == 0.0f)
         return;
@@ -1538,8 +1880,10 @@ static void EmitCastShadow(VoxelBuilder *shadows, const VoxelSpriteSlot *slot, u
     int rows = VisibleRows(slot);
     float v0 = 1.0f - baseY / (float)VOXEL_SPRITE_ATLAS_H;
     float v1 = 1.0f - (baseY + rows) / (float)VOXEL_SPRITE_ATLAS_H;
-    float halfW = slot->width / VOXEL_PIXELS_PER_TILE * 0.5f;
-    float height = rows / VOXEL_PIXELS_PER_TILE * stretch;
+    /* The card's size, scale and all (EmitBillboard): a Pokemon growing in
+     * casts the shadow of the size it is. */
+    float halfW = slot->width / VOXEL_PIXELS_PER_TILE * 0.5f * scale;
+    float height = rows / VOXEL_PIXELS_PER_TILE * stretch * scale;
     /* Off the ground by `lift` (riding), the feet's shadow falls that much
      * further along the sun. */
     float cx = worldX + 0.5f + VOXEL_SUN_DX * lift, cz = worldZ + 0.5f + VOXEL_SUN_DZ * lift;
@@ -1898,6 +2242,7 @@ typedef struct
     float deck;              /* up on a bridge's deck, tiles */
     float shade;
     bool outdoor;            /* casts a shadow */
+    float keystone;          /* its share of the keystone, once found this frame (EmitBillboard), else -1 */
 } VoxelObjectCard;
 
 typedef struct
@@ -1910,7 +2255,12 @@ typedef struct
     bool cloud;              /* a cloud, laid on the water (EmitCloud) */
     bool gate;               /* a rotating gate, turned on the ground (EmitTurnedDecal) */
     bool flyShadow;          /* Fly's Pokemon's shadow: its picture cast on its tile's ground */
+    bool casts;              /* a creature standing on the ground (a visible wild Pokemon): casts a shadow */
 } VoxelEffectCard;
+
+/* What footPadImages points at for a slot whose effect has had its feet
+ * measured (VoxelEntities_Emit): an effect has no picture table of its own. */
+static const struct SpriteFrameImage sFootMeasured = { 0 };
 
 static bool IsTemplate(const struct SpriteTemplate *template, unsigned first, unsigned last)
 {
@@ -2096,6 +2446,30 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
     sTiltCos = view.tiltCos;
     sTiltSin = view.tiltSin;
     sTiltSquat = view.tiltSquat;
+    /* The eye and where it looks, for the keystone (sKeystone): the camera
+     * moves a little every frame, so it is found each frame - one square root
+     * and a handful of products. Looking straight down has no right to
+     * speak of, and the swoop's tilt takes it back (1 - lay). */
+    {
+        float fx = camera->targetX - camera->x, fy = camera->targetY - camera->y;
+        float fz = camera->targetZ - camera->z;
+        float flat = sqrtf(fx * fx + fz * fz), length = sqrtf(fx * fx + fy * fy + fz * fz);
+
+        sKeystone = 0.0f;
+        if (flat > 0.01f && length > VOXEL_KEYSTONE_NEAR && camera->lay < 1.0f)
+        {
+            sEyeX = camera->x;
+            sEyeY = camera->y;
+            sEyeZ = camera->z;
+            sViewX = fx / length;
+            sViewY = fy / length;
+            sViewZ = fz / length;
+            /* forward x up, as the view matrix's right */
+            sSideX = -fz / flat;
+            sSideZ = fx / flat;
+            sKeystone = camera->lay > 0.0f ? 1.0f - camera->lay : 1.0f;
+        }
+    }
     /* Static, not automatic: this runs in the VBlank handler. */
     static VoxelObjectCard objects[OBJECT_EVENTS_COUNT];
     static VoxelEffectCard effects[VOXEL_EFFECTS_MAX];
@@ -2214,6 +2588,7 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
         card->rise = 0.0f;
         card->shade = shade;
         card->outdoor = outdoor;
+        card->keystone = -1.0f;
     }
 
     for (unsigned id = 0; id < MAX_SPRITES; ++id)
@@ -2252,7 +2627,10 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
         effect->tile = IsTileEffect(sprite->template) || effect->flyShadow;
         /* A visible wild Pokemon stands on its own tile, never on an object:
          * a tile south of the player, owned by it, it sank under the ground. */
-        effect->owner = effect->decal || effect->tile || VisibleWild_IsSprite((u8)id)
+        /* Only a creature stands in the sun and casts: a sparkle, a puff of
+         * dust or an emote is a picture in the air, not a body. */
+        effect->casts = VisibleWild_IsSprite((u8)id);
+        effect->owner = effect->decal || effect->tile || effect->casts
                       ? -1 : EffectOwner(sprite, objects);
         effect->front = effect->owner < 0 || DrawnOver(sprite, objects[effect->owner].sprite);
 
@@ -2392,7 +2770,7 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
          * the mon's back. */
         if (shadows != NULL && card->outdoor && !underBridge)
             EmitCastShadow(shadows, &sSlots[i], i, card->worldX, card->worldZ, rightX, rightZ,
-                           stretch, card->shade, card->rise > 0.0f ? rise : 0.0f, card->deck);
+                           stretch, card->shade, card->rise > 0.0f ? rise : 0.0f, card->deck, 1.0f);
 #endif
         if (reflections != NULL && gObjectEvents[i].hasReflection)
             EmitReflection(reflections, &sSlots[i], i, card->worldX, card->worldZ,
@@ -2401,7 +2779,8 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
             continue;
         unsigned first = builder->count;
         EmitBillboard(builder, &sSlots[i], i, card->worldX + 0.5f, card->worldZ + 0.5f,
-                      0.0f, 0.0f, rise, card->deck, rightX, rightZ, stretch, card->shade * dusk, 1.0f);
+                      0.0f, 0.0f, rise, card->deck, rightX, rightZ, stretch, card->shade * dusk, 1.0f,
+                      &card->keystone);
         if (i == gPlayerAvatar.objectEventId && builder->count == first + 6)
             sPlayerVertexFirst = (int)first;
     }
@@ -2416,6 +2795,29 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
         RefreshSlot(effect->slot, sprite, NULL, atlas);
         if (!sSlots[effect->slot].valid)
             continue;
+        /* A creature's feet are on the ground, not at the bottom of its
+         * picture: the rows under them are cut off as an object's are
+         * (VisibleRows), so it and its shadow (the same texture, started
+         * at the feet) meet. Measured on the frame it first shows, once for
+         * as long as the slot is its (a reset forgets it): the idle frames
+         * after it keep their offset from that, as an object's walk does. */
+        if (effect->casts && sSlots[effect->slot].footPadImages != &sFootMeasured)
+        {
+            VoxelSpriteSlot *slot = &sSlots[effect->slot];
+
+            slot->footPad = !slot->color256 && !slot->flipY && slot->atlasWidth == slot->width
+                         && slot->sourceBytes >= (u32)(slot->width / 8 * (slot->height / 8)) * TILE_SIZE_4BPP
+                          ? FootPadOf(slot->source, slot->width, slot->height) : 0;
+            slot->footPadImages = &sFootMeasured;
+        }
+        else if (!effect->casts && sSlots[effect->slot].footPadImages == &sFootMeasured)
+        {
+            /* The sprite id of a Pokemon taken over by another effect in the
+             * very frame it went: the slot is kept (the owner is the id), and
+             * its pad must not trim the newcomer. */
+            sSlots[effect->slot].footPad = 0;
+            sSlots[effect->slot].footPadImages = NULL;
+        }
         h = sSlots[effect->slot].height;
         x = sprite->x + sprite->x2;
         base = sprite->y + sprite->centerToCornerVecY + h;
@@ -2478,7 +2880,8 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
             EmitBillboard(builder, &sSlots[effect->slot], effect->slot,
                           object->worldX + 0.5f, object->worldZ + 0.5f,
                           rightX * along + towardX * depth, rightZ * along + towardZ * depth,
-                          rise, object->deck, rightX, rightZ, stretch, object->shade, SpriteScale(sprite));
+                          rise, object->deck, rightX, rightZ, stretch, object->shade, SpriteScale(sprite),
+                          &objects[effect->owner].keystone);
             continue;
         }
         /* On its own: placed from the player, whose feet are on the centre of
@@ -2533,9 +2936,28 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
             cz = reference->worldZ + 0.5f + (base - reference->base) / VOXEL_PIXELS_PER_TILE;
             if (fabsf(cx - camera->targetX) > 24.0f || fabsf(cz - camera->targetZ) > 24.0f)
                 continue;
+            float shade = reference->shade;
+            float scale = SpriteScale(sprite);
+
+#if CTR_VOXEL_LIGHTING
+            /* A creature stands in the light of its own ground, not the
+             * player's, and casts like an object: its shadow on the ground
+             * under its feet (the card stands on the centre of its tile, the
+             * shadow is given the tile) at the size it has, growing in or
+             * out. A hop (y2) leaves the shadow where it was. */
+            if (effect->casts)
+            {
+                bool outdoor;
+
+                SpotAt(effect->slot, cx, cz, reference->deck, &outdoor, &shade);
+                if (shadows != NULL && outdoor)
+                    EmitCastShadow(shadows, &sSlots[effect->slot], effect->slot, cx - 0.5f, cz - 0.5f,
+                                   rightX, rightZ, stretch, shade, 0.0f, reference->deck, scale);
+            }
+#endif
             EmitBillboard(builder, &sSlots[effect->slot], effect->slot, cx, cz, 0.0f, 0.0f,
                           -sprite->y2 * pixel, reference->deck, rightX, rightZ, stretch,
-                          reference->shade, SpriteScale(sprite));
+                          shade, scale, NULL);
         }
     }
 }

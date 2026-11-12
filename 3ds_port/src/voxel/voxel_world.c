@@ -32,6 +32,7 @@
 #include "voxel_tree.h"
 #include "voxel_atlas.h"
 #include "voxel_relief.h"
+#include "voxel_mesh_builder.h"
 #ifdef PLATFORM_3DS
 #include "3ds_map_events.h"
 #include "3ds_video.h"
@@ -1265,7 +1266,9 @@ static int EdgeFillAt(int worldX, int worldY)
 {
     VoxelEdgeFill fill;
 
-    if (sInstanceCount == 0 || !VoxelRelief_EdgeFillAt(&sInstances[0], worldX, worldY, &fill))
+    /* its owner's, a neighbour's as well as the current map's
+     * (VoxelMesh_BeltFill) */
+    if (sInstanceCount == 0 || !VoxelMesh_BeltFill(worldX, worldY, &fill))
         return -1;
     return fill.metatile;
 }
@@ -1330,8 +1333,17 @@ void VoxelWorld_MarkUsedMetatiles(const void *primaryTileset, const void *second
             if (y1 > sMaterialView[3] + sMaterialMargin - inst->originY)
                 y1 = sMaterialView[3] + sMaterialMargin - inst->originY;
         }
-        if (i == 0)
+        /* (a neighbour's fills are drawn from this side of the crossing
+         * too, and its cliff faces a step of the belt past it:
+         * VoxelMesh_BeltFill, BeltFaceUV) */
+        if (!inst->indoor)
+        {
+            int face = VoxelRelief_FaceTile(inst);
+
             MarkEdgeFills(inst, used);
+            if (face >= 0 && face < NUM_METATILES_TOTAL && used[face] < 1)
+                used[face] = 1;
+        }
         const uint16_t *map = i == 0 ? gBackupMapLayout.map : Voxel_ResolveMap(layout);
         if (map != NULL)
             for (int y = y0; y < y1; ++y)

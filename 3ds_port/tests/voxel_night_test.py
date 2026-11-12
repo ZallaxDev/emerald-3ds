@@ -475,7 +475,7 @@ int main(void)
     assert(sEnvs[2].rgbFunc == GPU_INTERPOLATE && sEnvs[2].rgb[0] == GPU_CONSTANT);
     assert(sEnvs[2].rgb[1] == GPU_PREVIOUS && sEnvs[2].rgbOp[2] == GPU_TEVOP_RGB_SRC_ALPHA);
     assert(sEnvs[2].alpha[0] == GPU_TEXTURE0 && sEnvs[2].alphaFunc == GPU_REPLACE);
-    assert(sEnvs[2].colour == 0xFFA0D8FFu);
+    assert(sEnvs[2].colour == 0xFF54C4FFu);
     assert(sEnvs[0].rgbFunc == GPU_MULTIPLY_ADD && sEnvs[0].colour == sMoonlightColour);
     assert(sEnvs[3].colour == 0 && sEnvs[4].colour == 0);
     ReleaseGlowUnit();
@@ -507,7 +507,7 @@ int main(void)
     assert(sEnvs[3].rgbFunc == GPU_INTERPOLATE && sEnvs[3].rgb[0] == GPU_CONSTANT);
     assert(sEnvs[3].rgb[1] == GPU_PREVIOUS && sEnvs[3].rgbOp[2] == GPU_TEVOP_RGB_SRC_ALPHA);
     assert(sEnvs[3].alpha[0] == GPU_TEXTURE0 && sEnvs[3].alphaFunc == GPU_REPLACE);
-    assert(sEnvs[3].colour == 0xFFA0D8FFu);
+    assert(sEnvs[3].colour == 0xFF54C4FFu);
     assert(sEnvs[4].rgbFunc == GPU_INTERPOLATE && sEnvs[4].rgb[0] == GPU_PREVIOUS);
     assert(sEnvs[4].rgb[2] == GPU_PRIMARY_COLOR && sEnvs[4].colour == FadeColour(1.0f, sHazeRgb));
     assert(sEnvs[5].rgbFunc == GPU_INTERPOLATE && sEnvs[5].rgb[1] == GPU_PREVIOUS);

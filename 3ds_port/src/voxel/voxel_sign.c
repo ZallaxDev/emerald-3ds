@@ -15,6 +15,10 @@
 #define SIGN_MASK_PATH "voxel/signposts.bin"
 #endif
 #define SIGN_MAGIC "VXS3"
+#ifndef WINDOW_LIGHT_PATH
+#define WINDOW_LIGHT_PATH "voxel/windowlights.bin"
+#endif
+#define WINDOW_LIGHT_MAGIC "VXW1"
 
 typedef struct
 {
@@ -29,12 +33,65 @@ static SignRecord *sIndex;
 static unsigned sCount;
 static bool sTried;
 
+/* The light the lit windows and glass doors of a building throw on the ground
+ * in front of them (gen_voxel_buildings.write_window_lights): one pool a window
+ * or door, in pixels of its map, sorted by layout. */
+typedef struct
+{
+    uint16_t layout;
+    int16_t x0, x1, z;      /* the span along the wall, and the wall's z */
+    uint8_t depth, low;     /* pixels the pool reaches out; the glass's lowest */
+    uint16_t pad;
+} WindowLight;
+
+static WindowLight *sLights;
+static unsigned sLightCount;
+static bool sLightsTried;
+
 void VoxelSign_Shutdown(void)
 {
     free(sIndex);
     sIndex = NULL;
     sCount = 0;
     sTried = false;
+    free(sLights);
+    sLights = NULL;
+    sLightCount = 0;
+    sLightsTried = false;
+}
+
+/* The window lights, once. Without the file there are none: the glass still
+ * glows, nothing lights the ground. */
+static bool LoadLights(void)
+{
+    uint8_t header[8];
+    FILE *file;
+    unsigned count;
+
+    if (sLightsTried) return sLights != NULL;
+    sLightsTried = true;
+    file = VoxelFile_Open(WINDOW_LIGHT_PATH);
+    if (!file) return false;
+    if (fread(header, 1, sizeof(header), file) != sizeof(header)
+        || memcmp(header, WINDOW_LIGHT_MAGIC, 4) != 0) {
+        fclose(file);
+        return false;
+    }
+    count = (unsigned)header[4] | ((unsigned)header[5] << 8)
+          | ((unsigned)header[6] << 16) | ((unsigned)header[7] << 24);
+    if (count == 0 || count > 65535u) {
+        fclose(file);
+        return false;
+    }
+    sLights = malloc((size_t)count * sizeof(*sLights));
+    if (!sLights || fread(sLights, sizeof(*sLights), count, file) != count) {
+        free(sLights); sLights = NULL;
+        fclose(file);
+        return false;
+    }
+    sLightCount = count;
+    fclose(file);
+    return true;
 }
 
 static bool LoadMasks(void)
@@ -69,6 +126,7 @@ static bool LoadMasks(void)
 void VoxelSign_Init(void)
 {
     LoadMasks();
+    LoadLights();
 }
 
 static const SignRecord *FindMask(unsigned layout, int x, int y)
@@ -196,10 +254,69 @@ static void LampGround(VoxelBuilder *builder, const VoxelMapInstance *inst,
         }
 }
 
+/*
+ * The light of one lit window or glass door on the ground in front of it: half
+ * of the lamp pool's disc, stretched along the span, brightest at the wall and
+ * gone at its other edge and ends. One quad a cell it covers that may be lit
+ * (as a lamp's pool on uneven ground), drawn with the lamps' ground light in
+ * the same draw. Nothing is built where the ground is no floor.
+ */
+static void WindowPool(VoxelBuilder *b, const VoxelMapInstance *inst, const WindowLight *w)
+{
+    float left = inst->originX + w->x0 / 16.0f - 0.25f, right = inst->originX + w->x1 / 16.0f + 0.25f;
+    float wall = inst->originY + w->z / 16.0f, out = wall + w->depth / 16.0f;
+    int firstX = (int)floorf(left), lastX = (int)floorf(right - 0.001f);
+    int firstZ = (int)floorf(wall + 0.001f), lastZ = (int)floorf(out - 0.001f);
+
+    if (right <= left || out <= wall)
+        return;
+    b->base = VoxelRelief_Base(inst);
+    for (int zpos = firstZ; zpos <= lastZ; ++zpos)
+        for (int xpos = firstX; xpos <= lastX; ++xpos)
+        {
+            float ax = xpos < left ? left : (float)xpos, bx = xpos + 1 > right ? right : (float)(xpos + 1);
+            float az = zpos < wall ? wall : (float)zpos, bz = zpos + 1 > out ? out : (float)(zpos + 1);
+            float u0 = (ax - left) / (right - left), u1 = (bx - left) / (right - left);
+            float v0 = 0.5f + 0.5f * (az - wall) / (out - wall), v1 = 0.5f + 0.5f * (bz - wall) / (out - wall);
+
+            if (!LampLit(inst, xpos, zpos))
+                continue;
+            if (b->capacity - b->count < 6u)
+                return;
+            b->lift = VoxelRelief_CellLift(inst, xpos, zpos);
+            b->shift = VoxelRelief_CellShift(inst, xpos, zpos);
+            VoxelBuilder_Quad(b,
+                &(VoxelVertex){ax, 0.0f, az, u0, v0, 1.0f},
+                &(VoxelVertex){bx, 0.0f, az, u1, v0, 1.0f},
+                &(VoxelVertex){bx, 0.0f, bz, u1, v1, 1.0f},
+                &(VoxelVertex){ax, 0.0f, bz, u0, v1, 1.0f});
+        }
+}
+
+static void EmitWindowLights(VoxelBuilder *ground, const VoxelMapInstance *inst,
+                             int x0, int y0, int x1, int y1)
+{
+    if (ground == NULL || !LoadLights())
+        return;
+    for (unsigned index = 0; index < sLightCount; ++index)
+    {
+        const WindowLight *w = &sLights[index];
+        int cellX = inst->originX + (w->x0 + w->x1) / 32, cellZ = inst->originY + w->z / 16;
+
+        if (w->layout != inst->layoutId || cellX < x0 - 2 || cellX >= x1 + 2
+         || cellZ < y0 - 2 || cellZ >= y1 + 2)
+            continue;
+        WindowPool(ground, inst, w);
+    }
+}
+
 void VoxelSign_EmitNight(VoxelBuilder *glass, VoxelBuilder *ground,
                        const VoxelMapInstance *inst, int x0, int y0, int x1, int y1)
 {
-    if (glass == NULL || inst == NULL || inst->indoor || !LoadMasks())
+    if (glass == NULL || inst == NULL || inst->indoor)
+        return;
+    EmitWindowLights(ground, inst, x0, y0, x1, y1);
+    if (!LoadMasks())
         return;
     for (unsigned index = 0; index < sCount; ++index)
     {
@@ -653,3 +770,5 @@ bool VoxelSign_Occludes(const VoxelMapInstance *inst, int x, int y,
         return false;
     return (s.rows[row] & (uint16_t)(1u << column)) != 0;
 }
+
+_Static_assert(sizeof(WindowLight) == 12, "windowlights.bin records are 12 bytes");

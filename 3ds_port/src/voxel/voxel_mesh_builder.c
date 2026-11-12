@@ -3353,6 +3353,8 @@ void VoxelMesh_EmitInstance(VoxelBuilder *builder, const VoxelMapInstance *inst,
  * it is tall, and doubled the rock along the south one.
  */
 #define VOXEL_BORDER_COURSES 2
+/* The first metatile of a secondary tileset (NUM_METATILES_IN_PRIMARY). */
+#define VOXEL_BELT_SECONDARY_ID 0x200
 
 static bool BorderAt(int x, int y)
 {
@@ -3378,49 +3380,228 @@ static bool BorderAt(int x, int y)
 /* How far along a map's edge a belt of water looks for the map's sea. */
 #define VOXEL_BORDER_SEA_SEARCH 12
 
-static bool BorderWaterLevel(int x, int y, float *level, float *shift)
+/*
+ * Whose a belt cell is: the outdoor map whose edge it goes on from, and that
+ * map's edge cell nearest (the corner's past a corner). Not always the map
+ * the player is on: north of Route 121, seen from Route 120 beside it, the
+ * belt followed Route 120's east edge - a plateau - and stood as a shelf of
+ * wood over Route 121's low ground, a dark face down to it, until the player
+ * crossed and the whole of it dropped. Each map's surroundings are its own
+ * from wherever they are seen, and the same from either side of a crossing.
+ *
+ * The nearest map, as fieldmap.c counts it for the border block
+ * (MapGridGetCameraBorderAt) - but in the corner two maps make, straight
+ * north or south of one and straight west or east of the other, the one
+ * whose edge stands lower there. Nearest alone cut the corner along its
+ * diagonal: a ridge that crosses the seam (Route 120's, cut by Route 121's
+ * north edge) went on into the corner as a wedge of steps. Lower, it ends
+ * where the map beside it ends it, row for row, as the drawing has it.
+ */
+#define VOXEL_BELT_CORNER_REACH 16 /* cells: past it the far map has no say */
+
+static float BeltEdgeLevel(const VoxelMapInstance *inst, int ex, int ey)
+{
+    return VoxelRelief_Base(inst) + VoxelRelief_CellLift(inst, ex, ey);
+}
+
+/*
+ * The answers, kept: a belt cell is asked for its metatile, its level and
+ * its faces a dozen times as its square is built, and its neighbours ask
+ * again. Good for as long as the same maps stand in the same place - the
+ * current map, where it is, and how many stand round it.
+ */
+#define VOXEL_BELT_MEMO 256u
+
+typedef struct
+{
+    int x, y, edgeX, edgeY;
+    const VoxelMapInstance *owner;
+    uint32_t stamp;
+} BeltMemo;
+static BeltMemo sBeltMemo[VOXEL_BELT_MEMO];
+
+static const VoxelMapInstance *BeltOwnerFind(int x, int y, int *edgeX, int *edgeY);
+
+const VoxelMapInstance *VoxelMesh_BeltOwner(int x, int y, int *edgeX, int *edgeY)
 {
     const VoxelMapInstance *ring = VoxelWorld_Instance(0);
+    BeltMemo *memo = &sBeltMemo[((unsigned)x * 31u + (unsigned)y) % VOXEL_BELT_MEMO];
+    uint32_t stamp;
+    unsigned count = 1;
+
+    if (ring == NULL)
+        return NULL;
+    while (VoxelWorld_Instance(count) != NULL)
+        ++count;
+    /* never 0, the empty slot's */
+    stamp = (((uint32_t)ring->layoutId * 2654435761u) ^ ((uint32_t)ring->originX * 40503u)
+           ^ ((uint32_t)ring->originY * 69069u) ^ (count << 28)) | 1u;
+    if (memo->stamp == stamp && memo->x == x && memo->y == y)
+    {
+        *edgeX = memo->edgeX;
+        *edgeY = memo->edgeY;
+        return memo->owner;
+    }
+    memo->owner = BeltOwnerFind(x, y, &memo->edgeX, &memo->edgeY);
+    memo->x = x;
+    memo->y = y;
+    memo->stamp = stamp;
+    *edgeX = memo->edgeX;
+    *edgeY = memo->edgeY;
+    return memo->owner;
+}
+
+static const VoxelMapInstance *BeltOwnerFind(int x, int y, int *edgeX, int *edgeY)
+{
+    /* nearest of all; nearest straight north or south; straight west or east */
+    const VoxelMapInstance *best[3] = {NULL, NULL, NULL}, *inst;
+    long bestDistance[3] = {0, 0, 0};
+    int bestX[3] = {0, 0, 0}, bestY[3] = {0, 0, 0};
+    unsigned pick = 0;
+
+    *edgeX = *edgeY = 0;
+    for (unsigned i = 0; (inst = VoxelWorld_Instance(i)) != NULL; ++i)
+    {
+        int ex, ey;
+        long dx, dy, distance;
+
+        if (inst->indoor || inst->width <= 0 || inst->height <= 0)
+            continue;
+        ex = x < inst->originX ? inst->originX
+           : x >= inst->originX + inst->width ? inst->originX + inst->width - 1 : x;
+        ey = y < inst->originY ? inst->originY
+           : y >= inst->originY + inst->height ? inst->originY + inst->height - 1 : y;
+        dx = x - ex, dy = y - ey;
+        distance = dx * dx + dy * dy;
+        for (unsigned k = 0; k < 3; ++k)
+        {
+            if ((k == 1 && dx != 0) || (k == 2 && dy != 0))
+                continue;
+            /* as near as another: the lower layout - never the map the
+             * player is on, or the cells between two maps changed hands at
+             * the crossing */
+            if (best[k] != NULL
+             && (distance > bestDistance[k]
+              || (distance == bestDistance[k] && inst->layoutId > best[k]->layoutId)))
+                continue;
+            best[k] = inst;
+            bestDistance[k] = distance;
+            bestX[k] = ex;
+            bestY[k] = ey;
+        }
+    }
+    if (best[0] == NULL)
+        return NULL;
+    /* the nearest, unless a map straight across from the cell, near enough
+     * to be seen with it, stands lower there - and not where the nearest's
+     * fixes fill past its edge: that was chosen for the place, by hand */
+    if (!VoxelRelief_EdgeFillAt(best[0], x, y, &(VoxelEdgeFill){0}))
+    {
+        const long reach = (long)VOXEL_BELT_CORNER_REACH * VOXEL_BELT_CORNER_REACH;
+        float lowest = 0.0f;
+        bool measured = false;
+
+        for (unsigned k = 1; k < 3; ++k)
+        {
+            float level;
+
+            if (best[k] == NULL || best[k] == best[0] || bestDistance[k] > reach)
+                continue;
+            if (!measured)
+            {
+                lowest = BeltEdgeLevel(best[0], bestX[0], bestY[0]);
+                measured = true;
+            }
+            level = BeltEdgeLevel(best[k], bestX[k], bestY[k]);
+            if (level < lowest - 1.0f / 32.0f)
+            {
+                lowest = level;
+                pick = k;
+            }
+        }
+    }
+    *edgeX = bestX[pick];
+    *edgeY = bestY[pick];
+    return best[pick];
+}
+
+/* How far a map stands over the one the belt is built on (instance 0, at
+ * whose base the belt's builder stands): a height, and as every height is
+ * drawn, as far south. */
+static float BeltRebase(const VoxelMapInstance *owner)
+{
+    const VoxelMapInstance *ring = VoxelWorld_Instance(0);
+
+    return owner == ring || ring == NULL ? 0.0f : VoxelRelief_Base(owner) - VoxelRelief_Base(ring);
+}
+
+/*
+ * The fill past a map's edge at a belt cell, its owner's (relief_fixes.json
+ * "edges"): a neighbour's as well as the current map's, so a face filled
+ * with sea is sea from the next map too. The belt is drawn with the current
+ * map's atlas, so only where the fill's metatile is one its tilesets hold:
+ * the same primary, and the same secondary for a secondary's metatile.
+ */
+bool VoxelMesh_BeltFill(int x, int y, VoxelEdgeFill *fill)
+{
+    const VoxelMapInstance *ring = VoxelWorld_Instance(0), *owner;
     int ex, ey;
+
+    if (ring == NULL || ring->indoor)
+        return false;
+    owner = VoxelMesh_BeltOwner(x, y, &ex, &ey);
+    if (owner == NULL || !VoxelRelief_EdgeFillAt(owner, x, y, fill))
+        return false;
+    if (owner == ring)
+        return true;
+    return owner->primaryTileset == ring->primaryTileset
+        && (fill->metatile < VOXEL_BELT_SECONDARY_ID || owner->secondaryTileset == ring->secondaryTileset);
+}
+
+static bool BorderWaterLevel(int x, int y, float *level, float *shift)
+{
+    const VoxelMapInstance *ring = VoxelWorld_Instance(0), *owner;
+    int ex, ey;
+    float rebase;
 
     VoxelEdgeFill fill;
 
     if (ring == NULL || ring->indoor || VoxelRelief_Belt(ring) != 0
      || !VoxelWorld_BorderIsWater(x, y))
         return false;
-    ex = x < ring->originX ? ring->originX
-       : x >= ring->originX + ring->width ? ring->originX + ring->width - 1 : x;
-    ey = y < ring->originY ? ring->originY
-       : y >= ring->originY + ring->height ? ring->originY + ring->height - 1 : y;
+    owner = VoxelMesh_BeltOwner(x, y, &ex, &ey);
+    if (owner == NULL)
+        return false;
+    rebase = BeltRebase(owner);
     /* (a fill the map's fixes give a height: there, laid on from the map's
      * edge as it is drawn - shifted by its own height instead, a fill set
      * lower than the edge stood rows away from it, a trench between) */
-    if (VoxelRelief_EdgeFillAt(ring, x, y, &fill) && fill.hasTop)
+    if (VoxelMesh_BeltFill(x, y, &fill) && fill.hasTop)
     {
-        *level = (float)fill.top / 16.0f;
-        *shift = VoxelRelief_CellShift(ring, ex, ey);
+        *level = (float)fill.top / 16.0f + rebase;
+        *shift = VoxelRelief_CellShift(owner, ex, ey) + rebase;
         return true;
     }
-    *level = 0.0f;
-    *shift = 0.0f;
+    *level = rebase;
+    *shift = rebase;
     /* Where the map's edge is land, the nearest of its sea along the edge:
      * a sea filled past an edge (VoxelWorld_BorderMetatile) lies level with
      * the map's, not raised to the belt's base beside a stretch of shore. */
     if (VoxelMesh_Classify(ex, ey) != VOXEL_SHAPE_WATER)
     {
-        bool alongY = x < ring->originX || x >= ring->originX + ring->width;
+        bool alongY = x < owner->originX || x >= owner->originX + owner->width;
 
         for (int k = 1; k <= VOXEL_BORDER_SEA_SEARCH; ++k)
         {
             int ax = alongY ? ex : ex - k, ay = alongY ? ey - k : ey;
             int bx = alongY ? ex : ex + k, by = alongY ? ey + k : ey;
 
-            if (VoxelWorld_GetInstanceAt(ax, ay) == ring && VoxelMesh_Classify(ax, ay) == VOXEL_SHAPE_WATER)
+            if (VoxelWorld_GetInstanceAt(ax, ay) == owner && VoxelMesh_Classify(ax, ay) == VOXEL_SHAPE_WATER)
             {
                 ex = ax, ey = ay;
                 break;
             }
-            if (VoxelWorld_GetInstanceAt(bx, by) == ring && VoxelMesh_Classify(bx, by) == VOXEL_SHAPE_WATER)
+            if (VoxelWorld_GetInstanceAt(bx, by) == owner && VoxelMesh_Classify(bx, by) == VOXEL_SHAPE_WATER)
             {
                 ex = bx, ey = by;
                 break;
@@ -3429,8 +3610,8 @@ static bool BorderWaterLevel(int x, int y, float *level, float *shift)
     }
     if (VoxelMesh_Classify(ex, ey) == VOXEL_SHAPE_WATER)
     {
-        *level = VoxelRelief_CellLift(ring, ex, ey);
-        *shift = VoxelRelief_CellShift(ring, ex, ey);
+        *level = VoxelRelief_CellLift(owner, ex, ey) + rebase;
+        *shift = VoxelRelief_CellShift(owner, ex, ey) + rebase;
     }
     return true;
 }
@@ -3452,8 +3633,9 @@ void VoxelMesh_SetBorderFollowsEdge(bool on)
 
 bool VoxelMesh_BorderLevel(int x, int y, float *level, float *shift)
 {
-    const VoxelMapInstance *ring = VoxelWorld_Instance(0);
+    const VoxelMapInstance *ring = VoxelWorld_Instance(0), *owner;
     int ex, ey;
+    float rebase;
 
     VoxelEdgeFill fill;
 
@@ -3462,25 +3644,54 @@ bool VoxelMesh_BorderLevel(int x, int y, float *level, float *shift)
     if (ring == NULL || ring->indoor || VoxelRelief_Belt(ring) != 0
      || VoxelWorld_GetInstanceAt(x, y) != NULL)
         return false;
-    ex = x < ring->originX ? ring->originX
-       : x >= ring->originX + ring->width ? ring->originX + ring->width - 1 : x;
-    ey = y < ring->originY ? ring->originY
-       : y >= ring->originY + ring->height ? ring->originY + ring->height - 1 : y;
+    /* its own map's edge (VoxelMesh_BeltOwner), over the base the belt is
+     * built on */
+    owner = VoxelMesh_BeltOwner(x, y, &ex, &ey);
+    if (owner == NULL)
+        return false;
+    rebase = BeltRebase(owner);
     /* a fill the map's fixes give a height stands its top there, laid on
      * from the map's edge as it is drawn (BorderWaterLevel) */
-    if (VoxelRelief_EdgeFillAt(ring, x, y, &fill) && fill.hasTop && !fill.water)
+    if (VoxelMesh_BeltFill(x, y, &fill) && fill.hasTop && !fill.water)
     {
-        *level = (float)fill.top / 16.0f - (float)VOXEL_BORDER_COURSES;
-        *shift = VoxelRelief_CellShift(ring, ex, ey);
+        *level = (float)fill.top / 16.0f - (float)VOXEL_BORDER_COURSES + rebase;
+        *shift = VoxelRelief_CellShift(owner, ex, ey) + rebase;
         return true;
     }
     if (!sBorderFollowsEdge)
         return false;
+    *level = rebase;
+    *shift = rebase;
     if (VoxelMesh_Classify(ex, ey) == VOXEL_SHAPE_WATER)
-        return false;
-    *level = VoxelRelief_CellLift(ring, ex, ey);
-    *shift = VoxelRelief_CellShift(ring, ex, ey);
+        return owner != ring;
+    *level += VoxelRelief_CellLift(owner, ex, ey);
+    *shift += VoxelRelief_CellShift(owner, ex, ey);
     return true;
+}
+
+/*
+ * What a step along the belt shows on its faces: the cliff of the map the
+ * cell goes on from (VoxelRelief_FaceTile), where its edge steps and no fill
+ * says otherwise. The cell's own drawing stood on end was a wood's canopy
+ * for a wall wherever a mountain met the map's edge; with the map's rock it
+ * is the same mountain going on. False where the map has no cliff or the
+ * current atlas does not hold it: the cell's drawing, as before.
+ */
+static bool BeltFaceUV(VoxelBuilder *builder, int x, int y, float *u0, float *v0, float *u1, float *v1)
+{
+    const VoxelMapInstance *ring = VoxelWorld_Instance(0), *owner;
+    VoxelEdgeFill fill;
+    int ex, ey, face;
+
+    if (ring == NULL || VoxelMesh_BeltFill(x, y, &fill))
+        return false;
+    owner = VoxelMesh_BeltOwner(x, y, &ex, &ey);
+    if (owner == NULL || owner->primaryTileset != ring->primaryTileset)
+        return false;
+    face = VoxelRelief_FaceTile(owner);
+    if (face < 0 || (face >= VOXEL_BELT_SECONDARY_ID && owner->secondaryTileset != ring->secondaryTileset))
+        return false;
+    return MetatileUV(builder, face, u0, v0, u1, v1);
 }
 
 /* A belt cell's top over the one north of it, seen from above: a block
@@ -3492,7 +3703,8 @@ bool VoxelMesh_BorderLevel(int x, int y, float *level, float *shift)
  * Beside the map (west or east of it) the flat part is capped down the
  * belt's courses: the map's edge cell stands that much lower. */
 static void EmitBorderNorth(VoxelBuilder *b, int x, int y, float low, float lowShift,
-                            float top, float shift, float u0, float v0, float u1, float v1)
+                            float top, float shift, float u0, float v0, float u1, float v1,
+                            float fu0, float fv0, float fu1, float fv1)
 {
     const float c = (float)VOXEL_BORDER_COURSES, za = y + lowShift, zb = y + shift;
 
@@ -3501,14 +3713,14 @@ static void EmitBorderNorth(VoxelBuilder *b, int x, int y, float low, float lowS
     for (float band = floorf(low); band < top; band += 1.0f)
     {
         float h0 = fmaxf(low, band), h1 = fminf(top, band + 1.0f);
-        float va = v1 + (v0 - v1) * (h0 - band), vb = v1 + (v0 - v1) * (h1 - band);
+        float va = fv1 + (fv0 - fv1) * (h0 - band), vb = fv1 + (fv0 - fv1) * (h1 - band);
 
         if (h1 <= h0)
             continue;
-        VoxelBuilder_Quad(b, &(VoxelVertex){(float)x + 1.0f, h0, zb, u0, va, SHADE_NORTH},
-                          &(VoxelVertex){(float)x, h0, zb, u1, va, SHADE_NORTH},
-                          &(VoxelVertex){(float)x, h1, zb, u1, vb, SHADE_NORTH},
-                          &(VoxelVertex){(float)x + 1.0f, h1, zb, u0, vb, SHADE_NORTH});
+        VoxelBuilder_Quad(b, &(VoxelVertex){(float)x + 1.0f, h0, zb, fu0, va, SHADE_NORTH},
+                          &(VoxelVertex){(float)x, h0, zb, fu1, va, SHADE_NORTH},
+                          &(VoxelVertex){(float)x, h1, zb, fu1, vb, SHADE_NORTH},
+                          &(VoxelVertex){(float)x + 1.0f, h1, zb, fu0, vb, SHADE_NORTH});
     }
     for (float row = floorf(za); row < zb; row += 1.0f)
     {
@@ -3548,9 +3760,12 @@ static void EmitBorderSteps(VoxelBuilder *builder, int x, int y, float level, fl
 {
     static const int kDir[3][2] = { {0, 1}, {1, 0}, {-1, 0} };
     float u0, v0, u1, v1, other, otherShift;
+    float fu0, fv0, fu1, fv1;
 
     if (!MetatileUV(builder, VoxelWorld_BorderMetatile(x, y), &u0, &v0, &u1, &v1))
         return;
+    if (!BeltFaceUV(builder, x, y, &fu0, &fv0, &fu1, &fv1))
+        fu0 = u0, fv0 = v0, fu1 = u1, fv1 = v1;
     for (int d = 0; d < 3; ++d)
     {
         int nx = x + kDir[d][0], ny = y + kDir[d][1];
@@ -3563,11 +3778,11 @@ static void EmitBorderSteps(VoxelBuilder *builder, int x, int y, float level, fl
         if (other >= level - 0.05f)
             continue;
         if (d == 0)
-            VoxelMesh_South(builder, (float)x, (float)y + shift, other, level, 0.0f, u0, v0, u1, v1);
+            VoxelMesh_South(builder, (float)x, (float)y + shift, other, level, 0.0f, fu0, fv0, fu1, fv1);
         else if (d == 1)
-            VoxelMesh_East(builder, (float)x, (float)y + shift, other, level, 0.0f, u0, v0, u1, v1);
+            VoxelMesh_East(builder, (float)x, (float)y + shift, other, level, 0.0f, fu0, fv0, fu1, fv1);
         else
-            VoxelMesh_West(builder, (float)x, (float)y + shift, other, level, 0.0f, u0, v0, u1, v1);
+            VoxelMesh_West(builder, (float)x, (float)y + shift, other, level, 0.0f, fu0, fv0, fu1, fv1);
     }
     if (VoxelWorld_GetInstanceAt(x, y - 1) == NULL)
     {
@@ -3581,7 +3796,7 @@ static void EmitBorderSteps(VoxelBuilder *builder, int x, int y, float level, fl
             low = other + (float)VOXEL_BORDER_COURSES;
         }
         EmitBorderNorth(builder, x, y, low, otherShift, level + (float)VOXEL_BORDER_COURSES, shift,
-                        u0, v0, u1, v1);
+                        u0, v0, u1, v1, fu0, fv0, fu1, fv1);
     }
 }
 

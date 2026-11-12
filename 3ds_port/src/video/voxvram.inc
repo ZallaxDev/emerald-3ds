@@ -81,6 +81,33 @@ static void VoxelPagesManage(void)
     sPageRetryFrame = sStats.frames + VOXEL_UNPARK_RETRY_FRAMES;
 }
 
+/* With the world up: SHADOW QUALITY HIGH's map, if the world was claimed
+ * without it (the option changed since). The quality is the option's all
+ * the while; only its shadows wait for the room. */
+static void VoxelShadowManage(void)
+{
+    static uint32_t sShadowRetryFrame, sShadowClaimFails;
+
+    if (!CtrVoxel_ShadowMapMissing() || sStats.frames < sShadowRetryFrame)
+        return;
+    /* None of these is drawn from on the voxel field; they come back on
+     * demand. Not a battle's or a transition's own. */
+    if (!CtrVoxel_InBattle() && !sBattle && !sBattleRequested && !sTransition && !sTransitionRequested)
+    {
+        if (sBandsReady) BandsRelease();
+        SceneRelease();
+        SlotsRelease();
+        if (sBottom && !sBottomInUse) BottomRelease();
+    }
+    if (CtrVoxel_ClaimShadowMap())
+        return;
+    if (sShadowClaimFails++ == 0)
+        CtrLog_Write(CTR_LOG_ERROR, "VOXEL: no room for the shadow map yet (free=%lu, largest=%lu); "
+                     "retrying every %u frames", (unsigned long)vramSpaceFree(),
+                     (unsigned long)CtrGpuMem_LargestVram(), VOXEL_UNPARK_RETRY_FRAMES);
+    sShadowRetryFrame = sStats.frames + VOXEL_UNPARK_RETRY_FRAMES;
+}
+
 static void VoxelVramManage(void)
 {
     static uint32_t sUnwanted, sRetryFrame;
@@ -135,6 +162,7 @@ static void VoxelVramManage(void)
     if (CtrVoxel_HoldsVram())
     {
         VoxelPagesManage();
+        VoxelShadowManage();
         return;
     }
     if (sStats.frames < sRetryFrame)

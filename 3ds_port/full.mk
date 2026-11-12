@@ -136,6 +136,7 @@ ROMFS_SHADER_OUTS := romfs/shaders/voxel.shbin romfs/voxel/regions.bin
 ROMFS_SHADER_OUTS += romfs/voxel/trees.rgba5551
 ROMFS_SHADER_OUTS += romfs/voxel/signposts.bin
 ROMFS_SHADER_OUTS += romfs/voxel/buildings.bin
+ROMFS_SHADER_OUTS += romfs/voxel/windowlights.bin
 ROMFS_SHADER_OUTS += romfs/voxel/relief.bin
 # New art around the intro's leaves scene (scripts/gen_intro_margins.py).
 ROMFS_SHADER_OUTS += romfs/stage/leaves.bin
@@ -537,7 +538,7 @@ romfs/voxel/trees.rgba5551: scripts/gen_voxel_trees.py \
 # in any room - see build/buildings/interior_lint.txt.
 # verify-voxel-buildings runs the proofs alone, even when the file is
 # up to date: the release build asks for it.
-romfs/voxel/buildings.bin: scripts/gen_voxel_buildings.py scripts/voxel_building.py scripts/voxel_night.py \
+romfs/voxel/buildings.bin: scripts/gen_voxel_buildings.py scripts/voxel_building.py scripts/voxel_night.py scripts/voxel_windows.py \
 		scripts/voxel_building_specs.py scripts/voxel_bridge.py scripts/voxel_fence.py scripts/voxel_fortree.py scripts/dump_region_art.py scripts/voxel_props.py \
 		scripts/voxel_relief_fixes.py assets/voxel/relief_fixes.json \
 		scripts/gen_voxel_relief.py \
@@ -545,6 +546,11 @@ romfs/voxel/buildings.bin: scripts/gen_voxel_buildings.py scripts/voxel_building
 		$(ROOT)/data/layouts/layouts.json
 	@mkdir -p $(@D)
 	"$(PYTHON)" scripts/gen_voxel_buildings.py --verify --output $@
+
+# The light lit windows throw on the ground, written beside buildings.bin
+# by the same run.
+romfs/voxel/windowlights.bin: romfs/voxel/buildings.bin
+	@test -f $@ || { rm -f $<; $(MAKE) $<; }
 
 .PHONY: verify-voxel-buildings
 verify-voxel-buildings:
