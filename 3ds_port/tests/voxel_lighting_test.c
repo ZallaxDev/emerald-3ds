@@ -133,6 +133,7 @@ uint32_t VoxelWorld_BlockHash(int x0, int z0, int x1, int z1)
     return hash;
 }
 int VoxelWorld_BorderMetatile(int x, int z) { (void)x; (void)z; return -1; }
+bool VoxelAtlas_IsVoid(const VoxelMapInstance *inst, int metatile) { (void)inst; (void)metatile; return false; }
 bool VoxelWorld_BorderIsWater(int x, int z) { (void)x; (void)z; return false; }
 void VoxelWorld_GetPlayerWorldCoords(float *x, float *z) { *x = *z = 0; }
 void VoxelAtlas_SlotUV(unsigned slot, float *u0, float *v0, float *u1, float *v1)

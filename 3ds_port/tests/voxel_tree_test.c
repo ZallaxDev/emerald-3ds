@@ -62,6 +62,7 @@ int VoxelWorld_BorderMetatile(int x, int y)
     const int pattern[] = {0x1D4, 0x1D5, 0x1DC, 0x1DD};
     return pattern[((x - sMap.originX) & 1) + 2 * ((y - sMap.originY) & 1)];
 }
+bool VoxelAtlas_IsVoid(const VoxelMapInstance *inst, int metatile) { (void)inst; (void)metatile; return false; }
 
 bool VoxelWorld_BorderIsWater(int x, int y) { (void)x; (void)y; return false; }
 
