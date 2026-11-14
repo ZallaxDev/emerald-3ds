@@ -544,6 +544,37 @@ static void PickMapCell(int x, int y)
         MapZoomTo(cx, cy, PickPanelWidth(mapsec, sPickPos));
 }
 
+/* The +Control Pad on the Fly map, as the game's Fly map moves its cursor:
+ * a cell each press, and on through the cells with no place in them (the
+ * sea) to the next one that has one; nothing that way, the pick stays.
+ * Zoomed in, the view comes round it as a tap's would. */
+static void StepPickCell(u16 dpad)
+{
+    int dx = (dpad & DPAD_RIGHT) ? 1 : (dpad & DPAD_LEFT) ? -1 : 0;
+    int dy = (dpad & DPAD_DOWN) ? 1 : (dpad & DPAD_UP) ? -1 : 0;
+    int cx = sPickX, cy = sPickY;
+    u16 mapsec;
+
+    if (dx == 0 && dy == 0)
+        return;
+    for (;;)
+    {
+        cx += dx;
+        cy += dy;
+        if (cx < 0 || cy < 0 || cx >= MAP_PIC_W / 8 || cy >= MAP_PIC_H / 8)
+            return;
+        mapsec = GetRegionMapSecIdAt(cx, cy);
+        if (mapsec != MAPSEC_NONE)
+            break;
+    }
+    sPickMapsec = mapsec;
+    sPickX = cx;
+    sPickY = cy;
+    sPickPos = CtrRegionMap_PosWithinMapSec(cx, cy, mapsec);
+    if (sMapZoom)
+        MapZoomTo(cx, cy, PickPanelWidth(mapsec, sPickPos));
+}
+
 /* The wild list, where the map is: a cream plate, the method's title bar
  * with the page of how many, then a row a species - its icon, its name
  * ("???" not seen yet), its levels and its chance. */

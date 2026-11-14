@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Bottom screen: the Fly map (from the party or from the Bag's HM02) takes
+  the +Control Pad and the Circle Pad as the game's Fly map does: a press
+  moves the pick to the next place that way, held it goes on, and A flies
+  there, so a destination can be chosen without the touch screen.
 - Voxel: the mountains' south faces lean back as the game draws them, not
   straight up (settings.txt `voxel_face_lean`, percent, 75 by default; 0 is
   the old upright walls). Cave mouths and doors lean with their face, a
