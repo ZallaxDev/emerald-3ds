@@ -6569,7 +6569,8 @@ static bool8 OpenGameScreen(u8 screen);
  * The Fly map, from public PR #108: FLY from the party or the bag's HM opens
  * the MAP here, its icons on it, instead of the game's Fly map. Till FLY or
  * CANCEL the game sees no buttons (CtrBottom_FilterKeys) and the dock is
- * locked; A is FLY, B is CANCEL.
+ * locked; A is FLY, B is CANCEL, the +Control Pad moves the pick
+ * (FlyMapDpad) as the game's Fly map moves its cursor.
  */
 void CtrBottom_OpenFlyMap(u8 slot, bool8 fromBag)
 {
@@ -6628,6 +6629,29 @@ static void FlyFromMap(void)
     RememberFlyer(sFlySlot);
     CtrParty_Fly(sFlySlot, sPickMapsec, sPickPos);
     EndFlyMap();
+}
+
+/* The +Control Pad (or the Circle Pad) on the Fly map: a press moves the
+ * pick (StepPickCell), held it goes on after a moment, as the game's Fly
+ * map's cursor does, so the place can be chosen without the touch screen. */
+#define FLY_DPAD_DELAY 16
+#define FLY_DPAD_REPEAT 4
+static u8 sFlyDpadFrames;
+
+static void FlyMapDpad(u16 held, u16 down)
+{
+    if (down)
+    {
+        sFlyDpadFrames = 0;
+        StepPickCell(down);
+    }
+    else if (!held)
+        sFlyDpadFrames = 0;
+    else if (++sFlyDpadFrames >= FLY_DPAD_DELAY)
+    {
+        sFlyDpadFrames = FLY_DPAD_DELAY - FLY_DPAD_REPEAT;
+        StepPickCell(held);
+    }
 }
 
 /* The map's own FLY: the destination as the Fly map's A would take it, and
@@ -7436,6 +7460,8 @@ static void ProcessKeys(u8 mode)
             FlyFromMap();
         else if (sShown.mapFly && (down & B_BUTTON))
             CancelFlyMap();
+        else if (sShown.mapFly)
+            FlyMapDpad(in->held & DPAD_ANY, down & DPAD_ANY);
         return;
     }
     /* A tap took the screen elsewhere. */
