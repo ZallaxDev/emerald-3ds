@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Visible wild Pokémon: one caught has its IVs from the random numbers right
+  after its personality, as a wild Pokémon of the game has, so save checkers
+  such as PKHeX accept it (PID/IV "Method 1"); before, its IVs were rolled
+  when the battle began and every one was flagged as illegal (issue #265). By
+  @Johannes-Sch.
 - Voxel: the mountains' south faces lean back as the game draws them, not
   straight up (settings.txt `voxel_face_lean`, percent, 75 by default; 0 is
   the old upright walls). Cave mouths and doors lean with their face, a
