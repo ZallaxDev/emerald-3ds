@@ -60,6 +60,7 @@ VoxelVisualShape VoxelWorld_ClassifyTile(int x,int y)
 /* (never the same twice: the belt keeps nothing from one case to the next) */
 unsigned VoxelWorld_InstanceBuilds(void) { static unsigned builds; return ++builds; }
 int VoxelWorld_BorderMetatile(int x,int y) { (void)x; (void)y; return -1; }
+bool VoxelAtlas_IsVoid(const VoxelMapInstance *inst, int metatile) { (void)inst; (void)metatile; return false; }
 bool VoxelWorld_BorderIsWater(int x, int y) { (void)x; (void)y; return false; }
 void VoxelWorld_GetPlayerWorldCoords(float *x,float *z) { *x=7+sMap.originX; *z=7+sMap.originY; }
 void VoxelAtlas_SlotUV(unsigned slot,float *u,float *v,float *ue,float *ve)
