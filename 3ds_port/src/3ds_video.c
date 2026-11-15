@@ -22,6 +22,7 @@
 #include "3ds_bottom.h"
 #include "ctr_battle_layout.h"
 #include "3ds_battle_hud.h"
+#include "3ds_bw_mons.h"
 #include "3ds_local.h"
 #include "3ds_obj_list.h"
 #include "../compat/port_prof.h"
@@ -75,6 +76,8 @@ static bool SkyPuffTexture(void); /* the sky scene's cloud dollops, made at star
 #include "video/edges.inc"
 
 #include "video/hud.inc"
+
+#include "video/bw.inc"
 
 #include "video/boxtext.inc"
 

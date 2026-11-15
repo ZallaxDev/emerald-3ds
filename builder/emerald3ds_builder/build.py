@@ -10,7 +10,7 @@ import zlib
 from dataclasses import dataclass
 from pathlib import Path
 
-from . import followers, pak, precompiled
+from . import followers, npc_looks, pak, precompiled
 from .errors import BuilderError
 from .recipe import Recipe, RecipeError, build_entry, recipe_rom_sha1
 from .rom import Rom, load_rom, reject_unsupported_rom
@@ -236,7 +236,7 @@ def build_pack(rom_path: Path, payload: Payload, out_pak: Path, progress=None,
                keep_workdir: bool = False, runner: str = "subprocess", rom: Rom | None = None,
                follower_fetcher: "followers.Fetcher | None | bool" = True,
                need_executables: bool = False, precompiled_ok: bool = True,
-               language: str | None = None) -> dict:
+               language: str | None = None, looks: bool | None = None) -> dict:
     """Generate emerald3ds.pak from the ROM. Returns a summary.
 
     `runner` picks how the voxel generators run (see voxel.py); `rom` lets a
@@ -258,7 +258,11 @@ def build_pack(rom_path: Path, payload: Payload, out_pak: Path, progress=None,
     `follower_fetcher` gets the optional follower sprites (followers.py): True
     for the default one (local copies, the cache, the network), False for
     none, or a Fetcher. They go into the pack but not into its ABI; what
-    cannot be had is left out and the build goes on."""
+    cannot be had is left out and the build goes on.
+
+    `looks` fetches the optional new looks for the people and the player
+    (npc_looks.py) the same way: outside the ABI, left out if they cannot be
+    had. By default, whenever the followers are fetched."""
     report = Progress(progress)
     timings: list[tuple[str, float]] = []
     payload.check(need_executables=False)
@@ -339,7 +343,20 @@ def build_pack(rom_path: Path, payload: Payload, out_pak: Path, progress=None,
             follower_fetcher, report.span(0.9, 0.92, "Fetching the follower sprites"),
             languages=[followers.ROM_LANGUAGES.get(rom.code[3:4], "en")])
         timings.append(("followers", time.perf_counter() - start))
-    report(0.92, "Writing the data pack")
+    looks_info = None
+    if looks is None:
+        looks = follower_fetcher is not False and follower_fetcher is not None
+    if looks:
+        report(0.92, "Fetching the new looks")
+        start = time.perf_counter()
+        try:
+            looks_files, looks_info = npc_looks.build_section(
+                progress=report.span(0.92, 0.94, "Fetching the new looks"))
+            optional.update(looks_files)
+        except Exception as error:      # noqa: BLE001 - optional, never fatal
+            looks_info = {"people": 0, "players": 0, "missing": [str(error)]}
+        timings.append(("looks", time.perf_counter() - start))
+    report(0.94, "Writing the data pack")
     info = pak.write_pak(out_pak, sorted({**files, **optional}.items()), abi, bytes.fromhex(rom.sha1))
     report(0.96, "Verifying the data pack")
     with pak.PakReader(out_pak) as reader:
@@ -347,4 +364,4 @@ def build_pack(rom_path: Path, payload: Payload, out_pak: Path, progress=None,
     report(1.0, "Done")
     return {"entries": info["entries"], "bytes": info["bytes"], "abi": abi, "release": recipe.release,
             "rom": rom.code, "timings": [(name, round(sec, 2)) for name, sec in timings],
-            "followers": follower_info, "payload": payload}
+            "followers": follower_info, "looks": looks_info, "payload": payload}

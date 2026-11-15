@@ -81,6 +81,8 @@
 #include "party_menu.h"
 #include "pokedex.h"
 #include "pokemon.h"
+#include "3ds_bw_mons.h"
+#include "3ds_extras.h"
 #include "pokemon_icon.h"
 #include "pokemon_summary_screen.h"
 #include "pokenav.h"
@@ -117,6 +119,7 @@
 #include "3ds_bottom.h"
 #include "3ds_extras.h"
 #include "3ds_bottom_art.h"
+#include "3ds_bottom_banner.h"
 #include "3ds_clock_store.h"
 #include "3ds_input.h"
 #include "3ds_local.h"
@@ -2412,6 +2415,10 @@ typedef struct
     struct CtrSummaryView sv;
     struct CtrBagView bv;
     struct CtrDexView dx;
+    /* The summary's or the Pokédex's Pokémon drawn from its BW picture
+     * (3ds_bw_mons.h), and the frame of it shown (BwUiSnapshot). */
+    u8 bwShown;
+    u16 bwFrame;
 } ViewState;
 
 /* NATIVE_BLANK: one of those whose view is not there yet: the section's
@@ -3432,6 +3439,124 @@ static u8 NativeKind(const ViewState *s)
  * its plates are no longer the game's, so a tap on them is not taken. */
 static bool8 sNativeStale;
 
+/*
+ * The summary's Pokémon (animated) and the Pokédex's (its first frame)
+ * from their Black 2 / White 2 pictures when the player has them and the
+ * option is on (3ds_bw_mons.h): read on the reader thread, the game's
+ * picture drawn until it is in. The frame shown is part of the view, so a
+ * new one redraws the summary as the game's own animation does.
+ */
+static char sBwUiPath[64];
+static const CtrBwPic *sBwUiPic;
+static uint32_t sBwUiTick;
+static uint32_t *sBwUiPixels;
+static const CtrBwPic *sBwUiDecodedPic;
+static int sBwUiDecodedFrame = -1;
+
+static void BwUiSnapshot(ViewState *s)
+{
+    char path[64] = "";
+    u16 species = 0;
+    bool8 female = FALSE, shiny = FALSE, animated = FALSE;
+    const char *form = "";
+    static const char *const unown[28] = {
+        "", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N",
+        "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "EX", "QU",
+    };
+
+    s->bwShown = 0;
+    s->bwFrame = 0;
+    ++sBwUiTick;
+    if (!CtrExtras_Get("bw_sprites")) return;
+    if (s->native == NATIVE_SUMMARY && !s->sv.isEgg && !s->sv.loading)
+    {
+        species = s->sv.species;
+        female = s->sv.gender == MON_FEMALE;
+        shiny = s->sv.shiny;
+        animated = TRUE;
+        if (species == SPECIES_UNOWN) form = unown[GetUnownLetterByPersonality(s->sv.pid) % 28];
+    }
+    else if (s->native == NATIVE_DEX)
+        species = s->dx.species;
+    if (species && species < NUM_SPECIES)
+    {
+        unsigned dex = SpeciesToNationalPokedexNum(species);
+
+        if (dex && dex <= 386)
+        {
+            snprintf(path, sizeof(path), CTR_BW_DIR "front/%03u%s%s%s.bin", dex, form, female ? "_f" : "",
+                     shiny ? "_s" : "");
+            /* A female with no picture of her own takes the common one. */
+            if (female && !CtrBwPic_Exists(path))
+                snprintf(path, sizeof(path), CTR_BW_DIR "front/%03u%s%s.bin", dex, form, shiny ? "_s" : "");
+        }
+    }
+    if (strcmp(path, sBwUiPath))
+    {
+        snprintf(sBwUiPath, sizeof(sBwUiPath), "%s", path);
+        sBwUiPic = NULL;
+        /* A new picture can come back at the address of the one it
+         * replaces, so the decoded pixels go with the path, not the pointer. */
+        sBwUiDecodedPic = NULL;
+        sBwUiDecodedFrame = -1;
+        if (path[0]) CtrBwPic_Request(CTR_BW_SLOT_UI, path);
+    }
+    if (!path[0]) return;
+    if (!sBwUiPic)
+    {
+        sBwUiPic = CtrBwPic_Get(CTR_BW_SLOT_UI, path);
+        sBwUiDecodedPic = NULL;
+        sBwUiDecodedFrame = -1;
+    }
+    if (!sBwUiPic) return;
+    s->bwShown = 1;
+    s->bwFrame = animated ? (u16)CtrBwPic_FrameAt(sBwUiPic, sBwUiTick) : 0;
+}
+
+/* The BW picture's frame, standing with its feet on (cx, feetY), made
+ * smaller to fit [x0, x1) x [y0, y1) where it would not. */
+static void DrawBwUi(u16 frame, int cx, int feetY, int x0, int y0, int x1, int y1)
+{
+    unsigned w, h, anchorX2, feet;
+    int outW, outH, left, top;
+    float scale = 1.0f;
+
+    if (!sBwUiPic) return;
+    if (!sBwUiPixels) sBwUiPixels = malloc(sizeof(uint32_t) * CTR_BW_MAX_DIM * CTR_BW_MAX_DIM);
+    if (!sBwUiPixels) return;
+    CtrBwPic_Size(sBwUiPic, &w, &h, &anchorX2, &feet);
+    if (sBwUiDecodedPic != sBwUiPic || sBwUiDecodedFrame != frame)
+    {
+        CtrBwPic_Decode(sBwUiPic, frame, sBwUiPixels, w);
+        sBwUiDecodedPic = sBwUiPic;
+        sBwUiDecodedFrame = frame;
+    }
+    if ((int)(feet + 1) > feetY - y0) scale = (float)(feetY - y0) / (float)(feet + 1);
+    if ((int)w * scale > x1 - x0) scale = (float)(x1 - x0) / (float)w;
+    outW = (int)(w * scale);
+    outH = (int)(h * scale);
+    left = cx - (int)(anchorX2 / 2.0f * scale);
+    top = feetY - (int)((feet + 1) * scale);
+    for (int oy = 0; oy < outH; ++oy)
+    {
+        int y = top + oy;
+        const uint32_t *row;
+
+        if (y < y0 || y >= y1) continue;
+        row = sBwUiPixels + (unsigned)(oy / scale) * w;
+        for (int ox = 0; ox < outW; ++ox)
+        {
+            int x = left + ox;
+            uint32_t c;
+
+            if (x < x0 || x >= x1) continue;
+            c = row[(unsigned)(ox / scale)];
+            if (c & 0xFF)
+                Put(x, y, PackRgb((int)(c >> 24), (int)((c >> 16) & 0xFF), (int)((c >> 8) & 0xFF)));
+        }
+    }
+}
+
 static void SnapshotNative(ViewState *s)
 {
     u8 kind = NativeKind(s);
@@ -3477,6 +3602,7 @@ static void SnapshotNative(ViewState *s)
     }
     if (s->native == NATIVE_PARTY)
         SnapshotPartyFull(s);
+    BwUiSnapshot(s);
 }
 
 /* The save view's file: the card's figures, where the player is, the party. */
@@ -5347,6 +5473,23 @@ static struct
 #define TITLE_MARGIN_Y 6
 #define TITLE_GREY 100   /* the logo's coverage at its strongest */
 
+/* The port's banner (3ds_bottom_banner.h) in the middle of a black screen:
+ * under the title and every screen that gives this one nothing, as while the
+ * game starts (3ds_log.c). */
+static void DrawBanner(void)
+{
+    int x0 = (W - BOTTOM_BANNER_W) / 2, y0 = (H - BOTTOM_BANNER_H) / 2 - 12;
+
+    for (int y = 0; y < BOTTOM_BANNER_H; ++y)
+        for (int x = 0; x < BOTTOM_BANNER_W; ++x)
+        {
+            u16 c = kBottomBanner[y * BOTTOM_BANNER_W + x];
+
+            if (c)
+                Put(x0 + x, y0 + y, c);
+        }
+}
+
 static void DrawTitleCredit(void)
 {
     int x0 = TITLE_MARGIN_X, y0 = H - TITLE_MARGIN_Y - ART_LOGO_H, ink = ART_LOGO_W;
@@ -5492,6 +5635,7 @@ static void Render(const ViewState *s)
     {
         memset(sCanvas, 0, sizeof(sCanvas));
         phase[1] = CtrPlatform_Ticks();
+        DrawBanner();
         if (s->title)
             DrawTitleCredit();
         phase[2] = CtrPlatform_Ticks();

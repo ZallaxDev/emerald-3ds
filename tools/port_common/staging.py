@@ -61,6 +61,9 @@ ENGINE_PATTERNS = [
 ]
 OPTIONAL_PATTERNS = [
     "followers/*",
+    # New looks for the people and the player (npc_looks.py).
+    "npcs/*",
+    "players/*",
 ]
 SUPPORTED_ROM_SHA1 = bytes.fromhex("f3ae088181bf583e55daf962a92bb46f4f1d07b7")
 

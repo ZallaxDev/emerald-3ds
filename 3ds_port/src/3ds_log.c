@@ -5,6 +5,7 @@
 #include <sys/iosupport.h>
 #include <sys/stat.h>
 #include "3ds_log.h"
+#include "3ds_bottom_banner.h"
 
 static PrintConsole sConsole;
 static const char *const sTags[] =
@@ -239,7 +240,18 @@ static void ClearBottomScreen(void)
 {
     gfxSetScreenFormat(GFX_BOTTOM, GSP_RGB565_OES);
     gfxSetDoubleBuffering(GFX_BOTTOM, false);
-    memset(gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, NULL, NULL), 0, 320 * 240 * 2);
+    {
+        /* Black, with the port's banner while the game starts (as the bottom
+         * screen shows it under the title, 3ds_bottom_ui.c). The screen is
+         * 240 pixels a column, from the bottom up. */
+        u16 *fb = (u16 *)gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, NULL, NULL);
+        int x0 = (320 - BOTTOM_BANNER_W) / 2, y0 = (240 - BOTTOM_BANNER_H) / 2 - 12;
+
+        memset(fb, 0, 320 * 240 * 2);
+        for (int x = 0; x < BOTTOM_BANNER_W; ++x)
+            for (int y = 0; y < BOTTOM_BANNER_H; ++y)
+                fb[(x0 + x) * 240 + (239 - (y0 + y))] = kBottomBanner[y * BOTTOM_BANNER_W + x];
+    }
     gfxFlushBuffers();
     gfxSwapBuffers();
     gspWaitForVBlank();

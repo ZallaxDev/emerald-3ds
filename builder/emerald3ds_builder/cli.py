@@ -14,7 +14,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from . import __version__, followers, pak
+from . import __version__, followers, npc_looks, pak
 from .build import Payload, build_pack, default_payload, select_payload
 from .errors import BuilderError
 from .install import APP_DIR, find_sd_cards, install
@@ -91,8 +91,9 @@ def cmd_verify(args) -> int:
         recipe = Recipe.load(payload.for_pak(reader.rom_sha1.hex(), reader.abi).recipe)
         count = reader.verify()
         expected = {pak.path_id(e["path"]): e for e in recipe.entries + recipe.generated}
-        # The optional follower sprites (followers.py) are not the recipe's.
-        optional = {pak.path_id(p) for p in followers.pack_paths()}
+        # The optional follower sprites (followers.py) and new looks
+        # (npc_looks.py) are not the recipe's.
+        optional = {pak.path_id(p) for p in followers.pack_paths() + npc_looks.pack_paths()}
         for pid, entry in reader.entries.items():
             if pid in optional:
                 continue

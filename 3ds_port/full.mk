@@ -75,6 +75,8 @@ BACKEND_SRCS += src/3ds_bottom_ui.c
 BACKEND_SRCS += src/3ds_dex_top_game.c
 # The battle's info boxes at the screen's resolution (3ds_battle_hud.h).
 BACKEND_SRCS += src/3ds_battle_hud.c
+# Battlers drawn from Black 2 / White 2 sprites, game side (include/3ds_bw_mons.h).
+BACKEND_SRCS += src/3ds_bw_mons_game.c
 build/bridge/3ds_bottom_ui.o: FULLCFLAGS += -DCTR_APP_VERSION='"$(APP_VERSION)"'
 # The ENHANCEMENTS and CHEATS pages of OPTIONS (include/3ds_extras.h).
 BACKEND_SRCS += src/3ds_extras.c

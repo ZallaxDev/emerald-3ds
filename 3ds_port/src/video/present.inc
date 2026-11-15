@@ -657,6 +657,8 @@ VIDEO_PIECE void FrameRoute(const PresentFrame *f)
 VIDEO_PIECE void FrameHud(const PresentFrame *f)
 {
     HudFrame();
+    /* The battlers drawn from BW pictures (BwDrawInScene). */
+    BwFrame();
     BoxFrame();
     sHudCrisp = sHud && sScene && !f->down && !f->blank && !sTransition && !f->voxel && HudCrispPossible();
     /* Why the boxes are drawn into the scene (magnified with it) when they

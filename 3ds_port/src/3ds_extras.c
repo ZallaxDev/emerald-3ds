@@ -40,6 +40,8 @@ static const char *const sTimedEncounters[] = {CTR_TEXT("ORIGINAL", "ORIGINAL", 
                                                CTR_TEXT("TIMED", "POR HORARIO", "PAR HORAIRE", "PER ORARIO", "POR HORÁRIO", "NACH UHRZEIT", "じかんたい")};
 
 static const char *const sExpShare[] = {CTR_TEXT("OFF", "NO", "NON", "NO", "NENHUM", "AUS", "オフ"), CTR_TEXT("GEN VI", "GEN. VI", "GÉN. VI", "GEN. VI", "GER. VI", "GEN. VI", "だい6せだい"), CTR_TEXT("BALANCED", "EQUILIBRADO", "ÉQUILIBRÉ", "BILANCIATO", "EQUILIBRADO", "AUSGEWOGEN", "バランス")};
+static const char *const sPlayerLooks[] = {CTR_TEXT("ORIGINAL", "ORIGINAL", "ORIGINAL", "ORIGINALE", "ORIGINAL", "ORIGINAL", "もとの"), "BRENDAN HGSS", "MAY HGSS", "BRENDAN ORAS", "MAY ORAS", "ASH", "KRIS", "GOLD", "SILVER", "GREEN"};
+static const char *const sWildChase[] = {CTR_TEXT("OFF", "NO", "NON", "NO", "NENHUM", "AUS", "オフ"), CTR_TEXT("SOME", "ALGUNOS", "CERTAINS", "ALCUNI", "ALGUNS", "EINIGE", "ときどき"), CTR_TEXT("ALL", "TODOS", "TOUS", "TUTTI", "TODOS", "ALLE", "みんな")};
 static const char *const sVisibleWild[] = {CTR_TEXT("OFF", "NO", "NON", "NO", "NENHUM", "AUS", "オフ"), CTR_TEXT("FEW", "POCOS", "PEU", "POCHE", "POUCOS", "WENIGE", "すこし"), CTR_TEXT("SOME", "ALGUNOS", "MOYEN", "ALCUNE", "ALGUNS", "EINIGE", "ふつう"), CTR_TEXT("MANY", "MUCHOS", "BEAUCOUP", "MOLTE", "MUITOS", "VIELE", "たくさん")};
 static const char *const sEncounterRate[] = {CTR_TEXT("NORMAL", "NORMAL", "NORMAL", "NORMALE", "NORMAL", "NORMAL", "ふつう"), CTR_TEXT("OFF", "NO", "NON", "NO", "NENHUM", "AUS", "オフ"), "1/4", "1/2", "2X"};
 /* Fly in the voxel overworld (3ds_fly_sky.h): OFF is the GBA's Fly; CLOUDS
@@ -242,6 +244,11 @@ const CtrExtra gCtrExtras[] =
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("3D DEPTH", "PROFUNDIDAD 3D", "PROFONDEUR 3D", "PROFOND. 3D", "PROFUNDIDADE 3D", "3D-TIEFE", "3D おくゆき"), "voxel_depth", 7, 3, sVoxelDepths, NULL, NULL, NULL},
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("SHADOW QUALITY", "CALIDAD DE SOMBRAS", "QUALITÉ OMBRES", "QUALITÀ OMBRE", "QUALID. SOMBRAS", "SCHATTENQUALITÄT", "かげの ひんしつ"), "voxel_shadows", 0, 0, sVoxelShadows, NULL, VoxelShadowsStep, VoxelShadowsText},
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("SPEED EFFECTS", "EFECTOS VELOC.", "EFFETS VITESSE", "EFFETTI VELOC.", "EFEITOS VELOC.", "TEMPO-EFFEKTE", "スピード こうか"), "battle_speed_fx", 2, 1, gCtrExtrasOffOn, NULL, NULL, NULL},
+    /* The battlers drawn from Black 2 / White 2 sprites, when the player
+     * has copied them to the card (3ds_bw_mons.h, docs/BW_SPRITES.md). */
+    {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("BW2 SPRITES", "SPRITES BN2", "SPRITES NB2", "SPRITE NB2", "SPRITES BW2", "SW2-SPRITES", "BW2 スプライト"), "bw_sprites", 2, 1, gCtrExtrasOffOn, NULL, NULL, NULL},
+    {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("NEW PEOPLE", "PERSONAS NUEVAS", "NOUVEAUX PNJ", "NUOVI PNG", "NPCS NOVOS", "NEUE PERSONEN", "あたらしい ひとびと"), "npc_looks", 2, 1, gCtrExtrasOffOn, NULL, NULL, NULL},
+    {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("PLAYER", "JUGADOR", "JOUEUR", "GIOCATORE", "PERSONAGEM", "SPIELER", "しゅじんこう"), "player_look", 10, 0, sPlayerLooks, NULL, NULL, NULL},
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("SPEED", "VELOC. JUEGO", "VITESSE", "VELOCITÀ", "VELOCIDADE", "TEMPO", "スピード"), "speed", 0, 0, NULL, NULL, SpeedStep, SpeedText},
     /* The game and the music keep real time on a slow frame; the sound
      * engine mixes on the DSP's clock (3ds_platform.c, 3ds_audio.c). */
@@ -251,6 +258,7 @@ const CtrExtra gCtrExtras[] =
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("TRADE EVO LV. 40", "EVOL. INTERC. N40", "ÉVOL. NIV. 40", "SCAMBIO LIV. 40", "EVO. TROCA NV. 40", "TAUSCH-ENTW. LV.40", "つうしん しんか Lv40"), "trade_evo", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("HMS WITHOUT MOVE", "MO SIN APRENDER", "CS SANS CAP.", "MN SENZA MOSSA", "MOS SEM GOLPE", "VM OHNE ATTACKE", "ひでんわざ なしで"), "field_hms", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("VISIBLE WILD", "SALVAJES VISIBLES", "SAUV. VISIBLES", "SELV. VISIBILI", "SELVAGEM VISÍVEL", "WILDE SICHTBAR", "やせいが みえる"), "visible_wild", 4, 0, sVisibleWild, NULL, NULL, NULL},
+    {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("WILD CHASE", "PERSECUCIÓN", "POURSUITE", "INSEGUIMENTO", "SELV. BRAVOS", "VERFOLGUNG", "おいかけてくる"), "wild_chase", 3, 1, sWildChase, NULL, NULL, NULL},
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("IVS AND EVS", "IV Y EV", "IV ET EV", "IV ED EV", "IVS E EVS", "IS UND FP", "こたいち どりょくち"), "ivs_evs", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("REPEL PROMPT", "AVISO REPELENTE", "RAPPEL REPOUSSE", "AVVISO REPELL.", "AVISO REPELENTE", "SCHUTZ-HINWEIS", "むしよけ かくにん"), "repel_prompt", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("INFINITE TMS", "MT INFINITAS", "CT INFINIES", "MT INFINITE", "MTS INFINITAS", "ENDLOSE TMS", "わざマシン むげん"), "infinite_tms", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},

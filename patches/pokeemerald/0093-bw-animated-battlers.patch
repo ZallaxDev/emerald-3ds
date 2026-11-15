@@ -1,0 +1,254 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: battlers and the evolution scene drawn from Black 2 / White 2 animated sprites
+Applies after 0092-touch-message-ack.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/battle_anim.c b/src/battle_anim.c
+index ffd01b6..a9998d8 100644
+--- a/src/battle_anim.c
++++ b/src/battle_anim.c
+@@ -17,6 +17,9 @@
+ #include "sprite.h"
+ #include "task.h"
+ #include "constants/battle_anim.h"
++#ifdef PLATFORM_3DS
++#include "3ds_bw_mons.h"
++#endif
+ 
+ /*
+     This file handles the commands for the macros defined in
+@@ -755,6 +758,13 @@ void MoveBattlerSpriteToBG(u8 battler, bool8 toBG_2, bool8 setSpriteInvisible)
+         else
+             battlerPosition = GetBattlerPosition(battler);
+ 
++#ifdef PLATFORM_3DS
++        // A battler drawn from its BW picture: the compositor draws the copy
++        // from the picture where this layer's scroll puts it (3ds_bw_mons.h).
++        if (CtrBwMons_Shown(battler))
++            CtrBwMons_OnBg(battler, 1, animBg.paletteId);
++        else
++#endif
+         DrawBattlerOnBg(1, 0, 0, battlerPosition, animBg.paletteId, animBg.bgTiles, animBg.bgTilemap, animBg.tilesOffset);
+ 
+         if (IsContest())
+@@ -785,6 +795,11 @@ void MoveBattlerSpriteToBG(u8 battler, bool8 toBG_2, bool8 setSpriteInvisible)
+         LoadPalette(&gPlttBufferUnfaded[OBJ_PLTT_ID(battler)], BG_PLTT_ID(9), PLTT_SIZE_4BPP);
+         CpuCopy32(&gPlttBufferUnfaded[OBJ_PLTT_ID(battler)], (void *)(BG_PLTT + PLTT_OFFSET_4BPP(9)), PLTT_SIZE_4BPP);
+ 
++#ifdef PLATFORM_3DS
++        if (CtrBwMons_Shown(battler))
++            CtrBwMons_OnBg(battler, 2, 9);
++        else
++#endif
+         DrawBattlerOnBg(2, 0, 0, GetBattlerPosition(battler), animBg.paletteId, animBg.bgTiles + 0x1000, animBg.bgTilemap + 0x400, animBg.tilesOffset);
+     }
+ }
+@@ -835,6 +850,10 @@ void RelocateBattleBgPal(u16 paletteNum, u16 *dest, u32 offset, bool8 largeScree
+ void ResetBattleAnimBg(bool8 toBG2)
+ {
+     struct BattleAnimBgData animBg;
++#ifdef PLATFORM_3DS
++    // The battler's copy on this layer is gone (3ds_bw_mons.h).
++    CtrBwMons_OffBg(toBG2 ? 2 : 1);
++#endif
+     GetBattleAnimBg1Data(&animBg);
+ 
+     if (!toBG2 || IsContest())
+diff --git a/src/battle_gfx_sfx_util.c b/src/battle_gfx_sfx_util.c
+index 7047aaa..086c995 100644
+--- a/src/battle_gfx_sfx_util.c
++++ b/src/battle_gfx_sfx_util.c
+@@ -25,6 +25,9 @@
+ #include "constants/songs.h"
+ #include "constants/rgb.h"
+ #include "constants/battle_palace.h"
++#ifdef PLATFORM_3DS
++#include "3ds_bw_mons.h"
++#endif
+ 
+ extern const u8 gBattlePalaceNatureToMoveTarget[];
+ extern const u8 *const gBattleAnims_General[];
+@@ -91,6 +94,10 @@ void AllocateBattleSpritesData(void)
+     gBattleSpritesDataPtr->healthBoxesData = AllocZeroed(sizeof(struct BattleHealthboxInfo) * MAX_BATTLERS_COUNT);
+     gBattleSpritesDataPtr->animationData = AllocZeroed(sizeof(struct BattleAnimationInfo));
+     gBattleSpritesDataPtr->battleBars = AllocZeroed(sizeof(struct BattleBarInfo) * MAX_BATTLERS_COUNT);
++#ifdef PLATFORM_3DS
++    // A new battle: no battler drawn from a BW picture until loaded (3ds_bw_mons.h).
++    CtrBwMons_Reset();
++#endif
+ }
+ 
+ void FreeBattleSpritesData(void)
+@@ -574,6 +581,26 @@ bool8 IsBattleSEPlaying(u8 battler)
+     return TRUE;
+ }
+ 
++#ifdef PLATFORM_3DS
++// The battler's BW picture, if the player has one for it (3ds_bw_mons.h).
++static void CtrBwMonsLoaded(u8 battler, u16 species, u32 personality, u32 shinyPersonality, u32 otId,
++                            bool8 back, bool8 deoxysForm)
++{
++    u8 form = 0;
++
++    if (species == SPECIES_UNOWN)
++        form = GET_UNOWN_LETTER(personality);
++    else if (species == SPECIES_CASTFORM)
++        form = gBattleMonForms[battler];
++    else if (species == SPECIES_DEOXYS)
++        form = deoxysForm;
++    CtrBwMons_Loaded(battler, species, form,
++                     GetGenderFromSpeciesAndPersonality(species, personality) == MON_FEMALE,
++                     IsShinyOtIdPersonality(otId, shinyPersonality), back,
++                     gBattleSpritesDataPtr->battlerData[battler].transformSpecies != SPECIES_NONE);
++}
++#endif
++
+ void BattleLoadOpponentMonSpriteGfx(struct Pokemon *mon, u8 battler)
+ {
+     u32 monsPersonality, currentPersonality, otId;
+@@ -625,6 +652,10 @@ void BattleLoadOpponentMonSpriteGfx(struct Pokemon *mon, u8 battler)
+         BlendPalette(paletteOffset, 16, 6, RGB_WHITE);
+         CpuCopy32(&gPlttBufferFaded[paletteOffset], &gPlttBufferUnfaded[paletteOffset], PLTT_SIZEOF(16));
+     }
++#ifdef PLATFORM_3DS
++    // As loaded: HandleLoadSpecialPokePic_DontHandleDeoxys, Deoxys' normal form.
++    CtrBwMonsLoaded(battler, species, currentPersonality, monsPersonality, otId, FALSE, FALSE);
++#endif
+ }
+ 
+ void BattleLoadPlayerMonSpriteGfx(struct Pokemon *mon, u8 battler)
+@@ -688,6 +719,12 @@ void BattleLoadPlayerMonSpriteGfx(struct Pokemon *mon, u8 battler)
+         BlendPalette(paletteOffset, 16, 6, RGB_WHITE);
+         CpuCopy32(&gPlttBufferFaded[paletteOffset], &gPlttBufferUnfaded[paletteOffset], PLTT_SIZEOF(16));
+     }
++#ifdef PLATFORM_3DS
++    // HandleLoadSpecialPokePic shows Deoxys' Emerald form (DuplicateDeoxysTiles).
++    CtrBwMonsLoaded(battler, species, currentPersonality, monsPersonality, otId, TRUE,
++                    !(ShouldIgnoreDeoxysForm(1, battler) == TRUE
++                      || gBattleSpritesDataPtr->battlerData[battler].transformSpecies != SPECIES_NONE));
++#endif
+ }
+ 
+ static void UNUSED BattleGfxSfxDummy1(void)
+@@ -944,6 +981,21 @@ void HandleSpeciesGfxDataChange(u8 battlerAtk, u8 battlerDef, bool8 castform)
+             CpuCopy32(&gPlttBufferFaded[paletteOffset], &gPlttBufferUnfaded[paletteOffset], PLTT_SIZEOF(16));
+         }
+         gSprites[gBattlerSpriteIds[battlerAtk]].y = GetBattlerSpriteDefault_Y(battlerAtk);
++#ifdef PLATFORM_3DS
++        if (!IsContest())
++        {
++            struct Pokemon *mon = GetBattlerSide(battlerAtk) == B_SIDE_PLAYER
++                                ? &gPlayerParty[gBattlerPartyIndexes[battlerAtk]]
++                                : &gEnemyParty[gBattlerPartyIndexes[battlerAtk]];
++            u16 species = gBattleSpritesDataPtr->battlerData[battlerAtk].transformSpecies;
++            u32 personality = GetMonData(mon, MON_DATA_PERSONALITY);
++
++            if (species == SPECIES_NONE)
++                species = GetMonData(mon, MON_DATA_SPECIES);
++            CtrBwMonsLoaded(battlerAtk, species, personality, personality, GetMonData(mon, MON_DATA_OT_ID),
++                            GetBattlerSide(battlerAtk) == B_SIDE_PLAYER, FALSE);
++        }
++#endif
+     }
+     else
+     {
+@@ -1020,6 +1072,12 @@ void HandleSpeciesGfxDataChange(u8 battlerAtk, u8 battlerDef, bool8 castform)
+ 
+         gSprites[gBattlerSpriteIds[battlerAtk]].y = GetBattlerSpriteDefault_Y(battlerAtk);
+         StartSpriteAnim(&gSprites[gBattlerSpriteIds[battlerAtk]], gBattleMonForms[battlerAtk]);
++#ifdef PLATFORM_3DS
++        // Transform: the target's picture, the attacker's shininess (its palette above).
++        if (!IsContest())
++            CtrBwMonsLoaded(battlerAtk, targetSpecies, gTransformedPersonalities[battlerAtk], personalityValue, otId,
++                            GetBattlerSide(battlerAtk) == B_SIDE_PLAYER, FALSE);
++#endif
+     }
+ }
+ 
+@@ -1048,6 +1106,11 @@ void BattleLoadSubstituteOrMonSpriteGfx(u8 battler, bool8 loadMonSprite)
+ 
+         palOffset = OBJ_PLTT_ID(battler);
+         LoadCompressedPalette(gSubstituteDollPal, palOffset, PLTT_SIZE_4BPP);
++#ifdef PLATFORM_3DS
++        // The doll is the game's own sprite.
++        if (!IsContest())
++            CtrBwMons_Clear(battler);
++#endif
+     }
+     else
+     {
+diff --git a/src/battle_main.c b/src/battle_main.c
+index f03feed..02d5008 100644
+--- a/src/battle_main.c
++++ b/src/battle_main.c
+@@ -62,6 +62,9 @@
+ #include "constants/rgb.h"
+ #include "constants/songs.h"
+ #include "constants/trainers.h"
++#ifdef PLATFORM_3DS
++#include "3ds_bw_mons.h"
++#endif
+ #include "cable_club.h"
+ 
+ #ifdef PORT_BRIDGE
+@@ -2822,6 +2825,10 @@ static void SpriteCB_AnimFaintOpponent(struct Sprite *sprite)
+         else // Erase bottom part of the sprite to create a smooth illusion of mon falling down.
+         {
+             u8 *dst = gMonSpritesGfxPtr->sprites.byte[GetBattlerPosition(sprite->sBattler)] + (gBattleMonForms[sprite->sBattler] << 11) + (sprite->data[3] << 8);
++#ifdef PLATFORM_3DS
++            // The BW picture is cut at the same line (3ds_bw_mons.h).
++            CtrBwMons_Faint(sprite->sBattler, sprite->data[3]);
++#endif
+ 
+             for (i = 0; i < 0x100; i++)
+                 *(dst++) = 0;
+diff --git a/src/evolution_scene.c b/src/evolution_scene.c
+index 2c46d4a..a826b59 100644
+--- a/src/evolution_scene.c
++++ b/src/evolution_scene.c
+@@ -1,6 +1,7 @@
+ #include "global.h"
+ #ifdef PLATFORM_3DS
+ #include "3ds_extras.h" // optional settings (OPTIONS pages)
++#include "3ds_bw_mons.h" // BW pictures of the evolving Pokémon
+ #endif
+ #include "malloc.h"
+ #include "battle.h"
+@@ -295,6 +296,9 @@ void EvolutionScene(struct Pokemon *mon, u16 postEvoSpecies, bool8 canStopEvo, u
+     gSprites[id].callback = SpriteCallbackDummy_2;
+     gSprites[id].oam.paletteNum = 1;
+     gSprites[id].invisible = TRUE;
++#ifdef PLATFORM_3DS
++    CtrBwMons_Scene(1, currSpecies, personality, trainerId, id, B_POSITION_OPPONENT_LEFT);
++#endif
+ 
+     // postEvo sprite
+     DecompressPicFromTable_2(&gMonFrontPicTable[postEvoSpecies],
+@@ -309,6 +313,9 @@ void EvolutionScene(struct Pokemon *mon, u16 postEvoSpecies, bool8 canStopEvo, u
+     gSprites[id].callback = SpriteCallbackDummy_2;
+     gSprites[id].oam.paletteNum = 2;
+     gSprites[id].invisible = TRUE;
++#ifdef PLATFORM_3DS
++    CtrBwMons_Scene(3, postEvoSpecies, personality, trainerId, id, B_POSITION_OPPONENT_RIGHT);
++#endif
+ 
+     LoadEvoSparkleSpriteAndPal();
+ 
+@@ -390,6 +397,9 @@ static void CB2_EvolutionSceneLoadGraphics(void)
+ 
+     gSprites[id].callback = SpriteCallbackDummy_2;
+     gSprites[id].oam.paletteNum = 2;
++#ifdef PLATFORM_3DS
++    CtrBwMons_Scene(3, postEvoSpecies, personality, trainerId, id, B_POSITION_OPPONENT_RIGHT);
++#endif
+ 
+     SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_OBJ_ON | DISPCNT_BG_ALL_ON | DISPCNT_OBJ_1D_MAP);
+ 
+@@ -868,6 +878,9 @@ static void Task_EvolutionScene(u8 taskId)
+ 
+             DestroyTask(taskId);
+             FreeMonSpritesGfx();
++#ifdef PLATFORM_3DS
++            CtrBwMons_Reset();
++#endif
+             FREE_AND_SET_NULL(sEvoStructPtr);
+             FreeAllWindowBuffers();
+             SetMainCallback2(gCB2_AfterEvolution);

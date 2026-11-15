@@ -1,0 +1,29 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: the player's back in battle in the look chosen for them (OPTIONS > GRAPHICS > PLAYER)
+Applies after 0095-visible-wild-chase.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/battle_gfx_sfx_util.c b/src/battle_gfx_sfx_util.c
+index 086c995..6c3bcaf 100644
+--- a/src/battle_gfx_sfx_util.c
++++ b/src/battle_gfx_sfx_util.c
+@@ -27,6 +27,8 @@
+ #include "constants/battle_palace.h"
+ #ifdef PLATFORM_3DS
+ #include "3ds_bw_mons.h"
++#include "npc_looks.h"
++#include "constants/trainers.h"
+ #endif
+ 
+ extern const u8 gBattlePalaceNatureToMoveTarget[];
+@@ -747,6 +749,12 @@ void DecompressTrainerFrontPic(u16 frontPicId, u8 battler)
+ void DecompressTrainerBackPic(u16 backPicId, u8 battler)
+ {
+     u8 position = GetBattlerPosition(battler);
++#ifdef PLATFORM_3DS
++    // The player in the look chosen for them (npc_looks.c).
++    if (backPicId == TRAINER_BACK_PIC_BRENDAN + gSaveBlock2Ptr->playerGender && position == B_POSITION_PLAYER_LEFT
++     && NpcLook_PlayerBackPic(gMonSpritesGfxPtr->sprites.ptr[position], OBJ_PLTT_ID(battler)))
++        return;
++#endif
+     DecompressPicFromTable_2(&gTrainerBackPicTable[backPicId],
+                              gMonSpritesGfxPtr->sprites.ptr[position],
+                              SPECIES_NONE);

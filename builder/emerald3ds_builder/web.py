@@ -81,7 +81,8 @@ def build_pack_for_web(rom_path, payload_path, output_path, progress_callback=No
         raise BuilderError("This release has no '%s' version made from this ROM." % language,
                            code="rom_mismatch")
     info = build_pack(Path(rom_path), Payload(Path(payload_path)), Path(output_path), report,
-                      runner="inprocess", rom=rom, follower_fetcher=fetcher, language=language)
+                      runner="inprocess", rom=rom, follower_fetcher=fetcher, language=language,
+                      looks=False)  # npc_looks.py fetches with urllib, not under Pyodide yet
     info.pop("payload")
     expected = variant["dataAbi"] if variant is not None else None
     if expected is not None and "%08x" % info["abi"] != expected:

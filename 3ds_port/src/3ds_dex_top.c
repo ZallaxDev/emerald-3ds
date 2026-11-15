@@ -16,6 +16,9 @@
 #include "3ds_video.h"
 #include "3ds_log.h"
 #include "3ds_dex_top.h"
+#include "3ds_bw_mons.h"
+#include "3ds_extras.h"
+#include <stdlib.h>
 
 #define DIM CTR_DEX_TOP_DIM
 #define FRAMES CTR_DEX_TOP_FRAMES
@@ -69,6 +72,23 @@ static unsigned sTexRetry;
 static bool sPictureDirty, sBackdropDirty, sBackdropShown;
 static uint32_t sTick;
 
+/*
+ * The Black 2 / White 2 picture of the species, animated, when the player
+ * has them (3ds_bw_mons.h) and the option is on: read on the reader thread
+ * as the cursor rests on a species, the game's picture shown until it is
+ * in. Its texture is the picture's size rounded up to a power of two.
+ */
+static char sBwPath[64];
+static const CtrBwPic *sBw;
+static C3D_Tex sBwTex;
+static unsigned sBwTexW, sBwTexH;
+static int sBwFrame = -1;
+static uint32_t sBwTick;
+static uint32_t *sBwPixels;
+/* The tallest a BW picture stands in the window: 2x as the game's, less
+ * for the few that would not fit. */
+#define BW_MAX_H 150.0f
+
 void CtrDexTop_Show(uint16_t national, const uint16_t *picture, unsigned frames, const char *name)
 {
     if (!sActive) sTick = 0;
@@ -78,6 +98,20 @@ void CtrDexTop_Show(uint16_t national, const uint16_t *picture, unsigned frames,
     if (sFrames) memcpy(sPicture, picture, sFrames * sizeof(sPicture[0]));
     snprintf(sName, sizeof(sName), "%s", sNational && name ? name : "");
     sPictureDirty = true;
+    {
+        char path[64] = "";
+
+        if (sNational && sNational <= 386 && CtrExtras_Get("bw_sprites"))
+            snprintf(path, sizeof(path), CTR_BW_DIR "front/%03u.bin", (unsigned)sNational);
+        if (strcmp(path, sBwPath))
+        {
+            snprintf(sBwPath, sizeof(sBwPath), "%s", path);
+            sBw = NULL;
+            sBwFrame = -1;
+            sBwTick = 0;
+            if (path[0]) CtrBwPic_Request(CTR_BW_SLOT_DEX, path);
+        }
+    }
     /* The backdrop is kept: the game side sends a new one (BackdropBegin)
      * when this Pokémon's terrain is not the last one's. */
 }
@@ -103,7 +137,13 @@ void CtrDexTop_BackdropRow(unsigned y, const uint16_t *row)
     if (++sBackdropRows == BACKDROP_H) sBackdropDirty = true;
 }
 
-void CtrDexTop_Hide(void) { sActive = false; }
+void CtrDexTop_Hide(void)
+{
+    sActive = false;
+    sBwPath[0] = 0;
+    sBw = NULL;
+    CtrBwPic_Release(CTR_BW_SLOT_DEX);
+}
 bool CtrDexTop_Active(void) { return sActive; }
 
 static bool TexturesReady(void)
@@ -163,6 +203,47 @@ void CtrDexTop_Upload(void)
         C3D_TexFlush(&sPictureTex);
         sPictureDirty = false;
     }
+    if (sBwPath[0] && !sBw) sBw = CtrBwPic_Get(CTR_BW_SLOT_DEX, sBwPath);
+    if (sBw)
+    {
+        unsigned w, h, anchorX2, feetY, frame;
+
+        CtrBwPic_Size(sBw, &w, &h, &anchorX2, &feetY);
+        frame = CtrBwPic_FrameAt(sBw, sBwTick++);
+        if (sBwTex.data && (sBwTexW < w || sBwTexH < h))
+        {
+            C3D_TexDelete(&sBwTex);
+            memset(&sBwTex, 0, sizeof(sBwTex));
+            sBwFrame = -1;
+        }
+        if (!sBwTex.data)
+        {
+            sBwTexW = sBwTexH = 8;
+            while (sBwTexW < w) sBwTexW <<= 1;
+            while (sBwTexH < h) sBwTexH <<= 1;
+            if (!C3D_TexInit(&sBwTex, (u16)sBwTexW, (u16)sBwTexH, GPU_RGBA8))
+                memset(&sBwTex, 0, sizeof(sBwTex));
+            else
+            {
+                C3D_TexSetFilter(&sBwTex, GPU_NEAREST, GPU_NEAREST);
+                C3D_TexSetWrap(&sBwTex, GPU_CLAMP_TO_EDGE, GPU_CLAMP_TO_EDGE);
+            }
+            sBwFrame = -1;
+        }
+        if (!sBwPixels) sBwPixels = malloc(sizeof(uint32_t) * CTR_BW_MAX_DIM * CTR_BW_MAX_DIM);
+        if (sBwTex.data && sBwPixels && (int)frame != sBwFrame)
+        {
+            uint32_t *texels = sBwTex.data;
+
+            memset(texels, 0, sBwTexW * sBwTexH * sizeof(uint32_t));
+            CtrBwPic_Decode(sBw, frame, sBwPixels, w);
+            for (unsigned y = 0; y < h; ++y)
+                for (unsigned x = 0; x < w; ++x)
+                    texels[CtrVideo_Texel(x, y, sBwTexW)] = sBwPixels[y * w + x];
+            C3D_TexFlush(&sBwTex);
+            sBwFrame = (int)frame;
+        }
+    }
     if (sBackdropDirty)
     {
         uint16_t *texels = sBackdropTex.data;
@@ -184,6 +265,11 @@ void CtrDexTop_Idle(void)
     C3D_TexDelete(&sPictureTex);
     C3D_TexDelete(&sBackdropTex);
     sTexAllocated = false;
+    if (sBwTex.data) C3D_TexDelete(&sBwTex);
+    memset(&sBwTex, 0, sizeof(sBwTex));
+    free(sBwPixels);
+    sBwPixels = NULL;
+    sBwFrame = -1;
 }
 
 /* ── Text: a 3x5 font, drawn as rectangles ──────────────────────────── */
@@ -299,6 +385,25 @@ void CtrDexTop_DrawEye(float sign, float slider)
         C2D_DrawRectSolid(x0, y0, 0, w, h, sSky);
         C2D_DrawImageAt((C2D_Image){&sBackdropTex, &whole}, bx, by, 0, NULL, BACKDROP_SCALE, BACKDROP_SCALE);
     }
+    if (sBw && sBwTex.data && sBwFrame >= 0)
+    {
+        unsigned w, h, anchorX2, feetY;
+        float scale = PICTURE_SCALE, x, y;
+
+        CtrBwPic_Size(sBw, &w, &h, &anchorX2, &feetY);
+        if ((feetY + 1) * scale > BW_MAX_H) scale = BW_MAX_H / (feetY + 1);
+        {
+            const Tex3DS_SubTexture sub = {(u16)w, (u16)h, 0.0f, 1.0f, (float)w / sBwTexW,
+                                           1.0f - (float)h / sBwTexH};
+
+            /* Its middle on the window's, its feet on the mound, where the
+             * game's picture stands. */
+            x = WIN_CX - anchorX2 / 2.0f * scale + roundf(sign * slider * PICTURE_DEPTH);
+            y = PICTURE_CY + DIM / 2 * PICTURE_SCALE - 6 - (feetY + 1) * scale;
+            C2D_DrawImageAt((C2D_Image){&sBwTex, &sub}, roundf(x), roundf(y), 0, NULL, scale, scale);
+        }
+    }
+    else
     {
         const unsigned frame = sFrames > 1 && sTick % ANIM_PERIOD < ANIM_HOLD ? 1 : 0;
         const Tex3DS_SubTexture tile = {DIM, DIM, 0.0f, 1.0f - frame * DIM / (float)PICTURE_TEX_H,

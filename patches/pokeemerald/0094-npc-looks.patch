@@ -1,0 +1,659 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: new looks for the field's people and the player (OPTIONS > GRAPHICS > NEW PEOPLE, PLAYER)
+Applies after 0093-bw-animated-battlers.patch; apply with tools/bootstrap.py.
+
+diff --git a/include/npc_looks.h b/include/npc_looks.h
+new file mode 100644
+index 0000000..aadbe6d
+--- /dev/null
++++ b/include/npc_looks.h
+@@ -0,0 +1,35 @@
++#ifndef GUARD_NPC_LOOKS_H
++#define GUARD_NPC_LOOKS_H
++
++#ifdef PLATFORM_3DS
++/*
++ * Port: new looks for the field's people (OPTIONS > GRAPHICS > NEW PEOPLE) and
++ * for the player (OPTIONS > GRAPHICS > PLAYER), from the npcs/NAME.bin and
++ * players/LOOK/SHEET.bin files the builder puts in the data pack
++ * (builder/emerald3ds_builder/npc_looks.py: Facets' DS-style sets, Emerald
++ * Lens' looks). A person
++ * with one is a 32x32 sprite of its own frames, on an ext palette of its own
++ * (include/palette.h); without one, or with no ext palette to spare, the
++ * game's own.
++ */
++struct ObjectEventGraphicsInfo;
++struct Sprite;
++
++/* The look standing in for `info` (graphics id `graphicsId`, a person on the
++ * standard nine frames or the nurse's when `standard`), or NULL for the
++ * game's own. */
++const struct ObjectEventGraphicsInfo *NpcLook_GraphicsInfo(u16 graphicsId, const struct ObjectEventGraphicsInfo *info,
++                                                           bool8 standard);
++/* A sprite just made (or remade) from `info`: on its look's ext palette, or
++ * off any if `info` is not a look. */
++void NpcLook_BindSprite(const struct ObjectEventGraphicsInfo *info, struct Sprite *sprite);
++bool8 NpcLook_IsLook(const struct ObjectEventGraphicsInfo *info);
++/* The battle's back picture of the player in the chosen look, where it has
++ * one: its four 64x64 frames (standing, then the throw) into `dest` and its
++ * colours at palette buffer offset `paletteOffset`. FALSE: the game's. */
++bool8 NpcLook_PlayerBackPic(void *dest, u16 paletteOffset);
++/* The soft reset: every file freed. */
++void NpcLook_ReleaseAll(void);
++#endif
++
++#endif // GUARD_NPC_LOOKS_H
+diff --git a/src/event_object_movement.c b/src/event_object_movement.c
+index 2327b4f..dc3c1cb 100644
+--- a/src/event_object_movement.c
++++ b/src/event_object_movement.c
+@@ -27,6 +27,7 @@
+ #endif
+ #ifdef PLATFORM_3DS
+ #include "follower_mon.h"
++#include "npc_looks.h"
+ #include "wild_encounter.h"
+ #endif
+ #include "constants/event_object_movement.h"
+@@ -1476,6 +1477,8 @@ static u8 TrySetupObjectEventSprite(const struct ObjectEventTemplate *objectEven
+ #ifdef PLATFORM_3DS
+     if (objectEvent->graphicsId == OBJ_EVENT_GFX_FOLLOWER)
+         FollowerMon_BindSprite(sprite);
++    else
++        NpcLook_BindSprite(graphicsInfo, sprite);
+ #endif
+     sprite->coordOffsetEnabled = TRUE;
+     sprite->sObjEventId = objectEventId;
+@@ -1636,6 +1639,9 @@ u8 CreateVirtualObject(u8 graphicsId, u8 virtualObjId, s16 x, s16 y, u8 elevatio
+         if (sprite->oam.paletteNum >= 16)
+             sprite->oam.paletteNum -= 16;
+ 
++#ifdef PLATFORM_3DS
++        NpcLook_BindSprite(graphicsInfo, sprite);
++#endif
+         sprite->coordOffsetEnabled = TRUE;
+         sprite->sVirtualObjId = virtualObjId;
+         sprite->sVirtualObjElev = elevation;
+@@ -2035,6 +2041,8 @@ static void SpawnObjectEventOnReturnToField(u8 objectEventId, s16 x, s16 y)
+ #ifdef PLATFORM_3DS
+         if (objectEvent->graphicsId == OBJ_EVENT_GFX_FOLLOWER)
+             FollowerMon_BindSprite(sprite);
++        else
++            NpcLook_BindSprite(graphicsInfo, sprite);
+ #endif
+         sprite->coordOffsetEnabled = TRUE;
+         sprite->sObjEventId = objectEventId;
+@@ -2096,6 +2104,9 @@ void ObjectEventSetGraphicsId(struct ObjectEvent *objectEvent, u8 graphicsId)
+     sprite->anims = graphicsInfo->anims;
+     sprite->subspriteTables = graphicsInfo->subspriteTables;
+     sprite->oam.paletteNum = paletteSlot;
++#ifdef PLATFORM_3DS
++    NpcLook_BindSprite(graphicsInfo, sprite);
++#endif
+     objectEvent->inanimate = graphicsInfo->inanimate;
+     objectEvent->graphicsId = graphicsId;
+     SetSpritePosToMapCoords(objectEvent->currentCoords.x, objectEvent->currentCoords.y, &sprite->x, &sprite->y);
+@@ -2183,7 +2194,21 @@ const struct ObjectEventGraphicsInfo *GetObjectEventGraphicsInfo(u8 graphicsId)
+     if (graphicsId >= NUM_OBJ_EVENT_GFX)
+         graphicsId = OBJ_EVENT_GFX_NINJA_BOY;
+ 
++#ifdef PLATFORM_3DS
++    {
++        // A new look for the person (npc_looks.c), when the pack has one.
++        const struct ObjectEventGraphicsInfo *info = gObjectEventGraphicsInfoPointers[graphicsId];
++        const struct ObjectEventGraphicsInfo *look = NpcLook_GraphicsInfo(graphicsId, info,
++                                                                          info->anims == sAnimTable_Standard
++                                                                       || info->anims == sAnimTable_Nurse);
++
++        if (look != NULL)
++            return look;
++        return info;
++    }
++#else
+     return gObjectEventGraphicsInfoPointers[graphicsId];
++#endif
+ }
+ 
+ #ifdef PLATFORM_3DS
+diff --git a/src/field_effect_helpers.c b/src/field_effect_helpers.c
+index b7db1ce..d554d96 100644
+--- a/src/field_effect_helpers.c
++++ b/src/field_effect_helpers.c
+@@ -70,8 +70,8 @@ void SetUpReflection(struct ObjectEvent *objectEvent, struct Sprite *sprite, boo
+     LoadObjectReflectionPalette(objectEvent, reflectionSprite);
+ #ifdef PLATFORM_3DS
+     // A copy is not bound to the ext palette (CreateCopySpriteAt): the
+-    // follower's reflection takes its own colours.
+-    if (FollowerMon_IsFollower(objectEvent))
++    // follower's reflection takes its own colours, as a person's new look's.
++    if (FollowerMon_IsFollower(objectEvent) || GetSpriteExtPalette(sprite) != 0xFF)
+         SetSpriteExtPalette(reflectionSprite, GetSpriteExtPalette(sprite));
+ #endif
+ 
+diff --git a/src/follower_mon.c b/src/follower_mon.c
+index 2b8b1ec..7336160 100644
+--- a/src/follower_mon.c
++++ b/src/follower_mon.c
+@@ -19,6 +19,7 @@
+ #include "decompress.h"
+ #include "pokeball.h"
+ #include "follower_mon.h"
++#include "npc_looks.h"
+ #include "malloc.h"
+ #include "metatile_behavior.h"
+ #include "overworld.h"
+@@ -1402,6 +1403,7 @@ void FollowerMon_ReleaseAll(void)
+ {
+     u32 i;
+ 
++    NpcLook_ReleaseAll();
+     free(sFollower.file);
+     free(sFollower.previous);
+     sFollower.file = sFollower.previous = NULL;
+diff --git a/src/npc_looks.c b/src/npc_looks.c
+new file mode 100644
+index 0000000..c08f697
+--- /dev/null
++++ b/src/npc_looks.c
+@@ -0,0 +1,502 @@
++#include <stdlib.h>
++#include <string.h>
++#include "global.h"
++#ifdef PLATFORM_3DS
++#include "3ds_data.h"
++#include "3ds_extras.h" // optional settings (OPTIONS pages)
++#include "3ds_log.h"
++#include "event_object_movement.h"
++#include "field_weather.h"
++#include "main.h"
++#include "npc_looks.h"
++#include "overworld.h"
++#include "palette.h"
++#include "sprite.h"
++#include "constants/event_objects.h"
++
++/* The ext palettes the people leave to the others: the follower and its ball,
++ * and as many visible wild Pokemon as may be out (wild_encounter.c). */
++static u32 PalettesLeft(void)
++{
++    static const u8 sWildMost[] = {0, 2, 4, 6};
++    u32 wild = CtrExtras_Get("visible_wild");
++
++    return 2 + (wild < ARRAY_COUNT(sWildMost) ? sWildMost[wild] : 6);
++}
++
++#define NPC_LOOK_PALETTES (PLTT_EXT_COUNT - PalettesLeft())
++
++/*
++ * Each person's file is read the first time the field asks for its graphics
++ * and kept (4.6 KB each, about a hundred people): its frames are the sprite's
++ * images, its palette an ext palette of tag NPC_LOOK_PAL_TAG + graphics id,
++ * loaded while someone shows it. The ext palettes are shared with the
++ * follower, its ball and the visible wild Pokemon (follower_mon.c), so the
++ * people take NPC_LOOK_PALETTES of them at most; one more on screen than that
++ * is drawn as the game draws it, until a palette is free again.
++ */
++#define NPL_HEADER 40
++#define NPL_FRAMES 9
++#define NPL_FRAMES_MAX 27        /* the Acro Bike's */
++/* The images a look gives: past its own frames (the nurse's tenth, her bow),
++ * its first. */
++#define LOOK_IMAGES NPL_FRAMES_MAX
++#define NPL_SIZE 32
++#define NPL_FRAME_BYTES (NPL_SIZE * NPL_SIZE / 2)
++#define NPC_LOOK_PAL_TAG 0x7E00     /* + graphics id */
++#define PLAYER_LOOK_PAL_TAG 0x7D00  /* + look * 16 + sheet */
++#define MAX_LOOKS 384
++#define OBJ_EVENT_PAL_TAG_NONE 0x11FF   /* as event_object_movement.c: no reflection palette of its own */
++
++const struct SubspriteTable *ObjectEventSubspriteTables(u32 dimension); // event_object_movement.c
++
++enum { LOOK_UNKNOWN, LOOK_NONE, LOOK_READ };
++
++/* The player's looks (OPTIONS > GRAPHICS > PLAYER), in the builder's order
++ * (npc_looks.py, PLAYER_LOOKS): option value 1 is the first. */
++static const char *const sPlayerLooks[] = {
++    "brendan_hgss", "may_hgss", "brendan_oras", "may_oras", "ash_hgss", "kris_hgss",
++    "gold_hgss", "silver_hgss", "green_hgss",
++};
++
++/* The player's pictures, by the sheet of a look each is drawn from. */
++static const char *PlayerSheet(u16 graphicsId)
++{
++    switch (graphicsId)
++    {
++    case OBJ_EVENT_GFX_BRENDAN_NORMAL:      case OBJ_EVENT_GFX_MAY_NORMAL:      return "walk";
++    case OBJ_EVENT_GFX_BRENDAN_MACH_BIKE:   case OBJ_EVENT_GFX_MAY_MACH_BIKE:   return "bike";
++    case OBJ_EVENT_GFX_BRENDAN_ACRO_BIKE:   case OBJ_EVENT_GFX_MAY_ACRO_BIKE:   return "acroBike";
++    case OBJ_EVENT_GFX_BRENDAN_SURFING:     case OBJ_EVENT_GFX_MAY_SURFING:     return "surf";
++    case OBJ_EVENT_GFX_BRENDAN_FIELD_MOVE:  case OBJ_EVENT_GFX_MAY_FIELD_MOVE:  return "fieldMove";
++    case OBJ_EVENT_GFX_BRENDAN_UNDERWATER:  case OBJ_EVENT_GFX_MAY_UNDERWATER:  return "underwater";
++    case OBJ_EVENT_GFX_BRENDAN_FISHING:     case OBJ_EVENT_GFX_MAY_FISHING:     return "fishing";
++    case OBJ_EVENT_GFX_BRENDAN_WATERING:    case OBJ_EVENT_GFX_MAY_WATERING:    return "watering";
++    case OBJ_EVENT_GFX_BRENDAN_DECORATING:  case OBJ_EVENT_GFX_MAY_DECORATING:  return "decorating";
++    default:                                                                    return NULL;
++    }
++}
++
++struct NpcLook
++{
++    u8 *file;
++    u8 playerLook;               /* the player's look it is (1-based), 0 a person's */
++    struct SpriteFrameImage frames[LOOK_IMAGES];
++    struct ObjectEventGraphicsInfo info;
++};
++
++static u8 sState[NUM_OBJ_EVENT_GFX];
++/* The frame a palette last found no room: no new one is tried again in it. */
++static u32 sNoRoomFrame = 0xFFFFFFFF;
++static struct NpcLook *sLooks[NUM_OBJ_EVENT_GFX];
++/* Every look read, kept until the soft reset: a sprite made from a look the
++ * option has since left still shows its frames until the field remakes it. */
++static struct NpcLook *sAll[MAX_LOOKS];
++static u32 sAllCount;
++
++static const char *const sNames[NUM_OBJ_EVENT_GFX] = {
++    [OBJ_EVENT_GFX_ANABEL] = "ANABEL",
++    [OBJ_EVENT_GFX_AQUA_MEMBER_F] = "AQUA_MEMBER_F",
++    [OBJ_EVENT_GFX_AQUA_MEMBER_M] = "AQUA_MEMBER_M",
++    [OBJ_EVENT_GFX_ARCHIE] = "ARCHIE",
++    [OBJ_EVENT_GFX_ARTIST] = "ARTIST",
++    [OBJ_EVENT_GFX_BARD] = "BARD",
++    [OBJ_EVENT_GFX_BEAUTY] = "BEAUTY",
++    [OBJ_EVENT_GFX_BLACK_BELT] = "BLACK_BELT",
++    [OBJ_EVENT_GFX_BOY_1] = "BOY_1",
++    [OBJ_EVENT_GFX_BOY_2] = "BOY_2",
++    [OBJ_EVENT_GFX_BOY_3] = "BOY_3",
++    [OBJ_EVENT_GFX_BRANDON] = "BRANDON",
++    [OBJ_EVENT_GFX_BRAWLY] = "BRAWLY",
++    [OBJ_EVENT_GFX_BUG_CATCHER] = "BUG_CATCHER",
++    [OBJ_EVENT_GFX_CAMERAMAN] = "CAMERAMAN",
++    [OBJ_EVENT_GFX_CAMPER] = "CAMPER",
++    [OBJ_EVENT_GFX_CONTEST_JUDGE] = "CONTEST_JUDGE",
++    [OBJ_EVENT_GFX_COOK] = "COOK",
++    [OBJ_EVENT_GFX_CYCLING_TRIATHLETE_F] = "CYCLING_TRIATHLETE_F",
++    [OBJ_EVENT_GFX_CYCLING_TRIATHLETE_M] = "CYCLING_TRIATHLETE_M",
++    [OBJ_EVENT_GFX_DEVON_EMPLOYEE] = "DEVON_EMPLOYEE",
++    [OBJ_EVENT_GFX_DRAKE] = "DRAKE",
++    [OBJ_EVENT_GFX_EXPERT_F] = "EXPERT_F",
++    [OBJ_EVENT_GFX_EXPERT_M] = "EXPERT_M",
++    [OBJ_EVENT_GFX_FAT_MAN] = "FAT_MAN",
++    [OBJ_EVENT_GFX_FISHERMAN] = "FISHERMAN",
++    [OBJ_EVENT_GFX_FLANNERY] = "FLANNERY",
++    [OBJ_EVENT_GFX_GAMEBOY_KID] = "GAMEBOY_KID",
++    [OBJ_EVENT_GFX_GENTLEMAN] = "GENTLEMAN",
++    [OBJ_EVENT_GFX_GIRL_1] = "GIRL_1",
++    [OBJ_EVENT_GFX_GIRL_2] = "GIRL_2",
++    [OBJ_EVENT_GFX_GIRL_3] = "GIRL_3",
++    [OBJ_EVENT_GFX_GLACIA] = "GLACIA",
++    [OBJ_EVENT_GFX_GRETA] = "GRETA",
++    [OBJ_EVENT_GFX_HEX_MANIAC] = "HEX_MANIAC",
++    [OBJ_EVENT_GFX_HIKER] = "HIKER",
++    [OBJ_EVENT_GFX_HOT_SPRINGS_OLD_WOMAN] = "HOT_SPRINGS_OLD_WOMAN",
++    [OBJ_EVENT_GFX_JUAN] = "JUAN",
++    [OBJ_EVENT_GFX_LASS] = "LASS",
++    [OBJ_EVENT_GFX_LINK_RECEPTIONIST] = "LINK_RECEPTIONIST",
++    [OBJ_EVENT_GFX_LITTLE_BOY] = "LITTLE_BOY",
++    [OBJ_EVENT_GFX_LITTLE_BOY_3] = "LITTLE_BOY_3",
++    [OBJ_EVENT_GFX_LITTLE_GIRL] = "LITTLE_GIRL",
++    [OBJ_EVENT_GFX_LIZA] = "LIZA",
++    [OBJ_EVENT_GFX_LUCY] = "LUCY",
++    [OBJ_EVENT_GFX_MAGMA_MEMBER_F] = "MAGMA_MEMBER_F",
++    [OBJ_EVENT_GFX_MAGMA_MEMBER_M] = "MAGMA_MEMBER_M",
++    [OBJ_EVENT_GFX_MANIAC] = "MANIAC",
++    [OBJ_EVENT_GFX_MAN_1] = "MAN_1",
++    [OBJ_EVENT_GFX_MAN_2] = "MAN_2",
++    [OBJ_EVENT_GFX_MAN_3] = "MAN_3",
++    [OBJ_EVENT_GFX_MAN_4] = "MAN_4",
++    [OBJ_EVENT_GFX_MAN_5] = "MAN_5",
++    [OBJ_EVENT_GFX_MART_EMPLOYEE] = "MART_EMPLOYEE",
++    [OBJ_EVENT_GFX_MAXIE] = "MAXIE",
++    [OBJ_EVENT_GFX_MOM] = "MOM",
++    [OBJ_EVENT_GFX_MYSTERY_GIFT_MAN] = "MYSTERY_GIFT_MAN",
++    [OBJ_EVENT_GFX_NINJA_BOY] = "NINJA_BOY",
++    [OBJ_EVENT_GFX_NOLAND] = "NOLAND",
++    [OBJ_EVENT_GFX_NORMAN] = "NORMAN",
++    [OBJ_EVENT_GFX_NURSE] = "NURSE",
++    [OBJ_EVENT_GFX_OLD_MAN] = "OLD_MAN",
++    [OBJ_EVENT_GFX_OLD_WOMAN] = "OLD_WOMAN",
++    [OBJ_EVENT_GFX_PHOEBE] = "PHOEBE",
++    [OBJ_EVENT_GFX_PICNICKER] = "PICNICKER",
++    [OBJ_EVENT_GFX_POKEFAN_F] = "POKEFAN_F",
++    [OBJ_EVENT_GFX_POKEFAN_M] = "POKEFAN_M",
++    [OBJ_EVENT_GFX_PROF_BIRCH] = "PROF_BIRCH",
++    [OBJ_EVENT_GFX_PSYCHIC_M] = "PSYCHIC_M",
++    [OBJ_EVENT_GFX_REPORTER_F] = "REPORTER_F",
++    [OBJ_EVENT_GFX_REPORTER_M] = "REPORTER_M",
++    [OBJ_EVENT_GFX_RICH_BOY] = "RICH_BOY",
++    [OBJ_EVENT_GFX_ROOFTOP_SALE_WOMAN] = "ROOFTOP_SALE_WOMAN",
++    [OBJ_EVENT_GFX_ROXANNE] = "ROXANNE",
++    [OBJ_EVENT_GFX_RUNNING_TRIATHLETE_F] = "RUNNING_TRIATHLETE_F",
++    [OBJ_EVENT_GFX_RUNNING_TRIATHLETE_M] = "RUNNING_TRIATHLETE_M",
++    [OBJ_EVENT_GFX_SAILOR] = "SAILOR",
++    [OBJ_EVENT_GFX_SCHOOL_KID_M] = "SCHOOL_KID_M",
++    [OBJ_EVENT_GFX_SCIENTIST_1] = "SCIENTIST_1",
++    [OBJ_EVENT_GFX_SCIENTIST_2] = "SCIENTIST_2",
++    [OBJ_EVENT_GFX_SCOTT] = "SCOTT",
++    [OBJ_EVENT_GFX_SIDNEY] = "SIDNEY",
++    [OBJ_EVENT_GFX_SPENSER] = "SPENSER",
++    [OBJ_EVENT_GFX_STEVEN] = "STEVEN",
++    [OBJ_EVENT_GFX_SWIMMER_F] = "SWIMMER_F",
++    [OBJ_EVENT_GFX_SWIMMER_M] = "SWIMMER_M",
++    [OBJ_EVENT_GFX_TATE] = "TATE",
++    [OBJ_EVENT_GFX_TEALA] = "TEALA",
++    [OBJ_EVENT_GFX_TUBER_F] = "TUBER_F",
++    [OBJ_EVENT_GFX_TUBER_M] = "TUBER_M",
++    [OBJ_EVENT_GFX_TUBER_M_SWIMMING] = "TUBER_M_SWIMMING",
++    [OBJ_EVENT_GFX_TUCKER] = "TUCKER",
++    [OBJ_EVENT_GFX_TWIN] = "TWIN",
++    [OBJ_EVENT_GFX_UNION_ROOM_NURSE] = "UNION_ROOM_NURSE",
++    [OBJ_EVENT_GFX_WALLACE] = "WALLACE",
++    [OBJ_EVENT_GFX_WALLY] = "WALLY",
++    [OBJ_EVENT_GFX_WATTSON] = "WATTSON",
++    [OBJ_EVENT_GFX_WINONA] = "WINONA",
++    [OBJ_EVENT_GFX_WOMAN_1] = "WOMAN_1",
++    [OBJ_EVENT_GFX_WOMAN_2] = "WOMAN_2",
++    [OBJ_EVENT_GFX_WOMAN_3] = "WOMAN_3",
++    [OBJ_EVENT_GFX_WOMAN_4] = "WOMAN_4",
++    [OBJ_EVENT_GFX_WOMAN_5] = "WOMAN_5",
++    [OBJ_EVENT_GFX_YOUNGSTER] = "YOUNGSTER",
++};
++
++/* The two options, read once a frame: the field asks for graphics often. */
++static u32 sOptionsFrame = 0xFFFFFFFF;
++static bool8 sEnabled;
++static u8 sPlayerLook;
++
++static void ReadOptions(void)
++{
++    u32 look;
++
++    if (sOptionsFrame == gMain.vblankCounter1)
++        return;
++    sOptionsFrame = gMain.vblankCounter1;
++    sEnabled = CtrExtras_Get("npc_looks") != 0;
++    look = CtrExtras_Get("player_look");
++    sPlayerLook = look <= ARRAY_COUNT(sPlayerLooks) ? look : 0;
++}
++
++static bool8 Enabled(void)
++{
++    ReadOptions();
++    return sEnabled;
++}
++
++static u32 PlayerLook(void)
++{
++    ReadOptions();
++    return sPlayerLook;
++}
++
++static bool8 IsLookTag(u16 tag)
++{
++    return (tag >= NPC_LOOK_PAL_TAG && tag < NPC_LOOK_PAL_TAG + NUM_OBJ_EVENT_GFX)
++        || (tag >= PLAYER_LOOK_PAL_TAG && tag < PLAYER_LOOK_PAL_TAG + 16 * (ARRAY_COUNT(sPlayerLooks) + 1));
++}
++
++bool8 NpcLook_IsLook(const struct ObjectEventGraphicsInfo *info)
++{
++    return info != NULL && IsLookTag(info->paletteTag);
++}
++
++/* A look's file read and its graphics info built over the game's. */
++static struct NpcLook *Read(const char *path, u16 tag, u8 playerLook, const struct ObjectEventGraphicsInfo *base)
++{
++    struct NpcLook *look;
++    u8 *file;
++    u32 size, i, frames;
++
++    if (sAllCount >= MAX_LOOKS || !CtrData_Exists(path) || (file = CtrData_Load(path, &size)) == NULL)
++        return NULL;
++    frames = file[4];
++    if (size < NPL_HEADER + frames * NPL_FRAME_BYTES || memcmp(file, "NPL1", 4) != 0
++     || frames == 0 || frames > NPL_FRAMES_MAX || file[5] != NPL_SIZE || file[6] != NPL_SIZE
++     || (look = calloc(1, sizeof(*look))) == NULL)
++    {
++        CtrLog_Write(CTR_LOG_ERROR, "npc looks: %s is not a look", path);
++        free(file);
++        return NULL;
++    }
++    look->file = file;
++    look->playerLook = playerLook;
++    for (i = 0; i < LOOK_IMAGES; i++)
++    {
++        look->frames[i].data = file + NPL_HEADER + (i < frames ? i : 0) * NPL_FRAME_BYTES;
++        look->frames[i].size = NPL_FRAME_BYTES;
++        look->frames[i].offset = 0;
++    }
++    look->info = *base;
++    look->info.tileTag = TAG_NONE;
++    look->info.paletteTag = tag;
++    look->info.reflectionPaletteTag = OBJ_EVENT_PAL_TAG_NONE;
++    look->info.size = NPL_FRAME_BYTES;
++    look->info.width = NPL_SIZE;
++    look->info.height = NPL_SIZE;
++    look->info.paletteSlot = PALSLOT_NPC_1;   /* PLTT_EXT_MODEL: the weather's rule for ext palettes */
++    look->info.disableReflectionPaletteLoad = TRUE;
++    look->info.oam = &gObjectEventBaseOam_32x32;
++    look->info.subspriteTables = ObjectEventSubspriteTables(NPL_SIZE);
++    look->info.images = look->frames;
++    sAll[sAllCount++] = look;
++    return look;
++}
++
++/* The looks' ext palettes no sprite shows any more, freed. */
++static void Collect(void)
++{
++    u32 inUse = 0, i;
++
++    for (i = 0; i < MAX_SPRITES; i++)
++    {
++        u8 ext;
++
++        if (!gSprites[i].inUse || (ext = GetSpriteExtPalette(&gSprites[i])) == 0xFF)
++            continue;
++        inUse |= 1u << ext;
++    }
++    for (i = 0; i < sAllCount; i++)
++    {
++        u16 tag = sAll[i]->info.paletteTag;
++        u8 slot = IndexOfSpritePaletteExtTag(tag);
++
++        if (slot != 0xFF && !((inUse >> slot) & 1))
++            FreeSpritePaletteByTag(tag);
++    }
++}
++
++static u32 LooksLoaded(void)
++{
++    u32 count = 0, i;
++
++    for (i = 0; i < sAllCount; i++)
++        if (IndexOfSpritePaletteExtTag(sAll[i]->info.paletteTag) != 0xFF)
++            count++;
++    return count;
++}
++
++/* The look's ext palette: loaded if it is not, room made for it if need be. */
++static u8 LoadLookPalette(const struct NpcLook *look)
++{
++    u16 tag = look->info.paletteTag;
++    u8 slot = IndexOfSpritePaletteExtTag(tag);
++
++    if (slot != 0xFF)
++        return slot;
++    if (sNoRoomFrame == gMain.vblankCounter1 && !look->playerLook)
++        return 0xFF;
++    // The player's look always gets one: a person's is freed for it.
++    if (LooksLoaded() >= NPC_LOOK_PALETTES || gPlttExtInUse == (1u << PLTT_EXT_COUNT) - 1)
++    {
++        Collect();
++        if (LooksLoaded() >= NPC_LOOK_PALETTES && !look->playerLook)
++        {
++            sNoRoomFrame = gMain.vblankCounter1;
++            return 0xFF;
++        }
++    }
++    slot = LoadSpritePaletteExt(&(const struct SpritePalette){(const u16 *)(look->file + 8), tag});
++    if (slot == 0xFF)
++    {
++        sNoRoomFrame = gMain.vblankCounter1;
++        return 0xFF;
++    }
++    // Coming back to the field the weather is still in the fade-out that
++    // left it; there the field's own fade-in brings the colours in.
++    if (gMain.callback2 == CB2_Overworld)
++        UpdateSpritePaletteExtWithWeather(slot);
++    return slot;
++}
++
++/* The player's sheets not in the pack (or not right), by look: asked once. */
++static u16 sPlayerFailed[ARRAY_COUNT(sPlayerLooks) + 1];
++
++static const struct NpcLook *FindByTag(u16 tag)
++{
++    u32 i;
++
++    for (i = 0; i < sAllCount; i++)
++        if (sAll[i]->info.paletteTag == tag)
++            return sAll[i];
++    return NULL;
++}
++
++/* The player's picture `sheet` in the chosen look. */
++static const struct ObjectEventGraphicsInfo *PlayerGraphicsInfo(u16 graphicsId, const char *sheet,
++                                                                const struct ObjectEventGraphicsInfo *info)
++{
++    static const char *const sSheets[] = {"walk", "bike", "acroBike", "surf", "fieldMove", "underwater",
++                                          "fishing", "watering", "decorating"};
++    u32 look = PlayerLook(), sheetIndex = 0;
++    struct NpcLook *read;
++    char path[48];
++    u16 tag;
++
++    if (look == 0)
++        return NULL;
++    while (sheetIndex < ARRAY_COUNT(sSheets) - 1 && strcmp(sSheets[sheetIndex], sheet) != 0)
++        sheetIndex++;
++    tag = PLAYER_LOOK_PAL_TAG + look * 16 + sheetIndex;
++    if ((sPlayerFailed[look] >> sheetIndex) & 1)
++        return NULL;
++    if (sLooks[graphicsId] == NULL || sLooks[graphicsId]->playerLook != look)
++    {
++        const struct NpcLook *known = FindByTag(tag);
++
++        if (known != NULL)
++            sLooks[graphicsId] = (struct NpcLook *)known;
++        else
++        {
++            snprintf(path, sizeof(path), "players/%s/%s.bin", sPlayerLooks[look - 1], sheet);
++            read = Read(path, tag, (u8)look, info);
++            if (read == NULL)
++            {
++                sPlayerFailed[look] |= 1 << sheetIndex;
++                return NULL;
++            }
++            sLooks[graphicsId] = read;
++        }
++    }
++    if (LoadLookPalette(sLooks[graphicsId]) == 0xFF)
++        return NULL;
++    return &sLooks[graphicsId]->info;
++}
++
++const struct ObjectEventGraphicsInfo *NpcLook_GraphicsInfo(u16 graphicsId, const struct ObjectEventGraphicsInfo *info,
++                                                           bool8 standard)
++{
++    struct NpcLook *look;
++    const char *sheet;
++    char path[40];
++
++    if (graphicsId >= NUM_OBJ_EVENT_GFX)
++        return NULL;
++    if ((sheet = PlayerSheet(graphicsId)) != NULL)
++        return PlayerGraphicsInfo(graphicsId, sheet, info);
++    if (!standard || sState[graphicsId] == LOOK_NONE || !Enabled())
++        return NULL;
++    if (info->paletteSlot == PALSLOT_PLAYER || info->width != 16 || (info->height != 32 && info->height != 16))
++        return NULL;
++    look = sLooks[graphicsId];
++    if (sState[graphicsId] != LOOK_READ)
++    {
++        sState[graphicsId] = LOOK_NONE;
++        if (sNames[graphicsId] == NULL)
++            return NULL;
++        snprintf(path, sizeof(path), "npcs/%s.bin", sNames[graphicsId]);
++        if ((look = Read(path, NPC_LOOK_PAL_TAG + graphicsId, 0, info)) == NULL)
++            return NULL;
++        sLooks[graphicsId] = look;
++        sState[graphicsId] = LOOK_READ;
++    }
++    if (LoadLookPalette(look) == 0xFF)
++        return NULL;
++    return &look->info;
++}
++
++void NpcLook_BindSprite(const struct ObjectEventGraphicsInfo *info, struct Sprite *sprite)
++{
++    const struct NpcLook *look;
++    u8 ext;
++    u32 i;
++
++    if (NpcLook_IsLook(info) && (look = FindByTag(info->paletteTag)) != NULL)
++    {
++        SetSpriteExtPalette(sprite, LoadLookPalette(look));
++        return;
++    }
++    /* Back to the game's own (a script or the player's state changed its
++     * graphics): off a look's ext palette. */
++    if ((ext = GetSpriteExtPalette(sprite)) == 0xFF)
++        return;
++    for (i = 0; i < sAllCount; i++)
++        if (IndexOfSpritePaletteExtTag(sAll[i]->info.paletteTag) == ext)
++        {
++            SetSpriteExtPalette(sprite, 0xFF);
++            break;
++        }
++}
++
++bool8 NpcLook_PlayerBackPic(void *dest, u16 paletteOffset)
++{
++    u32 look = PlayerLook(), size;
++    char path[48];
++    u8 *file;
++
++    if (look == 0)
++        return FALSE;
++    snprintf(path, sizeof(path), "players/%s/back.bin", sPlayerLooks[look - 1]);
++    if (!CtrData_Exists(path) || (file = CtrData_Load(path, &size)) == NULL)
++        return FALSE;
++    if (size < NPL_HEADER + 4 * 64 * 64 / 2 || memcmp(file, "NPL1", 4) != 0 || file[4] != 4
++     || file[5] != 64 || file[6] != 64)
++    {
++        free(file);
++        return FALSE;
++    }
++    memcpy(dest, file + NPL_HEADER, 4 * 64 * 64 / 2);
++    LoadPalette(file + 8, paletteOffset, PLTT_SIZE_4BPP);
++    free(file);
++    return TRUE;
++}
++
++void NpcLook_ReleaseAll(void)
++{
++    u32 i;
++
++    for (i = 0; i < sAllCount; i++)
++    {
++        free(sAll[i]->file);
++        free(sAll[i]);
++        sAll[i] = NULL;
++    }
++    sAllCount = 0;
++    memset(sPlayerFailed, 0, sizeof(sPlayerFailed));
++    for (i = 0; i < NUM_OBJ_EVENT_GFX; i++)
++    {
++        sLooks[i] = NULL;
++        sState[i] = LOOK_UNKNOWN;
++    }
++}
++#endif

@@ -408,6 +408,12 @@ static void DrawObjectEntry(int i, unsigned priority, bool effects, bool *fogDra
             return;
         }
     }
+    /* A battler drawn from its BW picture: the picture, not its tiles. */
+    if (sBw && sBwOamBattler[i] >= 0 && mode != 2)
+    {
+        BwDrawInScene((unsigned)sBwOamBattler[i], (unsigned)i, x, y, boxW, boxH, affine, effects, mode);
+        return;
+    }
     /* Below the PokeNav's picture is its background, not the space the
      * GBA parks its unused sprites in. */
     if (sCentredScreen == CTR_CENTRED_POKENAV && y >= 160) return;
@@ -471,6 +477,11 @@ static void DrawObjects(unsigned priority, bool effects)
     bool fogDrawn = false, latticeDrawn = false;
     float layerShift = sLayerShift;
     const CtrObjList *list = sObjList;
+
+    /* A battler's copy on a background, drawn from its BW picture: under
+     * the sprites of its priority, as its layer is (BwDrawCopies). */
+    if (sBw && sObjWinPass == OBJWIN_NONE && sObjFilter == OBJ_ALL && !sObjMaskOn && sVoxelObjPass == VOXEL_OBJ_NONE)
+        BwDrawCopies(priority, effects);
 
     /*
      * The Battle Factory's swap menu slides its bar in from past the right

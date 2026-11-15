@@ -617,7 +617,9 @@ static void DrawSummaryMon(const ViewState *s)
     oy = PlateEx(x, SUM_Y, SUM_LEFT_W, SUM_H, sEmerald, PLATE_STATE_NORMAL, SUM_LEFT_W - 14, 15, PlateCut(SUM_H), 0);
     if (v->loading)
         return;
-    if (v->picTiles)
+    if (s->bwShown)
+        DrawBwUi(s->bwFrame, x + 46, oy + 68, x + 2, SUM_Y + 2, x + SUM_LEFT_W - 2, min(oy + 70, SUM_PIC_BOTTOM));
+    else if (v->picTiles)
         DrawSummaryPicLive(v, x + 46, oy + 36, x + 2, SUM_Y + 2, x + SUM_LEFT_W - 2, min(oy + 70, SUM_PIC_BOTTOM));
     else if ((slot = FrontPic(SummaryPicSpecies(v), v->shiny)) >= 0)
         DrawSprite(sFronts[slot].tiles, 8, 8, x + 14, oy + 4, sFronts[slot].pal.c);
@@ -1261,6 +1263,12 @@ static void DrawDexPic(u16 species, int cx, int cy)
 {
     int slot = species ? FrontPic(species, FALSE) : -1;
 
+    /* Its BW picture, when the view has it (BwUiSnapshot). */
+    if (species && sState.bwShown && sState.native == NATIVE_DEX && sState.dx.species == species)
+    {
+        DrawBwUi(0, cx, cy + 30, cx - 40, cy - 40, cx + 40, cy + 34);
+        return;
+    }
     if (slot >= 0)
         DrawSprite(sFronts[slot].tiles, 8, 8, cx - 32, cy - 34, sFronts[slot].pal.c);
 }

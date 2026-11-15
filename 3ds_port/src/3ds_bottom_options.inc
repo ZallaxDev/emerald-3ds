@@ -64,6 +64,7 @@ static const OptRowDef sRows3d[] = {
 };
 static const OptRowDef sRowsField[] = {
     EXTRA_ROW("visible_wild"),
+    EXTRA_ROW("wild_chase"),
     EXTRA_ROW("follower"),
     EXTRA_ROW("run_indoors"),
     EXTRA_ROW("field_hms"),
@@ -87,6 +88,8 @@ static const OptRowDef sRowsScene[] = {
     GAME_ROW(OPT_BATTLE_STYLE, CTR_TEXT("BATTLE STYLE", "ESTILO", "STYLE", "STILE", "ESTILO", "KAMPFSTIL", "しあいの ルール")),
     GAME_ROW(OPT_VOXEL_BATTLE, CTR_TEXT("3D BATTLE", "COMBATE 3D", "COMBAT 3D", "BATTAGLIA 3D", "BATALHA 3D", "3D-KAMPF", "3D バトル")),
     EXTRA_ROW("battle_speed_fx"),
+    /* The battlers drawn from Black 2 / White 2 sprites (3ds_bw_mons.h). */
+    EXTRA_ROW("bw_sprites"),
 };
 static const OptRowDef sRowsRules[] = {
     EXTRA_ROW("move_split"),
@@ -134,6 +137,9 @@ static const OptRowDef sRowsItems[] = {
 /* The voxel world's picture beyond its camera (WORLD's 3D is full). */
 static const OptRowDef sRowsGraphics[] = {
     EXTRA_ROW("voxel_shadows"),
+    /* New looks for the people and the player (npc_looks.c). */
+    EXTRA_ROW("npc_looks"),
+    EXTRA_ROW("player_look"),
 };
 
 static const OptGroupDef sGroupsGeneral[] = {
