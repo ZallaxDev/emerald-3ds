@@ -190,19 +190,19 @@ static void PartyHeldSign(const ViewState *s, int slot, int cx, int cy)
         DrawSprite(sRes.holdTiles + (held == HELD_MAIL ? 32 : 0), 1, 1, cx, cy + 6, sRes.holdPal.c);
 }
 
-/*
- * The status icon in the level's place, as the party menu shows it
- * (DisplayPartyPokemonLevelCheck): the game's own 32x8 icon, one row of the
- * sheet for each of PSN, PAR, SLP, FRZ, BRN, PKRS, FNT. Pokérus keeps the
- * level, as in the game. FALSE when there is none to show.
- */
+/* The game's 32x8 status icons, one row per ailment. */
+static bool8 DrawStatusIcon(u8 ailment, int x, int y)
+{
+    if (ailment == AILMENT_NONE || ailment > AILMENT_FNT || !sRes.statusTiles)
+        return FALSE;
+    DrawSprite(sRes.statusTiles + (ailment - 1) * 4 * 32, 4, 1, x, y, sRes.statusPal.c);
+    return TRUE;
+}
+
+/* In the party list, Pokérus keeps the level visible as in Emerald. */
 static bool8 PartyStatusIcon(const MonView *mon, int x, int y)
 {
-    if (mon->ailment == AILMENT_NONE || mon->ailment == AILMENT_PKRS || mon->ailment > AILMENT_FNT
-     || !sRes.statusTiles)
-        return FALSE;
-    DrawSprite(sRes.statusTiles + (mon->ailment - 1) * 4 * 32, 4, 1, x, y, sRes.statusPal.c);
-    return TRUE;
+    return mon->ailment != AILMENT_PKRS && DrawStatusIcon(mon->ailment, x, y);
 }
 
 static void DrawPartyLead(const ViewState *s, int slot)
@@ -632,6 +632,7 @@ static void DrawSummaryMon(const ViewState *s)
         text[1] = CHAR_o;
         ConvertIntToDecimalStringN(text + 2, v->dexNum, STR_CONV_MODE_LEADING_ZEROS, 3);
         StyledStr(&sSmall, text, x + 32, oy + 110, STYLE_GRAY);
+        DrawStatusIcon(v->ailment, x + 58, oy + 125);
     }
     if (v->canChangeMon)
     {
