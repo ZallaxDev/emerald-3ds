@@ -261,11 +261,15 @@ static void TestTables(void) {
     assert(s.enc[2].species==7&&s.enc[2].percent==5&&s.enc[2].minLevel==20&&s.enc[2].maxLevel==45);
     /* More species than a page holds: the method's rows go on to its next page,
      * then the next method. Every row once, in slot order. */
+    sSeen[108]=sCaught[108]=1; /* A caught species on the second grass page. */
     sTimed=false;sSave1.location.mapNum=3;sEncPage=0;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
     assert(s.encPages==3&&s.encMethod==ENC_LAND&&s.encCount==ENC_SHOWN&&s.enc[0].species==1&&s.enc[5].species==6);
+    assert(s.encTotal==9&&s.encCaught==1);
     assert(s.enc[0].percent==24&&s.enc[1].percent==21&&s.enc[2].percent==11);
     sEncPage=1;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
     assert(s.encPage==1&&s.encMethod==ENC_LAND&&s.encCount==3&&s.enc[0].species==7&&s.enc[2].species==9);
+    assert(s.encTotal==9&&s.encCaught==1&&s.enc[1].seen==ENC_CAUGHT);
+    sSeen[108]=sCaught[108]=0;
     sEncPage=2;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
     assert(s.encMethod==ENC_WATER&&s.encCount==3);
     sEncPage=3;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
