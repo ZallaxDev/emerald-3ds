@@ -126,6 +126,8 @@ static const OptRowDef sRowsDex[] = {
     EXTRA_ROW("dex_hoenn"),
     EXTRA_ROW("dex_national_on"),
     EXTRA_ROW("dex_national"),
+    /* Ruby and Sapphire's wild Pokemon Emerald lacks (3ds_encounter_tables.c). */
+    EXTRA_ROW("rs_pokemon"),
 };
 static const OptRowDef sRowsItems[] = {
     EXTRA_ROW("give_pocket"),

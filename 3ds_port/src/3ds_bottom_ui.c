@@ -3821,7 +3821,8 @@ static void SnapshotEncounters(ViewState *s)
     {
         info[ENC_LAND] = CtrEncounters_Land(header->landMonsInfo, gSaveBlock1Ptr->location.mapGroup,
                                             gSaveBlock1Ptr->location.mapNum);
-        info[ENC_WATER] = header->waterMonsInfo;
+        info[ENC_WATER] = CtrEncounters_Water(header->waterMonsInfo, gSaveBlock1Ptr->location.mapGroup,
+                                              gSaveBlock1Ptr->location.mapNum);
         info[ENC_ROCK] = header->rockSmashMonsInfo;
         info[ENC_OLD_ROD] = info[ENC_GOOD_ROD] = info[ENC_SUPER_ROD] = header->fishingMonsInfo;
     }

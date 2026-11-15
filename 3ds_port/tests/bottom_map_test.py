@@ -179,6 +179,9 @@ static bool sTimed; static unsigned landGroup=99, landNum=99;
 static const struct WildPokemonInfo *CtrEncounters_Land(const struct WildPokemonInfo *o,unsigned g,unsigned n) {
     landGroup=g;landNum=n;return sTimed&&o==&routeLandInfo?&timedInfo:o;
 }
+static const struct WildPokemonInfo *CtrEncounters_Water(const struct WildPokemonInfo *o,unsigned g,unsigned n) {
+    (void)g;(void)n;return o;
+}
 static unsigned sMapped;
 static u16 CtrEncounters_DisplaySpecies(u16 species) {return sMapped&&species==1?(sMapped==2?2:7):species;}
 static int8_t sSeen[256],sCaught[256];

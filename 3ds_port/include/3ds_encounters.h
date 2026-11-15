@@ -22,6 +22,15 @@ uint16_t CtrEncounters_DisplaySpecies(uint16_t species);
 struct WildPokemonInfo;
 const struct WildPokemonInfo *CtrEncounters_Land(const struct WildPokemonInfo *original,
                                                 unsigned mapGroup, unsigned mapNum);
+/* The surfing table as met: Ruby/Sapphire's Pokemon in their slots
+ * (RUBY/SAPPHIRE POKEMON), or the game's own. The land one above has them
+ * too, before the hour's. Each returns a table of its own, kept until its
+ * next call. */
+const struct WildPokemonInfo *CtrEncounters_Water(const struct WildPokemonInfo *original,
+                                                 unsigned mapGroup, unsigned mapNum);
+/* Whether RUBY/SAPPHIRE POKEMON puts `species` on that map (the Pokedex's
+ * AREA, pokedex_area_screen.c). */
+bool CtrEncounters_MapHasExtra(unsigned mapGroup, unsigned mapNum, uint16_t species);
 
 /*
  * A visible wild Pokemon (wild_encounter.c) lives on land or in the water,

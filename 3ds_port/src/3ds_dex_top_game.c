@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "global.h"
+#include "3ds_encounters.h"
 #include "main.h"
 #include "data.h"
 #include "pokemon.h"
@@ -153,13 +154,17 @@ static u8 TerrainOf(u16 species)
         const struct MapHeader *map = Overworld_GetMapHeaderByGroupAndId(h->mapGroup, h->mapNum);
         u8 type = map ? map->mapType : MAP_TYPE_ROUTE;
 
-        if (InTable(h->landMonsInfo, LAND_WILD_COUNT, species))
+        /* Ruby/Sapphire's (RUBY/SAPPHIRE POKEMON) are on land slots but Surskit's. */
+        if (InTable(h->landMonsInfo, LAND_WILD_COUNT, species)
+         || (species != SPECIES_SURSKIT && CtrEncounters_MapHasExtra(h->mapGroup, h->mapNum, species)))
             return type == MAP_TYPE_UNDERGROUND ? BATTLE_ENVIRONMENT_CAVE : BATTLE_ENVIRONMENT_GRASS;
         if (InTable(h->waterMonsInfo, WATER_WILD_COUNT, species) || InTable(h->fishingMonsInfo, FISH_WILD_COUNT, species))
             return type == MAP_TYPE_OCEAN_ROUTE ? BATTLE_ENVIRONMENT_WATER
                  : type == MAP_TYPE_UNDERWATER ? BATTLE_ENVIRONMENT_UNDERWATER : BATTLE_ENVIRONMENT_POND;
         if (InTable(h->rockSmashMonsInfo, ROCK_WILD_COUNT, species))
             return BATTLE_ENVIRONMENT_MOUNTAIN;
+        if (species == SPECIES_SURSKIT && CtrEncounters_MapHasExtra(h->mapGroup, h->mapNum, species))
+            return BATTLE_ENVIRONMENT_POND;
     }
     switch (gSpeciesInfo[species].types[0])
     {

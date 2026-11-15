@@ -24,12 +24,28 @@ def main():
         assert (route, slot) not in seen
         seen.add((route, slot))
         assert routes['MAP_' + route]['land_mons']['mons'][int(slot)]['species'] == 'SPECIES_' + expected
+    # RUBY/SAPPHIRE POKEMON: each slot holds the species its rule expects, and
+    # the species it takes stays on that table.
+    maps = {entry['map']: entry for group in data['wild_encounter_groups']
+            for entry in group['encounters'] if 'map' in entry}
+    rs_rules = re.findall(r'RS\((\w+), ([01]), (\d+), (\w+), (\w+)\)', backend.read_text())
+    assert len(rs_rules) >= 30
+    taken = {}
+    for name, water, slot, expected, species in rs_rules:
+        table = maps['MAP_' + name]['water_mons' if water == '1' else 'land_mons']['mons']
+        assert table[int(slot)]['species'] == 'SPECIES_' + expected, (name, slot)
+        taken.setdefault((name, water), set()).add(int(slot))
+    for (name, water), slots in taken.items():
+        table = [m['species'] for m in maps['MAP_' + name]['water_mons' if water == '1' else 'land_mons']['mons']]
+        kept = {table[i] for i in range(len(table)) if i not in slots}
+        assert {table[i] for i in slots} <= kept, (name, water)
     source = r'''
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include "3ds_encounter_tables.c"
-static int enabled = 1;
+static int enabled = 1, rs = 0;
+int CtrExtras_Get(const char *key) { return strcmp(key, "rs_pokemon") == 0 ? rs : 0; }
 static bool outdoor = true, valid = true;
 static unsigned current;
 int CtrSettings_GetInt(const char *key, int fallback) {
@@ -72,10 +88,37 @@ int main(void) {
         mons[rule->slot].species = SPECIES_RALTS;
         assert(CtrEncounters_Land(&original, rule->mapGroup, rule->mapNum) == &original);
     }
+    /* RUBY/SAPPHIRE POKEMON: off, nothing; on, its slots alone, levels kept. */
+    for (unsigned ruleIndex = 0; ruleIndex < ARRAY_COUNT(sRsRules); ++ruleIndex) {
+        const CtrRsEncounterRule *rule = &sRsRules[ruleIndex];
+        struct WildPokemon table[12];
+        struct WildPokemonInfo info = {20, table};
+        unsigned count = rule->water ? 5 : 12;
+        for (unsigned index = 0; index < 12; ++index)
+            table[index] = (struct WildPokemon){3 + index, 5 + index, SPECIES_RALTS};
+        table[rule->slot].species = rule->expectedSpecies;
+        rs = 0; enabled = 0;
+        assert((rule->water ? CtrEncounters_Water(&info, rule->mapGroup, rule->mapNum)
+                            : CtrEncounters_Land(&info, rule->mapGroup, rule->mapNum)) == &info);
+        assert(!CtrEncounters_MapHasExtra(rule->mapGroup, rule->mapNum, rule->species));
+        rs = 1;
+        const struct WildPokemonInfo *result = rule->water ? CtrEncounters_Water(&info, rule->mapGroup, rule->mapNum)
+                                                           : CtrEncounters_Land(&info, rule->mapGroup, rule->mapNum);
+        assert(result != &info);
+        for (unsigned index = 0; index < count; ++index) {
+            assert(result->wildPokemon[index].minLevel == table[index].minLevel);
+            if (index == rule->slot)
+                assert(result->wildPokemon[index].species == rule->species);
+        }
+        assert(CtrEncounters_MapHasExtra(rule->mapGroup, rule->mapNum, rule->species));
+        assert(!CtrEncounters_MapHasExtra(255, 255, rule->species));
+        rs = 0; enabled = 1;
+    }
+    assert(CtrEncounters_Water(NULL, 0, 0) == NULL);
     assert(CtrEncounters_Land(NULL, 0, 0) == NULL);
     original.wildPokemon = NULL;
     assert(CtrEncounters_Land(&original, 0, 0) == &original);
-    puts("PASS production encounter tables: every rule/phase, pinned species, original fallback, unchanged levels/rates/data");
+    puts("PASS production encounter tables: every rule/phase, pinned species, original fallback, unchanged levels/rates/data, Ruby/Sapphire slots");
 }
 '''
     with tempfile.TemporaryDirectory(prefix='encounters-') as temporary:

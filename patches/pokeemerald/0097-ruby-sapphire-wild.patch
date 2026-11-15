@@ -1,0 +1,106 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: Ruby and Sapphire's wild Pokemon on the surfing tables and in the Pokedex's AREA (OPTIONS > POKEDEX > RUBY/SAPPHIRE)
+Applies after 0096-player-look-back-pic.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/pokedex_area_screen.c b/src/pokedex_area_screen.c
+index a3ab666..ebf0a5d 100644
+--- a/src/pokedex_area_screen.c
++++ b/src/pokedex_area_screen.c
+@@ -9,6 +9,9 @@
+ #include "overworld.h"
+ #include "palette.h"
+ #include "pokedex_area_screen.h"
++#ifdef PLATFORM_3DS
++#include "3ds_encounters.h"
++#endif
+ #include "region_map.h"
+ #include "roamer.h"
+ #include "sound.h"
+@@ -427,6 +430,11 @@ static bool8 MapHasSpecies(const struct WildPokemonHeader *info, u16 species)
+         return TRUE;
+     if (MonListHasSpecies(info->rockSmashMonsInfo, species, ROCK_WILD_COUNT))
+         return TRUE;
++#ifdef PLATFORM_3DS
++    // The Ruby/Sapphire Pokemon the port puts on this map's tables.
++    if (CtrEncounters_MapHasExtra(info->mapGroup, info->mapNum, species))
++        return TRUE;
++#endif
+     return FALSE;
+ }
+ 
+diff --git a/src/wild_encounter.c b/src/wild_encounter.c
+index 17ada6b..0fba5ab 100644
+--- a/src/wild_encounter.c
++++ b/src/wild_encounter.c
+@@ -65,6 +65,18 @@ static const struct WildPokemonInfo *GetLandMonsInfo(u16 headerId)
+ #endif
+ }
+ 
++// The surfing table as met (3ds_encounters.h: RUBY/SAPPHIRE POKEMON).
++static const struct WildPokemonInfo *GetWaterMonsInfo(u16 headerId)
++{
++    const struct WildPokemonHeader *header = &gWildMonHeaders[headerId];
++
++#ifdef PLATFORM_3DS
++    return CtrEncounters_Water(header->waterMonsInfo, header->mapGroup, header->mapNum);
++#else
++    return header->waterMonsInfo;
++#endif
++}
++
+ static u16 FeebasRandom(void);
+ static void FeebasSeedRng(u16 seed);
+ static bool8 IsWildLevelAllowedByRepel(u8 level);
+@@ -1106,7 +1118,7 @@ static void VisibleTrySpawn(u16 headerId)
+         if (VisibleAt(x, y, NULL) != NULL)
+             continue;
+         water = MetatileBehavior_IsWaterWildEncounter(MapGridGetMetatileBehaviorAt(x, y));
+-        info = water ? gWildMonHeaders[headerId].waterMonsInfo : GetLandMonsInfo(headerId);
++        info = water ? GetWaterMonsInfo(headerId) : GetLandMonsInfo(headerId);
+         if (info == NULL || !VisibleTileFits(x, y, water))
+             continue;
+         if (water && AreLegendariesInSootopolisPreventingEncounters())
+@@ -1172,7 +1184,7 @@ static void VisiblePrefetch(u16 headerId)
+         return;
+     sLastLook = sVisibleFrames;
+     land = headerId != HEADER_NONE ? GetLandMonsInfo(headerId) : NULL;
+-    water = headerId != HEADER_NONE ? gWildMonHeaders[headerId].waterMonsInfo : NULL;
++    water = headerId != HEADER_NONE ? GetWaterMonsInfo(headerId) : NULL;
+     for (i = 0; land != NULL && i < LAND_WILD_COUNT; i++)
+         species[count++] = WILD_SPECIES(land->wildPokemon[i].species);
+     for (i = 0; water != NULL && i < WATER_WILD_COUNT; i++)
+@@ -1709,7 +1721,7 @@ bool8 StandardWildEncounter(u16 curMetatileBehavior, u16 prevMetatileBehavior)
+                 if (VISIBLE_REPLACES_RANDOM())
+                     return FALSE;
+ #endif
+-                if (TryGenerateWildMon(gWildMonHeaders[headerId].waterMonsInfo, WILD_AREA_WATER, WILD_CHECK_REPEL | WILD_CHECK_KEEN_EYE) == TRUE)
++                if (TryGenerateWildMon(GetWaterMonsInfo(headerId), WILD_AREA_WATER, WILD_CHECK_REPEL | WILD_CHECK_KEEN_EYE) == TRUE)
+                 {
+                     BattleSetup_StartWildBattle();
+                     return TRUE;
+@@ -1816,7 +1828,7 @@ bool8 SweetScentWildEncounter(void)
+                 return TRUE;
+             }
+ 
+-            TryGenerateWildMon(gWildMonHeaders[headerId].waterMonsInfo, WILD_AREA_WATER, 0);
++            TryGenerateWildMon(GetWaterMonsInfo(headerId), WILD_AREA_WATER, 0);
+             BattleSetup_StartWildBattle();
+             return TRUE;
+         }
+@@ -1866,7 +1878,7 @@ u16 GetLocalWildMon(bool8 *isWaterMon)
+     if (headerId == HEADER_NONE)
+         return SPECIES_NONE;
+     landMonsInfo = GetLandMonsInfo(headerId);
+-    waterMonsInfo = gWildMonHeaders[headerId].waterMonsInfo;
++    waterMonsInfo = GetWaterMonsInfo(headerId);
+     // Neither
+     if (landMonsInfo == NULL && waterMonsInfo == NULL)
+         return SPECIES_NONE;
+@@ -1897,7 +1909,7 @@ u16 GetLocalWaterMon(void)
+ 
+     if (headerId != HEADER_NONE)
+     {
+-        const struct WildPokemonInfo *waterMonsInfo = gWildMonHeaders[headerId].waterMonsInfo;
++        const struct WildPokemonInfo *waterMonsInfo = GetWaterMonsInfo(headerId);
+ 
+         if (waterMonsInfo)
+             return waterMonsInfo->wildPokemon[ChooseWildMonIndex_WaterRock()].species;
