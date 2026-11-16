@@ -23,6 +23,29 @@ int main(void)
     assert(CtrSettings_SpeedHalves() == 6 && CtrSettings_BattleSpeedHalves() == 6);
     CtrSettings_ApplyLine("speed=1");
 
+    CtrSettings_ApplyLine("speed=1.5\r\n");
+    assert(CtrSettings_SpeedHalves() == 3);
+    CtrSettings_ApplyLine("speed=NaN");
+    CtrSettings_ApplyLine("speed=1e30");
+    CtrSettings_ApplyLine("speed=inf");
+    CtrSettings_ApplyLine("speed=4junk");
+    assert(CtrSettings_SpeedHalves() == 3);
+    CtrSettings_ApplyLine("speed=1");
+
+    CtrSettings_ApplyLine("voxel=1");
+    CtrSettings_ApplyLine("voxel=0junk");
+    CtrSettings_ApplyLine("voxel=2");
+    assert(sVoxel);
+    CtrSettings_ApplyLine("voxel=0");
+    assert(!sVoxel);
+
+    CtrSettings_ApplyLine("future_option=-2147483648");
+    assert(CtrSettings_GetInt("future_option", 0) == INT_MIN);
+    CtrSettings_ApplyLine("future_option=2147483648");
+    CtrSettings_ApplyLine("future_option=99999999999999999999999999999");
+    CtrSettings_ApplyLine("future_option=7junk");
+    assert(CtrSettings_GetInt("future_option", 0) == INT_MIN);
+
     /* At 1x, L has nowhere to go and sets nothing: still following. */
     CtrSettings_StepBattleSpeed(-1, false);
     assert(CtrSettings_GetInt("battle_speed", 0) == 0);

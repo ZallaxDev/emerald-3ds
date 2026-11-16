@@ -7,6 +7,9 @@
  * player expects from a console option. One "key=value" per line; unknown
  * keys are ignored, so older and newer builds can share the file.
  */
+#include <ctype.h>
+#include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -113,33 +116,72 @@ void CtrSettings_Defaults(void)
     sExtraCount = 0;
 }
 
+static bool EndOfValue(const char *end)
+{
+    while (isspace((unsigned char)*end))
+        ++end;
+    return *end == '\0';
+}
+
 /* One "key=value" line, from settings.txt or a measured scenario. */
 void CtrSettings_ApplyLine(const char *line)
 {
-    int value;
+    char key[sizeof(sExtra[0].key)];
+    size_t keyLength = strspn(line, "abcdefghijklmnopqrstuvwxyz0123456789_");
+    char *end;
 
-    if (strncmp(line, "voxel=", 6) == 0)
-        sVoxel = line[6] == '1';
-    else if (sscanf(line, "voxel_pitch=%d", &value) == 1)
+    if (keyLength == 0 || keyLength >= sizeof(key) || line[keyLength] != '=')
+        return;
+    memcpy(key, line, keyLength);
+    key[keyLength] = '\0';
+    const char *valueText = line + keyLength + 1;
+
+    errno = 0;
+    if (strcmp(key, "speed") == 0)
+    {
+        float speed = strtof(valueText, &end);
+        /* Keep rounding to the nearest half step, with a safe cast range. */
+        if (end != valueText && errno != ERANGE && EndOfValue(end)
+         && speed >= 0.0f && speed < sSpeeds[COUNT(sSpeeds) - 1] / 2.0f + 0.25f)
+            sSpeed = Find(sSpeeds, COUNT(sSpeeds), (int)(speed * 2.0f + 0.5f), sSpeed);
+        return;
+    }
+
+    long parsed = strtol(valueText, &end, 10);
+    if (end == valueText || errno == ERANGE || parsed < INT_MIN || parsed > INT_MAX || !EndOfValue(end))
+        return;
+    int value = (int)parsed;
+
+    if (strcmp(key, "voxel") == 0)
+    {
+        if (value == 0 || value == 1)
+            sVoxel = value == 1;
+    }
+    else if (strcmp(key, "voxel_pitch") == 0)
         sPitch = Find(sPitches, COUNT(sPitches), value, sPitch);
-    else if (sscanf(line, "voxel_zoom=%d", &value) == 1)
+    else if (strcmp(key, "voxel_zoom") == 0)
         sZoom = Find(sZooms, COUNT(sZooms), value, sZoom);
-    else if (sscanf(line, "voxel_blur=%d", &value) == 1)
+    else if (strcmp(key, "voxel_blur") == 0)
         sBlur = Find(sBlurs, COUNT(sBlurs), value == 1 ? 100 : value, sBlur);
-    else if (strncmp(line, "voxel_battle=", 13) == 0)
-        sVoxelBattle = line[13] == '1';
-    else if (strncmp(line, "fps=", 4) == 0)
-        sShowFps = line[4] == '1';
-    else if (strncmp(line, "run=", 4) == 0)
-        sRunAlways = line[4] == '1';
-    else if (strncmp(line, "speed=", 6) == 0)
-        sSpeed = Find(sSpeeds, COUNT(sSpeeds), (int)(strtof(line + 6, NULL) * 2 + 0.5f), sSpeed);
+    else if (strcmp(key, "voxel_battle") == 0)
+    {
+        if (value == 0 || value == 1)
+            sVoxelBattle = value == 1;
+    }
+    else if (strcmp(key, "fps") == 0)
+    {
+        if (value == 0 || value == 1)
+            sShowFps = value == 1;
+    }
+    else if (strcmp(key, "run") == 0)
+    {
+        if (value == 0 || value == 1)
+            sRunAlways = value == 1;
+    }
     else
     {
-        char key[sizeof(sExtra[0].key)];
-        int index;
-
-        if (sscanf(line, "%23[a-z0-9_]=%d", key, &value) == 2 && (index = ExtraIndex(key, true)) >= 0)
+        int index = ExtraIndex(key, true);
+        if (index >= 0)
             sExtra[index].value = value;
     }
 }
