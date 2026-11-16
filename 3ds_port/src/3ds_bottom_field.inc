@@ -801,7 +801,10 @@ static const u8 *HoursMinutes(unsigned hours, unsigned minutes)
 #define PASS_MAP_ROW 4
 #define PASS_MAP_COLS 16
 #define PASS_MAP_ROWS 9
-#define PASS_MAP_W 144
+/* Drawn half as big again (PASS_MAP_SCALE / 2), so the picture fills its
+ * blue plate rather than sit small in it: 192x108 in a plate 200 wide. */
+#define PASS_MAP_SCALE 3
+#define PASS_MAP_W 200
 #define PASS_LIST_X (AREA_X + PASS_MAP_W + 4)
 #define PASS_LIST_W (AREA_W - PASS_MAP_W - 4)
 #define PASS_ROW_PITCH 17
@@ -905,21 +908,50 @@ static void DrawFrontierPass(const ViewState *s)
     PassFooter(s, text);
 }
 
+/* A map tile drawn PASS_MAP_SCALE / 2 times as big, each pixel of the
+ * picture taken from the tile's nearest one. */
+static void DrawPassMapTile(u16 e, int x, int y)
+{
+    u32 tile = e & 0x3FF;
+    const u16 *pal = sRes.passPal[e >> 12].c;
+    bool8 hflip = (e >> 10) & 1, vflip = (e >> 11) & 1;
+    int size = 8 * PASS_MAP_SCALE / 2;
+
+    if (tile >= sRes.passMapTileCount)
+        return;
+    for (int py = 0; py < size; ++py)
+    {
+        int ty = py * 2 / PASS_MAP_SCALE;
+        const u8 *row = sRes.passMapTiles + tile * 32 + (vflip ? 7 - ty : ty) * 4;
+
+        for (int px = 0; px < size; ++px)
+        {
+            int tx = px * 2 / PASS_MAP_SCALE;
+            int sx = hflip ? 7 - tx : tx;
+            u8 v = (row[sx >> 1] >> ((sx & 1) * 4)) & 15;
+
+            if (v)
+                Put(x + px, y + py, pal[v]);
+        }
+    }
+}
+
+/* A point of the game's map screen on the picture here. */
+#define PASS_MAP_AT(origin, v, first) ((origin) + ((v) - (first) * 8) * PASS_MAP_SCALE / 2)
+
 static void DrawFrontierMap(const ViewState *s)
 {
     const u8 *description = NULL;
     int oy = Plate(AREA_X, AREA_Y, PASS_MAP_W, CARD_H, sFieldBlue, PLATE_STATE_NORMAL);
-    int mx = AREA_X + (PASS_MAP_W - PASS_MAP_COLS * 8) / 2, my = oy + (CARD_H - 6 - PASS_MAP_ROWS * 8) / 2;
-    /* A point of the game's screen on the picture here. */
-    int dx = mx - PASS_MAP_COL * 8, dy = my - PASS_MAP_ROW * 8;
+    int tile = 8 * PASS_MAP_SCALE / 2;
+    int mx = AREA_X + (PASS_MAP_W - PASS_MAP_COLS * tile) / 2, my = oy + (CARD_H - 6 - PASS_MAP_ROWS * tile) / 2;
 
-    /* The map, as the game draws it from its tiles. */
+    /* The map, as the game draws it from its tiles, half as big again. */
     if (sRes.passMapTiles && sRes.passMapMap)
         for (int r = 0; r < PASS_MAP_ROWS; ++r)
             for (int c = 0; c < PASS_MAP_COLS; ++c)
-                DrawMapEntry(sRes.passMapTiles, sRes.passMapTileCount,
-                             sRes.passMapMap[(PASS_MAP_ROW + r) * 32 + PASS_MAP_COL + c], mx + c * 8, my + r * 8,
-                             sRes.passPal);
+                DrawPassMapTile(sRes.passMapMap[(PASS_MAP_ROW + r) * 32 + PASS_MAP_COL + c], mx + c * tile,
+                                my + r * tile);
 
     for (int i = 0; i < NUM_FRONTIER_FACILITIES; ++i)
     {
@@ -933,7 +965,8 @@ static void DrawFrontierMap(const ViewState *s)
         if (!name)
             continue;
         /* The facility's building on the map, to touch it there too. */
-        AddHit(dx + x - 12, dy + y - 10, 24, 20, HIT_PASS_FACILITY + i);
+        AddHit(PASS_MAP_AT(mx, x, PASS_MAP_COL) - 18, PASS_MAP_AT(my, y, PASS_MAP_ROW) - 15, 36, 30,
+               HIT_PASS_FACILITY + i);
         /* Its name in the list. */
         py = Plate(PASS_LIST_X, ry, PASS_LIST_W, PASS_ROW_PITCH - 1, chosen || pressed ? sEmerald : sSlate,
                    pressed ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
@@ -943,15 +976,16 @@ static void DrawFrontierMap(const ViewState *s)
         {
             /* The game's mark on it, its first frame: a rectangle or a square. */
             if (sRes.passMarkTiles)
-                DrawSprite(sRes.passMarkTiles + (square ? 16 : 0) * 32, 4, 2, dx + x - 16, dy + y - 8,
-                           sRes.passMarkPal.c);
+                DrawSprite(sRes.passMarkTiles + (square ? 16 : 0) * 32, 4, 2, PASS_MAP_AT(mx, x, PASS_MAP_COL) - 16,
+                           PASS_MAP_AT(my, y, PASS_MAP_ROW) - 8, sRes.passMarkPal.c);
             description = desc;
         }
     }
     /* The player, at the Battle Frontier. */
     if (s->passHead && sRes.passHeadTiles)
-        DrawSprite(sRes.passHeadTiles + (s->gender == FEMALE ? 4 : 0) * 32, 2, 2, dx + s->passHeadX - 8,
-                   dy + s->passHeadY - 8, sRes.passHeadPal[s->gender].c);
+        DrawSprite(sRes.passHeadTiles + (s->gender == FEMALE ? 4 : 0) * 32, 2, 2,
+                   PASS_MAP_AT(mx, s->passHeadX, PASS_MAP_COL) - 8, PASS_MAP_AT(my, s->passHeadY, PASS_MAP_ROW) - 8,
+                   sRes.passHeadPal[s->gender].c);
     PassFooter(s, description);
 }
 
