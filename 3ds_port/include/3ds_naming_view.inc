@@ -128,7 +128,7 @@ static bool8 CtrNaming_TakeTap(struct Task *task)
 bool8 CtrNaming_GetView(struct CtrNamingView *view)
 {
     u8 i, row, col;
-    u8 keyboard;
+    s16 cursorX, cursorY;
 
     memset(view, 0, sizeof(*view));
     if (!CtrNaming_IsOpen())
@@ -165,7 +165,6 @@ bool8 CtrNaming_GetView(struct CtrNamingView *view)
     view->cols = GetCurrentPageColumnCount();
     if (view->cols > CTR_NAMING_COLS)
         view->cols = CTR_NAMING_COLS;
-    keyboard = CurrentPageToKeyboardId();
     for (row = 0; row < CTR_NAMING_ROWS; row++)
         for (col = 0; col < view->cols; col++)
             view->keys[row][col] = GetCharAtKeyboardPos(col, row);
@@ -189,12 +188,12 @@ bool8 CtrNaming_GetView(struct CtrNamingView *view)
 #else
     // The columns are laid out at fixed x positions (sPageColumnXPos): a wide
     // distance starts a new group (3ds_naming_layout.h).
-    view->gapAfter = CtrNaming_GapsFromPositions(sPageColumnXPos[keyboard], view->cols);
+    view->gapAfter = CtrNaming_GapsFromPositions(sPageColumnXPos[CurrentPageToKeyboardId()], view->cols);
 #endif
 
-    GetCursorPos(&col, &row);
-    view->cursorX = (s8)col;
-    view->cursorY = (s8)row;
+    GetCursorPos(&cursorX, &cursorY);
+    view->cursorX = (s8)cursorX;
+    view->cursorY = (s8)cursorY;
     view->gender = sNamingScreen->monGender;
     view->species = sNamingScreen->monSpecies;
     view->personality = sNamingScreen->monPersonality;
