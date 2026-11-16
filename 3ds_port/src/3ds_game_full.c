@@ -924,10 +924,10 @@ void CtrGame_Init(void)
  */
 static void ReportTilemapFill(void)
 {
-    char text[128];
-    int used = 0;
+    char text[128] = "";
+    size_t used = 0;
 
-    for (unsigned bg = 1; bg <= 3 && used < (int)sizeof(text) - 24; ++bg)
+    for (unsigned bg = 1; bg <= 3 && used < sizeof(text) - 24; ++bg)
     {
         unsigned control = GetGpuReg(REG_OFFSET_BG0CNT + bg * 2);
         const u16 *map = (const u16 *)(VRAM_ + ((control >> 8) & 31) * 0x800);
@@ -938,7 +938,13 @@ static void ReportTilemapFill(void)
             if (map[i]) ++first;
             if (map[1024 + i]) ++second;
         }
-        used += snprintf(text + used, sizeof(text) - used, "BG%u %u/%u ", bg, first, second);
+        int written = snprintf(text + used, sizeof(text) - used, "BG%u %u/%u ", bg, first, second);
+        if (written < 0 || (size_t)written >= sizeof(text) - used)
+        {
+            text[used] = '\0';
+            break;
+        }
+        used += (size_t)written;
     }
     CtrLog_Write(CTR_LOG_VIDEO, "tilemap entries per screenblock: %s", text);
 }

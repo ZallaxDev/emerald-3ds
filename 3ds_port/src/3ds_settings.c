@@ -245,8 +245,14 @@ int CtrSettings_Text(char *text, unsigned size)
              "speed=%d%s\n",
              sVoxel ? 1 : 0, sPitches[sPitch], sZooms[sZoom], sBlurs[sBlur], sVoxelBattle ? 1 : 0,
              sShowFps ? 1 : 0, sRunAlways ? 1 : 0, sSpeeds[sSpeed] / 2, sSpeeds[sSpeed] & 1 ? ".5" : "");
-    for (int i = 0; i < sExtraCount && used >= 0 && used < (int)size; ++i)
-        used += snprintf(text + used, size - used, "%s=%d\n", sExtra[i].key, sExtra[i].value);
+    for (int i = 0; i < sExtraCount && used >= 0 && (unsigned)used < size; ++i)
+    {
+        int written = snprintf(text + used, size - (unsigned)used, "%s=%d\n",
+                               sExtra[i].key, sExtra[i].value);
+        if (written < 0)
+            return -1;
+        used += written;
+    }
     return used;
 }
 
@@ -258,7 +264,12 @@ static void Save(void)
     /* Settings and shutdown are submitted by the game thread. */
     if (sSaveQuit || sFrozen)
         return;
-    CtrSettings_Text(text, sizeof(text));
+    int length = CtrSettings_Text(text, sizeof(text));
+    if (length < 0 || (size_t)length >= sizeof(text))
+    {
+        CtrLog_Write(CTR_LOG_ERROR, "settings: could not serialize the complete file");
+        return;
+    }
     if (sSaver == NULL)
     {
         s32 priority = 0x30;
