@@ -91,6 +91,7 @@
 #include "field_message_box.h"
 #include "sound.h"
 #include "sprite.h"
+#include "constants/easy_chat.h"
 #include "string_util.h"
 #include "strings.h"
 #include "task.h"
@@ -106,6 +107,7 @@
 #include "constants/map_types.h"
 #include "constants/party_menu.h"
 #include "constants/region_map_sections.h"
+#include "naming_screen.h"
 #include "constants/rgb.h"
 #include "constants/songs.h"
 #include "constants/trainers.h"
@@ -1391,6 +1393,47 @@ static int StrWidth(const Font *font, const u8 *str)
     return width > best ? width : best;
 }
 
+/*
+ * Where a line's ink starts and ends, from its left edge as drawn: the
+ * glyphs' advances leave room after each (a "1" is drawn at the left of its
+ * cell), so a line centred by its advance sits left of the middle. FALSE for
+ * a line with no ink.
+ */
+static bool8 StrInk(const Font *font, const u8 *str, int *left, int *right)
+{
+    int x = 0;
+
+    *left = 0x7FFF;
+    *right = -1;
+    if (!font->glyphs || !str)
+        return FALSE;
+    for (u16 g; (g = NextGlyph(&str)) != 0xFFFF;)
+    {
+        int width = GlyphWidth(font, g);
+
+        if (g == 0xFFFE)
+            break;
+        for (int row = 0; row < font->height; ++row)
+            for (int half = 0; half < 2 && half * 8 < width && half * 8 < 16; ++half)
+            {
+                u16 bits = GlyphBits(font, g, row, half);
+
+                for (int k = 0; bits && k < 8 && half * 8 + k < width; ++k)
+                {
+                    u8 byte = k < 4 ? bits >> 8 : bits & 0xFF;
+                    u8 v = (byte >> (6 - 2 * (k & 3))) & 3;
+
+                    if (v != 1 && v != 2)
+                        continue;
+                    if (x + half * 8 + k < *left) *left = x + half * 8 + k;
+                    if (x + half * 8 + k > *right) *right = x + half * 8 + k;
+                }
+            }
+        x += width;
+    }
+    return *right >= *left;
+}
+
 static int DrawGlyph(const Font *font, u16 glyph, int x, int y, u16 fg, u16 shadow)
 {
     int width = GlyphWidth(font, glyph);
@@ -2272,6 +2315,10 @@ enum
     /* The game's trainer card (classic menus), drawn by the compositor in
      * the game screen's window. */
     MODE_CARD,
+    /* The naming screen's keyboard, drawn here over the whole screen. */
+    MODE_NAMING,
+    /* A screen of the game with none of its own here: the buttons (3ds_bottom_pad.inc). */
+    MODE_PAD,
     MODE_BATTLE_INFO,
     MODE_BATTLE_ACTION,
     MODE_BATTLE_MOVE,
@@ -2412,6 +2459,23 @@ typedef struct
     struct CtrSummaryView sv;
     struct CtrBagView bv;
     struct CtrDexView dx;
+    /* MODE_NAMING: the naming screen, whole (3ds_bottom_game.inc). */
+    struct CtrNamingView nm;
+    /* ... or the Union Room chat's (3ds_bottom_chat.inc). */
+    struct CtrChatView ch;
+    u8 chat;
+    /* The game's own menu waiting for an answer in the field, as buttons (3ds_bottom_fieldmenu.inc). */
+    struct CtrFieldMenuView fm;
+    struct CtrFieldListView fl;
+    /* The Berry Blender, over the controller (3ds_bottom_blender.inc). */
+    struct CtrBlenderView bl;
+    /* The contest's move choice, over the controller (3ds_bottom_contest.inc). */
+    struct CtrContestView co;
+    /* Easy Chat, over the controller (3ds_bottom_easychat.inc). */
+    struct CtrEasyChatView ec;
+    u16 ecFirst;
+    /* The Rental Pokemon screens, over the controller (3ds_bottom_factory.inc). */
+    struct CtrFactoryView fac;
 } ViewState;
 
 /* NATIVE_BLANK: one of those whose view is not there yet: the section's
@@ -2544,6 +2608,8 @@ static u32 sFlyerPersonality;
 static bool8 sFlyerKnown;
 enum { MAP_FLY_NONE, MAP_FLY_GREY, MAP_FLY_READY };
 static s16 sMapViewX, sMapViewY;
+/* Easy Chat: the first word of the twelve shown (3ds_bottom_easychat.inc). */
+static u16 sEcFirst;
 /* Map extras: the wild list instead of the map, its page; the load
  * (CtrClockStore_LoadSerial) whose clock banner was dismissed. */
 static bool8 sEncView;
@@ -2744,8 +2810,15 @@ bool8 __attribute__((weak)) CtrBattle_QuickBallCycle(s8 direction)
     return FALSE;
 }
 
+/* Frames a screen of the game with none of its own here has been up before its buttons appear. */
+#define PAD_APPEARS_AFTER 45
+
 static u8 CurrentMode(void)
 {
+    /* Before the field is reached too: the player's name is asked in the
+     * professor's speech. */
+    if (CtrNaming_IsOpen() || CtrChat_IsOpen())
+        return MODE_NAMING;
     if (gMain.callback2 == CB2_Overworld)
         sInGame = TRUE;
     if (!sInGame || !gSaveBlock1Ptr || !gSaveBlock2Ptr)
@@ -2786,6 +2859,24 @@ static u8 CurrentMode(void)
         }
         return MODE_BATTLE_INFO;
     }
+    /* A screen of the game the bottom one does not draw: its buttons, once it has been up a moment
+     * (not on the way between two maps). */
+    {
+        static MainCallback last;
+        static u16 up;
+
+        /* Another screen starts the wait again: a map being loaded goes by quicker than it. */
+        if (gMain.callback2 != last || gMain.callback2 == CB2_Overworld)
+            up = 0;
+        last = gMain.callback2;
+        if (gMain.callback2 != CB2_Overworld)
+        {
+            if (up < 0xFFFF)
+                ++up;
+            if (up > PAD_APPEARS_AFTER)
+                return MODE_PAD;
+        }
+    }
     return MODE_FIELD;
 }
 
@@ -2821,7 +2912,8 @@ static void BeginSession(bool8 battle)
 static bool8 UpdateSession(u8 mode, bool8 planRunning)
 {
     bool8 inMenu = mode == MODE_PARTY_MENU || mode == MODE_BAG_MENU || mode == MODE_POKENAV
-                || mode == MODE_STORAGE || mode == MODE_POKEDEX || mode == MODE_SUMMARY || mode == MODE_CARD;
+                || mode == MODE_STORAGE || mode == MODE_POKEDEX || mode == MODE_SUMMARY || mode == MODE_CARD
+                || mode == MODE_NAMING;
     bool8 home = gMain.callback2 == CB2_Overworld || gMain.callback2 == BattleMainCB2;
 
     if (inMenu && !sSession.active)
@@ -3809,6 +3901,40 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
     if (s->mode == MODE_OFF)
     {
         s->title = CtrTitleScreen_RayquazaBg() >= 0;
+        /* The title menu, the professor's questions: the game's own menus, as buttons. */
+        CtrFieldMenu_GetView(&s->fm);
+        CtrFieldList_GetView(&s->fl);
+        return;
+    }
+    if (mode == MODE_PAD)
+    {
+        s->screen = SCR_COUNT;
+        CtrBlender_GetView(&s->bl);
+        CtrContest_GetView(&s->co);
+        CtrEasyChat_GetView(&s->ec);
+        CtrFactory_GetView(&s->fac);
+        if (s->ec.state != CTR_EC_WORDS_PAGE)
+            sEcFirst = 0;
+        s->ecFirst = sEcFirst;
+        CtrFieldMenu_GetView(&s->fm);
+        CtrFieldList_GetView(&s->fl);
+        return;
+    }
+    if (mode == MODE_FIELD)
+    {
+        CtrFieldMenu_GetView(&s->fm);
+        CtrFieldList_GetView(&s->fl);
+    }
+    if (s->mode == MODE_NAMING)
+    {
+        /* The whole screen, no dock or header: nothing of the save is read
+         * (the player's name is being made, before there is one). */
+        s->screen = SCR_COUNT;
+        s->chat = CtrChat_IsOpen();
+        if (s->chat)
+            CtrChat_GetView(&s->ch);
+        else
+            CtrNaming_GetView(&s->nm);
         return;
     }
     s->gender = gSaveBlock2Ptr->playerGender ? FEMALE : MALE;
@@ -4033,6 +4159,19 @@ static bool8 Prefetch(const ViewState *s)
         if (sIconBudget && s->sv.item)
             ItemIcon(s->sv.item);
     }
+    /* The Pokémon being named, whole; the player's own picture is loaded already. */
+    if (s->mode == MODE_NAMING && s->nm.species
+        && (s->nm.use == NAMING_SCREEN_CAUGHT_MON || s->nm.use == NAMING_SCREEN_NICKNAME) && sIconBudget)
+        FrontPic(s->nm.species, FALSE);
+    /* The contest's Pokemon and the Rental Pokemon, loaded one a frame. */
+    if (s->mode == MODE_PAD && s->co.state && s->co.species)
+        MonIcon(GetIconSpecies(s->co.species, s->co.personality), FALSE);
+    if (s->mode == MODE_PAD && s->fac.screen && s->fac.focus < s->fac.count && sIconBudget)
+        FrontPic(s->fac.species[s->fac.focus], FALSE);
+    if (s->mode == MODE_PAD && s->fac.screen)
+        for (int i = 0; i < s->fac.count && i < CTR_FAC_MONS && sIconBudget; ++i)
+            if (s->fac.species[i])
+                MonIcon(GetIconSpecies(s->fac.species[i], s->fac.personality[i]), FALSE);
     if (s->native == NATIVE_DEX)
     {
         if (sIconBudget && s->dx.species)
@@ -4060,6 +4199,15 @@ static bool8 Prefetch(const ViewState *s)
 #include "3ds_bottom_field.inc"
 #include "3ds_bottom_options.inc"
 #include "3ds_bottom_game.inc"
+#include "3ds_bottom_naming.inc"
+#include "3ds_bottom_chat.inc"
+#include "3ds_bottom_pad.inc"
+#include "3ds_bottom_fieldmenu.inc"
+#include "3ds_bottom_blender.inc"
+#include "3ds_bottom_contest.inc"
+#include "3ds_bottom_easychat.inc"
+#include "3ds_bottom_factory.inc"
+#include "3ds_bottom_factory_top.inc"
 
 /* ------------------------------------------------------------------------ */
 /* Drawing: battle                                                          */
@@ -5419,7 +5567,7 @@ static bool8 sMapShotOk;
 
 static bool8 MapCacheable(const ViewState *s)
 {
-    return s->mode == MODE_FIELD && s->dock
+    return s->mode == MODE_FIELD && s->dock && !s->fm.count && !s->fl.count
         && (s->screen == SCR_MAP || s->screen == SCR_CARD || s->screen == SCR_SAVE || s->screen == SCR_OPTION
             || s->screen == SCR_NUZLOCKE)
         && !CtrVideo_BottomInUse() && !CtrVideo_BottomWhole() && ClipIsFull();
@@ -5488,7 +5636,18 @@ static void Render(const ViewState *s)
     sDst = sCanvas;
     sOX = 0;
 
-    if (s->mode == MODE_OFF)
+    if (s->mode == MODE_OFF && (s->fm.count || s->fl.count))
+    {
+        CopyCache(CACHE_MENU);
+        phase[1] = CtrPlatform_Ticks();
+        NameBackdrop();
+        if (s->fl.count)
+            DrawFieldList(s);
+        else
+            DrawFieldMenu(s);
+        phase[2] = CtrPlatform_Ticks();
+    }
+    else if (s->mode == MODE_OFF)
     {
         memset(sCanvas, 0, sizeof(sCanvas));
         phase[1] = CtrPlatform_Ticks();
@@ -5508,6 +5667,40 @@ static void Render(const ViewState *s)
             DrawBattleTarget(s);
         phase[2] = CtrPlatform_Ticks();
     }
+    else if (s->mode == MODE_PAD)
+    {
+        CopyCache(CACHE_MENU);
+        phase[1] = CtrPlatform_Ticks();
+        if (s->fl.count || s->fm.count)
+        {
+            NameBackdrop();
+            if (s->fl.count)
+                DrawFieldList(s);
+            else
+                DrawFieldMenu(s);
+        }
+        else if (s->bl.state)
+            DrawBlender(s);
+        else if (s->co.state)
+            DrawContest(s);
+        else if (s->ec.state)
+            DrawEasyChat(s);
+        else if (s->fac.screen)
+            DrawFactory(s);
+        else
+            NameBackdrop();
+        phase[2] = CtrPlatform_Ticks();
+    }
+    else if (s->mode == MODE_NAMING)
+    {
+        CopyCache(CACHE_MENU);
+        phase[1] = CtrPlatform_Ticks();
+        if (s->chat)
+            DrawGameChat(s);
+        else
+            DrawGameNaming(s);
+        phase[2] = CtrPlatform_Ticks();
+    }
     else if (!s->dock)
     {
         /* The game's screen opened from a battle, a shop or the PC has the
@@ -5517,11 +5710,15 @@ static void Render(const ViewState *s)
     }
     else
     {
-        if (!s->native && s->screen == SCR_MAP && !s->encView)
+        if (!s->native && s->screen == SCR_MAP && !s->encView && !s->fm.count && !s->fl.count)
             EnsureMapCache(s);
-        CopyCache(SectionCache(s));
+        CopyCache(s->fm.count || s->fl.count ? CACHE_MENU : SectionCache(s));
         phase[1] = CtrPlatform_Ticks();
-        if (s->native)
+        if (s->fl.count)
+            DrawFieldList(s);
+        else if (s->fm.count)
+            DrawFieldMenu(s);
+        else if (s->native)
             DrawGameView(s);
         else switch (s->screen)
         {
@@ -5719,6 +5916,8 @@ static bool8 RectAddFocus(Rect *r, const ViewState *s, u8 focus)
     return RectAddHit(r, HIT_COLUMN + focus);
 }
 
+#include "3ds_bottom_keys_dirty.inc"
+
 /*
  * The clip a redraw can be limited to, when the new view differs from the
  * shown one only in things that touch one part of the screen: the button lit
@@ -5734,6 +5933,9 @@ static bool8 DirtyRect(const ViewState *now, const ViewState *shown, Rect *r)
 
     if (now->mode != shown->mode || now->screen != shown->screen || now->dock != shown->dock)
         return FALSE;
+    /* The keyboards: the key, the cursor or the text that changed (3ds_bottom_naming.inc, _chat.inc). */
+    if (now->mode == MODE_NAMING)
+        return now->chat == shown->chat && (now->chat ? ChatDirty(now, shown, r) : NamingDirty(now, shown, r));
     if (!battle && !now->dock)
         return FALSE;
     probe = *now;
@@ -5919,6 +6121,7 @@ typedef struct
 } Plan;
 
 static Plan sPlan;
+static u16 sPadHeld;
 static u16 sInjected;
 
 static Plan MakePlan(u8 kind, s16 target)
@@ -6009,9 +6212,11 @@ static void RunPlan(void)
     }
 }
 
+/* The keys the bottom screen presses for the game (a tap turned into a key), taken each frame. */
+
 uint16_t CtrBottom_InjectedKeys(void)
 {
-    return sInjected;
+    return sInjected | sPadHeld;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -6772,6 +6977,44 @@ static void Activate(u8 id, u8 mode)
     if (id == HIT_NONE)
         return;
     CtrLog_Write(CTR_LOG_INPUT, "bottom screen: tap %02x (mode %u screen %u)", id, mode, sShown.screen);
+    /* The contest's move choice: its plates are taps. */
+    if (mode == MODE_PAD && sShown.co.state && !sShown.fm.count && !sShown.fl.count)
+    {
+        ContestTap(id);
+        return;
+    }
+    /* Easy Chat: its buttons are taps, carried out as the keys the game reads. */
+    if (mode == MODE_PAD && sShown.ec.state && !sShown.fm.count && !sShown.fl.count)
+    {
+        EasyChatTap(id);
+        return;
+    }
+    /* The Rental Pokemon screens: carried out as the keys the game reads. */
+    if (mode == MODE_PAD && sShown.fac.screen && !sShown.fm.count && !sShown.fl.count)
+    {
+        FactoryTap(id);
+        return;
+    }
+    /* The buttons act as they are held (PadKeysHeld), not as a tap. */
+    if (mode == MODE_PAD && !sShown.fm.count && !sShown.fl.count)
+        return;
+    /* A menu or a list of the game's waiting: its buttons are the only things to tap. */
+    if ((mode == MODE_FIELD || mode == MODE_PAD || mode == MODE_OFF) && (sShown.fm.count || sShown.fl.count))
+    {
+        if (sShown.fl.count)
+            FieldListTap(&sShown, id);
+        else
+            FieldMenuTap(id);
+        return;
+    }
+    if (mode == MODE_NAMING)
+    {
+        if (sShown.chat)
+            ChatTap(id);
+        else
+            NamingTap(id);
+        return;
+    }
     if (mode >= MODE_BATTLE_INFO)
     {
         /* The controller waiting for it takes it on its next frame. */
@@ -7512,6 +7755,23 @@ void CtrBottom_Init(void)
                  CtrPlatform_TickMs(CtrPlatform_Ticks() - start));
 }
 
+/*
+ * A naming screen is about to open (after the fade that comes first): the top
+ * screen keeps what it shows - the battle, the professor's speech, a hatching -
+ * while the keyboard is on the bottom one. The classic menus do not change it:
+ * they are only the party, the summary and the Pokédex.
+ */
+void CtrBattleMenu_HoldScene(void);
+void CtrBottom_KeepWorld(void);
+
+void CtrBottom_NamingAhead(bool8 battle)
+{
+    if (battle)
+        CtrBattleMenu_HoldScene();
+    else
+        CtrBottom_KeepWorld();
+}
+
 /* The PC's boxes, the shop's BUY screen or the bag to sell from are about to
  * open: the top keeps the world, fade included, until the field is back. */
 void CtrBottom_KeepWorld(void)
@@ -7825,7 +8085,8 @@ void CtrBottom_SoftReset(void)
 #define PLATE_WARM_MS 4.0f
 static ViewState sWarmSeen[NATIVE_BLANK], sWarmSeenBattle[NATIVE_BLANK];
 static bool8 sWarmSeenOk[NATIVE_BLANK], sWarmSeenBattleOk[NATIVE_BLANK];
-enum { WARM_POKEMON, WARM_BAG, WARM_SUMMARY, WARM_DEX, WARM_CARD, WARM_SAVE, WARM_OPTION, WARM_NUZLOCKE, WARM_COUNT };
+enum { WARM_POKEMON, WARM_BAG, WARM_SUMMARY, WARM_DEX, WARM_CARD, WARM_SAVE, WARM_OPTION, WARM_NUZLOCKE, WARM_NAMING, WARM_CHAT,
+       WARM_COUNT };
 static bool8 sWarmScreenDone[WARM_COUNT], sWarmBattleDone[WARM_COUNT];
 static u8 sWarmNext;
 static u32 sWarmEvicted = 0xFFFFFFFF;
@@ -7837,8 +8098,17 @@ static bool8 WarmScreenView(u8 which, ViewState *v, bool8 battle)
     static const u8 screens[WARM_COUNT] = {SCR_POKEMON, SCR_BAG, SCR_POKEMON, SCR_POKEDEX, SCR_CARD, SCR_SAVE,
                                            SCR_OPTION, SCR_NUZLOCKE};
     static const u8 natives[WARM_COUNT] = {NATIVE_PARTY, NATIVE_BAG, NATIVE_SUMMARY, NATIVE_DEX};
-    u8 screen = screens[which], keep = sScreen;
+    u8 screen, keep = sScreen;
 
+    /* The naming screen's keyboard and the chat's, from nothing seen yet. */
+    if (which >= WARM_NAMING)
+    {
+        if (battle)
+            return FALSE;
+        WarmKeyboardView(v, which == WARM_CHAT);
+        return TRUE;
+    }
+    screen = screens[which];
     if (battle)
     {
         u8 native;
@@ -7967,7 +8237,14 @@ static void WarmScreens(bool8 battle)
         sPlateWarmShort = sPlateWarmFull = FALSE;
         sPlateWarmBuilt = 0;
         sPlateJobSeen = FALSE;
-        if (v.native)
+        if (v.mode == MODE_NAMING)
+        {
+            if (v.chat)
+                DrawGameChat(&v);
+            else
+                DrawGameNaming(&v);
+        }
+        else if (v.native)
             DrawGameView(&v);
         else if (v.screen == SCR_CARD)
             DrawTrainerCard(&v);
@@ -7977,8 +8254,11 @@ static void WarmScreens(bool8 battle)
             DrawOptions(&v);
         else if (v.screen == SCR_NUZLOCKE)
             DrawNuzlocke(&v);
-        DrawHeader(&v);
-        DrawDock(&v);
+        if (v.mode != MODE_NAMING)
+        {
+            DrawHeader(&v);
+            DrawDock(&v);
+        }
         sPlateWarm = FALSE;
         /* A plate begun for a screen that no longer has it goes; one still
          * being made keeps the walk on its screen. */
@@ -8075,6 +8355,8 @@ void CtrBottom_Frame(void)
     if (sLeaveTo < SCR_COUNT && (mode == MODE_FIELD || mode >= MODE_BATTLE_INFO || ++sLeaveToWait > 240))
         sLeaveTo = SCR_COUNT;
     pressed = ProcessTouch(mode);
+    sPadHeld = mode == MODE_PAD && sShown.bl.state && !sShown.fm.count && !sShown.fl.count
+        ? PadKeysHeld(sTouch.active, sTouch.lastX, sTouch.lastY) : 0;
     ProcessKeys(mode);
     OpenAsked(mode);
     RunPlan();
@@ -8151,6 +8433,8 @@ void CtrBottom_Frame(void)
     }
     else
         sIconsReady = sIconsIn = TRUE;
+    /* The Rental Pokemon's panel on the top screen. */
+    FactoryTopFrame(&sState);
 
     ticks[2] = CtrPlatform_Ticks();
     if (sAreaRedraw)

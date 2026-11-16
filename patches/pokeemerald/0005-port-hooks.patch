@@ -314,10 +314,10 @@ index 8ce0cc9e5052d5979de9d640b38571c2c02f1805..a539ff329a4b5a8a151d0aa784ec512e
  
  #endif // GUARD_WEATHER_H
 diff --git a/include/fieldmap.h b/include/fieldmap.h
-index 212dfb65a6868042e59f140df99fba7c8d134729..1620b51d70efaed63d3971114001b3e7aa2da322 100644
+index 212dfb65a6868042e59f140df99fba7c8d134729..af451cd0f372cafa7bbd87a962444d63a9211cb2 100644
 --- a/include/fieldmap.h
 +++ b/include/fieldmap.h
-@@ -19,11 +19,34 @@
+@@ -19,11 +19,35 @@
  #define MAP_OFFSET_W (MAP_OFFSET * 2 + 1)
  #define MAP_OFFSET_H (MAP_OFFSET * 2)
  
@@ -342,6 +342,7 @@ index 212dfb65a6868042e59f140df99fba7c8d134729..1620b51d70efaed63d3971114001b3e7
 +// Port only: what the wide camera draws past the GBA's map padding.
 +u32 MapGridGetMetatileIdForCameraAt(int x, int y);
 +const u16 *MapGridGetCameraBorderAt(int x, int y, u8 *index);
++const u16 *MapGridGetCameraBorderOf(u16 id, int x, int y, u8 *index);
 +#ifdef PLATFORM_3DS
 +// The bank (3ds_tile_banks.h) of the tileset the camera draws x, y with
 +// (backup-layout coordinates), and that map's layout: 0 for the current
@@ -1934,7 +1935,7 @@ index f7e9fef40609fbb3a6c5437daa01effa94cecdc6..fb52024b86901d779737504745941034
  }
  
 diff --git a/src/battle_factory_screen.c b/src/battle_factory_screen.c
-index 8726770f18cee8264d032ab9d980366d5064043a..7ae6fffd002cc1acd316fb0338a9671879428035 100644
+index 8726770f18cee8264d032ab9d980366d5064043a..16be2dfd6b25f82995da57fc81ebb7ba80aab80a 100644
 --- a/src/battle_factory_screen.c
 +++ b/src/battle_factory_screen.c
 @@ -31,6 +31,9 @@
@@ -1956,7 +1957,18 @@ index 8726770f18cee8264d032ab9d980366d5064043a..7ae6fffd002cc1acd316fb0338a96718
  };
  
  struct FactorySwapScreen
-@@ -253,7 +256,7 @@ static EWRAM_DATA u8 *sSwapMenuTilemapBuffer = NULL;
+@@ -198,6 +201,10 @@ static u8 Select_OptionOthers(void);
+ static u8 Select_OptionRentDeselect(void);
+ static bool32 Select_AreSpeciesValid(u16);
+ 
++#ifdef PLATFORM_3DS
++static void CtrFac_Inject(void);
++#endif
++
+ // Swap screen
+ static void CB2_InitSwapScreen(void);
+ static void Swap_DestroyAllSprites(void);
+@@ -253,7 +260,7 @@ static EWRAM_DATA u8 *sSwapMenuTilemapBuffer = NULL;
  static EWRAM_DATA u8 *sSwapMonPicBgTilemapBuffer = NULL;
  
  static struct FactorySelectScreen *sFactorySelectScreen;
@@ -1965,7 +1977,7 @@ index 8726770f18cee8264d032ab9d980366d5064043a..7ae6fffd002cc1acd316fb0338a96718
  static struct FactorySwapScreen *sFactorySwapScreen;
  
  COMMON_DATA u8 (*gFactorySelect_CurrentOptionFunc)(void) = NULL;
-@@ -275,6 +278,17 @@ static const u8 sMonPicBg_Tilemap[]          = INCBIN_U8( "graphics/battle_front
+@@ -275,6 +282,17 @@ static const u8 sMonPicBg_Tilemap[]          = INCBIN_U8( "graphics/battle_front
  static const u16 sMonPicBg_Gfx[]             = INCBIN_U16("graphics/battle_frontier/factory_screen/mon_pic_bg.4bpp");
  static const u16 sMonPicBg_Pal[]             = INCBIN_U16("graphics/battle_frontier/factory_screen/mon_pic_bg.gbapal");
  
@@ -1983,7 +1995,7 @@ index 8726770f18cee8264d032ab9d980366d5064043a..7ae6fffd002cc1acd316fb0338a96718
  static const struct SpriteSheet sSelect_SpriteSheets[] =
  {
      {sArrow_Gfx,              sizeof(sArrow_Gfx),              GFXTAG_ARROW},
-@@ -886,7 +900,7 @@ static const struct SpriteTemplate sSpriteTemplate_Swap_MonPicBgAnim =
+@@ -886,7 +904,7 @@ static const struct SpriteTemplate sSpriteTemplate_Swap_MonPicBgAnim =
      .callback = SpriteCallbackDummy
  };
  
@@ -1992,7 +2004,17 @@ index 8726770f18cee8264d032ab9d980366d5064043a..7ae6fffd002cc1acd316fb0338a96718
  {
      Swap_OptionSummary,
      Swap_OptionSwap,
-@@ -1152,7 +1166,7 @@ static void CB2_InitSelectScreen(void)
+@@ -1091,6 +1109,9 @@ static void SpriteCB_Pokeball(struct Sprite *sprite)
+ 
+ static void CB2_SelectScreen(void)
+ {
++#ifdef PLATFORM_3DS
++    CtrFac_Inject();
++#endif
+     AnimateSprites();
+     BuildOamBuffer();
+     RunTextPrinters();
+@@ -1152,7 +1173,7 @@ static void CB2_InitSelectScreen(void)
      case 1:
          sSelectMenuTilesetBuffer = Alloc(sizeof(gFrontierFactoryMenu_Gfx));
  #ifdef BUGFIX
@@ -2001,7 +2023,7 @@ index 8726770f18cee8264d032ab9d980366d5064043a..7ae6fffd002cc1acd316fb0338a96718
  #else
          sSelectMonPicBgTilesetBuffer = AllocZeroed(sizeof(gFrontierFactoryMenu_Gfx)); // Incorrect size
  #endif
-@@ -1182,9 +1196,9 @@ static void CB2_InitSelectScreen(void)
+@@ -1182,9 +1203,9 @@ static void CB2_InitSelectScreen(void)
          ResetTasks();
          FreeAllSpritePalettes();
          CpuCopy16(gFrontierFactoryMenu_Gfx, sSelectMenuTilesetBuffer, sizeof(gFrontierFactoryMenu_Gfx));
@@ -2013,7 +2035,17 @@ index 8726770f18cee8264d032ab9d980366d5064043a..7ae6fffd002cc1acd316fb0338a96718
          CpuCopy16(gFrontierFactoryMenu_Tilemap, sSelectMenuTilemapBuffer, BG_SCREEN_SIZE);
          LoadBgTilemap(1, sSelectMenuTilemapBuffer, BG_SCREEN_SIZE, 0);
          LoadPalette(gFrontierFactoryMenu_Pal, 0, 2 * PLTT_SIZE_4BPP);
-@@ -2485,7 +2499,11 @@ static void Swap_Task_HandleYesNo(u8 taskId)
+@@ -2333,6 +2354,9 @@ static void Select_Task_FadeSpeciesName(u8 taskId)
+ 
+ static void Swap_CB2(void)
+ {
++#ifdef PLATFORM_3DS
++    CtrFac_Inject();
++#endif
+     AnimateSprites();
+     BuildOamBuffer();
+     RunTextPrinters();
+@@ -2485,7 +2509,11 @@ static void Swap_Task_HandleYesNo(u8 taskId)
                  gTasks[taskId].tSaidYes = TRUE;
                  hiPtr = gTasks[taskId].tFollowUpTaskPtrHi;
                  loPtr = gTasks[taskId].tFollowUpTaskPtrLo;
@@ -2025,7 +2057,7 @@ index 8726770f18cee8264d032ab9d980366d5064043a..7ae6fffd002cc1acd316fb0338a96718
              }
              else
              {
-@@ -2494,7 +2512,11 @@ static void Swap_Task_HandleYesNo(u8 taskId)
+@@ -2494,7 +2522,11 @@ static void Swap_Task_HandleYesNo(u8 taskId)
                  Swap_ErasePopupMenu(SWAP_WIN_YES_NO);
                  hiPtr = gTasks[taskId].tFollowUpTaskPtrHi;
                  loPtr = gTasks[taskId].tFollowUpTaskPtrLo;
@@ -2037,7 +2069,7 @@ index 8726770f18cee8264d032ab9d980366d5064043a..7ae6fffd002cc1acd316fb0338a96718
              }
          }
          else if (JOY_NEW(B_BUTTON))
-@@ -2504,7 +2526,11 @@ static void Swap_Task_HandleYesNo(u8 taskId)
+@@ -2504,7 +2536,11 @@ static void Swap_Task_HandleYesNo(u8 taskId)
              Swap_ErasePopupMenu(SWAP_WIN_YES_NO);
              hiPtr = gTasks[taskId].tFollowUpTaskPtrHi;
              loPtr = gTasks[taskId].tFollowUpTaskPtrLo;
@@ -2049,7 +2081,7 @@ index 8726770f18cee8264d032ab9d980366d5064043a..7ae6fffd002cc1acd316fb0338a96718
          }
          else if (JOY_REPEAT(DPAD_UP))
          {
-@@ -3016,7 +3042,7 @@ static void Swap_Task_ScreenInfoTransitionOut(u8 taskId)
+@@ -3016,7 +3052,7 @@ static void Swap_Task_ScreenInfoTransitionOut(u8 taskId)
          gTasks[taskId].tState++;
          break;
      case 2:
@@ -2058,7 +2090,7 @@ index 8726770f18cee8264d032ab9d980366d5064043a..7ae6fffd002cc1acd316fb0338a96718
          gTasks[taskId].tState++;
          break;
      case 3:
-@@ -3074,7 +3100,11 @@ static void Swap_Task_ScreenInfoTransitionOut(u8 taskId)
+@@ -3074,7 +3110,11 @@ static void Swap_Task_ScreenInfoTransitionOut(u8 taskId)
              gTasks[taskId].tState = gTasks[taskId].tFollowUpTaskState;
              hiPtr = gTasks[taskId].tFollowUpTaskPtrHi;
              loPtr = gTasks[taskId].tFollowUpTaskPtrLo;
@@ -2071,7 +2103,7 @@ index 8726770f18cee8264d032ab9d980366d5064043a..7ae6fffd002cc1acd316fb0338a96718
          }
          break;
      }
-@@ -3137,14 +3167,14 @@ static void Swap_Task_ScreenInfoTransitionIn(u8 taskId)
+@@ -3137,14 +3177,14 @@ static void Swap_Task_ScreenInfoTransitionIn(u8 taskId)
          if (gTasks[taskId].tSlideFinishedPkmn == TRUE
           && gTasks[taskId].tSlideFinishedCancel == TRUE)
          {
@@ -2088,7 +2120,7 @@ index 8726770f18cee8264d032ab9d980366d5064043a..7ae6fffd002cc1acd316fb0338a96718
          gTasks[taskId].tState++;
          break;
      case 4:
-@@ -3181,7 +3211,11 @@ static void Swap_Task_ScreenInfoTransitionIn(u8 taskId)
+@@ -3181,7 +3221,11 @@ static void Swap_Task_ScreenInfoTransitionIn(u8 taskId)
          gTasks[taskId].tState = gTasks[taskId].tFollowUpTaskState;
          hiPtr = gTasks[taskId].tFollowUpTaskPtrHi;
          loPtr = gTasks[taskId].tFollowUpTaskPtrLo;
@@ -2101,7 +2133,7 @@ index 8726770f18cee8264d032ab9d980366d5064043a..7ae6fffd002cc1acd316fb0338a96718
          break;
      }
  }
-@@ -3289,7 +3323,7 @@ static void CB2_InitSwapScreen(void)
+@@ -3289,7 +3333,7 @@ static void CB2_InitSwapScreen(void)
      case 1:
          sSwapMenuTilesetBuffer = Alloc(sizeof(gFrontierFactoryMenu_Gfx));
  #ifdef BUGFIX
@@ -2110,7 +2142,7 @@ index 8726770f18cee8264d032ab9d980366d5064043a..7ae6fffd002cc1acd316fb0338a96718
  #else
          sSwapMonPicBgTilesetBuffer = AllocZeroed(sizeof(gFrontierFactoryMenu_Gfx)); // Incorrect size
  #endif
-@@ -3320,9 +3354,9 @@ static void CB2_InitSwapScreen(void)
+@@ -3320,9 +3364,9 @@ static void CB2_InitSwapScreen(void)
          FreeAllSpritePalettes();
          ResetAllPicSprites();
          CpuCopy16(gFrontierFactoryMenu_Gfx, sSwapMenuTilesetBuffer, sizeof(gFrontierFactoryMenu_Gfx));
@@ -2122,6 +2154,14 @@ index 8726770f18cee8264d032ab9d980366d5064043a..7ae6fffd002cc1acd316fb0338a96718
          CpuCopy16(gFrontierFactoryMenu_Tilemap, sSwapMenuTilemapBuffer, BG_SCREEN_SIZE);
          LoadBgTilemap(1, sSwapMenuTilemapBuffer, BG_SCREEN_SIZE, 0);
          LoadPalette(gFrontierFactoryMenu_Pal, 0, 2 * PLTT_SIZE_4BPP);
+@@ -4312,3 +4356,7 @@ static void Swap_CreateMonSprite(void)
+ 
+     sFactorySwapScreen->monPicAnimating = FALSE;
+ }
++
++#ifdef PLATFORM_3DS
++#include "3ds_factory_view.inc"
++#endif
 diff --git a/src/battle_gfx_sfx_util.c b/src/battle_gfx_sfx_util.c
 index 9117f89b63ffd5c0015325258d082e1827136708..7047aaabcc45f7a63a2aaf57ef8becfc855660b1 100644
 --- a/src/battle_gfx_sfx_util.c
@@ -2618,7 +2658,7 @@ index 0ea61b79b8a18601ec08b9a10c05a72bfbb4edfe..26c409fb2f0b92ced8226105a4da6d30
      LoadPalette(sTrainerHillWindowPalette, BG_PLTT_ID(0), sizeof(sTrainerHillWindowPalette));
  }
 diff --git a/src/battle_script_commands.c b/src/battle_script_commands.c
-index d5013b023993a3e12ae1109d571714cf6e5c0427..d4fae17eac16492622c49fe16ebc6c1750132865 100644
+index d5013b023993a3e12ae1109d571714cf6e5c0427..9a8fccd1dcb28addb15e229be4abb8f068900b23 100644
 --- a/src/battle_script_commands.c
 +++ b/src/battle_script_commands.c
 @@ -281,7 +281,7 @@ static void Cmd_trymemento(void);
@@ -2784,6 +2824,28 @@ index d5013b023993a3e12ae1109d571714cf6e5c0427..d4fae17eac16492622c49fe16ebc6c17
  
              for (shakes = 0; shakes < BALL_3_SHAKES_SUCCESS && Random() < odds; shakes++);
  
+@@ -10217,6 +10239,10 @@ void BattleDestroyYesNoCursorAt(u8 cursorPosition)
+     CopyBgTilemapBufferToVram(0);
+ }
+ 
++#ifdef PLATFORM_3DS
++void CtrBottom_NamingAhead(bool8 battle);
++#endif
++
+ static void Cmd_trygivecaughtmonnick(void)
+ {
+     switch (gBattleCommunication[MULTIUSE_STATE])
+@@ -10249,6 +10275,10 @@ static void Cmd_trygivecaughtmonnick(void)
+             if (gBattleCommunication[CURSOR_POSITION] == 0)
+             {
+                 gBattleCommunication[MULTIUSE_STATE]++;
++#ifdef PLATFORM_3DS
++                // The top screen keeps the battle while the keyboard is on the bottom one.
++                CtrBottom_NamingAhead(TRUE);
++#endif
+                 BeginFastPaletteFade(3);
+             }
+             else
 diff --git a/src/battle_setup.c b/src/battle_setup.c
 index 41026de7250dae938d608e65becdee7eda773358..d54b078426546cf31000903ba4f7be095f2bed73 100644
 --- a/src/battle_setup.c
@@ -3342,7 +3404,7 @@ index ea721743ddde06694a56f99abf3ec9de8c1edd31..ffe5f38743298202b73c481a63936d08
                  if (gBattleStruct->synchronizeMoveEffect == MOVE_EFFECT_TOXIC)
                      gBattleStruct->synchronizeMoveEffect = MOVE_EFFECT_POISON;
 diff --git a/src/berry_blender.c b/src/berry_blender.c
-index 6a9b196440316b908c0045d3cae3d4c04d42a22f..157e87487e2120dcbffb58cc69bfed98af7bcd27 100644
+index 6a9b196440316b908c0045d3cae3d4c04d42a22f..12d0360f5684cf3bcd8bb34c27907e6714f4d064 100644
 --- a/src/berry_blender.c
 +++ b/src/berry_blender.c
 @@ -945,6 +945,9 @@ static void UpdateHitPitch(void)
@@ -3401,6 +3463,14 @@ index 6a9b196440316b908c0045d3cae3d4c04d42a22f..157e87487e2120dcbffb58cc69bfed98
  }
  
  static void TryUpdateBerryBlenderRecord(void)
+@@ -3902,3 +3917,7 @@ static bool32 PrintMessage(s16 *textState, const u8 *string, s32 textSpeed)
+ 
+     return FALSE;
+ }
++
++#ifdef PLATFORM_3DS
++#include "3ds_blender_view.inc"
++#endif
 diff --git a/src/bg.c b/src/bg.c
 index 6264a1e426e753aeb8cddd86b2f062fbc565ed95..0c1d772f6a05868dcd56875d654c432a9863eb9f 100644
 --- a/src/bg.c
@@ -3633,7 +3703,7 @@ index 0f46fd4ca8581cb83ce8b13e54517f2b56da95ec..125d403bb34f92e8a650e544e5bcd68b
  
  static void UpdatePerDay(struct Time *localTime);
 diff --git a/src/contest.c b/src/contest.c
-index b73e23122edc4aeb75003c26a8f1d6737b58280c..5e3e7c64eb2e6453cf5c90ac489c380f40aa8a93 100644
+index b73e23122edc4aeb75003c26a8f1d6737b58280c..493d4707b6d716f5475110f604356571254bd4bb 100644
 --- a/src/contest.c
 +++ b/src/contest.c
 @@ -42,6 +42,9 @@
@@ -3646,7 +3716,56 @@ index b73e23122edc4aeb75003c26a8f1d6737b58280c..5e3e7c64eb2e6453cf5c90ac489c380f
  
  // This file's functions.
  static void LoadContestPalettes(void);
-@@ -4025,6 +4028,9 @@ static void Task_FlashJudgeAttentionEye(u8 taskId)
+@@ -59,6 +62,10 @@ static void Task_DisplayAppealNumberText(u8 taskId);
+ static void Task_TryShowMoveSelectScreen(u8 taskId);
+ static void Task_ShowMoveSelectScreen(u8 taskId);
+ static void Task_HandleMoveSelectInput(u8 taskId);
++#ifdef PLATFORM_3DS
++static void CtrContest_Take(u16 *keys, bool8 *confirm, u8 numMoves);
++static void CtrContest_Done(void);
++#endif
+ static void DrawMoveSelectArrow(s8);
+ static void EraseMoveSelectArrow(s8);
+ static void Task_SelectedMove(u8 taskId);
+@@ -1557,6 +1564,8 @@ static void Task_HandleMoveSelectInput(u8 taskId)
+ {
+     u8 numMoves = 0;
+     s32 i;
++    u16 keys = gMain.newAndRepeatedKeys;
++    bool8 confirm = JOY_NEW(A_BUTTON);
+ 
+     for (i = 0; i < MAX_MON_MOVES; i++)
+     {
+@@ -1564,17 +1573,26 @@ static void Task_HandleMoveSelectInput(u8 taskId)
+             numMoves++;
+     }
+ 
+-    if (JOY_NEW(A_BUTTON))
++#ifdef PLATFORM_3DS
++    CtrContest_Take(&keys, &confirm, numMoves);
++#endif
++    if (confirm)
+     {
+         PlaySE(SE_SELECT);
++#ifdef PLATFORM_3DS
++        CtrContest_Done();
++#endif
+         gTasks[taskId].func = Task_SelectedMove;
+     }
+     else
+     {
+-        switch (gMain.newAndRepeatedKeys)
++        switch (keys)
+         {
+         case B_BUTTON:
+             // Cancel move selection
++#ifdef PLATFORM_3DS
++            CtrContest_Done();
++#endif
+             PlaySE(SE_SELECT);
+             SetBottomSliderHeartsInvisibility(FALSE);
+             ConvertIntToDecimalStringN(gStringVar1, eContest.appealNumber + 1, STR_CONV_MODE_LEFT_ALIGN, 1);
+@@ -4025,6 +4043,9 @@ static void Task_FlashJudgeAttentionEye(u8 taskId)
               || gTasks[taskId].data[offset + 0] == 0)
                  gTasks[taskId].data[offset + 1] ^= 1;
  
@@ -3656,7 +3775,7 @@ index b73e23122edc4aeb75003c26a8f1d6737b58280c..5e3e7c64eb2e6453cf5c90ac489c380f
              BlendPalette(BG_PLTT_ID(5 + eContest.prevTurnOrder[i]) + 6, 2, gTasks[taskId].data[offset + 0], RGB(31, 31, 18));
          }
      }
-@@ -4728,15 +4734,27 @@ static void DoJudgeSpeechBubble(u8 symbolId)
+@@ -4728,15 +4749,27 @@ static void DoJudgeSpeechBubble(u8 symbolId)
  static void UpdateApplauseMeter(void)
  {
      s32 i;
@@ -3684,7 +3803,7 @@ index b73e23122edc4aeb75003c26a8f1d6737b58280c..5e3e7c64eb2e6453cf5c90ac489c380f
          CpuCopy32(src, (void *)(OBJ_VRAM0 + (gSprites[eContest.applauseMeterSpriteId].oam.tileNum + 17 + i) * 32), 32);
          CpuCopy32(src + 32, (void *)(OBJ_VRAM0 + (gSprites[eContest.applauseMeterSpriteId].oam.tileNum + 25 + i) * 32), 32);
  
-@@ -5033,7 +5051,12 @@ static const u8 *GetTurnOrderNumberGfx(u8 contestant)
+@@ -5033,7 +5066,12 @@ static const u8 *GetTurnOrderNumberGfx(u8 contestant)
      if (eContestantStatus[contestant].turnOrderMod != 1)
          return gContestNextTurnRandomGfx;
      else
@@ -3697,6 +3816,13 @@ index b73e23122edc4aeb75003c26a8f1d6737b58280c..5e3e7c64eb2e6453cf5c90ac489c380f
  }
  
  static void DrawUnnervedSymbols(void)
+@@ -6123,3 +6161,6 @@ void StripPlayerAndMonNamesForLinkContest(struct ContestPokemon *mon, s32 langua
+     }
+ }
+ 
++#ifdef PLATFORM_3DS
++#include "3ds_contest_view.inc"
++#endif
 diff --git a/src/contest_util.c b/src/contest_util.c
 index 7e49ce33c64b21cecee6331c7a3ec686ee9e50b5..13127dc6a51f22122b9b3d02c5abef72c327ac99 100644
 --- a/src/contest_util.c
@@ -4082,10 +4208,30 @@ index 456cead41e9ac22e53016297792a8224f974c393..16ea035c7cc55bf5e93948c311550ef4
      sExitingGame = FALSE;
  
 diff --git a/src/easy_chat.c b/src/easy_chat.c
-index 760b07e382f31eed650f84faa61abe9b46f0f309..5fdf762b8e8ea880653de77dbff43b2d947cc4fe 100644
+index 760b07e382f31eed650f84faa61abe9b46f0f309..5a670afa776d158ea900659951efa351e2d7f7fc 100644
 --- a/src/easy_chat.c
 +++ b/src/easy_chat.c
-@@ -4211,7 +4211,11 @@ static void AdjustBgTilemapForFooter(void)
+@@ -47,6 +47,9 @@ static void EnterQuizLadyScreen(u16);
+ static bool8 InitEasyChatScreenStruct(u8, u16 *, u8);
+ static void FreeEasyChatScreenStruct(void);
+ static u16 HandleEasyChatInput(void);
++#ifdef PLATFORM_3DS
++static void CtrEc_Inject(void);
++#endif
+ static u16 HandleEasyChatInput_Phrase(void);
+ static u16 HandleEasyChatInput_MainScreenButtons(void);
+ static u16 HandleEasyChatInput_Keyboard(void);
+@@ -1697,6 +1700,9 @@ static void FreeEasyChatScreenStruct(void)
+ // If no action is needed, returns ECFUNC_NONE
+ static u16 HandleEasyChatInput(void)
+ {
++#ifdef PLATFORM_3DS
++    CtrEc_Inject();
++#endif
+     switch (sEasyChatScreen->inputState)
+     {
+     case INPUTSTATE_PHRASE:
+@@ -4211,7 +4217,11 @@ static void AdjustBgTilemapForFooter(void)
  static void DrawLowerWindow(void)
  {
      PutWindowTilemap(WIN_INPUT_SELECT);
@@ -4097,11 +4243,29 @@ index 760b07e382f31eed650f84faa61abe9b46f0f309..5fdf762b8e8ea880653de77dbff43b2d
  }
  
  static void InitLowerWindowText(u32 whichText)
+@@ -5872,3 +5882,7 @@ bool32 IsEasyChatAnswerUnlocked(int easyChatWord)
+     else
+         return IsEasyChatIndexAndGroupUnlocked(index, groupId & mask);
+ }
++
++#ifdef PLATFORM_3DS
++#include "3ds_easychat_view.inc"
++#endif
 diff --git a/src/egg_hatch.c b/src/egg_hatch.c
-index 00a194ea7014445559b2872b04ef33fd85c34560..49cf5c7974efe3dd93d7517006eac7484daecfbb 100644
+index 00a194ea7014445559b2872b04ef33fd85c34560..4c215904166605fd410b555178f77a40f46536d7 100644
 --- a/src/egg_hatch.c
 +++ b/src/egg_hatch.c
-@@ -362,7 +362,7 @@ static void AddHatchedMonToParty(u8 id)
+@@ -37,6 +37,9 @@
+ #include "data.h"
+ #include "battle.h" // to get rid of later
+ #include "constants/rgb.h"
++#ifdef PLATFORM_3DS
++void CtrBottom_NamingAhead(bool8 battle);
++#endif
+ 
+ #define GFXTAG_EGG       12345
+ #define GFXTAG_EGG_SHARD 23456
+@@ -362,7 +365,7 @@ static void AddHatchedMonToParty(u8 id)
      u8 name[POKEMON_NAME_LENGTH + 1];
      u16 ball;
      u16 metLevel;
@@ -4110,7 +4274,7 @@ index 00a194ea7014445559b2872b04ef33fd85c34560..49cf5c7974efe3dd93d7517006eac748
      struct Pokemon *mon = &gPlayerParty[id];
  
      CreateHatchedMon(mon, &gEnemyParty[0]);
-@@ -557,7 +557,14 @@ static void CB2_LoadEggHatch(void)
+@@ -557,7 +560,14 @@ static void CB2_LoadEggHatch(void)
      case 7:
          SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_OBJ_ON | DISPCNT_OBJ_1D_MAP);
          LoadPalette(gTradeGba2_Pal, BG_PLTT_ID(1), 5 * PLTT_SIZE_4BPP);
@@ -4125,6 +4289,17 @@ index 00a194ea7014445559b2872b04ef33fd85c34560..49cf5c7974efe3dd93d7517006eac748
          CopyToBgTilemapBuffer(1, gTradePlatform_Tilemap, 0x1000, 0);
          CopyBgTilemapBufferToVram(1);
          gMain.state++;
+@@ -692,6 +702,10 @@ static void CB2_EggHatch(void)
+             species = GetMonData(&gPlayerParty[sEggHatchData->eggPartyId], MON_DATA_SPECIES);
+             gender = GetMonGender(&gPlayerParty[sEggHatchData->eggPartyId]);
+             personality = GetMonData(&gPlayerParty[sEggHatchData->eggPartyId], MON_DATA_PERSONALITY, 0);
++#ifdef PLATFORM_3DS
++            // The top screen keeps the hatching while the keyboard is on the bottom one.
++            CtrBottom_NamingAhead(FALSE);
++#endif
+             DoNamingScreen(NAMING_SCREEN_NICKNAME, gStringVar3, species, gender, personality, EggHatchSetMonNickname);
+             break;
+         case 1: // No
 diff --git a/src/event_object_lock.c b/src/event_object_lock.c
 index 7cb260757c4267c4d9b1c1cf6cd460f5b99c2526..c66b4e9c9d17cb246ace0f2f42b119c1a95e0db2 100644
 --- a/src/event_object_lock.c
@@ -6693,7 +6868,7 @@ index 10ce1bc37a9bdbd78c1601ca857fe67bf6fbac69..821dc7edce6e0b0262b8c72ac8f20a0e
 +}
 +#endif
 diff --git a/src/fieldmap.c b/src/fieldmap.c
-index 97db758caac9fefa27d6c2809df48086dc4ef4e1..149c51e050df1e890cc90f02697b407bcdbe224b 100644
+index 97db758caac9fefa27d6c2809df48086dc4ef4e1..c0c4ca3447cf4fe53ff0e142e148e5186f918a8c 100644
 --- a/src/fieldmap.c
 +++ b/src/fieldmap.c
 @@ -6,6 +6,7 @@
@@ -6847,7 +7022,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..149c51e050df1e890cc90f02697b407b
      dest = &gBackupMapLayout.map[gBackupMapLayout.width * y + x];
  
      for (i = 0; i < height; i++)
-@@ -362,9 +456,527 @@ u8 MapGridGetCollisionAt(int x, int y)
+@@ -362,9 +456,553 @@ u8 MapGridGetCollisionAt(int x, int y)
      return UNPACK_COLLISION(block);
  }
  
@@ -7090,6 +7265,32 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..149c51e050df1e890cc90f02697b407b
 +    y += MAP_OFFSET - best->phaseY;
 +    *index = ((x + 1) & 1) + ((y + 1) & 1) * 2;
 +    return best->header->mapLayout->border;
++}
++
++// The border of one map among those around (id: mapGroup << 8 | mapNum) at
++// x, y, phased as MapGridGetCameraBorderAt phases it: for what goes on past
++// the maps from a map that is not the nearest (the voxel belt, in the corner
++// two maps make). NULL if the map is not there or the current tilesets do
++// not draw its border.
++const u16 *MapGridGetCameraBorderOf(u16 id, int x, int y, u8 *index)
++{
++    int i;
++
++    UpdateCameraMaps();
++    for (i = 0; i < sCameraMapCount; i++)
++    {
++        const struct CameraMap *map = &sCameraMaps[i];
++
++        if (map->id != id)
++            continue;
++        if (!map->border)
++            return NULL;
++        x += MAP_OFFSET - map->phaseX;
++        y += MAP_OFFSET - map->phaseY;
++        *index = ((x + 1) & 1) + ((y + 1) & 1) * 2;
++        return map->header->mapLayout->border;
++    }
++    return NULL;
 +}
 +
 +static u16 GetNearestBorderBlockAt(int x, int y)
@@ -7375,7 +7576,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..149c51e050df1e890cc90f02697b407b
  
      if (block == MAPGRID_UNDEFINED)
          return UNPACK_METATILE(GetBorderBlockAt(x, y));
-@@ -375,6 +987,9 @@ u32 MapGridGetMetatileIdAt(int x, int y)
+@@ -375,6 +1013,9 @@ u32 MapGridGetMetatileIdAt(int x, int y)
  u32 MapGridGetMetatileBehaviorAt(int x, int y)
  {
      u16 metatile = MapGridGetMetatileIdAt(x, y);
@@ -7385,7 +7586,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..149c51e050df1e890cc90f02697b407b
      return UNPACK_BEHAVIOR(GetMetatileAttributesById(metatile));
  }
  
-@@ -412,11 +1027,47 @@ u16 GetMetatileAttributesById(u16 metatile)
+@@ -412,11 +1053,47 @@ u16 GetMetatileAttributesById(u16 metatile)
      if (metatile < NUM_METATILES_IN_PRIMARY)
      {
          attributes = gMapHeader.mapLayout->primaryTileset->metatileAttributes;
@@ -7433,7 +7634,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..149c51e050df1e890cc90f02697b407b
          return attributes[metatile - NUM_METATILES_IN_PRIMARY];
      }
      else
-@@ -660,19 +1311,32 @@ bool8 CameraMove(int x, int y)
+@@ -660,19 +1337,32 @@ bool8 CameraMove(int x, int y)
      }
      else
      {
@@ -7466,7 +7667,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..149c51e050df1e890cc90f02697b407b
      }
      return gCamera.active;
  }
-@@ -854,10 +1518,22 @@ static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTil
+@@ -854,10 +1544,22 @@ static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTil
  {
      if (tileset)
      {
@@ -7489,7 +7690,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..149c51e050df1e890cc90f02697b407b
      }
  }
  
-@@ -878,20 +1554,53 @@ static void LoadTilesetPalette(struct Tileset const *tileset, u16 destOffset, u1
+@@ -878,20 +1580,53 @@ static void LoadTilesetPalette(struct Tileset const *tileset, u16 destOffset, u1
  
      if (tileset)
      {
@@ -7546,7 +7747,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..149c51e050df1e890cc90f02697b407b
              ApplyGlobalTintToPaletteEntries(destOffset, size >> 1);
          }
      }
-@@ -926,8 +1635,20 @@ void CopyMapTilesetsToVram(struct MapLayout const *mapLayout)
+@@ -926,8 +1661,20 @@ void CopyMapTilesetsToVram(struct MapLayout const *mapLayout)
  {
      if (mapLayout)
      {
@@ -8155,6 +8356,68 @@ index d645c1442d1a7952cb8593c68d5c9de98294dd51..81203402f361f74e378f5dcdc6255466
  void SetGpuReg_ForcedBlank(u8 regOffset, u16 value)
  {
      if (regOffset < GPU_REG_BUF_SIZE)
+diff --git a/src/hall_of_fame.c b/src/hall_of_fame.c
+index c9038ecf64b65b68f91ce79cac4c559bd83a1e32..a39dc822689d7e7137cdf98cfd495931e650ef95 100644
+--- a/src/hall_of_fame.c
++++ b/src/hall_of_fame.c
+@@ -66,6 +66,13 @@ static EWRAM_DATA u32 sHofFadePalettes = 0;
+ static EWRAM_DATA struct HallofFameTeam *sHofMonPtr = NULL;
+ static EWRAM_DATA struct HofGfx *sHofGfxPtr = NULL;
+ 
++#ifdef PLATFORM_3DS
++// The margins of the top screen round the GBA picture, in pixels (3ds_video.h:
++// 400x240 against 240x160): where the Hall of Fame's confetti may fall.
++#define CTR_HOF_MARGIN_X 80
++#define CTR_HOF_MARGIN_Y 40
++#endif
++
+ static void ClearVramOamPltt_LoadHofPal(void);
+ static void LoadHofGfx(void);
+ static void InitHofBgs(void);
+@@ -660,7 +667,12 @@ static void Task_Hof_DoConfetti(u8 taskId)
+ 
+         // Create new confetti every 4th frame for the first 290 frames
+         // For the last 110 frames wait for the existing confetti to fall offscreen
++#ifdef PLATFORM_3DS
++        // A wider screen to cover: one every 3rd frame, not every 4th.
++        if (gTasks[taskId].tFrameCount % 3 == 0 && gTasks[taskId].tFrameCount > 110)
++#else
+         if ((gTasks[taskId].tFrameCount & 3) == 0 && gTasks[taskId].tFrameCount > 110)
++#endif
+             CreateHofConfettiSprite();
+     }
+     else
+@@ -1369,7 +1381,12 @@ static void SpriteCB_GetOnScreenAndAnimate(struct Sprite *sprite)
+ 
+ static void SpriteCB_HofConfetti(struct Sprite *sprite)
+ {
++#ifdef PLATFORM_3DS
++    // It starts above the picture, so it falls as far again to end where it does on the GBA.
++    if (sprite->y2 > 120 + CTR_HOF_MARGIN_Y)
++#else
+     if (sprite->y2 > 120)
++#endif
+     {
+         DestroySprite(sprite);
+     }
+@@ -1394,8 +1411,17 @@ static bool8 CreateHofConfettiSprite(void)
+     u8 spriteID;
+     struct Sprite *sprite;
+ 
++#ifdef PLATFORM_3DS
++    // Over the whole top screen, not only the GBA picture in the middle of it:
++    // from the left edge of the margin to the right one, and from the top of the
++    // screen. The compositor reads these positions as they are in this screen
++    // (video/obj.inc, the Hall of Fame's confetti).
++    s16 posX = (s16)(Random() % (DISPLAY_WIDTH + 2 * CTR_HOF_MARGIN_X)) - CTR_HOF_MARGIN_X;
++    s16 posY = -(s16)(CTR_HOF_MARGIN_Y + Random() % 8);
++#else
+     s16 posX = Random() % DISPLAY_WIDTH;
+     s16 posY = -(Random() % 8);
++#endif
+ 
+     spriteID = CreateSprite(&sSpriteTemplate_HofConfetti, posX, posY, 0);
+     sprite = &gSprites[spriteID];
 diff --git a/src/intro.c b/src/intro.c
 index 169ef002a665712e92f6fec36a86ee7888067a17..a154bacf5122bbebb940f2bc4240811e287ca7f8 100644
 --- a/src/intro.c
@@ -9646,7 +9909,7 @@ index 6b20cf96781496274fcbdbe6a45064c9450f406f..595e5a365aba1ac5ddb1cc1687ebf68a
  static void Task_ParentSearchForChildren(u8 taskId)
  {
 diff --git a/src/list_menu.c b/src/list_menu.c
-index 6929b20b42b235bf9eb49a8c07cb62f28ccb27c8..5a546d3567a2f13f5a95ba59cdc7b6ae8fe3b97d 100644
+index 6929b20b42b235bf9eb49a8c07cb62f28ccb27c8..2d082eee7267e4dc216d5264e1ac32f0f5c7d760 100644
 --- a/src/list_menu.c
 +++ b/src/list_menu.c
 @@ -13,10 +13,6 @@
@@ -9660,7 +9923,28 @@ index 6929b20b42b235bf9eb49a8c07cb62f28ccb27c8..5a546d3567a2f13f5a95ba59cdc7b6ae
  // Cursors after this point are created using a sprite with their own task.
  // This allows them to have idle animations. Cursors prior to this are simply printed text.
  #define CURSOR_OBJECT_START CURSOR_RED_OUTLINE
-@@ -1445,3 +1441,69 @@ static void ListMenuRemoveRedArrowCursorObject(u8 taskId)
+@@ -391,9 +387,20 @@ u8 ListMenuInitInRect(struct ListMenuTemplate *listMenuTemplate, struct ListMenu
+     return taskId;
+ }
+ 
++#ifdef PLATFORM_3DS
++bool8 CtrListField_Poll(u8 listTaskId, s32 *answer);
++#endif
++
+ s32 ListMenu_ProcessInput(u8 listTaskId)
+ {
+     struct ListMenu *list = (void *) gTasks[listTaskId].data;
++#ifdef PLATFORM_3DS
++    // An answer tapped on the bottom screen (3ds_list_view.inc).
++    s32 tapped;
++
++    if (CtrListField_Poll(listTaskId, &tapped))
++        return tapped;
++#endif
+ 
+     if (JOY_NEW(A_BUTTON))
+     {
+@@ -1445,3 +1452,73 @@ static void ListMenuRemoveRedArrowCursorObject(u8 taskId)
      DestroySprite(&gSprites[data->spriteId]);
      DestroyTask(taskId);
  }
@@ -9729,6 +10013,10 @@ index 6929b20b42b235bf9eb49a8c07cb62f28ccb27c8..5a546d3567a2f13f5a95ba59cdc7b6ae
 +    CopyWindowToVram(list->template.windowId, COPYWIN_GFX);
 +    return rows;
 +}
++#endif
++
++#ifdef PLATFORM_3DS
++#include "3ds_list_view.inc"
 +#endif
 diff --git a/src/load_save.c b/src/load_save.c
 index 117ba3e27c8d6284a164e04492a55e4303c2374e..715991ab4ce3d4b5dd1ef1e4977ef831d108c34e 100644
@@ -10261,7 +10549,7 @@ index 2a47ec51aca73cf1143c22d9f385f246b2ee72df..c428e8e593ef2becba3e5687c2c0286c
  
  void SetTrainerHillVBlankCounter(u32 *counter)
 diff --git a/src/main_menu.c b/src/main_menu.c
-index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d50790114468e151201 100644
+index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..a158815b06bff82bf9e702fcbf0ae5f0bfb60a73 100644
 --- a/src/main_menu.c
 +++ b/src/main_menu.c
 @@ -12,6 +12,7 @@
@@ -10272,12 +10560,15 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
  #include "main.h"
  #include "menu.h"
  #include "list_menu.h"
-@@ -37,6 +38,16 @@
+@@ -37,6 +38,19 @@
  #include "title_screen.h"
  #include "window.h"
  #include "mystery_gift_menu.h"
 +#ifdef PORT_BRIDGE
 +#include "port_platform.h"
++#ifdef PLATFORM_3DS
++void CtrBottom_NamingAhead(bool8 battle);
++#endif
 +#endif
 +
 +
@@ -10289,7 +10580,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
  
  /*
   * Main menu state machine
-@@ -173,6 +184,129 @@ static EWRAM_DATA u16 sCurrItemAndOptionMenuCheck = 0;
+@@ -173,6 +187,129 @@ static EWRAM_DATA u16 sCurrItemAndOptionMenuCheck = 0;
  
  static u8 sBirchSpeechMainTaskId;
  
@@ -10419,7 +10710,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
  // Static ROM declarations
  
  static u32 InitMainMenu(bool8);
-@@ -185,6 +319,7 @@ static void Task_DisplayMainMenu(u8);
+@@ -185,6 +322,7 @@ static void Task_DisplayMainMenu(u8);
  static void Task_WaitForBatteryDryErrorWindow(u8);
  static void MainMenu_FormatSavegameText(void);
  static void HighlightSelectedMainMenuItem(u8, u8, s16);
@@ -10427,7 +10718,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
  static void Task_HandleMainMenuInput(u8);
  static void Task_HandleMainMenuAPressed(u8);
  static void Task_HandleMainMenuBPressed(u8);
-@@ -237,7 +372,7 @@ static void SpriteCB_MovePlayerDownWhileShrinking(struct Sprite *);
+@@ -237,7 +375,7 @@ static void SpriteCB_MovePlayerDownWhileShrinking(struct Sprite *);
  static void Task_NewGameBirchSpeech_WaitForPlayerShrink(u8);
  static void Task_NewGameBirchSpeech_FadePlayerToWhite(u8);
  static void Task_NewGameBirchSpeech_Cleanup(u8);
@@ -10436,7 +10727,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
  static void Task_NewGameBirchSpeech_ReturnFromNamingScreenShowTextbox(u8);
  static void MainMenu_FormatSavegamePlayer(void);
  static void MainMenu_FormatSavegamePokedex(void);
-@@ -409,6 +544,8 @@ static const u16 sMainMenuTextPal[] = INCBIN_U16("graphics/interface/main_menu_t
+@@ -409,6 +547,8 @@ static const u16 sMainMenuTextPal[] = INCBIN_U16("graphics/interface/main_menu_t
  static const u8 sTextColor_Headers[] = {TEXT_DYNAMIC_COLOR_1, TEXT_DYNAMIC_COLOR_2, TEXT_DYNAMIC_COLOR_3};
  static const u8 sTextColor_MenuInfo[] = {TEXT_DYNAMIC_COLOR_1, TEXT_COLOR_WHITE, TEXT_DYNAMIC_COLOR_3};
  
@@ -10445,7 +10736,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
  static const struct BgTemplate sMainMenuBgTemplates[] = {
      {
          .bg = 0,
-@@ -531,10 +668,35 @@ enum
+@@ -531,10 +671,35 @@ enum
  
  static void CB2_MainMenu(void)
  {
@@ -10481,7 +10772,52 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
  }
  
  static void VBlankCB_MainMenu(void)
-@@ -930,7 +1092,13 @@ static bool8 HandleMainMenuInput(u8 taskId)
+@@ -881,11 +1046,43 @@ static void Task_HighlightSelectedMainMenuItem(u8 taskId)
+     gTasks[taskId].func = Task_HandleMainMenuInput;
+ }
+ 
++#ifdef PLATFORM_3DS
++void CtrMenu_Custom(u8 count, u8 cursor, const u8 *const *texts);
++bool8 CtrMenu_CustomTake(s8 *entry);
++#endif
++
+ static bool8 HandleMainMenuInput(u8 taskId)
+ {
+     s16 *data = gTasks[taskId].data;
+-
++#ifdef PLATFORM_3DS
++    bool8 tapped = FALSE;
++
++    // The bottom screen offers the entries as buttons; one tapped is chosen as A chooses it.
++    {
++        const u8 *entries[5];
++        u8 count = 0;
++        s8 picked;
++
++        if (tMenuType != HAS_NO_SAVED_GAME)
++            entries[count++] = gText_MainMenuContinue;
++        entries[count++] = gText_MainMenuNewGame;
++        if (tMenuType == HAS_MYSTERY_GIFT || tMenuType == HAS_MYSTERY_EVENTS)
++            entries[count++] = gText_MainMenuMysteryGift;
++        if (tMenuType == HAS_MYSTERY_EVENTS)
++            entries[count++] = gText_MainMenuMysteryEvents;
++        entries[count++] = gText_MainMenuOption;
++        CtrMenu_Custom(count, tCurrItem, entries);
++        if (CtrMenu_CustomTake(&picked) && picked < tItemCount)
++        {
++            tCurrItem = picked;
++            sCurrItemAndOptionMenuCheck = tCurrItem;
++            tapped = TRUE;
++        }
++    }
++    if (JOY_NEW(A_BUTTON) || tapped)
++#else
+     if (JOY_NEW(A_BUTTON))
++#endif
+     {
+         PlaySE(SE_SELECT);
+         IsWirelessAdapterConnected();   // why bother calling this here? debug? Task_HandleMainMenuAPressed will check too
+@@ -930,7 +1127,13 @@ static bool8 HandleMainMenuInput(u8 taskId)
  static void Task_HandleMainMenuInput(u8 taskId)
  {
      if (HandleMainMenuInput(taskId))
@@ -10495,7 +10831,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
  }
  
  static void Task_HandleMainMenuAPressed(u8 taskId)
-@@ -1053,13 +1221,30 @@ static void Task_HandleMainMenuAPressed(u8 taskId)
+@@ -1053,13 +1256,30 @@ static void Task_HandleMainMenuAPressed(u8 taskId)
          }
          ChangeBgY(0, 0, BG_COORD_SET);
          ChangeBgY(1, 0, BG_COORD_SET);
@@ -10526,7 +10862,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
                  break;
              case ACTION_CONTINUE:
                  gPlttBufferUnfaded[0] = RGB_BLACK;
-@@ -1278,18 +1463,23 @@ static void Task_NewGameBirchSpeech_Init(u8 taskId)
+@@ -1278,18 +1498,23 @@ static void Task_NewGameBirchSpeech_Init(u8 taskId)
      LZ77UnCompVram(sBirchSpeechShadowGfx, (void *)VRAM);
      LZ77UnCompVram(sBirchSpeechBgMap, (void *)(BG_SCREEN_ADDR(7)));
      LoadPalette(sBirchSpeechBgPals, BG_PLTT_ID(0), 2 * PLTT_SIZE_4BPP);
@@ -10554,7 +10890,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
      PlayBGM(MUS_ROUTE122);
      ShowBg(0);
      ShowBg(1);
-@@ -1299,35 +1489,54 @@ static void Task_NewGameBirchSpeech_WaitToShowBirch(u8 taskId)
+@@ -1299,35 +1524,54 @@ static void Task_NewGameBirchSpeech_WaitToShowBirch(u8 taskId)
  {
      u8 spriteId;
  
@@ -10594,7 +10930,9 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
  {
 -    if (gTasks[taskId].tIsDoneFadingSprites)
 +#ifdef PORT_BRIDGE
-+    {
+     {
+-        gSprites[gTasks[taskId].tBirchSpriteId].oam.objMode = ST_OAM_OBJ_NORMAL;
+-        if (gTasks[taskId].tTimer)
 +        u8 spriteId = PortBirchGetBirchSpriteId(taskId);
 +        u16 packed = PortBirchGetTimer(taskId) | (PortBirchGetFadeDone(taskId) << 8);
 +        u16 spriteState = gTasks[taskId].isActive | (spriteId << 8);
@@ -10602,9 +10940,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
 +    }
 +#endif
 +    if (PortBirchGetFadeDone(taskId))
-     {
--        gSprites[gTasks[taskId].tBirchSpriteId].oam.objMode = ST_OAM_OBJ_NORMAL;
--        if (gTasks[taskId].tTimer)
++    {
 +        gSprites[PortBirchGetBirchSpriteId(taskId)].oam.objMode = ST_OAM_OBJ_NORMAL;
 +        if (PortBirchGetTimer(taskId))
          {
@@ -10617,7 +10953,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
              InitWindows(sNewGameBirchSpeechTextWindows);
              LoadMainMenuWindowFrameTiles(0, 0xF3);
              LoadMessageBoxGfx(0, BIRCH_DLG_BASE_TILE_NUM, BG_PLTT_ID(15));
-@@ -1346,6 +1555,7 @@ static void Task_NewGameBirchSpeech_ThisIsAPokemon(u8 taskId)
+@@ -1346,6 +1590,7 @@ static void Task_NewGameBirchSpeech_ThisIsAPokemon(u8 taskId)
  {
      if (!gPaletteFade.active && !RunTextPrintersAndIsPrinter0Active())
      {
@@ -10625,7 +10961,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
          gTasks[taskId].func = Task_NewGameBirchSpeech_MainSpeech;
          StringExpandPlaceholders(gStringVar4, gText_ThisIsAPokemon);
          AddTextPrinterWithCallbackForMessage(TRUE, NewGameBirchSpeech_WaitForThisIsPokemonText);
-@@ -1367,7 +1577,9 @@ static void Task_NewGameBirchSpeech_MainSpeech(u8 taskId)
+@@ -1367,7 +1612,9 @@ static void Task_NewGameBirchSpeech_MainSpeech(u8 taskId)
  
  static void Task_NewGameBirchSpeechSub_InitPokeBall(u8 taskId)
  {
@@ -10636,7 +10972,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
  
      gSprites[spriteId].x = 100;
      gSprites[spriteId].y = 75;
-@@ -1376,13 +1588,13 @@ static void Task_NewGameBirchSpeechSub_InitPokeBall(u8 taskId)
+@@ -1376,13 +1623,13 @@ static void Task_NewGameBirchSpeechSub_InitPokeBall(u8 taskId)
  
      CreatePokeballSpriteToReleaseMon(spriteId, gSprites[spriteId].oam.paletteNum, 112, 58, 0, 0, 32, PALETTES_BG, SPECIES_LOTAD);
      gTasks[taskId].func = Task_NewGameBirchSpeechSub_WaitForLotad;
@@ -10652,7 +10988,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
  
      switch (tState)
      {
-@@ -1392,17 +1604,17 @@ static void Task_NewGameBirchSpeechSub_WaitForLotad(u8 taskId)
+@@ -1392,17 +1639,17 @@ static void Task_NewGameBirchSpeechSub_WaitForLotad(u8 taskId)
              sprite->oam.affineMode = ST_OAM_AFFINE_OFF;
              break;
          case 1:
@@ -10675,7 +11011,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
  }
  
  #undef tState
-@@ -1422,49 +1634,49 @@ static void Task_NewGameBirchSpeech_StartBirchLotadPlatformFade(u8 taskId)
+@@ -1422,49 +1669,49 @@ static void Task_NewGameBirchSpeech_StartBirchLotadPlatformFade(u8 taskId)
  {
      if (!RunTextPrintersAndIsPrinter0Active())
      {
@@ -10740,7 +11076,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
              NewGameBirchSpeech_StartFadeInTarget1OutTarget2(taskId, 2);
              NewGameBirchSpeech_StartFadePlatformOut(taskId, 1);
              gTasks[taskId].func = Task_NewGameBirchSpeech_WaitForPlayerFadeIn;
-@@ -1474,9 +1686,9 @@ static void Task_NewGameBirchSpeech_StartPlayerFadeIn(u8 taskId)
+@@ -1474,9 +1721,9 @@ static void Task_NewGameBirchSpeech_StartPlayerFadeIn(u8 taskId)
  
  static void Task_NewGameBirchSpeech_WaitForPlayerFadeIn(u8 taskId)
  {
@@ -10752,7 +11088,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
          gTasks[taskId].func = Task_NewGameBirchSpeech_BoyOrGirl;
      }
  }
-@@ -1519,10 +1731,10 @@ static void Task_NewGameBirchSpeech_ChooseGender(u8 taskId)
+@@ -1519,10 +1766,10 @@ static void Task_NewGameBirchSpeech_ChooseGender(u8 taskId)
              break;
      }
      gender2 = Menu_GetCursorPos();
@@ -10766,7 +11102,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
          NewGameBirchSpeech_StartFadeOutTarget1InTarget2(taskId, 0);
          gTasks[taskId].func = Task_NewGameBirchSpeech_SlideOutOldGenderSprite;
      }
-@@ -1530,22 +1742,22 @@ static void Task_NewGameBirchSpeech_ChooseGender(u8 taskId)
+@@ -1530,22 +1777,22 @@ static void Task_NewGameBirchSpeech_ChooseGender(u8 taskId)
  
  static void Task_NewGameBirchSpeech_SlideOutOldGenderSprite(u8 taskId)
  {
@@ -10795,7 +11131,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
          gSprites[spriteId].oam.objMode = ST_OAM_OBJ_BLEND;
          NewGameBirchSpeech_StartFadeInTarget1OutTarget2(taskId, 0);
          gTasks[taskId].func = Task_NewGameBirchSpeech_SlideInNewGenderSprite;
-@@ -1554,7 +1766,7 @@ static void Task_NewGameBirchSpeech_SlideOutOldGenderSprite(u8 taskId)
+@@ -1554,7 +1801,7 @@ static void Task_NewGameBirchSpeech_SlideOutOldGenderSprite(u8 taskId)
  
  static void Task_NewGameBirchSpeech_SlideInNewGenderSprite(u8 taskId)
  {
@@ -10804,7 +11140,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
  
      if (gSprites[spriteId].x > 180)
      {
-@@ -1563,7 +1775,7 @@ static void Task_NewGameBirchSpeech_SlideInNewGenderSprite(u8 taskId)
+@@ -1563,7 +1810,7 @@ static void Task_NewGameBirchSpeech_SlideInNewGenderSprite(u8 taskId)
      else
      {
          gSprites[spriteId].x = 180;
@@ -10813,7 +11149,18 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
          {
              gSprites[spriteId].oam.objMode = ST_OAM_OBJ_NORMAL;
              gTasks[taskId].func = Task_NewGameBirchSpeech_ChooseGender;
-@@ -1599,7 +1811,7 @@ static void Task_NewGameBirchSpeech_StartNamingScreen(u8 taskId)
+@@ -1589,6 +1836,10 @@ static void Task_NewGameBirchSpeech_WaitPressBeforeNameChoice(u8 taskId)
+ {
+     if ((JOY_NEW(A_BUTTON)) || (JOY_NEW(B_BUTTON)))
+     {
++#ifdef PLATFORM_3DS
++        // The top screen keeps the speech while the keyboard is on the bottom one.
++        CtrBottom_NamingAhead(FALSE);
++#endif
+         BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 16, RGB_BLACK);
+         gTasks[taskId].func = Task_NewGameBirchSpeech_StartNamingScreen;
+     }
+@@ -1599,7 +1850,7 @@ static void Task_NewGameBirchSpeech_StartNamingScreen(u8 taskId)
      if (!gPaletteFade.active)
      {
          FreeAllWindowBuffers();
@@ -10822,7 +11169,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
          NewGameBirchSpeech_SetDefaultPlayerName(Random() % NUM_PRESET_NAMES);
          DestroyTask(taskId);
          DoNamingScreen(NAMING_SCREEN_PLAYER, gSaveBlock2Ptr->playerName, gSaveBlock2Ptr->playerGender, 0, 0, CB2_NewGameBirchSpeech_ReturnFromNamingScreen);
-@@ -1629,7 +1841,7 @@ static void Task_NewGameBirchSpeech_ProcessNameYesNoMenu(u8 taskId)
+@@ -1629,7 +1880,7 @@ static void Task_NewGameBirchSpeech_ProcessNameYesNoMenu(u8 taskId)
      {
          case 0:
              PlaySE(SE_SELECT);
@@ -10831,7 +11178,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
              NewGameBirchSpeech_StartFadeOutTarget1InTarget2(taskId, 2);
              NewGameBirchSpeech_StartFadePlatformIn(taskId, 1);
              gTasks[taskId].func = Task_NewGameBirchSpeech_SlidePlatformAway2;
-@@ -1643,10 +1855,10 @@ static void Task_NewGameBirchSpeech_ProcessNameYesNoMenu(u8 taskId)
+@@ -1643,10 +1894,10 @@ static void Task_NewGameBirchSpeech_ProcessNameYesNoMenu(u8 taskId)
  
  static void Task_NewGameBirchSpeech_SlidePlatformAway2(u8 taskId)
  {
@@ -10845,7 +11192,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
      }
      else
      {
-@@ -1658,16 +1870,16 @@ static void Task_NewGameBirchSpeech_ReshowBirchLotad(u8 taskId)
+@@ -1658,16 +1909,16 @@ static void Task_NewGameBirchSpeech_ReshowBirchLotad(u8 taskId)
  {
      u8 spriteId;
  
@@ -10867,7 +11214,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
          gSprites[spriteId].x = 100;
          gSprites[spriteId].y = 75;
          gSprites[spriteId].invisible = FALSE;
-@@ -1683,17 +1895,17 @@ static void Task_NewGameBirchSpeech_ReshowBirchLotad(u8 taskId)
+@@ -1683,17 +1934,17 @@ static void Task_NewGameBirchSpeech_ReshowBirchLotad(u8 taskId)
  
  static void Task_NewGameBirchSpeech_WaitForSpriteFadeInAndTextPrinter(u8 taskId)
  {
@@ -10891,7 +11238,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
              gTasks[taskId].func = Task_NewGameBirchSpeech_AreYouReady;
          }
      }
-@@ -1703,24 +1915,24 @@ static void Task_NewGameBirchSpeech_AreYouReady(u8 taskId)
+@@ -1703,24 +1954,24 @@ static void Task_NewGameBirchSpeech_AreYouReady(u8 taskId)
  {
      u8 spriteId;
  
@@ -10924,7 +11271,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
          NewGameBirchSpeech_StartFadeInTarget1OutTarget2(taskId, 2);
          NewGameBirchSpeech_StartFadePlatformOut(taskId, 1);
          StringExpandPlaceholders(gStringVar4, gText_Birch_AreYouReady);
-@@ -1733,12 +1945,12 @@ static void Task_NewGameBirchSpeech_ShrinkPlayer(u8 taskId)
+@@ -1733,12 +1984,12 @@ static void Task_NewGameBirchSpeech_ShrinkPlayer(u8 taskId)
  {
      u8 spriteId;
  
@@ -10940,7 +11287,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
              gSprites[spriteId].oam.affineMode = ST_OAM_AFFINE_NORMAL;
              gSprites[spriteId].affineAnims = sSpriteAffineAnimTable_PlayerShrink;
              InitSpriteAffineAnim(&gSprites[spriteId]);
-@@ -1753,7 +1965,15 @@ static void Task_NewGameBirchSpeech_ShrinkPlayer(u8 taskId)
+@@ -1753,7 +2004,15 @@ static void Task_NewGameBirchSpeech_ShrinkPlayer(u8 taskId)
  
  static void Task_NewGameBirchSpeech_WaitForPlayerShrink(u8 taskId)
  {
@@ -10957,7 +11304,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
  
      if (gSprites[spriteId].affineAnimEnded)
          gTasks[taskId].func = Task_NewGameBirchSpeech_FadePlayerToWhite;
-@@ -1763,23 +1983,53 @@ static void Task_NewGameBirchSpeech_FadePlayerToWhite(u8 taskId)
+@@ -1763,23 +2022,53 @@ static void Task_NewGameBirchSpeech_FadePlayerToWhite(u8 taskId)
  {
      u8 spriteId;
  
@@ -11013,7 +11360,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
          SetMainCallback2(CB2_NewGame);
          DestroyTask(taskId);
      }
-@@ -1813,11 +2063,11 @@ static void CB2_NewGameBirchSpeech_ReturnFromNamingScreen(void)
+@@ -1813,11 +2102,11 @@ static void CB2_NewGameBirchSpeech_ReturnFromNamingScreen(void)
      LZ77UnCompVram(sBirchSpeechShadowGfx, (u8 *)VRAM);
      LZ77UnCompVram(sBirchSpeechBgMap, (u8 *)(BG_SCREEN_ADDR(7)));
      LoadPalette(sBirchSpeechBgPals, BG_PLTT_ID(0), 2 * PLTT_SIZE_4BPP);
@@ -11028,7 +11375,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
      ScanlineEffect_Stop();
      ResetSpriteData();
      FreeAllSpritePalettes();
-@@ -1825,18 +2075,18 @@ static void CB2_NewGameBirchSpeech_ReturnFromNamingScreen(void)
+@@ -1825,18 +2114,18 @@ static void CB2_NewGameBirchSpeech_ReturnFromNamingScreen(void)
      AddBirchSpeechObjects(taskId);
      if (gSaveBlock2Ptr->playerGender != MALE)
      {
@@ -11052,7 +11399,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
      SetGpuReg(REG_OFFSET_BG1HOFS, -60);
      BeginNormalPaletteFade(PALETTES_ALL, 0, 16, 0, RGB_BLACK);
      SetGpuReg(REG_OFFSET_WIN0H, 0);
-@@ -1861,10 +2111,6 @@ static void CB2_NewGameBirchSpeech_ReturnFromNamingScreen(void)
+@@ -1861,10 +2150,6 @@ static void CB2_NewGameBirchSpeech_ReturnFromNamingScreen(void)
      CopyWindowToVram(0, COPYWIN_FULL);
  }
  
@@ -11063,7 +11410,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
  static void SpriteCB_MovePlayerDownWhileShrinking(struct Sprite *sprite)
  {
      u32 y;
-@@ -1890,22 +2136,24 @@ static void AddBirchSpeechObjects(u8 taskId)
+@@ -1890,22 +2175,24 @@ static void AddBirchSpeechObjects(u8 taskId)
      gSprites[birchSpriteId].callback = SpriteCB_Null;
      gSprites[birchSpriteId].oam.priority = 0;
      gSprites[birchSpriteId].invisible = TRUE;
@@ -11092,7 +11439,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
  }
  
  #undef tPlayerSpriteId
-@@ -1928,7 +2176,7 @@ static void Task_NewGameBirchSpeech_FadeOutTarget1InTarget2(u8 taskId)
+@@ -1928,7 +2215,7 @@ static void Task_NewGameBirchSpeech_FadeOutTarget1InTarget2(u8 taskId)
  
      if (gTasks[taskId].tAlphaCoeff1 == 0)
      {
@@ -11101,7 +11448,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
          DestroyTask(taskId);
      }
      else if (gTasks[taskId].tDelayTimer)
-@@ -1952,7 +2200,7 @@ static void NewGameBirchSpeech_StartFadeOutTarget1InTarget2(u8 taskId, u8 delay)
+@@ -1952,7 +2239,7 @@ static void NewGameBirchSpeech_StartFadeOutTarget1InTarget2(u8 taskId, u8 delay)
      SetGpuReg(REG_OFFSET_BLDCNT, BLDCNT_TGT2_BG1 | BLDCNT_EFFECT_BLEND | BLDCNT_TGT1_OBJ);
      SetGpuReg(REG_OFFSET_BLDALPHA, BLDALPHA_BLEND(16, 0));
      SetGpuReg(REG_OFFSET_BLDY, 0);
@@ -11110,7 +11457,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
      taskId2 = CreateTask(Task_NewGameBirchSpeech_FadeOutTarget1InTarget2, 0);
      gTasks[taskId2].tMainTask = taskId;
      gTasks[taskId2].tAlphaCoeff1 = 16;
-@@ -1965,9 +2213,18 @@ static void Task_NewGameBirchSpeech_FadeInTarget1OutTarget2(u8 taskId)
+@@ -1965,9 +2252,18 @@ static void Task_NewGameBirchSpeech_FadeInTarget1OutTarget2(u8 taskId)
  {
      int alphaCoeff2;
  
@@ -11130,7 +11477,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
          DestroyTask(taskId);
      }
      else if (gTasks[taskId].tDelayTimer)
-@@ -1991,13 +2248,19 @@ static void NewGameBirchSpeech_StartFadeInTarget1OutTarget2(u8 taskId, u8 delay)
+@@ -1991,13 +2287,19 @@ static void NewGameBirchSpeech_StartFadeInTarget1OutTarget2(u8 taskId, u8 delay)
      SetGpuReg(REG_OFFSET_BLDCNT, BLDCNT_TGT2_BG1 | BLDCNT_EFFECT_BLEND | BLDCNT_TGT1_OBJ);
      SetGpuReg(REG_OFFSET_BLDALPHA, BLDALPHA_BLEND(0, 16));
      SetGpuReg(REG_OFFSET_BLDY, 0);
@@ -11151,7 +11498,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
  }
  
  #undef tMainTask
-@@ -2032,7 +2295,7 @@ static void Task_NewGameBirchSpeech_FadePlatformIn(u8 taskId)
+@@ -2032,7 +2334,7 @@ static void Task_NewGameBirchSpeech_FadePlatformIn(u8 taskId)
      {
          gTasks[taskId].tDelayTimer = gTasks[taskId].tDelay;
          gTasks[taskId].tPalIndex++;
@@ -11160,7 +11507,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
      }
  }
  
-@@ -2066,7 +2329,7 @@ static void Task_NewGameBirchSpeech_FadePlatformOut(u8 taskId)
+@@ -2066,7 +2368,7 @@ static void Task_NewGameBirchSpeech_FadePlatformOut(u8 taskId)
      {
          gTasks[taskId].tDelayTimer = gTasks[taskId].tDelay;
          gTasks[taskId].tPalIndex--;
@@ -11169,7 +11516,7 @@ index 9565df886d58baef5cdd1ae5a6addf4a56cf52f7..d787395863b45dd9b11b9d5079011446
      }
  }
  
-@@ -2257,6 +2520,7 @@ static void NewGameBirchSpeech_WaitForThisIsPokemonText(struct TextPrinterTempla
+@@ -2257,6 +2559,7 @@ static void NewGameBirchSpeech_WaitForThisIsPokemonText(struct TextPrinterTempla
      if (*(printer->currentChar - 2) == EXT_CTRL_CODE_PAUSE && !sStartedPokeBallTask)
      {
          sStartedPokeBallTask = TRUE;
@@ -11446,7 +11793,7 @@ index f77c82608a3758f56be66c67f9b7f6af79d9dc2a..6162dbf47b48e1217a757fee69aca22b
      x = 0x10000;
      return x / y;
 diff --git a/src/menu.c b/src/menu.c
-index dd43e310dc8c83c350a0bb714113cc95cc46969e..61c0dc4cd8f5deb013662137eb14584d7ac0169b 100644
+index dd43e310dc8c83c350a0bb714113cc95cc46969e..22a3665476be116859f4ba8aea49e8b996a97b39 100644
 --- a/src/menu.c
 +++ b/src/menu.c
 @@ -20,6 +20,11 @@
@@ -11522,8 +11869,20 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..61c0dc4cd8f5deb013662137eb14584d
  
      pos = initialCursorPos;
  
-@@ -986,8 +1020,14 @@ s8 Menu_ProcessInput(void)
+@@ -982,12 +1016,26 @@ u8 Menu_GetCursorPos(void)
+     return sMenu.cursorPos;
+ }
+ 
++#ifdef PLATFORM_3DS
++bool8 CtrMenuField_Poll(s8 *selection);
++#define CTR_MENU_TAPPED() { s8 tapped; if (CtrMenuField_Poll(&tapped)) return tapped; }
++#else
++#define CTR_MENU_TAPPED()
++#endif
++
+ s8 Menu_ProcessInput(void)
  {
++    CTR_MENU_TAPPED();
      if (JOY_NEW(A_BUTTON))
      {
 +#ifdef PORT_BRIDGE
@@ -11537,7 +11896,16 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..61c0dc4cd8f5deb013662137eb14584d
          return sMenu.cursorPos;
      }
      else if (JOY_NEW(B_BUTTON))
-@@ -1201,6 +1241,9 @@ static void CreateYesNoMenuAtPos(const struct WindowTemplate *window, u8 fontId,
+@@ -1014,6 +1062,8 @@ s8 Menu_ProcessInputNoWrap(void)
+ {
+     u8 oldPos = sMenu.cursorPos;
+ 
++    CTR_MENU_TAPPED();
++
+     if (JOY_NEW(A_BUTTON))
+     {
+         if (!sMenu.APressMuted)
+@@ -1201,6 +1251,9 @@ static void CreateYesNoMenuAtPos(const struct WindowTemplate *window, u8 fontId,
      AddTextPrinter(&printer, TEXT_SKIP_DRAW, NULL);
  
      InitMenuNormal(sYesNoWindowId, fontId, left, top, GetFontAttribute(fontId, FONTATTR_MAX_LETTER_HEIGHT), 2, initialCursorPos);
@@ -11547,7 +11915,7 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..61c0dc4cd8f5deb013662137eb14584d
  }
  
  static void UNUSED CreateYesNoMenuInTopLeft(const struct WindowTemplate *window, u8 fontId, u16 baseTileNum, u8 paletteNum)
-@@ -1211,6 +1254,15 @@ static void UNUSED CreateYesNoMenuInTopLeft(const struct WindowTemplate *window,
+@@ -1211,6 +1264,15 @@ static void UNUSED CreateYesNoMenuInTopLeft(const struct WindowTemplate *window,
  s8 Menu_ProcessInputNoWrapClearOnChoose(void)
  {
      s8 result = Menu_ProcessInputNoWrap();
@@ -11563,7 +11931,7 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..61c0dc4cd8f5deb013662137eb14584d
      if (result != MENU_NOTHING_CHOSEN)
          EraseYesNoWindow();
      return result;
-@@ -1218,8 +1270,20 @@ s8 Menu_ProcessInputNoWrapClearOnChoose(void)
+@@ -1218,8 +1280,20 @@ s8 Menu_ProcessInputNoWrapClearOnChoose(void)
  
  void EraseYesNoWindow(void)
  {
@@ -11584,7 +11952,16 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..61c0dc4cd8f5deb013662137eb14584d
  }
  
  static void PrintMenuActionGridText(u8 windowId, u8 fontId, u8 left, u8 top, u8 width, u8 height, u8 columns, u8 rows, const struct MenuAction *menuActions)
-@@ -1566,6 +1630,14 @@ u8 InitMenuInUpperLeftCorner(u8 windowId, u8 itemCount, u8 initialCursorPos, boo
+@@ -1437,6 +1511,8 @@ s8 Menu_ProcessGridInput(void)
+ {
+     u8 oldPos = sMenu.cursorPos;
+ 
++    CTR_MENU_TAPPED();
++
+     if (JOY_NEW(A_BUTTON))
+     {
+         PlaySE(SE_SELECT);
+@@ -1566,6 +1642,14 @@ u8 InitMenuInUpperLeftCorner(u8 windowId, u8 itemCount, u8 initialCursorPos, boo
      sMenu.fontId = FONT_NORMAL;
      sMenu.optionHeight = 16;
      sMenu.APressMuted = APressMuted;
@@ -11599,7 +11976,7 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..61c0dc4cd8f5deb013662137eb14584d
  
      pos = initialCursorPos;
  
-@@ -1643,6 +1715,9 @@ void CreateYesNoMenu(const struct WindowTemplate *window, u16 baseTileNum, u8 pa
+@@ -1643,6 +1727,9 @@ void CreateYesNoMenu(const struct WindowTemplate *window, u16 baseTileNum, u8 pa
  
      AddTextPrinter(&printer, TEXT_SKIP_DRAW, NULL);
      InitMenuInUpperLeftCornerNormal(sYesNoWindowId, 2, initialCursorPos);
@@ -11609,7 +11986,7 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..61c0dc4cd8f5deb013662137eb14584d
  }
  
  void PrintMenuGridTable(u8 windowId, u8 optionWidth, u8 columns, u8 rows, const struct MenuAction *menuActions)
-@@ -1783,11 +1858,24 @@ void *DecompressAndCopyTileDataToVram(u8 bgId, const void *src, u32 size, u16 of
+@@ -1783,11 +1870,24 @@ void *DecompressAndCopyTileDataToVram(u8 bgId, const void *src, u32 size, u16 of
      if (sTempTileDataBufferIdx < ARRAY_COUNT(sTempTileDataBuffer))
      {
          void *ptr = malloc_and_decompress(src, &sizeOut);
@@ -11634,7 +12011,7 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..61c0dc4cd8f5deb013662137eb14584d
              sTempTileDataBuffer[sTempTileDataBufferIdx++] = ptr;
          }
          return ptr;
-@@ -1799,13 +1887,26 @@ void DecompressAndLoadBgGfxUsingHeap(u8 bgId, const void *src, u32 size, u16 off
+@@ -1799,13 +1899,26 @@ void DecompressAndLoadBgGfxUsingHeap(u8 bgId, const void *src, u32 size, u16 off
  {
      u32 sizeOut;
      void *ptr = malloc_and_decompress(src, &sizeOut);
@@ -11661,7 +12038,7 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..61c0dc4cd8f5deb013662137eb14584d
      }
  }
  
-@@ -1821,18 +1922,67 @@ void task_free_buf_after_copying_tile_data_to_vram(u8 taskId)
+@@ -1821,18 +1934,67 @@ void task_free_buf_after_copying_tile_data_to_vram(u8 taskId)
  void *malloc_and_decompress(const void *src, u32 *size)
  {
      void *ptr;
@@ -11737,7 +12114,7 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..61c0dc4cd8f5deb013662137eb14584d
  }
  
  u16 copy_decompressed_tile_data_to_vram(u8 bgId, const void *src, u16 size, u16 offset, u8 mode)
-@@ -2097,7 +2247,7 @@ void ListMenuLoadStdPalAt(u8 palOffset, u8 palId)
+@@ -2097,7 +2259,7 @@ void ListMenuLoadStdPalAt(u8 palOffset, u8 palId)
  
  void BlitMenuInfoIcon(u8 windowId, u8 iconId, u16 x, u16 y)
  {
@@ -11746,12 +12123,14 @@ index dd43e310dc8c83c350a0bb714113cc95cc46969e..61c0dc4cd8f5deb013662137eb14584d
  }
  
  void BufferSaveMenuText(u8 textId, u8 *dest, u8 color)
-@@ -2145,3 +2295,150 @@ void BufferSaveMenuText(u8 textId, u8 *dest, u8 color)
+@@ -2145,3 +2307,152 @@ void BufferSaveMenuText(u8 textId, u8 *dest, u8 color)
              break;
      }
  }
 +
 +#ifdef PLATFORM_3DS
++#include "3ds_menu_view.inc"
++
 +// The 3DS bottom screen offers YES/NO buttons while a yes/no box is open.
 +bool8 CtrMenu_YesNoOpen(void)
 +{
@@ -12186,10 +12565,43 @@ index ee601059f8aa3a17d04f1ab26fc2ca19b1054fa4..037edd07356b903ab76c06f7bd3cf49b
  
  bool32 MysteryGift_ValidateLinkGameData(const struct MysteryGiftLinkGameData *data, bool32 isWonderNews)
 diff --git a/src/naming_screen.c b/src/naming_screen.c
-index f7f599f5b94241c77ca47bd65ec69a0c139e0070..3bb0bc561866fc1eed76493d3bbb570101e297c7 100644
+index f7f599f5b94241c77ca47bd65ec69a0c139e0070..fbe18c284a8b63e5a1f1072536a2ec5459fad441 100644
 --- a/src/naming_screen.c
 +++ b/src/naming_screen.c
-@@ -697,10 +697,17 @@ static bool8 MainState_Exit(void)
+@@ -29,6 +29,20 @@
+ #include "main.h"
+ #include "constants/event_objects.h"
+ #include "constants/rgb.h"
++#ifdef PLATFORM_3DS
++#include "3ds_game_views.h"
++
++// The bottom screen's own keyboard (CtrNaming_GetView, CtrNaming_NativeTap).
++bool8 CtrMenu_TakeAck(void);
++void CtrMenu_PostAck(void);
++#define CTR_NO_CARET 0xFF
++#define CTR_NO_PAGE 0xFF
++static u8 sCtrCaret = CTR_NO_CARET;   // a cell tapped to write in: none, the keys append
++static u8 sCtrPageTarget = CTR_NO_PAGE; // a page to turn to, one turn at a time
++static u8 sCtrTitle[CTR_VIEW_TEXT];   // the question as it was printed (raw, not expanded)
++static void CtrNaming_CaptureTitle(const u8 *title);
++static void CtrNaming_DeleteBeforeCaret(void);
++#endif
+ 
+ enum {
+     INPUT_NONE,
+@@ -408,6 +422,11 @@ void DoNamingScreen(u8 templateNum, u8 *destBuffer, u16 monSpecies, u16 monGende
+         sNamingScreen->destBuffer = destBuffer;
+         sNamingScreen->returnCallback = returnCallback;
+ 
++#ifdef PLATFORM_3DS
++        sCtrCaret = CTR_NO_CARET;
++        sCtrPageTarget = CTR_NO_PAGE;
++        sCtrTitle[0] = EOS;
++#endif
+         if (templateNum == NAMING_SCREEN_PLAYER)
+             StartTimer1();
+ 
+@@ -697,10 +716,17 @@ static bool8 MainState_Exit(void)
  {
      if (!gPaletteFade.active)
      {
@@ -12207,6 +12619,114 @@ index f7f599f5b94241c77ca47bd65ec69a0c139e0070..3bb0bc561866fc1eed76493d3bbb5701
          FreeAllWindowBuffers();
          FREE_AND_SET_NULL(sNamingScreen);
      }
+@@ -737,7 +763,11 @@ static void DisplaySentToPCMessage(void)
+ static bool8 MainState_WaitSentToPCMessage(void)
+ {
+     RunTextPrinters();
++#ifdef PLATFORM_3DS
++    if (!IsTextPrinterActive(0) && (JOY_NEW(A_BUTTON) || CtrMenu_TakeAck()))
++#else
+     if (!IsTextPrinterActive(0) && JOY_NEW(A_BUTTON))
++#endif
+         sNamingScreen->state = STATE_FADE_OUT;
+ 
+     return FALSE;
+@@ -1538,6 +1568,9 @@ static bool8 SwapKeyboardPage(void)
+ static void Input_Disabled(struct Task *);
+ static void Input_Enabled(struct Task *);
+ static void Input_Override(struct Task *);
++#ifdef PLATFORM_3DS
++static bool8 CtrNaming_TakeTap(struct Task *task);
++#endif
+ 
+ static void (*const sInputFuncs[])(struct Task *) =
+ {
+@@ -1582,6 +1615,12 @@ static void Input_Enabled(struct Task *task)
+ {
+     task->tKeyboardEvent = INPUT_NONE;
+ 
++#ifdef PLATFORM_3DS
++    // A tap on the bottom screen's keyboard is the event its key would give.
++    // Buttons still win: a physical press the frame it is taken goes first.
++    if (!JOY_NEW(A_BUTTON | B_BUTTON | SELECT_BUTTON | START_BUTTON | DPAD_ANY) && CtrNaming_TakeTap(task))
++        return;
++#endif
+     if (JOY_NEW(A_BUTTON))
+         task->tKeyboardEvent = INPUT_A_BUTTON;
+     else if (JOY_NEW(B_BUTTON))
+@@ -1705,6 +1744,9 @@ static void DrawNormalTextEntryBox(void)
+ {
+     FillWindowPixelBuffer(sNamingScreen->windows[WIN_TEXT_ENTRY_BOX], PIXEL_FILL(1));
+     AddTextPrinterParameterized(sNamingScreen->windows[WIN_TEXT_ENTRY_BOX], FONT_NORMAL, sNamingScreen->template->title, 8, 1, 0, 0);
++#ifdef PLATFORM_3DS
++    CtrNaming_CaptureTitle(sNamingScreen->template->title);
++#endif
+     PutWindowTilemap(sNamingScreen->windows[WIN_TEXT_ENTRY_BOX]);
+ }
+ 
+@@ -1716,6 +1758,9 @@ static void DrawMonTextEntryBox(void)
+     StringAppendN(buffer, sNamingScreen->template->title, 15);
+     FillWindowPixelBuffer(sNamingScreen->windows[WIN_TEXT_ENTRY_BOX], PIXEL_FILL(1));
+     AddTextPrinterParameterized(sNamingScreen->windows[WIN_TEXT_ENTRY_BOX], FONT_NORMAL, buffer, 8, 1, 0, 0);
++#ifdef PLATFORM_3DS
++    CtrNaming_CaptureTitle(buffer);
++#endif
+     PutWindowTilemap(sNamingScreen->windows[WIN_TEXT_ENTRY_BOX]);
+ }
+ 
+@@ -1785,6 +1830,11 @@ static u8 GetTextEntryPosition(void)
+ {
+     u8 i;
+ 
++#ifdef PLATFORM_3DS
++    // A cell tapped on the bottom screen: the next key writes there.
++    if (sCtrCaret < sNamingScreen->template->maxChars)
++        return sCtrCaret;
++#endif
+     for (i = 0; i < sNamingScreen->template->maxChars; i++)
+     {
+         if (sNamingScreen->textBuffer[i] == EOS)
+@@ -1810,6 +1860,13 @@ static void DeleteTextCharacter(void)
+     u8 index;
+     u8 keyRole;
+ 
++#ifdef PLATFORM_3DS
++    if (sCtrCaret < sNamingScreen->template->maxChars)
++    {
++        CtrNaming_DeleteBeforeCaret();
++        return;
++    }
++#endif
+     index = GetPreviousTextCaretPosition();
+     sNamingScreen->textBuffer[index] = 0;
+     DrawTextEntry();
+@@ -1846,6 +1903,18 @@ static void BufferCharacter(u8 ch)
+ {
+     u8 index = GetTextEntryPosition();
+     sNamingScreen->textBuffer[index] = ch;
++#ifdef PLATFORM_3DS
++    if (sCtrCaret < sNamingScreen->template->maxChars)
++    {
++        u8 end = 0;
++
++        // Written inside the text, the caret goes on to the next cell; at the
++        // end of it the keys append again, as they always do.
++        while (end < sNamingScreen->template->maxChars && sNamingScreen->textBuffer[end] != EOS)
++            end++;
++        sCtrCaret = index + 1 < end ? index + 1 : CTR_NO_CARET;
++    }
++#endif
+ }
+ 
+ static void SaveInputText(void)
+@@ -2586,3 +2655,7 @@ static const struct SpritePalette sSpritePalettes[] =
+ };
+ 
+ 
++
++#ifdef PLATFORM_3DS
++#include "3ds_naming_view.inc"
++#endif
 diff --git a/src/new_game.c b/src/new_game.c
 index 80746561b03bc467f4554bfb988cdd3b889457d3..7a2153785f1936008475b9f826974300af75c957 100644
 --- a/src/new_game.c
@@ -20205,7 +20725,7 @@ index 684c89546a933a19ffb8a6c21f8a8c90d0f862ef..e8cededb39eb4ba397bc7089bb50dd1d
  }
  
 diff --git a/src/scrcmd.c b/src/scrcmd.c
-index 9c7dd864e53704e274e1f5d88dcc131822a1c805..e0feae8094de4b6d64d0dd51a464cad2cace5326 100644
+index 9c7dd864e53704e274e1f5d88dcc131822a1c805..72e65a8f8d10f2526848e8c525116dc0a134650b 100644
 --- a/src/scrcmd.c
 +++ b/src/scrcmd.c
 @@ -48,6 +48,9 @@
@@ -20246,7 +20766,28 @@ index 9c7dd864e53704e274e1f5d88dcc131822a1c805..e0feae8094de4b6d64d0dd51a464cad2
      return FALSE;
  }
  
-@@ -649,12 +658,12 @@ bool8 ScrCmd_fadescreenswapbuffers(struct ScriptContext *ctx)
+@@ -623,9 +632,19 @@ static bool8 IsPaletteNotActive(void)
+         return FALSE;
+ }
+ 
++#ifdef PLATFORM_3DS
++static void CtrScript_FadeAhead(struct ScriptContext *ctx);
++#endif
++
+ bool8 ScrCmd_fadescreen(struct ScriptContext *ctx)
+ {
+-    FadeScreen(ScriptReadByte(ctx), 0);
++    u8 mode = ScriptReadByte(ctx);
++
++#ifdef PLATFORM_3DS
++    // A fade that comes just before a naming screen: the top screen keeps the world.
++    CtrScript_FadeAhead(ctx);
++#endif
++    FadeScreen(mode, 0);
+     SetupNativeScript(ctx, IsPaletteNotActive);
+     return TRUE;
+ }
+@@ -649,12 +668,12 @@ bool8 ScrCmd_fadescreenswapbuffers(struct ScriptContext *ctx)
      case FADE_TO_BLACK:
      case FADE_TO_WHITE:
      default:
@@ -20261,7 +20802,7 @@ index 9c7dd864e53704e274e1f5d88dcc131822a1c805..e0feae8094de4b6d64d0dd51a464cad2
          FadeScreen(mode, 0);
          break;
      }
-@@ -993,8 +1002,16 @@ bool8 ScrCmd_applymovement(struct ScriptContext *ctx)
+@@ -993,8 +1012,16 @@ bool8 ScrCmd_applymovement(struct ScriptContext *ctx)
  {
      u16 localId = VarGet(ScriptReadHalfword(ctx));
      const void *movementScript = (const void *)ScriptReadWord(ctx);
@@ -20280,7 +20821,7 @@ index 9c7dd864e53704e274e1f5d88dcc131822a1c805..e0feae8094de4b6d64d0dd51a464cad2
      sMovingNpcId = localId;
      return FALSE;
  }
-@@ -1013,7 +1030,16 @@ bool8 ScrCmd_applymovementat(struct ScriptContext *ctx)
+@@ -1013,7 +1040,16 @@ bool8 ScrCmd_applymovementat(struct ScriptContext *ctx)
  
  static bool8 WaitForMovementFinish(void)
  {
@@ -20298,7 +20839,7 @@ index 9c7dd864e53704e274e1f5d88dcc131822a1c805..e0feae8094de4b6d64d0dd51a464cad2
  }
  
  bool8 ScrCmd_waitmovement(struct ScriptContext *ctx)
-@@ -1065,8 +1091,15 @@ bool8 ScrCmd_removeobjectat(struct ScriptContext *ctx)
+@@ -1065,8 +1101,15 @@ bool8 ScrCmd_removeobjectat(struct ScriptContext *ctx)
  bool8 ScrCmd_addobject(struct ScriptContext *ctx)
  {
      u16 objectId = VarGet(ScriptReadHalfword(ctx));
@@ -20315,7 +20856,7 @@ index 9c7dd864e53704e274e1f5d88dcc131822a1c805..e0feae8094de4b6d64d0dd51a464cad2
      return FALSE;
  }
  
-@@ -1206,6 +1239,23 @@ bool8 ScrCmd_lockall(struct ScriptContext *ctx)
+@@ -1206,6 +1249,23 @@ bool8 ScrCmd_lockall(struct ScriptContext *ctx)
      }
      else
      {
@@ -20339,7 +20880,7 @@ index 9c7dd864e53704e274e1f5d88dcc131822a1c805..e0feae8094de4b6d64d0dd51a464cad2
          FreezeObjects_WaitForPlayer();
          SetupNativeScript(ctx, IsFreezePlayerFinished);
          return TRUE;
-@@ -1222,6 +1272,30 @@ bool8 ScrCmd_lock(struct ScriptContext *ctx)
+@@ -1222,6 +1282,30 @@ bool8 ScrCmd_lock(struct ScriptContext *ctx)
      }
      else
      {
@@ -20370,7 +20911,7 @@ index 9c7dd864e53704e274e1f5d88dcc131822a1c805..e0feae8094de4b6d64d0dd51a464cad2
          if (gObjectEvents[gSelectedObjectEvent].active)
          {
              FreezeObjects_WaitForPlayerAndSelected();
-@@ -1242,6 +1316,13 @@ bool8 ScrCmd_releaseall(struct ScriptContext *ctx)
+@@ -1242,6 +1326,13 @@ bool8 ScrCmd_releaseall(struct ScriptContext *ctx)
  
      HideFieldMessageBox();
      playerObjectId = GetObjectEventIdByLocalIdAndMap(LOCALID_PLAYER, 0, 0);
@@ -20384,7 +20925,7 @@ index 9c7dd864e53704e274e1f5d88dcc131822a1c805..e0feae8094de4b6d64d0dd51a464cad2
      ObjectEventClearHeldMovementIfFinished(&gObjectEvents[playerObjectId]);
      ScriptMovement_UnfreezeObjectEvents();
      UnfreezeObjectEvents();
-@@ -1268,6 +1349,9 @@ bool8 ScrCmd_message(struct ScriptContext *ctx)
+@@ -1268,6 +1359,9 @@ bool8 ScrCmd_message(struct ScriptContext *ctx)
  
      if (msg == NULL)
          msg = (const u8 *)ctx->data[0];
@@ -20394,7 +20935,7 @@ index 9c7dd864e53704e274e1f5d88dcc131822a1c805..e0feae8094de4b6d64d0dd51a464cad2
      ShowFieldMessage(msg);
      return FALSE;
  }
-@@ -1278,6 +1362,9 @@ bool8 ScrCmd_pokenavcall(struct ScriptContext *ctx)
+@@ -1278,6 +1372,9 @@ bool8 ScrCmd_pokenavcall(struct ScriptContext *ctx)
  
      if (msg == NULL)
          msg = (const u8 *)ctx->data[0];
@@ -20404,7 +20945,7 @@ index 9c7dd864e53704e274e1f5d88dcc131822a1c805..e0feae8094de4b6d64d0dd51a464cad2
      ShowPokenavFieldMessage(msg);
      return FALSE;
  }
-@@ -1288,6 +1375,9 @@ bool8 ScrCmd_messageautoscroll(struct ScriptContext *ctx)
+@@ -1288,6 +1385,9 @@ bool8 ScrCmd_messageautoscroll(struct ScriptContext *ctx)
  
      if (msg == NULL)
          msg = (const u8 *)ctx->data[0];
@@ -20414,7 +20955,7 @@ index 9c7dd864e53704e274e1f5d88dcc131822a1c805..e0feae8094de4b6d64d0dd51a464cad2
      gTextFlags.autoScroll = TRUE;
      gTextFlags.forceMidTextSpeed = TRUE;
      ShowFieldAutoScrollMessage(msg);
-@@ -1301,6 +1391,9 @@ bool8 ScrCmd_messageinstant(struct ScriptContext *ctx)
+@@ -1301,6 +1401,9 @@ bool8 ScrCmd_messageinstant(struct ScriptContext *ctx)
  
      if (msg == NULL)
          msg = (const u8 *)ctx->data[0];
@@ -20424,7 +20965,7 @@ index 9c7dd864e53704e274e1f5d88dcc131822a1c805..e0feae8094de4b6d64d0dd51a464cad2
      LoadMessageBoxAndBorderGfx();
      DrawDialogueFrame(0, TRUE);
      AddTextPrinterParameterized(0, FONT_NORMAL, msg, 0, 1, 0, NULL);
-@@ -1487,6 +1580,10 @@ bool8 ScrCmd_braillemessage(struct ScriptContext *ctx)
+@@ -1487,6 +1590,10 @@ bool8 ScrCmd_braillemessage(struct ScriptContext *ctx)
      u8 xWindow, yWindow, xText, yText;
      u8 temp;
  
@@ -20435,7 +20976,7 @@ index 9c7dd864e53704e274e1f5d88dcc131822a1c805..e0feae8094de4b6d64d0dd51a464cad2
      // + 6 for the 6 bytes at the start of a braille message (brailleformat macro)
      // In RS these bytes are used to position the text and window, but
      // in Emerald they are unused and position is calculated below instead
-@@ -1820,7 +1917,7 @@ bool8 ScrCmd_updatecoinsbox(struct ScriptContext *ctx)
+@@ -1820,7 +1927,7 @@ bool8 ScrCmd_updatecoinsbox(struct ScriptContext *ctx)
  
  bool8 ScrCmd_trainerbattle(struct ScriptContext *ctx)
  {
@@ -20444,7 +20985,7 @@ index 9c7dd864e53704e274e1f5d88dcc131822a1c805..e0feae8094de4b6d64d0dd51a464cad2
      return FALSE;
  }
  
-@@ -1832,13 +1929,13 @@ bool8 ScrCmd_dotrainerbattle(struct ScriptContext *ctx)
+@@ -1832,13 +1939,13 @@ bool8 ScrCmd_dotrainerbattle(struct ScriptContext *ctx)
  
  bool8 ScrCmd_gotopostbattlescript(struct ScriptContext *ctx)
  {
@@ -20460,7 +21001,7 @@ index 9c7dd864e53704e274e1f5d88dcc131822a1c805..e0feae8094de4b6d64d0dd51a464cad2
      return FALSE;
  }
  
-@@ -2012,7 +2109,30 @@ bool8 ScrCmd_setrespawn(struct ScriptContext *ctx)
+@@ -2012,7 +2119,30 @@ bool8 ScrCmd_setrespawn(struct ScriptContext *ctx)
  
  bool8 ScrCmd_checkplayergender(struct ScriptContext *ctx)
  {
@@ -20492,6 +21033,14 @@ index 9c7dd864e53704e274e1f5d88dcc131822a1c805..e0feae8094de4b6d64d0dd51a464cad2
      return FALSE;
  }
  
+@@ -2305,3 +2435,7 @@ bool8 ScrCmd_warpwhitefade(struct ScriptContext *ctx)
+     ResetInitialPlayerAvatarState();
+     return TRUE;
+ }
++
++#ifdef PLATFORM_3DS
++#include "3ds_script_naming.inc"
++#endif
 diff --git a/src/script.c b/src/script.c
 index a953ff1e75fcdb0ed8579ad2b830388c39061868..dc56472a66705c7f8a9cad4f0061a308a3352247 100644
 --- a/src/script.c
@@ -22858,7 +23407,7 @@ index b188cbbcba75744b034677173b363e930f201c79..fd819337fefe3e05eef277cf585eab73
  
      return count;
 diff --git a/src/text.c b/src/text.c
-index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b13602d22cac 100644
+index 1c8a64d5c7d34936f825764126ba6c40cac4c959..4a3a0b1321ca1711eb59e61eb8931657156e2a12 100644
 --- a/src/text.c
 +++ b/src/text.c
 @@ -12,6 +12,9 @@
@@ -22881,7 +23430,24 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
  
  static EWRAM_DATA struct TextPrinter sTempTextPrinter = {0};
  static EWRAM_DATA struct TextPrinter sTextPrinters[WINDOWS_MAX] = {0};
-@@ -286,6 +292,9 @@ bool16 AddTextPrinter(struct TextPrinterTemplate *printerTemplate, u8 speed, voi
+@@ -268,8 +274,16 @@ u16 AddTextPrinterParameterized(u8 windowId, u8 fontId, const u8 *str, u8 x, u8
+     return AddTextPrinter(&printerTemplate, speed, callback);
+ }
+ 
++#ifdef PLATFORM_3DS
++void CtrMenu_NotePrint(u8 windowId, u8 x, u8 y, const u8 *str);
++#endif
++
+ bool16 AddTextPrinter(struct TextPrinterTemplate *printerTemplate, u8 speed, void (*callback)(struct TextPrinterTemplate *, u16))
+ {
++#ifdef PLATFORM_3DS
++    // What the menus say, for the bottom screen's buttons (3ds_menu_view.inc).
++    CtrMenu_NotePrint(printerTemplate->windowId, printerTemplate->x, printerTemplate->y, printerTemplate->currentChar);
++#endif
+     int i;
+     u16 j;
+ 
+@@ -286,6 +300,9 @@ bool16 AddTextPrinter(struct TextPrinterTemplate *printerTemplate, u8 speed, voi
          sTempTextPrinter.subStructFields[i] = 0;
  
      sTempTextPrinter.printerTemplate = *printerTemplate;
@@ -22891,7 +23457,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
      sTempTextPrinter.callback = callback;
      sTempTextPrinter.minLetterSpacing = 0;
      sTempTextPrinter.japanese = 0;
-@@ -349,6 +358,44 @@ bool16 IsTextPrinterActive(u8 id)
+@@ -349,6 +366,44 @@ bool16 IsTextPrinterActive(u8 id)
      return sTextPrinters[id].active;
  }
  
@@ -22936,7 +23502,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
  static u32 RenderFont(struct TextPrinter *textPrinter)
  {
      u32 ret;
-@@ -509,6 +556,7 @@ void GenerateFontHalfRowLookupTable(u8 fgColor, u8 bgColor, u8 shadowColor)
+@@ -509,6 +564,7 @@ void GenerateFontHalfRowLookupTable(u8 fgColor, u8 bgColor, u8 shadowColor)
      *(current++) = (bg12) | temp;
      *(current++) = (fg12) | temp;
      *(current++) = (shadow12) | temp;
@@ -22944,7 +23510,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
  }
  
  void SaveTextColors(u8 *fgColor, u8 *bgColor, u8 *shadowColor)
-@@ -523,11 +571,28 @@ void RestoreTextColors(u8 *fgColor, u8 *bgColor, u8 *shadowColor)
+@@ -523,11 +579,28 @@ void RestoreTextColors(u8 *fgColor, u8 *bgColor, u8 *shadowColor)
      GenerateFontHalfRowLookupTable(*fgColor, *bgColor, *shadowColor);
  }
  
@@ -22974,7 +23540,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
  
      temp = *(src++);
      *(dest)++ = ((sFontHalfRowLookupTable[sFontHalfRowOffsets[temp & 0xFF]]) << 16) | (sFontHalfRowLookupTable[sFontHalfRowOffsets[temp >> 8]]);
-@@ -862,6 +927,20 @@ bool8 TextPrinterWaitAutoMode(struct TextPrinter *textPrinter)
+@@ -862,6 +935,20 @@ bool8 TextPrinterWaitAutoMode(struct TextPrinter *textPrinter)
      }
  }
  
@@ -22995,7 +23561,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
  bool16 TextPrinterWaitWithDownArrow(struct TextPrinter *textPrinter)
  {
      bool8 result = FALSE;
-@@ -872,7 +951,10 @@ bool16 TextPrinterWaitWithDownArrow(struct TextPrinter *textPrinter)
+@@ -872,7 +959,10 @@ bool16 TextPrinterWaitWithDownArrow(struct TextPrinter *textPrinter)
      else
      {
          TextPrinterDrawDownArrow(textPrinter);
@@ -23007,7 +23573,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
          {
              result = TRUE;
              PlaySE(SE_SELECT);
-@@ -890,7 +972,10 @@ bool16 TextPrinterWait(struct TextPrinter *textPrinter)
+@@ -890,7 +980,10 @@ bool16 TextPrinterWait(struct TextPrinter *textPrinter)
      }
      else
      {
@@ -23019,7 +23585,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
          {
              result = TRUE;
              PlaySE(SE_SELECT);
-@@ -941,14 +1026,17 @@ static u16 RenderText(struct TextPrinter *textPrinter)
+@@ -941,14 +1034,17 @@ static u16 RenderText(struct TextPrinter *textPrinter)
      switch (textPrinter->state)
      {
      case RENDER_STATE_HANDLE_CHAR:
@@ -23039,7 +23605,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
                  subStruct->hasPrintBeenSpedUp = TRUE;
                  textPrinter->delayCounter = 0;
              }
-@@ -1239,7 +1327,11 @@ static u32 UNUSED GetStringWidthFixedWidthFont(const u8 *str, u8 fontId, u8 lett
+@@ -1239,7 +1335,11 @@ static u32 UNUSED GetStringWidthFixedWidthFont(const u8 *str, u8 fontId, u8 lett
  
      width = 0;
      line = 0;
@@ -23051,7 +23617,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
      strPos = 0;
  
      do
-@@ -1352,6 +1444,10 @@ s32 GetStringWidth(u8 fontId, const u8 *str, s16 letterSpacing)
+@@ -1352,6 +1452,10 @@ s32 GetStringWidth(u8 fontId, const u8 *str, s16 letterSpacing)
      lineWidth = 0;
      bufferPointer = 0;
  
@@ -23062,7 +23628,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
      while (*str != EOS)
      {
          switch (*str)
-@@ -1379,6 +1475,9 @@ s32 GetStringWidth(u8 fontId, const u8 *str, s16 letterSpacing)
+@@ -1379,6 +1483,9 @@ s32 GetStringWidth(u8 fontId, const u8 *str, s16 letterSpacing)
          case CHAR_DYNAMIC:
              if (bufferPointer == NULL)
                  bufferPointer = DynamicPlaceholderTextUtil_GetPlaceholderPtr(*++str);
@@ -23072,7 +23638,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
              while (*bufferPointer != EOS)
              {
                  glyphWidth = func(*bufferPointer++, isJapanese);
-@@ -1515,7 +1614,11 @@ u8 RenderTextHandleBold(u8 *pixels, u8 fontId, u8 *str)
+@@ -1515,7 +1622,11 @@ u8 RenderTextHandleBold(u8 *pixels, u8 fontId, u8 *str)
      shadowColor = TEXT_COLOR_LIGHT_GRAY;
  
      GenerateFontHalfRowLookupTable(TEXT_COLOR_WHITE, TEXT_COLOR_TRANSPARENT, TEXT_COLOR_LIGHT_GRAY);
@@ -23084,7 +23650,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
      strPos = 0;
  
      do
-@@ -1610,7 +1713,7 @@ u8 DrawKeypadIcon(u8 windowId, u8 keypadIconId, u16 x, u16 y)
+@@ -1610,7 +1721,7 @@ u8 DrawKeypadIcon(u8 windowId, u8 keypadIconId, u16 x, u16 y)
  {
      BlitBitmapRectToWindow(
          windowId,
@@ -23093,7 +23659,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
          0,
          0,
          0x80,
-@@ -1686,7 +1789,12 @@ static void DecompressGlyph_Small(u16 glyphId, bool32 isJapanese)
+@@ -1686,7 +1797,12 @@ static void DecompressGlyph_Small(u16 glyphId, bool32 isJapanese)
  
      if (isJapanese == 1)
      {
@@ -23107,7 +23673,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
          DecompressGlyphTile(glyphs, gCurGlyph.gfxBufferTop);
          DecompressGlyphTile(glyphs + 0x80, gCurGlyph.gfxBufferBottom);
          gCurGlyph.width = 8;
-@@ -1694,7 +1802,12 @@ static void DecompressGlyph_Small(u16 glyphId, bool32 isJapanese)
+@@ -1694,7 +1810,12 @@ static void DecompressGlyph_Small(u16 glyphId, bool32 isJapanese)
      }
      else
      {
@@ -23121,7 +23687,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
          gCurGlyph.width = gFontSmallLatinGlyphWidths[glyphId];
  
          if (gCurGlyph.width <= 8)
-@@ -1728,7 +1841,12 @@ static void DecompressGlyph_Narrow(u16 glyphId, bool32 isJapanese)
+@@ -1728,7 +1849,12 @@ static void DecompressGlyph_Narrow(u16 glyphId, bool32 isJapanese)
  
      if (isJapanese == TRUE)
      {
@@ -23135,7 +23701,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
          DecompressGlyphTile(glyphs, gCurGlyph.gfxBufferTop);
          DecompressGlyphTile(glyphs + 0x80, gCurGlyph.gfxBufferBottom);
          gCurGlyph.width = 8;
-@@ -1736,7 +1854,12 @@ static void DecompressGlyph_Narrow(u16 glyphId, bool32 isJapanese)
+@@ -1736,7 +1862,12 @@ static void DecompressGlyph_Narrow(u16 glyphId, bool32 isJapanese)
      }
      else
      {
@@ -23149,7 +23715,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
          gCurGlyph.width = gFontNarrowLatinGlyphWidths[glyphId];
  
          if (gCurGlyph.width <= 8)
-@@ -1770,7 +1893,12 @@ static void DecompressGlyph_SmallNarrow(u16 glyphId, bool32 isJapanese)
+@@ -1770,7 +1901,12 @@ static void DecompressGlyph_SmallNarrow(u16 glyphId, bool32 isJapanese)
  
      if (isJapanese == TRUE)
      {
@@ -23163,7 +23729,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
          DecompressGlyphTile(glyphs, gCurGlyph.gfxBufferTop);
          DecompressGlyphTile(glyphs + 0x80, gCurGlyph.gfxBufferBottom);
          gCurGlyph.width = 8;
-@@ -1778,7 +1906,12 @@ static void DecompressGlyph_SmallNarrow(u16 glyphId, bool32 isJapanese)
+@@ -1778,7 +1914,12 @@ static void DecompressGlyph_SmallNarrow(u16 glyphId, bool32 isJapanese)
      }
      else
      {
@@ -23177,7 +23743,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
          gCurGlyph.width = gFontSmallNarrowLatinGlyphWidths[glyphId];
  
          if (gCurGlyph.width <= 8)
-@@ -1812,7 +1945,12 @@ static void DecompressGlyph_Short(u16 glyphId, bool32 isJapanese)
+@@ -1812,7 +1953,12 @@ static void DecompressGlyph_Short(u16 glyphId, bool32 isJapanese)
  
      if (isJapanese == TRUE)
      {
@@ -23191,7 +23757,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
          DecompressGlyphTile(glyphs, gCurGlyph.gfxBufferTop);
          DecompressGlyphTile(glyphs + 0x8, gCurGlyph.gfxBufferTop + 8);
          DecompressGlyphTile(glyphs + 0x80, gCurGlyph.gfxBufferBottom);    // gCurGlyph + 0x20
-@@ -1822,7 +1960,12 @@ static void DecompressGlyph_Short(u16 glyphId, bool32 isJapanese)
+@@ -1822,7 +1968,12 @@ static void DecompressGlyph_Short(u16 glyphId, bool32 isJapanese)
      }
      else
      {
@@ -23205,7 +23771,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
          gCurGlyph.width = gFontShortLatinGlyphWidths[glyphId];
  
          if (gCurGlyph.width <= 8)
-@@ -1856,7 +1999,12 @@ static void DecompressGlyph_Normal(u16 glyphId, bool32 isJapanese)
+@@ -1856,7 +2007,12 @@ static void DecompressGlyph_Normal(u16 glyphId, bool32 isJapanese)
  
      if (isJapanese == TRUE)
      {
@@ -23219,7 +23785,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
          DecompressGlyphTile(glyphs, gCurGlyph.gfxBufferTop);
          DecompressGlyphTile(glyphs + 0x80, gCurGlyph.gfxBufferBottom);
          gCurGlyph.width = 8;
-@@ -1864,7 +2012,12 @@ static void DecompressGlyph_Normal(u16 glyphId, bool32 isJapanese)
+@@ -1864,7 +2020,12 @@ static void DecompressGlyph_Normal(u16 glyphId, bool32 isJapanese)
      }
      else
      {
@@ -23233,7 +23799,7 @@ index 1c8a64d5c7d34936f825764126ba6c40cac4c959..0799a0966d9027d4be3b4a84d3e0b136
          gCurGlyph.width = gFontNormalLatinGlyphWidths[glyphId];
  
          if (gCurGlyph.width <= 8)
-@@ -1896,7 +2049,12 @@ static void DecompressGlyph_Bold(u16 glyphId)
+@@ -1896,7 +2057,12 @@ static void DecompressGlyph_Bold(u16 glyphId)
  {
      const u16 *glyphs;
  
@@ -23883,7 +24449,7 @@ index f7b19aa8d9248316751b4e623530954ab7d3f856..ec70c2234f0ac93010e055752be65b1b
      return 0;
  }
 diff --git a/src/union_room.c b/src/union_room.c
-index cd94cf23bf870a27e07d7f89e7f9dc744d7fe0e0..0ced727f12b237e7360181edeb665068cf881b67 100644
+index cd94cf23bf870a27e07d7f89e7f9dc744d7fe0e0..f9f187e81f90a818d954e89a5078070f772cc894 100644
 --- a/src/union_room.c
 +++ b/src/union_room.c
 @@ -194,7 +194,12 @@ enum {
@@ -23899,7 +24465,29 @@ index cd94cf23bf870a27e07d7f89e7f9dc744d7fe0e0..0ced727f12b237e7360181edeb665068
  EWRAM_DATA u8 gPlayerCurrActivity = 0;
  static EWRAM_DATA u8 sPlayerActivityGroupSize = 0;
  static EWRAM_DATA union
-@@ -3307,6 +3312,7 @@ void InitUnionRoom(void)
+@@ -1640,6 +1645,10 @@ static void CreateTrainerCardInBuffer(void *dest, bool32 setWonderCard)
+         card->hasAllFrontierSymbols = 0;
+ }
+ 
++#ifdef PLATFORM_3DS
++void CtrBottom_NamingAhead(bool8 battle);
++#endif
++
+ static void Task_StartActivity(u8 taskId)
+ {
+     MysteryGift_DisableStats();
+@@ -1720,6 +1729,10 @@ static void Task_StartActivity(u8 taskId)
+             LinkRfu_StopManagerBeforeEnteringChat();
+             SetHostRfuGameData(ACTIVITY_CHAT | IN_UNION_ROOM, 0, TRUE);
+         }
++#ifdef PLATFORM_3DS
++        // The top screen keeps the room while the keyboard is on the bottom one.
++        CtrBottom_NamingAhead(FALSE);
++#endif
+         EnterUnionRoomChat();
+         break;
+     case ACTIVITY_CARD:
+@@ -3307,6 +3320,7 @@ void InitUnionRoom(void)
      sUnionRoomPlayerName[0] = EOS;
  }
  
@@ -23907,7 +24495,7 @@ index cd94cf23bf870a27e07d7f89e7f9dc744d7fe0e0..0ced727f12b237e7360181edeb665068
  static void Task_InitUnionRoom(u8 taskId)
  {
      s32 i;
-@@ -3375,6 +3381,7 @@ static void Task_InitUnionRoom(u8 taskId)
+@@ -3375,6 +3389,7 @@ static void Task_InitUnionRoom(u8 taskId)
          break;
      }
  }
@@ -23916,10 +24504,111 @@ index cd94cf23bf870a27e07d7f89e7f9dc744d7fe0e0..0ced727f12b237e7360181edeb665068
  bool16 BufferUnionRoomPlayerName(void)
  {
 diff --git a/src/union_room_chat.c b/src/union_room_chat.c
-index 8cdd4bb1448e6e1b8714bc6e8b74d8afe24e8b6b..45c8d2721735f055e56dbdb00e2797a668e1f2b8 100644
+index 8cdd4bb1448e6e1b8714bc6e8b74d8afe24e8b6b..3e6c6dd0a9f1e473d3cd8d92ea2cc15029ccda83 100644
 --- a/src/union_room_chat.c
 +++ b/src/union_room_chat.c
-@@ -1953,7 +1953,7 @@ static u8 *GetLimitedMessageStartPtr(void)
+@@ -26,6 +26,19 @@
+ #include "window.h"
+ #include "constants/rgb.h"
+ #include "constants/songs.h"
++#ifdef PLATFORM_3DS
++// The bottom screen's keyboard (3ds_chat_view.inc): a tap stands for a key.
++bool8 CtrChat_Virtual(u16 keys);
++void CtrChat_Tick(void);
++s8 CtrChat_TakeMenuItem(void);
++void CtrChat_NoteMessage(int msgId);
++void CtrChat_NoteLine(const u8 *str, u8 color);
++#define CHAT_NEW(keys) (JOY_NEW(keys) || CtrChat_Virtual(keys))
++#define CHAT_REPEAT(keys) (JOY_REPEAT(keys) || CtrChat_Virtual(keys))
++#else
++#define CHAT_NEW(keys) JOY_NEW(keys)
++#define CHAT_REPEAT(keys) JOY_REPEAT(keys)
++#endif
+ 
+ enum
+ {
+@@ -994,6 +1007,9 @@ static void CB2_UnionRoomChatMain(void)
+ 
+ static void Task_HandlePlayerInput(u8 taskId)
+ {
++#ifdef PLATFORM_3DS
++    CtrChat_Tick();
++#endif
+     // If exitType is not CHAT_EXIT_NONE, begin exit function.
+     // Otherwise just call main function below.
+     switch (sChat->exitType)
+@@ -1044,16 +1060,16 @@ static void Chat_HandleInput(void)
+     switch (sChat->funcState)
+     {
+     case 0:
+-        if (JOY_NEW(START_BUTTON))
++        if (CHAT_NEW(START_BUTTON))
+         {
+             if (sChat->bufferCursorPos)
+                 SetChatFunction(CHAT_FUNC_SEND);
+         }
+-        else if (JOY_NEW(SELECT_BUTTON))
++        else if (CHAT_NEW(SELECT_BUTTON))
+         {
+             SetChatFunction(CHAT_FUNC_SWITCH);
+         }
+-        else if (JOY_REPEAT(B_BUTTON))
++        else if (CHAT_REPEAT(B_BUTTON))
+         {
+             if (sChat->bufferCursorPos)
+             {
+@@ -1066,14 +1082,14 @@ static void Chat_HandleInput(void)
+                 SetChatFunction(CHAT_FUNC_ASK_QUIT);
+             }
+         }
+-        else if (JOY_NEW(A_BUTTON))
++        else if (CHAT_NEW(A_BUTTON))
+         {
+             AppendTextToMessage();
+             StartDisplaySubtask(CHATDISPLAY_FUNC_UPDATE_MSG, 0);
+             StartDisplaySubtask(CHATDISPLAY_FUNC_CURSOR_BLINK, 1);
+             sChat->funcState = 1;
+         }
+-        else if (JOY_NEW(R_BUTTON))
++        else if (CHAT_NEW(R_BUTTON))
+         {
+             if (sChat->currentPage != UNION_ROOM_KB_PAGE_REGISTER)
+             {
+@@ -1117,7 +1133,7 @@ static void Chat_Switch(void)
+             sChat->funcState++;
+         break;
+     case 2:
+-        input = Menu_ProcessInput();
++        input = ProcessMenuInput();
+         switch (input)
+         {
+         default:
+@@ -1447,13 +1463,13 @@ static void Chat_Register(void)
+         }
+         break;
+     case 1:
+-        if (JOY_NEW(A_BUTTON))
++        if (CHAT_NEW(A_BUTTON))
+         {
+             RegisterTextAtRow();
+             StartDisplaySubtask(CHATDISPLAY_FUNC_RETURN_TO_KB, 0);
+             sChat->funcState = 3;
+         }
+-        else if (JOY_NEW(B_BUTTON))
++        else if (CHAT_NEW(B_BUTTON))
+         {
+             StartDisplaySubtask(CHATDISPLAY_FUNC_CANCEL_REGISTER, 0);
+             sChat->funcState = 4;
+@@ -1484,7 +1500,7 @@ static void Chat_Register(void)
+             sChat->funcState = 6;
+         break;
+     case 6:
+-        if (JOY_NEW(A_BUTTON | B_BUTTON))
++        if (CHAT_NEW(A_BUTTON | B_BUTTON))
+         {
+             StartDisplaySubtask(CHATDISPLAY_FUNC_DESTROY_YESNO, 0);
+             sChat->funcState = 4;
+@@ -1953,7 +1969,7 @@ static u8 *GetLimitedMessageStartPtr(void)
      for (i = 0; i < numChars; i++)
      {
          if (*str == CHAR_EXTRA_SYMBOL)
@@ -23928,7 +24617,63 @@ index 8cdd4bb1448e6e1b8714bc6e8b74d8afe24e8b6b..45c8d2721735f055e56dbdb00e2797a6
  
          str++;
      }
-@@ -3214,9 +3214,8 @@ static void MoveKeyboardCursor(void)
+@@ -2780,12 +2796,25 @@ static void DestroyYesNoMenuWindow(void)
+ 
+ static s8 ProcessMenuInput(void)
+ {
++#ifdef PLATFORM_3DS
++    // An entry tapped on the bottom screen.
++    s8 item = CtrChat_TakeMenuItem();
++
++    if (item != MENU_NOTHING_CHOSEN)
++    {
++        PlaySE(SE_SELECT);
++        return item;
++    }
++#endif
+     return Menu_ProcessInput();
+ }
+ 
+ static void AddStdMessageWindow(int msgId, u16 bg0vofs)
+ {
+     const u8 *str;
++#ifdef PLATFORM_3DS
++    CtrChat_NoteMessage(msgId);
++#endif
+     int windowId;
+     struct WindowTemplate template;
+     template.bg = 0;
+@@ -2853,6 +2882,9 @@ static void AddStdMessageWindow(int msgId, u16 bg0vofs)
+ 
+ static void HideStdMessageWindow(void)
+ {
++#ifdef PLATFORM_3DS
++    CtrChat_NoteMessage(-1);
++#endif
+     if (sDisplay->messageWindowId != WINDOW_NONE)
+     {
+         ClearStdWindowAndFrameToTransparent(sDisplay->messageWindowId, FALSE);
+@@ -2864,6 +2896,9 @@ static void HideStdMessageWindow(void)
+ 
+ static void DestroyStdMessageWindow(void)
+ {
++#ifdef PLATFORM_3DS
++    CtrChat_NoteMessage(-1);
++#endif
+     if (sDisplay->messageWindowId != WINDOW_NONE)
+     {
+         RemoveWindow(sDisplay->messageWindowId);
+@@ -3015,6 +3050,9 @@ static void PrintChatMessage(u16 row, u8 *str, u8 colorIdx)
+ {
+     // colorIdx: 0 = gray, 1 = red, 2 = green, 3 = blue
+     u8 color[3];
++#ifdef PLATFORM_3DS
++    CtrChat_NoteLine(str, colorIdx);
++#endif
+     color[0] = TEXT_COLOR_WHITE;
+     color[1] = colorIdx * 2 + 2;
+     color[2] = colorIdx * 2 + 3;
+@@ -3214,9 +3252,8 @@ static void MoveKeyboardCursor(void)
  
  static void SetRegisteredTextPalette(bool32 registering)
  {
@@ -23939,6 +24684,14 @@ index 8cdd4bb1448e6e1b8714bc6e8b74d8afe24e8b6b..45c8d2721735f055e56dbdb00e2797a6
  }
  
  static void StartKeyboardCursorAnim(void)
+@@ -3319,3 +3356,7 @@ static void UpdateRButtonLabel(void)
+     }
+ 
+ }
++
++#ifdef PLATFORM_3DS
++#include "3ds_chat_view.inc"
++#endif
 diff --git a/src/use_pokeblock.c b/src/use_pokeblock.c
 index 769e5a3465243530a1568a71f41ad0ba2e11de24..c9d5c56e5c0455149409f3f6d58cf637521cd809 100644
 --- a/src/use_pokeblock.c
@@ -23989,6 +24742,31 @@ index 09381fcaf317126e56ff1c1af30f21ca536c9ddb..ba44834cecb4eda8af83bbae654255f8
 +#endif
      }
  }
+diff --git a/src/walda_phrase.c b/src/walda_phrase.c
+index e5556b53e303ede8b9e0c17608572ece01729498..c368e7dd679a85aae362ff6851aa639bb4c97b01 100644
+--- a/src/walda_phrase.c
++++ b/src/walda_phrase.c
+@@ -9,6 +9,9 @@
+ #include "overworld.h"
+ #include "pokemon_storage_system.h"
+ #include "field_screen_effect.h"
++#ifdef PLATFORM_3DS
++void CtrBottom_NamingAhead(bool8 battle);
++#endif
+ 
+ extern const u8 gText_Peekaboo[];
+ 
+@@ -50,6 +53,10 @@ u16 TryBufferWaldaPhrase(void)
+ void DoWaldaNamingScreen(void)
+ {
+     StringCopy(gStringVar2, GetWaldaPhrasePtr());
++#ifdef PLATFORM_3DS
++    // The top screen keeps the room while the keyboard is on the bottom one.
++    CtrBottom_NamingAhead(FALSE);
++#endif
+     DoNamingScreen(NAMING_SCREEN_WALDA, gStringVar2, 0, 0, 0, CB2_HandleGivenWaldaPhrase);
+ }
+ 
 diff --git a/src/wild_encounter.c b/src/wild_encounter.c
 index 0656b1985386b5d1a8d8eeae92691a4916bb5369..7ac9ae0e8f0b983025e9945e38640ed9ddd3e327 100644
 --- a/src/wild_encounter.c
@@ -24026,3 +24804,29 @@ index 0656b1985386b5d1a8d8eeae92691a4916bb5369..7ac9ae0e8f0b983025e9945e38640ed9
  #include "constants/abilities.h"
  #include "constants/game_stat.h"
  #include "constants/items.h"
+diff --git a/src/window.c b/src/window.c
+index 644048fad7a1cb9eea28cd8cd45151ab5b479dea..5aa1f38e749d7fc7cf48247ab3dc9da3191c154f 100644
+--- a/src/window.c
++++ b/src/window.c
+@@ -106,6 +106,10 @@ bool16 InitWindows(const struct WindowTemplate *templates)
+     return TRUE;
+ }
+ 
++#ifdef PLATFORM_3DS
++void CtrMenu_ForgetWindow(u8 windowId);
++#endif
++
+ u16 AddWindow(const struct WindowTemplate *template)
+ {
+     u16 win;
+@@ -219,6 +223,10 @@ void RemoveWindow(u8 windowId)
+ {
+     u8 bgLayer = gWindows[windowId].window.bg;
+ 
++#ifdef PLATFORM_3DS
++    CtrMenu_ForgetWindow(windowId); // the texts printed there belong to a window that is gone
++#endif
++
+     if (gWindowTileAutoAllocEnabled == TRUE)
+         BgTileAllocOp(bgLayer, gWindows[windowId].window.baseBlock, gWindows[windowId].window.width * gWindows[windowId].window.height, 2);
+ 

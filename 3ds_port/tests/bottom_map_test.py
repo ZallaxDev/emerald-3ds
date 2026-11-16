@@ -105,7 +105,32 @@ struct CtrPartyView { u8 state, cursor, data[350]; u8 iconFrame[6]; s8 iconLift[
 struct CtrSummaryView { u8 state, page, data[400]; const u8 *picTiles; u32 picSum; };
 struct CtrBagView { u8 state, pocket, data[700]; };
 struct CtrDexView { u8 state, national, data[300]; };
+#define CTR_VIEW_TEXT 160
+#define CTR_FM_MAX 12
+#define CTR_FM_TEXT 24
 '''
+    views = (ROOT / 'include/3ds_game_views.h').read_text(encoding='utf-8')
+    for name in ('CTR_NAMING_ROWS', 'CTR_NAMING_COLS', 'CTR_NAMING_TEXT', 'CTR_CHAT_COLS', 'CTR_CHAT_ROWS', 'CTR_CHAT_LINES',
+                 'CTR_CHAT_LINE_LEN', 'CTR_CHAT_MAX', 'CTR_CHAT_ITEMS', 'CTR_CHAT_PAGE_REGISTER'):
+        source += define(views, name)
+    source += between(views, 'enum\n{\n    CTR_NAMING_VIEW_NONE', '};')
+    source += between(views, 'enum\n{\n    CTR_CHAT_VIEW_NONE', '};')
+    source += between(views, 'struct CtrNamingView\n{', '};')
+    source += between(views, 'struct CtrFieldMenuView\n{', '};')
+    source += define(views, 'CTR_FL_ROWS')
+    source += between(views, 'struct CtrFieldListView\n{', '};')
+    source += define(views, 'CTR_BLENDER_PLAYERS')
+    source += between(views, 'struct CtrBlenderView\n{', '};')
+    for name in ('CTR_EC_WORDS', 'CTR_EC_TEXT', 'CTR_EC_GROUPS'):
+        source += define(views, name)
+    source += between(views, 'enum { CTR_EC_NONE,', '};')
+    source += between(views, 'struct CtrEasyChatView\n{', '};')
+    source += define(views, 'CTR_FAC_MONS')
+    source += between(views, 'struct CtrFactoryView\n{', '};')
+    for name in ('CTR_CONTEST_MOVES', 'CTR_CONTEST_NICK'):
+        source += define(views, name)
+    source += between(views, 'struct CtrContestView\n{', '};')
+    source += between(views, 'struct CtrChatView\n{', '};')
     source += between(bottom, 'enum { SCR_MAP,', '};')
     source += between(bottom, 'enum { COL_Y = SCR_COUNT', '};')
     source += between(bottom, 'enum { OPT_TEXT_SPEED,', '};')
@@ -223,9 +248,23 @@ static u8 BattleCursorHit(const ViewState *s,u8 cursor) {(void)s;return cursor;}
     source += function(options, 'static void OptionsPanelRect(')
     source += between(bottom, 'typedef struct { int x0, y0, x1, y1; } Rect;', '} Rect;')
     for name in ('static void RectInit(', 'static void RectAdd(', 'static bool8 RectAddHitOf(',
-                 'static bool8 RectAddHit(', 'static void AreaRect(', 'static bool8 RectAddFocus(',
-                 'static bool8 DirtyRect('):
+                 'static bool8 RectAddHit(', 'static void AreaRect(', 'static bool8 RectAddFocus('):
         source += function(bottom, name).replace('RectAddPlate(r,', 'RectAddPlate((void *)r,')
+    # The keyboards' parts (3ds_bottom_keys_dirty.inc), with the real plate rectangle of a hit.
+    naming = (ROOT / 'src/3ds_bottom_naming.inc').read_text(encoding='utf-8')
+    chat = (ROOT / 'src/3ds_bottom_chat.inc').read_text(encoding='utf-8')
+    for name in ('NAME_KEY_COLS', 'NAME_PORTRAIT_Y', 'NAME_TITLE_X', 'NAME_TITLE_W', 'NAME_TITLE_H', 'NAME_ENTRY_Y',
+                 'NAME_ENTRY_H'):
+        source += define(naming, name)
+    source += between(naming, 'enum\n{\n    HIT_NAME_KEY = 0,', '};')
+    for name in ('CHAT_LOG_Y', 'CHAT_LOG_H', 'CHAT_ENTRY_Y', 'CHAT_ENTRY_H'):
+        source += define(chat, name)
+    source += between(chat, 'enum\n{\n    HIT_CHAT_KEY = 0,', '};')
+    source += function(bottom, 'static bool8 RectAddPlate(').replace('RectAddPlate(', 'RectAddPlateReal(')
+    source += '#define RectAddPlate RectAddPlateReal\n'
+    source += (ROOT / 'src/3ds_bottom_keys_dirty.inc').read_text(encoding='utf-8')
+    source += '#undef RectAddPlate\n'
+    source += function(bottom, 'static bool8 DirtyRect(').replace('RectAddPlate(r,', 'RectAddPlate((void *)r,')
     source += r'''
 static void Extras(ViewState *s) {
     u8 mapsec=s->mapsec,cx=s->cursorX,cy=s->cursorY,pick=s->pickMapsec;
@@ -406,6 +445,42 @@ static ViewState Field(u8 screen) {
     return s;
 }
 static bool Inside(Rect r,int x0,int y0,int x1,int y1) {return r.x0<=x0&&r.y0<=y0&&r.x1>=x1&&r.y1>=y1;}
+/* The keyboards: only the key, the cursor or the text that changed is redrawn. */
+static void TestKeyboardDirty(void) {
+    static ViewState a,b;
+    Rect r;
+    memset(&a,0,sizeof(a));
+    a.mode=MODE_NAMING;a.screen=SCR_COUNT;a.nm.state=CTR_NAMING_VIEW_KEYS;a.nm.cols=8;a.nm.cursorX=3;a.nm.cursorY=1;
+    a.pressed=HIT_NONE;
+    sShown=a;sHitCount=0;
+    AddHit(60,150,26,23,HIT_NAME_KEY+1*NAME_KEY_COLS+3);
+    AddHit(90,176,26,23,HIT_NAME_KEY+2*NAME_KEY_COLS+4);
+    AddHit(246,173,66,49,HIT_NAME_OK);
+    /* A key pressed: its plate, and nothing else. */
+    b=a;b.pressed=HIT_NAME_KEY+1*NAME_KEY_COLS+3;assert(DirtyRect(&b,&a,&r)&&Inside(r,60,150,86,173)&&r.y0>=130&&r.y1<=190);
+    /* The cursor on another key: both plates. */
+    b=a;b.nm.cursorX=4;b.nm.cursorY=2;assert(DirtyRect(&b,&a,&r)&&Inside(r,60,150,86,173)&&Inside(r,90,176,116,199));
+    /* Onto OK, in the buttons' column. */
+    b=a;b.nm.cursorX=8;b.nm.cursorY=2;assert(DirtyRect(&b,&a,&r)&&Inside(r,246,173,312,222));
+    /* The text: the entry and the counter above it, not the keys. */
+    b=a;b.nm.text[0]=5;b.nm.caret=1;assert(DirtyRect(&b,&a,&r)&&Inside(r,NAME_TITLE_X,NAME_ENTRY_Y,NAME_TITLE_X+NAME_TITLE_W,NAME_ENTRY_Y+NAME_ENTRY_H)
+        &&Inside(r,NAME_TITLE_X,NAME_PORTRAIT_Y,NAME_TITLE_X+NAME_TITLE_W,NAME_PORTRAIT_Y+NAME_TITLE_H)&&r.y1<=110);
+    /* A page, the question, a message, the keys busy: the whole screen. */
+    b=a;b.nm.page=2;assert(!DirtyRect(&b,&a,&r));
+    b=a;b.nm.title[0]=1;assert(!DirtyRect(&b,&a,&r));
+    b=a;b.nm.state=CTR_NAMING_VIEW_BUSY;assert(!DirtyRect(&b,&a,&r));
+    b=a;b.chat=1;assert(!DirtyRect(&b,&a,&r));
+    /* The chat. */
+    memset(&a,0,sizeof(a));
+    a.mode=MODE_NAMING;a.screen=SCR_COUNT;a.chat=1;a.ch.state=CTR_CHAT_VIEW_KEYS;a.ch.row=1;a.ch.col=2;a.pressed=HIT_NONE;
+    sShown=a;sHitCount=0;
+    AddHit(80,141,28,18,HIT_CHAT_KEY+1*CTR_CHAT_COLS+2);
+    b=a;b.pressed=HIT_CHAT_KEY+1*CTR_CHAT_COLS+2;assert(DirtyRect(&b,&a,&r)&&Inside(r,80,141,108,159));
+    b=a;b.ch.length=1;b.ch.text[0]=7;assert(DirtyRect(&b,&a,&r)&&Inside(r,8,CHAT_ENTRY_Y,170,CHAT_ENTRY_Y+CHAT_ENTRY_H)&&r.y1<=110);
+    b=a;b.ch.numLines=1;b.ch.lines[0][0]=3;assert(DirtyRect(&b,&a,&r)&&Inside(r,8,CHAT_LOG_Y,312,CHAT_LOG_Y+CHAT_LOG_H));
+    b=a;b.ch.page=1;assert(!DirtyRect(&b,&a,&r));
+    b=a;b.ch.state=CTR_CHAT_VIEW_YESNO;assert(!DirtyRect(&b,&a,&r));
+}
 static void TestDirty(void) {
     ViewState a=Field(SCR_MAP),b;
     Rect r;
@@ -501,10 +576,11 @@ int main(void) {
     TestDock();
     TestBlit();
     TestDirty();
+    TestKeyboardDirty();
     TestMark();
     puts("PASS bottom screen: wild list tables/timed grass/methods/pages of rows/Altering Cave, seen-only masking, "
          "taps and clock banner gating; dock and header layout; copies round the game's window; partial redraws "
-         "(clock, Repel, held button and title, focus, options panel and tabs, native views) and whole-redraw fallbacks; the mark moving alone, zoomed too, never on the Fly map");
+         "(clock, Repel, held button and title, focus, options panel and tabs, native views, the keyboards' key, cursor and text) and whole-redraw fallbacks; the mark moving alone, zoomed too, never on the Fly map");
 }
 '''
     (ROOT / 'build').mkdir(exist_ok=True)

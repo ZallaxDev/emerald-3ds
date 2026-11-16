@@ -102,6 +102,14 @@ EDGE_TOP, EDGE_WATER_SHIFT = 2, 4
 # edge fills too: they stood at the edge's level on a save past the tower)
 # were lost the day the tower fell. voxel_terraces reads its hand marks so.
 TWINS = {"LAYOUT_ROUTE111_NO_MIRAGE_TOWER": "LAYOUT_ROUTE111"}
+# "UNDR", after "EDGE": u16 count, u16 0, count x (u16 layout, u8 x, u8 y, u16
+# the metatile it is drawn with, u16 the metatile of its walls or 0xFFFF, s16
+# heights[25] in pixels over the base), by layout, y, x - the ground under a
+# raised floor where it is no flat run of one tile (voxel_relief.c
+# VoxelRelief_Under)
+UNDER_TAG = b"UNDR"
+UNDER_FMT = "<HBBHH25h"
+UNDER_BYTES = 58
 
 
 # --- relief.bin, read and written without loss ---------------------------------
@@ -112,7 +120,9 @@ def parse(blob):
     """{"layouts": {index: {w, h, flags, base, belt, level, cells{(x, y): [25 px]}}},
     "variants": [(layout, metatile, rows[16])],
     "cuts": {(layout, x, y): [variant, foot, ground, wall, sides, flags]},
-    "edges": [(layout, edge, flags, first, last, top, m0, m1, m2, m3)]}"""
+    "edges": [(layout, edge, flags, first, last, top, m0, m1, m2, m3)],
+    "under": {(layout, x, y): [tile, wall, [25 px]]}} - the surface under a
+    raised floor ("UNDR", voxel_terraces' "below" marks)"""
     if blob[:4] != MAGIC:
         raise ValueError("not a relief.bin")
     count, side = struct.unpack_from("<HH", blob, 4)
@@ -152,7 +162,15 @@ def parse(blob):
         for _ in range(n):
             edges.append(tuple(struct.unpack_from(EDGE_FMT, blob, at)))
             at += EDGE_BYTES
-    return {"layouts": layouts, "variants": variants, "cuts": cuts, "edges": edges}
+    under = {}
+    if blob[-4:] == b"CUTS" and blob[at:at + 4] == UNDER_TAG:
+        n = struct.unpack_from("<H", blob, at + 4)[0]
+        at += 8
+        for _ in range(n):
+            lay, x, y, tile, wall, *grid = struct.unpack_from(UNDER_FMT, blob, at)
+            under[(lay, x, y)] = [tile, wall, grid]
+            at += UNDER_BYTES
+    return {"layouts": layouts, "variants": variants, "cuts": cuts, "edges": edges, "under": under}
 
 
 _CUT_DIR = ((0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (1, -1), (-1, 1), (1, 1))
@@ -331,6 +349,12 @@ def pack(relief):
         table += b"EDGE" + struct.pack("<HH", len(edges), 0)
         for e in edges:
             table += struct.pack(EDGE_FMT, *e)
+    under = relief.get("under") or {}
+    if under:
+        table += UNDER_TAG + struct.pack("<HH", len(under), 0)
+        for (lay, x, y), (tile, wall, grid) in sorted(under.items(), key=lambda kv: (kv[0][0], kv[0][2], kv[0][1])):
+            table += struct.pack(UNDER_FMT, lay, x, y, tile, wall,
+                                 *(max(-32768, min(32767, int(round(v)))) for v in grid))
     return blob + table + struct.pack("<I", len(blob)) + b"CUTS"
 
 

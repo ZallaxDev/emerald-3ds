@@ -1536,25 +1536,38 @@ uint32_t VoxelWorld_BlockHash(int x0, int y0, int x1, int y1)
  * tiles the layout's 2x2 border block outwards for ever, which is why a town
  * looks like it sits in a wood rather than on a plate over a black sky.
  *
- * Whose border, and in which phase, is fieldmap.c's to say: the nearest map's
- * whose border the current tilesets draw, the same answer the 2D camera
- * gives, and the same from either side of a crossing. Past an edge filled
- * for the current map (VoxelRelief_EdgeFill), its fill.
+ * Whose border: the map's the belt stands by there (VoxelMesh_BeltOwner),
+ * the one that gives the cell its level - the nearest, but in the corner two
+ * maps make, the one whose edge is lower. The nearest alone drew another
+ * map's border on that one's level: north of Route 121, beside Lilycove's
+ * west edge, a wedge of Lilycove's sea among Route 121's wood, at the
+ * wood's height. In which phase is fieldmap.c's to say, and so is the
+ * whole answer where that map's border is not one the current tilesets
+ * draw: the nearest drawable, the 2D camera's. The same from either side of
+ * a crossing. Past an edge filled for the current map
+ * (VoxelRelief_EdgeFill), its fill.
  */
 int VoxelWorld_BorderMetatile(int worldX, int worldY)
 {
     const uint16_t *border;
-    const void *source, *resolved;
+    const VoxelMapInstance *owner;
+    const void *source = NULL, *resolved;
     u8 index;
-    int fill;
+    int fill, ex, ey;
 
     if (sInstanceCount == 0 || sInstances[0].layout == NULL)
         return -1;
     fill = EdgeFillAt(worldX, worldY);
     if (fill >= 0)
         return fill;
-    source = MapGridGetCameraBorderAt(worldX - sInstances[0].originX,
-                                      worldY - sInstances[0].originY, &index);
+    owner = VoxelMesh_BeltOwner(worldX, worldY, &ex, &ey);
+    if (owner != NULL)
+        source = MapGridGetCameraBorderOf((u16)(owner->mapGroup << 8 | owner->mapNum),
+                                          worldX - sInstances[0].originX,
+                                          worldY - sInstances[0].originY, &index);
+    if (source == NULL)
+        source = MapGridGetCameraBorderAt(worldX - sInstances[0].originX,
+                                          worldY - sInstances[0].originY, &index);
     if (source == NULL)
         return -1;
     if (!MemoGet(&sBorderMemo, source, &resolved))

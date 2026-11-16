@@ -181,6 +181,9 @@ static void CheckUpright(int route116)
     t = blob + at + 4 + 36u * nv + 14u * nc;
     if (memcmp(t, "EDGE", 4) == 0)
         t += 8 + 18u * Le16(t + 4);
+    /* (the layers laid under raised floors by hand, when a map has any) */
+    if (memcmp(t, "UNDR", 4) == 0)
+        t += 8 + 58u * Le16(t + 4);
     assert(memcmp(t, "UPRT", 4) == 0);
     n = Le16(t + 4);
     assert(n > 0 && Le16(t + 6) == 0);
