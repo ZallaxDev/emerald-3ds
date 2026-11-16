@@ -1270,16 +1270,21 @@ static void MeasureAid(void)
     if (!sRead)
     {
         const char *save = CtrScenario_SavePath();
+        const char *slash = save == NULL ? NULL : strrchr(save, '/');
         char line[128];
         FILE *file = NULL;
         unsigned f, g, n, x, y;
 
         sRead = 1;
-        if (save != NULL && strlen(save) < sizeof(line) && strrchr(save, '/') != NULL)
+        if (slash != NULL && strlen(save) < sizeof(line))
         {
-            strcpy(line, save);
-            strcpy(strrchr(line, '/') + 1, "measure.txt");
-            file = fopen(line, "r");
+            size_t prefixSize = (size_t)(slash - save) + 1;
+            if (prefixSize <= sizeof(line) - sizeof("measure.txt"))
+            {
+                memcpy(line, save, prefixSize);
+                memcpy(line + prefixSize, "measure.txt", sizeof("measure.txt"));
+                file = fopen(line, "r");
+            }
         }
         if (file == NULL)
             file = fopen("sdmc:/3ds/emerald3ds/measure.txt", "r");
