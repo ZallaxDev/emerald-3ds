@@ -46,6 +46,8 @@ _Static_assert(CTR_NAMING_ROWS * NAME_KEY_COLS <= HIT_NAME_TAB, "naming key hits
 
 /* The pages as the tabs show them: the game's page numbers (0 symbols, 1 upper, 2 lower). */
 static const u8 sNameTabPages[3] = {1, 2, 0};
+_Static_assert(CTR_NAMING_ROWS * NAME_KEY_COLS + CTR_NAMING_TEXT + ARRAY_COUNT(sNameTabPages) + 2 <= ARRAY_COUNT(sHits),
+               "hit regions must fit the widest naming screen, including DEL and OK");
 
 static const u8 *NameOne(u8 ch)
 {
