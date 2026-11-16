@@ -31,10 +31,16 @@ static u32 sArgv[0x400 / 4];
 
 static Result HbldrSetTarget(Handle h, const char *path)
 {
+    size_t length = strlen(path);
+    if (length >= sizeof(sTarget))
+        return -1;
+
+    size_t size = length + 1;
+    memcpy(sTarget, path, size);
+    memset(sTarget + size, 0, sizeof(sTarget) - size);
     u32 *cmd = getThreadCommandBuffer();
-    strncpy(sTarget, path, sizeof(sTarget) - 1);
     cmd[0] = IPC_MakeHeader(2, 0, 2);
-    cmd[1] = IPC_Desc_StaticBuffer(strlen(sTarget) + 1, 0);
+    cmd[1] = IPC_Desc_StaticBuffer(size, 0);
     cmd[2] = (u32)sTarget;
     Result res = svcSendSyncRequest(h);
     return R_FAILED(res) ? res : (Result)cmd[1];
