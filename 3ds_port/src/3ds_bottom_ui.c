@@ -4208,6 +4208,7 @@ static bool8 Prefetch(const ViewState *s)
 #include "3ds_bottom_easychat.inc"
 #include "3ds_bottom_factory.inc"
 #include "3ds_bottom_factory_top.inc"
+#include "3ds_bottom_title_top.inc"
 
 /* ------------------------------------------------------------------------ */
 /* Drawing: battle                                                          */
@@ -8435,6 +8436,8 @@ void CtrBottom_Frame(void)
         sIconsReady = sIconsIn = TRUE;
     /* The Rental Pokemon's panel on the top screen. */
     FactoryTopFrame(&sState);
+    /* The main menu's saved game, as its trainer card on the top screen. */
+    TitleTopFrame();
 
     ticks[2] = CtrPlatform_Ticks();
     if (sAreaRedraw)
