@@ -151,7 +151,7 @@ static bool8 CtrNaming_TakeTap(struct Task *task)
 bool8 CtrNaming_GetView(struct CtrNamingView *view)
 {
     u8 i, row, col;
-    u8 keyboard;
+    u8 keyboard, page;
 
     memset(view, 0, sizeof(*view));
     if (!CtrNaming_IsOpen())
@@ -184,6 +184,11 @@ bool8 CtrNaming_GetView(struct CtrNamingView *view)
     for (; i < CTR_NAMING_TEXT; i++)
         view->text[i] = EOS;
     view->caret = GetTextEntryPosition();
+    // While a tab's page is on its way (one page skipped behind the deck),
+    // the game's page is the one skipped for a moment: show the tab's page.
+    page = sNamingScreen->currentPage;
+    if (sCtrPageTarget != CTR_NO_PAGE)
+        sNamingScreen->currentPage = sCtrPageTarget;
     view->page = sNamingScreen->currentPage;
     view->cols = GetCurrentPageColumnCount();
     if (view->cols > CTR_NAMING_COLS)
@@ -214,6 +219,7 @@ bool8 CtrNaming_GetView(struct CtrNamingView *view)
     // distance starts a new group (3ds_naming_layout.h).
     view->gapAfter = CtrNaming_GapsFromPositions(sPageColumnXPos[keyboard], view->cols);
 #endif
+    sNamingScreen->currentPage = page;
 
     GetCursorPos(&col, &row);
     view->cursorX = (s8)col;
