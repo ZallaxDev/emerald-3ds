@@ -11,7 +11,7 @@
  *
  * main_menu.c says when (CtrMainMenu_CardUp, 0095-main-menu-top-card.patch):
  * from the menu's first highlight until its fade out; the card fades with the
- * game's picture (TitleTopFade).
+ * game's picture (CtrTopPanel_Keep).
  */
 #define TTOP_X 14
 #define TTOP_W (FTOP_W - 2 * TTOP_X)
@@ -23,31 +23,15 @@
 #define TTOP_ROW 25
 #define TTOP_BAND_Y 204
 
-static u16 *sTitleTop, *sTitleTopFaded;
+/* The card is in the panel's canvas (drawn once as the menu comes up). */
 static bool8 sTitleTopShown;
-/* The game's fade the panel was handed over with: 17 for none yet. */
-static u8 sTitleTopFadeY = 17;
-static u16 sTitleTopFadeColour;
 
-/* The card faded as the game's picture is (gPaletteFade), into sTitleTopFaded. */
-static const u16 *TitleTopFade(void)
+/* How far the game's fade to black has gone, for the panel to follow (0..16). */
+static unsigned TitleTopDark(void)
 {
-    unsigned y = gPaletteFade.y > 16 ? 16 : gPaletteFade.y;
-    u16 c = gPaletteFade.blendColor;
-    int br = (c & 31) << 3, bg = ((c >> 5) & 31) << 3, bb = ((c >> 10) & 31) << 3;
-
-    if (y == 0)
-        return sTitleTop;
-    if (!sTitleTopFaded && !(sTitleTopFaded = malloc(sizeof(u16) * FTOP_W * FTOP_H)))
-        return sTitleTop;
-    for (int i = 0; i < FTOP_W * FTOP_H; ++i)
-    {
-        u16 v = sTitleTop[i];
-        int r = ((v >> 11) & 31) << 3, g = ((v >> 5) & 63) << 2, b = (v & 31) << 3;
-
-        sTitleTopFaded[i] = PackRgb(r + (br - r) * (int)y / 16, g + (bg - g) * (int)y / 16, b + (bb - b) * (int)y / 16);
-    }
-    return sTitleTopFaded;
+    if (gPaletteFade.mode == 0 && gPaletteFade.blendColor == RGB_BLACK)
+        return gPaletteFade.y > 16 ? 16 : gPaletteFade.y;
+    return 0;
 }
 
 static void TitleTopRow(int i, int oy, const u8 *label, const u8 *value)
@@ -67,7 +51,7 @@ static void DrawTitleTop(const ViewState *c)
     u8 text[32];
     int oy, row = 0;
 
-    memcpy(sDst, sFacTopBack, sizeof(u16) * FTOP_W * FTOP_H);
+    FacTopPaint(sDst);
     /* Where the game goes on, and CONTINUE lit beside it. */
     oy = PlateEx(TTOP_X, TTOP_BAR_Y, TTOP_W - TTOP_GO_W - 6, TTOP_BAR_H, sLight, PLATE_STATE_NORMAL,
                  TTOP_W - TTOP_GO_W - 16, 30, PlateCut(TTOP_BAR_H), 0);
@@ -126,25 +110,20 @@ static void TitleTopFrame(void)
 
     if (!CtrMainMenu_CardUp())
     {
-        free(sTitleTop);
-        free(sTitleTopFaded);
-        sTitleTop = sTitleTopFaded = NULL;
         sTitleTopShown = FALSE;
-        sTitleTopFadeY = 17;
         return;
     }
-    FacTopBackdrop();
-    if (!sFacTopBack)
-        return;
-    if (!sTitleTop && !(sTitleTop = malloc(sizeof(u16) * FTOP_W * FTOP_H)))
-        return;
+    /* The panel went (or another took it): the card is handed over again. */
+    if (sTitleTopShown && !CtrTopPanel_Active())
+        sTitleTopShown = FALSE;
     if (!sTitleTopShown)
     {
         /* The saved game does not change while the menu is up. */
         memset(&card, 0, sizeof(card));
         SnapshotCard(&card);
         card.gender = gSaveBlock2Ptr->playerGender ? FEMALE : MALE;
-        sDst = sTitleTop;
+        FactoryTopWarm();
+        sDst = CtrTopPanel_Canvas();
         sOX = 0;
         sClipX0 = sClipY0 = 0;
         sClipX1 = FTOP_W;
@@ -156,16 +135,9 @@ static void TitleTopFrame(void)
         sClipY0 = cy0;
         sClipX1 = cx1;
         sClipY1 = cy1;
+        CtrTopPanel_Show();
         sTitleTopShown = TRUE;
-        sTitleTopFadeY = 17;
         CtrLog_Write(CTR_LOG_VIDEO, "title top: card drawn");
     }
-    /* Handed over again whenever the game's fade moves on. */
-    if (sTitleTopFadeY != gPaletteFade.y || sTitleTopFadeColour != gPaletteFade.blendColor)
-    {
-        sTitleTopFadeY = gPaletteFade.y;
-        sTitleTopFadeColour = gPaletteFade.blendColor;
-        CtrTopPanel_Show(TitleTopFade());
-    }
-    CtrTopPanel_Keep();
+    CtrTopPanel_Keep(TitleTopDark());
 }

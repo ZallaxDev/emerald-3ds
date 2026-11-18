@@ -16,6 +16,7 @@ import re
 import subprocess
 import tempfile
 from voxel_runtime_test import function, ROOT
+from bottom_text import read_bottom
 
 
 def between(source, start, end):
@@ -37,7 +38,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cc', default='gcc')
     args = parser.parse_args()
-    bottom = (ROOT / 'src/3ds_bottom_ui.c').read_text(encoding='utf-8')
+    # The file with its pieces in place: every piece in src/ is one it includes.
+    bottom = read_bottom(ROOT / 'src/3ds_bottom_ui.c')
     shell = (ROOT / 'src/3ds_bottom_shell.inc').read_text(encoding='utf-8')
     plate = (ROOT / 'src/3ds_bottom_plate.inc').read_text(encoding='utf-8')
     options = (ROOT / 'src/3ds_bottom_options.inc').read_text(encoding='utf-8')
@@ -62,9 +64,6 @@ def main():
         assert init.index(reset) < init.index('gSaveFileStatus')
     for key in ('map_encounters', 'repel_steps', 'clock_notice'):
         assert f'"{key}", 2, 0, gCtrExtrasOffOn' in table
-    # Every section's .inc is part of the build.
-    for inc in ('plate', 'shell', 'field', 'options'):
-        assert f'#include "3ds_bottom_{inc}.inc"' in bottom
     source = r'''
 #include <assert.h>
 #include <stdbool.h>
@@ -254,9 +253,12 @@ static u8 BattleCursorHit(const ViewState *s,u8 cursor) {(void)s;return cursor;}
     naming = (ROOT / 'src/3ds_bottom_naming.inc').read_text(encoding='utf-8')
     chat = (ROOT / 'src/3ds_bottom_chat.inc').read_text(encoding='utf-8')
     for name in ('NAME_KEY_COLS', 'NAME_PORTRAIT_Y', 'NAME_TITLE_X', 'NAME_TITLE_W', 'NAME_TITLE_H', 'NAME_ENTRY_Y',
-                 'NAME_ENTRY_H'):
+                 'NAME_ENTRY_H', 'NAME_TABS'):
         source += define(naming, name)
     source += between(naming, 'enum\n{\n    HIT_NAME_KEY = 0,', '};')
+    source += statement(naming, 'static const u8 sNameTabPages')
+    for name in ('static u8 NameNextPage(', 'static u8 NameTabOfPage('):
+        source += function(naming, name)
     for name in ('CHAT_LOG_Y', 'CHAT_LOG_H', 'CHAT_ENTRY_Y', 'CHAT_ENTRY_H'):
         source += define(chat, name)
     source += between(chat, 'enum\n{\n    HIT_CHAT_KEY = 0,', '};')
@@ -456,19 +458,41 @@ static void TestKeyboardDirty(void) {
     AddHit(60,150,26,23,HIT_NAME_KEY+1*NAME_KEY_COLS+3);
     AddHit(90,176,26,23,HIT_NAME_KEY+2*NAME_KEY_COLS+4);
     AddHit(246,173,66,49,HIT_NAME_OK);
+    AddHit(8,98,98,18,HIT_NAME_TAB+0);   /* the tab of the next page: page 0 turns to 1, the first tab */
+    AddHit(110,98,98,18,HIT_NAME_TAB+1);
     /* A key pressed: its plate, and nothing else. */
     b=a;b.pressed=HIT_NAME_KEY+1*NAME_KEY_COLS+3;assert(DirtyRect(&b,&a,&r)&&Inside(r,60,150,86,173)&&r.y0>=130&&r.y1<=190);
     /* The cursor on another key: both plates. */
     b=a;b.nm.cursorX=4;b.nm.cursorY=2;assert(DirtyRect(&b,&a,&r)&&Inside(r,60,150,86,173)&&Inside(r,90,176,116,199));
     /* Onto OK, in the buttons' column. */
     b=a;b.nm.cursorX=8;b.nm.cursorY=2;assert(DirtyRect(&b,&a,&r)&&Inside(r,246,173,312,222));
+    /* The game's cursor on its page button (the buttons' column, first row): on the tab it turns to, for page 0 the first. */
+    b=a;b.nm.cursorX=8;b.nm.cursorY=0;assert(DirtyRect(&b,&a,&r)&&Inside(r,8,98,106,116)&&Inside(r,60,150,86,173));
+    assert(NameCursorHit(&b.nm)==HIT_NAME_TAB+0);
+    b.nm.page=1;assert(NameCursorHit(&b.nm)==HIT_NAME_TAB+1);   /* the upper letters turn to the lower ones */
+    b.nm.page=2;assert(NameCursorHit(&b.nm)==HIT_NAME_TAB+2);   /* and those to the symbols: the third tab */
+    /* A cursor on a column that has no zone (a spacer, an empty column): the whole screen. */
+    b=a;b.nm.cursorX=5;b.nm.cursorY=0;assert(!DirtyRect(&b,&a,&r));
     /* The text: the entry and the counter above it, not the keys. */
     b=a;b.nm.text[0]=5;b.nm.caret=1;assert(DirtyRect(&b,&a,&r)&&Inside(r,NAME_TITLE_X,NAME_ENTRY_Y,NAME_TITLE_X+NAME_TITLE_W,NAME_ENTRY_Y+NAME_ENTRY_H)
         &&Inside(r,NAME_TITLE_X,NAME_PORTRAIT_Y,NAME_TITLE_X+NAME_TITLE_W,NAME_PORTRAIT_Y+NAME_TITLE_H)&&r.y1<=110);
     /* A page, the question, a message, the keys busy: the whole screen. */
     b=a;b.nm.page=2;assert(!DirtyRect(&b,&a,&r));
     b=a;b.nm.title[0]=1;assert(!DirtyRect(&b,&a,&r));
-    b=a;b.nm.state=CTR_NAMING_VIEW_BUSY;assert(!DirtyRect(&b,&a,&r));
+    b=a;b.nm.state=CTR_NAMING_VIEW_MESSAGE;assert(!DirtyRect(&b,&a,&r));
+    b=a;b.nm.state=CTR_NAMING_VIEW_NONE;assert(!DirtyRect(&b,&a,&r));
+    b=a;b.nm.cols=9;assert(!DirtyRect(&b,&a,&r));
+    /* Busy is drawn as the keys are, without the ring: to and from it is the cursor's plate, and only that. */
+    b=a;b.nm.state=CTR_NAMING_VIEW_BUSY;assert(DirtyRect(&b,&a,&r)&&Inside(r,60,150,86,173)&&r.y1<=190&&r.x1<=130);
+    {ViewState busy=b;
+     assert(DirtyRect(&a,&busy,&r)&&Inside(r,60,150,86,173)&&r.y1<=190);
+     /* The cursor gone to OK as it comes back to the keys: where it was and where it is. */
+     b=a;b.nm.cursorX=8;b.nm.cursorY=2;assert(DirtyRect(&b,&busy,&r)&&Inside(r,60,150,86,173)&&Inside(r,246,173,312,222));
+     /* Busy with the text written and the page turned in the same step: the entry too, or all of it. */
+     b=a;b.nm.text[0]=5;b.nm.caret=1;assert(DirtyRect(&b,&busy,&r)&&Inside(r,NAME_TITLE_X,NAME_ENTRY_Y,NAME_TITLE_X+NAME_TITLE_W,NAME_ENTRY_Y+NAME_ENTRY_H));
+     b=a;b.nm.page=2;assert(!DirtyRect(&b,&busy,&r));
+     /* A key held while busy shows nothing and is a plate to redraw, nothing more. */
+     b=busy;b.pressed=HIT_NAME_KEY+1*NAME_KEY_COLS+3;assert(DirtyRect(&b,&busy,&r)&&Inside(r,60,150,86,173));}
     b=a;b.chat=1;assert(!DirtyRect(&b,&a,&r));
     /* The chat. */
     memset(&a,0,sizeof(a));
@@ -480,6 +504,13 @@ static void TestKeyboardDirty(void) {
     b=a;b.ch.numLines=1;b.ch.lines[0][0]=3;assert(DirtyRect(&b,&a,&r)&&Inside(r,8,CHAT_LOG_Y,312,CHAT_LOG_Y+CHAT_LOG_H));
     b=a;b.ch.page=1;assert(!DirtyRect(&b,&a,&r));
     b=a;b.ch.state=CTR_CHAT_VIEW_YESNO;assert(!DirtyRect(&b,&a,&r));
+    b=a;b.ch.state=CTR_CHAT_VIEW_MENU;assert(!DirtyRect(&b,&a,&r));
+    /* Busy while the game waits for its display is the keys without the ring: the cursor's plate alone, either way. */
+    b=a;b.ch.state=CTR_CHAT_VIEW_BUSY;assert(DirtyRect(&b,&a,&r)&&Inside(r,80,141,108,159)&&r.y1<=190);
+    {ViewState busy=b;
+     assert(DirtyRect(&a,&busy,&r)&&Inside(r,80,141,108,159)&&r.y1<=190);
+     b=a;b.ch.length=1;b.ch.text[0]=7;assert(DirtyRect(&b,&busy,&r)&&Inside(r,8,CHAT_ENTRY_Y,170,CHAT_ENTRY_Y+CHAT_ENTRY_H));
+     b=a;b.ch.page=1;assert(!DirtyRect(&b,&busy,&r));}
 }
 static void TestDirty(void) {
     ViewState a=Field(SCR_MAP),b;

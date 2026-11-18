@@ -1,24 +1,14 @@
-/* Part of 3ds_port's bottom screen (3ds_bottom_ui.c): the buttons for a screen of the game that has none of its own (included after 3ds_bottom_fieldmenu.inc). */
+/* Part of 3ds_port's bottom screen (3ds_bottom_ui.c): the arrow the lists draw and the Berry Blender's button (included before 3ds_bottom_fieldmenu.inc, which uses the arrow). */
 
 /*
  * A screen of the game the bottom screen does not draw runs on the top screen
  * as it always did; the bottom one shows only its backdrop (the physical keys
- * already do what a touch pad would). What stays here: the hit ids the Berry
- * Blender's button uses (HIT_PAD_A) and the arrows the lists draw.
+ * already do what a touch pad would). What stays here: the hit id the Berry
+ * Blender's button uses (HIT_PAD_A) and the arrow the lists draw (PadArrow).
  */
 enum
 {
-    HIT_PAD_UP = HIT_ACTION,
-    HIT_PAD_DOWN,
-    HIT_PAD_LEFT,
-    HIT_PAD_RIGHT,
-    HIT_PAD_A,
-    HIT_PAD_B,
-    HIT_PAD_L,
-    HIT_PAD_R,
-    HIT_PAD_START,
-    HIT_PAD_SELECT,
-    HIT_PAD_COUNT
+    HIT_PAD_A = HIT_ACTION + 4
 };
 
 /* An arrow of the cross: a triangle of rows, pointing dir (0 up, 1 down, 2 left, 3 right). */

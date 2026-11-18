@@ -17,6 +17,12 @@
 #define CONTEST_DESC_H 34
 #define CONTEST_BTN_Y 198
 #define CONTEST_BTN_H 24
+/* On a plate: the name starts 12 px in, a chip ends 8 px from its right side,
+ * and the hearts - 8 slots of 9 px, so 70 px - sit right of the 32 px icon
+ * (x 14 to 46), the appeal row under the chip and the jam row below it. */
+#define CONTEST_HEARTS_X 52
+#define CONTEST_APPEAL_Y 20
+#define CONTEST_JAM_Y 29
 
 /* A string without the plates' light shadow, on a chip. */
 static void FlatStr(const u8 *str, int x, int y, const Font *font, u16 colour)
@@ -50,6 +56,8 @@ static void ContestHeart(int x, int y, u16 c)
 
 static void ContestHearts(int x, int y, int full, int slots, u16 on, u16 off)
 {
+    if (slots > CTR_CONTEST_HEARTS)
+        slots = CTR_CONTEST_HEARTS;
     for (int i = 0; i < slots; ++i)
         ContestHeart(x + i * 9, y, i < full ? on : off);
 }
@@ -57,7 +65,7 @@ static void ContestHearts(int x, int y, int full, int slots, u16 on, u16 off)
 static void DrawContestMove(const ViewState *s, int i)
 {
     const struct CtrContestView *v = &s->co;
-    int x = 8 + (i & 1) * 154, y = CONTEST_MOVE_Y + (i >> 1) * CONTEST_MOVE_STEP_Y, oy, tx;
+    int x = 8 + (i & 1) * 154, y = CONTEST_MOVE_Y + (i >> 1) * CONTEST_MOVE_STEP_Y, oy, tx, nameW;
     Rgb type = sContestColour[v->category[i] % CONTEST_CATEGORIES_COUNT];
     u8 state = s->pressed == HIT_MOVE + i ? PLATE_STATE_PRESSED : v->selected == i ? PLATE_STATE_FOCUS : PLATE_STATE_NORMAL;
     u16 ink = PackRgb(28, 28, 24);
@@ -65,13 +73,19 @@ static void DrawContestMove(const ViewState *s, int i)
     oy = Plate(x, y, CONTEST_MOVE_W, CONTEST_MOVE_H, sCreamPlate, state);
     FillRect(x + 3, oy + 3, 7, CONTEST_MOVE_H - 10, PackRgb(type.r, type.g, type.b));
     tx = x + 14;
-    TextIn(gMoveNames[v->moves[i]], tx - 2, oy + 1, CONTEST_MOVE_W - 18 - (v->flags[i] ? 38 : 0), 14, &sNormal, 'l',
-           STYLE_INK, 2);
+    nameW = CONTEST_MOVE_W - 18;
     if (v->flags[i])
-        ContestChip(v->flags[i] & CTR_CONTEST_COMBO ? Ascii("COMBO")
-                                                     : Ascii(CTR_TEXT("REPEAT", "REPET.", "RÉPÉTÉ", "RIPETUTA", "REPET.", "WIEDERH.", "くりかえし")),
-                    x + CONTEST_MOVE_W - 8 - (v->flags[i] & CTR_CONTEST_COMBO ? 34 : 40), oy + 3, PackRgb(255, 255, 255),
-                    v->flags[i] & CTR_CONTEST_COMBO ? ink : PackRgb(90, 90, 100));
+    {
+        bool8 combo = (v->flags[i] & CTR_CONTEST_COMBO) != 0;
+        const u8 *word = combo ? Ascii("COMBO")
+                               : Ascii(CTR_TEXT("REPEAT", "REPET.", "RÉPÉTÉ", "RIPETUTA", "REPET.", "WIEDERH.", "くりかえし"));
+        int chipX = x + CONTEST_MOVE_W - 8 - (StrWidth(&sSmall, word) + 8);
+
+        /* The chip is as wide as its word; the name has what is left of the plate. */
+        ContestChip(word, chipX, oy + 3, PackRgb(255, 255, 255), combo ? ink : PackRgb(90, 90, 100));
+        nameW = chipX - tx;
+    }
+    TextIn(gMoveNames[v->moves[i]], tx - 2, oy + 1, nameW, 14, &sNormal, 'l', STYLE_INK, 2);
     /* The game's own contest category icon (the one the summary's CONTEST page draws). */
     if (sRes.typeTiles)
     {
@@ -80,9 +94,11 @@ static void DrawContestMove(const ViewState *s, int i)
         DrawSprite(sRes.typeTiles + (NUMBER_OF_MON_TYPES + cat) * 8 * 32, 4, 2, tx, oy + 15,
                    sRes.typePal[sContestIconPal[cat]].c);
     }
-    ContestHearts(tx, oy + 32, v->hearts[i], CTR_CONTEST_HEARTS, PackRgb(232, 72, 72), PackRgb(207, 196, 180));
+    ContestHearts(x + CONTEST_HEARTS_X, oy + CONTEST_APPEAL_Y, v->hearts[i], CTR_CONTEST_HEARTS, PackRgb(232, 72, 72),
+                  PackRgb(207, 196, 180));
     if (v->jam[i])
-        ContestHearts(tx + 4 * 9 + 6, oy + 32, v->jam[i], v->jam[i], PackRgb(58, 58, 138), PackRgb(207, 196, 180));
+        ContestHearts(x + CONTEST_HEARTS_X, oy + CONTEST_JAM_Y, v->jam[i], v->jam[i], PackRgb(58, 58, 138),
+                      PackRgb(207, 196, 180));
     AddHit(x, y, CONTEST_MOVE_W, CONTEST_MOVE_H, HIT_MOVE + i);
 }
 
@@ -91,7 +107,7 @@ static void DrawContest(const ViewState *s)
     const struct CtrContestView *v = &s->co;
     int oy;
     u16 iconSpecies = GetIconSpecies(v->species, v->personality);
-    static u8 label[48];
+    static u8 label[64];
 
     NameBackdrop();
     /* The mon, and which appeal it is. */
