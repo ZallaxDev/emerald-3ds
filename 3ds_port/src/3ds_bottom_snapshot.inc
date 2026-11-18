@@ -571,21 +571,26 @@ static void SnapshotEncounters(ViewState *s)
         }
         EncCollect(rows, info[m]->wildPokemon, sEncFirst[m], sEncSlots[m], rates[m]);
         s->encMethod = m;
+        s->encTotal = counts[m];
+        /* Count the collected species for this method before slicing its page.
+         * Query caught only for seen species, as for the row markers. */
+        for (u8 i = 0; i < s->encTotal; ++i)
+        {
+            u16 national = SpeciesToNationalPokedexNum(rows[i].species);
+
+            if (!GetSetPokedexFlag(national, FLAG_GET_SEEN))
+                rows[i].seen = ENC_UNSEEN;
+            else if (GetSetPokedexFlag(national, FLAG_GET_CAUGHT))
+            {
+                rows[i].seen = ENC_CAUGHT;
+                ++s->encCaught;
+            }
+            else
+                rows[i].seen = ENC_SEEN;
+        }
         s->encCount = counts[m] - page * ENC_SHOWN > ENC_SHOWN ? ENC_SHOWN : counts[m] - page * ENC_SHOWN;
         memcpy(s->enc, rows + page * ENC_SHOWN, s->encCount * sizeof(EncRow));
         break;
-    }
-    /* Only what the Pokedex has seen is named, and what it has caught marked.
-     * FLAG_GET_CAUGHT clears the species' flags when they disagree: asked only
-     * of a species seen, whose flags agree, it reads and changes nothing. */
-    for (u8 i = 0; i < s->encCount; ++i)
-    {
-        u16 national = SpeciesToNationalPokedexNum(s->enc[i].species);
-
-        if (GetSetPokedexFlag(national, FLAG_GET_SEEN) == 0)
-            s->enc[i].seen = ENC_UNSEEN;
-        else
-            s->enc[i].seen = GetSetPokedexFlag(national, FLAG_GET_CAUGHT) != 0 ? ENC_CAUGHT : ENC_SEEN;
     }
 }
 

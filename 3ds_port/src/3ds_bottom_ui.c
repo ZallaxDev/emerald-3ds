@@ -443,7 +443,7 @@ typedef struct
      * encPages, 0 with no table here; ENC_SHOWN rows a page, each method
      * its own pages) and method, its rows; the Repel's plate and steps; the
      * clock-not-restored banner. */
-    u8 encOn, encView, encPage, encPages, encMethod, encCount;
+    u8 encOn, encView, encPage, encPages, encMethod, encCount, encTotal, encCaught;
     u8 repelShown, clockNotice;
     u16 repelSteps;
     EncRow enc[ENC_SHOWN];

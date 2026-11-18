@@ -580,6 +580,7 @@ static void DrawEncounters(const ViewState *s)
     static const char *const none = CTR_TEXT("NO ENCOUNTER TABLE", "SIN TABLA DE ENCUENTROS", "AUCUNE TABLE ICI",
                                              "NESSUNA TABELLA", "SEM TABELA DE ENCONTROS", "KEINE BEGEGNUNGEN", "でてくる ポケモンは いない");
     static const char *const level = CTR_TEXT("LV", "NV", "N", "LV", "NV", "LV", "Lv");
+    static const char *const caught = CTR_TEXT("CAUGHT", "CAPT.", "CAPT.", "CATT.", "CAPT.", "GEF.", "ゲット");
     const u8 *ball = CtrPokedex_CaughtBallGfx();
     char text[24];
     int oy, saved[4];
@@ -591,7 +592,12 @@ static void DrawEncounters(const ViewState *s)
         return;
     }
     oy = Plate(ENC_X + 4, ENC_TITLE_Y, ENC_W - 8, ENC_TITLE_H, sEmerald, PLATE_STATE_NORMAL);
-    TextIn(Ascii(methods[s->encMethod]), ENC_X + 4, oy, ENC_W - 8, ENC_TITLE_H, &sSmall, 'l', STYLE_WHITE, 6);
+    TextIn(Ascii(methods[s->encMethod]), ENC_X + 4, oy, 88, ENC_TITLE_H, &sSmall, 'l', STYLE_WHITE, 6);
+    if (s->encTotal)
+    {
+        snprintf(text, sizeof(text), "%u/%u %s", (unsigned)s->encCaught, (unsigned)s->encTotal, caught);
+        TextIn(Ascii(text), ENC_X + 4 + 88, oy, 76, ENC_TITLE_H, &sSmall, 'c', STYLE_WHITE, 2);
+    }
     snprintf(text, sizeof(text), "%u/%u", s->encPage + 1u, (unsigned)s->encPages);
     TextIn(Ascii(text), ENC_X + 4, oy, ENC_W - 8, ENC_TITLE_H, &sSmall, 'r', STYLE_WHITE, 6);
     for (int i = 0; i < s->encCount && i < ENC_SHOWN; ++i)
