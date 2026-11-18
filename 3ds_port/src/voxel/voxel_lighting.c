@@ -1391,8 +1391,9 @@ static void WorldPoint(const VoxelBuilder *builder, const VoxelVertex *v,
 {
     *x = v->x;
     *y = v->y + builder->lift + builder->base;
-    /* where it is drawn (VoxelBuilder_StretchZ): the rays start there */
-    *z = VoxelBuilder_StretchZ(builder, v->z + builder->shift);
+    /* where it would be drawn with its faces upright (VoxelBuilder_SunZ):
+     * the rays start there, and the casters stand there */
+    *z = VoxelBuilder_SunZ(builder, v->z + builder->shift);
 }
 
 /* ── Faces ──────────────────────────────────────────────────────────────── */

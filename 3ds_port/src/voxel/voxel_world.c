@@ -32,6 +32,7 @@
 #include "voxel_tree.h"
 #include "voxel_atlas.h"
 #include "voxel_relief.h"
+#include "voxel_mesh_builder.h"
 #ifdef PLATFORM_3DS
 #include "3ds_map_events.h"
 #include "3ds_video.h"
@@ -1265,19 +1266,50 @@ static int EdgeFillAt(int worldX, int worldY)
 {
     VoxelEdgeFill fill;
 
-    if (sInstanceCount == 0 || !VoxelRelief_EdgeFillAt(&sInstances[0], worldX, worldY, &fill))
+    /* its owner's, a neighbour's as well as the current map's
+     * (VoxelMesh_BeltFill) */
+    if (sInstanceCount == 0 || !VoxelMesh_BeltFill(worldX, worldY, &fill))
         return -1;
     return fill.metatile;
 }
 
-/* The edge fills' metatiles for this map, kept in its atlas. */
-static void MarkEdgeFills(const VoxelMapInstance *inst, uint8_t *used)
+/* The edge fills' metatiles for this map under `limit`, kept in the atlas. */
+static void MarkEdgeFills(const VoxelMapInstance *inst, uint8_t *used, int limit)
 {
     int metatile;
 
     for (unsigned i = 0; VoxelRelief_EdgeFills((unsigned)inst->layoutId, i, &metatile); ++i)
-        if (metatile >= 0 && metatile < NUM_METATILES_TOTAL)
+        if (metatile >= 0 && metatile < limit)
             used[metatile] = 2;
+}
+
+/*
+ * What the belt draws that is no cell's and no border's: the fills past the
+ * edges and the cliffs' face, the current map's and those of every map the
+ * belt can go on from (VoxelMesh_BeltFill, BeltFaceUV). The belt is drawn
+ * with the current map's atlas alone, so only for that atlas, and of another
+ * map only what these tilesets hold: the same primary's metatiles, and the
+ * secondary's when it is the same - exactly what those two accept.
+ */
+static void MarkBelt(const void *primaryTileset, const void *secondaryTileset, uint8_t *used)
+{
+    if (sInstanceCount == 0 || sInstances[0].indoor
+     || sInstances[0].primaryTileset != primaryTileset
+     || sInstances[0].secondaryTileset != secondaryTileset)
+        return;
+    for (unsigned i = 0; i < sInstanceCount; ++i)
+    {
+        const VoxelMapInstance *inst = &sInstances[i];
+        int limit, face;
+
+        if (inst->indoor || inst->primaryTileset != primaryTileset)
+            continue;
+        limit = inst->secondaryTileset == secondaryTileset ? NUM_METATILES_TOTAL : NUM_METATILES_IN_PRIMARY;
+        MarkEdgeFills(inst, used, limit);
+        face = VoxelRelief_FaceTile(inst);
+        if (face >= 0 && face < limit && used[face] < 1)
+            used[face] = 1;
+    }
 }
 
 /* The cut records' grounds and walls, in the window MarkUsedMetatiles reads
@@ -1309,6 +1341,7 @@ static void MarkCut(int x, int y, int ground, int wall, void *ctx)
 void VoxelWorld_MarkUsedMetatiles(const void *primaryTileset, const void *secondaryTileset,
                                   uint8_t *used)
 {
+    MarkBelt(primaryTileset, secondaryTileset, used);
     for (unsigned i = 0; i < sInstanceCount; ++i)
     {
         const VoxelMapInstance *inst = &sInstances[i];
@@ -1330,8 +1363,6 @@ void VoxelWorld_MarkUsedMetatiles(const void *primaryTileset, const void *second
             if (y1 > sMaterialView[3] + sMaterialMargin - inst->originY)
                 y1 = sMaterialView[3] + sMaterialMargin - inst->originY;
         }
-        if (i == 0)
-            MarkEdgeFills(inst, used);
         const uint16_t *map = i == 0 ? gBackupMapLayout.map : Voxel_ResolveMap(layout);
         if (map != NULL)
             for (int y = y0; y < y1; ++y)
@@ -1505,25 +1536,38 @@ uint32_t VoxelWorld_BlockHash(int x0, int y0, int x1, int y1)
  * tiles the layout's 2x2 border block outwards for ever, which is why a town
  * looks like it sits in a wood rather than on a plate over a black sky.
  *
- * Whose border, and in which phase, is fieldmap.c's to say: the nearest map's
- * whose border the current tilesets draw, the same answer the 2D camera
- * gives, and the same from either side of a crossing. Past an edge filled
- * for the current map (VoxelRelief_EdgeFill), its fill.
+ * Whose border: the map's the belt stands by there (VoxelMesh_BeltOwner),
+ * the one that gives the cell its level - the nearest, but in the corner two
+ * maps make, the one whose edge is lower. The nearest alone drew another
+ * map's border on that one's level: north of Route 121, beside Lilycove's
+ * west edge, a wedge of Lilycove's sea among Route 121's wood, at the
+ * wood's height. In which phase is fieldmap.c's to say, and so is the
+ * whole answer where that map's border is not one the current tilesets
+ * draw: the nearest drawable, the 2D camera's. The same from either side of
+ * a crossing. Past an edge filled for the current map
+ * (VoxelRelief_EdgeFill), its fill.
  */
 int VoxelWorld_BorderMetatile(int worldX, int worldY)
 {
     const uint16_t *border;
-    const void *source, *resolved;
+    const VoxelMapInstance *owner;
+    const void *source = NULL, *resolved;
     u8 index;
-    int fill;
+    int fill, ex, ey;
 
     if (sInstanceCount == 0 || sInstances[0].layout == NULL)
         return -1;
     fill = EdgeFillAt(worldX, worldY);
     if (fill >= 0)
         return fill;
-    source = MapGridGetCameraBorderAt(worldX - sInstances[0].originX,
-                                      worldY - sInstances[0].originY, &index);
+    owner = VoxelMesh_BeltOwner(worldX, worldY, &ex, &ey);
+    if (owner != NULL)
+        source = MapGridGetCameraBorderOf((u16)(owner->mapGroup << 8 | owner->mapNum),
+                                          worldX - sInstances[0].originX,
+                                          worldY - sInstances[0].originY, &index);
+    if (source == NULL)
+        source = MapGridGetCameraBorderAt(worldX - sInstances[0].originX,
+                                          worldY - sInstances[0].originY, &index);
     if (source == NULL)
         return -1;
     if (!MemoGet(&sBorderMemo, source, &resolved))

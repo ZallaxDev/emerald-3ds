@@ -17,6 +17,7 @@
 #include "3ds_tile_banks.h"
 #include "3ds_field_terrain.h"
 #include "3ds_dex_top.h"
+#include "3ds_top_panel.h"
 #include "3ds_corner_art.h"
 #include "3ds_data.h"
 #include "3ds_bottom.h"
@@ -307,6 +308,7 @@ void CtrVideo_SetStage(bool stage) { sStageRequested = stage; }
 void CtrVideo_SetStageFaded(bool faded) { sStageFadedRequested = faded; }
 void CtrVideo_SetStageZoomed(bool zoomed) { sStageZoomedRequested = zoomed; }
 bool CtrVideo_StageZoomed(void) { return sStageZoomedRequested; }
+void CtrVideo_SetStageCovered(bool covered) { sStageCoveredRequested = covered; }
 void CtrVideo_SetCentred(unsigned screen) { sCentredRequested = screen < CTR_CENTRED_SCREENS ? screen : CTR_CENTRED_NONE; }
 void CtrVideo_SetBattle(bool battle) { sBattleRequested = battle; }
 void CtrVideo_SetTransition(bool transition) { sTransitionRequested = transition; }

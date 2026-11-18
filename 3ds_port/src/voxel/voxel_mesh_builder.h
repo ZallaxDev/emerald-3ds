@@ -14,6 +14,7 @@
 #include <stdint.h>
 
 #include "voxel_world.h"
+#include "voxel_relief.h"
 
 typedef struct
 {
@@ -73,6 +74,38 @@ typedef struct
      * (VoxelRelief_Depth). Zero for everything on level ground.
      */
     float lift, shift;
+    /*
+     * The relief itself is being emitted (its lattice, its walls, the fills
+     * under it): each vertex is leant by its own height, as the mountain's
+     * faces are (VoxelRelief_Lean). Clear, what is emitted stands upright on
+     * a cell and is only moved with the ground at its foot (`lift` and the
+     * base): a tree, a sign, a model, a box.
+     */
+    bool slope;
+    /*
+     * With `slope`: what is emitted is the relief of an opening cut in a south
+     * face (VoxelRelief_Upright), which stands in a vertical plane at its foot
+     * instead of lying on the slope: every vertex is leant by `uprightAt` (the
+     * opening's foot over the map's base, tiles) instead of by its own height,
+     * so the old space's vertical plane stays vertical and stands where the
+     * foot of the face meets the ground (VoxelBuilder_PlaceZ); the slope
+     * higher up has moved back from it. Clear for the stitches that close what
+     * that leaves (EmitUprightStitches). Lighting takes the surface for a true
+     * wall: its normal is not tilted by the lean.
+     */
+    bool upright;
+    float uprightAt;
+    /*
+     * With `slope`: the lattice being emitted is a ledge's (EmitGroundRow):
+     * its points are not leant by their own height but by this reference,
+     * per lattice point (tiles over the base): the line from the height of
+     * the column's north point to that of its south point. The cell's north
+     * and south edges land where the leant ground beside them is, a lip
+     * keeps the shape it is drawn with - a berm, not a stretched ramp -, and
+     * a ledge that falls across (profile constant along the column) is leant
+     * as ever. NULL: each point by its own height.
+     */
+    const float *leanRef;
     /* The base of the map being built (VoxelRelief_Base): everything emitted
      * is raised by it and drawn as far south (VoxelBuilder_StretchZ). */
     float base;
@@ -105,8 +138,21 @@ void VoxelBuilder_SetStretch(VoxelBuilder *builder, const VoxelMapInstance *inst
 /* A world z (after the shift) where the builder's map draws it: on its
  * eased rows, and as far south as its base is high - a point stands as far
  * south as it is high in the world, (u, h, v + h), so two maps meeting at one
- * height meet in the same row whatever their bases. */
+ * height meet in the same row whatever their bases - and then leant with the
+ * ground it stands on, the base and `lift` (VoxelRelief_Lean). */
 float VoxelBuilder_StretchZ(const VoxelBuilder *builder, float z);
+/* The same z where the sun finds it: VoxelBuilder_StretchZ without the lean.
+ * The world is lit with its faces upright, as they stood before they leant,
+ * and only drawn leant: a south face leans further than the sun's rays do
+ * (VOXEL_SUN_DZ against VoxelRelief_Lean), so as drawn it would be a slope
+ * in full sun with no shadow at its foot. Every point given to the lighting
+ * (VoxelLighting_Sample, its rays and its casters) is one of these: a drawn
+ * z plus the lean times the height of the ground it stands on. */
+float VoxelBuilder_SunZ(const VoxelBuilder *builder, float z);
+/* Where a vertex given to the builder is drawn in the world (before the
+ * origin): VoxelBuilder_StretchZ of its z and the shift, and with `slope`
+ * leant by its own height too. */
+float VoxelBuilder_PlaceZ(const VoxelBuilder *builder, const VoxelVertex *v);
 void VoxelBuilder_Tri(VoxelBuilder *builder, const VoxelVertex *a,
                       const VoxelVertex *b, const VoxelVertex *c);
 /* A B C / A C D, the winding the reference quads already use. */
@@ -141,6 +187,10 @@ void VoxelMesh_Top(VoxelBuilder *b, float wx, float wz, float h, float inset,
 /* The cell's relief drawn with u0..v1 (a tree's trunk on a slope). */
 void VoxelMesh_ReliefGround(VoxelBuilder *b, const VoxelMapInstance *inst, int x, int y,
                             float u0, float v0, float u1, float v1);
+/* Does the ground pass stand tall grass's tufts on this world cell
+ * (voxel_tree.h, VoxelTree_Tuft)? On level ground only. What lies on that
+ * cell's ground - the grass rustling under a walker - lies on the card. */
+bool VoxelMesh_TuftAt(int x, int y);
 /* A tree's cell drawn as the rock under it: the ground pass's, not the tree
  * pass's. */
 bool VoxelMesh_TreeOnRock(const VoxelMapInstance *inst, int x, int y);
@@ -208,8 +258,17 @@ void VoxelMesh_DraftCell(VoxelBuilder *b, const VoxelMapInstance *inst, int x, i
 void VoxelMesh_EmitBorder(VoxelBuilder *builder, int x0, int y0, int x1, int y1);
 
 /* The level a cell of the belt of land stands at, in tiles over instance 0's
- * base, and its depth: its map edge's (false, both 0: at the base). */
+ * base, and its depth: the edge's of the map it goes on from, its owner
+ * (false, both 0: at the base). */
 bool VoxelMesh_BorderLevel(int x, int y, float *level, float *shift);
+
+/* The map a cell of the belt goes on from, the outdoor one nearest it, and
+ * that map's edge cell nearest the cell; NULL when there is none. */
+const VoxelMapInstance *VoxelMesh_BeltOwner(int x, int y, int *edgeX, int *edgeY);
+
+/* The fill its owner's fixes put at a cell of the belt, where the current
+ * map's atlas can draw it (voxel_relief.h, VoxelEdgeFill). */
+bool VoxelMesh_BeltFill(int x, int y, VoxelEdgeFill *fill);
 
 /* settings.txt voxel_border_edge: the belt at its edge's level (default) or
  * at the base, as it was. */

@@ -57,6 +57,8 @@ VoxelVisualShape VoxelWorld_ClassifyTile(int x, int y)
     return VoxelWorld_GetInstanceAt(x, y) ? VOXEL_SHAPE_FLAT : VOXEL_SHAPE_VOID;
 }
 
+/* (never the same twice: the belt keeps nothing from one case to the next) */
+unsigned VoxelWorld_InstanceBuilds(void) { static unsigned builds; return ++builds; }
 int VoxelWorld_BorderMetatile(int x, int y)
 {
     const int pattern[] = {0x1D4, 0x1D5, 0x1DC, 0x1DD};
@@ -184,12 +186,32 @@ int main(void)
     sTiles[2] = 0x1C6; sTiles[3] = 0x1C7;
     sAtlas.slotOf[0x001] = 1;
     sAtlas.slotOf[0x00D] = 2;
+    /* tall grass with no tuft in the atlas (a full one): its tile, flat */
+    sAtlas.slotOf[VOXEL_TUFT_FIRST] = VOXEL_SLOT_ABSENT;
     Init(&parts, sParts);
     VoxelMesh_EmitInstance(&parts, &sMap, -3, -5, -1, -3);
     VoxelTree_EmitInstance(&parts, &sMap, -3, -5, -1, -3);
     assert(parts.count == 24 && parts.uncovered == 0);
     for (unsigned i = 0; i < parts.count; ++i)
         assert(parts.vertices[i].y == 0);
+    /* with it: the grass it grows on, and its tufts in two low cards, each
+     * with its foot on the ground where its rows end */
+    sAtlas.slotOf[VOXEL_TUFT_FIRST] = 3;
+    Init(&parts, sParts);
+    VoxelMesh_EmitInstance(&parts, &sMap, -3, -5, -1, -3);
+    VoxelTree_EmitInstance(&parts, &sMap, -3, -5, -1, -3);
+    assert(parts.count == 12 + 2 * (6 + 6 * VOXEL_TUFT_ROWS) && parts.uncovered == 0);
+    {
+        unsigned raised = 0;
+
+        for (unsigned i = 0; i < parts.count; ++i)
+        {
+            assert(parts.vertices[i].y == 0 || parts.vertices[i].y == VOXEL_TUFT_HEIGHT);
+            raised += parts.vertices[i].y != 0;
+        }
+        assert(raised == 2 * 3 * VOXEL_TUFT_ROWS);
+    }
+    sAtlas.slotOf[VOXEL_TUFT_FIRST] = 0;
 
     /* Small trees: the canopy top keeps its ground; each trunk cell - edge of
      * a wood or inside it - lays the trunk and stands the whole crown on it. */

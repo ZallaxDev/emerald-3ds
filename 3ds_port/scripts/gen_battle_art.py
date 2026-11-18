@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The bottom screen's battle art: the port's own, drawn here from geometry.
 
-The battle menus (3ds_bottom_ui.c, "Drawing: battle") stand on a teal
+The battle menus (3ds_bottom_battleplate.inc, 3ds_bottom_battledraw.inc) stand on a teal
 backdrop with an engraved Poke Ball, and their buttons are plates in the
 style of the DS/3DS touch menus: an ink outline with cut corners, a cream
 section on the left with a faint Poke Ball and a diagonal cut into a strong

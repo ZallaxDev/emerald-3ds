@@ -231,9 +231,23 @@ static bool sHaveDapple;
 /* Where the current map's origin lies on the ground the dapples are laid
  * over: crossing into a connected map moves the origin, not the pattern. */
 static int sDappleAnchorX, sDappleAnchorZ;
+static bool ShadowMapMake(void);
+static void ShadowMapFree(void);
 /* The sun rays' mesh over the screen, linear; see MakeRays. */
 static VoxelGpuVertex *sRays;
 static unsigned sRayCount;
+/* ... and the fan of a timed sun, one for every hour (MakeRayFan). */
+static VoxelGpuVertex *sRayFan;
+static unsigned sRayFanCount;
+/* The night's veil over the screen, linear; see MakeNightVeil. */
+static VoxelGpuVertex *sNightVeil;
+/* The lit windows' warm colour (ABGR), and the least of the hour's glow that
+ * shows: below a step of 8 bits the lamps' pools and the windows' masks are
+ * built, streamed and drawn for nothing - some twenty minutes of a day, as
+ * the glow eases in from nothing and out to it. */
+#define VOXEL_WINDOW_GLOW_COLOUR 0xFF54C4FFu
+#define VOXEL_GLOW_MIN (1.0f / 255.0f)
+static unsigned sNightVeilCount;
 /* The sunlit dust's vertices, rewritten every frame, linear; see DrawMotes. */
 static VoxelGpuVertex *sMotes;
 /* This frame's bloom strength, for the 2D compositor (CtrVoxel_Bloom). */
@@ -424,6 +438,9 @@ static bool AtlasJobBusy(void);
 static void AtlasJobCancel(void);
 static CtrVoxelStats sStats;
 static uint32_t sFrame;
+/* The outdoor light is worked out (LightFor): once from the frame's update
+ * to its last drawing, the glitter's and each eye's the same one. */
+static bool sOutdoorLit;
 
 /*
  * A tileset pair whose atlas could not be built is remembered, because
@@ -1277,6 +1294,94 @@ static void LampsRelease(bool now);
 static uint32_t sLampSignature, sLampDigest;
 static int sLampX, sLampZ;             /* the lamps' own origin (drawn from it) */
 static int sLampView[4];               /* the rectangle they were built over */
+
+/*
+ * The sun's glitter on the water (UpdateGlitter, DrawGlitter): the sparkling
+ * path of reflected light HD-2D games lay over seas, lakes and rivers, running
+ * towards the sun and following it through the day; a faint cool one under
+ * the moon. Additive light over the water cells in the path's footprint, one
+ * draw: noise x a path mask, both textures, the mask's coordinates written per
+ * vertex (the path is an affine map of the ground, so a long quad carries the
+ * whole bell exactly), the noise drifting by the dapples' own uniform.
+ *
+ * What lives where: the cells (water, as the lamps' pools find theirs) and
+ * the quads on them are rebuilt when the maps, the sun's key or the camera's
+ * cell change; the vertices' mask coordinates are written again - in place,
+ * their positions kept - when the camera has moved an eighth of a cell; the
+ * noise's drift and the colour are uniforms and constants, every frame, free.
+ *
+ * Memory: heap 14.1 KiB (the builder's output) + 6.3 KiB (the water flags),
+ * kept while outdoors in light; linear 9.4 KiB (VOXEL_GLITTER_RESERVE vertices)
+ * + two 4 KiB textures, taken only while there is water in the path and given
+ * back VOXEL_GLITTER_RELEASE_MS after the last draw (as the lamps').
+ */
+#define VOXEL_GLITTER_RESERVE 600u     /* vertices: 100 quads, a run of water cells each */
+#define VOXEL_GLITTER_GRID 80          /* cells a side of the water flags' window */
+#define VOXEL_GLITTER_DIM 64           /* both textures, texels a side */
+#define VOXEL_GLITTER_RELEASE_MS 3000.0f
+#define VOXEL_GLITTER_MIN 0.03f        /* a gain under this draws nothing */
+/* The path, in the units of its mask: v runs along it from the viewer's side
+ * (0) to the sun's end (1), u across it, the middle at 0.5. Its half width is
+ * VOXEL_GLITTER_HW0 + VOXEL_GLITTER_HW1 v of the full width (it widens towards
+ * the sun), and it is brightest at VOXEL_GLITTER_PEAK_V. The hour scales the
+ * two axes (GlitterShapeFor), the texture stays as it is made. */
+#define VOXEL_GLITTER_PEAK_V 0.42f
+#define VOXEL_GLITTER_HW0 0.09f
+#define VOXEL_GLITTER_HW1 0.36f
+/* What of the noise the mask lets through at its brightest: the share of the
+ * water sparkling there (stage 0 adds them, stage 1 thresholds). */
+#define VOXEL_GLITTER_MASK 0.30f
+/* The footprint's slack, cells: a cell's half diagonal and the camera's travel
+ * inside its cell, then what a lifted lake's depth may move a cell by. */
+#define VOXEL_GLITTER_MARGIN 1.8f
+#define VOXEL_GLITTER_SHIFT_MARGIN 3.0f
+/* The noise's repeat in tiles (stretched along x: glints are dashes) and its
+ * drift in tiles a second. */
+#define VOXEL_GLITTER_PERIOD_X 9.0f
+#define VOXEL_GLITTER_PERIOD_Z 6.0f
+#define VOXEL_GLITTER_DRIFT_X 0.55f
+#define VOXEL_GLITTER_DRIFT_Z 0.30f
+/* Metatile behaviours that are open water (constants/metatile_behaviors.h,
+ * which this unit does not see: kept equal to it by hand): pond, deep,
+ * Sootopolis's, ocean, the shallows and the seaweed of the shores, the water
+ * no dive comes up through, and the four currents. Not waterfalls, puddles,
+ * hot springs or the water under a bridge. */
+#define VOXEL_MB_POND_WATER 16u
+#define VOXEL_MB_DEEP_WATER 18u
+#define VOXEL_MB_SOOTOPOLIS_DEEP_WATER 20u
+#define VOXEL_MB_OCEAN_WATER 21u
+#define VOXEL_MB_SHALLOW_WATER 23u
+#define VOXEL_MB_NO_SURFACING 25u
+#define VOXEL_MB_SEAWEED 34u
+#define VOXEL_MB_EASTWARD_CURRENT 80u
+#define VOXEL_MB_SOUTHWARD_CURRENT 83u
+
+typedef struct
+{
+    float sx, sz;        /* unit vector to the sun on the ground: screen right is +x, up -z */
+    float width, length; /* the path's full size in cells (v = 1 is `length` ahead) */
+    float invLength;
+    float back;          /* cells the viewer's end lies behind the camera's target */
+    bool moon;
+} GlitterShape;
+static float GlitterHour(const CtrDayNightLight *cycle, bool *moon);
+static float GlitterStrength(void);
+static void GlitterShapeFor(const CtrDayNightLight *cycle, GlitterShape *shape);
+static void GlitterRelease(bool now);
+static bool sMeasureGlitter = true;     /* settings.txt voxel_glitter */
+static VoxelVertex *sGlitScratch;      /* builder output, VOXEL_GLITTER_RESERVE (heap) */
+static uint8_t *sGlitWater;            /* water flags of a window of cells (heap) */
+static VoxelGpuVertex *sGlitGpu;       /* linear, VOXEL_GLITTER_RESERVE */
+static C3D_Tex sGlitMaskTex, sGlitNoiseTex;
+static unsigned sGlitVertices;
+static bool sGlitReady, sGlitNoRoomLogged, sGlitGridOk;
+static uint64_t sGlitDrawn;            /* tick of the last draw from sGlitGpu */
+static uint32_t sGlitRetry;            /* no buffers asked for before this frame */
+static uint32_t sGlitSignature, sGlitDigest, sGlitGridSignature, sGlitGridDigest, sGlitKey;
+static int sGlitX, sGlitZ;             /* the quads' own origin (drawn from it) */
+static int sGlitView[4], sGlitCell[2], sGlitQuant[2];
+static int sGlitGridX, sGlitGridZ;     /* the cell the window of water flags starts at */
+static GlitterShape sGlitShape;        /* what the vertices' mask coordinates were written for */
 /*
  * Built over the view and this many tiles more on each side, and built again
  * only once the view leaves that (or the maps or their cells change). Built
@@ -1345,6 +1450,8 @@ typedef struct
     uint32_t glowRetry;   /* no piece asked for again before this frame */
     uint32_t glowDropped; /* frame it stopped being drawn from */
     bool glowDropping;    /* no longer drawn from: freed two frames on */
+    /* filled by the GPU since they were given this page (PieceWipe) */
+    bool wiped, glowWiped;
     uint64_t requested; /* tick it was asked for, for the log */
 } BuildingPageSlot;
 static BuildingPageSlot sPageSlots[VOXEL_BUILDING_PAGES];
@@ -1353,6 +1460,9 @@ extern uint8_t __C3D_Context[];
 #define C3DI_CONTEXT_TEX 0x118u
 #define C3DI_FLAG_TEX(unit) (1u << (23 + (unit)))
 static C3D_Tex *sGlowBound;
+/* settings.txt voxel_glow_shadows=0: a page with lit windows takes no shadow
+ * from the map, as before the combiner's buffer was used for it. */
+static bool sGlowShadows = true;
 
 enum { STREAM_IDLE, STREAM_READING, STREAM_DONE, STREAM_FAILED };
 
@@ -1607,6 +1717,7 @@ static void GlowFree(BuildingPageSlot *slot)
     memset(&slot->glow, 0, sizeof(slot->glow));
     slot->glowLoaded = 0;
     slot->glowDropping = false;
+    slot->glowWiped = false;
 }
 
 /* No longer drawn from; its piece goes once no queued draw can read it. */
@@ -1703,6 +1814,7 @@ static void GlowWant(BuildingPageSlot *slot)
     slot->glow.fmt = GPU_L8;
     slot->glow.size = bytes;
     slot->glowLoaded = 0;
+    slot->glowWiped = false;
     slot->glowUsed = sFrame;
     slot->glowDropping = false;
 }
@@ -2280,6 +2392,14 @@ static void PageMovesStep(void)
         C3D_SyncTextureCopy((u32 *)(void *)(sPageArena.base + steps[k].from), 0,
                             (u32 *)(void *)(sPageArena.base + steps[k].to), 0, steps[k].size, 8);
     tex->data = dest;
+    /* Nothing of it loaded yet: its fill was the old place's (PieceWipe). */
+    if (held == 0)
+    {
+        if (glow)
+            slot->glowWiped = false;
+        else
+            slot->wiped = false;
+    }
     ++sPageMoves.slides;
     ++sPageMoves.recent;
     CtrLog_Write(CTR_LOG_VIDEO, "VOXEL: building page %d's %s slid from %lu to %lu KiB in the pages' "
@@ -2405,6 +2525,7 @@ static void WantPage(int page, uint32_t keep, bool quiet)
     }
     victim->page = page;
     victim->loaded = 0;
+    victim->wiped = false;
     victim->used = ring ? FramesAgo(keep / 2u) : sFrame;
     victim->requested = svcGetSystemTick();
     victim->glowRetry = 0;
@@ -2488,6 +2609,40 @@ static void GlowBad(BuildingPageSlot *slot)
     slot->glowRetry = UINT32_MAX;
 }
 
+/*
+ * With PageBlockWipe (settings.txt voxel_page_fill=0 turns both off): a
+ * piece filled by the GPU before the first slice of a page given to it -
+ * also one kept for another page of the same size, and the rows past the
+ * page's own, which no slice ever writes. The Azahar emulator goes on
+ * drawing from what it remembers at an address; the fill at the arena's
+ * claim alone left the pieces used again as the towns change. True when the
+ * fill went this frame, in the slice's place in the GX queue: the slice
+ * waits for the next.
+ */
+static bool PageFillOn(void)
+{
+    static int sWipe = -1;
+
+    if (sWipe < 0)
+        sWipe = CtrSettings_GetInt("voxel_page_fill", 1) != 0;
+    return sWipe != 0;
+}
+
+static bool PieceWipe(BuildingPageSlot *slot, bool glow)
+{
+    C3D_Tex *tex = glow ? &slot->glow : &slot->tex;
+    bool *wiped = glow ? &slot->glowWiped : &slot->wiped;
+    unsigned bytes;
+
+    if (!PageFillOn() || *wiped || tex->data == NULL || (glow ? slot->glowLoaded : slot->loaded) != 0)
+        return false;
+    bytes = glow ? slot->w * slot->tex.height : PageBytes(slot->w, slot->tex.height);
+    C3D_SyncMemoryFill((u32 *)tex->data, 0, (u32 *)((u8 *)tex->data + (bytes & ~1u)),
+                       GX_FILL_16BIT_DEPTH | BIT(0), NULL, 0, NULL, 0);
+    *wiped = true;
+    return true;
+}
+
 /* A slice read for the slot, texels or mask: its copy queued. */
 static void QueueSlice(BuildingPageSlot *slot, bool glow, void *source, unsigned count)
 {
@@ -2521,6 +2676,8 @@ static void StreamPages(void)
          || (next = NextPageSlot()) == NULL || !CtrVideo_TryVoxelUpload())
             return;
         glow = SliceIsGlow(next);
+        if (PieceWipe(next, glow))
+            return;
         count = SliceOf(next);
         if (!ReadPageSlice(next->page, glow, glow ? next->glowLoaded : next->loaded, count,
                            sAtlasStaging))
@@ -2564,6 +2721,8 @@ static void StreamPages(void)
         else if (current)
         {
             if (!CtrVideo_TryVoxelUpload())
+                return;
+            if (PieceWipe(slot, sStream.glow))
                 return;
             QueueSlice(slot, sStream.glow, sStream.buffer, sStream.count);
             sStream.copyQueued = true;
@@ -2888,6 +3047,8 @@ bool CtrVoxel_Init(void)
 {
     sLampReady = false;
     sLampVertices = sLampGroundVertices = 0;
+    sGlitReady = false;
+    sGlitVertices = 0;
     const char *step = "open " VOXEL_SHADER_PATH;
     FILE *file = fopen(VOXEL_SHADER_PATH, "rb");
     long size;
@@ -2990,6 +3151,16 @@ bool CtrVoxel_Init(void)
     if (sFillGpu == NULL)
         goto fail;
     VoxelRegions_Init();
+    /* settings.txt voxel_face_lean (percent; VOXEL_RELIEF_LEAN_DEFAULT by default): the lean of the
+     * mountains' south faces (voxel_relief.h). Before the relief's tables are
+     * made and before any chunk is built: the geometry it leans is cached. */
+    {
+        int percent = CtrSettings_GetInt("voxel_face_lean", (int)(VOXEL_RELIEF_LEAN_DEFAULT * 100.0f + 0.5f));
+
+        VoxelRelief_SetLean((float)(percent < 0 ? 0 : percent > 100 ? 100 : percent) / 100.0f);
+        /* voxel_upright_caves=1: cave mouths and doors in a face upright, not leant with it */
+        VoxelRelief_SetUprightOpenings(CtrSettings_GetInt("voxel_upright_caves", 0) != 0);
+    }
     VoxelRelief_Init();
     VoxelSign_Init();
     VoxelCamera_Init(&sCamera);
@@ -3097,6 +3268,7 @@ fail:
 void CtrVoxel_Shutdown(void)
 {
     LampsRelease(true);
+    GlitterRelease(true);
     StreamStop();
     AtlasJobCancel();
     ReleaseAllChunks();
@@ -3137,6 +3309,12 @@ void CtrVoxel_Shutdown(void)
     linearFree(sRays);
     sRays = NULL;
     sRayCount = 0;
+    linearFree(sRayFan);
+    sRayFan = NULL;
+    sRayFanCount = 0;
+    linearFree(sNightVeil);
+    sNightVeil = NULL;
+    sNightVeilCount = 0;
     linearFree(sMotes);
     sMotes = NULL;
     if (sFogTex.data != NULL)
@@ -3449,14 +3627,24 @@ static void AtlasFailed(int mapGroup, int mapNum, const void *primary, const voi
  * false for a map that is only in the prefetch ring: it may take an empty
  * slot, never the atlas of something else - which could be a map on screen.
  */
-/* How many rows south of its cells a map is drawn: its base (a point stands
- * as far south as it is high in the world, VoxelBuilder_StretchZ). The view
- * (sViewRect) is where things are drawn; a map's chunks are its cells. */
+/* How many rows south of its cells level ground at `base` is drawn: a point
+ * stands as far south as it is high in the world, less the lean of the
+ * ground it stands on (VoxelBuilder_StretchZ, VoxelRelief_Lean). With no
+ * lean, the base itself. */
+static float DrawnBase(float base)
+{
+    return base - VoxelRelief_Lean() * base;
+}
+
+/* How many rows south of its cells a map is drawn: its base, leant. The view
+ * (sViewRect) is where things are drawn; a map's chunks are its cells. Read
+ * unleant, a map whose ground is drawn fewer rows south than its base would
+ * ask for cells too far north, and leave a strip of the view without chunks. */
 static int DrawnRows(const VoxelMapInstance *inst)
 {
     /* floorf without the library call: asked for every map a few times a
      * frame (atlases in view, the ring, the lamps, the near maps). */
-    float rows = VoxelRelief_Base(inst) + 0.5f;
+    float rows = DrawnBase(VoxelRelief_Base(inst)) + 0.5f;
     int i = (int)rows;
 
     return (float)i > rows ? i - 1 : i;
@@ -3950,6 +4138,11 @@ static uint32_t SiteHash(const ChunkSite *site)
     /* the lift its map was placed at (the belt's: the current map's), all
      * of it that much higher (VoxelRelief_Base) */
     standing ^= (uint32_t)site->inst->lift * 0x9E3779B1u;
+    /* and the lean of the faces (VoxelRelief_Lean): a chunk, a cold mesh or a
+     * lighting sample made under another is another chunk. It is read at boot
+     * (CtrVoxel_Init) and does not move in a run, so this only keeps a mesh
+     * from one lean out of the other's slot; 0 xors nothing in. */
+    standing ^= (uint32_t)(VoxelRelief_Lean() * 1000.0f + 0.5f) * 0x7FEB352Du;
 
 #if CTR_VOXEL_LIGHTING
     if (!site->inst->indoor)
@@ -4769,6 +4962,10 @@ static unsigned TreeShadowCards(VoxelBuilder *builder)
              * is drawn flat on the ground, and a shadow begun at its foot
              * let the sun through beside it */
             out[j].z = foot->z - VOXEL_TREE_SHADOW_NORTH + across[2] * a + up[2] * b;
+            /* The map puts every vertex of a chunk back by the lean x its
+             * height (ShadowSunMtx), and a tree stands upright: it moved by
+             * its foot's alone. What is over the foot is taken off here. */
+            out[j].z -= VoxelRelief_Lean() * (out[j].y - foot->y);
             out[j].shade = 0.0f;
         }
         builder->vertices[builder->count++] = out[0];
@@ -5501,8 +5698,10 @@ static void PackFills(void)
         const FillSquare *f = &sFills[i];
         float x0 = Clamp((float)(f->x0 - sFillOriginX), -VOXEL_FILL_REACH, VOXEL_FILL_REACH);
         float x1 = Clamp((float)(f->x1 - sFillOriginX), -VOXEL_FILL_REACH, VOXEL_FILL_REACH);
-        float z0 = Clamp((float)f->z0 + f->base - (float)sFillOriginZ, -VOXEL_FILL_REACH, VOXEL_FILL_REACH);
-        float z1 = Clamp((float)f->z1 + f->base - (float)sFillOriginZ, -VOXEL_FILL_REACH, VOXEL_FILL_REACH);
+        /* (level ground at the base: its rows south are the leant ones) */
+        float rows = DrawnBase(f->base);
+        float z0 = Clamp((float)f->z0 + rows - (float)sFillOriginZ, -VOXEL_FILL_REACH, VOXEL_FILL_REACH);
+        float z1 = Clamp((float)f->z1 + rows - (float)sFillOriginZ, -VOXEL_FILL_REACH, VOXEL_FILL_REACH);
         float y = f->base - VOXEL_FILL_UNDER;
 
         quad[0] = (VoxelVertex){x0, y, z0, 0.0f, 0.0f, 1.0f};
@@ -5879,7 +6078,7 @@ static bool Overlaps(int ax0, int ay0, int ax1, int ay1, int bx0, int by0, int b
  */
 static bool SiteVisible(const ChunkSite *site, const VoxelChunk *chunk)
 {
-    float base;
+    float base, rows;
 
     if (chunk != NULL && chunk->count != 0)
         return BoxVisible((float)(site->baseX + chunk->gx0), chunk->gy0 - 0.05f,
@@ -5887,9 +6086,11 @@ static bool SiteVisible(const ChunkSite *site, const VoxelChunk *chunk)
                           (float)(site->baseX + chunk->gx1), chunk->gy1 + 0.05f,
                           (float)(site->baseY + chunk->gz1));
     base = VoxelRelief_Base(site->inst);
-    /* (as high as its base, and as far south: VoxelBuilder_StretchZ) */
-    return BoxVisible((float)site->x0, base + VOXEL_UNBUILT_LOW, (float)site->y0 + base,
-                      (float)site->x1, base + VOXEL_UNBUILT_HIGH, (float)site->y1 + base);
+    rows = DrawnBase(base);
+    /* (as high as its base, and as far south as the lean leaves it:
+     * VoxelBuilder_StretchZ) */
+    return BoxVisible((float)site->x0, base + VOXEL_UNBUILT_LOW, (float)site->y0 + rows,
+                      (float)site->x1, base + VOXEL_UNBUILT_HIGH, (float)site->y1 + rows);
 }
 
 /* Does the slab meet the frustum? x and y between theirs and z - y between
@@ -7875,6 +8076,7 @@ static void UpdateView(float playerX, float playerZ, bool cut)
 void CtrVoxel_Idle(void)
 {
     LampsRelease(false);
+    GlitterRelease(false);
 }
 
 /*
@@ -8405,7 +8607,7 @@ static bool LampsTake(void)
 /* The lamps on screen and the light they cast, rebuilt when the view moves. */
 static void UpdateNightLamps(void)
 {
-    if (!sMeasureLamps || !CtrGame_IsOutdoor() || CtrDayNight_Get()->glow <= 0.0f)
+    if (!sMeasureLamps || !CtrGame_IsOutdoor() || CtrDayNight_Get()->glow < VOXEL_GLOW_MIN)
     {
         sLampReady = false;
         sLampVertices = sLampGroundVertices = 0;
@@ -8454,6 +8656,571 @@ static void UpdateNightLamps(void)
     sLampX = sDynamicX;
     sLampZ = sDynamicZ;
     sLampReady = true;
+}
+
+/* ── The sun's glitter on the water ─────────────────────────────────────── */
+
+/* The linear buffer and the textures given back: at once (`now`: nothing
+ * queued draws from them), or once nothing has been drawn from them for
+ * VOXEL_GLITTER_RELEASE_MS. */
+static void GlitterLinearRelease(bool now)
+{
+    if (sGlitGpu == NULL && sGlitMaskTex.data == NULL && sGlitNoiseTex.data == NULL)
+        return;
+    if (!now && TicksMs(svcGetSystemTick() - sGlitDrawn) < VOXEL_GLITTER_RELEASE_MS)
+        return;
+    linearFree(sGlitGpu);
+    sGlitGpu = NULL;
+    if (sGlitMaskTex.data != NULL)
+        C3D_TexDelete(&sGlitMaskTex);
+    if (sGlitNoiseTex.data != NULL)
+        C3D_TexDelete(&sGlitNoiseTex);
+    memset(&sGlitMaskTex, 0, sizeof(sGlitMaskTex));
+    memset(&sGlitNoiseTex, 0, sizeof(sGlitNoiseTex));
+    sGlitReady = false;
+    sGlitVertices = 0;
+}
+
+/* Everything given back; the heap too once the linear part is (it is kept
+ * while a draw may still read the buffer). */
+static void GlitterRelease(bool now)
+{
+    GlitterLinearRelease(now);
+    if (sGlitGpu != NULL)
+        return;
+    free(sGlitScratch);
+    free(sGlitWater);
+    sGlitScratch = NULL;
+    sGlitWater = NULL;
+    sGlitGridOk = false;
+    sGlitReady = false;
+    sGlitVertices = 0;
+}
+
+static float GlitterSmooth(float edge0, float edge1, float x)
+{
+    float t = Clamp((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
+
+    return t * t * (3.0f - 2.0f * t);
+}
+
+/* The path's half width across (in its full width) and its brightness along
+ * it, at v: what the mask texture holds and the footprint is cut by. */
+static float GlitterHalfWidth(float v)
+{
+    return VOXEL_GLITTER_HW0 + VOXEL_GLITTER_HW1 * Clamp(v, 0.0f, 1.0f);
+}
+
+static float GlitterAlong(float v)
+{
+    return v < VOXEL_GLITTER_PEAK_V ? GlitterSmooth(0.0f, VOXEL_GLITTER_PEAK_V, v)
+                                    : 1.0f - GlitterSmooth(VOXEL_GLITTER_PEAK_V, 1.0f, v);
+}
+
+/*
+ * The two textures, once for the session's use of them (4 KiB each, L8,
+ * filtered):
+ *
+ *   mask   the path: along its length a bell (GlitterAlong), across it
+ *          (1 - q^2)^2 for q the distance from its middle over its half width
+ *          there, so it is zero outside, scaled to VOXEL_GLITTER_MASK. Row 0 is
+ *          v = 1 (VoxelAtlas_SlotUV). Clamped: outside it is its edge's, zero.
+ *   noise  white noise averaged over 4 x 2 texels - the glints' dashes - and
+ *          then evened out to a flat histogram, so the share of the water that
+ *          sparkles is the number the mask and the threshold say, whatever the
+ *          noise. Repeats.
+ *
+ * About a millisecond, the first time. False without the memory.
+ */
+static bool MakeGlitterTextures(void)
+{
+    enum { DIM = VOXEL_GLITTER_DIM, N = DIM * DIM, KX = 4, KY = 2, SUMS = 255 * KX * KY + 1 };
+    uint8_t *white = malloc(N);
+    uint16_t *sums = malloc(N * sizeof(uint16_t)), *rank = calloc(SUMS, sizeof(uint16_t));
+    uint32_t seed = 0x2545F491u, before = 0;
+    bool ok = white != NULL && sums != NULL && rank != NULL
+           && C3D_TexInit(&sGlitNoiseTex, DIM, DIM, GPU_L8);
+
+    if (ok && !C3D_TexInit(&sGlitMaskTex, DIM, DIM, GPU_L8))
+    {
+        C3D_TexDelete(&sGlitNoiseTex);
+        memset(&sGlitNoiseTex, 0, sizeof(sGlitNoiseTex));
+        ok = false;
+    }
+    if (!ok)
+    {
+        free(white);
+        free(sums);
+        free(rank);
+        return false;
+    }
+    for (unsigned i = 0; i < N; ++i)
+    {
+        seed = seed * 1664525u + 1013904223u;
+        white[i] = (uint8_t)(seed >> 24);
+    }
+    for (unsigned y = 0; y < DIM; ++y)
+        for (unsigned x = 0; x < DIM; ++x)
+        {
+            unsigned sum = 0;
+
+            for (unsigned dy = 0; dy < KY; ++dy)
+                for (unsigned dx = 0; dx < KX; ++dx)
+                    sum += white[((y + dy) & (DIM - 1)) * DIM + ((x + dx) & (DIM - 1))];
+            sums[y * DIM + x] = (uint16_t)sum;
+            ++rank[sum];
+        }
+    /* each sum's place in the order of all of them (ties share their middle) */
+    for (unsigned s = 0; s < SUMS; ++s)
+    {
+        unsigned count = rank[s];
+
+        rank[s] = (uint16_t)(before + count / 2u);
+        before += count;
+    }
+    for (unsigned y = 0; y < DIM; ++y)
+        for (unsigned x = 0; x < DIM; ++x)
+        {
+            float u = ((float)x + 0.5f) / DIM, v = 1.0f - ((float)y + 0.5f) / DIM;
+            float q = fabsf(u - 0.5f) / GlitterHalfWidth(v), mask = 0.0f;
+
+            if (q < 1.0f)
+                mask = (1.0f - q * q) * (1.0f - q * q) * GlitterAlong(v) * VOXEL_GLITTER_MASK;
+            ((uint8_t *)sGlitNoiseTex.data)[CtrVideo_Texel(x, y, DIM)] =
+                (uint8_t)((rank[sums[y * DIM + x]] * 255u + (N - 1) / 2u) / (N - 1));
+            ((uint8_t *)sGlitMaskTex.data)[CtrVideo_Texel(x, y, DIM)] = (uint8_t)(mask * 255.0f + 0.5f);
+        }
+    free(white);
+    free(sums);
+    free(rank);
+    C3D_TexSetFilter(&sGlitNoiseTex, GPU_LINEAR, GPU_LINEAR);
+    C3D_TexSetWrap(&sGlitNoiseTex, GPU_REPEAT, GPU_REPEAT);
+    C3D_TexFlush(&sGlitNoiseTex);
+    C3D_TexSetFilter(&sGlitMaskTex, GPU_LINEAR, GPU_LINEAR);
+    C3D_TexSetWrap(&sGlitMaskTex, GPU_CLAMP_TO_EDGE, GPU_CLAMP_TO_EDGE);
+    C3D_TexFlush(&sGlitMaskTex);
+    return true;
+}
+
+/* The heap part: the builder's output and the water flags. Wanted whenever
+ * the glitter may show (outdoors, in light), whether or not there is water. */
+static bool GlitterTake(void)
+{
+    if (sGlitScratch != NULL)
+        return true;
+    if (sFrame < sGlitRetry)
+        return false;
+    sGlitScratch = malloc(VOXEL_GLITTER_RESERVE * sizeof(VoxelVertex));
+    sGlitWater = malloc((size_t)VOXEL_GLITTER_GRID * VOXEL_GLITTER_GRID);
+    if (sGlitScratch == NULL || sGlitWater == NULL)
+    {
+        free(sGlitScratch);
+        free(sGlitWater);
+        sGlitScratch = NULL;
+        sGlitWater = NULL;
+        sGlitRetry = sFrame + VOXEL_PAGE_RETRY_FRAMES;
+        return false;
+    }
+    sGlitGridOk = false;
+    sGlitReady = false;
+    return true;
+}
+
+/* The linear part, for the first water in the path. When there is no room the
+ * glitter stays off and is asked for again later. */
+static bool GlitterLinearTake(void)
+{
+    if (sGlitGpu != NULL)
+        return true;
+    if (sFrame < sGlitRetry)
+        return false;
+    sGlitGpu = linearAlloc(VOXEL_GLITTER_RESERVE * sizeof(VoxelGpuVertex));
+    if (sGlitGpu == NULL || !MakeGlitterTextures())
+    {
+        GlitterLinearRelease(true);
+        sGlitRetry = sFrame + VOXEL_PAGE_RETRY_FRAMES;
+        if (!sGlitNoRoomLogged)
+            CtrLog_Write(CTR_LOG_VIDEO, "VOXEL: no room for the water's glitter (%lu KiB linear, linear free=%lu): "
+                         "it stays off until there is",
+                         (unsigned long)((VOXEL_GLITTER_RESERVE * sizeof(VoxelGpuVertex)
+                                          + 2u * VOXEL_GLITTER_DIM * VOXEL_GLITTER_DIM) >> 10),
+                         (unsigned long)linearSpaceFree());
+        sGlitNoRoomLogged = true;
+        return false;
+    }
+    sGlitDrawn = svcGetSystemTick();
+    sGlitReady = false;
+    return true;
+}
+
+/* Open water: a cell whose role is water and whose behaviour is a sea's, lake's
+ * or river's (VOXEL_MB_*), not a waterfall's, a puddle's or a bridge's. */
+static bool GlitterRawWater(int x, int z)
+{
+    const VoxelMapInstance *inst = VoxelWorld_GetInstanceAt(x, z);
+    unsigned behaviour;
+
+    if (inst == NULL || inst->indoor
+     || VoxelRegions_RoleAt((unsigned)inst->layoutId, x - inst->originX, z - inst->originY) != VOXEL_ROLE_WATER)
+        return false;
+    behaviour = VoxelWorld_GetMetatileBehavior(x, z);
+    return behaviour == VOXEL_MB_POND_WATER || behaviour == VOXEL_MB_DEEP_WATER
+        || behaviour == VOXEL_MB_SOOTOPOLIS_DEEP_WATER || behaviour == VOXEL_MB_OCEAN_WATER
+        || behaviour == VOXEL_MB_SHALLOW_WATER || behaviour == VOXEL_MB_NO_SURFACING
+        || behaviour == VOXEL_MB_SEAWEED
+        || (behaviour >= VOXEL_MB_EASTWARD_CURRENT && behaviour <= VOXEL_MB_SOUTHWARD_CURRENT);
+}
+
+/* The same, kept in a window of cells round the camera, found when first asked
+ * (what the path's footprint reaches), so walking asks for a row of new cells. */
+static bool GlitterWaterAt(int x, int z)
+{
+    int gx = x - sGlitGridX, gz = z - sGlitGridZ;
+    uint8_t *flag;
+
+    if (gx < 0 || gz < 0 || gx >= VOXEL_GLITTER_GRID || gz >= VOXEL_GLITTER_GRID)
+        return GlitterRawWater(x, z);
+    flag = &sGlitWater[gz * VOXEL_GLITTER_GRID + gx];
+    if (*flag == 0)
+        *flag = GlitterRawWater(x, z) ? 1 : 2;
+    return *flag == 1;
+}
+
+/*
+ * The water's edge. The cells along a shore are water too and glitter as the
+ * rest - left out, the light stopped a tile short of every bank, a dull rim
+ * round each pond. But their drawing is part land: a strip of grass or sand
+ * along the side the bank is on. So a cell's quad is drawn in from each side
+ * where what stands beside it is no water at all (land, a bridge's deck, a
+ * tree in the pond), by the width of that strip, and reaches the cell's edge
+ * on every side where the water goes on.
+ */
+#define VOXEL_GLITTER_SHORE_INSET (6.0f / 16.0f)
+
+/* Not water of any kind: land, or no map. */
+static bool GlitterLandAt(int x, int z)
+{
+    const VoxelMapInstance *inst = VoxelWorld_GetInstanceAt(x, z);
+
+    return inst == NULL || inst->indoor
+        || VoxelRegions_RoleAt((unsigned)inst->layoutId, x - inst->originX, z - inst->originY) != VOXEL_ROLE_WATER;
+}
+
+/* Which sides of a water cell meet land: bit 0 west, 1 east, 2 north, 3 south. */
+static unsigned GlitterShores(int x, int z)
+{
+    return (GlitterLandAt(x - 1, z) ? 1u : 0u) | (GlitterLandAt(x + 1, z) ? 2u : 0u)
+         | (GlitterLandAt(x, z - 1) ? 4u : 0u) | (GlitterLandAt(x, z + 1) ? 8u : 0u);
+}
+
+/* Is the ground point (x, z) - as the camera sees it, in drawn coordinates -
+ * inside the path's footprint, `slack` cells to spare? `shrink` narrows the
+ * path (and cuts its ends) for when it has too many cells to draw. The
+ * footprint is where the mask is not zero. */
+static bool GlitterInPath(const GlitterShape *shape, float shrink, float x, float z, float slack)
+{
+    float rx = x - sCamera.targetX, rz = z - sCamera.targetZ;
+    float v = (rx * shape->sx + rz * shape->sz + shape->back) * shape->invLength;
+    float a = fabsf(rz * shape->sx - rx * shape->sz);
+    float slackV = slack * shape->invLength;
+    float low = VOXEL_GLITTER_PEAK_V * (1.0f - shrink);
+    float high = VOXEL_GLITTER_PEAK_V + (1.0f - VOXEL_GLITTER_PEAK_V) * shrink;
+
+    if (v < low - slackV || v > high + slackV)
+        return false;
+    return a <= GlitterHalfWidth(v) * shrink * shape->width + slack;
+}
+
+/* The rectangle of ground (drawn coordinates) the footprint lies in, slack
+ * included: its four corners' own. */
+static void GlitterBounds(const GlitterShape *shape, float shrink, float bounds[4])
+{
+    float low = VOXEL_GLITTER_PEAK_V * (1.0f - shrink);
+    float high = VOXEL_GLITTER_PEAK_V + (1.0f - VOXEL_GLITTER_PEAK_V) * shrink;
+    float slack = VOXEL_GLITTER_MARGIN + VOXEL_GLITTER_SHIFT_MARGIN;
+    float across = GlitterHalfWidth(high) * shrink * shape->width + slack;
+
+    bounds[0] = bounds[2] = sCamera.targetX;
+    bounds[1] = bounds[3] = sCamera.targetZ;
+    for (unsigned corner = 0; corner < 4; ++corner)
+    {
+        float along = ((corner & 1u ? high : low) + (corner & 1u ? 1.0f : -1.0f) * slack * shape->invLength)
+                    * shape->length - shape->back;
+        float side = corner & 2u ? across : -across;
+        float x = sCamera.targetX + shape->sx * along - shape->sz * side;
+        float z = sCamera.targetZ + shape->sz * along + shape->sx * side;
+
+        bounds[0] = x < bounds[0] ? x : bounds[0];
+        bounds[1] = z < bounds[1] ? z : bounds[1];
+        bounds[2] = x > bounds[2] ? x : bounds[2];
+        bounds[3] = z > bounds[3] ? z : bounds[3];
+    }
+}
+
+/*
+ * The quads of one build: every row of water cells in the footprint, of one
+ * level and one map, is one quad lying on the water at its level - as the
+ * lamps' pools lie, the builder's lift, shift, base and the map's eased rows
+ * placing it as the water itself is placed. Returns the vertices; `overflow`
+ * says the reserve was too small (no quad is cut in half).
+ */
+static unsigned GlitterEmit(const GlitterShape *shape, float shrink, unsigned *cells, bool *overflow)
+{
+    VoxelBuilder b;
+    float bounds[4];
+
+    *cells = 0;
+    GlitterBounds(shape, shrink, bounds);
+    VoxelBuilder_Init(&b, sGlitScratch, VOXEL_GLITTER_RESERVE);
+    VoxelBuilder_SetOrigin(&b, sDynamicX, sDynamicZ);
+    for (unsigned index = 0; index < VoxelWorld_InstanceCount(); ++index)
+    {
+        const VoxelMapInstance *inst = VoxelWorld_Instance(index);
+        int rows = DrawnRows(inst);
+        float drawn = DrawnBase(VoxelRelief_Base(inst));
+        /* the map's cells in the view and in the footprint's rectangle (a cell
+         * stands up to a lake's depth north of where it is drawn) */
+        int lowX = (int)floorf(bounds[0]), highX = (int)ceilf(bounds[2]) + 1;
+        int lowZ = (int)floorf(bounds[1] - drawn - VOXEL_GLITTER_SHIFT_MARGIN);
+        int highZ = (int)ceilf(bounds[3] - drawn + VOXEL_GLITTER_SHIFT_MARGIN) + 1;
+        int x0 = sGlitView[0] > inst->originX ? sGlitView[0] : inst->originX;
+        int x1 = sGlitView[2] < inst->originX + inst->width ? sGlitView[2] : inst->originX + inst->width;
+        int z0 = sGlitView[1] - rows > inst->originY ? sGlitView[1] - rows : inst->originY;
+        int z1 = sGlitView[3] - rows < inst->originY + inst->height ? sGlitView[3] - rows
+                                                                      : inst->originY + inst->height;
+
+        x0 = x0 > lowX ? x0 : lowX;
+        x1 = x1 < highX ? x1 : highX;
+        z0 = z0 > lowZ ? z0 : lowZ;
+        z1 = z1 < highZ ? z1 : highZ;
+        if (inst->indoor || x0 >= x1 || z0 >= z1)
+            continue;
+        b.base = VoxelRelief_Base(inst);
+        VoxelBuilder_SetStretch(&b, inst);
+        for (int z = z0; z < z1; ++z)
+        {
+            bool open = false;
+            int start = x0;
+            float runLift = 0.0f, runShift = 0.0f;
+            unsigned runShores = 0, lastShores = 0;
+
+            for (int x = x0; x <= x1; ++x)
+            {
+                bool take = false;
+                float lift = 0.0f, shift = 0.0f;
+                unsigned shores = 0;
+
+                /* the cheap test first, with room for a lifted lake's depth; then the
+                 * water, then the exact one with the cell's own place */
+                if (x < x1
+                 && GlitterInPath(shape, shrink, (float)x + 0.5f, (float)z + 0.5f + drawn,
+                                  VOXEL_GLITTER_MARGIN + VOXEL_GLITTER_SHIFT_MARGIN)
+                 && GlitterWaterAt(x, z) && VoxelWorld_GetInstanceAt(x, z) == inst)
+                {
+                    lift = VoxelRelief_CellLift(inst, x, z);
+                    shift = VoxelRelief_CellShift(inst, x, z);
+                    take = GlitterInPath(shape, shrink, (float)x + 0.5f,
+                                         (float)z + 0.5f + drawn + shift - VoxelRelief_Lean() * lift,
+                                         VOXEL_GLITTER_MARGIN);
+                    if (take)
+                        shores = GlitterShores(x, z);
+                }
+                /* a run is one level and one pair of banks north and south
+                 * (its quad is drawn in from them the whole way along) */
+                if (open && (!take || lift != runLift || shift != runShift
+                          || (shores & 12u) != (runShores & 12u)))
+                {
+                    /* in from the bank at each end, where there is one */
+                    float xa = (float)start + (runShores & 1u ? VOXEL_GLITTER_SHORE_INSET : 0.0f);
+                    float xb = (float)x - (lastShores & 2u ? VOXEL_GLITTER_SHORE_INSET : 0.0f);
+                    float za = (float)z + (runShores & 4u ? VOXEL_GLITTER_SHORE_INSET : 0.0f);
+                    float zb = (float)(z + 1) - (runShores & 8u ? VOXEL_GLITTER_SHORE_INSET : 0.0f);
+
+                    b.lift = runLift;
+                    b.shift = runShift;
+                    if (xb > xa && zb > za)
+                        VoxelBuilder_Quad(&b,
+                            &(VoxelVertex){xa, 0.0f, za, 0.0f, 0.0f, 1.0f},
+                            &(VoxelVertex){xb, 0.0f, za, 0.0f, 0.0f, 1.0f},
+                            &(VoxelVertex){xb, 0.0f, zb, 0.0f, 0.0f, 1.0f},
+                            &(VoxelVertex){xa, 0.0f, zb, 0.0f, 0.0f, 1.0f});
+                    *cells += (unsigned)(x - start);
+                    open = false;
+                }
+                if (take && !open)
+                {
+                    open = true;
+                    start = x;
+                    runLift = lift;
+                    runShift = shift;
+                    runShores = shores;
+                }
+                if (take)
+                    lastShores = shores;
+            }
+        }
+    }
+    *overflow = b.dropped != 0;
+    return b.count;
+}
+
+/* A path that fits the reserve: the whole footprint, and when it has too many
+ * cells for it the same narrower and shorter, the cells nearest its middle and
+ * peak kept (what is cut is its faint outer part). Tried from the size that
+ * fitted the last time - on a sea every step of the camera walked the whole
+ * footprint three times over to end at the same one - and one size up the
+ * next time when this one left room for it (each is half as much again, or
+ * more, of the one below). */
+static unsigned GlitterBuild(const GlitterShape *shape, unsigned *cells, float *shrinkUsed)
+{
+    static const float shrinks[] = {1.0f, 0.82f, 0.66f, 0.50f, 0.36f};
+    static unsigned sFirst;
+    unsigned count = 0, k = sFirst;
+
+    for (;; ++k)
+    {
+        bool overflow;
+
+        *shrinkUsed = shrinks[k];
+        count = GlitterEmit(shape, shrinks[k], cells, &overflow);
+        if (!overflow || k + 1u == sizeof(shrinks) / sizeof(shrinks[0]))
+            break;
+    }
+    sFirst = k > 0 && count * 5u < VOXEL_GLITTER_RESERVE * 3u ? k - 1u : k;
+    return count;
+}
+
+/*
+ * Every vertex's coordinates in the mask (u across the path from its middle,
+ * v along it from the viewer's end), from where the vertex stands now and the
+ * camera's target, whole eighths of a cell of it: the path is an affine map of
+ * the ground, so the texture's interpolation across a quad is exact. Written in
+ * place into the linear buffer; the positions stay.
+ */
+static void GlitterUV(const GlitterShape *shape, float targetX, float targetZ)
+{
+    float invWidth = 1.0f / shape->width, invLength = 1.0f / shape->length;
+
+    for (unsigned i = 0; i < sGlitVertices; ++i)
+    {
+        float rx = sGlitScratch[i].x + (float)sGlitX - targetX;
+        float rz = sGlitScratch[i].z + (float)sGlitZ - targetZ;
+
+        sGlitGpu[i].u = 0.5f + (rz * shape->sx - rx * shape->sz) * invWidth;
+        sGlitGpu[i].v = (rx * shape->sx + rz * shape->sz + shape->back) * invLength;
+    }
+}
+
+/* The glitter's cells and quads, kept up to date; one call a frame. */
+static void UpdateGlitter(void)
+{
+    const CtrDayNightLight *cycle = CtrDayNight_Get();
+    GlitterShape shape;
+    int cell[2], quant[2];
+    uint32_t key;
+    bool rebuild;
+
+    if (!sMeasureGlitter || sFly.active || !CtrGame_IsOutdoor() || GlitterStrength() < VOXEL_GLITTER_MIN)
+    {
+        sGlitVertices = 0;
+        sGlitReady = false;
+        GlitterRelease(false);
+        return;
+    }
+    if (!GlitterTake())
+    {
+        sGlitVertices = 0;
+        return;
+    }
+    GlitterShapeFor(cycle, &shape);
+    cell[0] = (int)floorf(sCamera.targetX);
+    cell[1] = (int)floorf(sCamera.targetZ);
+    quant[0] = (int)floorf(sCamera.targetX * 8.0f);
+    quant[1] = (int)floorf(sCamera.targetZ * 8.0f);
+    /* the sun's direction to 1.2 degrees, the path's size to half a cell and
+     * a quarter: a key moves a few times an hour of a fast day, not a frame */
+    key = (uint32_t)(lrintf(shape.sx * 48.0f) + 64) | (uint32_t)(lrintf(shape.sz * 48.0f) + 64) << 7
+        | (uint32_t)lrintf(shape.length * 2.0f) << 14 | (uint32_t)lrintf(shape.width * 4.0f) << 21
+        | (shape.moon ? 1u << 28 : 0u);
+    rebuild = !sGlitReady || sGlitSignature != sInstanceSignature || sGlitDigest != sLiveDigest
+           || sGlitKey != key || sGlitCell[0] != cell[0] || sGlitCell[1] != cell[1]
+           || sGlitView[0] > sViewRect[0] - 2 || sGlitView[1] > sViewRect[1] - 2
+           || sGlitView[2] < sViewRect[2] + 2 || sGlitView[3] < sViewRect[3] + 2;
+    if (rebuild)
+    {
+        static uint32_t lastLog;
+        static unsigned rebuilds;
+        uint64_t started = svcGetSystemTick();
+        unsigned cells = 0, count;
+        float shrink = 1.0f;
+
+        if (sGlitGpu == NULL && sFrame < sGlitRetry)
+        {
+            sGlitVertices = 0;
+            return;
+        }
+        sGlitView[0] = sViewRect[0] - 4;
+        sGlitView[1] = sViewRect[1] - 4;
+        sGlitView[2] = sViewRect[2] + 4;
+        sGlitView[3] = sViewRect[3] + 4;
+        sGlitX = sDynamicX;
+        sGlitZ = sDynamicZ;
+        /* the water flags are kept while the maps and the camera stay near */
+        if (!sGlitGridOk || sGlitGridSignature != sInstanceSignature || sGlitGridDigest != sLiveDigest
+         || abs(cell[0] - (sGlitGridX + VOXEL_GLITTER_GRID / 2)) > 10
+         || abs(cell[1] - (sGlitGridZ + VOXEL_GLITTER_GRID / 2)) > 10)
+        {
+            memset(sGlitWater, 0, (size_t)VOXEL_GLITTER_GRID * VOXEL_GLITTER_GRID);
+            sGlitGridX = cell[0] - VOXEL_GLITTER_GRID / 2;
+            sGlitGridZ = cell[1] - VOXEL_GLITTER_GRID / 2;
+            sGlitGridSignature = sInstanceSignature;
+            sGlitGridDigest = sLiveDigest;
+            sGlitGridOk = true;
+        }
+        count = GlitterBuild(&shape, &cells, &shrink);
+        if (count != 0 && !GlitterLinearTake())
+        {
+            sGlitVertices = 0;
+            sGlitReady = false;
+            return;
+        }
+        sGlitVertices = count;
+        if (count == 0)
+            GlitterLinearRelease(false);
+        else
+        {
+            PackDynamic(sGlitScratch, count, sGlitGpu);
+            sGlitShape = shape;
+            GlitterUV(&shape, (float)quant[0] * 0.125f, (float)quant[1] * 0.125f);
+        }
+        sGlitSignature = sInstanceSignature;
+        sGlitDigest = sLiveDigest;
+        sGlitKey = key;
+        sGlitCell[0] = cell[0];
+        sGlitCell[1] = cell[1];
+        sGlitQuant[0] = quant[0];
+        sGlitQuant[1] = quant[1];
+        sGlitReady = true;
+        ++rebuilds;
+        if (lastLog == 0 || sFrame - lastLog >= 120u)
+        {
+            CtrLog_Write(CTR_LOG_VIDEO, "VOXEL glitter: %u vertices (budget %u) %u cells, %u builds since the last line, "
+                         "last %.3f ms, footprint %.2f of the path, sun %.2f,%.2f%s, gain %.2f",
+                         count, VOXEL_GLITTER_RESERVE, cells, rebuilds,
+                         TicksMs(svcGetSystemTick() - started), shrink, shape.sx, shape.sz,
+                         shape.moon ? " (moon)" : "", GlitterStrength());
+            lastLog = sFrame;
+            rebuilds = 0;
+        }
+        return;
+    }
+    /* the camera moved an eighth of a cell inside its cell: the mask again */
+    if (sGlitVertices != 0 && (sGlitQuant[0] != quant[0] || sGlitQuant[1] != quant[1]))
+    {
+        GlitterUV(&sGlitShape, (float)quant[0] * 0.125f, (float)quant[1] * 0.125f);
+    }
+    sGlitQuant[0] = quant[0];
+    sGlitQuant[1] = quant[1];
 }
 
 /*
@@ -8927,6 +9694,7 @@ bool CtrVoxel_Update(void)
         CtrVoxel_EndBattle();
     started = svcGetSystemTick();
     ++sFrame;
+    sOutdoorLit = false;
     DumpBitsRead();
     if (sFrame % VOXEL_KEYS_LOG_FRAMES == 0)
         KeysLog();
@@ -9048,6 +9816,10 @@ bool CtrVoxel_Update(void)
     {
         sMeasureGlow = CtrSettings_GetInt("measure_glow", 1) != 0;
         sMeasureLamps = CtrSettings_GetInt("measure_lamps", 1) != 0;
+        /* settings.txt voxel_glitter=0: no sun glitter on the water. On for
+         * now; the cost of its rebuilds is still to be settled on the console. */
+        sMeasureGlitter = CtrSettings_GetInt("voxel_glitter", 1) != 0;
+        sGlowShadows = CtrSettings_GetInt("voxel_glow_shadows", 1) != 0;
         sMeasurePlain = CtrSettings_GetInt("voxel_plain_vs", 1) != 0;
         sMeasureFusedBlur = CtrSettings_GetInt("voxel_fused_blur", 0) != 0;
         sMeasureScissor = CtrSettings_GetInt("voxel_scissor", 1) != 0;
@@ -9125,7 +9897,7 @@ bool CtrVoxel_Update(void)
                          (unsigned long)CtrPlatform_FrameCount());
         }
     }
-    sGlowWanted = sMeasureGlow && CtrDayNight_Get()->glow > 0.0f;
+    sGlowWanted = sMeasureGlow && CtrDayNight_Get()->glow >= VOXEL_GLOW_MIN;
     NotePart(PART_CHECK, &partStart);
 
 #if CTR_VOXEL_LIGHTING
@@ -9143,8 +9915,28 @@ bool CtrVoxel_Update(void)
 
         if (readShadows)
             sShadowsRead = sFrame + 8u;
+        {
+            /* settings.txt measure_shadows_high_at=N: SHADOW QUALITY goes to
+             * HIGH at the world's frame N, as from OPTIONS with the world up
+             * (a scenario cannot press its way there): the map is claimed
+             * then (CtrVoxel_ClaimShadowMap). Written to settings.txt as
+             * OPTIONS would: for a test's own card. */
+            static int sHighAt = -2;
+
+            if (sHighAt == -2)
+                sHighAt = CtrSettings_GetInt("measure_shadows_high_at", -1);
+            if (sHighAt >= 0 && sFrame == (uint32_t)sHighAt)
+            {
+                CtrSettings_SetInt("voxel_shadows", 2);
+                CtrLog_Write(CTR_LOG_VIDEO, "VOXEL: SHADOW QUALITY set to HIGH at frame %d (measure_shadows_high_at)", sHighAt);
+            }
+        }
+        /* The option's, and nothing else's: the quality never changes by
+         * itself. HIGH's map is claimed with the world's VRAM
+         * (CtrVoxel_UnparkVram, CtrVoxel_ClaimShadowMap). */
         if (readShadows
-         && VoxelLighting_SetQuality(CtrSettings_VoxelShadowsHigh() ? VOXEL_SHADOWS_HIGH : VOXEL_SHADOWS_LOW))
+         && VoxelLighting_SetQuality(CtrSettings_VoxelShadowsHigh()
+                                     ? VOXEL_SHADOWS_HIGH : VOXEL_SHADOWS_LOW))
         {
             ++sEpoch;
             CtrLog_Write(CTR_LOG_VIDEO, "VOXEL shadows %s",
@@ -9324,6 +10116,9 @@ bool CtrVoxel_Update(void)
         sLampVertices = sLampGroundVertices = 0;
         sLampReady = false;
         LampsRelease(false);
+        sGlitVertices = 0;
+        sGlitReady = false;
+        GlitterRelease(false);
         sStats.reflections = 0;
 #if CTR_VOXEL_LIGHTING
         sShadowVertices = 0;
@@ -9348,6 +10143,7 @@ bool CtrVoxel_Update(void)
         lampsTicks = Port_ProfTick();
         UpdateNightLamps();
         lampsTicks = Port_ProfTick() - lampsTicks;
+        UpdateGlitter();
         VoxelBuilder_Init(&sprites, dynamic, VOXEL_SPRITE_RESERVE);
         VoxelBuilder_SetOrigin(&sprites, sDynamicX, sDynamicZ);
         VoxelBuilder_Init(&reflections, dynamic + VOXEL_REFLECTION_FIRST,
@@ -9411,7 +10207,8 @@ bool CtrVoxel_Update(void)
     for (unsigned i = 0; i < VOXEL_CHUNK_SLOTS; ++i)
         if (sChunks[i].used)
             ++sStats.chunks;
-    sStats.vertices += sSpriteVertices + sReflectionVertices + sLampVertices + sLampGroundVertices;
+    sStats.vertices += sSpriteVertices + sReflectionVertices + sLampVertices + sLampGroundVertices
+                     + sGlitVertices;
 #if CTR_VOXEL_LIGHTING
     sStats.vertices += sShadowVertices;
 #endif
@@ -9638,6 +10435,7 @@ void CtrVoxel_ParkVram(void)
     if (!sReady || sParked)
         return;
     LampsRelease(true);
+    GlitterRelease(true);
     StreamStop();
     AtlasJobCancel();
     JobCancel();
@@ -9667,12 +10465,32 @@ void CtrVoxel_ParkVram(void)
     if (sChunkBlock != NULL)
         vramFree(sChunkBlock);
     sPageBlock = sChunkBlock = NULL;
+    ShadowMapFree();
     sHaveBuildings = false;
     /* Back as for a map never seen: HandleMapChange builds it again. */
     sMeshMapGroup = sMeshMapNum = -1;
     sParked = true;
     CtrLog_Write(CTR_LOG_VIDEO, "VOXEL: VRAM parked while the world is off (VRAM free=%lu)",
                  (unsigned long)vramSpaceFree());
+}
+
+/*
+ * The pages' block filled by the GPU as it is claimed (settings.txt
+ * voxel_page_fill=0: not). The Azahar emulator alone drew some towns'
+ * buildings with another texture, black or white, and which town changed
+ * with where this block lay: the VRAM under it
+ * was the 2D screens' targets a moment before, and the emulator may go on
+ * drawing from what it remembers of them. A fill makes it forget. Outside
+ * the frame, waited for.
+ */
+static void PageBlockWipe(void)
+{
+    if (sPageBlock == NULL || !PageFillOn())
+        return;
+    C3D_SyncMemoryFill((u32 *)sPageBlock, 0, (u32 *)((u8 *)sPageBlock + VOXEL_PAGE_VRAM_BUDGET),
+                       GX_FILL_32BIT_DEPTH | BIT(0), NULL, 0, NULL, 0);
+    CtrLog_Write(CTR_LOG_VIDEO, "VOXEL: building pages' block filled as claimed (%p, %u KiB)",
+                 sPageBlock, (unsigned)(VOXEL_PAGE_VRAM_BUDGET >> 10));
 }
 
 /* False if the chunk arena does not fit, or the pages' when the buildings
@@ -9690,6 +10508,18 @@ bool CtrVoxel_UnparkVram(void)
     if (sChunkBlock == NULL)
         return false;
     sPageBlock = vramAlloc(VOXEL_PAGE_VRAM_BUDGET);
+    /* SHADOW QUALITY HIGH's map is part of the world as the chunks' arena
+     * is: claimed here, with the VRAM in one piece, before the atlases and
+     * the rest can take its room. Asked for at the first frame that wanted
+     * it, it found the VRAM taken by the world's own atlases (port.log
+     * 2026-11-11: 384000 the largest gap) and the option fell to LOW. After
+     * the two arenas, which stay where they have always been. With no room
+     * even so the world comes back all the same - a field left in 2D for a
+     * shadow would be the worse fault - and the map is asked for with the
+     * world up (CtrVoxel_ClaimShadowMap), the quality HIGH all the while. */
+    if (CtrSettings_VoxelShadowsHigh() && !ShadowMapMake())
+        CtrLog_Write(CTR_LOG_ERROR, "VOXEL: the world back without SHADOW QUALITY HIGH's map (largest=%lu); "
+                     "asked for again with the world up", (unsigned long)CtrGpuMem_LargestVram());
     /* Loaded, the buildings' cells are their models' (VoxelBuildings_CellAt):
      * without the pages to draw them the houses were left out, the ground
      * under them alone. The whole world waits for the room instead - for a
@@ -9705,6 +10535,9 @@ bool CtrVoxel_UnparkVram(void)
     {
         if (++sUnparkPageFails < VOXEL_UNPARK_PAGE_TRIES)
         {
+            /* (the map with it: still parked, nothing else would free it,
+             * and it would lie in the middle of the room the next try needs) */
+            ShadowMapFree();
             vramFree(sChunkBlock);
             sChunkBlock = NULL;
             return false;
@@ -9743,6 +10576,7 @@ bool CtrVoxel_UnparkVram(void)
         VoxelArena_Init(&sChunkArena, sChunkBlock, arena, 16, sChunkPieces, VOXEL_CHUNK_SLOTS + 1);
     }
     sAheadNoRoomBytes = 0; /* (an empty arena: room for anything) */
+    PageBlockWipe();
     VoxelArena_Init(&sPageArena, sPageBlock, sPageBlock != NULL ? VOXEL_PAGE_VRAM_BUDGET : 0,
                     128, sPagePieces, VOXEL_PAGE_PIECES);
     PageRetriesForget();
@@ -9802,6 +10636,7 @@ bool CtrVoxel_ClaimPages(void)
         return true;
     }
     JobCancel();
+    PageBlockWipe();
     VoxelArena_Init(&sPageArena, sPageBlock, VOXEL_PAGE_VRAM_BUDGET, 128, sPagePieces, VOXEL_PAGE_PIECES);
     PageRetriesForget();
     sHaveBuildings = true;
@@ -10118,6 +10953,8 @@ typedef struct
     float motes;                 /* the sunlit dust in the air, at its brightest */
     float hazeRgb[3];            /* what the distance fades to */
     float hazeStart, hazeRamp;   /* x the eye-to-player distance, see SetGrade */
+    float glitter;               /* the sun's (or moon's) glitter on the water: its gain,
+                                  * 1 = a clear day's, 0 = none (GlitterHour, DrawGlitter) */
 } VoxelLight;
 
 #if CTR_VOXEL_LIGHTING
@@ -10139,6 +10976,7 @@ static VoxelLight LightMix(const VoxelLight *a, const VoxelLight *b, float t)
     out.motes += (b->motes - a->motes) * t;
     out.hazeStart += (b->hazeStart - a->hazeStart) * t;
     out.hazeRamp += (b->hazeRamp - a->hazeRamp) * t;
+    out.glitter += (b->glitter - a->glitter) * t;
     return out;
 }
 
@@ -10167,6 +11005,7 @@ static VoxelLight FogLight(const VoxelLight *clear, bool cave)
         fog.rays = 0.0f;
         fog.bloom = 0.0f;
         fog.motes = 0.0f;
+        fog.glitter = 0.0f;
     }
     else
     {
@@ -10177,6 +11016,7 @@ static VoxelLight FogLight(const VoxelLight *clear, bool cave)
         fog.rays = 0.0f;
         fog.bloom = 0.18f;
         fog.motes = 0.0f;
+        fog.glitter = 0.0f;
         fog.hazeRgb[0] = 0.80f; fog.hazeRgb[1] = 0.83f; fog.hazeRgb[2] = 0.87f;
         fog.hazeStart = 0.80f;
         fog.hazeRamp = 0.65f;
@@ -10192,7 +11032,10 @@ static VoxelLight BaseLightFor(bool indoor)
                         {(VOXEL_HAZE_COLOUR & 255) / 255.0f,
                          ((VOXEL_HAZE_COLOUR >> 8) & 255) / 255.0f,
                          ((VOXEL_HAZE_COLOUR >> 16) & 255) / 255.0f},
-                        VOXEL_HAZE_START, VOXEL_HAZE_RAMP};
+                        VOXEL_HAZE_START, VOXEL_HAZE_RAMP,
+                        /* the glitter's gain on a clear day: every weather's own
+                         * is set here, one knob each (see GlitterHour for the hour's) */
+                        1.00f};
 
 #if CTR_VOXEL_LIGHTING
     if (!indoor)
@@ -10206,6 +11049,7 @@ static VoxelLight BaseLightFor(bool indoor)
             light.rays = 0.14f;
             light.bloom = 0.10f;
             light.motes = 1.00f;
+            light.glitter = 1.35f;
             break;
         case VOXEL_WEATHER_RAIN:
             /* Overcast: no sun to break into patches, rays or glinting dust. */
@@ -10216,6 +11060,7 @@ static VoxelLight BaseLightFor(bool indoor)
             light.rays = 0.0f;
             light.bloom = 0.08f;
             light.motes = 0.0f;
+            light.glitter = 0.0f;
             /* The air grey with rain: the distance goes sooner, colder. */
             light.hazeRgb[0] = 0.62f; light.hazeRgb[1] = 0.68f; light.hazeRgb[2] = 0.76f;
             light.haze = 0.30f + 0.18f * VoxelWorld_WeatherAmount();
@@ -10249,6 +11094,7 @@ static VoxelLight BaseLightFor(bool indoor)
             sand.rays = 0.0f;
             sand.bloom = 0.16f;
             sand.motes = 0.0f;
+            sand.glitter = 0.0f;
             light = LightMix(&light, &sand, VoxelWorld_WeatherAmount());
             break;
         }
@@ -10268,6 +11114,7 @@ static VoxelLight BaseLightFor(bool indoor)
             ash.rays = 0.0f;
             ash.bloom = 0.10f;
             ash.motes = 0.0f;
+            ash.glitter = 0.0f;
             light = LightMix(&light, &ash, VoxelWorld_WeatherAmount());
             break;
         }
@@ -10282,6 +11129,7 @@ static VoxelLight BaseLightFor(bool indoor)
             light.rays = 0.0f;
             light.bloom = 0.12f;
             light.motes = 0.0f;
+            light.glitter = 0.0f;
             break;
         case VOXEL_WEATHER_SHADE:
             light.sun[0] = 0.92f; light.sun[1] = 0.95f; light.sun[2] = 0.98f;
@@ -10290,6 +11138,7 @@ static VoxelLight BaseLightFor(bool indoor)
             light.rays = 0.0f;
             light.bloom = 0.12f;
             light.motes = 0.40f;
+            light.glitter = 0.25f;
             break;
         default:
             break;
@@ -10305,7 +11154,37 @@ static VoxelLight BaseLightFor(bool indoor)
     light.rays = 0.0f;
     light.bloom = 0.0f;
     light.motes = 0.0f;
+    light.glitter = 0.0f;
     return light;
+}
+
+/*
+ * The glitter's hour: the sun's own path, then the moon's. The gain on a clear
+ * day (1) scaled by this, from curves the cycle already has: the sun's by the
+ * rays' (zero before dawn and after dusk, so the glitter comes in with the
+ * light), lower the higher the sun, a low sun's the longest and strongest; the
+ * night's by the glow, as the moonlight is, faint. Where the two cross, both
+ * are zero, so the path swaps its direction with nothing showing. Untimed
+ * (DAY / NIGHT off, no clock) it is the legacy sun's: top left, subtle.
+ * `moon` says which of the two it is.
+ */
+#define VOXEL_GLITTER_FIXED 0.45f   /* untimed, the legacy sun's */
+#define VOXEL_GLITTER_NIGHT 0.35f   /* the night's raw gain, x glow squared */
+#define VOXEL_GLITTER_MOON 0.85f    /* ...and what of it the moon keeps */
+#define VOXEL_GLITTER_NOON 0.55f    /* the sun's, at its highest, of its lowest's */
+static float GlitterHour(const CtrDayNightLight *cycle, bool *moon)
+{
+    float sun, night;
+
+    *moon = false;
+    if (cycle->rayWidth <= 0.0f)
+        return VOXEL_GLITTER_FIXED;
+    sun = cycle->rays < 1.0f ? cycle->rays : 1.0f;
+    night = VOXEL_GLITTER_NIGHT * cycle->glow * cycle->glow;
+    if (sun >= night)
+        return (sun - night) * (VOXEL_GLITTER_NOON + (1.0f - VOXEL_GLITTER_NOON) * (1.0f - cycle->sunAlt));
+    *moon = true;
+    return (night - sun) * VOXEL_GLITTER_MOON;
 }
 
 static float sMoonlight;
@@ -10323,26 +11202,98 @@ static uint32_t MoonlightColour(float fade)
 
 static VoxelLight LightFor(bool indoor)
 {
-    VoxelLight light = BaseLightFor(indoor);
+    static VoxelLight sOutdoorLight;
+    VoxelLight light;
 
+    if (!indoor && sOutdoorLit)
+        return sOutdoorLight;
+    light = BaseLightFor(indoor);
     if (!indoor)
     {
         const CtrDayNightLight *cycle = CtrDayNight_Get();
         CtrDayNightBlend moon = CtrDayNight_Moonlight(cycle, 0.0f, cycle->rgb);
 
+        /*
+         * The hour's split light (CtrDayNightLight): the sun's tint on what
+         * is lit, the sky's on what is not, the horizon's on the distance.
+         * Every one is a multiple of what the weather made, 1 without a cycle.
+         * All of it is the uniforms and texture-environment constants this
+         * already was: the model-specific knobs of the cycle end here.
+         */
         for (unsigned channel = 0; channel < 3; ++channel)
         {
-            light.sun[channel] *= cycle->rgb[channel] * (1.0f - moon.amount);
-            light.shade[channel] *= cycle->rgb[channel] * (1.0f - moon.amount);
-            light.hazeRgb[channel] *= cycle->rgb[channel];
+            light.sun[channel] *= cycle->sun[channel] * (1.0f - moon.amount);
+            light.shade[channel] *= cycle->shade[channel] * (1.0f - moon.amount);
+            light.hazeRgb[channel] *= cycle->haze[channel];
+            if (light.hazeRgb[channel] > 1.0f)
+                light.hazeRgb[channel] = 1.0f;
             light.hazeRgb[channel] += (moon.rgb[channel] - light.hazeRgb[channel]) * moon.amount;
         }
-        light.rays *= cycle->daylight;
+        light.haze = Clamp(light.haze * cycle->hazeAmount, 0.0f, 0.95f > light.haze ? 0.95f : light.haze);
+        light.bloom = Clamp(light.bloom * cycle->bloom, 0.0f, 0.6f > light.bloom ? 0.6f : light.bloom);
+        light.rays = Clamp(light.rays * cycle->rays, 0.0f, 1.0f);
+        {
+            bool moonGlitter;
+            float hour = GlitterHour(cycle, &moonGlitter);
+
+            /* (to 1: it is a colour's gain, DrawGlitter) */
+            light.glitter = Clamp(light.glitter * hour, 0.0f, 1.0f);
+        }
         light.motes *= cycle->daylight;
         light.dappleLow = 1.0f + (light.dappleLow - 1.0f) * cycle->daylight;
         light.dappleHigh = 1.0f + (light.dappleHigh - 1.0f) * cycle->daylight;
+        sOutdoorLight = light;
+        sOutdoorLit = true;
     }
     return light;
+}
+
+/* The glitter's gain this frame, outdoors: the weather's and the hour's, and
+ * nothing while the camera swoops to the 2D field. */
+static float GlitterStrength(void)
+{
+    return LightFor(false).glitter * (1.0f - CtrVoxel_SwoopNeutral());
+}
+
+/*
+ * The path for the hour: towards the sun on the ground (the sun's own
+ * direction, gVoxelSun's: positive dx / dz is a sun towards -x / -z, and the
+ * camera looks north, so the morning's sun, dx < 0, is on the right of the
+ * screen and a noon sun straight up it), and how big. A low sun's is the
+ * longest (32 cells) and widest (16) and its brightest part furthest ahead; a
+ * high sun's a short, narrow patch near the top of the picture (12 by 7). The
+ * moon's is opposite the legacy sun's - up and to the right - thin and long.
+ */
+static void GlitterShapeFor(const CtrDayNightLight *cycle, GlitterShape *shape)
+{
+    bool moon;
+    float dx = cycle->sunDx, dz = cycle->sunDz, alt = cycle->sunAlt;
+    float len, low, peak;
+
+    GlitterHour(cycle, &moon);
+    if (moon)
+    {
+        dx = -0.85f;
+        dz = 0.55f;
+        alt = 0.5f;
+    }
+    len = sqrtf(dx * dx + dz * dz);
+    if (len < 0.001f)
+    {
+        dx = 0.0f;
+        dz = 1.0f;
+        len = 1.0f;
+    }
+    low = 1.0f - Clamp(alt, 0.0f, 1.0f);
+    shape->sx = -dx / len;
+    shape->sz = -dz / len;
+    shape->moon = moon;
+    shape->length = moon ? 18.0f : 12.0f + 20.0f * low;
+    shape->width = moon ? 5.0f : 7.0f + 9.0f * low;
+    shape->invLength = 1.0f / shape->length;
+    /* the brightest part this far ahead of the camera's target */
+    peak = moon ? 4.0f : 4.0f + low;
+    shape->back = VOXEL_GLITTER_PEAK_V * shape->length - peak;
 }
 
 static void SetGrade(const VoxelLight *light)
@@ -10509,7 +11460,8 @@ static void ReleaseDappleUnit(void)
     uint32_t *flags = (uint32_t *)(void *)(__C3D_Context + C3DI_CONTEXT_FLAGS);
     C3D_Tex **bound = (C3D_Tex **)(void *)(__C3D_Context + C3DI_CONTEXT_TEX);
 
-    if (bound[1] != &sDappleTex)
+    /* (the water's glitter leaves its noise there when there are no dapples) */
+    if (bound[1] != &sDappleTex && bound[1] != &sGlitNoiseTex)
     {
         if (!warned)
             CtrLog_Write(CTR_LOG_ERROR, "VOXEL: unknown citro3d layout, texture unit 1 left on");
@@ -10543,6 +11495,30 @@ static void ReleaseDappleUnit(void)
 /* 0xAABBGGRR: warm white, the sun's own colour rather than gold. */
 #define VOXEL_RAY_COLOUR 0xFFD0F0FFu
 
+/*
+ * The fan of a timed sun (DAY / NIGHT on, outdoors): the same shafts, but
+ * from a source that follows the sun along the top edge and at the angle the
+ * light travels (CtrDayNightLight.rayX, rayAngle). Still one static mesh, one
+ * draw and no rebuild: a polar fan around its source, its strength falling
+ * with the distance as above and with the angle off the light's axis, laid
+ * out in units of VOXEL_RAYFAN_UNIT pixels with the axis straight down. Each
+ * frame's model-view matrix turns it to the light, stretches it (wider at
+ * high sun, longer at low) and puts it on the edge, so the hour costs a
+ * matrix and nothing more; the pattern is made from the mesh's own coordinates,
+ * so it stays along the shafts whatever the angle. The sun's own colour tints
+ * the shafts. The reach and the half angle keep the blended area near the
+ * corner fan's (about 72k pixels an eye) at every hour.
+ *
+ * Everything new is here and in CtrDayNightLight: not reading its rayWidth
+ * (zero is the corner fan) is all a later restriction to one model takes.
+ */
+#define VOXEL_RAYFAN_SPOKES 10
+#define VOXEL_RAYFAN_RINGS 5
+#define VOXEL_RAYFAN_UNIT 100.0f       /* pixels a mesh unit stands for */
+#define VOXEL_RAYFAN_REACH 0.58f       /* of the screen's diagonal, from the source */
+#define VOXEL_RAYFAN_HALF_ANGLE 60.0f  /* degrees each side of the light's axis */
+#define VOXEL_RAYFAN_RISE 0.03f        /* the source, this far above the top edge */
+
 static float RayStrength(float x, float y)
 {
     float dx = x * CTR_GAME_WIDTH, dy = (1.0f - y) * CTR_GAME_HEIGHT;
@@ -10553,6 +11529,9 @@ static float RayStrength(float x, float y)
     return s <= 0.0f ? 0.0f : s * s;
 }
 
+static void MakeRayFan(void);
+static void MakeNightVeil(void);
+
 static void RayVertex(VoxelGpuVertex *v, float x, float y)
 {
     v->u = v->v = 0.0f;
@@ -10562,12 +11541,72 @@ static void RayVertex(VoxelGpuVertex *v, float x, float y)
     v->shade = (int16_t)(RayStrength(x, y) * VOXEL_SHADE_SCALE + 0.5f);
 }
 
+static void RayFanVertex(VoxelGpuVertex *v, float radius, float phase, float reach, float half)
+{
+    float along = 1.0f - radius / reach, t = 1.0f - fabsf(phase) / half;
+    float strength = along <= 0.0f || t <= 0.0f ? 0.0f : along * along * (t * t * (3.0f - 2.0f * t));
+
+    v->u = v->v = 0.0f;
+    v->x = (int16_t)lrintf(radius * sinf(phase) * 512.0f);
+    v->y = (int16_t)lrintf(-radius * cosf(phase) * 512.0f);
+    v->z = -512;
+    v->shade = (int16_t)(strength * VOXEL_SHADE_SCALE + 0.5f);
+}
+
+/* Not fatal: without it a timed sun has no rays. */
+static void MakeRayFan(void)
+{
+    float diagonal = sqrtf((float)(CTR_GAME_WIDTH * CTR_GAME_WIDTH + CTR_GAME_HEIGHT * CTR_GAME_HEIGHT));
+    float reach = diagonal * VOXEL_RAYFAN_REACH / VOXEL_RAYFAN_UNIT;
+    float half = C3D_AngleFromDegrees(VOXEL_RAYFAN_HALF_ANGLE);
+    unsigned count = 0;
+
+    sRayFan = linearAlloc((VOXEL_RAYFAN_SPOKES + 2 * VOXEL_RAYFAN_SPOKES * (VOXEL_RAYFAN_RINGS - 1)) * 3
+                          * sizeof(VoxelGpuVertex));
+    if (sRayFan == NULL)
+    {
+        CtrLog_Write(CTR_LOG_ERROR, "VOXEL: no linear memory for the sun rays' fan");
+        return;
+    }
+    for (unsigned ring = 0; ring < VOXEL_RAYFAN_RINGS; ++ring)
+    {
+        float r0 = reach * ring / VOXEL_RAYFAN_RINGS, r1 = reach * (ring + 1) / VOXEL_RAYFAN_RINGS;
+
+        for (unsigned spoke = 0; spoke < VOXEL_RAYFAN_SPOKES; ++spoke)
+        {
+            float p0 = -half + 2.0f * half * spoke / VOXEL_RAYFAN_SPOKES;
+            float p1 = -half + 2.0f * half * (spoke + 1) / VOXEL_RAYFAN_SPOKES;
+
+            if (ring == 0)
+            {
+                /* The source itself: one point, a triangle to the first ring. */
+                RayFanVertex(&sRayFan[count++], 0.0f, 0.0f, reach, half);
+                RayFanVertex(&sRayFan[count++], r1, p0, reach, half);
+                RayFanVertex(&sRayFan[count++], r1, p1, reach, half);
+                continue;
+            }
+            RayFanVertex(&sRayFan[count++], r0, p0, reach, half);
+            RayFanVertex(&sRayFan[count++], r1, p0, reach, half);
+            RayFanVertex(&sRayFan[count++], r1, p1, reach, half);
+            RayFanVertex(&sRayFan[count++], r0, p0, reach, half);
+            RayFanVertex(&sRayFan[count++], r1, p1, reach, half);
+            RayFanVertex(&sRayFan[count++], r0, p1, reach, half);
+        }
+    }
+    GSPGPU_FlushDataCache(sRayFan, count * sizeof(VoxelGpuVertex));
+    sRayFanCount = count;
+}
+
 /* Not fatal: without it there are no rays. */
 static void MakeRays(void)
 {
     static const unsigned corner[6][2] = {{0, 0}, {1, 0}, {1, 1}, {0, 0}, {1, 1}, {0, 1}};
     unsigned count = 0;
 
+    /* (each of the three on its own: the fan and the veil need nothing of
+     * the corner's mesh) */
+    MakeRayFan();
+    MakeNightVeil();
     sRays = linearAlloc(VOXEL_RAY_COLS * VOXEL_RAY_ROWS * 6 * sizeof(VoxelGpuVertex));
     if (sRays == NULL)
     {
@@ -10591,19 +11630,104 @@ static void MakeRays(void)
 }
 
 /*
- * Drawn last, with the dapple texture on unit 1. Colour is the constant gold;
- * alpha is (1 - pattern) x the vertex's strength x the light's, so the shafts
- * are the pattern's narrower shaded patches. Neither depth tested nor written:
- * light in the air lies over everything. The fade environment still applies,
- * so a fade to black takes the rays with it.
+ * The night's veil. A night lit evenly from edge to edge is a flat picture,
+ * a day with its colours turned blue. The dark gathers instead round the
+ * edges of the screen and over the distance at its top, and leaves the
+ * ground round the player as the moon lights it: the eye is held where the
+ * game is played, and the lamps and the lit windows stand out of the dark
+ * they are in. One mesh over the screen, its vertices' strength the dark
+ * (0 in the middle: those squares are left out), blended towards a deep
+ * blue - never black: the night's shadows keep their colour.
+ *
+ *   strength = 1 - (1 - edge)(1 - far)
+ *   edge: 0 inside an ellipse round the player's place, to 1 at the corners
+ *   far:  0 over the lower two thirds, rising to the top edge
+ *
+ * settings.txt voxel_night_veil=0 leaves it out.
  */
-static void DrawRays(const VoxelLight *light, const VoxelLight *unlit)
+#define VOXEL_VEIL_COLS 16u
+#define VOXEL_VEIL_ROWS 10u
+#define VOXEL_VEIL_COLOUR 0x00240A04u /* B G R: (4, 10, 36) */
+#define VOXEL_VEIL_MOST 0.62f          /* the dark at a corner, at full night */
+#define VOXEL_VEIL_CENTRE_Y 0.46f      /* a little under the middle: the player's feet */
+#define VOXEL_VEIL_INNER 0.42f         /* of the ellipse's radius: lit as it is up to here */
+#define VOXEL_VEIL_FAR 0.45f           /* the dark at the top edge, of the most */
+
+static float VeilSmooth(float t)
 {
-    float angle = C3D_AngleFromDegrees(VOXEL_RAY_ANGLE);
-    float along[2] = {sinf(angle), -cosf(angle)}, across[2] = {cosf(angle), sinf(angle)};
-    double seconds = EffectSeconds();
-    float drift = (float)fmod(seconds * VOXEL_RAY_DRIFT, 1.0);
-    unsigned strength = (unsigned)(light->rays * 255.0f + 0.5f);
+    if (t <= 0.0f) return 0.0f;
+    if (t >= 1.0f) return 1.0f;
+    return t * t * (3.0f - 2.0f * t);
+}
+
+/* x, y in 0..1, y up. */
+static float VeilStrength(float x, float y)
+{
+    float dx = (x - 0.5f) / 0.60f, dy = (y - VOXEL_VEIL_CENTRE_Y) / 0.64f;
+    float edge = VeilSmooth((sqrtf(dx * dx + dy * dy) - VOXEL_VEIL_INNER) / (1.0f - VOXEL_VEIL_INNER));
+    float far = VeilSmooth((y - 0.62f) / 0.38f) * VOXEL_VEIL_FAR;
+
+    return 1.0f - (1.0f - edge) * (1.0f - far);
+}
+
+static void VeilVertex(VoxelGpuVertex *v, float x, float y)
+{
+    v->u = v->v = 0.0f;
+    v->x = (int16_t)(x * 512.0f + 0.5f);
+    v->y = (int16_t)(y * 512.0f + 0.5f);
+    v->z = -512;
+    v->shade = (int16_t)(VeilStrength(x, y) * VOXEL_SHADE_SCALE + 0.5f);
+}
+
+/* Not fatal: without it the night is lit evenly. */
+static void MakeNightVeil(void)
+{
+    static const unsigned corner[6][2] = {{0, 0}, {1, 0}, {1, 1}, {0, 0}, {1, 1}, {0, 1}};
+    unsigned count = 0;
+
+    sNightVeil = linearAlloc(VOXEL_VEIL_COLS * VOXEL_VEIL_ROWS * 6 * sizeof(VoxelGpuVertex));
+    if (sNightVeil == NULL)
+    {
+        CtrLog_Write(CTR_LOG_ERROR, "VOXEL: no linear memory for the night's veil");
+        return;
+    }
+    for (unsigned row = 0; row < VOXEL_VEIL_ROWS; ++row)
+        for (unsigned col = 0; col < VOXEL_VEIL_COLS; ++col)
+        {
+            float x0 = (float)col / VOXEL_VEIL_COLS, x1 = (float)(col + 1) / VOXEL_VEIL_COLS;
+            float y0 = (float)row / VOXEL_VEIL_ROWS, y1 = (float)(row + 1) / VOXEL_VEIL_ROWS;
+
+            if (VeilStrength(x0, y0) <= 0.0f && VeilStrength(x1, y0) <= 0.0f
+             && VeilStrength(x0, y1) <= 0.0f && VeilStrength(x1, y1) <= 0.0f)
+                continue;
+            for (unsigned k = 0; k < 6; ++k)
+                VeilVertex(&sNightVeil[count++], corner[k][0] ? x1 : x0, corner[k][1] ? y1 : y0);
+        }
+    GSPGPU_FlushDataCache(sNightVeil, count * sizeof(VoxelGpuVertex));
+    sNightVeilCount = count;
+}
+
+/* How much of the veil this hour draws: none by day or without a cycle. */
+static float NightVeilAmount(void)
+{
+    static int sOn = -1;
+
+    if (sOn < 0)
+        sOn = CtrSettings_GetInt("voxel_night_veil", 1) != 0;
+    if (!sOn || sNightVeil == NULL || sNightVeilCount == 0)
+        return 0.0f;
+    return Clamp(1.0f - CtrDayNight_Get()->daylight, 0.0f, 1.0f) * (1.0f - CtrVoxel_SwoopNeutral());
+}
+
+/*
+ * Over everything of the world, as the rays are: neither depth tested nor
+ * written. Colour is the constant blue; alpha the vertex's strength (the
+ * shader's colour is half of it, hence the scale) x the hour's. The fade
+ * still applies, so a fade to white takes the veil with it.
+ */
+static void DrawNightVeil(const VoxelLight *unlit, float amount)
+{
+    unsigned strength = (unsigned)(amount * VOXEL_VEIL_MOST * 255.0f + 0.5f);
     C3D_Mtx ortho, identity;
     C3D_TexEnv *env;
 
@@ -10611,15 +11735,113 @@ static void DrawRays(const VoxelLight *light, const VoxelLight *unlit)
     FitToLogicalSurface(&ortho);
     Mtx_Identity(&identity);
     SetProjection(&ortho);
-    UploadModelView(&identity);
     SetOrigin(0.0f, 0.0f);
-    /* The pattern in pixels, turned to the rays. */
-    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleU,
-                  across[0] * CTR_GAME_WIDTH / VOXEL_RAY_ACROSS,
-                  across[1] * CTR_GAME_HEIGHT / VOXEL_RAY_ACROSS, 0.0f, drift);
-    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleV,
-                  along[0] * CTR_GAME_WIDTH / VOXEL_RAY_ALONG,
-                  along[1] * CTR_GAME_HEIGHT / VOXEL_RAY_ALONG, 0.0f, 0.0f);
+    UploadModelView(&identity);
+    SetGrade(unlit);
+
+    env = C3D_GetTexEnv(0);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_RGB, GPU_CONSTANT, GPU_CONSTANT, GPU_CONSTANT);
+    C3D_TexEnvFunc(env, C3D_RGB, GPU_REPLACE);
+    C3D_TexEnvSrc(env, C3D_Alpha, GPU_PRIMARY_COLOR, GPU_CONSTANT, GPU_CONSTANT);
+    C3D_TexEnvOpAlpha(env, GPU_TEVOP_A_SRC_R, GPU_TEVOP_A_SRC_ALPHA, GPU_TEVOP_A_SRC_ALPHA);
+    C3D_TexEnvFunc(env, C3D_Alpha, GPU_MODULATE);
+    C3D_TexEnvScale(env, C3D_Alpha, GPU_TEVSCALE_2);
+    C3D_TexEnvColor(env, VOXEL_VEIL_COLOUR | strength << 24);
+    C3D_TexEnvInit(C3D_GetTexEnv(1));
+    C3D_TexEnvInit(C3D_GetTexEnv(2));
+    FadeFor(false);
+
+    C3D_AlphaTest(false, GPU_ALWAYS, 0);
+    C3D_DepthTest(false, GPU_ALWAYS, GPU_WRITE_COLOR);
+    C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD,
+                   GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA, GPU_ZERO, GPU_ONE);
+    BindVertices(sNightVeil);
+    C3D_DrawArrays(GPU_TRIANGLES, 0, (int)sNightVeilCount);
+    C3D_DepthTest(true, GPU_GREATER, GPU_WRITE_ALL);
+}
+
+/*
+ * Drawn last, with the dapple texture on unit 1. Colour is the constant gold;
+ * alpha is (1 - pattern) x the vertex's strength x the light's, so the shafts
+ * are the pattern's narrower shaded patches. Neither depth tested nor written:
+ * light in the air lies over everything. The fade environment still applies,
+ * so a fade to black takes the rays with it.
+ */
+/* The corner fan, or the timed sun's: the mesh this hour's rays are drawn
+ * with (NULL: none to draw) and how many vertices it has. */
+static const VoxelGpuVertex *RayMesh(unsigned *count)
+{
+    bool timed = CtrDayNight_Get()->rayWidth > 0.0f;
+
+    *count = timed ? sRayFanCount : sRayCount;
+    return timed ? sRayFan : sRays;
+}
+
+static void DrawRays(const VoxelLight *light, const VoxelLight *unlit)
+{
+    const CtrDayNightLight *cycle = CtrDayNight_Get();
+    bool timed = cycle->rayWidth > 0.0f;
+    float angle = C3D_AngleFromDegrees(VOXEL_RAY_ANGLE);
+    float along[2] = {sinf(angle), -cosf(angle)}, across[2] = {cosf(angle), sinf(angle)};
+    double seconds = EffectSeconds();
+    float drift = (float)fmod(seconds * VOXEL_RAY_DRIFT, 1.0);
+    unsigned strength = (unsigned)(light->rays * 255.0f + 0.5f);
+    uint32_t colour = VOXEL_RAY_COLOUR;
+    unsigned meshCount;
+    const VoxelGpuVertex *mesh = RayMesh(&meshCount);
+    C3D_Mtx ortho, identity, model;
+    C3D_TexEnv *env;
+
+    Mtx_Ortho(&ortho, 0.0f, 1.0f, 0.0f, 1.0f, 0.1f, 10.0f, false);
+    FitToLogicalSurface(&ortho);
+    Mtx_Identity(&identity);
+    SetProjection(&ortho);
+    SetOrigin(0.0f, 0.0f);
+    if (timed)
+    {
+        /*
+         * The fan's own matrix: its axis (down) turned to the light, which
+         * travels at rayAngle off the vertical (positive to the right: the
+         * source is at the left), scaled across and along, in pixels so the
+         * turn keeps the screen's proportions, and put on the top edge at
+         * rayX. A fan from a source off the top-right corner leans left.
+         */
+        float turn = C3D_AngleFromDegrees(cycle->rayAngle), c = cosf(turn), s = sinf(turn);
+        float unitX = VOXEL_RAYFAN_UNIT / CTR_GAME_WIDTH, unitY = VOXEL_RAYFAN_UNIT / CTR_GAME_HEIGHT;
+
+        model = identity;
+        model.r[0].x = unitX * c * cycle->rayWidth;
+        model.r[0].y = -unitX * s * cycle->rayLength;
+        model.r[0].w = cycle->rayX;
+        model.r[1].x = unitY * s * cycle->rayWidth;
+        model.r[1].y = unitY * c * cycle->rayLength;
+        model.r[1].w = 1.0f + VOXEL_RAYFAN_RISE;
+        UploadModelView(&model);
+        /* The pattern from the mesh's own units: across the shafts is local
+         * x, along them local y (down, as the light goes). */
+        C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleU, VOXEL_RAYFAN_UNIT / VOXEL_RAY_ACROSS, 0.0f, 0.0f, drift);
+        C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleV, 0.0f, -VOXEL_RAYFAN_UNIT / VOXEL_RAY_ALONG, 0.0f, 0.0f);
+        colour = 0xFF000000u;
+        for (unsigned channel = 0; channel < 3; ++channel)
+        {
+            float tint = Clamp(cycle->rayRgb[channel], 0.0f, 1.0f);
+
+            colour |= (uint32_t)((float)((VOXEL_RAY_COLOUR >> (channel * 8u)) & 255u) * tint + 0.5f)
+                   << (channel * 8u);
+        }
+    }
+    else
+    {
+        UploadModelView(&identity);
+        /* The pattern in pixels, turned to the rays. */
+        C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleU,
+                      across[0] * CTR_GAME_WIDTH / VOXEL_RAY_ACROSS,
+                      across[1] * CTR_GAME_HEIGHT / VOXEL_RAY_ACROSS, 0.0f, drift);
+        C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleV,
+                      along[0] * CTR_GAME_WIDTH / VOXEL_RAY_ALONG,
+                      along[1] * CTR_GAME_HEIGHT / VOXEL_RAY_ALONG, 0.0f, 0.0f);
+    }
     SetGrade(unlit);
 
     env = C3D_GetTexEnv(0);
@@ -10630,7 +11852,7 @@ static void DrawRays(const VoxelLight *light, const VoxelLight *unlit)
     C3D_TexEnvOpAlpha(env, GPU_TEVOP_A_ONE_MINUS_SRC_R, GPU_TEVOP_A_SRC_R, GPU_TEVOP_A_SRC_ALPHA);
     C3D_TexEnvFunc(env, C3D_Alpha, GPU_MODULATE);
     C3D_TexEnvScale(env, C3D_Alpha, GPU_TEVSCALE_2);
-    C3D_TexEnvColor(env, VOXEL_RAY_COLOUR);
+    C3D_TexEnvColor(env, colour);
     env = C3D_GetTexEnv(1);
     C3D_TexEnvInit(env);
     C3D_TexEnvSrc(env, C3D_Alpha, GPU_PREVIOUS, GPU_CONSTANT, GPU_CONSTANT);
@@ -10642,8 +11864,10 @@ static void DrawRays(const VoxelLight *light, const VoxelLight *unlit)
     C3D_AlphaTest(false, GPU_ALWAYS, 0);
     C3D_DepthTest(false, GPU_ALWAYS, GPU_WRITE_COLOR);
     C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, GPU_SRC_ALPHA, GPU_ONE, GPU_ZERO, GPU_ONE);
-    BindVertices(sRays);
-    C3D_DrawArrays(GPU_TRIANGLES, 0, (int)sRayCount);
+    BindVertices((VoxelGpuVertex *)mesh);
+    C3D_DrawArrays(GPU_TRIANGLES, 0, (int)meshCount);
+    if (timed)
+        UploadModelView(&identity);
     C3D_DepthTest(true, GPU_GREATER, GPU_WRITE_ALL);
     C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD,
                    GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA, GPU_ZERO, GPU_ONE);
@@ -11110,7 +12334,6 @@ static uint32_t DappleConstant(const VoxelLight *light)
 #define VOXEL_SHADOW_SOFT_BACK 0.05f
 static C3D_Tex sShadowTex;
 static C3D_RenderTarget *sShadowTarget;
-static bool sShadowFailed;
 /* The world's passes sample it (set by CtrVoxel_Draw around them). */
 static bool sShadowOn;
 /* This frame's map was drawn, from this matrix: anchored world to (u, v,
@@ -11128,19 +12351,17 @@ static float sShadowBias = 0.25f;
 /* The atlas is on this unit while the map is on unit 0. */
 static C3D_Tex *sShadowAtlasBound;
 
+/* Made outside the frame, with the world's VRAM (CtrVoxel_UnparkVram) or
+ * when the option asks for it with the world up (CtrVoxel_ClaimShadowMap);
+ * kept until the world parks. VRAM only: the GPU fills and renders it
+ * there. */
 static bool ShadowMapMake(void)
 {
     if (sShadowTarget != NULL)
         return true;
-    if (sShadowFailed)
-        return false;
-    /* VRAM only (the GPU fills and renders it there), and only with room
-     * to spare: the chunks' arenas come first */
-    if (CtrGpuMem_LargestVram() < 4u * VOXEL_SHADOW_MAP_DIM * VOXEL_SHADOW_MAP_DIM + 128u * 1024u
-     || !C3D_TexInitShadow(&sShadowTex, VOXEL_SHADOW_MAP_DIM, VOXEL_SHADOW_MAP_DIM))
+    if (!C3D_TexInitShadow(&sShadowTex, VOXEL_SHADOW_MAP_DIM, VOXEL_SHADOW_MAP_DIM))
     {
-        sShadowFailed = true;
-        CtrLog_Write(CTR_LOG_VIDEO, "VOXEL shadow map: no VRAM (%lu largest)",
+        CtrLog_Write(CTR_LOG_ERROR, "VOXEL shadow map: no VRAM (%lu largest)",
                      (unsigned long)CtrGpuMem_LargestVram());
         return false;
     }
@@ -11151,11 +12372,98 @@ static bool ShadowMapMake(void)
     if (sShadowTarget == NULL)
     {
         C3D_TexDelete(&sShadowTex);
-        sShadowFailed = true;
+        CtrLog_Write(CTR_LOG_ERROR, "VOXEL shadow map: no render target");
         return false;
     }
     CtrLog_Write(CTR_LOG_VIDEO, "VOXEL shadow map: %dx%d made", VOXEL_SHADOW_MAP_DIM, VOXEL_SHADOW_MAP_DIM);
     return true;
+}
+
+/* With the world's VRAM (CtrVoxel_ParkVram): nothing queued reads it. */
+static void ShadowMapFree(void)
+{
+    if (sShadowTarget == NULL)
+        return;
+    C3D_RenderTargetDelete(sShadowTarget);
+    C3D_TexDelete(&sShadowTex);
+    sShadowTarget = NULL;
+    sShadowReady = false;
+    sShadowOn = false;
+}
+
+/*
+ * SHADOW QUALITY set to HIGH with the world up: its map is still to be made
+ * (the world was claimed in LOW, or found no room for it then). Asked for
+ * outside the frame. `hard`, the first time: the atlases out of view go for
+ * it, then whatever idle the world holds - they come back on demand. After
+ * that only an atlas whose going makes the room by itself: asked again every
+ * couple of seconds, the rest would be dropped and built again each time for
+ * nothing. The quality stays HIGH meanwhile, whatever happens.
+ */
+bool CtrVoxel_ShadowMapMissing(void)
+{
+    return sReady && !sParked && CtrSettings_VoxelShadowsHigh() && sShadowTarget == NULL;
+}
+
+bool CtrVoxel_ClaimShadowMap(bool hard)
+{
+    uint32_t bytes = 4u * VOXEL_SHADOW_MAP_DIM * VOXEL_SHADOW_MAP_DIM;
+
+    if (!CtrVoxel_ShadowMapMissing())
+        return true;
+    if (CtrGpuMem_LargestVram() < bytes)
+    {
+        if (hard)
+            CtrVoxel_ReleaseIdleVramFor(bytes, true);
+        else
+            CtrVoxel_ReleaseAtlasMaking(bytes);
+    }
+    return ShadowMapMake();
+}
+
+/* SHADOW QUALITY back to LOW with the world up: the map's VRAM given back,
+ * a quarter of a mebibyte nothing else would free while the option stays on.
+ * The caller's to say that nothing queued reads it (the world not drawn for
+ * two frames: the OPTIONS screen the change is made on). */
+void CtrVoxel_DropShadowMap(void)
+{
+    if (!sReady || sShadowTarget == NULL || CtrSettings_VoxelShadowsHigh())
+        return;
+    ShadowMapFree();
+    CtrLog_Write(CTR_LOG_VIDEO, "VOXEL shadow map: given back, SHADOW QUALITY is LOW (VRAM free=%lu)",
+                 (unsigned long)vramSpaceFree());
+}
+
+/*
+ * The sun's world. The mountains' south faces are drawn leant
+ * (VoxelRelief_Lean), further than the sun's rays lean: as drawn they are
+ * slopes in full sun with no shadow at their feet. The world is lit with its
+ * faces upright instead, as they stood before they leant (VoxelBuilder_SunZ
+ * for the baked light), and so is the map: a point of the relief is put back
+ * as far south as the lean moved it north, lean x its height, when it is
+ * drawn into the map and when it reads it. What stands upright on the ground
+ * (a static model) moved north whole, by the lean x the height of its foot,
+ * and goes back by that (ShadowUprightAt, DrawStatics).
+ */
+static void ShadowSunMtx(C3D_Mtx *sun)
+{
+    Mtx_Identity(sun);
+    sun->r[2].y = VoxelRelief_Lean();
+}
+
+/* The map's rows from a view-space point with no lean undone: ShadowUniforms
+ * keeps them for the models that stand upright. */
+static C3D_Mtx sShadowUprightRows;
+
+/* The shadow uniforms for a model standing upright on ground at `height`. */
+static void ShadowUprightAt(float height)
+{
+    float back = VoxelRelief_Lean() * height;
+    const C3D_Mtx *r = &sShadowUprightRows, *t = &sShadowTexMtx;
+
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowU, r->r[0].x, r->r[0].y, r->r[0].z, r->r[0].w + back * t->r[0].z);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowV, r->r[1].x, r->r[1].y, r->r[1].z, r->r[1].w + back * t->r[1].z);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowW, r->r[2].x, r->r[2].y, r->r[2].z, r->r[2].w + back * t->r[2].z);
 }
 
 /* The shader's shadow uniforms: off (the texture coordinates as they were),
@@ -11172,11 +12480,16 @@ static void ShadowUniforms(const C3D_Mtx *modelView)
         return;
     }
     {
-        C3D_Mtx inverse, rows;
+        C3D_Mtx inverse, rows, sun, leant;
 
         Mtx_Copy(&inverse, modelView);
         Mtx_Inverse(&inverse);
-        Mtx_Multiply(&rows, &sShadowTexMtx, &inverse);
+        /* what stands upright on its ground (ShadowUprightAt) */
+        Mtx_Multiply(&sShadowUprightRows, &sShadowTexMtx, &inverse);
+        /* the relief: each point where the sun finds it (ShadowSunMtx) */
+        ShadowSunMtx(&sun);
+        Mtx_Multiply(&leant, &sShadowTexMtx, &sun);
+        Mtx_Multiply(&rows, &leant, &inverse);
         C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowU, rows.r[0].x, rows.r[0].y, rows.r[0].z, rows.r[0].w);
         C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowV, rows.r[1].x, rows.r[1].y, rows.r[1].z, rows.r[1].w);
         C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniShadowW, rows.r[2].x, rows.r[2].y, rows.r[2].z, rows.r[2].w);
@@ -11224,8 +12537,8 @@ static uint32_t ShadowColour(const VoxelLight *light)
  * with s the filtered comparison: stage 0 is C - A (a subtraction clamps at
  * 0, A in the constant's alpha), stage 1 x (1 - s), stage 2 the rest. An
  * opaque texel stays at or above a half and the alpha test still drops
- * only the clear ones. The haze and the fade stay on 3 and 4 (5 with the
- * glow, which puts the texel's alpha back: no shadow on a glowing wall).
+ * only the clear ones. The haze and the fade stay on 3 and 4; a page with
+ * lit windows has its own stages after these three (BuildingGlowShadowEnv).
  */
 static void ShadowTexEnv(void)
 {
@@ -11921,13 +13234,160 @@ static void FadeFor(bool sprites)
 }
 
 /*
+ * The sun's glitter (UpdateGlitter): the quads on the water, one draw, added
+ * to what is there. Drawn over the lamps' pools and under the reflections,
+ * the cast shadows and every sprite: depth tested without writing, with the
+ * pools' polygon offset, so the water in front of terrain, a bridge, a tree
+ * or a walker hides it by the depth test, and a sprite, its shadow or the surf
+ * blob drawn after lies over it as over the water.
+ *
+ * Texture environment (texture 0 is the mask, written per vertex; texture 1
+ * the noise, the dapples' own coordinates, drifting by their uniform):
+ *
+ *   0  colour = constant (the sun's or the moon's colour x the gain)
+ *      alpha  = texture1.r + texture0.r - 0.5      (ADD_SIGNED)
+ *   1  alpha  = (previous - 1/2) x 4               (SUBTRACT, scale 4)
+ *   2  alpha  = previous x vertex alpha            (MODULATE: 1 - the haze)
+ *   3  the screen fade (FadeTexEnv), colour only; 4 and 5 pass through
+ *
+ * so a fragment sparkles where noise + mask exceed one: the share of the water
+ * a mask value m lets through is m, and a glint reaches full strength a
+ * quarter of the noise's range above that. The 1/2 is exact on purpose: with
+ * no mask (the footprint's slack, the quads' corners) noise + 0 - 1/2 never
+ * passes it, so nothing glints off the path whatever the gain; a lower one
+ * would haze every quad with sparkle. The blend adds colour x alpha: a fade
+ * to black takes the glitter with it (its colour goes to black), a fade to
+ * white leaves it where it sparkles, and the haze takes it from the far water
+ * as it takes the water's own colour. The gain is the colour's (and the glints'
+ * brightness, not their number), to 1.
+ */
+#if CTR_VOXEL_LIGHTING
+static void DrawGlitter(const VoxelLight *light, const CtrDayNightLight *cycle, bool dapples)
+{
+    static const float sunBase[3] = {1.00f, 0.99f, 0.95f}, moonBase[3] = {0.62f, 0.78f, 1.00f};
+    float gain = Clamp(light->glitter, 0.0f, 1.0f);
+    uint32_t colour = 0xFF000000u;
+    double seconds = EffectSeconds();
+    double driftU = ((double)sGlitX - (double)VOXEL_GLITTER_DRIFT_X * seconds) / VOXEL_GLITTER_PERIOD_X;
+    double driftV = ((double)sGlitZ - (double)VOXEL_GLITTER_DRIFT_Z * seconds) / VOXEL_GLITTER_PERIOD_Z;
+    C3D_TexEnv *env;
+
+    for (unsigned channel = 0; channel < 3; ++channel)
+    {
+        float c = sGlitShape.moon ? moonBase[channel] : sunBase[channel] * Clamp(cycle->rayRgb[channel], 0.0f, 1.0f);
+
+        colour |= (uint32_t)(Clamp(c * gain, 0.0f, 1.0f) * 255.0f + 0.5f) << (channel * 8u);
+    }
+    /* the noise's pattern stays on the ground: the origin's own place in it, wrapped */
+    driftU -= floor(driftU);
+    driftV -= floor(driftV);
+
+    SetGrade(light);
+    C3D_AlphaTest(false, GPU_ALWAYS, 0);
+    C3D_DepthTest(true, GPU_GREATER, GPU_WRITE_COLOR);
+    C3D_DepthMap(true, -1.0f, 3.0f / 65535.0f);
+    SetModelView(sGlitX, sGlitZ);
+    BindVertices(sGlitGpu);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleU, 1.0f / VOXEL_GLITTER_PERIOD_X, 0.0f, 0.0f, (float)driftU);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, sUniDappleV, 0.0f, 0.0f, 1.0f / VOXEL_GLITTER_PERIOD_Z, (float)driftV);
+    C3D_TexBind(0, &sGlitMaskTex);
+    C3D_TexBind(1, &sGlitNoiseTex);
+
+    env = C3D_GetTexEnv(0);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_RGB, GPU_CONSTANT, GPU_CONSTANT, GPU_CONSTANT);
+    C3D_TexEnvFunc(env, C3D_RGB, GPU_REPLACE);
+    C3D_TexEnvSrc(env, C3D_Alpha, GPU_TEXTURE1, GPU_TEXTURE0, GPU_CONSTANT);
+    C3D_TexEnvOpAlpha(env, GPU_TEVOP_A_SRC_R, GPU_TEVOP_A_SRC_R, GPU_TEVOP_A_SRC_ALPHA);
+    C3D_TexEnvFunc(env, C3D_Alpha, GPU_ADD_SIGNED);
+    C3D_TexEnvColor(env, colour);
+    env = C3D_GetTexEnv(1);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_Alpha, GPU_PREVIOUS, GPU_CONSTANT, GPU_CONSTANT);
+    C3D_TexEnvFunc(env, C3D_Alpha, GPU_SUBTRACT);
+    C3D_TexEnvScale(env, C3D_Alpha, GPU_TEVSCALE_4);
+    C3D_TexEnvColor(env, 0x80000000u);
+    env = C3D_GetTexEnv(2);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_Alpha, GPU_PREVIOUS, GPU_PRIMARY_COLOR, GPU_PRIMARY_COLOR);
+    C3D_TexEnvFunc(env, C3D_Alpha, GPU_MODULATE);
+    FadeTexEnv(&sWorldFade, 3);
+    C3D_TexEnvInit(C3D_GetTexEnv(4));
+    C3D_TexEnvInit(C3D_GetTexEnv(5));
+    C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, GPU_SRC_ALPHA, GPU_ONE, GPU_ZERO, GPU_ONE);
+
+    C3D_DrawArrays(GPU_TRIANGLES, 0, (int)sGlitVertices);
+    sGlitDrawn = svcGetSystemTick();
+
+    /* what the passes after it expect (as after the lamps) */
+    if (dapples)
+        C3D_TexBind(1, &sDappleTex);
+    SetModelView(sDynamicX, sDynamicZ);
+    BindVertices(sDynamic);
+    C3D_DepthMap(true, -1.0f, 0.0f);
+    C3D_AlphaTest(true, GPU_GREATER, 0);
+    C3D_ColorLogicOp(GPU_LOGICOP_COPY);
+    C3D_DepthTest(true, GPU_GREATER, GPU_WRITE_ALL);
+    C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD,
+                   GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA, GPU_ZERO, GPU_ONE);
+    TerrainTexEnv(NULL);
+    FadeFor(false);
+    C3D_TexEnvInit(C3D_GetTexEnv(5));
+}
+#endif
+
+/*
  * The windows' glow over the lit texel: stage 1's alpha carries the mask x
  * the strength (its colour never reads the constant), and the glow mixes the
  * warm colour in after the texture. Plain, that is stage 2. With the dapples
  * (NULL for none) stages 0-2 are theirs, so the glow is stage 3 and the haze
  * and the fade move on to 4 and 5; CtrVoxel_Draw puts them back after the
  * building pass.
+ *
+ * With the map (SHADOW QUALITY HIGH, at dawn and dusk: sun and lit windows
+ * together) the alpha is the shadow's all the way (ShadowTexEnv) and there
+ * is no room for the mask in it. The shadow, whole after stage 2, is kept in
+ * the combiner's buffer instead; stage 3 puts the mask x the strength in the
+ * alpha, stage 4 mixes the warm colour in by it and takes the shadow back
+ * from the buffer, and the haze is stage 5:
+ *   0-2  the map's (rgb the lit texel, alpha the shadow S)  -> buffer alpha
+ *   3    alpha = mask x strength
+ *   4    rgb = glow x alpha + previous x (1 - alpha); alpha = buffer (S)
+ *   5    haze
+ * That is all six, so not while the screen fades (its stage): the page then
+ * takes no shadow for those frames, its glow as ever (the plain way below).
  */
+static void BuildingGlowShadowEnv(C3D_Tex *mask, float strength)
+{
+    C3D_TexEnv *env;
+
+    TerrainTexEnv(NULL);
+    /* stage 2's alpha into the buffer: read two stages on, at 4 */
+    C3D_TexEnvBufUpdate(C3D_Alpha, GPU_TEV_BUFFER_WRITE_CONFIG(0, 0, 1, 0));
+    C3D_TexBind(2, mask);
+    sGlowBound = mask;
+
+    env = C3D_GetTexEnv(3);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_RGB, GPU_PREVIOUS, GPU_PREVIOUS, GPU_PREVIOUS);
+    C3D_TexEnvFunc(env, C3D_RGB, GPU_REPLACE);
+    C3D_TexEnvSrc(env, C3D_Alpha, GPU_TEXTURE2, GPU_CONSTANT, GPU_CONSTANT);
+    C3D_TexEnvOpAlpha(env, GPU_TEVOP_A_SRC_R, GPU_TEVOP_A_SRC_ALPHA, GPU_TEVOP_A_SRC_ALPHA);
+    C3D_TexEnvFunc(env, C3D_Alpha, GPU_MODULATE);
+    C3D_TexEnvColor(env, (uint32_t)(strength * 255.0f + 0.5f) << 24);
+
+    env = C3D_GetTexEnv(4);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_RGB, GPU_CONSTANT, GPU_PREVIOUS, GPU_PREVIOUS);
+    C3D_TexEnvOpRgb(env, GPU_TEVOP_RGB_SRC_COLOR, GPU_TEVOP_RGB_SRC_COLOR, GPU_TEVOP_RGB_SRC_ALPHA);
+    C3D_TexEnvFunc(env, C3D_RGB, GPU_INTERPOLATE);
+    C3D_TexEnvSrc(env, C3D_Alpha, GPU_PREVIOUS_BUFFER, GPU_PREVIOUS_BUFFER, GPU_PREVIOUS_BUFFER);
+    C3D_TexEnvFunc(env, C3D_Alpha, GPU_REPLACE);
+    C3D_TexEnvColor(env, VOXEL_WINDOW_GLOW_COLOUR);
+
+    HazeTexEnv(FadeColour(1.0f, sHazeRgb), 5);
+}
+
 static void BuildingGlowEnv(C3D_Tex *mask, float strength, const VoxelLight *dapples)
 {
     C3D_TexEnv *env;
@@ -11938,6 +13398,12 @@ static void BuildingGlowEnv(C3D_Tex *mask, float strength, const VoxelLight *dap
 
     if (sShadowOn)
         dapples = NULL;
+    C3D_TexEnvBufUpdate(C3D_Alpha, 0);
+    if (glow && sShadowOn && sWorldFade.amount <= 0.0f && sGlowShadows)
+    {
+        BuildingGlowShadowEnv(mask, strength);
+        return;
+    }
     TerrainTexEnv(dapples);
     if (three)
     {
@@ -11958,7 +13424,19 @@ static void BuildingGlowEnv(C3D_Tex *mask, float strength, const VoxelLight *dap
     C3D_TexEnvOpAlpha(env, GPU_TEVOP_A_SRC_R, GPU_TEVOP_A_SRC_ALPHA, GPU_TEVOP_A_SRC_ALPHA);
     C3D_TexEnvFunc(env, C3D_Alpha, GPU_MODULATE);
     C3D_TexEnvColor(env, (uint32_t)(strength * 255.0f + 0.5f) << 24);
-    /* With the dapples stage 2 passes stage 1's alpha on (TerrainTexEnv). */
+    /* With the dapples stage 2 passes stage 1's alpha on (TerrainTexEnv).
+     * With the map it would turn it round (texel alpha x (1 - previous), the
+     * shadow's last step: ShadowTexEnv) and the glow would lie on every wall
+     * but the windows; it passes it on here too, and the page takes no shadow:
+     * only while the screen fades, or with voxel_glow_shadows=0 - otherwise
+     * BuildingGlowShadowEnv above has both. */
+    if (sShadowOn)
+    {
+        env = C3D_GetTexEnv(2);
+        C3D_TexEnvSrc(env, C3D_Alpha, GPU_PREVIOUS, GPU_PREVIOUS, GPU_PREVIOUS);
+        C3D_TexEnvOpAlpha(env, GPU_TEVOP_A_SRC_ALPHA, GPU_TEVOP_A_SRC_ALPHA, GPU_TEVOP_A_SRC_ALPHA);
+        C3D_TexEnvFunc(env, C3D_Alpha, GPU_REPLACE);
+    }
     env = C3D_GetTexEnv(three ? 3 : 2);
     if (three)
         C3D_TexEnvInit(env);
@@ -11967,7 +13445,7 @@ static void BuildingGlowEnv(C3D_Tex *mask, float strength, const VoxelLight *dap
     C3D_TexEnvFunc(env, C3D_RGB, GPU_INTERPOLATE);
     C3D_TexEnvSrc(env, C3D_Alpha, texel, texel, texel);
     C3D_TexEnvFunc(env, C3D_Alpha, GPU_REPLACE);
-    C3D_TexEnvColor(env, 0xFFA0D8FFu);
+    C3D_TexEnvColor(env, VOXEL_WINDOW_GLOW_COLOUR);
 }
 
 /* Outdoors and under the ground; a building keeps the game's own sprites. */
@@ -13086,8 +14564,10 @@ void CtrVoxel_FrameCounts(unsigned *modelsSkipped, unsigned *spritesLeftOut)
     *spritesLeftOut = VoxelEntities_SpritesLeftOut();
 }
 
-static void DrawStatics(const C3D_Mtx *view, const VoxelLight *dapples, bool glowing)
+/* `casting`: into the shadow map, each where the sun finds it. */
+static void DrawStatics(const C3D_Mtx *view, const VoxelLight *dapples, bool glowing, bool casting)
 {
+    const float lean = casting ? VoxelRelief_Lean() : 0.0f;
     const C3D_Tex *bound = NULL;
 
     for (unsigned i = 0; i < sDrawCount; ++i)
@@ -13132,7 +14612,9 @@ static void DrawStatics(const C3D_Mtx *view, const VoxelLight *dapples, bool glo
                 StaticWant(s->pageModel, s->lit, true);
                 continue;
             }
-            SetModelViewAt(view, x, s->y, z);
+            SetModelViewAt(view, x, s->y, z + lean * s->y);
+            if (sShadowOn && !casting)
+                ShadowUprightAt(s->y);
 #if CTR_VOXEL_LIGHTING
             /* The dapples are worked out from the model's own frame: whole
              * tiles of its spot (a model stands on a whole cell), slid along
@@ -13169,6 +14651,10 @@ static void DrawStatics(const C3D_Mtx *view, const VoxelLight *dapples, bool glo
 static float sShadowFitWanted[2], sShadowFitSlid[2];
 static void ShadowMapFit(const float U[3], const float V[3], float *centreU, float *centreV)
 {
+    /* (every point across the sun is one of the sun's world, ShadowSunMtx:
+     * as far south again as the lean drew it north) */
+    const float lean = VoxelRelief_Lean();
+    const float targetSunZ = sCamera.targetZ + lean * sCamera.targetY;
     float eye[3] = {sCamera.x, sCamera.y, sCamera.z};
     float f[3] = {sCamera.targetX - eye[0], sCamera.targetY - eye[1], sCamera.targetZ - eye[2]};
     float r[3], up[3], length = sqrtf(f[0] * f[0] + f[1] * f[1] + f[2] * f[2]);
@@ -13183,8 +14669,8 @@ static void ShadowMapFit(const float U[3], const float V[3], float *centreU, flo
     if (sSwoop > 0.0f || length < 0.001f)
     {
         sShadowHalfU = sShadowHalfV = VOXEL_SHADOW_MAP_HALF;
-        *centreU = U[0] * sCamera.targetX + U[1] * sCamera.targetY + U[2] * sCamera.targetZ;
-        *centreV = V[0] * sCamera.targetX + V[1] * sCamera.targetY + V[2] * sCamera.targetZ;
+        *centreU = U[0] * sCamera.targetX + U[1] * sCamera.targetY + U[2] * targetSunZ;
+        *centreV = V[0] * sCamera.targetX + V[1] * sCamera.targetY + V[2] * targetSunZ;
         return;
     }
     for (int i = 0; i < 3; ++i)
@@ -13220,6 +14706,7 @@ static void ShadowMapFit(const float U[3], const float V[3], float *centreU, flo
             }
             for (int i = 0; i < 3; ++i)
                 p[i] = eye[i] + d[i] * s;
+            p[2] += lean * p[1];
             u = U[0] * p[0] + U[1] * p[1] + U[2] * p[2];
             v = V[0] * p[0] + V[1] * p[1] + V[2] * p[2];
             if (u < minU) minU = u;
@@ -13236,8 +14723,8 @@ static void ShadowMapFit(const float U[3], const float V[3], float *centreU, flo
         }
     }
     {
-        float tu = U[0] * sCamera.targetX + U[1] * sCamera.targetY + U[2] * sCamera.targetZ;
-        float tv = V[0] * sCamera.targetX + V[1] * sCamera.targetY + V[2] * sCamera.targetZ;
+        float tu = U[0] * sCamera.targetX + U[1] * sCamera.targetY + U[2] * targetSunZ;
+        float tv = V[0] * sCamera.targetX + V[1] * sCamera.targetY + V[2] * targetSunZ;
 
         if (tu < nearMin[0]) nearMin[0] = tu;
         if (tu > nearMax[0]) nearMax[0] = tu;
@@ -13321,7 +14808,7 @@ static void ShadowMapCasters(const C3D_Mtx *identity)
             C3D_DrawArrays(GPU_TRIANGLES, BindChunkVertices(chunk, first, count), (int)count);
         }
         if (pass == VOXEL_ATLAS_PAGES + 1u && sHaveBuildings)
-            DrawStatics(identity, NULL, false);
+            DrawStatics(identity, NULL, false, true);
     }
     C3D_AlphaTest(false, GPU_ALWAYS, 0);
 }
@@ -13440,7 +14927,7 @@ static void ShadowMapRender(void)
         double au = U[0] * ax + U[2] * az, av = V[0] * ax + V[2] * az;
         double texelsU = floor((double)worldU / texelU + 0.5), texelsV = floor((double)worldV / texelV + 0.5);
         double depth = (double)D[0] * sCamera.targetX + (double)D[1] * sCamera.targetY
-                     + (double)D[2] * sCamera.targetZ;
+                     + (double)D[2] * ((double)sCamera.targetZ + (double)VoxelRelief_Lean() * sCamera.targetY);
         /* the room the picture leaves in the window, either side */
         float roomU = sShadowHalfU - 0.5f * sShadowFitWanted[0] - VOXEL_SHADOW_FIT_MARGIN;
         float roomV = sShadowHalfV - 0.5f * sShadowFitWanted[1] - VOXEL_SHADOW_FIT_MARGIN;
@@ -13451,7 +14938,8 @@ static void ShadowMapRender(void)
         if (roomV > VOXEL_SHADOW_KEEP_ACROSS) roomV = VOXEL_SHADOW_KEEP_ACROSS;
         if (sSwoop > 0.0f)
             roomU = roomV = 0.0f;
-        kept = sShadowKept.valid && sShadowKept.casters == casters
+        /* (ready: a map made anew holds nothing yet - ShadowMapFree) */
+        kept = sShadowReady && sShadowKept.valid && sShadowKept.casters == casters
             && sShadowKept.halfU == sShadowHalfU && sShadowKept.halfV == sShadowHalfV
             && sShadowKept.bias == sShadowBias && sShadowKept.ambient == ambient
             && sShadowKept.dx == dx && sShadowKept.dz == dz
@@ -13579,7 +15067,9 @@ static void ShadowMapRender(void)
     }
 
     /* the anchored world as it is: the eye's model-view without its view */
-    Mtx_Identity(&sDrawModelView);
+    /* (the relief where the sun finds it, ShadowSunMtx; the statics each by
+     * their own foot, DrawStatics) */
+    ShadowSunMtx(&sDrawModelView);
     Mtx_Identity(&identity);
     Mtx_Translate(&identity, -(float)sDrawAnchorX, 0.0f, -(float)sDrawAnchorZ, true);
     if (SHADOW_DEBUG != 3)
@@ -13656,9 +15146,16 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
     /* The swoop: the light towards neutral with the camera (VOXEL_SWOOP_NEUTRAL_START). */
     float neutral = CtrVoxel_SwoopNeutral();
     bool dapples;
+
+    /* The frame's last drawing (the right eye's, or the only one): a drawing
+     * with no update before it (a transition's) works its light out anew. */
+    if (eye != 0)
+        sOutdoorLit = false;
 #if CTR_VOXEL_LIGHTING
     float fog = !indoor && sHaveFog ? VoxelWorld_FogDensity() : 0.0f;
     bool cave = fog > 0.0f && VoxelWorld_Underground();
+    /* the glitter left its noise on texture unit 1 (nothing else there) */
+    bool glitterUnit = false;
     VoxelWeatherClass weather = indoor ? VOXEL_WEATHER_CLEAR : VoxelWorld_Weather();
     bool ownsWeather = sHaveWeatherProgram && sStreaks != NULL
                     && (weather == VOXEL_WEATHER_RAIN || weather == VOXEL_WEATHER_SAND
@@ -13708,8 +15205,8 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
     sShadowOn = false;
     bool shadowMap = false;
 #if CTR_VOXEL_LIGHTING
-    shadowMap = VoxelLighting_Quality() == VOXEL_SHADOWS_HIGH && !indoor
-             && gVoxelSun.strength > 0.0f && neutral <= 0.0f && ShadowMapMake();
+    shadowMap = VoxelLighting_Quality() == VOXEL_SHADOWS_HIGH && !indoor && sShadowTarget != NULL
+             && gVoxelSun.strength > 0.0f && neutral <= 0.0f;
 #endif
     if (!shadowMap)
     {
@@ -13932,11 +15429,12 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
             C3D_DrawArrays(GPU_TRIANGLES, BindChunkVertices(chunk, first, count), (int)count);
         }
         if (pass == VOXEL_ATLAS_PAGES + 1u && sHaveBuildings)
-            DrawStatics(&view, dapples ? &light : NULL, glowing);
+            DrawStatics(&view, dapples ? &light : NULL, glowing, false);
     }
     ReleaseGlowUnit();
     /* The glow over the dapples moved the haze and the fade a stage on
      * (BuildingGlowEnv): back where every later pass has them. */
+    C3D_TexEnvBufUpdate(C3D_Alpha, 0);
     if (dapples || sShadowOn)
     {
         FadeFor(false);
@@ -13984,7 +15482,7 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
     SetModelView(sDynamicX, sDynamicZ);
     BindVertices(sDynamic);
 
-    if (!indoor && !sBattle.on && CtrGame_IsOutdoor() && CtrDayNight_Get()->glow > 0.0f
+    if (!indoor && !sBattle.on && CtrGame_IsOutdoor() && CtrDayNight_Get()->glow >= VOXEL_GLOW_MIN
         && sLampGpu != NULL && (sLampVertices != 0 || sLampGroundVertices != 0))
     {
         float strength = CtrDayNight_Get()->glow;
@@ -14017,6 +15515,18 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
         TerrainTexEnv(NULL);
         SetGrade(&light);
     }
+
+#if CTR_VOXEL_LIGHTING
+    /* The sun's glitter on the water: over the pools, under the reflections
+     * and everything stood on it (DrawGlitter). Nothing without water in the
+     * path or without the gain (rain, fog, a cave, indoors, a battle). */
+    if (!indoor && !sBattle.on && CtrGame_IsOutdoor() && sGlitGpu != NULL && sGlitVertices != 0
+        && light.glitter >= VOXEL_GLITTER_MIN && sGlitMaskTex.data != NULL && sGlitNoiseTex.data != NULL)
+    {
+        DrawGlitter(&light, cycle, dapples);
+        glitterUnit = !dapples;
+    }
+#endif
 
     if (sReflectionVertices != 0)
     {
@@ -14165,7 +15675,8 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
 #endif
 #if CTR_VOXEL_LIGHTING
     {
-        bool rays = sRayCount != 0 && sHaveDapple && light.rays > 0.005f;
+        unsigned rayVertices;
+        bool rays = RayMesh(&rayVertices) != NULL && rayVertices != 0 && sHaveDapple && light.rays > 0.005f;
 
         if (rays)
         {
@@ -14173,8 +15684,19 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
                 C3D_TexBind(1, &sDappleTex);
             DrawRays(&light, &unlit);
         }
-        if (dapples || rays)
+        if (dapples || rays || glitterUnit)
             ReleaseDappleUnit();
+        /* The night's dark round the edges, over the rays' place (there
+         * are none at night) and under the weather. */
+        if (!indoor)
+        {
+            float veil = NightVeilAmount();
+
+            /* (under a twentieth it darkens the corners by less than eight
+             * steps of 255: a blended pass over most of the screen for it) */
+            if (veil > 0.05f)
+                DrawNightVeil(&unlit, veil);
+        }
     }
     /* Last: the rays put their own projection in. */
     if (weatherAmount > 0.0f)

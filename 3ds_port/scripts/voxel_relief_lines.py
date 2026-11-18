@@ -35,6 +35,7 @@ import collections
 import json
 import math
 import os
+import re
 import struct
 import subprocess
 import sys
@@ -51,6 +52,11 @@ GRID = 64                      # tests/voxel_mesh_dump.c: the virtual atlas
 METATILE_REAL = 1024           # voxel_atlas.h
 VARIANTS = 160
 CUT_FIRST = METATILE_REAL + VARIANTS
+TUFT_FIRST = CUT_FIRST + 512   # voxel_atlas.h: the tall grass tufts
+# voxel_tree.c kTufts: the secondary tileset it is of (None: the General's
+# own) and its metatile; the tiles every tuft's outline is read from
+TUFTS = ((None, 0x00D), ("gTileset_Lavaridge", 0x206))
+TUFT_SHAPE, TUFT_SHAPE_FLOOR = 0x00D, 0x001
 DUMP = os.path.join(PORT, "build", "voxel_mesh_dump.exe")
 RELIEF = os.path.join(PORT, "romfs", "voxel", "relief.bin")
 
@@ -62,6 +68,57 @@ def use_relief(path):
     RELIEF = os.path.abspath(path)
     os.environ["VOXEL_RELIEF"] = RELIEF
 FOV = 35.0
+RELIEF_HEADER = os.path.join(PORT, "src", "voxel", "voxel_relief.h")
+
+
+def lean():
+    """The lean of the mountains' south faces the dumps are built with
+    (voxel_relief.h): the engine draws a point `h` up in the world `lean * h`
+    further north, z = v + h - lean * h. It is read where the engine reads
+    it: the host builds take VOXEL_LEAN (0 = the drawing as it stood, vertical
+    faces), else VOXEL_RELIEF_LEAN_DEFAULT, clamped to 0..1 as
+    VoxelRelief_SetLean does. Every tool that judges the shapes undoes it
+    (`unlean_tri`) so that tops, faces and bands are what the drawing says."""
+    env = os.environ.get("VOXEL_LEAN")
+    if env is None:
+        text = open(RELIEF_HEADER, encoding="utf-8").read()
+        m = re.search(r"#define\s+VOXEL_RELIEF_LEAN_DEFAULT\s+([0-9.]+)f?", text)
+        value = float(m.group(1)) if m else 0.0
+    else:
+        # atof: the number a string starts with, else 0
+        m = re.match(r"\s*[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?", env)
+        value = float(m.group(0)) if m else 0.0
+    return min(1.0, max(0.0, value))
+
+
+def unlean_tri(tri, amount=None):
+    """The triangle as the drawing has it, before the engine's lean: a point
+    h up (y, the world height with the map's base) is drawn `lean * h` north,
+    so its z gives it back as z + lean * y.
+
+    What stands on the ground does not lean (voxel_mesh_builder.h `slope`):
+    it moves north with the ground at its foot only. Those come back as one
+    body, by their lowest corner's height: the atlas' ground variants
+    (METATILE_REAL..CUT_FIRST, level where they stand) and any wall facing
+    north or south with no lean in it - the relief's own would fall `amount`
+    of its height - a sign's board, a post. (A relief wall the engine forgot
+    to lean would pass for one of those: its pixels are then compared with
+    the drawing as an upright thing's.) Lean 0 hands the triangle back
+    untouched."""
+    amount = lean() if amount is None else amount
+    if amount == 0.0:
+        return tri
+    low = min(p[1] for p in tri)
+    upright = METATILE_REAL <= atlas_id(tri) < CUT_FIRST
+    if not upright:
+        (x0, y0, z0), (x1, y1, z1), (x2, y2, z2) = [p[:3] for p in tri]
+        ax, ay, az, bx, by, bz = x1 - x0, y1 - y0, z1 - z0, x2 - x0, y2 - y0, z2 - z0
+        nx, ny, nz = ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx
+        n = math.sqrt(nx * nx + ny * ny + nz * nz)
+        upright = n > 1e-12 and abs(nx / n) < 0.5 * amount and abs(ny / n) < 0.5 * amount
+    if upright:
+        return tuple((p[0], p[1], p[2] + amount * low) + tuple(p[3:]) for p in tri)
+    return tuple((p[0], p[1], p[2] + amount * p[1]) + tuple(p[3:]) for p in tri)
 
 
 def layouts():
@@ -69,8 +126,13 @@ def layouts():
                           encoding="utf-8"))["layouts"]
 
 
-def dump(layout_id):
-    """[(x, y, z, u, v, shade) * 3] of the layout's terrain, as the game emits it."""
+def dump(layout_id, leant=False):
+    """[(x, y, z, u, v, shade) * 3] of the layout's terrain, as the game emits
+    it - but in the drawing's own space, before the engine's lean (`lean`):
+    the checks built on this judge surfaces (tops, faces, bands) and compare
+    them with the drawing, which a sheared world would break. `leant=True`
+    gives the world as the engine draws it. (A dump of an older engine, VOXEL_DUMP,
+    is not leant: run it with VOXEL_LEAN=0.)"""
     L = layouts()
     entry = next(e for e in L if e["id"] == layout_id)
     index = L.index(entry) + 1
@@ -87,7 +149,10 @@ def dump(layout_id):
     n = struct.unpack_from("<I", data)[0]
     vals = struct.unpack_from("<%df" % (n * 6), data, 4)
     verts = [vals[i * 6:i * 6 + 6] for i in range(n)]
-    return [tuple(verts[i:i + 3]) for i in range(0, n - n % 3, 3)], index
+    tris = [tuple(verts[i:i + 3]) for i in range(0, n - n % 3, 3)]
+    if not leant and lean() != 0.0:
+        tris = [unlean_tri(t) for t in tris]
+    return tris, index
 
 
 def relief_cuts():
@@ -142,9 +207,35 @@ class Atlas:
             self._arts[index] = vb.LayoutArt(self.L[index - 1]["id"])
         return self._arts[index]
 
+    def tuft(self, k):
+        """Tuft k (voxel_atlas.c TuftClear): its tall grass tile, clear where
+        the General's is the ground it grows on - what is reached from the
+        tile's edge through the colours of that grass."""
+        if k >= len(TUFTS):
+            return None
+        shape = self.art.cell_image(TUFT_SHAPE).convert("RGBA").load()
+        floor = self.art.cell_image(TUFT_SHAPE_FLOOR).convert("RGBA")
+        ground = {c for _, c in floor.getcolors(256)}
+        im = self.art.cell_image(TUFTS[k][1]).convert("RGBA")
+        px = im.load()
+        stack = [(i, j) for j in range(16) for i in range(16) if i in (0, 15) or j in (0, 15)]
+        queued = set(stack)
+        while stack:
+            i, j = stack.pop()
+            if shape[i, j] not in ground:
+                continue
+            px[i, j] = (0, 0, 0, 0)
+            for n in ((i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)):
+                if 0 <= n[0] < 16 and 0 <= n[1] < 16 and n not in queued:
+                    queued.add(n)
+                    stack.append(n)
+        return im
+
     def tile(self, aid):
         if aid < METATILE_REAL:
             return self.art.cell_image(aid)
+        if aid >= TUFT_FIRST:
+            return self.tuft(aid - TUFT_FIRST)
         if aid >= CUT_FIRST:
             k = aid - CUT_FIRST
             if k >= len(self.cuts):
@@ -253,17 +344,19 @@ class Raster:
         return img
 
 
-def camera(tris, at, pitch=46.0, distance=13.0, yaw=0.0, w=400, h=240):
+def camera(tris, at, pitch=46.0, distance=13.0, yaw=0.0, w=400, h=240, leant=0.0):
     """The game's camera (voxel_camera.c) on cell `at`, at the height of the
-    terrain there."""
+    terrain there. `leant`: the lean the triangles are drawn with (`dump`
+    gives them none): a point h up stands lean * h further north, and so
+    does the camera's target."""
     cx, cy = at
     best = None
     for tri in tris:
         for (x, y, z, u, v, s) in tri:
-            if cx <= x <= cx + 1 and cy <= z - y <= cy + 1:
+            if cx <= x <= cx + 1 and cy <= z - y + leant * y <= cy + 1:
                 best = y if best is None else max(best, y)
     g = best or 0.0
-    return vb.Camera((cx + 0.5, g, cy + 0.5 + g), pitch=pitch, yaw=yaw, distance=distance,
+    return vb.Camera((cx + 0.5, g, cy + 0.5 + g - leant * g), pitch=pitch, yaw=yaw, distance=distance,
                      fov=FOV, width=w, height=h)
 
 

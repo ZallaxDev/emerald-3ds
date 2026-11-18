@@ -323,6 +323,13 @@ void CtrStageZoomed_SetVBlankCallback(IntrCallback callback)
     SetVBlankCallback(callback);
 }
 
+/* A stage scaled to cover the screen (ctr_gba_stage.h). */
+void CtrStageCovered_SetVBlankCallback(IntrCallback callback)
+{
+    RememberCallback(&sStage, callback, 3);
+    SetVBlankCallback(callback);
+}
+
 static void SetCentredCallback(IntrCallback callback, unsigned screen)
 {
     RememberCallback(&sCentred, callback, screen);
@@ -516,6 +523,7 @@ static void UpdateStage(void)
     CtrVideo_SetStage(!caughtMonPage && sStage.on);
     CtrVideo_SetStageFaded(!caughtMonPage && sStage.on && sStage.screen == 1);
     CtrVideo_SetStageZoomed(!caughtMonPage && sStage.on && sStage.screen == 2);
+    CtrVideo_SetStageCovered(!caughtMonPage && sStage.on && sStage.screen == 3);
     CtrVideo_SetCentred(caughtMonPage ? CTR_CENTRED_POKEDEX_CAUGHT
                                     : sCentred.on ? sCentred.screen : CTR_CENTRED_NONE);
     CtrVideo_SetBattle(!caughtMonPage && sBattle.on);

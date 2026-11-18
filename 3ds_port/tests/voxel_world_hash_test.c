@@ -64,6 +64,13 @@ int VoxelTree_GroundMetatile(const void *secondaryTileset, int metatileId)
 bool VoxelRelief_IsDrawn(const VoxelMapInstance *inst) { (void)inst; return false; }
 bool VoxelRelief_EdgeFillAt(const VoxelMapInstance *ring, int worldX, int worldY, VoxelEdgeFill *fill)
 { (void)ring; (void)worldX; (void)worldY; (void)fill; return false; }
+/* (no fills and no cliff face here: the belt's, voxel_mesh_builder.c) */
+bool VoxelMesh_BeltFill(int x, int y, VoxelEdgeFill *fill)
+{ (void)x; (void)y; (void)fill; return false; }
+/* (no owner: the border is the nearest map's, fieldmap.c's) */
+const VoxelMapInstance *VoxelMesh_BeltOwner(int x, int y, int *edgeX, int *edgeY)
+{ (void)x; (void)y; *edgeX = *edgeY = 0; return NULL; }
+int VoxelRelief_FaceTile(const VoxelMapInstance *inst) { (void)inst; return -1; }
 bool VoxelRelief_EdgeFills(unsigned layoutId, unsigned i, int *metatile)
 { (void)layoutId; (void)i; (void)metatile; return false; }
 /* The row's seam between maps 3 and 4 asks map 4 a level up (Hoenn's loops
@@ -82,6 +89,8 @@ void VoxelRelief_ForEachCut(const VoxelMapInstance *inst, VoxelReliefCutVisit vi
 const struct MapLayout *Port_GetMapLayoutById(u16 mapLayoutId) { (void)mapLayoutId; return NULL; }
 const u16 *MapGridGetCameraBorderAt(int x, int y, u8 *index)
 { (void)x; (void)y; *index = 0; return NULL; }
+const u16 *MapGridGetCameraBorderOf(u16 id, int x, int y, u8 *index)
+{ (void)id; (void)x; (void)y; *index = 0; return NULL; }
 u32 GetMapClosedEdges(void) { return 0; }
 /* The layout swaps' conditions (sLayoutSwaps): no fixture map is one of theirs. */
 bool8 FlagGet(u16 id) { (void)id; return FALSE; }

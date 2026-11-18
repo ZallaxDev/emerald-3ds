@@ -124,7 +124,7 @@ static void StopAtEdges(const VoxelCamera *cam, float *x, float *z)
     unsigned closed = VoxelWorld_ClosedEdges();
     float pitch = cam->pitch * VOXEL_DEG_TO_RAD, half = cam->fov * 0.5f * VOXEL_DEG_TO_RAD;
     float height = tanf(pitch) * cam->distance;
-    float north, south, side;
+    float north, south, side, drawnBase;
     float playerX = *x, playerZ = *z;
 
     if (map == NULL || closed == 0)
@@ -137,9 +137,13 @@ static void StopAtEdges(const VoxelCamera *cam, float *x, float *z)
     side = cam->distance / cosf(pitch) * tanf(half) * VOXEL_ASPECT;
 
     *x = CtrFieldView_Limit(*x, side, side, (float)map->originX, (float)(map->originX + map->width), closed & 3);
-    /* (its rows as far south as its base is high: VoxelBuilder_StretchZ) */
-    *z = CtrFieldView_Limit(*z, north, south, (float)map->originY + VoxelRelief_Base(map),
-                            (float)(map->originY + map->height) + VoxelRelief_Base(map),
+    /* (its rows as far south as its base is high, less the lean of the
+     * ground there: VoxelBuilder_StretchZ. The edge is level ground at the
+     * base, which the lean carries north by `lean * base`.) */
+    drawnBase = VoxelRelief_Base(map);
+    drawnBase -= VoxelRelief_Lean() * drawnBase;
+    *z = CtrFieldView_Limit(*z, north, south, (float)map->originY + drawnBase,
+                            (float)(map->originY + map->height) + drawnBase,
                             (closed >> 2) & 3);
     *x = Between(*x, playerX - VOXEL_EDGE_SIDE * cam->distance, playerX + VOXEL_EDGE_SIDE * cam->distance);
     *z = Between(*z, playerZ - VOXEL_EDGE_DOWN * cam->distance, playerZ + VOXEL_EDGE_UP * cam->distance);

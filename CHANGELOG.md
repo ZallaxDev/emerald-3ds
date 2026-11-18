@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Voxel: the mountains' south faces lean back as the game draws them, not
+  straight up (settings.txt `voxel_face_lean`, percent, 75 by default; 0 is
+  the old upright walls). Cave mouths and doors lean with their face, a
+  walker stands on the stairs' treads, and the shadows are still cast as by
+  upright walls, so a mountain shades the ground at its foot as before.
 - Battle: the bag, the switch after a faint and the summary to forget a move
   keep the battle scene on the top screen instead of a black one. By
   @luksgrin (pull request #222).

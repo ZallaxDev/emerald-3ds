@@ -148,10 +148,122 @@ def _drawn_by(parts, tex, W, H):
     return {(k % W, k // W) for k, o in enumerate(ras.owner) if o is not None}
 
 
+def _build_beam(layout, spec, family, foreign=()):
+    """A block of a beam on posts (the Acro Bike's rails): a white beam drawn
+    as its top and, in the rows under it, `front` rows of its front, on thin
+    posts down to the water - along a row of the map, or down a column (a
+    strip, its front and post at its south end).
+
+    Every pixel column of the drawing is read down: a stretch of the beam's
+    own colours - its top, however long, and its last `front` rows the
+    front - then the posts' colour. The beam stands `height` over the
+    ground: its top lies at that height from where its first row is drawn
+    to where its front begins, the front under it, and each post goes from
+    there to the ground - all projected, so the drawing is reproduced
+    exactly. The ground under it is the map's own lower layer (the water,
+    the shadow it paints there).
+
+    A block builds the tops drawn in its own rows; a top that goes on into
+    the block south is cut there, and the front and posts a beam of the
+    block north draws into this one are that block's."""
+    x, y, w, h = spec["rect"]
+    owned = spec["owned"]
+    ref = _ref_image(layout, family["ref"])
+    Y, F = family["height"], family["front"]
+    post_rgb = _rect_colours(ref, family["post"])
+    body = _rect_colours(ref, family["body"]) | post_rgb
+    cells = {(x + i, y + j) for (i, j) in owned}
+    cells |= {(x + i, y + j - 1) for (i, j) in spec.get("north", ())}
+    cells |= {(x + i, y + j + 1) for (i, j) in spec.get("south", ())}
+    ext = _compose(layout, cells, x, y - 1, w, h + 2, ())
+    epx = ext.load()
+    W, H0 = w * CELL, h * CELL
+    E = ext.size[1]
+    # only the rail's own colours are the rail (a bank's rock drawn on the
+    # upper layer beside it is the bank's), and not what another model keeps
+    for v in range(E):
+        for u in range(W):
+            if epx[u, v][3] >= 128 and epx[u, v][:3] not in body:
+                epx[u, v] = (0, 0, 0, 0)
+    for (X, Z) in foreign:
+        u, v = X - x * CELL, Z - (y - 1) * CELL
+        if 0 <= u < W and 0 <= v < E:
+            epx[u, v] = (0, 0, 0, 0)
+    beams = {}          # (top's first row, front's first row) -> columns
+    posts = {}          # front's first row -> columns
+    north = set()
+    for u in range(W):
+        v = 0
+        while v < E:
+            if epx[u, v][3] < 128:
+                v += 1
+                continue
+            # one beam: a stretch of its own colours, then its posts'
+            a = v
+            while v < E and epx[u, v][3] >= 128 and epx[u, v][:3] not in post_rgb:
+                v += 1
+            f = v - F
+            end = v
+            while end < E and epx[u, end][3] >= 128 and epx[u, end][:3] in post_rgb:
+                end += 1
+            v = end
+            if f < a:
+                continue            # a post alone, a front cut short: not read
+            a, f, end = a - CELL, f - CELL, end - CELL
+            if f <= 0:
+                # its top in the block north: that block's front and posts
+                north |= {(u, r) for r in range(max(0, f), min(H0, end))}
+                continue
+            if a >= H0:
+                continue            # the block south's
+            a = max(a, 0)
+            if f > H0:
+                beams.setdefault((a, H0), []).append(u)     # goes on south
+                continue
+            beams.setdefault((a, f), []).append(u)
+            if end > f + F:
+                posts.setdefault(f, []).append(u)
+
+    def spans(cols):
+        out = []
+        for u in sorted(cols):
+            if out and out[-1][1] == u:
+                out[-1][1] = u + 1
+            else:
+                out.append([u, u + 1])
+        return out
+
+    art = ext.crop((0, CELL, W, CELL + H0 + CELL))
+    o = H0 + CELL
+    R = o + H0
+    strip = _strip(ref, family["strip"])
+    tex = Image.new("RGBA", (max(W, strip.width), R + CELL), (0, 0, 0, 0))
+    tex.paste(art, (0, 0))
+    tex.paste(strip, (0, R))
+    side = (0, strip.width, R + CELL)
+    parts = []
+    for (a, f), cols in sorted(beams.items()):
+        for (u0, u1) in spans(cols):
+            parts.append(vb.PlanPrism("beam", [(u0, a + Y), (u1, a + Y), (u1, f + Y), (u0, f + Y)],
+                                      Y - F, Y, side, art=tex))
+    d = family["depth"]
+    for f, cols in sorted(posts.items()):
+        for (u0, u1) in spans(cols):
+            parts.append(vb.PlanPrism("post", [(u0, f + Y - d), (u1, f + Y - d), (u1, f + Y), (u0, f + Y)],
+                                      -1.0, Y - F, side, art=tex))
+    reference = tex.copy()
+    rpx = reference.load()
+    for (u, v) in north:
+        rpx[u, v] = (0, 0, 0, 0)
+    return tex, parts, reference
+
+
 def build(layout, spec, family, foreign=()):
     """(art, parts, reference) of one block of a fence run: the posts whose
     tops it draws, the rails from them, the drawing's leftovers on the
     ground. `foreign`: the map's pixels another model keeps."""
+    if family["kind"] == "beam":
+        return _build_beam(layout, spec, family, foreign)
     x, y, w, h = spec["rect"]
     owned = spec["owned"]
     ref = _ref_image(layout, family["ref"])

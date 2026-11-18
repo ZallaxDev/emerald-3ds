@@ -118,6 +118,8 @@ VoxelVisualShape VoxelWorld_ClassifyTile(int x, int y)
 int VoxelWorld_BorderMetatile(int x, int y) { (void)x; (void)y; return -1; }
 bool VoxelWorld_BorderIsWater(int x, int y) { (void)x; (void)y; return false; }
 unsigned VoxelWorld_InstanceCount(void) { return 1; }
+/* (one map a run: what the belt keeps by it is good throughout) */
+unsigned VoxelWorld_InstanceBuilds(void) { return 1; }
 /* the lighting caches what it casts by this: the map never changes here */
 uint32_t VoxelWorld_BlockHash(int x0, int y0, int x1, int y1)
 {
