@@ -71,7 +71,14 @@ void VoxelAtlas_SolidUV(VoxelSolidColor color, float *u0, float *v0, float *u1, 
  */
 #define VOXEL_CUTS 512u
 #define VOXEL_CUT_FIRST (VOXEL_METATILE_REAL + VOXEL_VARIANTS)
-#define VOXEL_METATILE_IDS (VOXEL_CUT_FIRST + VOXEL_CUTS)
+/*
+ * Then the tufts (voxel_tree.h, VoxelTree_Tuft): a tall grass tile with the
+ * ground it grows on clear, for its tufts to stand in low cards over that
+ * ground laid flat. Id VOXEL_TUFT_FIRST + i is tuft i.
+ */
+#define VOXEL_TUFTS 2u
+#define VOXEL_TUFT_FIRST (VOXEL_CUT_FIRST + VOXEL_CUTS)
+#define VOXEL_METATILE_IDS (VOXEL_TUFT_FIRST + VOXEL_TUFTS)
 #define VOXEL_SLOT_ABSENT  0xFFFFu
 #define VOXEL_SLOT_PENDING 0xFFFEu
 #define VOXEL_ATLAS_PAGES ((VOXEL_METATILE_IDS + VOXEL_SOLID_BASE - 1u) / VOXEL_SOLID_BASE)
