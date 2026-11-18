@@ -45,12 +45,25 @@ bool8 CtrNaming_IsOpen(void)
     return sNamingScreen != NULL && gMain.callback2 == CB2_NamingScreen;
 }
 
-// A tap, waiting for Input_Enabled. Only one at a time: a later one replaces it.
+// A tap, waiting for Input_Enabled. Only one at a time: a later one replaces it,
+// and one nobody took within CTR_TAP_FRAMES is gone.
+#define CTR_TAP_FRAMES 30
 static struct {
     bool8 pending;
     u8 kind, a, b;
+    u8 page;    // the page a key was tapped on
+    u32 frame;
 } sCtrTap;
 
+static void CtrNaming_Reset(void)
+{
+    sCtrCaret = CTR_NO_CARET;
+    sCtrPageTarget = CTR_NO_PAGE;
+    sCtrTitle[0] = EOS;
+    sCtrTap.pending = FALSE;
+}
+
+// For a key, b is its row and, in its upper bits, the page the tap was made on.
 void CtrNaming_NativeTap(u8 kind, u8 a, u8 b)
 {
     if (kind == CTR_NAMING_TAP_MESSAGE)
@@ -63,7 +76,122 @@ void CtrNaming_NativeTap(u8 kind, u8 a, u8 b)
     sCtrTap.pending = TRUE;
     sCtrTap.kind = kind;
     sCtrTap.a = a;
-    sCtrTap.b = b;
+    sCtrTap.b = b & 0x0F;
+    sCtrTap.page = b >> 4;
+    sCtrTap.frame = gMain.vblankCounter1;
+}
+
+// The keys of a page, for any page and not only the one the game is on
+// (GetCurrentPageColumnCount, GetCharAtKeyboardPos).
+static u8 CtrNaming_PageColumns(u8 page)
+{
+#ifdef JAPANESE_KEYBOARD
+    u8 i, count = 0;
+
+    for (i = 0; i < KBROW_COUNT; i++)
+        if (StringLength(sNamingScreenKeyboardText[sPageToKeyboardId[page]][i]) > count)
+            count = StringLength(sNamingScreenKeyboardText[sPageToKeyboardId[page]][i]);
+    return count;
+#else
+    return sPageColumnCounts[sPageToKeyboardId[page]];
+#endif
+}
+
+static u8 CtrNaming_PageChar(u8 page, s16 x, s16 y)
+{
+#ifdef JAPANESE_KEYBOARD
+    const u8 *row = sNamingScreenKeyboardText[sPageToKeyboardId[page]][y];
+
+    return x < StringLength(row) ? row[x] : CHAR_SPACE;
+#else
+    return sKeyboardChars[sPageToKeyboardId[page]][y][x];
+#endif
+}
+
+// A page's keys and how they are laid out in groups.
+static void CtrNaming_FillPage(struct CtrNamingView *view, u8 page)
+{
+    u8 row, col;
+
+    view->page = page;
+    view->cols = CtrNaming_PageColumns(page);
+    if (view->cols > CTR_NAMING_COLS)
+        view->cols = CTR_NAMING_COLS;
+    for (row = 0; row < CTR_NAMING_ROWS; row++)
+        for (col = 0; col < view->cols; col++)
+            view->keys[row][col] = CtrNaming_PageChar(page, col, row);
+
+#ifdef JAPANESE_KEYBOARD
+    // The kana come in groups with a space between: a column that is a space in
+    // every row holds no key, and a gap lies after it.
+    for (col = 0; col < view->cols; col++)
+    {
+        bool8 all = TRUE;
+
+        for (row = 0; row < CTR_NAMING_ROWS; row++)
+            if (view->keys[row][col] != CHAR_SPACE)
+                all = FALSE;
+        if (all)
+            view->spacer |= 1 << col;
+    }
+    for (col = 0; col + 1 < view->cols; col++)
+        if ((view->spacer >> col) & 1 || (view->spacer >> (col + 1)) & 1)
+            view->gapAfter |= 1 << col;
+#else
+    // The columns are laid out at fixed x positions (sPageColumnXPos): a wide
+    // distance starts a new group (3ds_naming_layout.h). A column the text
+    // leaves empty in every row (the ninth of a nine-column page) has no key.
+    for (col = 0; col < view->cols; col++)
+    {
+        bool8 all = TRUE;
+
+        for (row = 0; row < CTR_NAMING_ROWS; row++)
+            if (view->keys[row][col] != EOS)
+                all = FALSE;
+        if (all)
+            view->spacer |= 1 << col;
+    }
+    view->gapAfter = CtrNaming_GapsFromPositions(sPageColumnXPos[sPageToKeyboardId[page]], view->cols);
+#endif
+}
+
+// The page the keyboard turns to: the next of the game's cycle, which is one way.
+static u8 CtrNaming_NextPage(u8 page)
+{
+    return (page + 1) % KBPAGE_COUNT;
+}
+
+// The page the view shows: the one a tap is turning to, or the one the game is
+// turning to, so the keys on show are those the next input will find.
+static u8 CtrNaming_ShownPage(void)
+{
+    u8 page = sNamingScreen->currentPage;
+
+    if (sCtrPageTarget < KBPAGE_COUNT && sCtrPageTarget != page)
+        return sCtrPageTarget;
+    if (sNamingScreen->state == STATE_START_PAGE_SWAP || sNamingScreen->state == STATE_WAIT_PAGE_SWAP)
+        return CtrNaming_NextPage(page);
+    return page;
+}
+
+// The cursor's column after the turns from the game's page to `shown`, as
+// MainState_WaitPageSwap leaves it at the end of each.
+static s16 CtrNaming_CursorColumnOn(u8 shown, s16 x)
+{
+    u8 page = sNamingScreen->currentPage;
+    u8 turns;
+
+    for (turns = 0; page != shown && turns < KBPAGE_COUNT; turns++)
+    {
+        bool8 onButtons = x == CtrNaming_PageColumns(page);
+
+        page = CtrNaming_NextPage(page);
+        if (onButtons)
+            x = CtrNaming_PageColumns(page);
+        else if (x >= CtrNaming_PageColumns(page))
+            x = CtrNaming_PageColumns(page) - 1;
+    }
+    return x;
 }
 
 // The pages go round one way (symbols, upper, lower). A tab two turns away
@@ -73,16 +201,10 @@ void CtrNaming_NativeTap(u8 kind, u8 a, u8 b)
 static void CtrNaming_SkipPage(void)
 {
     s16 x, y;
-    bool32 onLastColumn;
 
     GetCursorPos(&x, &y);
-    onLastColumn = (x == GetCurrentPageColumnCount());
-    sNamingScreen->currentPage++;
-    sNamingScreen->currentPage %= KBPAGE_COUNT;
-    if (onLastColumn)
-        x = GetCurrentPageColumnCount();
-    else if (x >= GetCurrentPageColumnCount())
-        x = GetCurrentPageColumnCount() - 1;
+    x = CtrNaming_CursorColumnOn(CtrNaming_NextPage(sNamingScreen->currentPage), x);
+    sNamingScreen->currentPage = CtrNaming_NextPage(sNamingScreen->currentPage);
     SetCursorPos(x, y);
     DrawKeyboardPageOnDeck();
 }
@@ -110,11 +232,14 @@ static bool8 CtrNaming_TakeTap(struct Task *task)
     if (!sCtrTap.pending)
         return FALSE;
     sCtrTap.pending = FALSE;
+    if (gMain.vblankCounter1 - sCtrTap.frame > CTR_TAP_FRAMES)
+        return FALSE;
 
     switch (sCtrTap.kind)
     {
     case CTR_NAMING_TAP_KEY:
-        if (sCtrTap.a >= columns || sCtrTap.b >= KBROW_COUNT)
+        // A key of the page it was tapped on, not of the one the game turned to since.
+        if (sCtrTap.page != sNamingScreen->currentPage || sCtrTap.a >= columns || sCtrTap.b >= KBROW_COUNT)
             return FALSE;
         SetCursorPos(sCtrTap.a, sCtrTap.b);
         task->tKeyboardEvent = INPUT_A_BUTTON;
@@ -122,7 +247,7 @@ static bool8 CtrNaming_TakeTap(struct Task *task)
     case CTR_NAMING_TAP_PAGE:
         if (sCtrTap.a >= KBPAGE_COUNT || sCtrTap.a == sNamingScreen->currentPage)
             return FALSE;
-        if ((sNamingScreen->currentPage + 1) % KBPAGE_COUNT != sCtrTap.a)
+        if (CtrNaming_NextPage(sNamingScreen->currentPage) != sCtrTap.a)
             CtrNaming_SkipPage();
         sCtrPageTarget = sCtrTap.a;
         task->tKeyboardEvent = INPUT_SELECT;
@@ -150,85 +275,70 @@ static bool8 CtrNaming_TakeTap(struct Task *task)
 // Fills the view from the game's own state. FALSE: no naming screen to draw.
 bool8 CtrNaming_GetView(struct CtrNamingView *view)
 {
-    u8 i, row, col;
-    u8 keyboard, page;
+    u8 i;
+    u8 shown;
+    s16 col, row;
 
     memset(view, 0, sizeof(*view));
     if (!CtrNaming_IsOpen())
         return FALSE;
 
+    view->use = sNamingScreen->templateNum;
+    view->gender = sNamingScreen->monGender;
+    view->species = sNamingScreen->monSpecies;
+    view->personality = sNamingScreen->monPersonality;
     switch (sNamingScreen->state)
     {
+    case STATE_FADE_IN:
+        // Before the screen is made: the question is not printed yet. Only who
+        // is named is known, for the picture to be loaded by the time it shows.
+        view->state = CTR_NAMING_VIEW_NONE;
+        return TRUE;
     case STATE_HANDLE_INPUT:
         view->state = CTR_NAMING_VIEW_KEYS;
         break;
     case STATE_WAIT_SENT_TO_PC_MESSAGE:
         view->state = CTR_NAMING_VIEW_MESSAGE;
         break;
-    case STATE_FADE_OUT:
-    case STATE_EXIT:
-        view->state = CTR_NAMING_VIEW_NONE;
-        break;
     default:
-        // Coming in, or a page turning, or the cursor on its way to OK.
+        // Coming in, a page turning, the cursor on its way to OK, going out.
         view->state = CTR_NAMING_VIEW_BUSY;
         break;
     }
-    if (view->state == CTR_NAMING_VIEW_NONE)
-        return TRUE;
 
-    view->use = sNamingScreen->templateNum;
+    shown = CtrNaming_ShownPage();
+    // The keys are live only on the page the game is on.
+    if (view->state == CTR_NAMING_VIEW_KEYS && shown != sNamingScreen->currentPage)
+        view->state = CTR_NAMING_VIEW_BUSY;
+
     view->maxChars = sNamingScreen->template->maxChars;
     for (i = 0; i < CTR_NAMING_TEXT && i < view->maxChars; i++)
         view->text[i] = sNamingScreen->textBuffer[i];
     for (; i < CTR_NAMING_TEXT; i++)
         view->text[i] = EOS;
     view->caret = GetTextEntryPosition();
-    // While a tab's page is on its way (one page skipped behind the deck),
-    // the game's page is the one skipped for a moment: show the tab's page.
-    page = sNamingScreen->currentPage;
-    if (sCtrPageTarget != CTR_NO_PAGE)
-        sNamingScreen->currentPage = sCtrPageTarget;
-    view->page = sNamingScreen->currentPage;
-    view->cols = GetCurrentPageColumnCount();
-    if (view->cols > CTR_NAMING_COLS)
-        view->cols = CTR_NAMING_COLS;
-    keyboard = CurrentPageToKeyboardId();
-    for (row = 0; row < CTR_NAMING_ROWS; row++)
-        for (col = 0; col < view->cols; col++)
-            view->keys[row][col] = GetCharAtKeyboardPos(col, row);
-
-#ifdef JAPANESE_KEYBOARD
-    // The kana come in groups with a space between: a column that is a space in
-    // every row holds no key, and a gap lies after it.
-    for (col = 0; col < view->cols; col++)
-    {
-        bool8 all = TRUE;
-
-        for (row = 0; row < CTR_NAMING_ROWS; row++)
-            if (view->keys[row][col] != CHAR_SPACE)
-                all = FALSE;
-        if (all)
-            view->spacer |= 1 << col;
-    }
-    for (col = 0; col + 1 < view->cols; col++)
-        if ((view->spacer >> col) & 1 || (view->spacer >> (col + 1)) & 1)
-            view->gapAfter |= 1 << col;
-#else
-    // The columns are laid out at fixed x positions (sPageColumnXPos): a wide
-    // distance starts a new group (3ds_naming_layout.h).
-    view->gapAfter = CtrNaming_GapsFromPositions(sPageColumnXPos[keyboard], view->cols);
-#endif
-    sNamingScreen->currentPage = page;
+    CtrNaming_FillPage(view, shown);
 
     GetCursorPos(&col, &row);
-    view->cursorX = (s8)col;
+    view->cursorX = (s8)CtrNaming_CursorColumnOn(shown, col);
     view->cursorY = (s8)row;
-    view->gender = sNamingScreen->monGender;
-    view->species = sNamingScreen->monSpecies;
-    view->personality = sNamingScreen->monPersonality;
     StringExpandPlaceholders(view->title, sCtrTitle);
     if (view->state == CTR_NAMING_VIEW_MESSAGE)
         StringCopyN(view->msg, gStringVar4, CTR_VIEW_TEXT - 1);
+    return TRUE;
+}
+
+// A keyboard page as the bottom screen would show it with no naming screen up
+// (to make its plates ahead): the player's name on that page, in this game's
+// language. The cursor and the rest are the caller's.
+bool8 CtrNaming_WarmView(struct CtrNamingView *view, u8 page)
+{
+    memset(view, 0, sizeof(*view));
+    if (page >= KBPAGE_COUNT)
+        return FALSE;
+    view->state = CTR_NAMING_VIEW_KEYS;
+    view->use = NAMING_SCREEN_PLAYER;
+    view->maxChars = sNamingScreenTemplates[NAMING_SCREEN_PLAYER]->maxChars;
+    CtrNaming_FillPage(view, page);
     return TRUE;
 }

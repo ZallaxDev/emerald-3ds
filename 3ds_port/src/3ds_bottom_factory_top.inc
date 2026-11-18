@@ -6,16 +6,15 @@
  * the bottom screen's plates do not say: its level, ability, held item,
  * nature and moves; and the three of the team. The game's own picture up
  * there said nothing the bottom screen does not (its menu, its message, the
- * balls), so the panel covers it whole (3ds_top_panel.h).
+ * balls), so the panel covers it whole (3ds_top_panel.h), from the screen's
+ * first frame to its last: the backdrop alone until the card can be drawn
+ * whole, then the card, drawn again only when what it shows changes.
  *
- * It is drawn with the bottom screen's own writers, into a 400x240 canvas of
- * the same layout (column by column, each from the bottom row up), on the
- * menu's backdrop made 400 wide (gen_menu_art.py --top), and handed over only
- * when what it shows changes.
+ * It is drawn with the bottom screen's own writers, straight into the panel's
+ * 400x240 canvas of the same layout (column by column, each from the bottom
+ * row up), on the menu's backdrop made 400 wide (gen_menu_art.py --top).
  */
 #include "3ds_top_panel.h"
-
-static bool8 sIconsReady;
 
 #define FTOP_W CTR_TOP_PANEL_W
 #define FTOP_H CTR_TOP_PANEL_H
@@ -30,56 +29,90 @@ static bool8 sIconsReady;
 #define FTOP_TEAM_Y 190
 #define FTOP_TEAM_H 44
 #define FTOP_SLOT 36
+/* Frames a front picture may take to come in before the card is drawn without it. */
+#define FTOP_WAIT_FRAMES 90
 
-static u16 *sFacTop, *sFacTopBack;
-static bool8 sFacTopBackTried;
-/* What the panel handed over shows, to hand it over again only on a change. */
-static struct
+/* The backdrop, held while the Rental screens are up. */
+static u16 *sFacTopBack;
+/* What the panel was handed: nothing, the backdrop alone, a card. */
+enum { FTOP_NONE, FTOP_BACKDROP, FTOP_CARD };
+static u8 sFacTopKind;
+/* Frames the focus' picture has been waited for, and which one it is. */
+static u16 sFacTopWait;
+static u32 sFacTopWaitKey;
+/* Everything the card draws, to draw it again only on a change. */
+static struct FacTopSig
 {
-    u8 screen, focus, enemy, chosen, ready;
+    u8 screen, focus, enemy, chosen, shiny, sprite;
+    u8 level, ability, nature;
+    u16 item, moves[MAX_MON_MOVES];
+    u16 species[CTR_FAC_MONS];
+    u32 personality[CTR_FAC_MONS];
     u8 order[CTR_FAC_MONS];
-    u16 species;
-    u32 personality;
 } sFacTopShown;
 
-static void FacTopBackdrop(void)
+/* The plain backdrop: the menu's green, light at the top. */
+static void FacTopPlain(u16 *dst)
+{
+    for (int y = 0; y < FTOP_H; ++y)
+    {
+        int t = y * 255 / (FTOP_H - 1);
+        u16 c = PackRgb(168 - 50 * t / 255, 226 - 34 * t / 255, 190 - 42 * t / 255);
+
+        for (int x = 0; x < FTOP_W; ++x)
+            dst[x * FTOP_H + (FTOP_H - 1 - y)] = c;
+    }
+}
+
+/*
+ * The backdrop read from RomFS into its own buffer: once, when the screen's
+ * first frame needs it or ahead of it (the idle warm-up). Never inside a
+ * redraw that has it already. If the file is missing the buffer is the plain
+ * one; if there is no memory for the buffer nothing is kept and the panel
+ * paints the plain one straight, trying again at the next call.
+ */
+static void FactoryTopWarm(void)
 {
     FILE *f;
-    long size = 0;
-    u8 *data = NULL;
+    u8 head[20];
+    bool8 ok = FALSE;
 
-    if (sFacTopBackTried)
+    if (sFacTopBack)
         return;
-    sFacTopBackTried = TRUE;
     sFacTopBack = malloc(sizeof(u16) * FTOP_W * FTOP_H);
     if (!sFacTopBack)
         return;
     f = fopen("romfs:/bottom/menu_top.bin", "rb");
     if (f)
     {
-        fseek(f, 0, SEEK_END);
-        size = ftell(f);
-        fseek(f, 0, SEEK_SET);
-        data = size > 0 ? malloc(size) : NULL;
-        if (data && fread(data, 1, size, f) != (size_t)size)
-            size = 0;
+        ok = fread(head, 1, sizeof(head), f) == sizeof(head) && memcmp(head, "EM3DMNU1", 8) == 0
+          && (head[16] | (head[17] << 8)) == FTOP_W && (head[18] | (head[19] << 8)) == FTOP_H
+          && fread(sFacTopBack, 1, sizeof(u16) * FTOP_W * FTOP_H, f) == sizeof(u16) * FTOP_W * FTOP_H;
         fclose(f);
     }
-    if (data && size >= (long)(10 + 10 + sizeof(u16) * FTOP_W * FTOP_H) && memcmp(data, "EM3DMNU1", 8) == 0
-     && (data[16] | (data[17] << 8)) == FTOP_W && (data[18] | (data[19] << 8)) == FTOP_H)
-        memcpy(sFacTopBack, data + 20, sizeof(u16) * FTOP_W * FTOP_H);
-    else
+    if (!ok)
     {
         CtrLog_Write(CTR_LOG_ERROR, "bottom: romfs/bottom/menu_top.bin missing or bad, plain backdrop");
-        for (int x = 0; x < FTOP_W; ++x)
-            for (int y = 0; y < FTOP_H; ++y)
-            {
-                int t = y * 255 / (FTOP_H - 1);
-
-                sFacTopBack[x * FTOP_H + (FTOP_H - 1 - y)] = PackRgb(168 - 50 * t / 255, 226 - 34 * t / 255, 190 - 42 * t / 255);
-            }
+        FacTopPlain(sFacTopBack);
     }
-    free(data);
+}
+
+/* The backdrop under everything, into the canvas. */
+static void FacTopPaint(u16 *dst)
+{
+    if (sFacTopBack)
+        memcpy(dst, sFacTopBack, sizeof(u16) * FTOP_W * FTOP_H);
+    else
+        FacTopPlain(dst);
+}
+
+/* The panel is no longer asked for: the backdrop goes with it. */
+static void FactoryTopLeave(void)
+{
+    free(sFacTopBack);
+    sFacTopBack = NULL;
+    sFacTopKind = FTOP_NONE;
+    sFacTopWait = 0;
 }
 
 /* A 4bpp sprite with every pixel an exact 2x2 block. */
@@ -158,18 +191,33 @@ static void FacTopRow(const u8 *label, const u8 *value, int y)
     TextIn(value, FTOP_RIGHT_X + 84, y, FTOP_RIGHT_W - 94, 14, &sSmall, 'l', STYLE_INK, 0);
 }
 
-/* The panel's picture, into sFacTop. FALSE while the front picture is not in yet. */
-static bool8 DrawFactoryTop(const ViewState *s)
+/* A front picture is in the cache (FrontPic loads them, one a frame, in Prefetch); never loads one itself. */
+enum { FRONT_PENDING, FRONT_READY, FRONT_FAILED };
+
+static int FacFrontState(u16 species, bool8 shiny, int *slot)
+{
+    for (int i = 0; i < FRONT_SLOTS; ++i)
+        if (sFronts[i].loaded && sFronts[i].species == species && sFronts[i].shiny == shiny)
+        {
+            *slot = i;
+            return sFronts[i].valid ? FRONT_READY : FRONT_FAILED;
+        }
+    return FRONT_PENDING;
+}
+
+/* The panel's picture, into the canvas now in sDst; slot is the front picture's, -1 for none. */
+static void DrawFactoryTop(const ViewState *s, int slot)
 {
     const struct CtrFactoryView *v = &s->fac;
     u16 species = v->species[v->focus];
-    int oy, slot = FrontPic(species, FALSE);
+    int oy;
     u8 label[16];
 
-    memcpy(sDst, sFacTopBack, sizeof(u16) * FTOP_W * FTOP_H);
+    FacTopPaint(sDst);
     /* The title bar, and how many are chosen: in a dark pill in the middle of its height. */
     oy = Plate(FTOP_LEFT_X, FTOP_BAR_Y, FTOP_W - 2 * FTOP_LEFT_X, FTOP_BAR_H, sEmerald, PLATE_STATE_NORMAL);
-    TextIn(gText_RentalPkmn2, FTOP_LEFT_X + 8, oy, 200, 20, &sNormal, 'l', STYLE_WHITE, 0);
+    TextIn(v->screen == CTR_FAC_SELECT ? gText_RentalPkmn2 : gText_PkmnSwap, FTOP_LEFT_X + 8, oy, 200, 20, &sNormal, 'l',
+           STYLE_WHITE, 0);
     if (v->screen == CTR_FAC_SELECT)
     {
         int px = FTOP_W - FTOP_LEFT_X - 8 - FTOP_PILL_W, py = FTOP_BAR_Y + (FTOP_BAR_H - FTOP_PILL_H) / 2;
@@ -252,60 +300,106 @@ static bool8 DrawFactoryTop(const ViewState *s)
         DrawTypeIcon(gBattleMoves[move].type, FTOP_RIGHT_X + 8, oy + 3 + i * 21);
         TextIn(gMoveNames[move], FTOP_RIGHT_X + 46, oy + 2 + i * 21, FTOP_RIGHT_W - 54, 18, &sSmall, 'l', STYLE_INK, 0);
     }
-    return slot >= 0;
 }
 
-/* Every frame: the panel drawn again when what it shows changed, and kept up. */
+static void FacTopSigOf(struct FacTopSig *sig, const struct CtrFactoryView *v, bool8 sprite)
+{
+    memset(sig, 0, sizeof(*sig));
+    sig->screen = v->screen;
+    sig->focus = v->focus;
+    sig->enemy = v->enemy;
+    sig->chosen = v->chosen;
+    sig->shiny = v->shiny;
+    sig->sprite = sprite;
+    sig->level = v->level;
+    sig->ability = v->ability;
+    sig->nature = v->nature;
+    sig->item = v->item;
+    memcpy(sig->moves, v->moves, sizeof(sig->moves));
+    memcpy(sig->species, v->species, sizeof(sig->species));
+    memcpy(sig->personality, v->personality, sizeof(sig->personality));
+    memcpy(sig->order, v->order, sizeof(sig->order));
+}
+
+/*
+ * Every frame: the panel up from the screen's first frame, the backdrop alone
+ * until there is a card (the view's Pokemon, every icon in and the focus' front
+ * picture in, or given up on after FTOP_WAIT_FRAMES), then the card, handed
+ * over only when what it shows changes. While a new picture is waited for the
+ * card shown stays. Drawn into the panel's own canvas: nothing is shown until
+ * it is whole. It follows the game's fade to black as the screen leaves.
+ */
 static void FactoryTopFrame(const ViewState *s)
 {
     const struct CtrFactoryView *v = &s->fac;
     u16 *dst = sDst;
     int ox = sOX, cx0 = sClipX0, cy0 = sClipY0, cx1 = sClipX1, cy1 = sClipY1;
-    bool8 changed;
+    int slot = -1, front = FRONT_FAILED;
+    bool8 card;
+    struct FacTopSig sig;
 
-    if (s->mode != MODE_PAD || !v->screen || v->focus >= v->count || !v->species[v->focus])
+    if (s->mode != MODE_PAD || !v->screen)
     {
-        if (sFacTop)
+        FactoryTopLeave();
+        return;
+    }
+    /* The panel went (this is not asked every frame): it is handed over again. */
+    if (sFacTopKind != FTOP_NONE && !CtrTopPanel_Active())
+        sFacTopKind = FTOP_NONE;
+    card = v->count && v->loaded && v->focus < v->count && v->species[v->focus];
+    if (card)
+    {
+        u16 pic = FacPicSpecies(v->species[v->focus], v->personality[v->focus]);
+        u32 key = pic << 1 | v->shiny;
+
+        front = FacFrontState(pic, v->shiny, &slot);
+        if (key != sFacTopWaitKey)
         {
-            free(sFacTop);
-            sFacTop = NULL;
-            sFacTopShown.screen = 0;
+            sFacTopWaitKey = key;
+            sFacTopWait = 0;
         }
-        return;
+        if (front == FRONT_PENDING && sFacTopWait < FTOP_WAIT_FRAMES)
+        {
+            ++sFacTopWait;
+            card = FALSE;
+        }
+        if (front != FRONT_READY)
+            slot = -1;
     }
-    FacTopBackdrop();
-    if (!sFacTopBack)
-        return;
-    if (!sFacTop && !(sFacTop = malloc(sizeof(u16) * FTOP_W * FTOP_H)))
-        return;
-    changed = !sFacTopShown.ready || sFacTopShown.screen != v->screen || sFacTopShown.focus != v->focus
-           || sFacTopShown.enemy != v->enemy || sFacTopShown.chosen != v->chosen
-           || sFacTopShown.species != v->species[v->focus] || sFacTopShown.personality != v->personality[v->focus]
-           || memcmp(sFacTopShown.order, v->order, sizeof(v->order)) != 0;
-    if (changed)
+    if (!card)
     {
-        sDst = sFacTop;
-        sOX = 0;
-        sClipX0 = sClipY0 = 0;
-        sClipX1 = FTOP_W;
-        sClipY1 = FTOP_H;
-        sFacTopShown.ready = DrawFactoryTop(s) && sIconsReady;
-        sDst = dst;
-        sOX = ox;
-        sClipX0 = cx0;
-        sClipY0 = cy0;
-        sClipX1 = cx1;
-        sClipY1 = cy1;
-        sFacTopShown.screen = v->screen;
-        sFacTopShown.focus = v->focus;
-        sFacTopShown.enemy = v->enemy;
-        sFacTopShown.chosen = v->chosen;
-        sFacTopShown.species = v->species[v->focus];
-        sFacTopShown.personality = v->personality[v->focus];
-        memcpy(sFacTopShown.order, v->order, sizeof(v->order));
-        CtrTopPanel_Show(sFacTop);
-        CtrLog_Write(CTR_LOG_VIDEO, "factory top: panel drawn (screen %u, focus %u, ready %u)", v->screen, v->focus,
-                     sFacTopShown.ready);
+        /* The card shown stays while the next one is waited for. */
+        if (sFacTopKind == FTOP_NONE)
+        {
+            FactoryTopWarm();
+            FacTopPaint(CtrTopPanel_Canvas());
+            CtrTopPanel_Show();
+            sFacTopKind = FTOP_BACKDROP;
+        }
     }
-    CtrTopPanel_Keep();
+    else
+    {
+        FacTopSigOf(&sig, v, slot >= 0);
+        if (sFacTopKind != FTOP_CARD || memcmp(&sig, &sFacTopShown, sizeof(sig)) != 0)
+        {
+            FactoryTopWarm();
+            sDst = CtrTopPanel_Canvas();
+            sOX = 0;
+            sClipX0 = sClipY0 = 0;
+            sClipX1 = FTOP_W;
+            sClipY1 = FTOP_H;
+            DrawFactoryTop(s, slot);
+            sDst = dst;
+            sOX = ox;
+            sClipX0 = cx0;
+            sClipY0 = cy0;
+            sClipX1 = cx1;
+            sClipY1 = cy1;
+            CtrTopPanel_Show();
+            memcpy(&sFacTopShown, &sig, sizeof(sig));
+            sFacTopKind = FTOP_CARD;
+            CtrLog_Write(CTR_LOG_VIDEO, "factory top: card drawn (screen %u, focus %u, picture %d)", v->screen, v->focus, slot);
+        }
+    }
+    CtrTopPanel_Keep(CtrFactory_Dark());
 }
