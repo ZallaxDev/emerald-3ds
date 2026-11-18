@@ -153,13 +153,27 @@ static bool Falls(const int16_t *g, int *high, int *low)
     return falls;
 }
 
+/* EDGE and under-floor layers precede the upright and stair tables. */
+static const unsigned char *UprightAndStepsTables(const unsigned char *blob, long size)
+{
+    unsigned at = Le16(blob + size - 8) | (Le16(blob + size - 6) << 16);
+    unsigned nv = Le16(blob + at), nc = Le16(blob + at + 2);
+    const unsigned char *t = blob + at + 4 + 36u * nv + 14u * nc;
+
+    if (memcmp(t, "EDGE", 4) == 0)
+        t += 8 + 18u * Le16(t + 4);
+    if (memcmp(t, "UNDR", 4) == 0)
+        t += 8 + 58u * Le16(t + 4);
+    return t;
+}
+
 /* The "UPRT" table of the file, each cell through the runtime. */
 static void CheckUpright(int route116)
 {
     FILE *f = fopen(VOXEL_RELIEF_PATH, "rb");
     long size;
     unsigned char *blob;
-    unsigned at, nv, nc, n, seen = 0;
+    unsigned n, seen = 0;
     const unsigned char *t;
     VoxelMapInstance inst = {0};
     float top, foot;
@@ -175,15 +189,7 @@ static void CheckUpright(int route116)
     blob = malloc((size_t)size);
     assert(blob != NULL && fread(blob, 1, (size_t)size, f) == (size_t)size);
     fclose(f);
-    at = Le16(blob + size - 8) | (Le16(blob + size - 6) << 16);
-    nv = Le16(blob + at);
-    nc = Le16(blob + at + 2);
-    t = blob + at + 4 + 36u * nv + 14u * nc;
-    if (memcmp(t, "EDGE", 4) == 0)
-        t += 8 + 18u * Le16(t + 4);
-    /* (the layers laid under raised floors by hand, when a map has any) */
-    if (memcmp(t, "UNDR", 4) == 0)
-        t += 8 + 58u * Le16(t + 4);
+    t = UprightAndStepsTables(blob, size);
     assert(memcmp(t, "UPRT", 4) == 0);
     n = Le16(t + 4);
     assert(n > 0 && Le16(t + 6) == 0);
@@ -271,7 +277,7 @@ static void CheckSteps(void)
     FILE *f = fopen(VOXEL_RELIEF_PATH, "rb");
     long size;
     unsigned char *blob;
-    unsigned at, nv, nc, n, seen = 0, asked = 0;
+    unsigned n, seen = 0, asked = 0;
     const unsigned char *t, *up = NULL;
     unsigned nup = 0;
     unsigned risers;
@@ -283,12 +289,7 @@ static void CheckSteps(void)
     blob = malloc((size_t)size);
     assert(blob != NULL && fread(blob, 1, (size_t)size, f) == (size_t)size);
     fclose(f);
-    at = Le16(blob + size - 8) | (Le16(blob + size - 6) << 16);
-    nv = Le16(blob + at);
-    nc = Le16(blob + at + 2);
-    t = blob + at + 4 + 36u * nv + 14u * nc;
-    if (memcmp(t, "EDGE", 4) == 0)
-        t += 8 + 18u * Le16(t + 4);
+    t = UprightAndStepsTables(blob, size);
     if (memcmp(t, "UPRT", 4) == 0)
     {
         nup = Le16(t + 4);
