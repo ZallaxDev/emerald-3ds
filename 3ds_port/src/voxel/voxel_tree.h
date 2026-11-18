@@ -27,6 +27,30 @@ int VoxelTree_GroundMetatile(const void *secondaryTileset, int metatileId);
  * VoxelTree_GroundMetatile names it, and the tree its roots over it. */
 bool VoxelTree_LaysGround(const void *secondaryTileset, int metatileId);
 
+/*
+ * Tall grass (the General's 00D, and Lavaridge's on Jagged Pass's soil): the
+ * tile's own drawing stood up. The ground pass lays `*floor`, the ground the
+ * grass grows on, and over it the tile's tufts on one low card a cell (cut
+ * in two, each half stood up apart, the drawing's tufts - which run from
+ * one half into the other - showed the cut from a battle's low camera),
+ * drawn with the tile less its ground (voxel_atlas.h, VOXEL_TUFT_FIRST + the
+ * index returned). -1 for any other metatile. The metatile is the one the
+ * ground pass draws (VoxelTree_GroundMetatile's, under a crown's top).
+ */
+#define VOXEL_TUFT_COUNT 2
+#define VOXEL_TUFT_ROWS 1
+/* the card's height at its north edge, tiles: 6 px */
+#define VOXEL_TUFT_HEIGHT 0.375f
+int VoxelTree_Tuft(const void *secondaryTileset, int metatileId, int *floor);
+/* Tuft `i`: its metatile, its floor, and the secondary tileset it is of
+ * (NULL: the General's own, on every map of it). */
+bool VoxelTree_TuftSource(unsigned i, const void **secondaryTileset, unsigned *metatile,
+                          unsigned *floor);
+/* The General's tall grass and the grass it grows on: what every tuft's
+ * outline is read from (the atlas, TuftClear). */
+#define VOXEL_TUFT_SHAPE 0x00D
+#define VOXEL_TUFT_SHAPE_FLOOR 0x001
+
 /* Appended after the ordinary terrain; these vertices use the tree texture. */
 void VoxelTree_EmitInstance(VoxelBuilder *builder, const VoxelMapInstance *inst,
                             int x0, int y0, int x1, int y1);
