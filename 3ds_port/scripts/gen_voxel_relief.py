@@ -545,6 +545,10 @@ def own_id(lid, m, layouts=ALIAS_LAYOUTS):
 def terrace_art(lid):
     """The layout's drawing as voxel_terraces reads it: layout_art, or the
     alias reading of an ALIAS_TERRACES map (the world's solve keeps its own)."""
+    if is_cave(lid):
+        if lid not in _TERRACE_ART:
+            _TERRACE_ART[lid] = CaveArt(lid)
+        return _TERRACE_ART[lid]
     if lid not in ALIAS_TERRACES:
         return layout_art(lid)
     if lid not in _TERRACE_ART:
@@ -565,7 +569,362 @@ def own_art(lid):
 
 def terrace_own_id(lid, m):
     """own_id for the terraces' reading (terrace_art)."""
+    if is_cave(lid):
+        art = terrace_art(lid)
+        art.cells       # (read: its pieces' own tiles)
+        if m in art.back:
+            return art.back[m]
+        # a wall of the General's the terraces stand (a band's side face, the
+        # face a fill stands on) where the cave drew no piece of that kind:
+        # the cave's own rock, never the General mountain's brown
+        if m < vb.NUM_PRIMARY and m in CAVE_WALLS and m not in art.drawn:
+            side = {CAVE_BAND_W: CAVE_BAND_E, CAVE_BAND_E: CAVE_BAND_W}.get(m)
+            for g in (side, CAVE_FACE, CAVE_BAND_W, CAVE_BAND_E):
+                if g in art.back:
+                    return art.back[g]
+        return m
     return own_id(lid, m, ALIAS_LAYOUTS | ALIAS_TERRACES)
+
+
+# -- caves read as the General's mountain -------------------------------------
+#
+# A cave's tileset draws its rock with tiles of its own, not the General's
+# recoloured (alias_of finds none), and draws the top of its rock with the
+# very tiles of its floor: what tells them apart is the collision. So a cave
+# is read cell by cell, blocked cells only, each as the General piece it
+# plays (voxel_terraces then counts it as any mountain):
+#
+#   drawn as light as the map's floor   a top (CAVE_TOP), or its rim
+#                                       (CAVE_RIM) where the cell north of it
+#                                       is walked, or a lip starts there
+#                                       (CaveArt.lips): the terrace's back;
+#                                       alone, walked round, a boulder
+#                                       (CAVE_LOOSE)
+#   drawn darker                        the rock's side, by the run of it the
+#                                       cell is in (_cave_side): down a column
+#                                       a band (CAVE_BAND_W/E) falling to the
+#                                       side walked, across a row a face
+#                                       (CAVE_FACE, one level a row), a lump a
+#                                       rock lying on the ground (CAVE_LOOSE)
+#   a bridge's deck (elevation 15)      voxel_terraces' cave decks: level
+#                                       between its banks, thin over the floor
+#                                       walked under it
+#   stairs of the cave's own, walked    the General's carved steps (CAVE_STEPS)
+#
+# The export writes the cave's own ids back (CaveArt.back: each piece as the
+# tile the map draws it with most), so the walls stand in the cave's rock.
+CAVE_TILESETS = {"gTileset_Cave", "gTileset_MeteorFalls"}
+# modelled by hand, cell by cell, in relief_fixes.json
+CAVE_BY_HAND = {"LAYOUT_METEOR_FALLS_1F_1R", "LAYOUT_RUSTURF_TUNNEL"}
+CAVE_TOP, CAVE_RIM, CAVE_FACE = 0x071, 0x06C, 0x07C
+CAVE_BAND_W, CAVE_BAND_E = 0x070, 0x072     # falling west (floor west of it), east
+CAVE_STEPS = 0x0E8
+CAVE_LOOSE = 0x0DF          # voxel_terraces.LOOSE: a rock lying on the ground, no level
+# each cave tileset's steps cut up a face (Victory Road's, Meteor Falls')
+CAVE_STAIRS = {"gTileset_Cave": {0x204}, "gTileset_MeteorFalls": {0x202}}
+BRIDGE_ELEVATION = 15       # a cell walked over and under: a bridge's deck
+# the General's walls voxel_terraces stands (faces, band sides): in a cave, its own
+CAVE_WALLS = {0x07c, 0x0a9, 0x079, 0x091, 0x070, 0x072, 0x073, 0x075, 0x088, 0x08a,
+              0x06b, 0x06d, 0x080, 0x082, 0x083, 0x084, 0x068, 0x06a, 0x0a2, 0x0a4}
+CAVE_DARK = 0.80           # darker than this share of the floor's light: the rock's side
+_CAVE_SIDES = {}
+
+
+def _secondary(lid):
+    e = next((e for e in vb._layouts_json() if e["id"] == lid), None)
+    return e and e.get("secondary_tileset")
+
+
+_UNDERGROUND = []
+
+
+def _underground():
+    """The layouts of the maps the game calls underground (map.json's
+    map_type), and of no other: Route 130 is drawn with the Cave tileset too."""
+    if not _UNDERGROUND:
+        import glob
+        kinds = collections.defaultdict(set)
+        for p in glob.glob(os.path.join(vb.ROOT, "data", "maps", "*", "map.json")):
+            m = json.load(open(p, encoding="utf-8"))
+            kinds[m.get("layout")].add(m.get("map_type"))
+        _UNDERGROUND.append({lid for lid, k in kinds.items() if k == {"MAP_TYPE_UNDERGROUND"}})
+    return _UNDERGROUND[0]
+
+
+def is_cave(lid):
+    """A cave read as the General's mountain (CAVE_TILESETS)."""
+    return lid not in CAVE_BY_HAND and _secondary(lid) in CAVE_TILESETS and lid in _underground()
+
+
+def _cave_blocked(art, x, y):
+    return (art.blocks[y * art.w + x] >> 10) & 3 != 0
+
+
+def _light(img):
+    px = [p for p in img.convert("RGB").getdata() if p != (0, 0, 0)]
+    return sum(0.299 * r + 0.587 * g + 0.114 * b for r, g, b in px) / len(px) if px else 0.0
+
+
+def _cave_floor(art):
+    """The light of the map's floor: of its commonest walked tile (not water)."""
+    import voxel_cells as vc
+    beh = vc.behaviours()
+    water = {beh.get(k) for k in ("MB_POND_WATER", "MB_INTERIOR_DEEP_WATER", "MB_DEEP_WATER",
+                                   "MB_WATERFALL", "MB_SOOTOPOLIS_DEEP_WATER", "MB_OCEAN_WATER")}
+    roles = open_roles(art.id)
+    seen = collections.Counter(art.own_metatile(x, y) for y in range(art.h) for x in range(art.w)
+                               if not _cave_blocked(art, x, y) and roles.behaviour(x, y) not in water)
+    m = seen.most_common(1)[0][0] if seen else art.own_metatile(0, 0)
+    return _light(vb.LayoutArt.cell_image(art, m))
+
+
+def _cave_top(art, m, floor):
+    """A blocked tile drawn about as light as the floor: the rock's top
+    (darker, the rock's side). The colours alone do not tell: Victory Road
+    draws its faces in its floor's palette."""
+    return _light(vb.LayoutArt.cell_image(art, m)) >= CAVE_DARK * floor
+
+
+def _cave_loose(art, dark, rock, holds):
+    """The dark cells that are rocks lying on the ground: a cliff's face or
+    band hangs from a top (a light blocked cell), from the map's edge or
+    beside the rest of its face (`holds`: stairs cut in it); a lump of dark
+    rock no more than three cells either way touching none of them (a
+    boulder on the floor, Meteor Falls' cones of stalagmite) counts no
+    level. (A ridge's face between two floors is wider: Meteor Falls'
+    between its stairs and its curtains.)"""
+    loose, seen = set(), set()
+    for start in sorted(dark):
+        if start in seen:
+            continue
+        patch, todo, hangs = [], [start], False
+        seen.add(start)
+        while todo:
+            x, y = todo.pop()
+            patch.append((x, y))
+            for n in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
+                if not (0 <= n[0] < art.w and 0 <= n[1] < art.h):
+                    hangs = True
+                elif n in dark:
+                    if n not in seen:
+                        seen.add(n)
+                        todo.append(n)
+                elif rock(*n) or holds(*n):
+                    hangs = True
+        xs, ys = [p[0] for p in patch], [p[1] for p in patch]
+        if not hangs and max(xs) - min(xs) < 3 and max(ys) - min(ys) < 3:
+            loose.update(patch)
+    return loose
+
+
+def _cave_side(art, dark, x, y, dry):
+    """The piece a dark blocked cell plays, read off the dark run it is in:
+    a run down a column is a band (falling towards the side walked on), a run
+    across a row a face; a lump (no more than two cells either way) with the
+    floor walked north of it, or a top north and south of it, is a rock
+    lying there (CAVE_LOOSE): drawn on the ground, it counts no level."""
+    def run(dx, dy):
+        n, i, j = 0, x + dx, y + dy
+        while (i, j) in dark:
+            n, i, j = n + 1, i + dx, j + dy
+        return n, (i, j)
+    w, wend = run(-1, 0)
+    e, eend = run(1, 0)
+    n, nend = run(0, -1)
+    s, send = run(0, 1)
+    h, v = w + e + 1, n + s + 1
+
+    def walked(c):
+        return 0 <= c[0] < art.w and 0 <= c[1] < art.h and not _cave_blocked(art, *c)
+
+    def light(c):
+        return 0 <= c[0] < art.w and 0 <= c[1] < art.h and c not in dark and _cave_blocked(art, *c)
+    # (the floor dry: a pool's rounded corner, rock with the water north of
+    # it, is the shore's cliff, not a rock lying in the pool)
+    if h <= 2 and v <= 2 and ((walked(nend) and dry(*nend)) or (light(nend) and light(send))):
+        return CAVE_LOOSE
+    if v > h:
+        if walked(wend) and not walked(eend):
+            return CAVE_BAND_W
+        if walked(eend) and not walked(wend):
+            return CAVE_BAND_E
+    return CAVE_FACE
+
+
+class CaveArt(vb.LayoutArt):
+    """A cave's drawing as the terraces read it: each blocked cell the
+    General piece it plays (see above), every other cell its own."""
+
+    def __init__(self, layout_id):
+        super().__init__(layout_id)
+        self.alias, self.colour = {}, {}
+        self._cells = None
+
+    def own_metatile(self, x, y):
+        return super().metatile(x, y)
+
+    def _read(self):
+        floor = _cave_floor(self)
+        roles = open_roles(self.id)
+        cells, used = {}, collections.defaultdict(collections.Counter)
+
+        def own(x, y):
+            # (the General's own tiles are read as they always are: the sea's
+            # rocks in Meteor Falls' pools are its props, its ledges ledges)
+            return self.own_metatile(x, y) >= vb.NUM_PRIMARY
+
+        # the floor walked, in one piece wherever it joins round a ledge
+        walk = {}
+        for y in range(self.h):
+            for x in range(self.w):
+                if (x, y) in walk or _cave_blocked(self, x, y):
+                    continue
+                todo, walk[(x, y)] = [(x, y)], (x, y)
+                while todo:
+                    i, j = todo.pop()
+                    for n in ((i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)):
+                        if (0 <= n[0] < self.w and 0 <= n[1] < self.h and n not in walk
+                                and not _cave_blocked(self, *n)):
+                            walk[n] = (x, y)
+                            todo.append(n)
+
+        def curtain(x, y):
+            # a ledge of the cave's own (Meteor Falls' curtains of
+            # stalactites, blocked, jumped down) between two levels: the
+            # floors before and behind it not joined round it - a whole row
+            # of face, one level, as the hand modelled 1F_1R.
+            # One the floor goes round is a ledge
+            # on level ground: the ledge's mound, as any ledge
+            if not (own(x, y) and roles.role_at(x, y) == "ledge"):
+                return False
+            ends = []
+            for d in (-1, 1):
+                j = y + d
+                while 0 <= j < self.h and own(x, j) and roles.role_at(x, j) == "ledge":
+                    j += d
+                ends.append(walk.get((x, j)))
+            return None in ends or ends[0] != ends[1]
+
+        def dry(x, y):
+            return roles.role_at(x, y) != "water"
+
+        def rock(x, y):
+            # (the water the terraces read by its role)
+            return (_cave_blocked(self, x, y) and own(x, y)
+                    and roles.role_at(x, y) not in ("ledge", "water"))
+        dark = set()
+        for y in range(self.h):
+            for x in range(self.w):
+                m = self.own_metatile(x, y)
+                if (rock(x, y) and m not in CAVE_STAIRS.get(self.secondary, ())
+                        and not _cave_top(self, m, floor)):
+                    dark.add((x, y))
+        stairs = CAVE_STAIRS.get(self.secondary, set())
+        loose = _cave_loose(self, dark, rock,
+                            lambda x, y: self.own_metatile(x, y) in stairs)
+        # lips: a top drawn with a dark line along its north edge (209, 355,
+        # 2db...). The cave tiles its rock's top with them row after row as
+        # texture, and draws with the same line a terrace a level over the
+        # one north of it: a row of lips is a terrace's back where it starts
+        # or ends against the rock's side (a band's head, a face's corner -
+        # Artisan Cave B1F's terraces up to the south-east, a lip from each
+        # band's head; Victory Road B2F's down to its lake). Walked or not
+        lipped = {}
+
+        def lip(x, y):
+            m = self.own_metatile(x, y)
+            if m not in lipped:
+                img = vb.LayoutArt.cell_image(self, m).convert("RGB")
+                px = [0.299 * r + 0.587 * g + 0.114 * b for r, g, b in img.getdata()]
+                rows = [sum(px[j * 16:(j + 1) * 16]) / 16 for j in range(16)]
+                lipped[m] = rows[0] < 0.7 * floor and sum(rows[4:]) / 12 >= 0.85 * floor
+            return lipped[m]
+        self._lips = set()
+        for y in range(1, self.h):
+            x = 0
+            while x < self.w:
+                if not (lip(x, y) and roles.role_at(x, y) != "water"):
+                    x += 1
+                    continue
+                run = [x]
+                while x + 1 < self.w and lip(x + 1, y) and roles.role_at(x + 1, y) != "water":
+                    x += 1
+                    run.append(x)
+                x += 1
+                # (its end against the rock's side: dark, or a strip's rounded
+                # head drawn light - any rock not lipped itself)
+                def side(i):
+                    return (i, y) in dark or (0 <= i < self.w and rock(i, y) and not lip(i, y))
+                if side(run[0] - 1) or side(run[-1] + 1):
+                    # (the rounded head it starts from, drawn light, is the
+                    # terrace's corner: its back too, or the terrace ran on
+                    # round it into the one behind - Artisan Cave B1F's)
+                    heads = [i for i in (run[0] - 1, run[-1] + 1)
+                             if (i, y) not in dark and side(i)]
+                    self._lips.update((i, y) for i in run + heads
+                                      if _cave_blocked(self, i, y - 1) and dry(i, y - 1))
+        for y in range(self.h):
+            for x in range(self.w):
+                m = self.own_metatile(x, y)
+                if m in CAVE_STAIRS.get(self.secondary, ()):
+                    g = CAVE_STEPS
+                elif curtain(x, y):
+                    g = CAVE_FACE
+                elif not rock(x, y):
+                    continue
+                elif (x, y) in loose:
+                    g = CAVE_LOOSE
+                elif (x, y) in dark:
+                    g = _cave_side(self, dark, x, y, dry)
+                elif all(0 <= i < self.w and 0 <= j < self.h and not _cave_blocked(self, i, j) and dry(i, j)
+                         for i, j in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1))):
+                    # a light cell walked round on every side: a boulder, a
+                    # pillar, an ice rock standing on the floor, not a
+                    # terrace a cell wide
+                    g = CAVE_LOOSE
+                else:
+                    g = (CAVE_RIM if y > 0 and (not _cave_blocked(self, x, y - 1) or (x, y) in self._lips)
+                         else CAVE_TOP)
+                cells[(x, y)] = g
+        # a tile is drawn as one side of the rock wherever it stands: the
+        # band a run beside the floor reads it as is the band it is too where
+        # bands are drawn nested, one inside the other, with no floor beside
+        # them (Steven's Cave) - read across a row, each would be a face
+        sides = collections.defaultdict(collections.Counter)
+        for (x, y), g in cells.items():
+            if g in (CAVE_BAND_W, CAVE_BAND_E, CAVE_FACE):
+                sides[self.own_metatile(x, y)][g] += 1
+        for m, seen in sides.items():
+            w, e = seen[CAVE_BAND_W], seen[CAVE_BAND_E]
+            band = CAVE_BAND_W if w > e else CAVE_BAND_E
+            if max(w, e) >= 2 * min(w, e) + 2 and 4 * max(w, e) >= sum(seen.values()):
+                # (and a strip read falling the other way, where the floor
+                # beside it is on its high side: Victory Road B2F's 212 by
+                # its lake, falling east, read west - its top a level over
+                # the terrace it flanks)
+                for c, g in cells.items():
+                    if g in (CAVE_FACE, CAVE_BAND_W, CAVE_BAND_E) and c in dark and self.own_metatile(*c) == m:
+                        cells[c] = band
+        for (x, y), g in cells.items():
+            used[g][self.own_metatile(x, y)] += 1
+        self._cells = cells
+        self.back = {g: c.most_common(1)[0][0] for g, c in used.items()}
+        self.drawn = {self.own_metatile(x, y) for y in range(self.h) for x in range(self.w)}
+
+    @property
+    def cells(self):
+        if self._cells is None:
+            self._read()
+        return self._cells
+
+    @property
+    def lips(self):
+        """The cells, walked or not, a lip makes a terrace's back (_read)."""
+        self.cells
+        return self._lips
+
+    def metatile(self, x, y):
+        return self.cells.get((x, y), super().metatile(x, y))
 
 
 # ── mountains read off the drawing ──────────────────────────────────────────
@@ -1361,7 +1720,7 @@ def drawn_canvas(name):
         # the object, and the relief reads what is under it, the cell's
         # lower layer - the sea, flat at the water's level, or the ground or
         # the terrace's top it lies on, read as any other
-        props = set(voxel_props.cells_in(entries[lid]))
+        props = set(voxel_props.cells_in(entries[lid])) | voxel_props.beam_cells(entries[lid])
         # in a map read off its drawing only now (alias_of), a ledge and
         # berry soil are ground, whatever rock they are drawn like: they
         # keep the shape they always had (Jagged Pass draws its ledges'

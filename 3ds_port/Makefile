@@ -62,6 +62,8 @@ SOURCES += src/3ds_memcpy.c
 SOURCES += src/3ds_corner_art.c
 # The Pokédex on the top screen (include/3ds_dex_top.h).
 SOURCES += src/3ds_dex_top.c
+# A panel the bottom screen draws for the top one (include/3ds_top_panel.h).
+SOURCES += src/3ds_top_panel.c
 # Local wireless play (include/3ds_local.h).
 SOURCES += src/3ds_local.c
 SOURCES += src/3ds_daynight.c
@@ -329,6 +331,30 @@ build/input_test.exe: tests/input_test.c src/3ds_input_decode.c include/3ds_inpu
 	@mkdir -p build
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/input_test.c src/3ds_input_decode.c -o $@
 
+.PHONY: verify-list-view
+verify-list-view: build/list_view_test$(EXESUFFIX)
+	./build/list_view_test$(EXESUFFIX)
+
+build/list_view_test$(EXESUFFIX): tests/list_view_test.c include/3ds_list_view.inc
+	@mkdir -p build
+	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/list_view_test.c -o $@
+
+.PHONY: verify-menu-view
+verify-menu-view: build/menu_view_test$(EXESUFFIX)
+	./build/menu_view_test$(EXESUFFIX)
+
+build/menu_view_test$(EXESUFFIX): tests/menu_view_test.c include/3ds_menu_view.inc
+	@mkdir -p build
+	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/menu_view_test.c -o $@
+
+.PHONY: verify-naming-layout
+verify-naming-layout: build/naming_layout_test$(EXESUFFIX)
+	./build/naming_layout_test$(EXESUFFIX)
+
+build/naming_layout_test$(EXESUFFIX): tests/naming_layout_test.c include/3ds_naming_layout.h
+	@mkdir -p build
+	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/naming_layout_test.c -o $@
+
 .PHONY: verify-memcpy
 verify-memcpy: build/memcpy_test$(EXESUFFIX)
 	./build/memcpy_test$(EXESUFFIX)
@@ -339,6 +365,9 @@ build/memcpy_test$(EXESUFFIX): tests/memcpy_test.c src/3ds_memcpy.c
 
 verify: verify-video
 verify: verify-memcpy
+verify: verify-naming-layout
+verify: verify-menu-view
+verify: verify-list-view
 verify: verify-daynight
 verify: verify-clock-store
 verify: verify-nuzlocke

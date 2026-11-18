@@ -299,6 +299,68 @@ def everywhere(names=None):
     return out
 
 
+_BEAM_TILES = {}
+
+
+def beam_cells(layout_entry):
+    """The cells of a layout a beam on posts stands over (the Acro Bike's
+    rails: voxel_building_specs' `components` specs built by voxel_fence's
+    kind "beam"), found by their metatiles: the beam and its posts are the
+    model's, and what lies under them - the river, the grass - is flat
+    ground, as under any other object here."""
+    key = (layout_entry.get("primary_tileset"), layout_entry.get("secondary_tileset"))
+    if key not in _BEAM_TILES:
+        import voxel_building_specs as specs
+        tiles = set()
+        for spec in specs.SPECS:
+            comp = spec.get("components")
+            if not comp or (comp.get("posts") or {}).get("kind") != "beam":
+                continue
+            if ("primary" in comp and comp["primary"] != key[0]) or \
+                    ("secondary" in comp and comp["secondary"] != key[1]):
+                continue
+            tiles |= set(comp["tiles"]) | set(comp.get("also", {}).get(key[1], ()))
+        _BEAM_TILES[key] = tiles
+    tiles = _BEAM_TILES[key]
+    if not tiles or "blockdata_filepath" not in layout_entry:
+        return set()
+    with open(os.path.join(ROOT, layout_entry["blockdata_filepath"]), "rb") as f:
+        raw = f.read()
+    w = layout_entry["width"]
+    return {(i % w, i // w) for i in range(len(raw) // 2)
+            if (raw[2 * i] | (raw[2 * i + 1] << 8)) & 0x3FF in tiles}
+
+
+def beam_decks():
+    """[(layout id, x, y, top, bottom, elevation)] (gen_voxel_buildings'
+    deck table): the cells of the beam models that are ridden (`ride`, the
+    rail's own metatiles - not the cells of its posts), lifted the beam's
+    height. Their relief is the flat water under the beam."""
+    import voxel_building_specs as specs
+    out = []
+    with open(os.path.join(ROOT, "data", "layouts", "layouts.json"), encoding="utf-8") as f:
+        layouts = json.load(f)["layouts"]
+    for spec in specs.SPECS:
+        comp = spec.get("components")
+        if not comp or (comp.get("posts") or {}).get("kind") != "beam":
+            continue
+        for entry in layouts:
+            if "blockdata_filepath" not in entry or entry.get("id") in comp.get("skip", ()):
+                continue
+            if ("primary" in comp and entry.get("primary_tileset") != comp["primary"]) or \
+                    ("secondary" in comp and entry.get("secondary_tileset") != comp["secondary"]):
+                continue
+            ride = set(comp["posts"]["ride"]) | set(comp["posts"].get("ride_also", {}).get(
+                entry.get("secondary_tileset"), ()))
+            with open(os.path.join(ROOT, entry["blockdata_filepath"]), "rb") as f:
+                raw = f.read()
+            w = entry["width"]
+            for i in range(len(raw) // 2):
+                if (raw[2 * i] | (raw[2 * i + 1] << 8)) & 0x3FF in ride:
+                    out.append((entry["id"], i % w, i // w, comp["posts"]["height"], comp["posts"]["height"], 0))
+    return out
+
+
 def main():
     if len(sys.argv) < 2:
         raise SystemExit(__doc__)

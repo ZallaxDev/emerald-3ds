@@ -88,6 +88,9 @@ static bool sStageRequested, sStage;
 static bool sStageFadedRequested, sStageFaded;
 /* A stage magnified to fit the screen (CtrVideo_SetStageZoomed). */
 static bool sStageZoomedRequested, sStageZoomed;
+/* A stage scaled to cover the screen (CtrVideo_SetStageCovered): drawn as a
+ * magnified one, but filling the width instead of fitting the height. */
+static bool sStageCoveredRequested, sStageCovered;
 static bool sCentred;
 static unsigned sCentredRequested, sCentredScreen;
 static bool sBattleRequested, sBattle;

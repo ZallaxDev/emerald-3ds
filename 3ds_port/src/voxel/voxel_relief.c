@@ -174,6 +174,10 @@ static unsigned sEdgeCount;
 static const uint8_t *sUpright;     /* "UPRT": u16 layout, u8 x, u8 y a cell */
 static unsigned sUprightCount;
 #define UPRIGHT_BYTES 4
+static const uint8_t *sUnder;       /* "UNDR": u16 layout, u8 x, u8 y, u16 tile, u16 wall, s16 heights[25] */
+static unsigned sUnderCount;
+static int16_t *sUnderHeights;      /* the heights of each, aligned */
+#define UNDER_BYTES 58
 static const uint8_t *sSteps;       /* "STEP": u16 layout, u8 x, u8 y, u16 riser mask a cell */
 static unsigned sStepCount;
 #define STEP_BYTES 6
@@ -263,6 +267,20 @@ bool VoxelRelief_Init(void)
                 if ((long)(sEdges - sBlob) + (long)(EDGE_BYTES * sEdgeCount) > size - 8)
                     goto fail;
                 e = sEdges + EDGE_BYTES * sEdgeCount;
+            }
+            if ((long)(e - sBlob) + 8 <= size - 8 && memcmp(e, "UNDR", 4) == 0)
+            {
+                sUnderCount = U16(e + 4);
+                sUnder = e + 8;
+                if ((long)(sUnder - sBlob) + (long)(UNDER_BYTES * sUnderCount) > size - 8)
+                    goto fail;
+                sUnderHeights = malloc((size_t)(sUnderCount ? sUnderCount : 1) * GRID * sizeof(int16_t));
+                if (sUnderHeights == NULL)
+                    goto fail;
+                for (unsigned k = 0; k < sUnderCount; ++k)
+                    for (unsigned g = 0; g < GRID; ++g)
+                        sUnderHeights[k * GRID + g] = (int16_t)U16(sUnder + k * UNDER_BYTES + 8 + 2 * g);
+                e = sUnder + UNDER_BYTES * sUnderCount;
             }
             if ((long)(e - sBlob) + 8 <= size - 8 && memcmp(e, "UPRT", 4) == 0)
             {
@@ -417,6 +435,10 @@ void VoxelRelief_Shutdown(void)
     memset(sUprightMemo, 0, sizeof(sUprightMemo));
     sSteps = NULL;
     sStepCount = 0;
+    free(sUnderHeights);
+    sUnderHeights = NULL;
+    sUnder = NULL;
+    sUnderCount = 0;
     memset(sStepMemo, 0, sizeof(sStepMemo));
 }
 
@@ -702,11 +724,63 @@ int VoxelRelief_Cut(const VoxelMapInstance *inst, int x, int y, float *foot, int
     return (int)U16(c + 4);
 }
 
+const int16_t *VoxelRelief_Under(const VoxelMapInstance *inst, int x, int y, int *tile, int *wall)
+{
+    unsigned lo = 0, hi = sUnderCount, key;
+
+    if (inst == NULL || sUnderCount == 0)
+        return NULL;
+    x -= inst->originX;
+    y -= inst->originY;
+    if (x < 0 || y < 0 || x > 255 || y > 255)
+        return NULL;
+    /* by layout, row, column */
+    key = ((unsigned)inst->layoutId << 16) | ((unsigned)y << 8) | (unsigned)x;
+    while (lo < hi)
+    {
+        unsigned mid = (lo + hi) / 2;
+        const uint8_t *c = sUnder + UNDER_BYTES * mid;
+        unsigned at = (U16(c) << 16) | ((unsigned)c[3] << 8) | c[2];
+
+        if (at == key)
+        {
+            if (tile != NULL)
+                *tile = U16(c + 4) == 0xFFFFu ? -1 : (int)U16(c + 4);
+            if (wall != NULL)
+                *wall = U16(c + 6) == 0xFFFFu ? -1 : (int)U16(c + 6);
+            return sUnderHeights + mid * GRID;
+        }
+        if (at < key)
+            lo = mid + 1;
+        else
+            hi = mid;
+    }
+    return NULL;
+}
+
+static float Sample(const int16_t *g, float worldX, float worldZ);
+
+float VoxelRelief_UnderAt(const VoxelMapInstance *inst, float worldX, float worldZ)
+{
+    return Sample(VoxelRelief_Under(inst, FloorI(worldX), FloorI(worldZ), NULL, NULL), worldX, worldZ);
+}
+
 void VoxelRelief_ForEachCut(const VoxelMapInstance *inst, VoxelReliefCutVisit visit, void *ctx)
 {
     unsigned lo = 0, hi = sCutCellCount, first;
 
-    if (inst == NULL || sCutCells == NULL)
+    if (inst == NULL)
+        return;
+    /* (and what the layers under its raised floors are drawn with) */
+    for (unsigned k = 0; k < sUnderCount; ++k)
+    {
+        const uint8_t *c = sUnder + UNDER_BYTES * k;
+
+        if (U16(c) == (unsigned)inst->layoutId)
+            visit((int)c[2], (int)c[3], U16(c + 4) == 0xFFFFu ? -1 : (int)U16(c + 4),
+                  U16(c + 6) == 0xFFFFu ? -1 : (int)U16(c + 6), ctx);
+    }
+    if (sCutCells == NULL)
         return;
     first = (unsigned)inst->layoutId << 16;
     while (lo < hi)

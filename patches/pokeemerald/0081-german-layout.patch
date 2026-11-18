@@ -392,7 +392,7 @@ messages get German wording, as the French and Italian ones do.
                  {
 --- a/src/battle_script_commands.c
 +++ b/src/battle_script_commands.c
-@@ -10317,7 +10317,19 @@ void BattleCreateYesNoCursorAt(u8 cursorPosition)
+@@ -10359,7 +10359,19 @@ void BattleCreateYesNoCursorAt(u8 cursorPosition)
      src[0] = 1;
      src[1] = 2;
  
@@ -412,7 +412,7 @@ messages get German wording, as the French and Italian ones do.
      CopyBgTilemapBufferToVram(0);
  }
  
-@@ -10327,7 +10339,19 @@ void BattleDestroyYesNoCursorAt(u8 cursorPosition)
+@@ -10369,7 +10381,19 @@ void BattleDestroyYesNoCursorAt(u8 cursorPosition)
      src[0] = 0x1016;
      src[1] = 0x1016;
  
@@ -903,7 +903,7 @@ messages get German wording, as the French and Italian ones do.
              u8 colorsId = COLORID_GRAY;
 --- a/src/easy_chat.c
 +++ b/src/easy_chat.c
-@@ -828,9 +828,17 @@ static const struct BgTemplate sEasyChatBgTemplates[] = {
+@@ -831,9 +831,17 @@ static const struct BgTemplate sEasyChatBgTemplates[] = {
  static const struct WindowTemplate sEasyChatWindowTemplates[] = {
      [WIN_TITLE] = {
          .bg = 1,
@@ -921,7 +921,7 @@ messages get German wording, as the French and Italian ones do.
          .height = 2,
          .paletteNum = 10,
          .baseBlock = 0x10,
-@@ -1199,8 +1207,13 @@ static const struct SpriteTemplate sSpriteTemplate_ScrollIndicator =
+@@ -1202,8 +1210,13 @@ static const struct SpriteTemplate sSpriteTemplate_ScrollIndicator =
  
  static const u8 sFooterOptionXOffsets[NUM_FOOTER_TYPES][4] = {
      [FOOTER_NORMAL] = {16, 111, 196,   0},
@@ -935,7 +935,7 @@ messages get German wording, as the French and Italian ones do.
  };
  
  static const u8 *const sFooterTextOptions[NUM_FOOTER_TYPES][4] = {
-@@ -3945,7 +3958,15 @@ static void PrintTitle(void)
+@@ -3951,7 +3964,15 @@ static void PrintTitle(void)
      if (!titleText)
          return;
  
@@ -951,7 +951,7 @@ messages get German wording, as the French and Italian ones do.
      FillWindowPixelBuffer(WIN_TITLE, PIXEL_FILL(0));
      PrintEasyChatTextWithColors(WIN_TITLE, FONT_NORMAL, titleText, xOffset, 1, TEXT_SKIP_DRAW, TEXT_COLOR_TRANSPARENT, TEXT_COLOR_DARK_GRAY, TEXT_COLOR_LIGHT_GRAY);
      PutWindowTilemap(WIN_TITLE);
-@@ -4043,7 +4064,11 @@ static void AddPhraseWindow(void)
+@@ -4049,7 +4070,11 @@ static void AddPhraseWindow(void)
      template.width = sPhraseFrameDimensions[frameId].width;
      template.height = sPhraseFrameDimensions[frameId].height;
      template.paletteNum = 11;
@@ -963,7 +963,7 @@ messages get German wording, as the French and Italian ones do.
      sScreenControl->windowId = AddWindow(&template);
      PutWindowTilemap(sScreenControl->windowId);
  }
-@@ -5092,7 +5117,11 @@ static void AddMainScreenButtonWindow(void)
+@@ -5098,7 +5123,11 @@ static void AddMainScreenButtonWindow(void)
      template.width = 28;
      template.height = 2;
      template.paletteNum = 11;
@@ -975,7 +975,7 @@ messages get German wording, as the French and Italian ones do.
      windowId = AddWindow(&template);
      FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
      for (i = 0; i < (int)ARRAY_COUNT(sFooterTextOptions[0]); i++)
-@@ -5268,7 +5297,11 @@ u8 *ConvertEasyChatWordsToString(u8 *dest, const u16 *src, u16 columns, u16 rows
+@@ -5274,7 +5303,11 @@ u8 *ConvertEasyChatWordsToString(u8 *dest, const u16 *src, u16 columns, u16 rows
      return dest;
  }
  
@@ -1006,7 +1006,7 @@ messages get German wording, as the French and Italian ones do.
      {
 --- a/src/follower_mon.c
 +++ b/src/follower_mon.c
-@@ -1074,6 +1074,8 @@ static const char *LanguageCode(void)
+@@ -1137,6 +1137,8 @@ static const char *LanguageCode(void)
      return "fr";
  #elif GAME_LANGUAGE == LANGUAGE_ITALIAN
      return "it";
@@ -1252,7 +1252,7 @@ messages get German wording, as the French and Italian ones do.
  bool8 IsBagPocketNonEmpty(u8 pocket)
 --- a/src/item_menu.c
 +++ b/src/item_menu.c
-@@ -298,6 +298,11 @@ static const struct ListMenuTemplate sItemListMenu =
+@@ -306,6 +306,11 @@ static const struct ListMenuTemplate sItemListMenu =
      .cursorKind = CURSOR_BLACK_ARROW
  };
  
@@ -1264,7 +1264,7 @@ messages get German wording, as the French and Italian ones do.
  static const struct MenuAction sItemMenuActions[] = {
      [ACTION_USE]               = {gMenuText_Use,      {ItemMenu_UseOutOfBattle}},
      [ACTION_TOSS]              = {gMenuText_Toss,     {ItemMenu_Toss}},
-@@ -309,7 +314,11 @@ static const struct MenuAction sItemMenuActions[] = {
+@@ -317,7 +322,11 @@ static const struct MenuAction sItemMenuActions[] = {
      [ACTION_WALK]              = {gMenuText_Walk,     {ItemMenu_UseOutOfBattle}},
      [ACTION_DESELECT]          = {gMenuText_Deselect, {ItemMenu_Register}},
      [ACTION_CHECK_TAG]         = {gMenuText_CheckTag, {ItemMenu_CheckTag}},
@@ -1369,7 +1369,7 @@ messages get German wording, as the French and Italian ones do.
              sMailboxWindowIds[windowIdx] = AddWindow(&sWindowTemplates_MailboxMenu[windowIdx]);
 --- a/src/naming_screen.c
 +++ b/src/naming_screen.c
-@@ -44,7 +44,7 @@ enum {
+@@ -58,7 +58,7 @@ enum {
  };
  
  #define KBROW_COUNT 4
@@ -1378,7 +1378,7 @@ messages get German wording, as the French and Italian ones do.
  #define KBCOL_COUNT 9
  #else
  #define KBCOL_COUNT 8
-@@ -1721,10 +1721,19 @@ static void DrawNormalTextEntryBox(void)
+@@ -1779,10 +1779,19 @@ static void DrawNormalTextEntryBox(void)
  
  static void DrawMonTextEntryBox(void)
  {
@@ -1397,7 +1397,7 @@ messages get German wording, as the French and Italian ones do.
 +#endif
      FillWindowPixelBuffer(sNamingScreen->windows[WIN_TEXT_ENTRY_BOX], PIXEL_FILL(1));
      AddTextPrinterParameterized(sNamingScreen->windows[WIN_TEXT_ENTRY_BOX], FONT_NORMAL, buffer, 8, 1, 0, 0);
-     PutWindowTilemap(sNamingScreen->windows[WIN_TEXT_ENTRY_BOX]);
+ #ifdef PLATFORM_3DS
 --- a/src/option_menu.c
 +++ b/src/option_menu.c
 @@ -557,6 +557,9 @@ static void FrameType_DrawChoices(u8 selection)
@@ -1441,7 +1441,7 @@ messages get German wording, as the French and Italian ones do.
      MailboxMenu_AddScrollArrows(&gPlayerPCItemPageInfo);
 --- a/src/pokedex.c
 +++ b/src/pokedex.c
-@@ -279,7 +279,7 @@ static void Task_HandleCaughtMonPageInput(u8);
+@@ -286,7 +286,7 @@ static void Task_HandleCaughtMonPageInput(u8);
  static void Task_ExitCaughtMonPage(u8);
  static void SpriteCB_SlideCaughtMonToCenter(struct Sprite *sprite);
  static void PrintMonInfo(u32 num, u32, u32 owned, u32 newEntry);
@@ -1450,7 +1450,7 @@ messages get German wording, as the French and Italian ones do.
  #define NATIVE_DEX_MEASUREMENT_X 0x90
  #else
  #define NATIVE_DEX_MEASUREMENT_X 0x81
-@@ -3088,12 +3088,20 @@ static void CreateInterfaceSprites(u8 page)
+@@ -3115,12 +3115,20 @@ static void CreateInterfaceSprites(u8 page)
              digitNum = (sPokedexView->ownCount % 100) % 10;
              StartSpriteAnim(&gSprites[spriteId], digitNum);
          }
@@ -1471,7 +1471,7 @@ messages get German wording, as the French and Italian ones do.
          gSprites[spriteId].invisible = TRUE;
      }
  }
-@@ -4318,11 +4326,11 @@ static void PrintMonInfo(u32 num, u32 value, u32 owned, u32 newEntry)
+@@ -4405,11 +4413,11 @@ static void PrintMonInfo(u32 num, u32 value, u32 owned, u32 newEntry)
  
  static void PrintMonHeight(u16 height, u8 left, u8 top)
  {
@@ -1485,7 +1485,7 @@ messages get German wording, as the French and Italian ones do.
      *end++ = CHAR_COMMA;
  #else
      *end++ = CHAR_PERIOD;
-@@ -4367,11 +4375,11 @@ static void PrintMonHeight(u16 height, u8 left, u8 top)
+@@ -4454,11 +4462,11 @@ static void PrintMonHeight(u16 height, u8 left, u8 top)
  
  static void PrintMonWeight(u16 weight, u8 left, u8 top)
  {
@@ -1507,7 +1507,7 @@ messages get German wording, as the French and Italian ones do.
  #ifdef PLATFORM_3DS
  #include "3ds_extras.h" // optional settings (OPTIONS pages)
  #endif
-@@ -7065,7 +7066,11 @@ const u8 *GetTrainerClassNameFromId(u16 trainerId)
+@@ -7084,7 +7085,11 @@ const u8 *GetTrainerClassNameFromId(u16 trainerId)
  {
      if (trainerId >= TRAINERS_COUNT)
          trainerId = TRAINER_NONE;
@@ -1550,7 +1550,7 @@ messages get German wording, as the French and Italian ones do.
  #else
  static const u8 sText_SkillsIVs[] = _("IVs  (0-31)");
  static const u8 sText_SkillsEVs[] = _("EVs  (0-255)");
-@@ -1227,6 +1238,9 @@ static const u8 sText_Category[] = _("CATÉG.");
+@@ -1243,6 +1254,9 @@ static const u8 sText_Category[] = _("CATÉG.");
  #elif defined(PORT_BRIDGE) && GAME_LANGUAGE == LANGUAGE_ITALIAN
  // Shortened the same way: CATEGORIA is wider than the label column.
  static const u8 sText_Category[] = _("CATEG.");
@@ -1560,7 +1560,7 @@ messages get German wording, as the French and Italian ones do.
  #else
  static const u8 sText_Category[] = _("CATEGORY");
  #endif
-@@ -4561,7 +4575,11 @@ static void PrintNewMoveDetailsOrCancelText(void)
+@@ -4726,7 +4740,11 @@ static void PrintNewMoveDetailsOrCancelText(void)
  static void AddAndFillMoveNamesWindow(void)
  {
      u8 windowId = AddWindowFromTemplateList(sPageMovesTemplate, PSS_DATA_WINDOW_MOVE_NAMES);
@@ -2023,7 +2023,7 @@ messages get German wording, as the French and Italian ones do.
  u8 *GetSecretBaseMapName(u8 *dest)
 --- a/src/trainer_card.c
 +++ b/src/trainer_card.c
-@@ -1527,6 +1527,8 @@ static void DrawStarsAndBadgesOnCard(void)
+@@ -1557,6 +1557,8 @@ static void DrawStarsAndBadgesOnCard(void)
  
  static void DrawCardBackStats(void)
  {
@@ -2032,7 +2032,7 @@ messages get German wording, as the French and Italian ones do.
      if (sData->cardType == CARD_TYPE_FRLG)
      {
          if (sData->hasTrades)
-@@ -1565,6 +1567,7 @@ static void DrawCardBackStats(void)
+@@ -1595,6 +1597,7 @@ static void DrawCardBackStats(void)
              FillBgTilemapBufferRect(3, 156, 27, 16, 1, 1, 0);
          }
      }
@@ -2042,7 +2042,7 @@ messages get German wording, as the French and Italian ones do.
  
 --- a/src/union_room.c
 +++ b/src/union_room.c
-@@ -3671,7 +3671,11 @@ static u8 CreateTradeBoardWindow(const struct WindowTemplate *template)
+@@ -3679,7 +3679,11 @@ static u8 CreateTradeBoardWindow(const struct WindowTemplate *template)
      u8 windowId = AddWindow(template);
      DrawStdWindowFrame(windowId, FALSE);
      FillWindowPixelBuffer(windowId, PIXEL_FILL(15));

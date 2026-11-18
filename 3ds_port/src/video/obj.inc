@@ -373,6 +373,19 @@ static void DrawObjectEntry(int i, unsigned priority, bool effects, bool *fogDra
          */
         if (x + (int)boxW > 512) x -= 512;
         if (y + (int)boxH > 256) y -= 256;
+        /*
+         * The Hall of Fame's confetti falls over the whole top screen, margins
+         * included (hall_of_fame.c): 80 columns left of the picture and 40 rows
+         * above it, which the GBA's coordinates reach only by wrapping round
+         * the 512 and the 256. Only its 8x8 sprites are read so, so nothing
+         * the GBA parks off screen comes into view.
+         */
+        if (sCentred && sCentredScreen == CTR_CENTRED_HALL_OF_FAME && boxW == 8 && boxH == 8)
+        {
+            /* 96: the margin's 80 and the sway the confetti adds. */
+            if (x >= 512 - 96 - 8) x -= 512;
+            if (y >= 256 - 40 - 8 && y < 240) y -= 256;
+        }
     }
     else
     {
