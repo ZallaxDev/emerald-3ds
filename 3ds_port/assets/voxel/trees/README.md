@@ -133,6 +133,21 @@ the game's flat picture of the grass under the walker
 (`FLDEFFOBJ_LONG_GRASS`) is not laid on that floor. Long grass casts no
 crown's shadow and a 3D battle stands on it as on any ground.
 
+Tall grass (the General's `00D`, also under a crown's top: `025`, `1C6–1C7`;
+Lavaridge's `206` on Jagged Pass's soil) needs no art here: it is the game's
+own tile stood up. The ground pass lays the ground the grass grows on (`001`,
+Jagged Pass's `271`) and over it the tile's tufts on one card a cell, its
+foot on the cell's south edge and its north edge 6 px up, where the drawing
+puts a point that high, so the tile reads as the tile it was. (Cut in two
+cards the drawing's tufts showed the cut from a battle's low camera.) The
+grass rustling under a walker lies on that card. The cards are
+drawn with the tile less its ground, an atlas id of its own
+(`VOXEL_TUFT_FIRST`, `voxel_atlas.h`) whose clear pixels are read off the
+drawing when the atlas is composed: what is reached from the tile's edge
+through the colours of the plain grass. Only on level ground; an atlas with no
+room for the tuft leaves the tile flat. The list is `kTufts` in
+`src/voxel/voxel_tree.c`.
+
 Two secondary tilesets draw 2×2 trees of their own, replaced with that art:
 Mossdeep's round tree (Mossdeep City and Routes 124–129) and the leaning tree
 of the Fallarbor tileset (Route 113, Fallarbor Town, Route 114, also in the
