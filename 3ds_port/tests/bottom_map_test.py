@@ -196,20 +196,29 @@ static const struct WildPokemonHeader gWildMonHeaders[] = {
     {24,5,&caveAInfo,NULL,NULL,NULL}, {24,5,&caveBInfo,NULL,NULL,NULL}, {24,5,&caveCInfo,NULL,NULL,NULL},
     {0,3,&wideInfo,&seaWaterInfo,NULL,NULL},
     {0xFF,0xFF,NULL,NULL,NULL,NULL}};
-static struct { struct { int8_t mapGroup, mapNum; } location; } sSave1, *gSaveBlock1Ptr=&sSave1;
+static struct { struct { int8_t mapGroup, mapNum; } location; u8 seen1[256],seen2[256]; } sSave1, *gSaveBlock1Ptr=&sSave1;
 static u16 sVars[0x100];
 static u16 VarGet(u16 id) {return sVars[id-0x4000];}
-static bool sTimed; static unsigned landGroup=99, landNum=99;
+static bool sTimed; static unsigned landGroup=99, landNum=99, landCalls, dexCalls;
+static unsigned CtrEncounters_LandPhase(void) {return sTimed?1:3;}
 static const struct WildPokemonInfo *CtrEncounters_Land(const struct WildPokemonInfo *o,unsigned g,unsigned n) {
-    landGroup=g;landNum=n;return sTimed&&o==&routeLandInfo?&timedInfo:o;
+    ++landCalls;landGroup=g;landNum=n;return sTimed&&o==&routeLandInfo?&timedInfo:o;
 }
 static unsigned sMapped;
 static u16 CtrEncounters_DisplaySpecies(u16 species) {return sMapped&&species==1?(sMapped==2?2:7):species;}
-static int8_t sSeen[256],sCaught[256];
+static struct { struct { u8 owned[256],seen[256]; } pokedex; } sSave2,*gSaveBlock2Ptr=&sSave2;
+#define sSeen sSave2.pokedex.seen
+#define sCaught sSave2.pokedex.owned
+static int CtrSettings_GetInt(const char *key,int fallback) {
+    if(!strcmp(key,"rand_wild"))return sMapped!=0;
+    if(!strcmp(key,"rand_seed"))return sMapped;
+    return fallback;
+}
 static u16 SpeciesToNationalPokedexNum(u16 species) {return species+100;}
 /* FLAG_GET_CAUGHT clears a species' flags when they disagree, as the game's does:
  * so it is never to be asked of a species not seen, as a save could say caught. */
 static int8_t GetSetPokedexFlag(u16 national,u8 caseId) {
+    ++dexCalls;
     if(caseId==FLAG_GET_SEEN)return sSeen[national];
     assert(caseId==FLAG_GET_CAUGHT);
     assert(sSeen[national]);
@@ -237,8 +246,9 @@ static u8 BattleCursorHit(const ViewState *s,u8 cursor) {(void)s;return cursor;}
     source += between(bottom, 'enum { ENC_LAND', '};')
     for name in ('sEncLandRates', 'sEncWaterRates', 'sEncFishRates', 'sEncFirst', 'sEncSlots'):
         source += statement(bottom, 'static const u8 ' + name)
+    source += between(bottom, '/* Compare only the save bytes', '} EncPage;')
     for name in ('static void AddHit(', 'static u8 EncCollect(', 'static const struct WildPokemonHeader *EncHeader(',
-                 'static void SnapshotEncounters(', 'static void SnapshotMapExtras(', 'static void MapExtrasTap(',
+                 'static void BuildEncounterPage(', 'static void SnapshotEncounters(', 'static void SnapshotMapExtras(', 'static void MapExtrasTap(',
                  'static bool8 MapCursorOnlyMoved(', 'static void BlitAroundWindow('):
         source += function(bottom, name)
     for name in ('static int DockCount(', 'static void DockButton(', 'static int TitleWidth(',
@@ -289,6 +299,23 @@ static void TestTables(void) {
     sSave1.location.mapGroup=0;sSave1.location.mapNum=1;sExtra[0]=1;sEncView=1;sEncPage=0;sTimed=false;
     memset(&s,0,sizeof(s));SnapshotEncounters(&s);
     assert(s.encPages==4&&s.encPage==0&&s.encMethod==ENC_LAND&&s.encCount==6&&s.enc[0].species==1);
+    {unsigned builds=landCalls, reads=dexCalls; ViewState next={0};
+     SnapshotEncounters(&next);
+     assert(landCalls==builds&&dexCalls==reads&&memcmp(&s,&next,sizeof(s))==0);
+     sSave1.seen2[101]=1;SnapshotEncounters(&next);
+     assert(landCalls==builds+1&&dexCalls>reads);
+     sSave1.seen2[101]=0;}
+    {ViewState next={0};
+     sSeen[101]=sCaught[101]=1;SnapshotEncounters(&next);
+     assert(next.encPage==0&&next.enc[0].species==1&&next.enc[0].seen==ENC_CAUGHT);
+     unsigned builds=landCalls, reads=dexCalls;
+     sEncUncaught=1;SnapshotEncounters(&next);
+     assert(landCalls==builds+1&&dexCalls>reads);
+     assert(next.encUncaught&&next.encPage==0&&next.encCaught==1&&next.enc[0].species!=1);
+     builds=landCalls;reads=dexCalls;
+     SnapshotEncounters(&next);
+     assert(landCalls==builds&&dexCalls==reads);
+     sEncUncaught=0;sSeen[101]=sCaught[101]=0;}
     assert(landGroup==0&&landNum==1);
     /* The timed tables: the grass page is what CtrEncounters_Land gives. */
     sTimed=true;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
