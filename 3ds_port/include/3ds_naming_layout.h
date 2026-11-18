@@ -20,6 +20,8 @@
  * Bit n of the result: a gap after column n. The game spaces its columns at
  * fixed x positions (sPageColumnXPos): a distance over one and a half times
  * the shortest one starts a new group (the letters 3 + 4 + 1, the symbols 6).
+ * A table has a slot for every column the widest page has: the slots past a
+ * page's own columns are 0, a step that does not go forward, and is no step.
  */
 static inline uint16_t CtrNaming_GapsFromPositions(const uint8_t *xs, int cols)
 {
@@ -27,11 +29,19 @@ static inline uint16_t CtrNaming_GapsFromPositions(const uint8_t *xs, int cols)
     uint16_t gaps = 0;
 
     for (int c = 1; c < cols; ++c)
-        if (xs[c] - xs[c - 1] < min)
-            min = xs[c] - xs[c - 1];
+    {
+        int step = xs[c] - xs[c - 1];
+
+        if (step > 0 && step < min)
+            min = step;
+    }
     for (int c = 1; c < cols; ++c)
-        if ((xs[c] - xs[c - 1]) * 2 > min * 3)
+    {
+        int step = xs[c] - xs[c - 1];
+
+        if (step > 0 && step * 2 > min * 3)
             gaps |= (uint16_t)(1u << (c - 1));
+    }
     return gaps;
 }
 

@@ -31,7 +31,7 @@ enum
 struct CtrPartyView
 {
     u8 state;
-    s8 cursor;              /* the slot the game's cursor is on; PARTY_SIZE + 1 CANCEL */
+    s8 cursor;              /* the slot the game's cursor is on; PARTY_SIZE CONFIRM, PARTY_SIZE + 1 CANCEL */
     s8 moving;              /* the slot being switched, -1 */
     s8 chosen;              /* the slot the menu is about, -1 */
     u8 desc[PARTY_SIZE];    /* the box's description (ABLE, NOT ABLE...), CTR_PARTY_DESC_NONE */
@@ -41,6 +41,7 @@ struct CtrPartyView
     s8 cancelEntry;         /* the entry that is CANCEL, -1 */
     bool8 message;          /* a message is up (msg) */
     bool8 yesNo;            /* a yes/no box is open */
+    bool8 confirm;          /* the menu has a CONFIRM button over CANCEL (choosing a team) */
     const u8 *entries[CTR_VIEW_ENTRIES];
     u8 prompt[CTR_VIEW_TEXT]; /* the prompt shown ("Choose a POKéMON."), expanded */
     u8 msg[CTR_VIEW_TEXT];  /* the message printed, expanded */
@@ -53,11 +54,11 @@ struct CtrPartyView
 };
 
 bool8 CtrParty_GetView(struct CtrPartyView *view);
-/* A box tapped, as the game's own tap on it; PARTY_SIZE + 1 is CANCEL. */
+/* A box tapped, as the game's own tap on it; PARTY_SIZE is CONFIRM, PARTY_SIZE + 1 CANCEL. */
 void CtrParty_TapSlot(s8 slot);
 const u8 *CtrParty_DescText(u8 desc);
 bool8 CtrParty_Building(void);
-/* The party menu is in the bottom screen's window: the field's, or a battle's own. */
+/* The party menu is in the bottom screen's window: every one but the multi battle's showcase. */
 bool8 CtrParty_InWindow(void);
 
 /* ------------------------------------------------------------ summary */
@@ -321,9 +322,9 @@ bool8 CtrMenu_YesNoOpen(void);
 
 enum
 {
-    CTR_NAMING_VIEW_NONE,   /* not up, or fading in or out: nothing to draw */
+    CTR_NAMING_VIEW_NONE,   /* not up, or not made yet: the backdrop only (who is named is set, for the picture to load) */
     CTR_NAMING_VIEW_KEYS,   /* the keyboard, taking keys */
-    CTR_NAMING_VIEW_BUSY,   /* a page turning or the cursor travelling: it draws, it takes no tap */
+    CTR_NAMING_VIEW_BUSY,   /* a page turning, the cursor travelling, coming in or going out: the keys are drawn, they take no tap */
     CTR_NAMING_VIEW_MESSAGE,/* "sent to the PC": msg, a tap goes on */
 };
 
@@ -334,7 +335,7 @@ enum
 /* The game's tap kinds (CtrNaming_NativeTap). */
 enum
 {
-    CTR_NAMING_TAP_KEY,     /* a = column, b = row of the keyboard page shown */
+    CTR_NAMING_TAP_KEY,     /* a = column, b = row | (page << 4) of the keyboard page shown */
     CTR_NAMING_TAP_PAGE,    /* a = the page to turn to (CtrNamingView.page's values) */
     CTR_NAMING_TAP_BACK,    /* delete, as B */
     CTR_NAMING_TAP_OK,      /* accept, as A on OK */
@@ -363,6 +364,9 @@ struct CtrNamingView
 };
 
 bool8 CtrNaming_GetView(struct CtrNamingView *view);
+/* A keyboard page as the player's name would show it (state KEYS, the game's language's keys and layout), with
+ * no naming screen up: for its plates to be made ahead. FALSE for a page there is none of. */
+bool8 CtrNaming_WarmView(struct CtrNamingView *view, u8 page);
 /* True from when the naming screen is created until it is closed. */
 bool8 CtrNaming_IsOpen(void);
 /* A tap, as the game's own input takes it (CtrNaming_TakeTap in naming_screen.c). */
@@ -443,34 +447,49 @@ struct CtrFieldMenuView
     u8 columns;             /* 1 for a list */
     u8 cursor;
     u8 yesNo;
+    u8 locked;              /* still up, but the game is not taking an answer (an animation of its own) */
+    u8 noCancel;            /* B does nothing in it: no CANCEL button */
+    u8 serial;              /* which menu this is: a tap is given back with it (CtrFieldMenu_Pick) */
     u8 text[CTR_FM_MAX][CTR_FM_TEXT];
 };
 
 bool8 CtrFieldMenu_GetView(struct CtrFieldMenuView *view);
-/* An entry tapped; -1 is B. */
-void CtrFieldMenu_Pick(s8 entry);
+/* An entry tapped; -1 is B. serial is the view's: a tap on a menu that is gone is dropped. */
+void CtrFieldMenu_Pick(s8 entry, u8 serial);
+/* The game's code, on a frame its menu is up but not asked for an answer: the
+ * buttons stay, locked, instead of going away for the length of an animation. */
+void CtrMenu_Hold(void);
+/* The menu just set up ignores B (until its window is forgotten or another menu is set up). */
+void CtrMenu_SetNoCancel(void);
+/* Every window is gone (InitWindows, FreeAllWindowBuffers): nothing printed is an entry any more. */
+void CtrMenu_ForgetAll(void);
 
 /* ------------------------------------------------------------ Berry Blender */
 
 #define CTR_BLENDER_PLAYERS 4
+#define CTR_BLENDER_STEP 20 /* the Pokéblock's bar is given in steps of this many of the game's units */
+
+enum { CTR_BLENDER_NONE, CTR_BLENDER_PLAY, CTR_BLENDER_WATCH };
 
 struct CtrBlenderView
 {
-    u8 state;               /* 0: not blending; 1: the bowl turning, taking A */
+    u8 state;               /* CTR_BLENDER_NONE; _PLAY: the bowl turning, taking A; _WATCH: berries going in, the results */
     u8 numPlayers, own;     /* who is playing, and which of them is this console's */
-    u16 rpm, maxRpm;        /* whole revolutions per minute, now and the best so far */
-    u16 progress, progressMax;
+    u16 rpm, maxRpm;        /* whole revolutions per minute, now (0 unless _PLAY) and the best so far */
+    u16 progress, progressMax; /* the bar as the game shows it, in CTR_BLENDER_STEPs */
     u16 scores[CTR_BLENDER_PLAYERS][3]; /* best, good, miss */
     u16 items[CTR_BLENDER_PLAYERS];     /* the berry each put in */
 };
 
 bool8 CtrBlender_GetView(struct CtrBlenderView *view);
+/* The Berry Blender's screen is the one running, from its first frame to its last. */
+bool8 CtrBlender_Active(void);
 
 /* ------------------------------------------------------------ Contest: the move to appeal with */
 
 #define CTR_CONTEST_MOVES 4
 #define CTR_CONTEST_NICK 12
-#define CTR_CONTEST_HEARTS 4 /* the hearts a move can have (MAX_CONTEST_MOVE_HEARTS) */
+#define CTR_CONTEST_HEARTS 8 /* the hearts a move can have (MAX_CONTEST_MOVE_HEARTS) */
 
 enum { CTR_CONTEST_COMBO = 1, CTR_CONTEST_REPEAT = 2 };
 enum { CTR_CONTEST_SELECT, CTR_CONTEST_CONFIRM, CTR_CONTEST_CANCEL };
@@ -487,7 +506,8 @@ struct CtrContestView
     u8 state;               /* 0: no choice is waiting */
     u8 count, selected;     /* moves it has, and the cursor's */
     u8 round, rounds;       /* the appeal now, of how many */
-    u16 species, personality;
+    u16 species;
+    u32 personality;
     u8 nick[CTR_CONTEST_NICK];
     u16 moves[CTR_CONTEST_MOVES];
     u8 category[CTR_CONTEST_MOVES];
@@ -497,6 +517,8 @@ struct CtrContestView
 };
 
 bool8 CtrContest_GetView(struct CtrContestView *view);
+/* The contest is the screen running (its appeals and its results), from its first frame to its last. */
+bool8 CtrContest_Active(void);
 /* kind CTR_CONTEST_SELECT: move `value` of those shown; the others take no value. */
 void CtrContest_Act(u8 kind, u8 value);
 
@@ -506,9 +528,20 @@ void CtrContest_Act(u8 kind, u8 value);
 #define CTR_EC_TEXT 20
 #define CTR_EC_GROUPS 22
 
-enum { CTR_EC_NONE, CTR_EC_MAIN, CTR_EC_KEYBOARD, CTR_EC_WORDS_PAGE, CTR_EC_MESSAGE, CTR_EC_OTHER };
+/* What the game is asking: the phrase and its buttons, the groups or the alphabet, a group's words, a message
+ * to read (A), the Quiz Lady's question shown (A: the answer, B: back); OTHER is a prompt, whose YES / NO are
+ * the game's own menu. */
+enum { CTR_EC_NONE, CTR_EC_MAIN, CTR_EC_KEYBOARD, CTR_EC_WORDS_PAGE, CTR_EC_MESSAGE, CTR_EC_OTHER, CTR_EC_QUIZ };
 
-/* What a tap asks for (CtrEasyChat_Act); each is carried out as the keys the game reads would. */
+#define CTR_EC_PAGE 12 /* the words the bottom screen shows at a time */
+
+/*
+ * What a tap asks for (CtrEasyChat_Act); each is carried out as the keys the
+ * game reads would, and is taken only in the state its button is drawn in:
+ * SLOT and FOOTER in CTR_EC_MAIN; GROUP, LETTER, KB_MODE and KB_DELETE in
+ * CTR_EC_KEYBOARD; WORD in CTR_EC_WORDS_PAGE; BACK and MESSAGE in the state
+ * given as their `a` (BACK: keyboard, words or quiz; MESSAGE: message or quiz).
+ */
 enum
 {
     CTR_EC_ACT_NONE,
@@ -519,12 +552,8 @@ enum
     CTR_EC_ACT_WORD,        /* a: the word of the group */
     CTR_EC_ACT_KB_MODE,     /* groups <-> alphabet */
     CTR_EC_ACT_KB_DELETE,   /* clear the word being changed */
-    CTR_EC_ACT_BACK,        /* B */
-    CTR_EC_ACT_START,       /* START: confirm (main), page up (words) */
-    CTR_EC_ACT_SELECT,      /* SELECT: page down (words) */
-    CTR_EC_ACT_UP,          /* one row up in the words */
-    CTR_EC_ACT_DOWN,        /* one row down in the words */
-    CTR_EC_ACT_MESSAGE      /* A: a message read */
+    CTR_EC_ACT_BACK,        /* B; a: the state it is drawn in */
+    CTR_EC_ACT_MESSAGE      /* A: a message read, the quiz's answer; a: the state it is drawn in */
 };
 
 /*
@@ -536,9 +565,9 @@ enum
 struct CtrEasyChatView
 {
     u8 state;                       /* CTR_EC_NONE ... */
-    u8 ready;                       /* the game is taking input, not animating */
     u8 columns, rows, maxWords;     /* the phrase's grid */
     u8 footer;                      /* 3 or 4 buttons under it */
+    const u8 *footerText[4];        /* the game's own labels for them, NULL where it has none */
     s8 mainColumn, mainRow;         /* the cursor; row == rows: on the footer */
     u8 alphabet;                    /* the keyboard shows the alphabet, not the groups */
     s8 keyColumn, keyRow;           /* its cursor; column -1: on the side buttons */
@@ -547,6 +576,7 @@ struct CtrEasyChatView
     u16 numWords;                   /* of the group opened */
     s8 wordColumn;
     u16 wordRow;                    /* the cursor in the words, the row from the top */
+    u16 first;                      /* the first word of the page shown (CtrEasyChat_Page) */
     u16 phrase[CTR_EC_WORDS];       /* EC_EMPTY_WORD (0xFFFF) for none */
     u8 phraseText[CTR_EC_WORDS][CTR_EC_TEXT];
     const u8 *title;
@@ -555,7 +585,11 @@ struct CtrEasyChatView
 };
 
 bool8 CtrEasyChat_GetView(struct CtrEasyChatView *view);
-void CtrEasyChat_Act(u8 kind, u8 a);
+/* Easy Chat is the screen running, from its first frame to its last. */
+bool8 CtrEasyChat_Active(void);
+void CtrEasyChat_Act(u8 kind, u16 a);
+/* The words shown go on a page (+1) or back one (-1); the game's cursor stays where it is. */
+void CtrEasyChat_Page(s8 direction);
 /* The text of a word of the group opened, "" past the last. */
 void CtrEasyChat_WordText(u16 index, u8 *dst);
 
@@ -564,8 +598,9 @@ void CtrEasyChat_WordText(u16 index, u8 *dst);
 #define CTR_FAC_MONS 6
 
 enum { CTR_FAC_NONE, CTR_FAC_SELECT, CTR_FAC_SWAP };
-/* BUSY: the game is animating or between screens; CHOOSE: its cursor on a Pokémon; MENU: the popup; YESNO: the question. */
-enum { CTR_FAC_BUSY, CTR_FAC_CHOOSE, CTR_FAC_MENU, CTR_FAC_YESNO };
+/* BUSY: the game is animating or between screens; CHOOSE: its cursor on a Pokémon; MENU: the popup; YESNO: the
+ * question; INFO: a message waiting for A (that one cannot be picked twice). */
+enum { CTR_FAC_BUSY, CTR_FAC_CHOOSE, CTR_FAC_MENU, CTR_FAC_YESNO, CTR_FAC_INFO };
 enum
 {
     CTR_FAC_ACT_NONE,
@@ -574,7 +609,8 @@ enum
     CTR_FAC_ACT_OPTION,     /* a: the popup's option (opens it first) */
     CTR_FAC_ACT_YES,
     CTR_FAC_ACT_NO,
-    CTR_FAC_ACT_BACK
+    CTR_FAC_ACT_BACK,
+    CTR_FAC_ACT_OK          /* the message's A */
 };
 
 /*
@@ -594,17 +630,26 @@ struct CtrFactoryView
     u8 menuCursor, yesNoCursor;
     u8 chosen;                      /* the Pokémon chosen so far (choosing) */
     u8 cursorChosen;                /* the one the cursor is on is among them */
-    u16 species[CTR_FAC_MONS], personality[CTR_FAC_MONS];
+    u16 species[CTR_FAC_MONS];
+    u32 personality[CTR_FAC_MONS];
     u8 order[CTR_FAC_MONS];         /* 0, or 1..3: the order chosen */
+    /* Set by the bottom screen, not the game: every picture the view shows is
+     * loaded, so it is drawn whole at once, never half and then again. */
+    u8 loaded;
     const u8 *question;
     /* The Pokemon the cursor is on (or was last on, while it is on a
      * button), for the top screen's panel: focus is its index. */
     u8 focus, level, ability, nature;
+    u8 shiny;                       /* the one in focus is shiny */
     u16 item;
     u16 moves[MAX_MON_MOVES];
 };
 
 bool8 CtrFactory_GetView(struct CtrFactoryView *view);
+/* A Rental Pokemon screen is the one running (being set up too), from its first frame to its last. */
+bool8 CtrFactory_Active(void);
+/* 0..16: how far the game's fade to black has gone while the screen leaves. */
+u8 CtrFactory_Dark(void);
 void CtrFactory_Act(u8 kind, u8 a);
 
 /* ------------------------------------------------------------ a list in the field */
@@ -621,16 +666,19 @@ void CtrFactory_Act(u8 kind, u8 a);
 struct CtrFieldListView
 {
     u8 count;               /* the rows shown, 0: no list is waiting */
-    u8 selected;            /* the row the game's cursor is on */
+    u8 selected;            /* the row (of those shown) the game's cursor is on, 0xFF: none of them */
     u16 total, scroll;      /* every item the list has, and the first shown */
     u8 header;              /* bit per row: a heading, not to be chosen */
+    u8 first;               /* the rows of the game's window above the first shown: it has more than CTR_FL_ROWS */
+    u8 serial;              /* which list this is: a tap is given back with it (CtrFieldList_Pick) */
     u8 text[CTR_FL_ROWS][CTR_FM_TEXT];
 };
 
 enum { CTR_FL_ROW, CTR_FL_SCROLL, CTR_FL_CANCEL };
 
 bool8 CtrFieldList_GetView(struct CtrFieldListView *view);
-/* kind CTR_FL_ROW: the row (of those shown) chosen; CTR_FL_SCROLL: value rows down (up if negative). */
-void CtrFieldList_Pick(u8 kind, s16 value);
+/* kind CTR_FL_ROW: the row of the game's window chosen (the view's first + the row shown);
+ * CTR_FL_SCROLL: value rows down (up if negative). serial is the view's: a tap on a list that is gone is dropped. */
+void CtrFieldList_Pick(u8 kind, s16 value, u8 serial);
 
 #endif

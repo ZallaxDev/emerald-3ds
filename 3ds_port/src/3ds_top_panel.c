@@ -1,8 +1,10 @@
 /*
  * The bottom screen's panel on the top screen (3ds_top_panel.h): what it
- * hands over is kept in a plain buffer and written into the texture only
- * inside the frame, once C3D_FrameBegin has waited for the GPU to finish the
- * last one (as the Pokedex's device does, 3ds_dex_top.c).
+ * draws is kept in a plain buffer and written into the texture only inside
+ * the frame, once C3D_FrameBegin has waited for the GPU to finish the last
+ * one (as the Pokedex's device does, 3ds_dex_top.c). The buffer is drawn in
+ * and read within the one thread, never between the bottom screen's draw and
+ * its Show.
  */
 #include <3ds.h>
 #include <citro2d.h>
@@ -21,19 +23,23 @@
 
 static uint16_t sPicture[PW * PH];
 static bool sHas, sDirty, sTexAllocated, sTexFailLogged;
-static unsigned sKeep, sTexRetry;
+static unsigned sKeep, sTexRetry, sDark;
 static C3D_Tex sTex;
 
-void CtrTopPanel_Show(const uint16_t *canvas)
+uint16_t *CtrTopPanel_Canvas(void) { return sPicture; }
+
+void CtrTopPanel_Show(void)
 {
-    memcpy(sPicture, canvas, sizeof(sPicture));
     sHas = sDirty = true;
     sKeep = KEEP_FRAMES;
+    sDark = 0;
 }
 
-void CtrTopPanel_Keep(void)
+void CtrTopPanel_Keep(unsigned dark)
 {
-    if (sHas) sKeep = KEEP_FRAMES;
+    if (!sHas) return;
+    sKeep = KEEP_FRAMES;
+    sDark = dark > 16 ? 16 : dark;
 }
 
 bool CtrTopPanel_Active(void) { return sHas && sKeep != 0; }
@@ -85,13 +91,29 @@ void CtrTopPanel_Upload(void)
     sDirty = false;
 }
 
-/* Over the whole top screen, on the target the caller set up for 2D. */
+/*
+ * Over the whole top screen, on the target the caller set up for 2D. With no
+ * texture (no memory for it) a flat colour of the backdrop's: the game's own
+ * picture, which the panel is there to replace, is never the fallback.
+ */
 void CtrTopPanel_Draw(void)
 {
-    if (!CtrTopPanel_Active() || !sTexAllocated || sDirty) return;
-    const Tex3DS_SubTexture part = {PW, PH, 0.0f, 1.0f, (float)PW / TEX_W, 1.0f - (float)PH / TEX_H};
+    if (!CtrTopPanel_Active()) return;
+    if (!sTexAllocated)
+    {
+        unsigned level = 16 - sDark;
 
-    C2D_DrawImageAt((C2D_Image){&sTex, &part}, 0.0f, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
+        C2D_DrawRectSolid(0.0f, 0.0f, 0.0f, (float)PW, (float)PH,
+                          C2D_Color32(140 * level / 16, 208 * level / 16, 170 * level / 16, 255));
+        return;
+    }
+    if (sDirty) return;
+    const Tex3DS_SubTexture part = {PW, PH, 0.0f, 1.0f, (float)PW / TEX_W, 1.0f - (float)PH / TEX_H};
+    C2D_ImageTint tint;
+
+    /* Dark: towards black by the tint's blend, as the game's fade is. */
+    C2D_PlainImageTint(&tint, C2D_Color32(0, 0, 0, 255), sDark / 16.0f);
+    C2D_DrawImageAt((C2D_Image){&sTex, &part}, 0.0f, 0.0f, 0.0f, sDark ? &tint : NULL, 1.0f, 1.0f);
 }
 
 void CtrTopPanel_Idle(void)

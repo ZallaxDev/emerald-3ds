@@ -4,9 +4,13 @@
  * Choosing three of six (the Pokemon as plates with their icon, name, types
  * and the order they were chosen in; SUMMARY and RENT / DESELECT) and, after a
  * win, swapping one (the three of the team, or of the beaten team, and the
- * game's own buttons). The question the game asks is a small dialog. Every
- * label is the game's own string; a tap is carried out as the keys the game
- * reads (CtrFactory_Act).
+ * game's own buttons). The question the game asks, and its message that a
+ * Pokemon cannot be picked twice, are small dialogs. Every label is the game's
+ * own string; a tap is carried out as the keys the game reads (CtrFactory_Act).
+ *
+ * Until the view has its Pokemon and every picture it shows is loaded (loaded)
+ * only the header and empty plates are drawn, with no taps: the screen is up
+ * from its first frame and the plates fill in with one redraw.
  */
 enum
 {
@@ -24,7 +28,19 @@ enum
 #define FAC_BUTTON_Y 200
 #define FAC_BUTTON_H 22
 
-static void FacMonIcon(u16 species, u16 personality, int cx, int y)
+/* The front picture of a Pokemon: an UNOWN's letter is its own picture. */
+static u16 FacPicSpecies(u16 species, u32 personality)
+{
+    if (species == SPECIES_UNOWN)
+    {
+        u16 letter = GetUnownLetterByPersonality(personality);
+
+        return letter ? SPECIES_UNOWN_B + letter - 1 : SPECIES_UNOWN;
+    }
+    return species;
+}
+
+static void FacMonIcon(u16 species, u32 personality, int cx, int y)
 {
     u16 iconSpecies = GetIconSpecies(species, personality);
     const u8 *tiles = MonIcon(iconSpecies, FALSE);
@@ -73,6 +89,25 @@ static void FacButton(const ViewState *s, int x, int w, u8 hit, Rgb colour, cons
     AddHit(x, FAC_BUTTON_Y, w, FAC_BUTTON_H, hit);
 }
 
+static int FacMonY(const struct CtrFactoryView *v, int i)
+{
+    return v->screen == CTR_FAC_SELECT ? FAC_MON_Y + (i / 3) * FAC_MON_STEP_Y : FAC_MON_Y + 32;
+}
+
+/* The game's message that waits for A: any tap answers it. */
+static void DrawFacInfo(const ViewState *s)
+{
+    const struct CtrFactoryView *v = &s->fac;
+    int oy = Plate(40, 70, 240, 100, sCreamPlate, PLATE_STATE_NORMAL);
+    Rgb green = {88, 192, 128};
+    int by = Plate(110, oy + 62, 100, 24, green, s->pressed == HIT_OK ? PLATE_STATE_PRESSED : PLATE_STATE_FOCUS);
+
+    TextLines(v->question, 52, oy + 12, 216, 14, 3, &sNormal, STYLE_INK, TRUE);
+    TextIn(Ascii("OK"), 110, by, 100, 24, &sSmall, 'c', STYLE_WHITE, 3);
+    /* After the plates' zones, which it covers: the whole screen is the answer. */
+    AddHit(0, 0, W, H, HIT_OK);
+}
+
 static void DrawFacQuestion(const ViewState *s)
 {
     const struct CtrFactoryView *v = &s->fac;
@@ -103,6 +138,13 @@ static void DrawFactory(const ViewState *s)
 
     NameBackdrop();
     TextIn(v->screen == CTR_FAC_SELECT ? gText_RentalPkmn2 : gText_PkmnSwap, 8, oy, 304, FAC_HEAD_H, &sSmall, 'l', STYLE_INK, 10);
+    if (!v->count || !v->loaded)
+    {
+        /* Nothing to say yet: the plates empty, and no zones to tap. */
+        for (int i = 0; i < (v->screen == CTR_FAC_SELECT ? 6 : FRONTIER_PARTY_SIZE); ++i)
+            Plate(8 + (i % 3) * 102, FacMonY(v, i), FAC_MON_W, FAC_MON_H, sCreamPlate, PLATE_STATE_NORMAL);
+        return;
+    }
     if (v->screen == CTR_FAC_SELECT)
     {
         static u8 count[8];
@@ -115,18 +157,29 @@ static void DrawFactory(const ViewState *s)
     {
         int x = 8 + (i % 3) * 102;
 
-        DrawFacMon(s, i, x, v->screen == CTR_FAC_SELECT ? FAC_MON_Y + (i / 3) * FAC_MON_STEP_Y : FAC_MON_Y + 32);
+        DrawFacMon(s, i, x, FacMonY(v, i));
     }
     if (v->phase == CTR_FAC_YESNO)
     {
         DrawFacQuestion(s);
         return;
     }
-    if (v->screen == CTR_FAC_SELECT)
+    if (v->phase == CTR_FAC_INFO)
     {
-        FacButton(s, 8, 98, FAC_HIT_OPTION + 0, cream, gText_Summary, menu && v->menuCursor == 0);
-        FacButton(s, 110, 202, FAC_HIT_OPTION + 1, green, v->cursorChosen ? gText_Deselect : gText_Rent,
-                  menu && v->menuCursor == 1);
+        DrawFacInfo(s);
+        return;
+    }
+    if (v->screen == CTR_FAC_SELECT && menu)
+    {
+        /* The popup's three: the third closes it. */
+        FacButton(s, 8, 98, FAC_HIT_OPTION + 0, cream, gText_Summary, v->menuCursor == 0);
+        FacButton(s, 110, 98, FAC_HIT_OPTION + 1, green, v->cursorChosen ? gText_Deselect : gText_Rent, v->menuCursor == 1);
+        FacButton(s, 212, 100, FAC_HIT_OPTION + 2, cream, gText_Others2, v->menuCursor == 2);
+    }
+    else if (v->screen == CTR_FAC_SELECT)
+    {
+        FacButton(s, 8, 98, FAC_HIT_OPTION + 0, cream, gText_Summary, FALSE);
+        FacButton(s, 110, 202, FAC_HIT_OPTION + 1, green, v->cursorChosen ? gText_Deselect : gText_Rent, FALSE);
     }
     else if (menu)
     {
@@ -158,6 +211,8 @@ static void FactoryTap(u8 id)
         CtrFactory_Act(CTR_FAC_ACT_OPTION, id - FAC_HIT_OPTION);
     else if (id >= FAC_HIT_BUTTON && id < FAC_HIT_BUTTON + 2)
         CtrFactory_Act(CTR_FAC_ACT_SLOT, FRONTIER_PARTY_SIZE + (id - FAC_HIT_BUTTON));
+    else if (id == HIT_OK)
+        CtrFactory_Act(CTR_FAC_ACT_OK, 0);
     else if (id == HIT_YES)
         CtrFactory_Act(CTR_FAC_ACT_YES, 0);
     else if (id == HIT_NO)
