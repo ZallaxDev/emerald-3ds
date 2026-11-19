@@ -337,6 +337,12 @@ static void GetObjectWorldPos(const struct ObjectEvent *obj, const struct Sprite
 
     *outX = prevX + (curX - prevX) * t;
     *outZ = prevZ + (curZ - prevZ) * t;
+
+    /* Berry art puts the stem about two pixels above the south edge of the
+     * soil tile. The billboard and shadow add half a tile for their usual
+     * centre anchor, so move their shared origin six pixels south. */
+    if (obj->movementType == MOVEMENT_TYPE_BERRY_TREE_GROWTH)
+        *outZ += 6.0f / VOXEL_PIXELS_PER_TILE;
 }
 
 /*
