@@ -5,14 +5,42 @@ on:
   pull_request:
 
 jobs:
+  release-versions:
+    runs-on: ubuntu-24.04
+    outputs:
+      python: ${{ steps.versions.outputs.python }}
+      pillow: ${{ steps.versions.outputs.pillow }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: versions
+        name: Read the Python and Pillow release pins
+        shell: python
+        run: |
+          import os
+          import tomllib
+          from pathlib import Path
+
+          python = tomllib.loads(Path("upstream.lock").read_text(encoding="utf-8"))["python"]
+          version = python["image"].removeprefix("python:").split("-", 1)[0]
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              print(f"python={version}", f"pillow={python['pillow']}", sep="\n", file=output)
+
   audit-and-python:
-    runs-on: ubuntu-latest
+    needs: release-versions
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "${{ needs.release-versions.outputs.python }}"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - run: pip install pillow
+          python-version: ${{ matrix.python }}
+      - name: Install the release Pillow version
+        env:
+          PILLOW: ${{ needs.release-versions.outputs.pillow }}
+        run: python -m pip install "Pillow==$PILLOW"
       - name: Publication audit
         run: python tools/release_audit.py --repo . --strict
       - name: Byte-compile all Python
@@ -25,12 +53,13 @@ jobs:
           python tools/release_audit.py --zip synthetic-web/Emerald3DS-WebPayload.zip --strict --web-payload
 
   host-tests:
-    runs-on: ubuntu-latest
+    needs: release-versions
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ needs.release-versions.outputs.python }}
       - name: Data pack parser against the builder's writer
         run: |
           gcc -std=c99 -O2 -Wall -Wextra -Werror -I3ds_port/include \
@@ -49,8 +78,10 @@ jobs:
           cd 3ds_port
           ./build/voxel_ground_mesh_test.exe
       - name: Night window masks and building-page compatibility
+        env:
+          PILLOW: ${{ needs.release-versions.outputs.pillow }}
         run: |
-          python -m pip install Pillow
+          python -m pip install "Pillow==$PILLOW"
           python 3ds_port/tests/voxel_night_test.py --cc gcc
       - name: Bottom map and clock footer
         run: python 3ds_port/tests/bottom_map_test.py
@@ -60,32 +91,52 @@ jobs:
     # builds (pokedex_capture_test.py --sanitize) loop on DEADLYSIGNAL until
     # the runner is lost.
     runs-on: ubuntu-24.04
-    container: devkitpro/devkitarm:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Host tools
+      - name: Build the pinned release environment
+        id: release-image
         run: |
-          apt-get update
-          apt-get install -y --no-install-recommends build-essential g++ libpng-dev python3 python3-pil git
-      - name: Bootstrap and build
+          python3 - <<'PYTHON'
+          import os
+          import tomllib
+          from pathlib import Path
+          from tools.docker_release import image
+
+          lock = tomllib.loads(Path("upstream.lock").read_text(encoding="utf-8"))
+          tag = image(lock)
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              print(f"tag={tag}", file=output)
+          PYTHON
+      - name: Build and verify the engine in the release environment
+        env:
+          RELEASE_IMAGE: ${{ steps.release-image.outputs.tag }}
         run: |
+          docker run --rm -i --user "$(id -u):$(id -g)" -e HOME=/tmp \
+            -v "$GITHUB_WORKSPACE:/work" -w /work "$RELEASE_IMAGE" bash -e <<'BUILD'
+          echo "::group::Bootstrap and build"
           python3 -m py_compile tools/port_common/gen_asset_table.py
           python3 builder/tests/test_asset_table_compatibility.py
           python3 tools/bootstrap.py --make -j4 --python python3
-      - name: Host tests and link audit
-        run: make -C build/upstream/3ds_port verify PYTHON=python3
-      - name: Production timed encounter rules
-        run: python3 3ds_port/tests/encounter_tables_test.py --tree build/upstream
-      - name: Production berry clock integration
-        run: python3 3ds_port/tests/berry_clock_test.py --tree build/upstream
-      - name: Engine-only 3DSX
-        run: make -C build/upstream/3ds_port release PYTHON=python3
-      - name: Audit the build outputs that would ship
-        run: |
-          mkdir -p ship && cp build/upstream/3ds_port/dist/Emerald3DS.3dsx build/upstream/3ds_port/dist/Emerald3DS.smdh ship/
+          echo "::endgroup::"
+
+          echo "::group::Host tests and link audit"
+          make -C build/upstream/3ds_port verify PYTHON=python3
+          echo "::endgroup::"
+
+          echo "::group::Production encounter and berry clock tests"
+          python3 3ds_port/tests/encounter_tables_test.py --tree build/upstream
+          python3 3ds_port/tests/berry_clock_test.py --tree build/upstream
+          echo "::endgroup::"
+
+          echo "::group::Engine-only 3DSX and publication audit"
+          make -C build/upstream/3ds_port release PYTHON=python3
+          mkdir -p ship
+          cp build/upstream/3ds_port/dist/Emerald3DS.3dsx build/upstream/3ds_port/dist/Emerald3DS.smdh ship/
           # In payload/, where the release ships them (release_audit_allow.toml [large]).
           python3 -c "import zipfile,pathlib; z=zipfile.ZipFile('ship.zip','w'); [z.write(p, 'payload/' + p.name) for p in pathlib.Path('ship').iterdir()]"
           python3 tools/release_audit.py --zip ship.zip --strict
+          echo "::endgroup::"
+          BUILD
       - uses: actions/upload-artifact@v4
         with:
           name: emerald3ds-engine

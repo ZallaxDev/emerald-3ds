@@ -464,6 +464,70 @@ static void EmitUpright(VoxelBuilder *builder, int x, int y,
         &(VoxelVertex){wx,        height, wz, u0, v0, SHADE_TOP});
 }
 
+/* Tall grass (voxel_tree.h): the atlas id of the cell's tuft and, in
+ * `*floor`, the ground laid under it. -1 for any other cell. */
+static int TuftCell(const VoxelMapInstance *inst, int x, int y, int *floor)
+{
+    int tuft;
+
+    if (!VoxelWorld_UsesTreeSprites(inst))
+        return -1;
+    tuft = VoxelTree_Tuft(inst->secondaryTileset,
+                          VoxelTree_GroundMetatile(inst->secondaryTileset, VoxelWorld_GetMetatileId(x, y)),
+                          floor);
+    return tuft < 0 ? -1 : (int)VOXEL_TUFT_FIRST + tuft;
+}
+
+bool VoxelMesh_TuftAt(int x, int y)
+{
+    const VoxelMapInstance *inst = VoxelWorld_GetInstanceAt(x, y);
+    const int16_t *relief;
+    float foot;
+    int floor, ground, wall;
+    unsigned sides;
+
+    if (inst == NULL || TuftCell(inst, x, y, &floor) < 0)
+        return false;
+    relief = VoxelRelief_Cell(inst, x, y);
+    if (relief == NULL)
+        return VoxelWorld_ClassifyTile(x, y) == VOXEL_SHAPE_FLAT;
+    /* as VoxelMesh_EmitGroundRow lays it */
+    return !VoxelRelief_IsSlope(relief) && !VoxelSign_IsCell(inst, x, y)
+        && VoxelRelief_Cut(inst, x, y, &foot, &ground, &wall, &sides) == -1;
+}
+
+/*
+ * A tall grass cell's tufts, on the ground laid under them (the builder's
+ * lift): the tile's rows in VOXEL_TUFT_ROWS cards, each stood up
+ * VOXEL_TUFT_HEIGHT with its foot where its rows end. Its top is where the
+ * drawing puts a point that high, (u, h, v + h), leant as the ground it
+ * stands on leans (VoxelRelief_Lean): seen as the map is drawn, the tile is
+ * the tile it was. u0..v1 are the tuft's (the tile less its ground).
+ */
+static void EmitTufts(VoxelBuilder *b, int x, int y, float u0, float v0, float u1, float v1)
+{
+    const float wx = (float)x, h = VOXEL_TUFT_HEIGHT;
+    const float back = h * (1.0f - VoxelRelief_Lean());
+    const bool slope = b->slope;
+
+    b->slope = false;
+    b->rounded = true;
+    for (int k = 0; k < VOXEL_TUFT_ROWS; ++k)
+    {
+        const float r0 = (float)k / VOXEL_TUFT_ROWS, r1 = (float)(k + 1) / VOXEL_TUFT_ROWS;
+        const float top = (float)y + r0 + back, foot = (float)y + r1;
+        const float vt = v0 + (v1 - v0) * r0, vf = v0 + (v1 - v0) * r1;
+
+        VoxelBuilder_Quad(b,
+            &(VoxelVertex){wx,        h,    top,  u0, vt, SHADE_TOP},
+            &(VoxelVertex){wx + 1.0f, h,    top,  u1, vt, SHADE_TOP},
+            &(VoxelVertex){wx + 1.0f, 0.0f, foot, u1, vf, SHADE_TOP},
+            &(VoxelVertex){wx,        0.0f, foot, u0, vf, SHADE_TOP});
+    }
+    b->rounded = false;
+    b->slope = slope;
+}
+
 static void EmitTile(VoxelBuilder *builder, int x, int y, VoxelVisualShape shape)
 {
     float wx = (float)x, wz = (float)y;
@@ -2998,6 +3062,18 @@ void VoxelMesh_EmitGroundRow(VoxelBuilder *builder, const VoxelMapInstance *inst
                     art = -1;
                 if (bare >= 0 && MetatileUV(builder, bare, &u0, &v0, &u1, &v1))
                     art = bare;
+                /* tall grass on level ground: the ground it grows on, and
+                 * its tufts standing on it (EmitTufts) */
+                float tuftU0 = 0.0f, tuftV0 = 0.0f, tuftU1 = 0.0f, tuftV1 = 0.0f;
+                int tuftFloor = -1;
+                const int tuft = !sign && cut == -1 && art < 0 && !VoxelRelief_IsSlope(relief)
+                               ? TuftCell(inst, x, y, &tuftFloor) : -1;
+                const bool tufts = tuft >= 0
+                                && MetatileUV(builder, tuft, &tuftU0, &tuftV0, &tuftU1, &tuftV1)
+                                && MetatileUV(builder, tuftFloor, &u0, &v0, &u1, &v1);
+
+                if (tufts)
+                    art = tuftFloor;
 
                 /* A door or a cave mouth cut in a south face stands upright
                  * (VoxelRelief_Upright, EmitUprightStitches). */
@@ -3285,6 +3361,8 @@ void VoxelMesh_EmitGroundRow(VoxelBuilder *builder, const VoxelMapInstance *inst
                 builder->lift = VoxelRelief_CellLift(inst, x, y);
                 builder->shift = VoxelRelief_CellShift(inst, x, y);
                 builder->slope = false;
+                if (tufts)
+                    EmitTufts(builder, x, y, tuftU0, tuftV0, tuftU1, tuftV1);
                 VoxelSign_EmitStanding(builder, inst, x, y);
                 builder->slope = true;
                 builder->lift = 0.0f;
@@ -3355,6 +3433,20 @@ void VoxelMesh_EmitGroundRow(VoxelBuilder *builder, const VoxelMapInstance *inst
                 if (MetatileUV(builder, ground, &u0, &v0, &u1, &v1))
                     VoxelMesh_Top(builder, (float)x, (float)y, 0.0f, 0.0f,
                                   u0, v0, u1, v1, SHADE_TOP);
+                continue;
+            }
+        }
+        /* Tall grass: the ground it grows on, and its tufts standing on it. */
+        {
+            float u0, v0, u1, v1, f0, g0, f1, g1;
+            int floor = -1;
+            const int tuft = shape == VOXEL_SHAPE_FLAT ? TuftCell(inst, x, y, &floor) : -1;
+
+            if (tuft >= 0 && MetatileUV(builder, tuft, &u0, &v0, &u1, &v1)
+             && MetatileUV(builder, floor, &f0, &g0, &f1, &g1))
+            {
+                VoxelMesh_Top(builder, (float)x, (float)y, 0.0f, 0.0f, f0, g0, f1, g1, SHADE_TOP);
+                EmitTufts(builder, x, y, u0, v0, u1, v1);
                 continue;
             }
         }

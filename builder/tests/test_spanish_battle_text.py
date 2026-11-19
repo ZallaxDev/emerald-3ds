@@ -67,7 +67,7 @@ class SpanishBattleTextTests(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which("cc"), "requires a host C compiler")
     def test_clock_accents_use_game_glyphs(self):
-        source = (ROOT / "3ds_port/src/3ds_bottom_ui.c").read_text(encoding="utf-8")
+        source = (ROOT / "3ds_port/src/3ds_bottom_text.inc").read_text(encoding="utf-8")
         start = source.index("static const u8 *Ascii(")
         end = source.index("static const u8 *Number(", start)
         harness = '''
