@@ -1,143 +1,236 @@
 name: CI
+run-name: Compare current and v7 CI helpers
 
 on:
   push:
+    branches: [test/mkrieger95-ci-helper-comparison]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
 
 jobs:
-  release-versions:
-    runs-on: ubuntu-24.04
-    outputs:
-      python: ${{ steps.versions.outputs.python }}
-      pillow: ${{ steps.versions.outputs.pillow }}
-    steps:
-      - uses: actions/checkout@v4
-      - id: versions
-        name: Read the Python and Pillow release pins
-        shell: python
-        run: |
-          import os
-          import tomllib
-          from pathlib import Path
-
-          python = tomllib.loads(Path("upstream.lock").read_text(encoding="utf-8"))["python"]
-          version = python["image"].removeprefix("python:").split("-", 1)[0]
-          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-              print(f"python={version}", f"pillow={python['pillow']}", sep="\n", file=output)
-
-  audit-and-python:
-    needs: release-versions
-    runs-on: ubuntu-24.04
+  current-first:
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.11", "${{ needs.release-versions.outputs.python }}"]
+        sample: [1, 2, 3]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Preinstall the common Python version
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
-          python-version: ${{ matrix.python }}
-      - name: Install the release Pillow version
+          python-version: "3.15.2"
+      - name: Fetch the common engine payload
         env:
-          PILLOW: ${{ needs.release-versions.outputs.pillow }}
-        run: python -m pip install "Pillow==$PILLOW"
-      - name: Publication audit
-        run: python tools/release_audit.py --repo . --strict
-      - name: Byte-compile all Python
-        run: python -m compileall -q builder tools 3ds_port/scripts 3ds_port/tests
-      - name: Builder tests (synthetic data, no ROM)
-        run: python -m unittest discover -s builder/tests -v
-      - name: Synthetic web payload passes the release contract audit
+          GH_TOKEN: ${{ github.token }}
         run: |
+          gh api /repos/ZallaxDev/emerald-3ds/actions/artifacts/14486395069/zip > "$RUNNER_TEMP/engine.zip"
+          mkdir payload
+          python -m zipfile -e "$RUNNER_TEMP/engine.zip" payload
+          sha256sum payload/* > "$RUNNER_TEMP/expected.sha256"
+          cat "$RUNNER_TEMP/expected.sha256"
+          python -m pip install "Pillow==13.0.0"
+      - name: "baseline checkout"
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: ZallaxDev/emerald-3ds
+          ref: b9343f55ab961d03e750faf9e05d34744fe19396
+          path: source-baseline
+      - name: "baseline Python setup"
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.15.2"
+      - name: "baseline compatibility checks"
+        working-directory: source-baseline
+        env:
+          PYTHON_CPU_COUNT: "1"
+          HTTP_PROXY: http://127.0.0.1:1
+          HTTPS_PROXY: http://127.0.0.1:1
+          NO_PROXY: ""
+        run: |
+          export http_proxy="$HTTP_PROXY" https_proxy="$HTTPS_PROXY" no_proxy="$NO_PROXY"
+          python -c "import sys,PIL; assert sys.version_info[:3] == (3,15,2); assert PIL.__version__ == '13.0.0'"
+          test "$(git rev-parse HEAD)" = "b9343f55ab961d03e750faf9e05d34744fe19396"
+          python -c "from pathlib import Path; print('Authorization header stored directly in git config:', 'AUTHORIZATION:' in Path('.git/config').read_text())"
+          python tools/release_audit.py --repo . --strict
+          python -m unittest discover -s builder/tests
           python tools/build_web_payload.py --synthetic synthetic-web
           python tools/release_audit.py --zip synthetic-web/Emerald3DS-WebPayload.zip --strict --web-payload
-
-  host-tests:
-    needs: release-versions
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: "baseline artifact upload"
+        id: upload-baseline
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          python-version: ${{ needs.release-versions.outputs.python }}
-      - name: Data pack parser against the builder's writer
-        run: |
-          gcc -std=c99 -O2 -Wall -Wextra -Werror -I3ds_port/include \
-              3ds_port/tests/pak_test.c 3ds_port/src/3ds_pak.c -o pak_test
-          ./pak_test test.pak "$(python 3ds_port/tests/make_test_pak.py test.pak)"
-      - name: Input and video decoding
-        run: |
-          cd 3ds_port
-          gcc -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/input_test.c src/3ds_input_decode.c -o input_test && ./input_test
-          gcc -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/video_decode_test.c src/3ds_video_decode.c -o video_test && ./video_test
-      - name: Day/night clock and lighting
-        run: make -C 3ds_port verify-daynight verify-clock-store verify-encounters verify-night-lamps
-      - name: Standalone voxel shadows and mesh fixtures
-        run: |
-          make -C 3ds_port verify-voxel-lighting verify-voxel-trees build/voxel_ground_mesh_test.exe
-          cd 3ds_port
-          ./build/voxel_ground_mesh_test.exe
-      - name: Night window masks and building-page compatibility
-        env:
-          PILLOW: ${{ needs.release-versions.outputs.pillow }}
-        run: |
-          python -m pip install "Pillow==$PILLOW"
-          python 3ds_port/tests/voxel_night_test.py --cc gcc
-      - name: Bottom map and clock footer
-        run: python 3ds_port/tests/bottom_map_test.py
-
-  build-3ds:
-    # Not ubuntu-latest: on Ubuntu 26.04 the container's AddressSanitizer
-    # builds (pokedex_capture_test.py --sanitize) loop on DEADLYSIGNAL until
-    # the runner is lost.
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build the pinned release environment
-        id: release-image
-        run: |
-          python3 - <<'PYTHON'
-          import os
-          import tomllib
-          from pathlib import Path
-          from tools.docker_release import image
-
-          lock = tomllib.loads(Path("upstream.lock").read_text(encoding="utf-8"))
-          tag = image(lock)
-          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-              print(f"tag={tag}", file=output)
-          PYTHON
-      - name: Build and verify the engine in the release environment
-        env:
-          RELEASE_IMAGE: ${{ steps.release-image.outputs.tag }}
-        run: |
-          docker run --rm -i --user "$(id -u):$(id -g)" -e HOME=/tmp \
-            -v "$GITHUB_WORKSPACE:/work" -w /work "$RELEASE_IMAGE" bash -e <<'BUILD'
-          echo "::group::Bootstrap and build"
-          python3 -m py_compile tools/port_common/gen_asset_table.py
-          python3 builder/tests/test_asset_table_compatibility.py
-          python3 tools/bootstrap.py --make -j4 --python python3
-          echo "::endgroup::"
-
-          echo "::group::Host tests and link audit"
-          make -C build/upstream/3ds_port verify PYTHON=python3
-          echo "::endgroup::"
-
-          echo "::group::Production encounter and berry clock tests"
-          python3 3ds_port/tests/encounter_tables_test.py --tree build/upstream
-          python3 3ds_port/tests/berry_clock_test.py --tree build/upstream
-          echo "::endgroup::"
-
-          echo "::group::Engine-only 3DSX and publication audit"
-          make -C build/upstream/3ds_port release PYTHON=python3
-          mkdir -p ship
-          cp build/upstream/3ds_port/dist/Emerald3DS.3dsx build/upstream/3ds_port/dist/Emerald3DS.smdh ship/
-          # In payload/, where the release ships them (release_audit_allow.toml [large]).
-          python3 -c "import zipfile,pathlib; z=zipfile.ZipFile('ship.zip','w'); [z.write(p, 'payload/' + p.name) for p in pathlib.Path('ship').iterdir()]"
-          python3 tools/release_audit.py --zip ship.zip --strict
-          echo "::endgroup::"
-          BUILD
-      - uses: actions/upload-artifact@v4
+          name: helpers-${{ github.run_id }}-${{ github.job }}-${{ matrix.sample }}-baseline
+          path: payload/
+          compression-level: 6
+          retention-days: 1
+      - name: "candidate checkout"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          name: emerald3ds-engine
-          path: ship/
+          repository: ZallaxDev/emerald-3ds
+          ref: b9343f55ab961d03e750faf9e05d34744fe19396
+          path: source-candidate
+      - name: "candidate Python setup"
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.15.2"
+      - name: "candidate compatibility checks"
+        working-directory: source-candidate
+        env:
+          PYTHON_CPU_COUNT: "1"
+          HTTP_PROXY: http://127.0.0.1:1
+          HTTPS_PROXY: http://127.0.0.1:1
+          NO_PROXY: ""
+        run: |
+          export http_proxy="$HTTP_PROXY" https_proxy="$HTTPS_PROXY" no_proxy="$NO_PROXY"
+          python -c "import sys,PIL; assert sys.version_info[:3] == (3,15,2); assert PIL.__version__ == '13.0.0'"
+          test "$(git rev-parse HEAD)" = "b9343f55ab961d03e750faf9e05d34744fe19396"
+          python -c "from pathlib import Path; print('Authorization header stored directly in git config:', 'AUTHORIZATION:' in Path('.git/config').read_text())"
+          python tools/release_audit.py --repo . --strict
+          python -m unittest discover -s builder/tests
+          python tools/build_web_payload.py --synthetic synthetic-web
+          python tools/release_audit.py --zip synthetic-web/Emerald3DS-WebPayload.zip --strict --web-payload
+      - name: "candidate artifact upload"
+        id: upload-candidate
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: helpers-${{ github.run_id }}-${{ github.job }}-${{ matrix.sample }}-candidate
+          path: payload/
+          compression-level: 6
+          retention-days: 1
+      - name: Verify both uploaded artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          BASELINE_ID: ${{ steps.upload-baseline.outputs.artifact-id }}
+          CANDIDATE_ID: ${{ steps.upload-candidate.outputs.artifact-id }}
+        run: |
+          for kind in baseline candidate; do
+            artifact_id="$BASELINE_ID"
+            if test "$kind" = candidate; then artifact_id="$CANDIDATE_ID"; fi
+            gh api "/repos/$REPOSITORY/actions/artifacts/$artifact_id/zip" > "$RUNNER_TEMP/$kind.zip"
+          done
+          python - <<'VERIFY'
+          import hashlib, os, pathlib, zipfile
+          root = pathlib.Path(os.environ["RUNNER_TEMP"])
+          expected = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in pathlib.Path("payload").iterdir() if p.is_file()}
+          for kind in ("baseline", "candidate"):
+              with zipfile.ZipFile(root / f"{kind}.zip") as archive:
+                  actual = {name: hashlib.sha256(archive.read(name)).hexdigest() for name in archive.namelist() if not name.endswith("/")}
+              assert actual == expected, (kind, actual, expected)
+              print(kind, "round-trip hashes match", "ZIP bytes", (root / f"{kind}.zip").stat().st_size)
+          VERIFY
+  v7-first:
+    runs-on: ubuntu-26.04
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [1, 2, 3]
+    steps:
+      - name: Preinstall the common Python version
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.15.2"
+      - name: Fetch the common engine payload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api /repos/ZallaxDev/emerald-3ds/actions/artifacts/14486395069/zip > "$RUNNER_TEMP/engine.zip"
+          mkdir payload
+          python -m zipfile -e "$RUNNER_TEMP/engine.zip" payload
+          sha256sum payload/* > "$RUNNER_TEMP/expected.sha256"
+          cat "$RUNNER_TEMP/expected.sha256"
+          python -m pip install "Pillow==13.0.0"
+      - name: "candidate checkout"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ZallaxDev/emerald-3ds
+          ref: b9343f55ab961d03e750faf9e05d34744fe19396
+          path: source-candidate
+      - name: "candidate Python setup"
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.15.2"
+      - name: "candidate compatibility checks"
+        working-directory: source-candidate
+        env:
+          PYTHON_CPU_COUNT: "1"
+          HTTP_PROXY: http://127.0.0.1:1
+          HTTPS_PROXY: http://127.0.0.1:1
+          NO_PROXY: ""
+        run: |
+          export http_proxy="$HTTP_PROXY" https_proxy="$HTTPS_PROXY" no_proxy="$NO_PROXY"
+          python -c "import sys,PIL; assert sys.version_info[:3] == (3,15,2); assert PIL.__version__ == '13.0.0'"
+          test "$(git rev-parse HEAD)" = "b9343f55ab961d03e750faf9e05d34744fe19396"
+          python -c "from pathlib import Path; print('Authorization header stored directly in git config:', 'AUTHORIZATION:' in Path('.git/config').read_text())"
+          python tools/release_audit.py --repo . --strict
+          python -m unittest discover -s builder/tests
+          python tools/build_web_payload.py --synthetic synthetic-web
+          python tools/release_audit.py --zip synthetic-web/Emerald3DS-WebPayload.zip --strict --web-payload
+      - name: "candidate artifact upload"
+        id: upload-candidate
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: helpers-${{ github.run_id }}-${{ github.job }}-${{ matrix.sample }}-candidate
+          path: payload/
+          compression-level: 6
+          retention-days: 1
+      - name: "baseline checkout"
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: ZallaxDev/emerald-3ds
+          ref: b9343f55ab961d03e750faf9e05d34744fe19396
+          path: source-baseline
+      - name: "baseline Python setup"
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.15.2"
+      - name: "baseline compatibility checks"
+        working-directory: source-baseline
+        env:
+          PYTHON_CPU_COUNT: "1"
+          HTTP_PROXY: http://127.0.0.1:1
+          HTTPS_PROXY: http://127.0.0.1:1
+          NO_PROXY: ""
+        run: |
+          export http_proxy="$HTTP_PROXY" https_proxy="$HTTPS_PROXY" no_proxy="$NO_PROXY"
+          python -c "import sys,PIL; assert sys.version_info[:3] == (3,15,2); assert PIL.__version__ == '13.0.0'"
+          test "$(git rev-parse HEAD)" = "b9343f55ab961d03e750faf9e05d34744fe19396"
+          python -c "from pathlib import Path; print('Authorization header stored directly in git config:', 'AUTHORIZATION:' in Path('.git/config').read_text())"
+          python tools/release_audit.py --repo . --strict
+          python -m unittest discover -s builder/tests
+          python tools/build_web_payload.py --synthetic synthetic-web
+          python tools/release_audit.py --zip synthetic-web/Emerald3DS-WebPayload.zip --strict --web-payload
+      - name: "baseline artifact upload"
+        id: upload-baseline
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: helpers-${{ github.run_id }}-${{ github.job }}-${{ matrix.sample }}-baseline
+          path: payload/
+          compression-level: 6
+          retention-days: 1
+      - name: Verify both uploaded artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          BASELINE_ID: ${{ steps.upload-baseline.outputs.artifact-id }}
+          CANDIDATE_ID: ${{ steps.upload-candidate.outputs.artifact-id }}
+        run: |
+          for kind in baseline candidate; do
+            artifact_id="$BASELINE_ID"
+            if test "$kind" = candidate; then artifact_id="$CANDIDATE_ID"; fi
+            gh api "/repos/$REPOSITORY/actions/artifacts/$artifact_id/zip" > "$RUNNER_TEMP/$kind.zip"
+          done
+          python - <<'VERIFY'
+          import hashlib, os, pathlib, zipfile
+          root = pathlib.Path(os.environ["RUNNER_TEMP"])
+          expected = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in pathlib.Path("payload").iterdir() if p.is_file()}
+          for kind in ("baseline", "candidate"):
+              with zipfile.ZipFile(root / f"{kind}.zip") as archive:
+                  actual = {name: hashlib.sha256(archive.read(name)).hexdigest() for name in archive.namelist() if not name.endswith("/")}
+              assert actual == expected, (kind, actual, expected)
+              print(kind, "round-trip hashes match", "ZIP bytes", (root / f"{kind}.zip").stat().st_size)
+          VERIFY
