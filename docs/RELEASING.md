@@ -185,7 +185,7 @@ Without these options the release is English-only, as before.
 
 ## Prerequisites (maintainer machine)
 
-- Python of the version `upstream.lock` names under `[python]` (3.13), with
+- Python of the version `upstream.lock` names under `[python]`, with
   Pillow (`pillow` there: 12.3.0), to run `build_release.py`: the voxel data
   depends on the interpreter, so the release refuses any other and makes
   `make` run the generators with the same one (`PYTHON=` is set for it).
@@ -232,7 +232,7 @@ python tools/docker_release.py --rom baserom.gba \
 
 PyInstaller makes an executable for the system it runs on, so the Windows
 builder's `.exe` is not made there: make the release on Windows as below
-(native devkitPro, Python 3.13 - `build_release.py` refuses another) when the
+(native devkitPro and the Python version in `upstream.lock`) when the
 Windows ZIP is wanted, or attach the Docker release's other assets and the
 Windows ZIP of a native run of the same commit (its data is the same: same
 pins, and `voxel_precompile.py` proves it against the recipe).

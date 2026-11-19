@@ -1,0 +1,70 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: a visible wild Pokemon's IVs follow its personality, as a wild one's do
+Applies after 0092-touch-message-ack.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/wild_encounter.c b/src/wild_encounter.c
+--- a/src/wild_encounter.c
++++ b/src/wild_encounter.c
+@@ -683,6 +683,7 @@
+     u16 species, idle, sparkle;
+     s16 x, y;                    /* map coordinates (MAP_OFFSET included) */
+     u32 personality;
++    u16 ivs[2];                  /* rolled right after the personality (VisibleRollIvs) */
+ };
+ 
+ static struct VisibleWild sVisible[VW_MAX];
+@@ -861,6 +862,39 @@
+ }
+ 
+ /*
++ * A wild Pokemon of the game takes its IVs from the two random numbers right
++ * after its personality's (CreateMonWithNature, then CreateBoxMon): the pair
++ * PID/IVs is what save checkers test a wild one against ("Method 1"). Rolled
++ * in the battle instead, the IVs came from a later point of the generator and
++ * every visible one caught failed that test. So they are rolled here, at once
++ * after VisibleRollPersonality, and given to it in VisibleStartBattle.
++ */
++static void VisibleRollIvs(struct VisibleWild *v)
++{
++    v->ivs[0] = Random();
++    v->ivs[1] = Random();
++}
++
++static void VisibleSetIvs(struct Pokemon *mon, const struct VisibleWild *v)
++{
++    static const u8 sIvData[2][3] = {
++        {MON_DATA_HP_IV, MON_DATA_ATK_IV, MON_DATA_DEF_IV},
++        {MON_DATA_SPEED_IV, MON_DATA_SPATK_IV, MON_DATA_SPDEF_IV},
++    };
++    u32 i, j, iv;
++
++    for (i = 0; i < 2; i++)
++    {
++        for (j = 0; j < 3; j++)
++        {
++            iv = (v->ivs[i] >> (5 * j)) & MAX_IV_MASK;
++            SetMonData(mon, sIvData[i][j], &iv);
++        }
++    }
++    CalculateMonStats(mon);
++}
++
++/*
+  * Their icons' two frames, copied straight into OBJ VRAM. The game's own
+  * callback queues the copy for VBlank with a pointer into the asset cache,
+  * and on the field, where many assets stream through it, that slot can be
+@@ -1095,6 +1129,7 @@
+         // The species it is shown as is the one met when touched (VisibleStartBattle).
+         v->species = WILD_SPECIES(wild->species);
+         v->personality = VisibleRollPersonality();
++        VisibleRollIvs(v);
+         v->shiny = GET_SHINY_VALUE(VisibleOtId(), v->personality) < SHINY_ODDS;
+         v->faceX = 0;
+         v->faceY = 1;
+@@ -1168,6 +1203,7 @@
+ {
+     ZeroEnemyPartyMons();
+     CreateMon(&gEnemyParty[0], v->species, v->level, USE_RANDOM_IVS, TRUE, v->personality, OT_ID_PLAYER_ID, 0);
++    VisibleSetIvs(&gEnemyParty[0], v);
+     CtrLog_Write(CTR_LOG_GAME, "visible wild: battle with species %u lv %u", v->species, v->level);
+     VisibleRemove(v);
+     BattleSetup_StartWildBattle();
