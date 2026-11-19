@@ -187,6 +187,10 @@ void VoxelMesh_Top(VoxelBuilder *b, float wx, float wz, float h, float inset,
 /* The cell's relief drawn with u0..v1 (a tree's trunk on a slope). */
 void VoxelMesh_ReliefGround(VoxelBuilder *b, const VoxelMapInstance *inst, int x, int y,
                             float u0, float v0, float u1, float v1);
+/* Does the ground pass stand tall grass's tufts on this world cell
+ * (voxel_tree.h, VoxelTree_Tuft)? On level ground only. What lies on that
+ * cell's ground - the grass rustling under a walker - lies on the card. */
+bool VoxelMesh_TuftAt(int x, int y);
 /* A tree's cell drawn as the rock under it: the ground pass's, not the tree
  * pass's. */
 bool VoxelMesh_TreeOnRock(const VoxelMapInstance *inst, int x, int y);

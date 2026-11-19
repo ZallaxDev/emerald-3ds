@@ -13,7 +13,7 @@ static const Rgb sFieldMove = {64, 120, 200};
 
 /* Ids of the native views' things: a box, an entry of the open menu, the
  * message going on. CANCEL, YES and NO are the shared ones. */
-enum { HIT_NAT_SLOT = HIT_ROW, HIT_NAT_ENTRY = HIT_ROW + 8, HIT_NAT_MSG = HIT_ROW + 16 };
+enum { HIT_NAT_SLOT = HIT_ROW, HIT_NAT_CONFIRM = HIT_ROW + PARTY_SIZE, HIT_NAT_ENTRY = HIT_ROW + 8, HIT_NAT_MSG = HIT_ROW + 16 };
 
 /* The game's HP bar, by the party menu's own math (DisplayPartyPokemonHPBar):
  * its colour by GetHPBarLevel, its length by GetScaledHPFraction, so any HP
@@ -406,12 +406,25 @@ static void DrawGameParty(const ViewState *s)
     oy = Plate(AREA_X, AREA_Y + 87, PARTY_LEFT_W, 44, sCreamPlate, PLATE_STATE_NORMAL);
     TextLines(v->prompt, AREA_X + 8, oy + 5, PARTY_LEFT_W - 14, PARTY_LINE, 2, &sNormal, STYLE_INK, TRUE);
     {
-        bool8 pressed = s->pressed == HIT_CANCEL;
+        /* Choosing a team: CONFIRM and CANCEL side by side, the cursor's
+         * button lit as a box is. */
+        int bw = v->confirm ? (PARTY_LEFT_W - 4) / 2 : PARTY_LEFT_W;
+        int cx = v->confirm ? AREA_X + bw + 4 : AREA_X;
+        bool8 pressed = s->pressed == HIT_CANCEL || (v->cursor == PARTY_SIZE + 1 && v->state == CTR_PARTY_VIEW_LIST);
 
-        oy = Plate(AREA_X, AREA_Y + 134, PARTY_LEFT_W, 30, pressed ? sEmerald : sSlate,
-                   pressed ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
-        TextIn(gText_Cancel2, AREA_X, oy, PARTY_LEFT_W, 30, &sNormal, 'c', STYLE_WHITE, 4);
-        AddHit(AREA_X, AREA_Y + 134, PARTY_LEFT_W, 30, HIT_CANCEL);
+        if (v->confirm)
+        {
+            bool8 lit = s->pressed == HIT_NAT_CONFIRM || (v->cursor == PARTY_SIZE && v->state == CTR_PARTY_VIEW_LIST);
+
+            oy = Plate(AREA_X, AREA_Y + 134, bw, 30, lit ? sEmerald : sSlate,
+                       s->pressed == HIT_NAT_CONFIRM ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+            TextIn(gMenuText_Confirm, AREA_X, oy, bw, 30, &sNormal, 'c', STYLE_WHITE, 4);
+            AddHit(AREA_X, AREA_Y + 134, bw, 30, HIT_NAT_CONFIRM);
+        }
+        oy = Plate(cx, AREA_Y + 134, bw, 30, pressed ? sEmerald : sSlate,
+                   s->pressed == HIT_CANCEL ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+        TextIn(gText_Cancel2, cx, oy, bw, 30, &sNormal, 'c', STYLE_WHITE, 4);
+        AddHit(cx, AREA_Y + 134, bw, 30, HIT_CANCEL);
     }
     if (stats)
     {
@@ -440,6 +453,12 @@ static void PartyTap(const ViewState *s, u8 id)
 
     if (id >= HIT_NAT_SLOT && id < HIT_NAT_SLOT + PARTY_SIZE)
         CtrParty_TapSlot(id - HIT_NAT_SLOT);
+    else if (id == HIT_NAT_CONFIRM)
+    {
+        /* Only the list takes it; over a menu, a message or a question it is no button. */
+        if (v->state == CTR_PARTY_VIEW_LIST && !v->message && !v->yesNo)
+            CtrParty_TapSlot(PARTY_SIZE);
+    }
     else if (id >= HIT_NAT_ENTRY && id < HIT_NAT_ENTRY + CTR_VIEW_ENTRIES)
         CtrMenu_PostEntry(id - HIT_NAT_ENTRY);
     else if (id == HIT_YES || id == HIT_NO)

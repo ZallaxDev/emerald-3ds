@@ -261,6 +261,48 @@ def test_real_ledges():
     assert cell in auto["cells"].jumps and cell in c.jumps
 
 
+def test_under_and_below():
+    # what stands under a raised floor is the hand's: "under" on any cell,
+    # and a ground laid under it ("below") - a deck then, its layer in the
+    # relief's "UNDR" table, read back as written
+    import voxel_relief_fixes as vrf
+    lid = "LAYOUT_LAVARIDGE_TOWN"
+    auto = vt.solve_auto(lid)
+    c = auto["cells"]
+    cell = (10, 17)
+    top = auto["pieces"][cell][1]
+    zero = vt.zero_of(auto)
+    fixes = {"layouts": {lid: {"terraces": {"10,17": {
+        "level": (top - zero) // L + 2, "piece": "F", "under": "wall",
+        "below": {"level": (top - zero) // L, "piece": "S"}}}}}}
+    marks = vt.load_marks(c, fixes, zero=zero)
+    assert marks[cell]["under"] == "wall"
+    assert marks[cell]["below"] == {"level": top, "piece": "S"}, marks[cell]
+    sol = vt.finish(auto, marks)
+    assert sol["under"] == {cell: "wall"} and sol["below"] == {cell: marks[cell]["below"]}
+    rec = vt.records(sol)[cell]
+    assert rec[0] == "fill" and rec[5] & vt.THIN_DECK and not rec[5] & vt.BLOCK_WALLS, rec
+    assert rec[1] == top - L, rec
+    relief = {"layouts": {}, "variants": [], "cuts": {}, "edges": []}
+    vt.merge(sol, relief)
+    lay = vrf.layout_index(lid)
+    key = (lay,) + tuple(c.src[cell][1:])
+    tile, wall, grid = relief["under"][key]
+    base = relief["layouts"][lay]["base"]
+    assert [round(v) for v in grid[:5]] == [top - base] * 5 and [round(v) for v in grid[20:]] == [top - L - base] * 5
+    back = vrf.parse(vrf.pack(relief))
+    assert back["under"][key] == [tile, wall, [int(round(v)) for v in grid]], back["under"][key]
+    # merged again without the mark, the layer is gone
+    vt.merge(vt.finish(auto, {}), relief)
+    assert key not in relief["under"]
+    try:
+        vt.load_marks(c, {"layouts": {lid: {"terraces": {"10,17": {"below": {"level": 0, "piece": "Q"}}}}}}, zero=zero)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("an unknown piece below was taken")
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_"):

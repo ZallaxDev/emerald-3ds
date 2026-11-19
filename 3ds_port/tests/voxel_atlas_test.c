@@ -34,6 +34,15 @@ bool VoxelRelief_CutVariant(unsigned i, unsigned *layout, unsigned *metatile, co
     if (!sDerived || i >= VOXEL_CUTS) return false;
     *layout = 1; *metatile = i; *rows = cut; return true;
 }
+/* The fake pair draws no tall grass (voxel_tree.h): its tuft ids are absent.
+ * TuftClear is tested on its own (Tufts). */
+const struct Tileset gTileset_General;
+bool VoxelTree_TuftSource(unsigned i, const void **secondaryTileset, unsigned *metatile,
+                          unsigned *floor)
+{
+    (void)i; (void)secondaryTileset; (void)metatile; (void)floor;
+    return false;
+}
 /* What voxel_relief.c gives a cut whose rock has no 45-degree side: its
  * background clear as drawn, and no pixel kept for the polygon's edge. */
 /* sFringe: pixel (1, 0) of the background kept, with the colour of (1, 1). */
@@ -638,7 +647,7 @@ static void DerivedPages(void)
     do
     {
         while (!VoxelAtlas_JobStep(&job, 17)) {}
-        assert(job.ok && !job.map.overflowed && job.map.used == VOXEL_METATILE_IDS);
+        assert(job.ok && !job.map.overflowed && job.map.used == VOXEL_TUFT_FIRST);
         assert(job.map.slotOf[1023] == 1);
         unsigned expected = job.map.used - job.page * VOXEL_SOLID_BASE;
         if (expected > VOXEL_SOLID_BASE) expected = VOXEL_SOLID_BASE;
@@ -646,7 +655,9 @@ static void DerivedPages(void)
         struct AtlasSource src = {.primaryTiles = live, .secondaryTiles = live + sizeof(sPrimaryTiles),
             .primaryPalettes = sPrimaryPalettes, .secondaryPalettes = sSecondaryPalettes};
         memset(sOld, 0, sizeof(sOld)); FillSolidSlots(sOld);
-        for (unsigned m = 0; m < VOXEL_METATILE_IDS; ++m)
+        for (unsigned m = VOXEL_TUFT_FIRST; m < VOXEL_METATILE_IDS; ++m)
+            assert(job.map.slotOf[m] == 0); /* never asked for */
+        for (unsigned m = 0; m < VOXEL_TUFT_FIRST; ++m)
         {
             unsigned slot = job.map.slotOf[m] - 1u;
             assert(slot / VOXEL_ATLAS_MAX_SLOTS < VOXEL_ATLAS_PAGES);
@@ -715,6 +726,67 @@ static void DerivedPages(void)
         assert(VoxelAnim_AddAtlas(&sPass, 0, &inst, false, &one, live) && sPass.targets == 1);
     }
     sDerived = false;
+}
+
+/* A tuft's clear pixels (TuftClear): the ground reached from the tile's
+ * edge through the colours of the grass it grows on. A ring of leaf round
+ * one pixel of that colour keeps it; a leaf touching the edge is not clear;
+ * the corner cut off by a diagonal of leaf (no way in by a side) is kept. */
+static void Tufts(void)
+{
+    static uint8_t tiles[512 * 32];
+    static uint16_t metatiles[1024 * 8], palettes[16 * 16];
+    struct AtlasSource src = {.primaryTiles = tiles, .secondaryTiles = tiles,
+        .primaryMetatiles = metatiles, .secondaryMetatiles = metatiles,
+        .primaryPalettes = palettes, .secondaryPalettes = palettes,
+        .primaryCount = 512, .secondaryCount = 512};
+    uint16_t clear[16], want[16];
+    static const char *const kShape[8] = {
+        "gggggggg",     /* tile 1, the tall grass's top left quarter: g the */
+        "gLLLgggg",     /* ground's colour, L leaf, h the ground's other    */
+        "gLhLgggg",     /* colour (a highlight) closed in by the leaf       */
+        "gLLLgggg",
+        "gggggggg",
+        "ggggggLg",
+        "gggggLgg",     /* a diagonal to the corner: the two pixels past it */
+        "LLLLLggg",     /* (6,7) (7,7)... are reached round its end         */
+    };
+
+    InitMorton();
+    for (unsigned c = 1; c < 16; ++c)
+        palettes[c] = (uint16_t)(c * 0x0421u);
+    /* tile 2: all ground (colour 1), with one highlight (colour 3) */
+    memset(tiles + 2 * 32, 0x11, 32);
+    tiles[2 * 32] = 0x13;
+    /* tile 1 from the picture: g = 1, L = 2, h = 3 */
+    for (unsigned y = 0; y < 8; ++y)
+        for (unsigned x = 0; x < 8; ++x)
+        {
+            unsigned c = kShape[y][x] == 'g' ? 1u : kShape[y][x] == 'L' ? 2u : 3u;
+
+            tiles[1 * 32 + y * 4 + x / 2] |= (uint8_t)(c << ((x & 1) * 4));
+        }
+    for (unsigned q = 0; q < 4; ++q)
+    {
+        metatiles[VOXEL_TUFT_SHAPE * 8 + q] = q == 0 ? 1 : 2;
+        metatiles[VOXEL_TUFT_SHAPE_FLOOR * 8 + q] = 2;
+    }
+    BuildColorTable(&src);
+    TuftClear(&src, clear);
+    for (unsigned y = 0; y < 16; ++y)
+    {
+        want[y] = 0xFFFF;
+        for (unsigned x = 0; x < 8 && y < 8; ++x)
+            if (kShape[y][x] == 'L' || (x == 2 && y == 2))
+                want[y] &= (uint16_t)~(1u << x);
+    }
+    for (unsigned y = 0; y < 16; ++y)
+        assert(clear[y] == want[y]);
+    /* a pair with neither tile: nothing clear */
+    src.primaryMetatiles = NULL;
+    TuftClear(&src, clear);
+    for (unsigned y = 0; y < 16; ++y)
+        assert(clear[y] == 0);
 }
 
 /* A cut tile as its kept plan draws it, met once and again: its clear
@@ -868,6 +940,7 @@ int main(void)
     AnimatedTiles();
     PagedAtlases();
     DerivedPages();
+    Tufts();
     UnchangedExtension();
     StablePlans();
     printf("PASS voxel atlas: block composer equals per-texel reference (%u black), "

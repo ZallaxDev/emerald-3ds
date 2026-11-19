@@ -17,6 +17,7 @@
 #include "voxel_building.h"
 #include "voxel_grade.h"
 #include "voxel_relief.h"
+#include "voxel_tree.h"
 
 /* Largest 4bpp tileset payload: 512 tiles of 32 bytes, doubled for headroom
  * because a compressed payload only declares its size at run time. */
@@ -24,6 +25,8 @@
 
 #define TILES_PER_TILESET 512u
 #define SUBTILE_PX 8u
+
+extern const struct Tileset gTileset_General;
 
 /* In texels; see VoxelAtlas_SlotUV. */
 #define VOXEL_ATLAS_EDGE_INSET (1.0f / 32.0f)
@@ -204,12 +207,37 @@ static bool CutSourceOf(const struct Tileset *primary, const struct Tileset *sec
         && sCutTileset[i] == (*metatile < NUM_METATILES_IN_PRIMARY ? primary : secondary);
 }
 
+/* What a tuft's `cut` is (AtlasSourceOf): no cut tile's rows - its clear
+ * pixels are read off the drawing (TuftClear). As rows, nothing is clear. */
+static const uint8_t sTuftCut[32];
+_Static_assert(VOXEL_TUFTS == VOXEL_TUFT_COUNT, "one atlas id a tuft");
+
+/* A tuft (voxel_tree.h): its tall grass tile, on the pairs that draw it -
+ * the General's with any secondary tileset, another's with its own. */
+static bool TuftSourceOf(const struct Tileset *primary, const struct Tileset *secondary,
+                         unsigned i, unsigned *metatile, unsigned *floor)
+{
+    const void *of;
+
+    return primary == &gTileset_General
+        && VoxelTree_TuftSource(i, &of, metatile, floor)
+        && (of == NULL || of == (const void *)secondary);
+}
+
 static bool AtlasSourceOf(const struct Tileset *primary, const struct Tileset *secondary,
                           unsigned id, unsigned *metatile, unsigned *hidden, const uint8_t **cut)
 {
     unsigned layoutId, quarters, i = id - VOXEL_METATILE_REAL;
 
     *cut = NULL;
+    if (id >= VOXEL_TUFT_FIRST)
+    {
+        unsigned floor;
+
+        *hidden = 0;
+        *cut = sTuftCut;
+        return TuftSourceOf(primary, secondary, id - VOXEL_TUFT_FIRST, metatile, &floor);
+    }
     if (id < VOXEL_METATILE_REAL)
     {
         *metatile = id;
@@ -394,6 +422,68 @@ static const struct CutPlan *CutPlanOf(const uint8_t *cut)
     return plan;
 }
 
+static bool ComposeAt(const struct AtlasSource *src, const uint16_t *entries,
+                      uint16_t *dest, unsigned baseX, unsigned baseY, unsigned width,
+                      unsigned hidden, const uint8_t *cut, uint16_t *mean);
+
+/*
+ * The pixels of a tall grass tile that are the ground it grows on, a bit
+ * each: clear in its tuft (voxel_tree.h). Read off the General's tall grass
+ * and the grass it grows on, which every tuft is drawn after: the ground is
+ * what is reached from the tile's edge through the grass's own colours. The
+ * leaves' highlights are one of those colours too, but closed in by their
+ * outline, and the ground seen between the leaves stays with the tuft.
+ * Nothing clear where the pair has neither tile.
+ */
+static void TuftClear(const struct AtlasSource *src, uint16_t clear[16])
+{
+    const uint16_t *shape = MetatileEntries(src, VOXEL_TUFT_SHAPE);
+    const uint16_t *floor = MetatileEntries(src, VOXEL_TUFT_SHAPE_FLOOR);
+    uint16_t art[2][VOXEL_ATLAS_SLOT * VOXEL_ATLAS_SLOT];
+    uint8_t stack[VOXEL_ATLAS_SLOT * VOXEL_ATLAS_SLOT];
+    uint16_t queued[16] = {0};
+    unsigned top = 0;
+
+#define ART_TEXEL(x, y) ((((y) >> 3) * 2u + ((x) >> 3)) * 64u + sMorton[((y) & 7u) * 8u + ((x) & 7u)])
+    memset(clear, 0, 16 * sizeof(clear[0]));
+    if (shape == NULL || floor == NULL)
+        return;
+    memset(art, 0, sizeof(art));
+    ComposeAt(src, shape, art[0], 0, 0, VOXEL_ATLAS_SLOT, 0, NULL, NULL);
+    ComposeAt(src, floor, art[1], 0, 0, VOXEL_ATLAS_SLOT, 0, NULL, NULL);
+    /* from the tile's edge; a pixel is queued once, so never past the stack */
+    for (unsigned i = 0; i < 256; ++i)
+        if ((i & 15u) == 0 || (i & 15u) == 15 || i < 16 || i >= 240)
+        {
+            stack[top++] = (uint8_t)i;
+            queued[i >> 4] |= (uint16_t)(1u << (i & 15u));
+        }
+    while (top > 0)
+    {
+        static const int8_t kSide[4][2] = { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } };
+        const unsigned at = stack[--top], x = at & 15u, y = at >> 4;
+        const uint16_t texel = art[0][ART_TEXEL(x, y)];
+        bool ground = false;
+
+        for (unsigned i = 0; i < 256 && !ground; ++i)
+            ground = art[1][i] == texel;
+        if (!ground)
+            continue;
+        clear[y] |= (uint16_t)(1u << x);
+        for (unsigned k = 0; k < 4; ++k)
+        {
+            const unsigned nx = x + (unsigned)kSide[k][0], ny = y + (unsigned)kSide[k][1];
+
+            if (nx < 16 && ny < 16 && !((queued[ny] >> nx) & 1u))
+            {
+                queued[ny] |= (uint16_t)(1u << nx);
+                stack[top++] = (uint8_t)(ny * 16 + nx);
+            }
+        }
+    }
+#undef ART_TEXEL
+}
+
 /*
  * Composes one metatile straight into its packed slot of the destination,
  * less the upper-layer quarters in `hidden`. Returns whether everything it
@@ -419,7 +509,23 @@ static bool ComposeAt(const struct AtlasSource *src, const uint16_t *entries,
     /* a cut tile's background is clear: the alpha test leaves the ground
      * drawn flat under it to show (less what its straight diagonals take
      * in: VoxelRelief_CutClear) */
-    if (cut != NULL)
+    if (cut == sTuftCut)
+    {
+        uint16_t *origin = dest + CtrVideo_Texel(baseX, baseY, width);
+        unsigned blocks = width / SUBTILE_PX;
+        uint16_t clear[16];
+
+        /* a tuft: the ground it grows on clear, laid flat under its cards */
+        TuftClear(src, clear);
+        for (unsigned y = 0; y < 16; ++y)
+            for (unsigned bits = clear[y]; bits != 0; bits &= bits - 1u)
+            {
+                unsigned x = (unsigned)__builtin_ctz(bits);
+
+                origin[(((y >> 3) * blocks + (x >> 3)) * 64u) + sMorton[(y & 7u) * 8u + (x & 7u)]] &= (uint16_t)~1u;
+            }
+    }
+    else if (cut != NULL)
     {
         const struct CutPlan *plan = CutPlanOf(cut);
         uint16_t *origin = dest + CtrVideo_Texel(baseX, baseY, width);
@@ -795,6 +901,16 @@ bool VoxelAtlas_JobBegin(VoxelAtlasJob *job, const VoxelMapInstance *inst, uint1
 
         if (AtlasSourceOf(job->primary, job->secondary, id, &m, &hidden, &cut) && m < VOXEL_METATILE_REAL && job->used[m])
             job->used[id] = job->used[m];
+    }
+    /* and the ground a tuft grows on, which no cell of the map need name */
+    for (unsigned i = 0; i < VOXEL_TUFTS; ++i)
+    {
+        unsigned m, floor;
+
+        if (job->used[VOXEL_TUFT_FIRST + i]
+         && TuftSourceOf(job->primary, job->secondary, i, &m, &floor)
+         && job->used[floor] < job->used[VOXEL_TUFT_FIRST + i])
+            job->used[floor] = job->used[VOXEL_TUFT_FIRST + i];
     }
     /* An older in-flight chunk can request an extension after all of its
      * materials were already published. Do not decode both tilesets and

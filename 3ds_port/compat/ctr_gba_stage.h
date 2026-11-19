@@ -19,6 +19,11 @@
  * RenderEye). */
 void CtrStageZoomed_SetVBlankCallback(void (*callback)(void));
 #define SetVBlankCallback CtrStageZoomed_SetVBlankCallback
+#elif defined(CTR_STAGE_COVERED)
+/* The cable car: scaled up until its picture covers the whole top screen, the
+ * rows that do not fit cut off, so no margin is invented (3ds_video.c). */
+void CtrStageCovered_SetVBlankCallback(void (*callback)(void));
+#define SetVBlankCallback CtrStageCovered_SetVBlankCallback
 #elif defined(CTR_STAGE_FADED)
 /* The cable car: its scrolling layers too fade into the margins, like the
  * intro's still ones (3ds_video.c, DrawStageBg). */
