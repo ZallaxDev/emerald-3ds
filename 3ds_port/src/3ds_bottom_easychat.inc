@@ -3,9 +3,16 @@
 /*
  * The phrase on top as a grid of its words; under it, by what the game is
  * asking: its title and a hint; the groups (all of them at once) or the
- * alphabet; or the words of the group opened, twelve at a time. Every
- * button is a tap the game takes as the keys it reads (CtrEasyChat_Act):
- * the cursor on the top screen moves as it would for the D-pad.
+ * alphabet; or the words of the group opened, twelve at a time (the page is
+ * the view's own, CtrEasyChat_Page); or, for the Quiz Lady's question, its
+ * title and the two buttons the game reads, A and B. Every button is a tap the
+ * game takes as the keys it reads (CtrEasyChat_Act): the cursor on the top
+ * screen moves as it would for the D-pad. A prompt's YES / NO are the game's
+ * own menu, which the bottom screen draws in place of this.
+ *
+ * The hit ids stay apart from each other: slots 0-8, groups 0x10-0x25, the
+ * side buttons 0x38-0x3D, words 0x50-0x5B, the footer 0x60-0x63, letters
+ * 0x70-0x8F (row * 8 + column). At most 31 are in the table at once.
  */
 enum
 {
@@ -25,7 +32,7 @@ enum
 #define EC_PHRASE_Y 16
 #define EC_FOOT_Y 202
 #define EC_FOOT_H 20
-#define EC_SHOWN 12
+#define EC_SHOWN CTR_EC_PAGE
 #define EC_WORD_COLS 3
 
 static int EcPhraseHeight(const struct CtrEasyChatView *v)
@@ -121,17 +128,15 @@ static void DrawEcFooter(const ViewState *s)
 {
     const struct CtrEasyChatView *v = &s->ec;
     int n = v->footer, gap = 4, w = (304 - (n - 1) * gap) / n;
-    const u8 *label[4] = {
-        Ascii(CTR_TEXT("DEL. ALL", "BORRAR", "TOUT EFF.", "CANC. TUTTO", "LIMPAR", "ALLES LÖSCH.", "ぜんぶけす")),
-        gText_Cancel2,
-        Ascii(CTR_TEXT("OK", "ACEPTAR", "OK", "OK", "OK", "OK", "けってい")),
-        Ascii(CTR_TEXT("QUIZ", "QUIZ", "QUIZ", "QUIZ", "QUIZ", "QUIZ", "クイズ")),
-    };
     Rgb colour[4] = {{232, 96, 72}, {252, 245, 234}, {88, 192, 128}, {88, 192, 128}};
 
+    /* The labels are the game's own, whatever the language. */
     for (int i = 0; i < n; ++i)
-        EcButton(s, 8 + i * (w + gap), EC_FOOT_Y, w, EC_FOOT_H, EC_HIT_FOOTER + i, colour[i], label[i],
-                 v->mainRow == v->rows && v->mainColumn == i);
+    {
+        if (v->footerText[i])
+            EcButton(s, 8 + i * (w + gap), EC_FOOT_Y, w, EC_FOOT_H, EC_HIT_FOOTER + i, colour[i], v->footerText[i],
+                     v->mainRow == v->rows && v->mainColumn == i);
+    }
 }
 
 static void DrawEcGroups(const ViewState *s, int y0)
@@ -158,10 +163,11 @@ static void DrawEcAlphabet(const ViewState *s, int y0)
         u8 tokens[8][12];
         int n = EcLetterRow(r, tokens);
 
-        for (int c = 0; c < n; ++c)
+        for (int c = 0; c < n && c < 7; ++c)
         {
+            /* Seven columns of 40 pixels; the first row's last is "others", out to the plate's edge (312). */
             bool8 others = c == 6 && r == 0;
-            int w = others ? 82 : 40, x = 8 + c * 43;
+            int x = 8 + c * 43, w = others ? 312 - x : 40;
 
             EcButton(s, x, y0 + r * step, w, h, EC_HIT_LETTER + r * 8 + c, sCreamPlate, tokens[c],
                      v->keyColumn == c && v->keyRow == r);
@@ -183,7 +189,7 @@ static void DrawEcWords(const ViewState *s, int y0)
     EcButton(s, 248, y0, 64, 16, EC_HIT_PAGE_DOWN, sCreamPlate, Ascii("v"), FALSE);
     for (int i = 0; i < EC_SHOWN; ++i)
     {
-        int index = sEcFirst + i, x = 8 + (i % EC_WORD_COLS) * 102, y = y0 + 20 + (i / EC_WORD_COLS) * step;
+        int index = v->first + i, x = 8 + (i % EC_WORD_COLS) * 102, y = y0 + 20 + (i / EC_WORD_COLS) * step;
 
         if (index >= v->numWords)
             break;
@@ -200,7 +206,16 @@ static void DrawEasyChat(const ViewState *s)
 
     NameBackdrop();
     DrawEcPhrase(s, v->state == CTR_EC_MAIN, ph);
-    if (v->state == CTR_EC_MAIN)
+    if (v->state == CTR_EC_QUIZ)
+    {
+        int oy = Plate(8, y0, 304, 26, sEmerald, PLATE_STATE_NORMAL);
+
+        if (v->title)
+            TextIn(v->title, 8, oy, 304, 18, &sNormal, 'c', STYLE_WHITE, 6);
+        EcButton(s, 8, EC_FOOT_Y, 146, EC_FOOT_H, EC_HIT_BACK, cream, gText_Cancel5, FALSE);
+        EcButton(s, 158, EC_FOOT_Y, 154, EC_FOOT_H, EC_HIT_MESSAGE, green, gText_Answer, FALSE);
+    }
+    else if (v->state == CTR_EC_MAIN)
     {
         int oy = Plate(8, y0, 304, 40, sEmerald, PLATE_STATE_NORMAL);
 
@@ -249,7 +264,7 @@ static void EasyChatTap(u8 id)
     else if (id >= EC_HIT_LETTER && id < EC_HIT_LETTER + 32)
         CtrEasyChat_Act(CTR_EC_ACT_LETTER, id - EC_HIT_LETTER);
     else if (id >= EC_HIT_WORD && id < EC_HIT_WORD + EC_SHOWN)
-        CtrEasyChat_Act(CTR_EC_ACT_WORD, sEcFirst + (id - EC_HIT_WORD));
+        CtrEasyChat_Act(CTR_EC_ACT_WORD, v->first + (id - EC_HIT_WORD));
     else if (id >= EC_HIT_FOOTER && id < EC_HIT_FOOTER + 4)
         CtrEasyChat_Act(CTR_EC_ACT_FOOTER, id - EC_HIT_FOOTER);
     else if (id == EC_HIT_MODE)
@@ -257,11 +272,11 @@ static void EasyChatTap(u8 id)
     else if (id == EC_HIT_DELETE)
         CtrEasyChat_Act(CTR_EC_ACT_KB_DELETE, 0);
     else if (id == EC_HIT_BACK)
-        CtrEasyChat_Act(CTR_EC_ACT_BACK, 0);
+        CtrEasyChat_Act(CTR_EC_ACT_BACK, v->state);
     else if (id == EC_HIT_MESSAGE)
-        CtrEasyChat_Act(CTR_EC_ACT_MESSAGE, 0);
+        CtrEasyChat_Act(CTR_EC_ACT_MESSAGE, v->state);
     else if (id == EC_HIT_PAGE_UP)
-        sEcFirst = sEcFirst >= EC_SHOWN ? sEcFirst - EC_SHOWN : 0;
-    else if (id == EC_HIT_PAGE_DOWN && sEcFirst + EC_SHOWN < v->numWords)
-        sEcFirst += EC_SHOWN;
+        CtrEasyChat_Page(-1);
+    else if (id == EC_HIT_PAGE_DOWN)
+        CtrEasyChat_Page(1);
 }

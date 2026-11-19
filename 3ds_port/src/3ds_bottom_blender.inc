@@ -6,7 +6,9 @@
  * missed), the revolutions now and the best so far, how far the Pokéblock has
  * got, and a button as large as the screen leaves, which the game reads as A.
  * The figures are the game's own (CtrBlenderView); the button is held as long
- * as it is touched, like the controller's (HIT_PAD_A).
+ * as it is touched, like the controller's (HIT_PAD_A). It is there only while
+ * the game takes A (CTR_BLENDER_PLAY); with the berries going in and the
+ * results (CTR_BLENDER_WATCH) the panel keeps the figures and nothing to tap.
  */
 #define BLEND_PLAYER_Y 16
 #define BLEND_PLAYER_H 46
@@ -51,18 +53,27 @@ static void DrawBlender(const ViewState *s)
     }
     /* The turning: now, and the best so far. */
     oy = Plate(8, BLEND_GAUGE_Y, 304, 30, sCreamPlate, PLATE_STATE_NORMAL);
-    scale = v->maxRpm > 100 ? v->maxRpm : 100;
-    FillRect(14, oy + 18, 292, 6, PackRgb(208, 200, 188));
-    FillRect(14, oy + 18, 292 * (v->rpm > scale ? scale : v->rpm) / scale, 6, PackRgb(88, 192, 128));
-    FillRect(14 + 292 * (v->maxRpm > scale ? scale : v->maxRpm) / scale, oy + 16, 2, 10, PackRgb(216, 88, 80));
-    StyledStr(&sNormal, BlendNumber(v->rpm), 14, oy + 2, STYLE_INK);
-    StyledRight(&sSmall, BlendNumber(v->maxRpm), 304, oy + 4, STYLE_GRAY);
+    if (v->state == CTR_BLENDER_PLAY)
+    {
+        scale = v->maxRpm > 100 ? v->maxRpm : 100;
+        FillRect(14, oy + 18, 292, 6, PackRgb(208, 200, 188));
+        FillRect(14, oy + 18, 292 * (v->rpm > scale ? scale : v->rpm) / scale, 6, PackRgb(88, 192, 128));
+        FillRect(14 + 292 * (v->maxRpm > scale ? scale : v->maxRpm) / scale, oy + 16, 2, 10, PackRgb(216, 88, 80));
+        StyledStr(&sNormal, BlendNumber(v->rpm), 14, oy + 2, STYLE_INK);
+        StyledRight(&sSmall, BlendNumber(v->maxRpm), 304, oy + 4, STYLE_GRAY);
+    }
+    else
+    {
+        StyledStr(&sNormal, BlendNumber(v->maxRpm), 14, oy + 6, STYLE_INK);
+    }
     /* How much of the Pokéblock there is. */
     FillRect(8, BLEND_GAUGE_Y + 36, 304, 6, PackRgb(208, 200, 188));
+    /* In steps of about six pixels (CtrBlenderView). */
     if (v->progressMax)
         FillRect(8, BLEND_GAUGE_Y + 36, 304 * (v->progress > v->progressMax ? v->progressMax : v->progress) / v->progressMax, 6,
                  PackRgb(255, 184, 72));
     /* The button. */
+    if (v->state == CTR_BLENDER_PLAY)
     {
         bool8 pressed = s->pressed == HIT_PAD_A;
 
