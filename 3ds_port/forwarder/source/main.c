@@ -31,10 +31,16 @@ static u32 sArgv[0x400 / 4];
 
 static Result HbldrSetTarget(Handle h, const char *path)
 {
+    size_t length = strlen(path);
+    if (length >= sizeof(sTarget))
+        return -1;
+
+    size_t size = length + 1;
+    memcpy(sTarget, path, size);
+    memset(sTarget + size, 0, sizeof(sTarget) - size);
     u32 *cmd = getThreadCommandBuffer();
-    strncpy(sTarget, path, sizeof(sTarget) - 1);
     cmd[0] = IPC_MakeHeader(2, 0, 2);
-    cmd[1] = IPC_Desc_StaticBuffer(strlen(sTarget) + 1, 0);
+    cmd[1] = IPC_Desc_StaticBuffer(size, 0);
     cmd[2] = (u32)sTarget;
     Result res = svcSendSyncRequest(h);
     return R_FAILED(res) ? res : (Result)cmd[1];
@@ -43,11 +49,22 @@ static Result HbldrSetTarget(Handle h, const char *path)
 // argv[0] is the game's path (its RomFS), argv[1] the title to restore.
 static Result HbldrSetArgv(Handle h, const char *argv0, u64 restoreTid)
 {
-    u32 *cmd = getThreadCommandBuffer();
-    char *p = (char *)&sArgv[1];
+    const size_t capacity = sizeof(sArgv) - sizeof(sArgv[0]);
+    size_t pathLength = strlen(argv0);
+    char *args = (char *)&sArgv[1];
+
+    if (pathLength >= capacity)
+        return -1;
+    size_t pathSize = pathLength + 1;
+    size_t remaining = capacity - pathSize;
+    int written = snprintf(args + pathSize, remaining, RESTORE_ARG "%016llX",
+                           (unsigned long long)restoreTid);
+    if (written < 0 || (size_t)written >= remaining)
+        return -1;
+
+    memcpy(args, argv0, pathSize);
     sArgv[0] = 2;
-    p += sprintf(p, "%s", argv0) + 1;
-    sprintf(p, RESTORE_ARG "%016llX", (unsigned long long)restoreTid);
+    u32 *cmd = getThreadCommandBuffer();
     cmd[0] = IPC_MakeHeader(3, 0, 2);
     cmd[1] = IPC_Desc_StaticBuffer(sizeof(sArgv), 1);
     cmd[2] = (u32)sArgv;

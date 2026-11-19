@@ -553,6 +553,8 @@ static void PickMapCell(int x, int y)
 #define ENC_H MAP_WIN_H
 #define ENC_TITLE_Y (ENC_Y + 4)
 #define ENC_TITLE_H 18
+#define ENC_FILTER_X (ENC_X + 4 + 88)
+#define ENC_FILTER_W 76
 #define ENC_ROW_Y (ENC_Y + 25)
 #define ENC_ROW_H 22
 #define ENC_COL_CAUGHT (ENC_X + 38)
@@ -580,6 +582,9 @@ static void DrawEncounters(const ViewState *s)
     static const char *const none = CTR_TEXT("NO ENCOUNTER TABLE", "SIN TABLA DE ENCUENTROS", "AUCUNE TABLE ICI",
                                              "NESSUNA TABELLA", "SEM TABELA DE ENCONTROS", "KEINE BEGEGNUNGEN", "でてくる ポケモンは いない");
     static const char *const level = CTR_TEXT("LV", "NV", "N", "LV", "NV", "LV", "Lv");
+    static const char *const complete = CTR_TEXT("ALL CAUGHT", "TODOS CAPT.", "TOUS CAPT.", "TUTTI CATT.",
+                                                 "TODOS CAPT.", "ALLE GEF.", "ぜんぶ ゲット");
+    static const char *const caught = CTR_TEXT("CAUGHT", "CAPT.", "CAPT.", "CATT.", "CAPT.", "GEF.", "ゲット");
     const u8 *ball = CtrPokedex_CaughtBallGfx();
     char text[24];
     int oy, saved[4];
@@ -591,9 +596,21 @@ static void DrawEncounters(const ViewState *s)
         return;
     }
     oy = Plate(ENC_X + 4, ENC_TITLE_Y, ENC_W - 8, ENC_TITLE_H, sEmerald, PLATE_STATE_NORMAL);
-    TextIn(Ascii(methods[s->encMethod]), ENC_X + 4, oy, ENC_W - 8, ENC_TITLE_H, &sSmall, 'l', STYLE_WHITE, 6);
+    TextIn(Ascii(methods[s->encMethod]), ENC_X + 4, oy, 88, ENC_TITLE_H, &sSmall, 'l', STYLE_WHITE, 6);
+    if (s->encTotal)
+    {
+        snprintf(text, sizeof(text), "%u/%u %s", (unsigned)s->encCaught, (unsigned)s->encTotal, caught);
+        bool8 pressed = s->pressed == HIT_MAP_FILTER;
+        int fy = Plate(ENC_FILTER_X, ENC_TITLE_Y, ENC_FILTER_W, ENC_TITLE_H,
+                       s->encUncaught ? sFieldBlue : sCardGreen,
+                       pressed ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+
+        TextIn(Ascii(text), ENC_FILTER_X, fy, ENC_FILTER_W, ENC_TITLE_H, &sSmall, 'c', STYLE_WHITE, 2);
+    }
     snprintf(text, sizeof(text), "%u/%u", s->encPage + 1u, (unsigned)s->encPages);
     TextIn(Ascii(text), ENC_X + 4, oy, ENC_W - 8, ENC_TITLE_H, &sSmall, 'r', STYLE_WHITE, 6);
+    if (s->encUncaught && s->encTotal && !s->encCount)
+        TextIn(Ascii(complete), ENC_X, ENC_ROW_Y, ENC_W, ENC_ROW_H, &sSmall, 'c', STYLE_GREEN, 6);
     for (int i = 0; i < s->encCount && i < ENC_SHOWN; ++i)
     {
         const EncRow *row = &s->enc[i];
@@ -655,6 +672,9 @@ static void DrawRegionMap(const ViewState *s)
         DrawEncounters(s);
         if (s->encPages > 1)
             AddHit(ENC_X, ENC_Y, ENC_W, ENC_H, HIT_MAP_PAGE);
+        /* HitTest checks the most recently added region first. */
+        if (s->encTotal)
+            AddHit(ENC_FILTER_X, ENC_TITLE_Y, ENC_FILTER_W, ENC_TITLE_H, HIT_MAP_FILTER);
     }
     else
     {
