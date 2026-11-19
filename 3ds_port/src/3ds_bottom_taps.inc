@@ -166,6 +166,12 @@ static void MapExtrasTap(u8 id)
         sPickMapsec = MAPSEC_NONE;
         PlaySE(SE_SELECT);
     }
+    else if (id == HIT_MAP_FILTER && sShown.encView && sShown.encTotal)
+    {
+        sEncUncaught = !sShown.encUncaught;
+        sEncPage = sShown.encTogglePage;
+        PlaySE(SE_SELECT);
+    }
     else if (id == HIT_MAP_PAGE && sShown.encView && sShown.encPages > 1)
     {
         sEncPage = (sShown.encPage + 1) % sShown.encPages;

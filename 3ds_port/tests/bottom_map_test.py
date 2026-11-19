@@ -224,7 +224,7 @@ static int CtrExtras_Get(const char *key) {
 static CtrClockStoreStatus sStatus; static unsigned sSerial;
 CtrClockStoreStatus CtrClockStore_Status(void) {return sStatus;}
 unsigned CtrClockStore_LoadSerial(void) {return sSerial;}
-static bool8 sEncView; static u8 sEncPage; static unsigned sClockNoticeSerial;
+static bool8 sEncView, sEncUncaught; static u8 sEncPage; static unsigned sClockNoticeSerial;
 static u8 sPickMapsec;
 #define SE_SELECT 1
 static unsigned selectSounds;
@@ -302,11 +302,26 @@ static void TestTables(void) {
     assert(s.enc[2].species==7&&s.enc[2].percent==5&&s.enc[2].minLevel==20&&s.enc[2].maxLevel==45);
     /* More species than a page holds: the method's rows go on to its next page,
      * then the next method. Every row once, in slot order. */
+    sSeen[108]=sCaught[108]=1; /* A caught species on the second grass page. */
     sTimed=false;sSave1.location.mapNum=3;sEncPage=0;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
     assert(s.encPages==3&&s.encMethod==ENC_LAND&&s.encCount==ENC_SHOWN&&s.enc[0].species==1&&s.enc[5].species==6);
+    assert(s.encTotal==9&&s.encCaught==1);
     assert(s.enc[0].percent==24&&s.enc[1].percent==21&&s.enc[2].percent==11);
     sEncPage=1;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
     assert(s.encPage==1&&s.encMethod==ENC_LAND&&s.encCount==3&&s.enc[0].species==7&&s.enc[2].species==9);
+    assert(s.encTotal==9&&s.encCaught==1&&s.enc[1].seen==ENC_CAUGHT);
+    sEncUncaught=1;sEncPage=1;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
+    assert(s.encUncaught&&s.encTotal==9&&s.encCaught==1&&s.encCount==2);
+    assert(s.enc[0].species==7&&s.enc[1].species==9&&s.enc[0].seen==ENC_UNSEEN);
+    sEncPage=2;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
+    assert(s.encMethod==ENC_WATER&&s.encTogglePage==2);
+    for(int i=101;i<=109;++i)sSeen[i]=sCaught[i]=1;
+    sEncPage=0;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
+    assert(s.encMethod==ENC_LAND&&s.encPages==2&&s.encTotal==9&&s.encCaught==9&&s.encCount==0);
+    sEncPage=1;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
+    assert(s.encMethod==ENC_WATER&&s.encTogglePage==2);
+    for(int i=101;i<=109;++i)sSeen[i]=sCaught[i]=0;
+    sEncUncaught=0;
     sEncPage=2;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
     assert(s.encMethod==ENC_WATER&&s.encCount==3);
     sEncPage=3;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
@@ -386,12 +401,16 @@ static void TestInput(void) {
     sShown.encPages=1;sEncPage=0;MapExtrasTap(HIT_MAP_PAGE);assert(sEncPage==0);
     sShown.encPages=0;MapExtrasTap(HIT_MAP_PAGE);assert(sEncPage==0);
     sShown.encPages=4;sShown.encView=0;MapExtrasTap(HIT_MAP_PAGE);assert(sEncPage==0);
+    sShown.encView=1;sShown.encTotal=5;sShown.encTogglePage=2;
+    MapExtrasTap(HIT_MAP_FILTER);assert(sEncUncaught&&sEncPage==2);
+    sShown.encUncaught=1;sShown.encTogglePage=3;
+    MapExtrasTap(HIT_MAP_FILTER);assert(!sEncUncaught&&sEncPage==3);
     sShown.encView=1;MapExtrasTap(HIT_MAP_INFO);assert(!sEncView&&sEncPage==0);
     sShown.clockNotice=0;sSerial=20;sClockNoticeSerial=5;
     MapExtrasTap(HIT_CLOCK_NOTICE);assert(sClockNoticeSerial==5);
     sShown.clockNotice=1;MapExtrasTap(HIT_CLOCK_NOTICE);assert(sClockNoticeSerial==20);
     MapExtrasTap(HIT_MAP);assert(sClockNoticeSerial==20);
-    assert(selectSounds==4);
+    assert(selectSounds==6);
 }
 /* The dock: inside the screen, a gap between buttons, the same width each. */
 static void TestDock(void) {
