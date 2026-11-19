@@ -111,7 +111,18 @@ jobs:
           for kind in baseline candidate; do
             artifact_id="$BASELINE_ID"
             if test "$kind" = candidate; then artifact_id="$CANDIDATE_ID"; fi
-            gh api "/repos/$REPOSITORY/actions/artifacts/$artifact_id/zip" > "$RUNNER_TEMP/$kind.zip"
+            error_log="$RUNNER_TEMP/$kind-download.log"
+            for attempt in 1 2 3 4 5; do
+              if gh api "/repos/$REPOSITORY/actions/artifacts/$artifact_id/zip" > "$RUNNER_TEMP/$kind.zip" 2>"$error_log"; then
+                break
+              fi
+              if ! grep -Fq '(HTTP 404)' "$error_log" || test "$attempt" -eq 5; then
+                cat "$error_log" >&2
+                exit 1
+              fi
+              echo "Artifact $artifact_id is not available yet (attempt $attempt/5)"
+              sleep "$((attempt * 2))"
+            done
           done
           python - <<'VERIFY'
           import hashlib, os, pathlib, zipfile
@@ -222,7 +233,18 @@ jobs:
           for kind in baseline candidate; do
             artifact_id="$BASELINE_ID"
             if test "$kind" = candidate; then artifact_id="$CANDIDATE_ID"; fi
-            gh api "/repos/$REPOSITORY/actions/artifacts/$artifact_id/zip" > "$RUNNER_TEMP/$kind.zip"
+            error_log="$RUNNER_TEMP/$kind-download.log"
+            for attempt in 1 2 3 4 5; do
+              if gh api "/repos/$REPOSITORY/actions/artifacts/$artifact_id/zip" > "$RUNNER_TEMP/$kind.zip" 2>"$error_log"; then
+                break
+              fi
+              if ! grep -Fq '(HTTP 404)' "$error_log" || test "$attempt" -eq 5; then
+                cat "$error_log" >&2
+                exit 1
+              fi
+              echo "Artifact $artifact_id is not available yet (attempt $attempt/5)"
+              sleep "$((attempt * 2))"
+            done
           done
           python - <<'VERIFY'
           import hashlib, os, pathlib, zipfile
