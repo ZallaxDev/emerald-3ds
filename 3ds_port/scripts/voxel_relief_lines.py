@@ -52,6 +52,11 @@ GRID = 64                      # tests/voxel_mesh_dump.c: the virtual atlas
 METATILE_REAL = 1024           # voxel_atlas.h
 VARIANTS = 160
 CUT_FIRST = METATILE_REAL + VARIANTS
+TUFT_FIRST = CUT_FIRST + 512   # voxel_atlas.h: the tall grass tufts
+# voxel_tree.c kTufts: the secondary tileset it is of (None: the General's
+# own) and its metatile; the tiles every tuft's outline is read from
+TUFTS = ((None, 0x00D), ("gTileset_Lavaridge", 0x206))
+TUFT_SHAPE, TUFT_SHAPE_FLOOR = 0x00D, 0x001
 DUMP = os.path.join(PORT, "build", "voxel_mesh_dump.exe")
 RELIEF = os.path.join(PORT, "romfs", "voxel", "relief.bin")
 
@@ -202,9 +207,35 @@ class Atlas:
             self._arts[index] = vb.LayoutArt(self.L[index - 1]["id"])
         return self._arts[index]
 
+    def tuft(self, k):
+        """Tuft k (voxel_atlas.c TuftClear): its tall grass tile, clear where
+        the General's is the ground it grows on - what is reached from the
+        tile's edge through the colours of that grass."""
+        if k >= len(TUFTS):
+            return None
+        shape = self.art.cell_image(TUFT_SHAPE).convert("RGBA").load()
+        floor = self.art.cell_image(TUFT_SHAPE_FLOOR).convert("RGBA")
+        ground = {c for _, c in floor.getcolors(256)}
+        im = self.art.cell_image(TUFTS[k][1]).convert("RGBA")
+        px = im.load()
+        stack = [(i, j) for j in range(16) for i in range(16) if i in (0, 15) or j in (0, 15)]
+        queued = set(stack)
+        while stack:
+            i, j = stack.pop()
+            if shape[i, j] not in ground:
+                continue
+            px[i, j] = (0, 0, 0, 0)
+            for n in ((i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)):
+                if 0 <= n[0] < 16 and 0 <= n[1] < 16 and n not in queued:
+                    queued.add(n)
+                    stack.append(n)
+        return im
+
     def tile(self, aid):
         if aid < METATILE_REAL:
             return self.art.cell_image(aid)
+        if aid >= TUFT_FIRST:
+            return self.tuft(aid - TUFT_FIRST)
         if aid >= CUT_FIRST:
             k = aid - CUT_FIRST
             if k >= len(self.cuts):

@@ -144,6 +144,8 @@ ROMFS_SHADER_OUTS += romfs/stage/leaves.bin
 ROMFS_SHADER_OUTS += romfs/bottom/battle.bin
 # The bottom screen's menu backdrop: the port's own art (scripts/gen_menu_art.py).
 ROMFS_SHADER_OUTS += romfs/bottom/menu.bin
+# Its 400-wide twin for the panel drawn on the top screen (the Rental Pokemon's).
+ROMFS_SHADER_OUTS += romfs/bottom/menu_top.bin
 # The battle's info boxes and text box: the port's own art (scripts/gen_battle_hud.py).
 ROMFS_SHADER_OUTS += romfs/battle/hud.bin
 
@@ -176,21 +178,25 @@ build/root/%.o: $(ROOT)/%.c Makefile full.mk
 # Screens staged as one whole GBA picture: GBA geometry, and their VBlank
 # callbacks reported to the bridge (compat/ctr_gba_stage.h). The cable car too:
 # built wide, its scene sat in a corner of the screen with black around it.
-CTR_GBA_STAGE_SRCS := intro title_screen credits intro_credits_graphics cable_car rayquaza_scene
+CTR_GBA_STAGE_SRCS := intro title_screen credits intro_credits_graphics cable_car rayquaza_scene contest contest_util
 CTR_GBA_STAGE_OBJS := $(patsubst %,build/root/src/%.o,$(CTR_GBA_STAGE_SRCS))
-# Its scenery scrolls, but its margins fade like the intro's.
-build/root/src/cable_car.o: FULLCFLAGS += -DCTR_STAGE_FADED
+# Its scenery scrolls and its art ends at the GBA screen's edges: it is scaled
+# up until it covers the top screen (the rows that do not fit are cut), not
+# mirrored and faded into the margins as it was (CTR_STAGE_FADED).
+build/root/src/cable_car.o: FULLCFLAGS += -DCTR_STAGE_COVERED
 # The legendaries' cutscenes (Groudon and Kyogre's fight, Rayquaza's arrival):
 # built wide, they were drawn off in a corner of the screen. Staged and shown
 # as large as the screen holds them, centred.
 build/root/src/rayquaza_scene.o: FULLCFLAGS += -DCTR_STAGE_ZOOMED
+# The contest hall and its results: one GBA picture each, magnified to fill the top screen.
+build/root/src/contest.o build/root/src/contest_util.o: FULLCFLAGS += -DCTR_STAGE_ZOOMED
 $(CTR_GBA_STAGE_OBJS): FULLCFLAGS += -DCTR_GBA_STAGE -include $(abspath compat/ctr_gba_stage.h)
 $(CTR_GBA_STAGE_OBJS): compat/ctr_gba_stage.h $(ROOT)/include/gba/defines.h
 # GBA screens shown centred, margins only from layers that wrap on the GBA
 # (compat/ctr_gba_centred.h).
 CTR_GBA_CENTRED_SRCS := region_map field_region_map main_menu option_menu naming_screen wallclock \
 	pokemon_summary_screen starter_choose shop link berry_blender pokemon_jump dodrio_berry_picking \
-	contest contest_util slot_machine roulette hall_of_fame battle_dome battle_factory_screen 	battle_pyramid_bag battle_records berry_crush berry_tag_screen clear_save_data_screen contest_painting 	diploma easy_chat mail move_relearner pokeblock pokeblock_feed reset_rtc_screen 	save_failed_screen union_room_chat use_pokeblock wireless_communication_status_screen
+	slot_machine roulette hall_of_fame battle_dome battle_factory_screen 	battle_pyramid_bag battle_records berry_crush berry_tag_screen clear_save_data_screen contest_painting 	diploma easy_chat mail move_relearner pokeblock pokeblock_feed reset_rtc_screen 	save_failed_screen union_room_chat use_pokeblock wireless_communication_status_screen
 CTR_GBA_CENTRED_OBJS := $(patsubst %,build/root/src/%.o,$(CTR_GBA_CENTRED_SRCS))
 $(CTR_GBA_CENTRED_OBJS): FULLCFLAGS += -DCTR_GBA_STAGE -include $(abspath compat/ctr_gba_centred.h)
 $(CTR_GBA_CENTRED_OBJS): compat/ctr_gba_centred.h $(ROOT)/include/gba/defines.h
@@ -576,6 +582,10 @@ romfs/bottom/battle.bin: scripts/gen_battle_art.py
 romfs/bottom/menu.bin: scripts/gen_menu_art.py scripts/gen_battle_art.py
 	@mkdir -p $(@D)
 	"$(PYTHON)" scripts/gen_menu_art.py --output $@
+
+romfs/bottom/menu_top.bin: scripts/gen_menu_art.py scripts/gen_battle_art.py
+	@mkdir -p $(@D)
+	"$(PYTHON)" scripts/gen_menu_art.py --top --output $@
 
 romfs/battle/hud.bin: scripts/gen_battle_hud.py
 	@mkdir -p $(@D)

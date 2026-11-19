@@ -332,6 +332,7 @@ static void SetVBlankCallback(IntrCallback callback) { gMain.vblankCallback = ca
 static void CtrVideo_SetStage(bool active) { videoStage = active; }
 static void CtrVideo_SetStageFaded(bool faded) { videoStageFaded = faded; }
 static void CtrVideo_SetStageZoomed(bool zoomed) { videoStageZoomed = zoomed; }
+static void CtrVideo_SetStageCovered(bool covered) { (void)covered; }
 static void CB2_OverworldBasic(void) {}
 static void CtrVideo_SetCentred(unsigned screen) { videoCentred = screen; }
 static void CtrVideo_SetBattle(bool active) { videoBattle = active; }

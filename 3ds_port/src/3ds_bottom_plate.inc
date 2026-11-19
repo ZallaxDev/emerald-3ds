@@ -1510,8 +1510,13 @@ static int StyledRight(const Font *font, const u8 *str, int right, int y, u8 sty
     return StyledStr(font, str, right - StrWidth(font, str), y, style);
 }
 
+/* Centred by its ink, not by its glyphs' advances (StrInk). */
 static int StyledCentre(const Font *font, const u8 *str, int cx, int y, u8 style)
 {
+    int left, right;
+
+    if (StrInk(font, str, &left, &right))
+        return StyledStr(font, str, cx - (left + right + 1) / 2, y, style);
     return StyledStr(font, str, cx - StrWidth(font, str) / 2, y, style);
 }
 

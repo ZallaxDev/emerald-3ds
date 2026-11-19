@@ -425,6 +425,18 @@ static void RenderEye(C3D_RenderTarget *target, uint32_t clear, float parallax)
                 scale = fmaxf(scale, (float)CTR_GAME_HEIGHT / (float)(y1 - y0));
             }
         }
+        /* A covered stage (the cable car) fills the width, as a charge does,
+         * and the rows that do not fit are cut equally from the top and the
+         * bottom: 8 of 160 each with the 400x240 screen. Nothing is made up
+         * for the margins. */
+        if (sStageCovered && y0 == 0 && y1 == 160)
+        {
+            float visible = (float)CTR_GAME_HEIGHT / ((float)CTR_GAME_WIDTH / 240.0f);
+
+            scale = (float)CTR_GAME_WIDTH / 240.0f;
+            y0 = (int)ceilf((160.0f - visible) / 2.0f - 0.001f);
+            y1 = 160 - y0;
+        }
         {
             const Tex3DS_SubTexture picture = {240, (u16)(y1 - y0),
                 CTR_STAGE_X / 512.0f, 1 - (CTR_STAGE_Y + y0) / 256.0f,

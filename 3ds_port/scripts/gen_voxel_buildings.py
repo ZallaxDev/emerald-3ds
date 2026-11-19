@@ -4575,7 +4575,8 @@ def export(models, path):
     variants = ground_variants(models, layouts_json)
     index_of = {e.get("id"): k + 1 for k, e in enumerate(layouts_json)}
     decks = sorted((index_of[lid], y, x, top, bottom, gate)
-                   for (lid, x, y, top, bottom, gate) in voxel_bridge.deck_table() + voxel_fortree.deck_table())
+                   for (lid, x, y, top, bottom, gate) in voxel_bridge.deck_table() + voxel_fortree.deck_table()
+                   + voxel_props.beam_decks())
     head = MAGIC + struct.pack("<HHHHHHIHHHH", len(pages), len(models), len(page_models),
                                len(placements), len(heights), len(masks), nverts,
                                len(variants), len(decks), len(conditions), 0)

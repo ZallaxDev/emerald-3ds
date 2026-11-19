@@ -7345,6 +7345,38 @@ SPECS = [
         "ground_fixed": True,
     },
     {
+        # The Acro Bike's rails over Route 119's river (voxel_fence.py, kind
+        # "beam"): a white beam 14 pixels over the water - its top the last
+        # five rows of the rail's cell, its front the first three of the
+        # cell south of it - on posts two pixels wide; down a column, a
+        # strip with its front and post at its south end. The water under
+        # it, and the shadow the map paints there, are the map's own lower
+        # layer. Raised as terrain (voxel_terraces) each cell stood up
+        # whole, its water with it. The rails' ends drawn over a bank (0EC,
+        # 0F0, 0F2, their fronts 0F8, 0FA) are the bank's cells: the relief's.
+        "name": "bike_rail",
+        "components": {
+            "primary": "gTileset_General",
+            "tiles": {0x0ED, 0x0F1, 0x0F3, 0x0F4, 0x0F5, 0x0F7, 0x0F9, 0x0FB, 0x0FC, 0x0FD},
+            # the Safari Zone's, over its grass: the same drawing in the
+            # Lilycove tileset's metatiles (its ends over the rocks, 312 and
+            # 314, the relief's as Route 119's)
+            "also": {"gTileset_Lilycove": {0x313, 0x315, 0x316, 0x31D, 0x31E, 0x320, 0x321, 0x322}},
+            "block": 4, "upper": True,
+            "posts": {
+                "kind": "beam", "ref": 0x0FB, "height": 14, "front": 3, "depth": 2,
+                # the cells ridden (the rest are the posts' cells, south of
+                # them): voxel_props.beam_decks lifts whoever is on them
+                "ride": {0x0ED, 0x0F1, 0x0F3, 0x0F4, 0x0F7, 0x0FB, 0x0FC, 0x0FD},
+                "ride_also": {"gTileset_Lilycove": {0x313, 0x316, 0x31D, 0x31E}},
+                # the beam's own colours (top and front), a post's, and the
+                # front's rows for the faces the drawing never shows
+                "body": (0, 0, 16, 16), "post": (3, 3, 5, 11), "strip": (1, 0, 15, 2),
+            },
+        },
+        "ground": [0x170, GRASS],
+    },
+    {
         # Lilycove's blue iron railings, read column by column like the fence
         "name": "railing_lilycove",
         "components": {

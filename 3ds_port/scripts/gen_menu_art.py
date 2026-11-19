@@ -15,6 +15,10 @@ then elements; the one element here is the backdrop, RGB565 in the canvas'
 layout (column by column, each from the bottom row up).
 
     python scripts/gen_menu_art.py --output romfs/bottom/menu.bin
+
+With --top, the same backdrop 400 wide for a panel the bottom screen's code
+draws on the top screen (the Rental Pokemon's): no strip, no dock, the
+emerald in the middle (romfs/bottom/menu_top.bin).
 """
 import argparse
 import math
@@ -29,6 +33,7 @@ import gen_battle_art as G  # noqa: E402
 
 MAGIC = b"EM3DMNU1"
 W, H = 320, 240
+TOP = False
 ID_BACKDROP = 0
 
 # The backdrop's colours: the inside light, the strips dark.
@@ -46,6 +51,7 @@ DOCK = [(0, (24, 72, 56)), (1, (10, 32, 24))]
 
 def backdrop():
     SS = G.SS
+    gem_centre = (W // 2, H // 2) if TOP else GEM_CENTRE
     p = G.Pic(W, H, (0, 0, 0))
     sz = p.im.size
     p.paint_img(G.vgrad(p, 0, H, GRADIENT), Image.new("L", sz, 255))
@@ -63,7 +69,7 @@ def backdrop():
                        (x * SS, (y + 4) * SS)], outline=255)
     p.paint(LATTICE, lat, LATTICE_ALPHA)
     # an emerald, step cut: outer octagon, table, the facet lines between them
-    cx, cy = GEM_CENTRE
+    cx, cy = gem_centre
     gw, gh = GEM_SIZE
     shapes = p.blank()
     sd = ImageDraw.Draw(shapes)
@@ -91,6 +97,8 @@ def backdrop():
                                    ((cx - 30) * SS, (cy + 6) * SS), ((cx - 48) * SS, (cy + 6) * SS)], fill=255)
     p.paint((255, 255, 255), gloss.filter(ImageFilter.GaussianBlur(3 * SS)), 0.10)
     p.paint((0, 0, 0), G.scanlines(p), 0.04)
+    if TOP:
+        return p.im.resize((W, H), Image.LANCZOS)
     # a straight top strip, edged with the rail's light green
     top = p.blank()
     ImageDraw.Draw(top).rectangle((0, 0, sz[0], 10 * SS), fill=255)
@@ -122,7 +130,11 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     ap.add_argument("--output", required=True)
     ap.add_argument("--png", help="also write the backdrop as a PNG, to look at")
+    ap.add_argument("--top", action="store_true", help="400 wide, without the strip and the dock")
     args = ap.parse_args()
+    global W, TOP
+    if args.top:
+        W, TOP = 400, True
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     Path(args.output).write_bytes(build())
     if args.png:
