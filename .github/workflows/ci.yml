@@ -11,7 +11,7 @@ jobs:
       python: ${{ steps.versions.outputs.python }}
       pillow: ${{ steps.versions.outputs.pillow }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
       - id: versions
         name: Read the Python and Pillow release pins
         shell: python
@@ -33,8 +33,8 @@ jobs:
       matrix:
         python: ["3.11", "${{ needs.release-versions.outputs.python }}"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.1.0
         with:
           python-version: ${{ matrix.python }}
       - name: Install the release Pillow version
@@ -56,8 +56,8 @@ jobs:
     needs: release-versions
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.1.0
         with:
           python-version: ${{ needs.release-versions.outputs.python }}
       - name: Data pack parser against the builder's writer
@@ -92,7 +92,7 @@ jobs:
     # the runner is lost.
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
       - name: Build the pinned release environment
         id: release-image
         run: |
@@ -137,7 +137,7 @@ jobs:
           python3 tools/release_audit.py --zip ship.zip --strict
           echo "::endgroup::"
           BUILD
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: emerald3ds-engine
           path: ship/
