@@ -472,13 +472,19 @@ $(ROMFS_GAMEDATA_OUTS) &: build/gamedata_image.elf $(TARGET).elf scripts/gen_gam
 $(MAPJSON): $(wildcard $(ROOT)/tools/mapjson/*.cpp $(ROOT)/tools/mapjson/*.h)
 	$(MAKE) -C $(ROOT)/tools/mapjson
 
-$(ROOT)/include/constants/map_groups.h: $(ROOT)/data/maps/map_groups.json $(wildcard $(ROOT)/data/maps/*/map.json) | $(MAPJSON)
+HOST_MAP_JSONS := $(wildcard $(ROOT)/data/maps/*/map.json)
+
+$(ROOT)/include/constants/map_groups.h: $(ROOT)/data/maps/map_groups.json $(HOST_MAP_JSONS) | $(MAPJSON)
 	"$(MAPJSON)" groups emerald $< $(ROOT)/data/maps $(ROOT)/include/constants
 
 $(ROOT)/include/constants/layouts.h: $(ROOT)/data/layouts/layouts.json | $(MAPJSON)
 	"$(MAPJSON)" layouts emerald $< $(ROOT)/data/layouts $(ROOT)/include/constants
 
-HOST_MAP_HEADERS := $(ROOT)/include/constants/map_groups.h $(ROOT)/include/constants/layouts.h
+$(ROOT)/include/constants/map_event_ids.h: $(HOST_MAP_JSONS) | $(MAPJSON)
+	@"$(MAPJSON)" event_constants emerald $^ $@
+
+HOST_MAP_HEADERS := $(ROOT)/include/constants/map_groups.h $(ROOT)/include/constants/layouts.h \
+                    $(ROOT)/include/constants/map_event_ids.h
 
 .PHONY: map-includes
 map-includes:
