@@ -12,13 +12,13 @@ schema = 1
 # The Python a release's voxel data is made and precompiled with
 # (tools/build_release.py, tools/voxel_precompile.py refuse any other): the
 # generators' output depends on the interpreter (set order, float sums), and
-# the players' builders only replay it. 3.13 is the web builder's (Pyodide
-# 0.28), whose generators give the same bytes.
+# the players' builders usually replay the precompiled assets. The web
+# builder's Pyodide runtime has its own Python version.
 [python]
-version = "3.13"
+version = "3.15"
 # what tools/release_env builds its image with (pillow: the one the voxel
 # data was proven with; any 11.x/12.x gave the same bytes)
-image = "python:3.13.17-slim-bookworm"
+image = "python:3.15.2-slim-bookworm"
 pillow = "12.3.0"
 
 # The release environment (tools/docker_release.py): devkitARM and libctru,

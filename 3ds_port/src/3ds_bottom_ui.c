@@ -443,7 +443,8 @@ typedef struct
      * encPages, 0 with no table here; ENC_SHOWN rows a page, each method
      * its own pages) and method, its rows; the Repel's plate and steps; the
      * clock-not-restored banner. */
-    u8 encOn, encView, encPage, encPages, encMethod, encCount;
+    u8 encOn, encView, encPage, encPages, encMethod, encCount, encTotal, encCaught;
+    u8 encUncaught, encTogglePage;
     u8 repelShown, clockNotice;
     u16 repelSteps;
     EncRow enc[ENC_SHOWN];
@@ -656,7 +657,7 @@ enum { MAP_FLY_NONE, MAP_FLY_GREY, MAP_FLY_READY };
 static s16 sMapViewX, sMapViewY;
 /* Map extras: the wild list instead of the map, its page; the load
  * (CtrClockStore_LoadSerial) whose clock banner was dismissed. */
-static bool8 sEncView;
+static bool8 sEncView, sEncUncaught;
 static u8 sEncPage;
 static unsigned sClockNoticeSerial;
 static u8 sSaveStep;
@@ -696,6 +697,7 @@ enum
     HIT_QUICK_BALL_NEXT,
     HIT_MAP = 0x90,
     HIT_MAP_INFO,          /* the title: map <-> wild list (map extras) */
+    HIT_MAP_FILTER,        /* the wild list: show only uncaught species */
     HIT_MAP_PAGE,          /* the wild list: its next page */
     HIT_CLOCK_NOTICE,      /* the clock banner: hide it */
     HIT_MAP_ZOOM,          /* zoom in or back out */
@@ -1081,7 +1083,7 @@ void CtrBottom_SoftReset(void)
     sCardBack = FALSE;
     sCardView = CARD_VIEW_CARD;
     sPickMapsec = MAPSEC_NONE;
-    sEncView = FALSE;
+    sEncView = sEncUncaught = FALSE;
     sEncPage = 0;
     sSaveStep = SAVE_ASK;
     sAsk.kind = sAsked.kind = ASK_NONE;

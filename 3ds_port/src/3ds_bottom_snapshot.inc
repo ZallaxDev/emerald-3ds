@@ -536,9 +536,11 @@ static void SnapshotEncounters(ViewState *s)
     const struct WildPokemonInfo *info[ENC_METHODS] = {NULL};
     static const u8 *const rates[ENC_METHODS] = {sEncLandRates, sEncWaterRates, sEncWaterRates,
                                                  sEncFishRates, sEncFishRates, sEncFishRates};
-    EncRow rows[ENC_ROWS];
-    u8 counts[ENC_METHODS] = {0}, pages = 0, page;
+    EncRow rows[ENC_METHODS][ENC_ROWS];
+    u8 totals[ENC_METHODS] = {0}, visible[ENC_METHODS] = {0}, caught[ENC_METHODS] = {0};
+    u8 pages = 0, togglePage = 0, page;
 
+    s->encUncaught = sEncUncaught;
     if (header)
     {
         info[ENC_LAND] = CtrEncounters_Land(header->landMonsInfo, gSaveBlock1Ptr->location.mapGroup,
@@ -548,44 +550,57 @@ static void SnapshotEncounters(ViewState *s)
         info[ENC_OLD_ROD] = info[ENC_GOOD_ROD] = info[ENC_SUPER_ROD] = header->fishingMonsInfo;
     }
     for (u8 m = 0; m < ENC_METHODS; ++m)
-        if (info[m] && info[m]->wildPokemon)
+    {
+        if (!info[m] || !info[m]->wildPokemon)
+            continue;
+        totals[m] = EncCollect(rows[m], info[m]->wildPokemon, sEncFirst[m], sEncSlots[m], rates[m]);
+        for (u8 i = 0; i < totals[m]; ++i)
         {
-            counts[m] = EncCollect(rows, info[m]->wildPokemon, sEncFirst[m], sEncSlots[m], rates[m]);
-            pages += counts[m] ? (counts[m] + ENC_SHOWN - 1) / ENC_SHOWN : 1;
+            EncRow row = rows[m][i];
+            u16 national = SpeciesToNationalPokedexNum(row.species);
+
+            /* Only query the caught flag for species the Pokédex has seen. */
+            if (!GetSetPokedexFlag(national, FLAG_GET_SEEN))
+                row.seen = ENC_UNSEEN;
+            else if (GetSetPokedexFlag(national, FLAG_GET_CAUGHT))
+            {
+                row.seen = ENC_CAUGHT;
+                ++caught[m];
+                if (s->encUncaught)
+                    continue;
+            }
+            else
+                row.seen = ENC_SEEN;
+            rows[m][visible[m]++] = row;
         }
+        pages += visible[m] ? (visible[m] + ENC_SHOWN - 1) / ENC_SHOWN : 1;
+    }
     s->encPages = pages;
     if (pages == 0)
         return;
     s->encPage = page = sEncPage % pages;
     for (u8 m = 0; m < ENC_METHODS; ++m)
     {
-        u8 n;
+        u8 n, alternate, remaining;
 
         if (!info[m] || !info[m]->wildPokemon)
             continue;
-        n = counts[m] ? (counts[m] + ENC_SHOWN - 1) / ENC_SHOWN : 1;
+        n = visible[m] ? (visible[m] + ENC_SHOWN - 1) / ENC_SHOWN : 1;
         if (page >= n)
         {
             page -= n;
+            alternate = s->encUncaught ? totals[m] : totals[m] - caught[m];
+            togglePage += alternate ? (alternate + ENC_SHOWN - 1) / ENC_SHOWN : 1;
             continue;
         }
-        EncCollect(rows, info[m]->wildPokemon, sEncFirst[m], sEncSlots[m], rates[m]);
         s->encMethod = m;
-        s->encCount = counts[m] - page * ENC_SHOWN > ENC_SHOWN ? ENC_SHOWN : counts[m] - page * ENC_SHOWN;
-        memcpy(s->enc, rows + page * ENC_SHOWN, s->encCount * sizeof(EncRow));
+        s->encTotal = totals[m];
+        s->encCaught = caught[m];
+        s->encTogglePage = togglePage;
+        remaining = visible[m] - page * ENC_SHOWN;
+        s->encCount = remaining > ENC_SHOWN ? ENC_SHOWN : remaining;
+        memcpy(s->enc, rows[m] + page * ENC_SHOWN, s->encCount * sizeof(EncRow));
         break;
-    }
-    /* Only what the Pokedex has seen is named, and what it has caught marked.
-     * FLAG_GET_CAUGHT clears the species' flags when they disagree: asked only
-     * of a species seen, whose flags agree, it reads and changes nothing. */
-    for (u8 i = 0; i < s->encCount; ++i)
-    {
-        u16 national = SpeciesToNationalPokedexNum(s->enc[i].species);
-
-        if (GetSetPokedexFlag(national, FLAG_GET_SEEN) == 0)
-            s->enc[i].seen = ENC_UNSEEN;
-        else
-            s->enc[i].seen = GetSetPokedexFlag(national, FLAG_GET_CAUGHT) != 0 ? ENC_CAUGHT : ENC_SEEN;
     }
 }
 
