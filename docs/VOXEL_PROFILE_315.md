@@ -4,6 +4,43 @@ Fork experiment, November 19, 2026. Source base: `6699c19a2a36bcf90be62859f43f70
 Python 3.15.2 and Pillow 13.0.0 were selected explicitly for these measurements.
 Release version pins follow `upstream.lock`; this experiment does not edit them.
 
+## End-to-end generator benchmark
+
+Compare the original project at `6699c19` with the complete optimization
+stack at `a32152e`. Both runs use the same prepared English source inputs
+from pokeemerald `76463dac`. The staged scripts match their respective
+commits and 10,725 shared input files were checked for byte equality.
+Both use Python 3.15.2 and Pillow 13.0.0 on Linux x86-64, with the JIT disabled,
+hash seed 0, and no profiling.
+
+The benchmark runs regions, signposts, buildings, terrain relief, and
+intro generation in sequence. Each step is timed from process launch to
+exit. The building step also generates the window-light file, and relief
+reads the buildings just generated. The reported totals sum the measured
+wall time of the five steps. Source preparation, 3DS compilation,
+the building generator's optional geometry verification, and other
+CI work are outside this measurement.
+
+| Generator | Original | Optimized | Seconds saved |
+| --- | ---: | ---: | ---: |
+| Map regions | 6.667 s | 5.173 s | 1.494 |
+| Signposts | 2.751 s | 2.907 s | -0.156 |
+| Buildings and window lights | 268.854 s | 194.762 s | 74.092 |
+| Terrain relief | 392.074 s | 269.450 s | 122.624 |
+| Intro leaves | 0.290 s | 0.245 s | 0.045 |
+| **Total** | **670.636 s (11:11)** | **472.538 s (7:53)** | **198.099 (29.5%)** |
+
+All six generated files matched byte for byte. The timings come from
+one local pair, with the baseline followed by the optimized run. The
+earlier interrupted attempt is excluded. The individual experiments
+below ran at different times and sum to an estimate of 255.5 seconds.
+Use **198.1 seconds** as the measured end-to-end generator savings on
+this machine. A separate CI comparison would measure the effect on the
+complete `build-3ds` job.
+
+Raw timings, sizes and SHA-256 hashes:
+[voxel-end-to-end-python315.json](benchmarks/voxel-end-to-end-python315.json).
+
 ## Complete building generation
 
 | Mode | Wall time |
@@ -301,9 +338,8 @@ for byte.
 | Approximate sum of separate measurements | **255.5** |
 
 The sum combines individual experiments with different baselines and
-workloads. Treat it as an estimate of build work saved. An end-to-end
-benchmark of the original and current branches under the same conditions
-can establish the actual wall time difference.
+workloads. The paired end-to-end benchmark above measured 198.1 seconds
+of wall-clock savings across the full generator sequence.
 
 ## Terrace edge scoring follow-up
 
