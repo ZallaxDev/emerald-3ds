@@ -1093,6 +1093,14 @@ void CtrBottom_SoftReset(void)
     sInside = INSIDE_NONE;
     sSwallow = FALSE;
     sScreen = SCR_MAP;
+    /* No stale selection or queued ACTIONS may survive a soft reset. */
+    sLivePartyCursor = 0;
+    sLivePartyPending = sLivePartyHandoff = PARTY_SIZE;
+    sLivePartyHandoffFrames = 0;
+    sLiveBagPocket = ITEMS_POCKET;
+    memset(sLiveBagCursor, 0, sizeof(sLiveBagCursor));
+    memset(sLiveBagScroll, 0, sizeof(sLiveBagScroll));
+    sLiveBagPending = FALSE;
     sMapZoom = sMapFly = FALSE;
     sOptPage = CAT_GENERAL;
     sOptSub = 0;
