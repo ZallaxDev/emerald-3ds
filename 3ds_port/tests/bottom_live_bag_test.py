@@ -26,6 +26,8 @@ typedef u8 bool8;
 #define FEMALE 1
 #define ITEM_NONE 0
 #define ITEMS_POCKET 0
+#define TMHM_POCKET 2
+#define BERRIES_POCKET 3
 #define KEYITEMS_POCKET 4
 #define POCKETS_COUNT 5
 #define CTR_BAG_ROWS 8
@@ -82,6 +84,8 @@ int main(void)
 {
     struct ItemSlot items[14] = {{0}};
     struct ItemSlot keys[3] = {{42, 1}, {43, 1}, {0, 0}};
+    struct ItemSlot tms[4] = {{50, 1}, {0, 0}, {30, 1}, {40, 1}};
+    unsigned total;
     ViewState state = {0};
 
     /* Overfull list: selected row #12 must be visible in the final page. */
@@ -100,12 +104,46 @@ int main(void)
     assert(state.bv.item == 13 && state.bv.items[7] == 13 && state.bv.counts[7] == 14);
     assert((state.bv.flags[7] & CTR_BAG_ROW_COUNT) != 0);
 
-    /* Shrinking the inventory must not expose stale rows or underflow. */
+    /* Consumption outside the Bag leaves holes. Never stop at the first
+     * ITEM_NONE, and keep the selected item's compact ordinal. */
     memset(&state, 0, sizeof(state));
     items[3].itemId = ITEM_NONE;
     SnapshotLiveBag(&state);
-    assert(state.bv.total == 3 && state.bv.scroll == 0);
-    assert(state.bv.numRows == 3 && state.bv.cursor == 0 && state.bv.item == 1);
+    assert(state.bv.total == 12 && state.bv.scroll == 0);
+    assert(state.bv.numRows == 8 && state.bv.cursor == 0 && state.bv.item == 1);
+    assert(state.bv.items[3] == 5 && state.bv.counts[3] == 6);
+    assert(LiveBagNativeIndex(ITEMS_POCKET, 3, &total) == 3 && total == 12);
+
+    /* Scroll beyond a gap; display the actual physical item at the selected
+     * occupied position, while never mutating or compacting the save. */
+    memset(&state, 0, sizeof(state));
+    sLiveBagCursor[ITEMS_POCKET] = 11;
+    SnapshotLiveBag(&state);
+    assert(state.bv.scroll == 4 && state.bv.cursor == 7);
+    assert(state.bv.item == 13 && state.bv.items[7] == 13);
+    assert(items[3].itemId == ITEM_NONE);
+
+    /* A gap in the first slot must not make the pocket look empty or block
+     * ACTIONS from opening the original Bag menu. */
+    memset(&state, 0, sizeof(state));
+    items[0].itemId = ITEM_NONE;
+    sLiveBagCursor[ITEMS_POCKET] = 0;
+    SnapshotLiveBag(&state);
+    assert(state.bv.total == 11 && state.bv.item == 2);
+    assert(state.bv.items[0] == 2 && state.bv.items[2] == 5);
+    assert(LiveBagNativeIndex(ITEMS_POCKET, 0, &total) == 0 && total == 11);
+
+    /* The real Bag sorts TMs/berries as it opens: the selected item's
+     * native position is its stable item-ID rank, not its physical slot. */
+    memset(&state, 0, sizeof(state));
+    gBagPockets[TMHM_POCKET].itemSlots = tms;
+    gBagPockets[TMHM_POCKET].capacity = 4;
+    sLiveBagPocket = TMHM_POCKET;
+    sLiveBagCursor[TMHM_POCKET] = 2;
+    SnapshotLiveBag(&state);
+    assert(state.bv.total == 3 && state.bv.item == 40);
+    assert(LiveBagNativeIndex(TMHM_POCKET, 2, &total) == 1 && total == 3);
+    assert(tms[0].itemId == 50 && tms[1].itemId == ITEM_NONE);
 
     /* Registered key items are marked, and all five pockets remain valid. */
     memset(&state, 0, sizeof(state));
@@ -127,6 +165,7 @@ int main(void)
     sLiveBagPocket = ITEMS_POCKET;
     SnapshotLiveBag(&state);
     assert(state.bv.total == 0 && state.bv.numRows == 0 && state.bv.item == ITEM_NONE);
+    assert(LiveBagNativeIndex(ITEMS_POCKET, 0, &total) == 0xFFFF && total == 0);
 
     puts("live Bag snapshot fixture passed");
     return 0;
