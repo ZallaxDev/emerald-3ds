@@ -73,10 +73,12 @@ static void RestoreLumaHbldrTitle(void)
         const char *arg = __system_argv[i];
         if (arg == NULL || strncmp(arg, FORWARDER_RESTORE_ARG, prefixLen) != 0)
             continue;
-        char *end;
-        u64 tid = strtoull(arg + prefixLen, &end, 16);
+        const char *hex = arg + prefixLen;
+        if (strspn(hex, "0123456789ABCDEFabcdef") != 16 || hex[16] != '\0')
+            continue;
+        u64 tid = strtoull(hex, NULL, 16);
         s64 luma;
-        if (*end == 0 && tid != 0 && R_SUCCEEDED(svcGetSystemInfo(&luma, 0x10000, 0)))
+        if (tid != 0 && R_SUCCEEDED(svcGetSystemInfo(&luma, 0x10000, 0)))
             *(volatile u64 *)(OS_SHAREDCFG_VADDR + 0x808) = tid;
     }
 }
