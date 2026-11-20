@@ -295,7 +295,8 @@ for byte.
 | Texture page packing and writing | 11.9 |
 | Texture compaction | 2.1 |
 | Terrace edge scoring | 86.6 |
-| Approximate sum of separate measurements | **229.6** |
+| Terrain region labeling | 8.3 |
+| Approximate sum of separate measurements | **237.9** |
 
 The sum combines individual experiments with different baselines and
 workloads. Treat it as an estimate of build work saved. An end-to-end
@@ -354,3 +355,31 @@ eight terrace and ledge fixtures and the host C relief reader passed.
 The branch retains the existing writer because the observed difference
 was only 0.365 seconds in one comparison and the caches add state for
 each map group. The cumulative estimate counts the accepted changes.
+
+## Terrain region labeling follow-up
+
+The flood fill queues horizontal runs of ground or top pixels and writes
+their region labels together. Each run looks for connected pixels in the
+rows above and below. Neighboring map tiles still use the original seam
+rules, and the first pixel in row order still determines the region number.
+
+The old and new algorithms produced identical region grids and sizes on
+300 randomized canvases with a mix of open and blocked seams. The eight
+terrace and ledge fixtures also passed.
+
+| Paired region labeling calls | Seconds |
+| --- | ---: |
+| Pixel-by-pixel fill | 17.826 |
+| Horizontal runs | 9.544 |
+| Saved | 8.282 (46.5%) |
+
+The timed calls covered 33 map groups, 59,703,808 canvas pixels and
+16,129 regions in one terrain export on Python 3.15.2 and Pillow 13.0.0
+with JIT disabled. The run order alternated by group and each version
+started with an empty seam cache. The original pixel loop ran as a
+function with local variables, like the original generator. Each pair
+produced the same region numbers, label grids and sizes.
+
+The complete `relief.bin` matched the previous terrain export byte for
+byte, with the SHA-256 recorded in the terrain generation follow-up.
+The host C relief reader and its terrain assertions passed.

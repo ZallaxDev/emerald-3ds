@@ -2170,6 +2170,56 @@ def split_wrapped(region, sizes, kind, side, south, W, H):
             return made
 
 
+def drawn_regions(kind, W, H, crosses):
+    """Label ground and top regions by horizontal runs of connected pixels."""
+    region = [[-1] * W for _ in range(H)]
+    sizes = []
+
+    def label_run(x, y, material, number):
+        kinds, labels = kind[y], region[y]
+        left = right = x
+        while (left > 0 and labels[left - 1] < 0 and kinds[left - 1] == material
+               and (left & 15 or crosses(left, y, left - 1, y))):
+            left -= 1
+        while (right + 1 < W and labels[right + 1] < 0 and kinds[right + 1] == material
+               and ((right + 1) & 15 or crosses(right, y, right + 1, y))):
+            right += 1
+        labels[left:right + 1] = [number] * (right - left + 1)
+        return left, right, y
+
+    # Row-major seeds give the same region numbers independently of the
+    # order in which a region's pixels are visited.
+    for y, (kinds, labels) in enumerate(zip(kind, region)):
+        for x, material in enumerate(kinds):
+            if material not in (GROUND, TOP) or labels[x] >= 0:
+                continue
+            number = len(sizes)
+            stack = [label_run(x, y, material, number)]
+            count = 0
+            while stack:
+                left, right, row = stack.pop()
+                count += right - left + 1
+                for other in (row + 1, row - 1):
+                    if not 0 <= other < H:
+                        continue
+                    adjacent_kinds, adjacent_labels = kind[other], region[other]
+                    across_seam = row // 16 != other // 16
+                    x = left
+                    while x <= right:
+                        if adjacent_labels[x] >= 0 or adjacent_kinds[x] != material:
+                            x += 1
+                        elif across_seam and not crosses(x, row, x, other):
+                            # The seam rule is shared by all 16 pixels of
+                            # these neighboring cells.
+                            x = (x // 16 + 1) * 16
+                        else:
+                            run = label_run(x, other, material, number)
+                            stack.append(run)
+                            x = run[1] + 1
+            sizes.append(count)
+    return region, sizes
+
+
 def drawn_prepare(name):
     """What a group's drawing says, the pixels read and let go: its regions
     (terraces and ground), the drops between them, and per cell what it is
@@ -2185,6 +2235,7 @@ def drawn_prepare(name):
         text = open(os.path.join(here, "gen_voxel_relief.py"), encoding="utf-8").read()
         key = hashlib.sha1((text[:text.index("def find_drawn")]     # the constants
                             + inspect.getsource(drawn_prepare) + inspect.getsource(drawn_canvas)
+                            + inspect.getsource(drawn_regions)
                             + inspect.getsource(drawn_role) + repr(sorted(ROLE_REFERENCE.items()))
                             + ((inspect.getsource(split_wrapped) + inspect.getsource(_neck)
                                 + inspect.getsource(_wrapped) + inspect.getsource(_rim_gaps)
@@ -2213,8 +2264,6 @@ def drawn_prepare(name):
     W, H = CW * 16, CH * 16
 
     # regions
-    region = [[-1] * W for _ in range(H)]
-    sizes = []
     pier = _PIER[name]
 
     def apart(a, b, i, j):
@@ -2253,34 +2302,7 @@ def drawn_prepare(name):
         if v is None:
             v = crossing[key] = not apart(a, b, i, j) and not band_seam(a, b, i, j)
         return v
-    for y in range(H):
-        krow, rrow = kind[y], region[y]
-        for x in range(W):
-            k = krow[x]
-            if (k != GROUND and k != TOP) or rrow[x] >= 0:
-                continue
-            n = len(sizes)
-            stack, count = [(x, y)], 0
-            rrow[x] = n
-            while stack:
-                a, b = stack.pop()
-                count += 1
-                ra, ka = region[b], kind[b]
-                # west and east, in the row
-                if a + 1 < W and ra[a + 1] < 0 and ka[a + 1] == k and ((a + 1) & 15 or crosses(a, b, a + 1, b)):
-                    ra[a + 1] = n
-                    stack.append((a + 1, b))
-                if a > 0 and ra[a - 1] < 0 and ka[a - 1] == k and (a & 15 or crosses(a, b, a - 1, b)):
-                    ra[a - 1] = n
-                    stack.append((a - 1, b))
-                # south and north
-                if b + 1 < H and region[b + 1][a] < 0 and kind[b + 1][a] == k and ((b + 1) & 15 or crosses(a, b, a, b + 1)):
-                    region[b + 1][a] = n
-                    stack.append((a, b + 1))
-                if b > 0 and region[b - 1][a] < 0 and kind[b - 1][a] == k and (b & 15 or crosses(a, b, a, b - 1)):
-                    region[b - 1][a] = n
-                    stack.append((a, b - 1))
-            sizes.append(count)
+    region, sizes = drawn_regions(kind, W, H, crosses)
     cut_apart = set() if name not in WRAP_GROUPS else split_wrapped(region, sizes, kind, side,
                   {(cx, cy) for cy in range(CH) for cx in range(CW)
                               if (cx, cy) in face_low or metatile_at(cx, cy) in FACE_SOUTH}, W, H)
