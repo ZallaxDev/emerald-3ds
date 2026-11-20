@@ -318,6 +318,10 @@ void CtrMenu_PostEntry(s8 entry);
 void CtrMenu_PostAck(void);
 bool8 CtrMenu_YesNoOpen(void);
 
+/* The main menu is up with a saved game to continue (main_menu.c,
+ * 0095-main-menu-top-card.patch): its trainer card is on the top screen. */
+bool8 CtrMainMenu_CardUp(void);
+
 /* ------------------------------------------------------------ naming screen */
 
 enum

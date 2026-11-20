@@ -26,6 +26,8 @@ uint16_t *CtrTopPanel_Canvas(void);
 void CtrTopPanel_Show(void);
 /* dark: 0..16, how far towards black the panel is (the game's fade); 16 is fully black. */
 void CtrTopPanel_Keep(unsigned dark);
+/* As CtrTopPanel_Keep, towards white instead: light 0..16, 16 fully white (the game's fade to white). */
+void CtrTopPanel_KeepWhite(unsigned light);
 
 /* The video side, inside the frame. */
 bool CtrTopPanel_Active(void);
