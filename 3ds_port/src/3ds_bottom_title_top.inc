@@ -11,7 +11,7 @@
  *
  * main_menu.c says when (CtrMainMenu_CardUp, 0095-main-menu-top-card.patch):
  * from the menu's first highlight until its fade out; the card fades with the
- * game's picture (CtrTopPanel_Keep).
+ * game's picture, to black or to white (CtrTopPanel_Keep, CtrTopPanel_KeepWhite).
  */
 #define TTOP_X 14
 #define TTOP_W (FTOP_W - 2 * TTOP_X)
@@ -26,12 +26,18 @@
 /* The card is in the panel's canvas (drawn once as the menu comes up). */
 static bool8 sTitleTopShown;
 
-/* How far the game's fade to black has gone, for the panel to follow (0..16). */
-static unsigned TitleTopDark(void)
+/* The panel follows the game's fade: to black as A or the options leave the
+ * menu, to white as B goes back to the title screen. */
+static void TitleTopKeep(void)
 {
-    if (gPaletteFade.mode == 0 && gPaletteFade.blendColor == RGB_BLACK)
-        return gPaletteFade.y > 16 ? 16 : gPaletteFade.y;
-    return 0;
+    unsigned y = gPaletteFade.y > 16 ? 16 : gPaletteFade.y;
+
+    if (gPaletteFade.mode == 0 && gPaletteFade.blendColor == (RGB_WHITE & 0x7FFF))
+        CtrTopPanel_KeepWhite(y);
+    else if (gPaletteFade.mode == 0 && gPaletteFade.blendColor == RGB_BLACK)
+        CtrTopPanel_Keep(y);
+    else
+        CtrTopPanel_Keep(0);
 }
 
 static void TitleTopRow(int i, int oy, const u8 *label, const u8 *value)
@@ -118,9 +124,13 @@ static void TitleTopFrame(void)
         sTitleTopShown = FALSE;
     if (!sTitleTopShown)
     {
-        /* The saved game does not change while the menu is up. */
+        /* The saved game does not change while the menu is up; its Pokédex
+         * count and stars are counted afresh each time the card is drawn,
+         * not taken from the field card's twice-a-second cache. */
         memset(&card, 0, sizeof(card));
         SnapshotCard(&card);
+        card.dex = CardDexCount(card.hasDex);
+        card.stars = CardStars();
         card.gender = gSaveBlock2Ptr->playerGender ? FEMALE : MALE;
         FactoryTopWarm();
         sDst = CtrTopPanel_Canvas();
@@ -139,5 +149,5 @@ static void TitleTopFrame(void)
         sTitleTopShown = TRUE;
         CtrLog_Write(CTR_LOG_VIDEO, "title top: card drawn");
     }
-    CtrTopPanel_Keep(TitleTopDark());
+    TitleTopKeep();
 }
