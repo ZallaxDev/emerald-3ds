@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import re
 import subprocess
+import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -86,8 +87,9 @@ int main(void) {
             '#define ARRAY_COUNT(array) (sizeof(array) / sizeof((array)[0]))\n')
         (directory / 'test.c').write_text(source)
         executable = directory / 'test'
+        flags = ['-fno-pie', '-no-pie'] if sys.platform.startswith('linux') else []
         subprocess.run([args.cc, '-std=c99', '-Wall', '-Wextra', '-Werror',
-                        '-fsanitize=address,undefined', '-I' + str(directory),
+                        '-fsanitize=address,undefined', *flags, '-I' + str(directory),
                         '-I' + str(args.tree / 'include'), '-I' + str(ROOT / 'include'),
                         '-I' + str(ROOT / 'src'), str(directory / 'test.c'),
                         str(ROOT / 'src/3ds_encounters.c'), '-o', str(executable)], check=True)

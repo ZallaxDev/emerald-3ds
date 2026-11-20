@@ -87,10 +87,7 @@ jobs:
         run: python 3ds_port/tests/bottom_map_test.py
 
   build-3ds:
-    # Not ubuntu-latest: on Ubuntu 26.04 the container's AddressSanitizer
-    # builds (pokedex_capture_test.py --sanitize) loop on DEADLYSIGNAL until
-    # the runner is lost.
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7.0.1
       - name: Build the pinned release environment

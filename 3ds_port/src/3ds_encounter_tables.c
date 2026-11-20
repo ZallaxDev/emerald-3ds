@@ -33,18 +33,29 @@ static const CtrTimedEncounterRule sRules[] = {
     RULE(ROUTE123, 9, WINGULL, WINGULL, WINGULL, DUSKULL),
 };
 
+unsigned CtrEncounters_LandPhase(void)
+{
+    unsigned seconds, rate;
+
+    if (CtrSettings_GetInt("timed_encounters", 0) != 1
+     || !CtrGame_IsOutdoor() || !CtrDayNight_Time(&seconds, &rate))
+        return CTR_TIME_COUNT;
+    return CtrEncounters_Phase(seconds);
+}
+
 const struct WildPokemonInfo *CtrEncounters_Land(const struct WildPokemonInfo *original,
                                                 unsigned mapGroup, unsigned mapNum)
 {
     static struct WildPokemon slots[12];
     static struct WildPokemonInfo timed;
-    unsigned seconds, rate;
+    unsigned phase;
     bool changed = false;
 
-    if (!original || !original->wildPokemon || CtrSettings_GetInt("timed_encounters", 0) != 1
-     || !CtrGame_IsOutdoor() || !CtrDayNight_Time(&seconds, &rate))
+    if (!original || !original->wildPokemon)
         return original;
-    unsigned phase = CtrEncounters_Phase(seconds);
+    phase = CtrEncounters_LandPhase();
+    if (phase == CTR_TIME_COUNT)
+        return original;
 
     for (unsigned index = 0; index < ARRAY_COUNT(slots); ++index)
     {

@@ -186,7 +186,7 @@ Without these options the release is English-only, as before.
 ## Prerequisites (maintainer machine)
 
 - Python of the version `upstream.lock` names under `[python]`, with
-  Pillow (`pillow` there: 12.3.0), to run `build_release.py`: the voxel data
+  the Pillow version pinned there, to run `build_release.py`: the voxel data
   depends on the interpreter, so the release refuses any other and makes
   `make` run the generators with the same one (`PYTHON=` is set for it).
   `tools/docker_release.py` brings all of it (see *Release environment*).
