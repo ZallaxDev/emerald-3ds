@@ -541,3 +541,40 @@ optional follower downloads disabled.
 
 Raw measurements and hashes:
 [voxel-terrain-matching-python315.json](benchmarks/voxel-terrain-matching-python315.json).
+
+## Terrace solver follow-up
+
+The terrace piece solver skips trials for a stable tile until the tile,
+one of its neighbours, or the current pit penalty changes. Tiles still
+run in the original order, so a change reaches later neighbours in the
+same sweep and earlier neighbours in the next sweep.
+
+The region joiner tracks which current regions must stay apart. When two
+regions join, it transfers their restrictions to the surviving region.
+This avoids looking up the original face endpoints at every candidate
+join and keeps the original region representatives and join order.
+
+| Paired authored calls | Calls | Before | After |
+| --- | ---: | ---: | ---: |
+| Region joins | 76 | 7.169 s | 3.815 s |
+| Piece solver | 76 | 26.077 s | 9.511 s |
+
+The focused timing sums paired function calls on the same inputs.
+Call order alternated by group. Every ordered region assignment, tree
+ground assignment, and chosen piece matched. The generated checks also
+matched all 180 piece grids and 300 region grids.
+
+The complete terrain generator took **232.797 seconds before** and
+**215.966 seconds after**, a saving of **16.831 seconds
+(7.2%)**. This is one sequential local pair against `cd6a48b` on the
+same prepared English source tree with Python 3.15.2, Pillow 13.0.0,
+hash seed 0, and JIT and profiling disabled. A separate targeted check
+also ran on the host. The timing includes the final terrain corrections.
+
+The intermediate terrain export and final `relief.bin` matched byte for
+byte. The host relief reader and all eight terrace and ledge checks
+passed. The builder suite recorded 264 passes and two skips with optional
+follower downloads disabled.
+
+Raw measurements and hashes:
+[voxel-terrace-sweeps-python315.json](benchmarks/voxel-terrace-sweeps-python315.json).

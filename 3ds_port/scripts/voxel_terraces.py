@@ -863,7 +863,6 @@ def terraces(c, runs):
     for _, hi, cells, lo in runs:
         apart[hi].add(lo)
         apart[lo].add(hi)
-    members = {}
 
     def find(a):
         while uf.setdefault(a, a) != a:
@@ -892,18 +891,19 @@ def terraces(c, runs):
             return
         if ea or eb:
             elevs[ra] = (ea or set()) | (eb or set())
-        ma, mb = members.get(ra, ()), members.get(rb, ())
-        # a cell kept apart from one of the other side's
-        if not force and (any(find(o) == rb for m in ma for o in apart[m]) or
-                          any(find(o) == ra for m in mb for o in apart[m])):
+        # Track blocked joins by current terrace roots. A face's endpoints
+        # do not need to be found again for every candidate edge.
+        if not force and rb in apart.get(ra, ()):
             return
         uf[rb] = ra
-        if mb:
-            members.setdefault(ra, set()).update(mb)
-            members.pop(rb, None)
+        for other in apart.pop(rb, ()):
+            if other == ra:
+                apart[ra].discard(rb)
+            elif other != rb:
+                apart[other].discard(rb)
+                apart[other].add(ra)
+                apart[ra].add(other)
 
-    for cell in apart:
-        members[cell] = {cell}
     # a cave's bridge passes over what lies along its sides (Victory Road's
     # decks over the floor and the faces under them): it meets the ground
     # only at its ends, across its run
@@ -1836,6 +1836,8 @@ def blocks(c, U, flat, kept=None):
     free = sorted(cell for cell in out if cell not in flat and cell not in c.keep
                   and c.kind[cell] in (ROCK, TOP))
     neighbors = {}
+    dependents = collections.defaultdict(list)
+    movable = set(free)
     for cell in free:
         x, y = cell
         adjacent = []
@@ -1844,6 +1846,8 @@ def blocks(c, U, flat, kept=None):
             # A tree's ground is hidden and contributes no edge cost.
             if n in borders and n not in trees:
                 adjacent.append((n, mine, theirs, n in kept))
+                if n in movable:
+                    dependents[n].append(cell)
         neighbors[cell] = adjacent
 
     def step(p, q, back):
@@ -1906,14 +1910,21 @@ def blocks(c, U, flat, kept=None):
     # over a face needs the face to give way first)
     pit = [0.3]
     for pit[0], sweeps in ((0.3, 10), (1.0, 10), (3.0, 10), (10.0, 30)):
+        # A stable piece needs another trial only after its inputs change.
+        # Keep the original sweep order: a later dependent sees the update
+        # immediately, while an earlier one sees it on the next sweep.
+        dirty = movable.copy()
         for _ in range(sweeps):
             moved = 0
             for cell in free:
+                if cell not in dirty:
+                    continue
+                dirty.remove(cell)
                 kind, top = out[cell]
                 if cell in c.band and kind == "F":
                     continue
                 kinds = [c.band[cell], c.band[cell] + "2"] if cell in c.band else ["F", "S"] + CORNER_KINDS
-                tops = {U[cell] + LEVEL * k for k in (-2, -1, 0, 1, 2)} | {top}
+                tops = sorted({U[cell] + LEVEL * k for k in (-2, -1, 0, 1, 2)} | {top})
                 # Capture neighboring pieces once for this cell's trials.
                 # The next cell still sees any update made by this one.
                 adjacent = [(mine, borders[n][theirs], fixed,
@@ -1921,7 +1932,7 @@ def blocks(c, U, flat, kept=None):
                             for n, mine, theirs, fixed in neighbors[cell]]
                 best, best_cost = out[cell], cost(cell, borders[cell], out[cell], adjacent)
                 for k2 in kinds:
-                    for t in sorted(tops):
+                    for t in tops:
                         piece = (k2, t)
                         if piece == out[cell]:
                             continue
@@ -1931,6 +1942,8 @@ def blocks(c, U, flat, kept=None):
                 if best != out[cell]:
                     out[cell] = best
                     borders[cell] = piece_edges(best)
+                    dirty.add(cell)
+                    dirty.update(dependents[cell])
                     moved += 1
             if not moved:
                 break
