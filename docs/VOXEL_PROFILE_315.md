@@ -259,3 +259,44 @@ preparing the page offset tables and the rest of the export.
 Every packing result and each page's colour and glow buffers matched the
 original. The complete `buildings.bin` and `windowlights.bin` also matched
 the previous export byte for byte.
+
+## Texture compaction loops follow-up
+
+When testing how a triangle overlaps a row of texels, the candidate
+computes the row's shared term once and skips bisection if the whole
+remaining interval already passes. It preserves the edge tolerance and
+the arithmetic of the overlap test. When marking the one-pixel safety
+margin used by texture compaction, it gathers the distinct sampled
+texels first so adjoining faces share the work.
+
+The sampler matched the original on 3,000 generated triangles, including
+partly clipped and degenerate triangles. The existing building crop tests
+passed.
+
+The paired comparison on Python 3.15.2 and Pillow 13.0.0 covered 2,858
+models and 175,492 triangles. Summed compaction time fell from **12.895
+seconds to 10.782 seconds**, a saving of **2.113 seconds (16.4%)**. Run
+order alternated between models, and the JIT was disabled. This measures
+compaction with the updated sampler. Sampling gains in other callers are
+outside this timing.
+
+Every compared texture and triangle list matched. The complete
+`buildings.bin` and `windowlights.bin` matched the previous export byte
+for byte.
+
+## Cumulative timing estimate
+
+| Change | Measured seconds saved |
+| --- | ---: |
+| Room floor and shell classification | 107.0 |
+| Terrain voting and height solving | 1.9 |
+| Route 110 bridge generation | 1.2 |
+| Round furniture fitting | 18.9 |
+| Texture page packing and writing | 11.9 |
+| Texture compaction | 2.1 |
+| Approximate sum of separate measurements | **143.0** |
+
+The sum combines individual experiments with different baselines and
+workloads. Treat it as an estimate of build work saved. An end-to-end
+benchmark of the original and current branches under the same conditions
+can establish the actual wall time difference.

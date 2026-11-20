@@ -3929,10 +3929,11 @@ def sampled_texels(uv, W, H):
     if abs(area) < 1e-6:
         pts = sorted(uv)
         a, c = pts[0], pts[-1]
-        n = int(max(abs(c[0] - a[0]), abs(c[1] - a[1])) * 4) + 1
+        span_u, span_v = c[0] - a[0], c[1] - a[1]
+        n = int(max(abs(span_u), abs(span_v)) * 4) + 1
         for k in range(n + 1):
-            u = a[0] + (c[0] - a[0]) * k / n
-            v = a[1] + (c[1] - a[1]) * k / n
+            u = a[0] + span_u * k / n
+            v = a[1] + span_v * k / n
             out.add((min(hi_u, max(lo_u, int(u))), min(hi_v, max(lo_v, int(v)))))
         return out
     sign = 1.0 if area > 0 else -1.0
@@ -3945,33 +3946,37 @@ def sampled_texels(uv, W, H):
     # run of the row's squares, found by bisection
     tests = [(ax, ay, ex, ey,
               1 if sign * ex > 0 else 0, 1 if sign * ey < 0 else 0,
-              eps * math.hypot(ex, ey)) for (ax, ay), (ex, ey) in edges]
+              -sign * ey, eps * math.hypot(ex, ey)) for (ax, ay), (ex, ey) in edges]
     for v in range(lo_v, hi_v + 1):
         first, last = lo_u, hi_u
-        for ax, ay, ex, ey, dv, du, limit in tests:
+        for ax, ay, ex, ey, dv, du, slope, limit in tests:
             if first > last:
                 break
-            def passes(u):
-                return sign * (ex * (v + dv - ay) - ey * (u + du - ax)) > limit
-            if -sign * ey > 0:          # passing from some square on
+            # This term is shared by all bisection probes in the row.
+            vertical = ex * (v + dv - ay)
+            if slope > 0:               # passing from some square on
+                if sign * (vertical - ey * (first + du - ax)) > limit:
+                    continue
                 a, b = first, last + 1
                 while a < b:
                     m = (a + b) // 2
-                    if passes(m):
+                    if sign * (vertical - ey * (m + du - ax)) > limit:
                         b = m
                     else:
                         a = m + 1
                 first = a
-            elif -sign * ey < 0:        # passing up to some square
+            elif slope < 0:             # passing up to some square
+                if sign * (vertical - ey * (last + du - ax)) > limit:
+                    continue
                 a, b = first - 1, last
                 while a < b:
                     m = (a + b + 1) // 2
-                    if passes(m):
+                    if sign * (vertical - ey * (m + du - ax)) > limit:
                         a = m
                     else:
                         b = m - 1
                 last = a
-            elif not passes(first):
+            elif not sign * (vertical - ey * (first + du - ax)) > limit:
                 first = last + 1
         for u in range(first, last + 1):
             out.add((u, v))
@@ -4143,7 +4148,7 @@ def compact_rows_moved(model):
         W = art.size[0]
         apx = art.load()
         band = []
-        front = set()
+        front_samples = set()
         top = rows          # the rows the drawing's own faces read
         for (tri, shade, tag) in model.mesh.tris:
             vs = [p[4] for p in tri]
@@ -4156,10 +4161,11 @@ def compact_rows_moved(model):
             else:
                 band.append(None)
                 top = max(top, min(H, int(math.ceil(max(vs))) + 1))
-                # and a texel round it: a face's edge on a texel's edge may
-                # read the next one by rounding
-                front |= {(u + du, v + dv) for (u, v) in texels if v < rows
-                          for du in (-1, 0, 1) for dv in (-1, 0, 1)}
+                front_samples.update((u, v) for u, v in texels if v < rows)
+        # Neighboring triangles often share texels. Add the rounding margin
+        # around each distinct texel just once.
+        front = {(u + du, v + dv) for u, v in front_samples
+                 for du in (-1, 0, 1) for dv in (-1, 0, 1)}
         filled = {}         # clear texels given a band's colour
         held = set()        # texels a moved face reads as they are
         moved, left = {}, []
