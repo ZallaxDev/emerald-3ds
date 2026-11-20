@@ -82,11 +82,12 @@ paths = [
 
 [local_paths]
 # The audit documents the patterns it checks. The bundled macOS CPython
-# framework binary contains a build-machine path from the upstream runtime.
+# framework and its Tcl binary contain build-machine paths from the upstream runtime.
 # Neither exception affects the ROM or secret checks.
 paths = [
     "tools/release_audit.py",
     "Emerald3DS-v*-macOS/_internal/Python.framework/Versions/*/Python",
+    "Emerald3DS-v*-macOS/_internal/Tcl",
 ]
 
 [skip]
