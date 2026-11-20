@@ -154,3 +154,48 @@ cp 3ds_port/scripts/gen_voxel_relief.py build/upstream/3ds_port/scripts/
 PYTHONHASHSEED=0 uv run --python 3.15.2 --with Pillow==13.0.0 python tools/profile_voxel.py --tree build/upstream --out build/terrain-candidate --steps relief --profiler none
 cmp build/terrain-baseline/relief.bin build/terrain-candidate/relief.bin
 ```
+
+## Route 110 bridge follow-up
+
+The bridge generator now decodes each metatile's visible pixels once
+per layout, constructs the neighborhoods around deck cells from the deck
+outward, and scans for curb runs from actual curb tiles. The darkest
+texel used for underside and girder faces is cached per cell. Removing the
+selected texel invalidates its entry, and an empty cell still uses the
+original fallback.
+
+Three paired runs measured `voxel_bridge.block_specs` in fresh Python
+3.15.2 processes with Pillow 13.0.0, JIT disabled and hash seed 0. Pairs
+alternated run order. Timings exclude importing Python modules and checking
+the generated data.
+
+| Bridge generation | Run 1 | Run 2 | Run 3 | Median |
+| --- | ---: | ---: | ---: | ---: |
+| Original | 8.665 s | 7.932 s | 7.844 s | 7.932 s |
+| Candidate | 6.604 s | 6.762 s | 7.470 s | 6.762 s |
+
+The median fell by **1.171 seconds (14.8%)**. All six runs produced 292
+models and 2,028 bridge faces. A fingerprint covering the textures, faces,
+UVs, placement and shadow data, ground patches and deck table matched
+across all runs.
+
+The deck-neighborhood selection matched both the contents and iteration
+order of the original on 100 randomized maps. Focused texel checks
+covered tied colours, deletion of the selected texel, and the empty-cell
+fallback.
+
+A fresh full building export produced `buildings.bin` and
+`windowlights.bin` byte for byte equal to the files from the earlier room
+optimization experiment. Their hashes are listed under Output identity.
+The paired bridge timings above quantify this change's performance.
+
+To reproduce the timing, run this from a checkout with a prepared
+`build/upstream` tree. Stage the previous or current copy of
+`voxel_bridge.py` in that tree before each timed invocation. Commit
+`79135bb` contains the previous copy.
+
+```sh
+PYTHONPATH=build/upstream/3ds_port/scripts PYTHONHASHSEED=0 PYTHON_JIT=0 \
+  uv run --python 3.15.2 --with Pillow==13.0.0 python -c \
+  'import time, voxel_bridge; start = time.perf_counter(); models = voxel_bridge.block_specs({"name": "cycling_road"}); print(time.perf_counter() - start, len(models))'
+```
