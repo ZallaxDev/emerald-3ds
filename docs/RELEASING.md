@@ -273,6 +273,13 @@ extracted command-line and graphical builders on that architecture.
 The official standalone download remains the Windows ZIP. Linux uses the
 source builder.
 
+The macOS packaging CI separately tests Python 3.15.2 and Pillow 13.0.0
+with a synthetic payload. Those versions test compatibility of PyInstaller,
+archive extraction and both builder executables; they do not replace the
+release-generation versions in `upstream.lock`. Continue using those pinned
+versions to generate and precompile real game data, preserving the proven
+native/browser parity.
+
 The web payload can also be made on its own from any release's `payload/`
 folder, for example the one inside an already published Windows ZIP:
 
