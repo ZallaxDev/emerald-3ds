@@ -3068,6 +3068,22 @@ class Raster:
         self.depth = [-1e30] * (w * h)
         self.owner = [None] * (w * h)
 
+    def draw_ground_tile(self, x, y, tex):
+        """Lay a flat 16x16 tile on an empty, in-bounds part of the raster.
+
+        In the proof projection each texel covers one pixel. Its depth is
+        the centre of its row and the ground has no owner.
+        """
+        pixels = tex.load()
+        for v in range(16):
+            row = (y + v) * self.w + x
+            depth = y + v + 0.5
+            for u in range(16):
+                r, g, b, alpha = pixels[u, v]
+                if alpha >= 128:
+                    self.color[row + u] = (r, g, b)
+                    self.depth[row + u] = depth
+
     def draw(self, verts, tex, shade, owner=None):
         """verts: three (sx, sy, depth, invw, u, v); larger depth is nearer.
 
