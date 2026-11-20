@@ -41,6 +41,7 @@ import voxel_props  # noqa: E402
 import voxel_relief_fixes  # noqa: E402
 import voxel_night
 import voxel_windows  # noqa: E402
+from voxel_floor import match_floor_pixels  # noqa: E402
 
 PORT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # A placement whose cells keep their own metatile under the model: the
@@ -1974,14 +1975,13 @@ def interior_specs(spec):
         for x in range(layout.w):
             full.paste(layout.cell_image(layout.metatile(x, y)), (x * 16, y * 16))
     fpx = full.load()
-    floors = [layout.cell_image(m).load() for m in room["ground"]]
+    floors = [layout.cell_image(m) for m in room["ground"]]
     pieces = voxel_relief_fixes.furniture_pieces(spec["name"], room["pieces"])
     # Floor is a pixel the floor metatile has there too - and, inside a
     # piece's shape, one that the open floor reaches through such pixels: a
     # counter top can be painted in the floor's own cream, but its outline
     # closes it off.
-    match = [[any(f[x % 16, y % 16] == fpx[x, y] for f in floors) for x in range(W)]
-             for y in range(H)]
+    match = match_floor_pixels(full, floors)
     grids = [_inside_grid(pc["shape"], W, H) for pc in pieces]
     # a piece drawn from some tiles of the upper layer alone (`tiles`): a
     # beam over the floor and the posts it runs between, its pixels only
@@ -2020,8 +2020,11 @@ def interior_specs(spec):
     owner = [[None] * W for _ in range(H)]
     variant_px = {}
     # the room's shell, where a piece's copies never take a pixel
-    walls_at = [[any(grids[j][y][x] for j, p_ in enumerate(pieces)
-                     if p_.get("fill") or p_["name"].split("_")[0] in SHELL_PIECES)
+    # Shell membership is constant for the room: do not reclassify every
+    # furniture piece (and split its name) for every pixel of the drawing.
+    shell_grids = [grids[j] for j, p_ in enumerate(pieces)
+                   if p_.get("fill") or p_["name"].split("_")[0] in SHELL_PIECES]
+    walls_at = [[any(grid[y][x] for grid in shell_grids)
                  for x in range(W)] for y in range(H)]
     # (the floor the terrain lays under a piece's cells)
     floor_hexes = {"%02x%02x%02x" % c[:3] for c in layout.cell_image(room["ground"][0]).getdata()}
