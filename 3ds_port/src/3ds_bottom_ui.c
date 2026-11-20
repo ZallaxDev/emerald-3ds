@@ -529,14 +529,16 @@ static bool8 BagShown(u8 mode)
     return mode == MODE_BAG_MENU;
 }
 
-/* The bag to deposit from at the PC or to sell from at a shop: in the window,
- * but it goes back to the PC's or the shop's menu as it closes, never to
- * another screen (CtrBottom_LeaveTo), so the dock is locked to its own BAG,
- * which closes it as B does. */
+/* The bag to deposit from at the PC, to sell from at a shop or to plant a
+ * berry from at a soft patch: in the window, but it goes back to the PC's or
+ * the shop's menu, or to the patch, as it closes, never to another screen
+ * (CtrBottom_LeaveTo), so the dock is locked to its own BAG, which closes it
+ * as B does. */
 static bool8 BagReturnsToMenu(u8 mode)
 {
     return mode == MODE_BAG_MENU
-        && (gBagPosition.location == ITEMMENULOCATION_ITEMPC || gBagPosition.location == ITEMMENULOCATION_SHOP);
+        && (gBagPosition.location == ITEMMENULOCATION_ITEMPC || gBagPosition.location == ITEMMENULOCATION_SHOP
+            || gBagPosition.location == ITEMMENULOCATION_BERRY_TREE);
 }
 
 /* A party menu a script or a facility opened to choose a Pokemon, and the summary opened from it, go
