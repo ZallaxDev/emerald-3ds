@@ -199,3 +199,30 @@ PYTHONPATH=build/upstream/3ds_port/scripts PYTHONHASHSEED=0 PYTHON_JIT=0 \
   uv run --python 3.15.2 --with Pillow==13.0.0 python -c \
   'import time, voxel_bridge; start = time.perf_counter(); models = voxel_bridge.block_specs({"name": "cycling_road"}); print(time.perf_counter() - start, len(models))'
 ```
+
+## Round furniture fitting follow-up
+
+The furniture fitter estimates how much of each image row a trial profile
+covers. Each search trial changes one ring, so only the neighboring bands
+need new widths. The candidate caches each band's row widths by its two
+radii and clears the cache when the axis moves. It uses the same radius
+interpolation, ellipse arithmetic, pixel thresholds and trial order.
+
+During a full building export on Python 3.15.2 and Pillow 13.0.0, each
+object fit ran through both implementations on the same input. Run order
+alternated between objects. The test checked the returned axis and
+radius profiles before passing the candidate result to the exporter.
+Four additional synthetic silhouettes matched, including fractional
+heights and a case with more bands than samples.
+
+| Fitting time across 152 authored object fits | Time |
+| --- | ---: |
+| Original | 26.589 s |
+| Candidate | 7.667 s |
+| Saved | 18.921 s (71.2% less time) |
+
+These are sums of timed function calls from one export with JIT disabled.
+They exclude the rest of model generation and the export itself.
+All 152 fits matched. The full export also produced `buildings.bin` and
+`windowlights.bin` byte for byte equal to the bridge follow-up's export.
+The hashes are listed under Output identity.

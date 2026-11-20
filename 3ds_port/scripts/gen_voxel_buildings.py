@@ -1457,33 +1457,51 @@ def lathe_fit(obj, height, base, squash=0.7, bands=4, seg=16):
     spare = {v: [abs(u + 0.5 - cx) for u in range(x0 - 2, x1 + 2) if (u, v) not in own]
              for v in rows}
     n = int(4 * h) + 1
-    ys = [h * k / (n - 1) for k in range(n)]
-
-    def radius(radii, y):
+    band_samples = [[] for _ in range(bands)]
+    for k in range(n):
+        y = h * k / (n - 1)
         t = y / h * bands
         i = min(int(t), bands - 1)
-        return radii[i] + (radii[i + 1] - radii[i]) * (t - i)
+        band_samples[i].append((y, t - i))
 
     # (sorted, to count a row's pixels either side of a width by bisection)
     need_sorted = {v: sorted(ds) for v, ds in need.items()}
     spare_sorted = {v: sorted(ds) for v, ds in spare.items()}
     costs = {}
+    band_cache = [{} for _ in band_samples]
 
-    def cost(cz, radii):
+    def band_widths(i, lower, upper):
+        # Each trial changes one ring, so the other bands can reuse their
+        # row widths at this axis position. Use the same radius interpolation
+        # and ellipse test as when evaluating the full profile.
+        key = (lower, upper)
+        cache = band_cache[i]
+        if key not in cache:
+            samples = []
+            for y, fraction in band_samples[i]:
+                r = lower + (upper - lower) * fraction
+                if r > 0:
+                    samples.append((y, r, squash * r))
+            widths = []
+            for offset in row_offsets:
+                width = -1.0
+                for y, r, depth in samples:
+                    t = (offset + y) / depth
+                    if -1.0 <= t <= 1.0:
+                        width = max(width, r * math.sqrt(1.0 - t * t))
+                widths.append(width)
+            cache[key] = widths
+        return cache[key]
+
+    def cost(radii):
         # the search comes back to the same radii often: each is costed once
-        key = (cz, tuple(radii))
+        key = tuple(radii)
         if key in costs:
             return costs[key]
-        rs = [(y, radius(radii, y)) for y in ys]
+        widths = [band_widths(i, radii[i], radii[i + 1]) for i in range(bands)]
         c = 0
-        for v in rows:
-            dv = v + 0.5 + base - cz
-            w = -1.0
-            for y, r in rs:
-                if r > 0:
-                    t = (dv + y) / (squash * r)
-                    if -1.0 <= t <= 1.0:
-                        w = max(w, r * math.sqrt(1.0 - t * t))
+        for v, row_widths in zip(rows, zip(*widths)):
+            w = max(row_widths)
             nd, sp = need_sorted[v], spare_sorted[v]
             c += 1000 * (len(nd) - bisect.bisect_right(nd, w)) + bisect.bisect_right(sp, w)
         costs[key] = c
@@ -1498,8 +1516,12 @@ def lathe_fit(obj, height, base, squash=0.7, bands=4, seg=16):
     while top + h + 0.25 * k <= foot:
         cz = top + h + base + 0.25 * k
         k += 1
+        row_offsets = [v + 0.5 + base - cz for v in rows]
+        costs.clear()
+        for cache in band_cache:
+            cache.clear()
         for radii in ([(x1 - x0) / 2.0] * (bands + 1), drawn(cz)):
-            c0 = cost(cz, radii)
+            c0 = cost(radii)
             better = True
             while better:
                 better = False
@@ -1507,7 +1529,7 @@ def lathe_fit(obj, height, base, squash=0.7, bands=4, seg=16):
                     for d in (-0.25, 0.25, -1.0, 1.0):
                         rr = list(radii)
                         rr[i] = max(0.0, rr[i] + d)
-                        c1 = cost(cz, rr)
+                        c1 = cost(rr)
                         if c1 < c0:
                             radii, c0, better = rr, c1, True
             if best is None or c0 < best[0]:
