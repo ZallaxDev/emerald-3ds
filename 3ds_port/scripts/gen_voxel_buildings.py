@@ -28,9 +28,7 @@ import os
 import struct
 import sys
 import types
-from concurrent.futures import ProcessPoolExecutor
 from functools import cache
-from multiprocessing import get_context
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import voxel_building as vb  # noqa: E402
@@ -3012,6 +3010,10 @@ def build_models(only=None, *, jobs=1):
     if jobs == 1:
         expanded = expand_model_specs(layouts)
     else:
+        # The browser builder uses the serial path without multiprocessing.
+        from concurrent.futures import ProcessPoolExecutor
+        from multiprocessing import get_context
+
         indices = [i for i, spec in enumerate(specs.SPECS) if "interior" in spec]
         with ProcessPoolExecutor(max_workers=jobs, mp_context=get_context("spawn")) as pool:
             expanded = expand_model_specs(layouts, prepare_interiors(indices, pool, jobs))

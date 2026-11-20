@@ -43,10 +43,8 @@ import shutil
 import struct
 import subprocess
 import sys
-from concurrent.futures import ProcessPoolExecutor
 from functools import cache
 from itertools import repeat
-from multiprocessing import get_context
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PORT = os.path.dirname(HERE)
@@ -707,6 +705,10 @@ def check_dumps(names, by_name, jobs):
     if jobs == 1 or len(names) == 1:
         yield from map(check_dump, layouts)
     else:
+        # The browser's relief generator imports this module to read buildings.
+        from concurrent.futures import ProcessPoolExecutor
+        from multiprocessing import get_context
+
         with ProcessPoolExecutor(max_workers=min(jobs, len(names)), mp_context=get_context("spawn")) as pool:
             yield from pool.map(check_dump, layouts)
 
