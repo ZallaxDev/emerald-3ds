@@ -473,3 +473,37 @@ and Pillow 13.0.0 with the JIT disabled. The order alternated between
 calls, and the original and candidate used separate per-art lookup caches.
 Every tile choice and mask matched. The complete `relief.bin` matched the
 previous export byte for byte, and the host C relief reader passed.
+
+## Terrain search and mask follow-up
+
+This round reduces three kinds of repeated work:
+
+- Plain-ground lookup groups each row's matching tiles by quality, then
+  searches outward from the nearest column until it finds an eligible tile.
+  It checks current exclusions and retains the original row and column
+  tie breaks.
+- The cutout flood fill advances a whole bit mask at once using four-way
+  connectivity. Terrain cuts cache the pixels for each metatile colour and
+  combine only the colours present on the surrounding ground.
+- Terrain voting visits runs of pixels whose kind can change. Rim pixels
+  still contribute to the same vote totals.
+
+The complete terrain generator, including terrace and map corrections,
+took **293.130 seconds before** and **274.032 seconds after**.
+This saved **19.098 seconds (6.5%)** in one sequential local
+pair against the already optimized `a6f06d5` checkout. Both runs used the
+same prepared English source inputs and building file, Python 3.15.2,
+Pillow 13.0.0, hash seed 0, and JIT and profiling disabled. This measures
+the terrain generator alone. It is a separate comparison from the earlier
+five-generator benchmark.
+
+The new `relief.bin` and `signposts.bin` both matched the original
+generator's files byte for byte. The host C relief reader passed. The
+signpost fixture and all eight terrace and ledge checks passed on Python
+3.15.2 and 3.12.14. Focused comparisons matched 1,112 sign-mask cases
+(including every 3×3 pattern), 1,800 ground searches with changing
+exclusions, and 1,800 terrain cut masks. The builder suite passed
+264 tests and skipped two with optional follower downloads disabled.
+
+Raw measurements and hashes:
+[voxel-terrain-algorithms-python315.json](benchmarks/voxel-terrain-algorithms-python315.json).

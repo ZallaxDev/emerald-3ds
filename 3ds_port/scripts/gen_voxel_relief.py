@@ -1860,15 +1860,18 @@ def drawn_canvas(name):
         scores = itertools.accumulate(map(vote_by_kind.__getitem__, kind[y]))
         balance[y + 1][1:] = map(operator.add, balance[y][1:], scores)
     bounds = [(max(0, x - R), min(W, x + R + 1)) for x in range(W)]
-    for y in range(H):
+    # Find runs of pixels that can change without testing each ground
+    # pixel in Python. Rim pixels contribute votes but keep their kind.
+    rock_runs = re.compile(b"[" + re.escape(bytes((TOP, FACE, FLECK))) + b"]+")
+    for y, row in enumerate(kind):
         y0, y1 = max(0, y - R), min(H, y + R + 1)
         above, below = balance[y0], balance[y1]
-        for x, pixel in enumerate(kind[y]):
-            if pixel not in (TOP, FACE, FLECK):
-                continue
-            x0, x1 = bounds[x]
-            net = below[x1] - above[x1] - below[x0] + above[x0]
-            voted[y][x] = TOP if net > 0 else FACE
+        target = voted[y]
+        for run in rock_runs.finditer(bytes(row)):
+            for x in range(run.start(), run.end()):
+                x0, x1 = bounds[x]
+                net = below[x1] - above[x1] - below[x0] + above[x0]
+                target[x] = TOP if net > 0 else FACE
     return layouts, CW, CH, voted, blocked, side, flat, face_low
 
 
@@ -3600,10 +3603,22 @@ def _cut_mask(art, layout, x, y, rock_cells):
                 ground.update(palettes[m])
     if not ground:
         return None
-    img = art.cell_image(art.metatile(x, y)).convert("RGB")
-    opaque = [(i % 16, i // 16) for i, pixel in enumerate(img.getdata()) if pixel not in ground]
-    rows = voxel_sign_mask.cutout_mask(opaque)
-    return [(~r) & 0xFFFF for r in rows]
+    # A metatile's pixel positions are fixed. Combine the masks for the
+    # colours present on nearby ground instead of scanning all 256 pixels.
+    by_metatile = art.__dict__.setdefault("_cut_colour_masks", {})
+    m = art.metatile(x, y)
+    if m not in by_metatile:
+        colours = collections.defaultdict(int)
+        for i, pixel in enumerate(art.cell_image(m).convert("RGB").getdata()):
+            colours[pixel] |= 1 << i
+        by_metatile[m] = dict(colours)
+    empty = 0
+    for colour, mask in by_metatile[m].items():
+        if colour in ground:
+            empty |= mask
+    solid = ((1 << 256) - 1) ^ empty
+    outside = voxel_sign_mask.exterior_mask(solid, 16, 16)
+    return [(outside >> (y * 16)) & 0xFFFF for y in range(16)]
 
 
 def _lifted(grid, mask):
@@ -3692,43 +3707,68 @@ def plain_ground(art, layout, content, x, y, side=None, kind=None, half=False):
         return known[m]
     m0 = art.metatile(x, y)
     forced = kind is not None
-    if forced:
-        pass
-    elif side is None:
+    if not forced and side is None:
         kind = main(m0)[0]
-    else:
-        # a shore tile's commonest colour can be the sea beyond it: what the
-        # rock stands on is the ground at the edge the rock is on
-        im = art.cell_image(m0).convert("RGB")
-        part = [im.getpixel((i, j)) for j in range(16) for i in range(16) if _SIDE_PIXELS[side](i, j)]
-        kind = commonest(part)
-    # Rows are indexed by colour on demand. The layout art is fixed, while
-    # the caller's excluded cells can differ, so filter exclusions at lookup.
-    rows = art.__dict__.setdefault("_plain_ground_rows", {}).setdefault(layout.w, {})
+    elif not forced:
+        # A shore tile's commonest colour can be the sea beyond it. Sample
+        # the edge where the rock stands, once per tile and direction.
+        edges = art.__dict__.setdefault("_plain_ground_edges", {})
+        edge = (m0, side)
+        if edge not in edges:
+            im = art.cell_image(m0).convert("RGB")
+            part = [im.getpixel((i, j)) for j in range(16) for i in range(16) if _SIDE_PIXELS[side](i, j)]
+            edges[edge] = commonest(part)
+        kind = edges[edge]
+
+    # Quality outranks distance. In each row, find the closest available
+    # tile of the first usable quality, then compare the row winners.
+    rows = art.__dict__.setdefault("_plain_ground_quality_rows", {}).setdefault(layout.w, {})
     best = None
     for ny in range(max(0, y - 24), min(layout.h, y + 25)):
         if ny not in rows:
-            by_colour = collections.defaultdict(list)
+            by_colour = collections.defaultdict(lambda: collections.defaultdict(list))
             for nx in range(layout.w):
                 m = art.metatile(nx, ny)
                 colour, pixels, foreign = main(m)
-                by_colour[colour].append((nx, m, pixels, foreign))
-            rows[ny] = by_colour
-        candidates = rows[ny].get(kind)
-        if not candidates:
-            continue
-        first = bisect.bisect_left(candidates, (x - 24,))
-        last = bisect.bisect_left(candidates, (x + 25,))
-        dy = abs(ny - y)
-        for nx, m, pixels, foreign in candidates[first:last]:
-            if (half and pixels < 128) or (nx, ny) in content:
+                by_colour[colour][foreign, -pixels].append((nx, m))
+            rows[ny] = {colour: sorted(qualities.items()) for colour, qualities in by_colour.items()}
+        for quality, candidates in rows[ny].get(kind, ()):
+            if best is not None and quality > best[0][:2]:
+                break
+            if half and quality[1] > -128:
                 continue
-            k = (foreign, -pixels, abs(nx - x) + dy)
-            if best is None or k < best[0]:
-                best = (k, m)
+            nearest = _nearest_plain_tile(candidates, content, x, ny)
+            if nearest is not None:
+                nx, m = nearest
+                k = (*quality, abs(nx - x) + abs(ny - y))
+                if best is None or k < best[0]:
+                    best = (k, m)
+                break
     if best:
         return best[1]
     return None if forced else art.metatile(x, y)
+
+
+def _nearest_plain_tile(candidates, content, x, y):
+    """Find the closest eligible column, breaking distance ties to the left."""
+    right = bisect.bisect_left(candidates, (x,))
+    left = right - 1
+    while left >= 0:
+        nx, _ = candidates[left]
+        if nx < x - 24:
+            break
+        if (nx, y) not in content:
+            break
+        left -= 1
+    left_tile = candidates[left] if left >= 0 and candidates[left][0] >= x - 24 else None
+    while right < len(candidates):
+        nx, m = candidates[right]
+        if nx > x + 24 or (left_tile is not None and nx - x >= x - left_tile[0]):
+            break
+        if (nx, y) not in content:
+            return nx, m
+        right += 1
+    return left_tile
 
 
 def _plain_tile(art, m):
