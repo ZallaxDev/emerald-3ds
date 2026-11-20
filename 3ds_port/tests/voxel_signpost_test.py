@@ -61,6 +61,10 @@ def run():
     # An enclosed transparent pocket survives the outside flood.
     rows = cutout_mask({(x, y) for x in range(3) for y in range(3) if (x, y) != (1, 1)}, 3, 3)
     assert rows[1] & (1 << 1)
+    # A diagonal gap does not connect the pocket to the border.
+    assert cutout_mask({(1, 0), (0, 1), (2, 1), (1, 2)}, 3, 3) == [2, 7, 2]
+    # Opening the pocket with an orthogonal gap makes it exterior.
+    assert cutout_mask({(0, 1), (2, 1), (1, 2)}, 3, 3) == [0, 5, 2]
     # A board that fills its cell is all sign.
     assert cutout_mask({(x, y): 1 for x in range(16) for y in range(16)}) == [65535] * 16
 

@@ -510,7 +510,7 @@ VOXEL_GFX_OUTPUTS += $(patsubst %.pal,%.gbapal,$(filter %.pal,$(VOXEL_GFX_SOURCE
 ifneq ($(strip $(VOXEL_GFX_OUTPUTS)),)
 $(VOXEL_GFX_OUTPUTS) &: $(VOXEL_GFX_SOURCES)
 	+$(MAKE) -C $(ROOT) $(patsubst $(ROOT)/%,%,$(VOXEL_GFX_OUTPUTS))
-romfs/voxel/regions.bin romfs/voxel/signposts.bin romfs/voxel/buildings.bin romfs/voxel/relief.bin romfs/stage/leaves.bin: $(VOXEL_GFX_OUTPUTS)
+romfs/voxel/regions.bin romfs/voxel/signposts.bin romfs/voxel/buildings.bin build/voxel_relief_base.bin romfs/stage/leaves.bin: $(VOXEL_GFX_OUTPUTS)
 endif
 
 # What every cell of every layout IS (the console reads its signposts).
@@ -551,13 +551,14 @@ romfs/voxel/trees.rgba5551: scripts/gen_voxel_trees.py \
 # verify-voxel-buildings runs the proofs alone, even when the file is
 # up to date: the release build asks for it.
 romfs/voxel/buildings.bin: scripts/gen_voxel_buildings.py scripts/voxel_building.py scripts/voxel_night.py scripts/voxel_windows.py \
+		scripts/voxel_floor.py \
 		scripts/voxel_building_specs.py scripts/voxel_bridge.py scripts/voxel_fence.py scripts/voxel_fortree.py scripts/dump_region_art.py scripts/voxel_props.py \
 		scripts/voxel_relief_fixes.py assets/voxel/relief_fixes.json \
 		scripts/gen_voxel_relief.py \
 		scripts/voxel_defect_scan.py assets/voxel/interior_lint_allow.toml \
 		$(ROOT)/data/layouts/layouts.json
 	@mkdir -p $(@D)
-	"$(PYTHON)" scripts/gen_voxel_buildings.py --verify --output $@
+	"$(PYTHON)" scripts/gen_voxel_buildings.py --verify --diagnostics failures --output $@
 
 # The light lit windows throw on the ground, written beside buildings.bin
 # by the same run.
@@ -569,17 +570,27 @@ romfs/voxel/windowlights.bin: romfs/voxel/buildings.bin
 verify-voxel-buildings:
 	"$(PYTHON)" scripts/gen_voxel_buildings.py --verify
 
-# Terrain relief read off the drawing: gen_voxel_relief.py explains it.
-# It leaves a building's cells to its model and reads which cells those are
-# from buildings.bin (voxel_terraces.modelled), so it comes after it: made
-# beside it, the relief depended on which of the two finished first.
-romfs/voxel/relief.bin: scripts/gen_voxel_relief.py scripts/voxel_cells.py scripts/voxel_props.py \
+# The base can survive a buildings-only rebuild. Track the maps and metatiles
+# it reads so their edits still regenerate it.
+RELIEF_MAP_INPUTS := $(ROOT)/data/layouts/layouts.json $(HOST_MAP_JSONS) \
+	$(ROOT)/src/data/tilesets/metatiles.h $(ROOT)/include/constants/metatile_behaviors.h \
+	$(wildcard $(ROOT)/data/layouts/*/map.bin $(ROOT)/data/tilesets/*/*/metatiles.bin \
+		$(ROOT)/data/tilesets/*/*/metatile_attributes.bin)
+
+# Solve the terrain from the map art while the buildings are being verified.
+# The terrace pass reads the building footprints, so the finished relief
+# still waits for the verified buildings.
+build/voxel_relief_base.bin: scripts/gen_voxel_relief.py scripts/voxel_cells.py scripts/voxel_props.py \
 		scripts/voxel_art.py scripts/voxel_building.py scripts/dump_region_art.py \
-		scripts/voxel_relief_fixes.py scripts/voxel_terraces.py assets/voxel/relief_fixes.json \
-		scripts/voxel_engine_view.py romfs/voxel/buildings.bin \
-		$(ROOT)/data/layouts/layouts.json
+		scripts/voxel_relief_fixes.py $(RELIEF_MAP_INPUTS)
 	@mkdir -p $(@D)
-	"$(PYTHON)" scripts/gen_voxel_relief.py --output $@
+	"$(PYTHON)" scripts/gen_voxel_relief.py --base-output $@.tmp && mv -f $@.tmp $@
+
+VOXEL_TERRACE_JOBS ?= 1
+romfs/voxel/relief.bin: build/voxel_relief_base.bin romfs/voxel/buildings.bin \
+		scripts/voxel_terraces.py scripts/voxel_engine_view.py assets/voxel/relief_fixes.json
+	@mkdir -p $(@D)
+	"$(PYTHON)" scripts/gen_voxel_relief.py --base-input $< --output $@.tmp --terrace-jobs "$(VOXEL_TERRACE_JOBS)" && mv -f $@.tmp $@
 
 romfs/bottom/battle.bin: scripts/gen_battle_art.py
 	@mkdir -p $(@D)
@@ -604,7 +615,7 @@ romfs/stage/leaves.bin: scripts/gen_intro_margins.py $(ROOT)/graphics/intro/scen
 HOST_VOXEL_DEFS := -D'PORT_LOG(...)=((void)0)' -DVOXEL_HOST_FILES
 
 .PHONY: verify-voxel-trees
-verify: verify-voxel-world
+VERIFY_HOST_CHECKS += verify-voxel-world
 .PHONY: verify-voxel-world
 verify-voxel-world: build/voxel_world_hash_test.exe
 	./build/voxel_world_hash_test.exe
@@ -615,7 +626,7 @@ build/voxel_world_hash_test.exe: tests/voxel_world_hash_test.c src/voxel/voxel_w
 		-iquote compat -iquote ../include -Isrc/voxel tests/voxel_world_hash_test.c -o $@
 
 # The field's banks of other tilesets in 2D (3ds_tile_banks.h).
-verify: verify-tile-banks
+VERIFY_HOST_CHECKS += verify-tile-banks
 .PHONY: verify-tile-banks
 verify-tile-banks: build/tile_banks_test.exe
 	./build/tile_banks_test.exe
@@ -626,7 +637,7 @@ build/tile_banks_test.exe: tests/tile_banks_test.c include/3ds_tile_banks.h
 
 # What stands on the current map follows the live grid (voxel_building.h,
 # VoxelBuildings_SetDrawings), on a fixture of its own.
-verify: verify-voxel-building-live
+VERIFY_HOST_CHECKS += verify-voxel-building-live
 .PHONY: verify-voxel-building-live
 verify-voxel-building-live: build/voxel_building_live_test.exe
 	./build/voxel_building_live_test.exe
@@ -638,7 +649,7 @@ build/voxel_building_live_test.exe: tests/voxel_building_live_test.c src/voxel/v
 		$(HOST_VOXEL_DEFS) -DVOXEL_BUILDINGS_PATH=\"build/voxel_building_live.bin\" \
 		tests/voxel_building_live_test.c src/voxel/voxel_building.c -lm -o $@
 
-verify: verify-voxel-arena
+VERIFY_HOST_CHECKS += verify-voxel-arena
 .PHONY: verify-voxel-arena
 verify-voxel-arena: build/voxel_arena_test.exe
 	./build/voxel_arena_test.exe
@@ -647,7 +658,7 @@ build/voxel_arena_test.exe: tests/voxel_arena_test.c src/voxel/voxel_arena.c src
 	@mkdir -p $(@D)
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror tests/voxel_arena_test.c -o $@
 
-verify: verify-voxel-atlas
+VERIFY_HOST_CHECKS += verify-voxel-atlas
 .PHONY: verify-voxel-atlas
 verify-voxel-atlas: build/voxel_atlas_test.exe
 	./build/voxel_atlas_test.exe
@@ -658,7 +669,7 @@ build/voxel_atlas_test.exe: tests/voxel_atlas_test.c src/voxel/voxel_atlas.c src
 	$(HOSTCC) -std=gnu99 -O2 -DPORTABLE -DMODERN=1 -D__INTELLISENSE__ \
 		-iquote compat -iquote ../include -Iinclude -Isrc/voxel tests/voxel_atlas_test.c src/voxel/voxel_grade.c -o $@
 
-verify: verify-voxel-trees
+VERIFY_HOST_CHECKS += verify-voxel-trees
 verify-voxel-trees: build/voxel_tree_test.exe
 	./build/voxel_tree_test.exe
 
@@ -676,7 +687,7 @@ build/voxel_tree_test.exe: tests/voxel_tree_test.c src/voxel/voxel_tree.c \
 		src/voxel/voxel_building.c src/voxel/voxel_relief.c src/voxel/voxel_grade.c src/3ds_video_decode.c $(HOST_VOXEL_DEFS) -lm -o $@
 
 .PHONY: verify-voxel-lighting
-verify: verify-voxel-lighting
+VERIFY_HOST_CHECKS += verify-voxel-lighting
 verify-voxel-lighting: build/voxel_lighting_on_test.exe build/voxel_lighting_off_test.exe
 	./build/voxel_lighting_on_test.exe
 	./build/voxel_lighting_off_test.exe
@@ -697,7 +708,7 @@ build/voxel_lighting_off_test.exe: $(LIGHTING_TEST_SRCS) $(LIGHTING_TEST_HEADERS
 		-iquote ../include $(HOST_VOXEL_DEFS) $(LIGHTING_TEST_SRCS) -lm -o $@
 
 .PHONY: verify-voxel-structures
-verify: verify-voxel-structures
+VERIFY_HOST_CHECKS += verify-voxel-structures
 verify-voxel-structures: build/voxel_ground_mesh_test.exe build/voxel_sign_test.exe \
 		romfs/voxel/regions.bin romfs/voxel/signposts.bin
 	./build/voxel_ground_mesh_test.exe
@@ -727,7 +738,7 @@ check-voxel-relief:
 		--against build/relief_check.pkl --save build/relief_check.pkl
 
 .PHONY: verify-voxel-relief
-verify: verify-voxel-relief
+VERIFY_HOST_CHECKS += verify-voxel-relief
 verify-voxel-relief: build/voxel_relief_test.exe romfs/voxel/relief.bin
 	./build/voxel_relief_test.exe $$("$(PYTHON)" -c "import json; l = json.load(open('$(ROOT)/data/layouts/layouts.json'))['layouts']; ids = [e['id'] for e in l]; print(ids.index('LAYOUT_ROUTE101') + 1, ids.index('LAYOUT_ROUTE116') + 1, ids.index('LAYOUT_RUSTURF_TUNNEL') + 1, ids.index('LAYOUT_ROUTE108') + 1, ids.index('LAYOUT_LILYCOVE_CITY') + 1, ids.index('LAYOUT_ROUTE124') + 1, ids.index('LAYOUT_ROUTE126') + 1)")
 
@@ -738,7 +749,7 @@ build/voxel_relief_test.exe: tests/voxel_relief_test.c src/voxel/voxel_relief.c 
 		tests/voxel_relief_test.c src/voxel/voxel_relief.c -lm -o $@
 
 .PHONY: verify-settings
-verify: verify-settings
+VERIFY_HOST_CHECKS += verify-settings
 verify-settings: build/settings_shutdown_test.exe
 	./build/settings_shutdown_test.exe
 	./build/settings_shutdown_test.exe 1
@@ -748,44 +759,44 @@ build/settings_shutdown_test.exe: tests/settings_shutdown_test.c tests/settings_
 	@mkdir -p $(@D)
 	$(HOSTCC) -std=gnu99 -O2 -Wall -Wextra -Werror -Itests/settings_host -Iinclude $< -pthread -o $@
 .PHONY: verify-voxel-runtime
-verify: verify-voxel-runtime
+VERIFY_HOST_CHECKS += verify-voxel-runtime
 verify-voxel-runtime:
 	"$(PYTHON)" tests/voxel_runtime_test.py --cc "$(HOSTCC)"
 
 .PHONY: verify-wide-windows
-verify: verify-wide-windows
+VERIFY_HOST_CHECKS += verify-wide-windows
 verify-wide-windows:
 	"$(PYTHON)" tests/wide_window_test.py --cc "$(HOSTCC)"
 
 .PHONY: verify-slot-pack
-verify: verify-slot-pack
+VERIFY_HOST_CHECKS += verify-slot-pack
 verify-slot-pack:
 	"$(PYTHON)" tests/slot_pack_test.py --cc "$(HOSTCC)"
 
 .PHONY: verify-voxel-draft
-verify: verify-voxel-draft
+VERIFY_HOST_CHECKS += verify-voxel-draft
 verify-voxel-draft:
 	"$(PYTHON)" -B tests/voxel_draft_test.py --cc "$(HOSTCC)"
 
 .PHONY: verify-voxel-pages-gap
-verify: verify-voxel-pages-gap
+VERIFY_HOST_CHECKS += verify-voxel-pages-gap
 verify-voxel-pages-gap:
 	"$(PYTHON)" -B tests/voxel_pages_gap_test.py --cc "$(HOSTCC)"
 
 .PHONY: verify-bottom-map
-verify: verify-bottom-map
+VERIFY_HOST_CHECKS += verify-bottom-map
 verify-bottom-map:
 	"$(PYTHON)" -B tests/bottom_map_test.py --cc "$(HOSTCC)"
 
 .PHONY: verify-voxel-regions
-verify: verify-voxel-regions
+VERIFY_HOST_CHECKS += verify-voxel-regions
 verify-voxel-regions: romfs/voxel/regions.bin
 	"$(PYTHON)" -B tests/voxel_regions_test.py --cc "$(HOSTCC)"
 
 # The buildings' animated texels (Rustboro's fountain plays its jet), composed
 # by voxel_building.c from BG VRAM at each frame of the game's animation.
 .PHONY: verify-voxel-building-anim
-verify: verify-voxel-building-anim
+VERIFY_HOST_CHECKS += verify-voxel-building-anim
 verify-voxel-building-anim: romfs/voxel/buildings.bin
 	"$(PYTHON)" -B tests/voxel_building_anim_test.py --cc "$(HOSTCC)"
 
@@ -793,7 +804,7 @@ verify-voxel-building-anim: romfs/voxel/buildings.bin
 # loaded by voxel_building.c: each stands only while its cell holds its
 # metatile; a VXB8 file still loads, every placement standing always.
 .PHONY: verify-voxel-building-when
-verify: verify-voxel-building-when
+VERIFY_HOST_CHECKS += verify-voxel-building-when
 verify-voxel-building-when:
 	"$(PYTHON)" -B tests/voxel_building_when_test.py --cc "$(HOSTCC)"
 
@@ -811,7 +822,7 @@ verify-voxel-building-when:
 # laboratory's desk tops in a strip on its floor); a floor decal's quads
 # only over its marks.
 .PHONY: verify-voxel-interior-lint
-verify: verify-voxel-interior-lint
+VERIFY_HOST_CHECKS += verify-voxel-interior-lint
 verify-voxel-interior-lint:
 	"$(PYTHON)" -B tests/voxel_interior_lint_test.py
 	"$(PYTHON)" -B tests/voxel_interior_parts_test.py
@@ -823,7 +834,7 @@ verify-voxel-interior-lint:
 # run is exact at 45 degrees, and the Battle Pyramid and Dome leave their
 # fences to them.
 .PHONY: verify-voxel-fences
-verify: verify-voxel-fences
+VERIFY_HOST_CHECKS += verify-voxel-fences
 verify-voxel-fences:
 	"$(PYTHON)" -B tests/voxel_fence_test.py
 
@@ -832,19 +843,19 @@ verify-voxel-fences:
 # the halls, arches and flowerbeds, the Pike's tail apart, all exact at 45
 # degrees.
 .PHONY: verify-voxel-frontier
-verify: verify-voxel-frontier
+VERIFY_HOST_CHECKS += verify-voxel-frontier
 verify-voxel-frontier:
 	"$(PYTHON)" -B tests/voxel_frontier_test.py
 
 # The hand marks over the terraces (voxel_terraces.py "7. hand marks", the
 # editor's mountain page): the piece a level gives, the runs, the ledges.
 .PHONY: verify-voxel-terrace-marks
-verify: verify-voxel-terrace-marks
+VERIFY_HOST_CHECKS += verify-voxel-terrace-marks
 verify-voxel-terrace-marks:
 	"$(PYTHON)" -B tests/voxel_terrace_marks_test.py
 
 .PHONY: verify-pokedex-capture verify-voxel-dewford
-verify: verify-pokedex-capture verify-voxel-dewford
+VERIFY_HOST_CHECKS += verify-pokedex-capture verify-voxel-dewford
 verify-pokedex-capture:
 	"$(PYTHON)" -B tests/pokedex_capture_test.py --tree "$(ROOT)" --cc "$(HOSTCC)" --sanitize
 
@@ -861,7 +872,7 @@ build/voxel_check.report: romfs/voxel/buildings.bin romfs/voxel/relief.bin romfs
 	@"$(PYTHON)" scripts/voxel_engine_view.py check > $@ 2>&1 		&& echo "voxel check: ok" 		|| { echo "voxel check: WARNING, see $@"; grep -E "DROPS|OVER|failed" $@ || true; }
 
 .PHONY: verify-voxel-sprite-slots
-verify: verify-voxel-sprite-slots
+VERIFY_HOST_CHECKS += verify-voxel-sprite-slots
 verify-voxel-sprite-slots: build/voxel_sprite_slots_test.exe
 	./build/voxel_sprite_slots_test.exe
 

@@ -1,0 +1,356 @@
+{
+  "date": "2026-11-19",
+  "source_base_commit": "6699c19a2a36bcf90be62859f43f70f405a2e777",
+  "pokeemerald_commit": "76463dac15cad36aca5e2b3f6366abf9e53f814f",
+  "scope": "fork-only experiment; English source assets; generation without --verify; not a full 3DS build or gameplay benchmark",
+  "native_comparison": {
+    "pairs": 1,
+    "before": {
+      "python": "3.15.2 (main, Nov 11 2026, 00:19:20) [Clang 23.1.3 ]",
+      "pillow": "13.0.0",
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+      "profiler": "none",
+      "seconds_limit": null,
+      "jit": false,
+      "hash_seed": "random",
+      "mode": "generator --output (without --verify)",
+      "steps": [
+        {
+          "name": "buildings",
+          "wall_seconds": 452.33754030399996,
+          "completed": true,
+          "bytes": 42485196,
+          "sha256": "9cec5168e808c0299a0bbff5301800aafc01677267999578cc8bf4dca9f4b2ad"
+        }
+      ]
+    },
+    "after": {
+      "python": "3.15.2 (main, Nov 11 2026, 00:19:20) [Clang 23.1.3 ]",
+      "pillow": "13.0.0",
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+      "profiler": "none",
+      "seconds_limit": null,
+      "jit": false,
+      "hash_seed": "random",
+      "mode": "generator --output (without --verify)",
+      "steps": [
+        {
+          "name": "buildings",
+          "wall_seconds": 345.3359883439998,
+          "completed": true,
+          "bytes": 42485196,
+          "sha256": "9cec5168e808c0299a0bbff5301800aafc01677267999578cc8bf4dca9f4b2ad"
+        }
+      ]
+    },
+    "seconds_saved": 107.00155196000014,
+    "percent_less_time": 23.655244684774168,
+    "output_identity": [
+      {
+        "name": "buildings.bin",
+        "bytes": 42485196,
+        "sha256": "9cec5168e808c0299a0bbff5301800aafc01677267999578cc8bf4dca9f4b2ad"
+      },
+      {
+        "name": "windowlights.bin",
+        "bytes": 2984,
+        "sha256": "4640b06c85d305c6fa63ff3d2afbf529812e1442eabf85f58084be789f89f8af"
+      }
+    ]
+  },
+  "floor_real_rooms": {
+    "python": "3.15.2 (main, Nov 11 2026, 00:19:20) [Clang 23.1.3 ]",
+    "pillow": "13.0.0",
+    "jit": false,
+    "workload": "authored room masks",
+    "rooms": 193,
+    "pixels": 11899392,
+    "all_masks_equal": true,
+    "seconds": {
+      "baseline": [
+        6.531663884999034,
+        6.506106182001076,
+        6.488531376001902
+      ],
+      "candidate": [
+        2.1401938769981825,
+        1.9653389830000378,
+        1.9531240570013324
+      ]
+    },
+    "median_seconds": {
+      "baseline": 6.506106182001076,
+      "candidate": 1.9653389830000378
+    }
+  },
+  "floor_jit_off": {
+    "python": "3.15.2 (main, Nov 11 2026, 00:19:20) [Clang 23.1.3 ]",
+    "pillow": "13.0.0",
+    "jit": false,
+    "workload": "synthetic 640x480 RGBA room, four floor tiles",
+    "rooms": 1,
+    "pixels": 307200,
+    "all_masks_equal": true,
+    "seconds": {
+      "baseline": [
+        0.3268796190000103,
+        0.3403826809999373,
+        0.34406391899983646,
+        0.351298506999683,
+        0.34866563099967607,
+        0.3140252270000019
+      ],
+      "candidate": [
+        0.053683837999869866,
+        0.05179960099985692,
+        0.05326174399988304,
+        0.05310152599986395,
+        0.05133884599990779,
+        0.05605736200004685
+      ]
+    },
+    "median_seconds": {
+      "baseline": 0.3422232999998869,
+      "candidate": 0.053181634999873495
+    }
+  },
+  "floor_jit_on": {
+    "python": "3.15.2 (main, Nov 11 2026, 00:19:20) [Clang 23.1.3 ]",
+    "pillow": "13.0.0",
+    "jit": true,
+    "workload": "synthetic 640x480 RGBA room, four floor tiles",
+    "rooms": 1,
+    "pixels": 307200,
+    "all_masks_equal": true,
+    "seconds": {
+      "baseline": [
+        0.355186840999977,
+        0.33815327100001014,
+        0.37753843400014375,
+        0.34711614500020005,
+        0.3403502920000392,
+        0.4190565799999604
+      ],
+      "candidate": [
+        0.05808159700018223,
+        0.05357609600014257,
+        0.059831691999988834,
+        0.052599510999698396,
+        0.0515818069998204,
+        0.05067306599994481
+      ]
+    },
+    "median_seconds": {
+      "baseline": 0.3511514930000885,
+      "candidate": 0.05308780349992048
+    }
+  },
+  "bounded_profiles": {
+    "scope": "45-second prefixes, not complete generator profiles; cumulative times overlap",
+    "buildings": [
+      {
+        "file": "voxel_bridge.py",
+        "line": 2138,
+        "function": "block_specs",
+        "calls": 1,
+        "internal_seconds": 0.228045464,
+        "cumulative_seconds": 33.44786921
+      },
+      {
+        "file": "voxel_bridge.py",
+        "line": 2071,
+        "function": "bridge",
+        "calls": 1,
+        "internal_seconds": 1.7746000000000003e-05,
+        "cumulative_seconds": 15.500925692000001
+      },
+      {
+        "file": "voxel_bridge.py",
+        "line": 156,
+        "function": "__init__",
+        "calls": 1,
+        "internal_seconds": 0.095974206,
+        "cumulative_seconds": 15.500907946000002
+      },
+      {
+        "file": "voxel_bridge.py",
+        "line": 237,
+        "function": "_read",
+        "calls": 1,
+        "internal_seconds": 6.296985308,
+        "cumulative_seconds": 15.280122247000001
+      },
+      {
+        "file": "voxel_bridge.py",
+        "line": 612,
+        "function": "quads",
+        "calls": 1,
+        "internal_seconds": 1.027228151,
+        "cumulative_seconds": 13.518734176
+      },
+      {
+        "file": "gen_voxel_buildings.py",
+        "line": 1949,
+        "function": "interior_specs",
+        "calls": 5,
+        "internal_seconds": 1.400828156,
+        "cumulative_seconds": 8.867977459
+      },
+      {
+        "file": "voxel_bridge.py",
+        "line": 1683,
+        "function": "_merge",
+        "calls": 1,
+        "internal_seconds": 0.36097133400000003,
+        "cumulative_seconds": 6.748673521000001
+      },
+      {
+        "file": "voxel_bridge.py",
+        "line": 1732,
+        "function": "runs",
+        "calls": 1492,
+        "internal_seconds": 0.05633582,
+        "cumulative_seconds": 5.846314004000001
+      },
+      {
+        "file": "voxel_bridge.py",
+        "line": 1713,
+        "function": "fits",
+        "calls": 16242,
+        "internal_seconds": 0.969842937,
+        "cumulative_seconds": 5.773158240000001
+      },
+      {
+        "file": "voxel_bridge.py",
+        "line": 660,
+        "function": "put",
+        "calls": 40118,
+        "internal_seconds": 0.13325087200000002,
+        "cumulative_seconds": 3.2703413730000004
+      },
+      {
+        "file": "voxel_bridge.py",
+        "line": 652,
+        "function": "darkest",
+        "calls": 11064,
+        "internal_seconds": 2.5101765360000003,
+        "cumulative_seconds": 3.104039653
+      },
+      {
+        "file": "voxel_bridge.py",
+        "line": 2078,
+        "function": "_world_cover",
+        "calls": 1,
+        "internal_seconds": 0.485267229,
+        "cumulative_seconds": 3.011874835
+      }
+    ],
+    "relief": [
+      {
+        "file": "gen_voxel_relief.py",
+        "line": 1430,
+        "function": "world_levels",
+        "calls": 1,
+        "internal_seconds": 0.047860589,
+        "cumulative_seconds": 43.111703211000005
+      },
+      {
+        "file": "gen_voxel_relief.py",
+        "line": 2173,
+        "function": "drawn_prepare",
+        "calls": 6,
+        "internal_seconds": 10.856172626000001,
+        "cumulative_seconds": 36.120481886
+      },
+      {
+        "file": "gen_voxel_relief.py",
+        "line": 1696,
+        "function": "drawn_canvas",
+        "calls": 6,
+        "internal_seconds": 12.765799032,
+        "cumulative_seconds": 21.236720225000003
+      },
+      {
+        "file": "gen_voxel_relief.py",
+        "line": 1397,
+        "function": "_blocks",
+        "calls": 5,
+        "internal_seconds": 0.33092592400000004,
+        "cumulative_seconds": 5.759506905
+      },
+      {
+        "file": "gen_voxel_relief.py",
+        "line": 1339,
+        "function": "_robust",
+        "calls": 5,
+        "internal_seconds": 0.019534526,
+        "cumulative_seconds": 5.426551838
+      },
+      {
+        "file": "gen_voxel_relief.py",
+        "line": 1316,
+        "function": "_gauss_seidel",
+        "calls": 10,
+        "internal_seconds": 1.845961229,
+        "cumulative_seconds": 5.384329404000001
+      },
+      {
+        "file": "gen_voxel_relief.py",
+        "line": 1891,
+        "function": "drawn_role",
+        "calls": 52170,
+        "internal_seconds": 0.6133956540000001,
+        "cumulative_seconds": 3.5809708600000003
+      },
+      {
+        "file": "voxel_cells.py",
+        "line": 421,
+        "function": "role_at",
+        "calls": 122278,
+        "internal_seconds": 0.179091848,
+        "cumulative_seconds": 2.90296309
+      },
+      {
+        "file": "voxel_building.py",
+        "line": 206,
+        "function": "cell_image",
+        "calls": 11166,
+        "internal_seconds": 0.029263853000000003,
+        "cumulative_seconds": 2.0974635320000004
+      },
+      {
+        "file": "voxel_building.py",
+        "line": 214,
+        "function": "_cell_image",
+        "calls": 4758,
+        "internal_seconds": 0.389526517,
+        "cumulative_seconds": 1.886522019
+      },
+      {
+        "file": "voxel_building.py",
+        "line": 127,
+        "function": "subtiles",
+        "calls": 9516,
+        "internal_seconds": 0.018990512,
+        "cumulative_seconds": 1.3995878590000002
+      },
+      {
+        "file": "voxel_building.py",
+        "line": 135,
+        "function": "_subtiles",
+        "calls": 4948,
+        "internal_seconds": 0.154726374,
+        "cumulative_seconds": 1.3805973470000001
+      }
+    ]
+  },
+  "validation": {
+    "builder_tests_run": 266,
+    "builder_tests_passed": 264,
+    "builder_tests_skipped": 2,
+    "python_3_11_pillow_12_3_targeted_tests_passed": 2,
+    "publication_audit": "clean",
+    "release_closure_includes_voxel_floor": true,
+    "profiling_harness_smoke_checks": "passed"
+  }
+}

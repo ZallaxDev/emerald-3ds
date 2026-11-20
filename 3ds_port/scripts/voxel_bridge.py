@@ -169,9 +169,15 @@ class Bridge:
 
     # -- the drawing ----------------------------------------------------------
 
-    def _near(self, x, y, r):
-        return any((x + dx, y + dy) in self.deck_cells
-                   for dx in range(-r, r + 1) for dy in range(-r, r + 1))
+    def _deck_zone(self, radius):
+        """Cells within the given distance of a deck cell, in map order."""
+        near = set()
+        for x, y in self.deck_cells:
+            for row in range(max(0, y - radius), min(self.h, y + radius + 1)):
+                near.update((column, row) for column in
+                            range(max(0, x - radius), min(self.w, x + radius + 1)))
+        # Preserve the insertion order used to build the zone set.
+        return {(x, y) for y in range(self.h) for x in range(self.w) if (x, y) in near}
 
     def _curbs(self):
         """Rows where a curb (the `curb` component's stones, a lawn's edge)
@@ -191,13 +197,16 @@ class Bridge:
             x = 0
             while x < self.w:
                 t = L.metatile(x, y)
+                if t not in tiles:
+                    x += 1
+                    continue
                 x1 = x + 1
                 while x1 < self.w and L.metatile(x1, y) not in tiles:
                     x1 += 1
-                if t not in tiles or x1 >= self.w or L.metatile(x1, y) != t \
+                if x1 >= self.w or L.metatile(x1, y) != t \
                         or not 1 <= x1 - x - 1 <= 8 \
                         or not any((c, y) in self.deck_cells for c in range(x + 1, x1)):
-                    x = x1 if t in tiles else x + 1
+                    x = x1
                     continue
                 tile = L.cell_image(t).load()
                 same = {}
@@ -261,20 +270,25 @@ class Bridge:
             for m, _ in counter.most_common(2):
                 for blk in L.subtiles(m, 0):
                     ground_colours.update(rgb for rgb, _ in blk)
-        zone = {(x, y) for y in range(self.h) for x in range(self.w) if self._near(x, y, ZONE)}
+        zone = self._deck_zone(ZONE)
+        tile_pixels = {}
         px = {}
         for (x, y) in zone:
             m = L.metatile(x, y)
-            low, high = L.subtiles(m, 0), L.subtiles(m, 1)
-            for q in range(4):
-                is_ground = tuple(rgb for rgb, _ in low[q]) in ground
-                for k in range(64):
-                    u, v = x * 16 + (q & 1) * 8 + k % 8, y * 16 + (q >> 1) * 8 + k // 8
-                    rgb1, i1 = high[q][k]
-                    if i1:
-                        px[(u, v)] = rgb1
-                    elif not is_ground:
-                        px[(u, v)] = low[q][k][0]
+            samples = tile_pixels.get(m)
+            if samples is None:
+                samples = tile_pixels[m] = []
+                low, high = L.subtiles(m, 0), L.subtiles(m, 1)
+                for q in range(4):
+                    is_ground = tuple(rgb for rgb, _ in low[q]) in ground
+                    for k, (rgb, index) in enumerate(high[q]):
+                        if index or not is_ground:
+                            u = (q & 1) * 8 + k % 8
+                            v = (q >> 1) * 8 + k // 8
+                            samples.append((u, v, rgb if index else low[q][k][0]))
+            x0, y0 = x * 16, y * 16
+            for u, v, rgb in samples:
+                px[(x0 + u, y0 + v)] = rgb
         # a lawn's curb going on under the deck: its stones are not the
         # bridge's (_curbs), whatever their colours
         self._curbs()
@@ -619,11 +633,19 @@ class Bridge:
             cols[u].append(v)
         claimed = set(road)
         self.patch_px = {}
+        darkest_by_cell = {}
         # the curb's stones drawn in the deck's cells: the curb laid under
         # the bridge (block_specs) draws them
         for p, rgb in self.curb_px.items():
             self.art.putpixel(p, tuple(rgb) + (255,))
             claimed.add(p)
+
+        def remove_pixel(p):
+            del pix[p]
+            # A cached minimum stays valid unless its own pixel was removed.
+            cell = (p[0] // 16 * 16, p[1] // 16 * 16)
+            if darkest_by_cell.get(cell) == p:
+                del darkest_by_cell[cell]
 
         def lay(p, rgb=None):
             """Pixel p laid on the ground as drawn: a patch of the placement's
@@ -632,7 +654,7 @@ class Bridge:
             shadow falls here."""
             if rgb is None:
                 rgb = self.art.getpixel(p)
-                del pix[p]
+                remove_pixel(p)
                 self.art.putpixel(p, (0, 0, 0, 0))
             self.patch_px[p] = rgb
             claimed.add(p)
@@ -652,10 +674,14 @@ class Bridge:
         def darkest(at):
             """The cell's darkest texel: the girder's shade, for what is
             under the deck."""
-            c0, r0 = int(at[0]) // 16 * 16, int(at[1]) // 16 * 16
-            got = [(sum(pix[(i, j)]), (i, j)) for j in range(r0, r0 + 16) for i in range(c0, c0 + 16)
-                   if (i, j) in pix]
-            return min(got)[1] if got else texel(at)
+            cell = c0, r0 = int(at[0]) // 16 * 16, int(at[1]) // 16 * 16
+            if cell not in darkest_by_cell:
+                best = min(((sum(rgb), (i, j))
+                            for j in range(r0, r0 + 16) for i in range(c0, c0 + 16)
+                            if (rgb := pix.get((i, j))) is not None), default=None)
+                darkest_by_cell[cell] = best[1] if best is not None else None
+            chosen = darkest_by_cell[cell]
+            return chosen if chosen is not None else texel(at)
 
         def put(pts, uvs, tag, at):
             if tag.endswith("~clamp"):
@@ -957,7 +983,7 @@ class Bridge:
 
         def drop(ps):
             for p in ps:
-                del pix[p]
+                remove_pixel(p)
                 apx[p] = (0, 0, 0, 0)
 
         # what is not the road's in the cells the road's models stand on
@@ -1637,9 +1663,10 @@ class Bridge:
         self.counts = collections.Counter()
         self.water = set()
         out = {}
+        near = self._deck_zone(ZONE + 1)
         for y in range(self.h):
             for x in range(self.w):
-                if self._near(x, y, ZONE + 1):
+                if (x, y) in near:
                     continue
                 m = L.metatile(x, y)
                 if any(i for blk in L.subtiles(m, 1) for _, i in blk):

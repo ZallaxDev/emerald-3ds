@@ -50,12 +50,14 @@ steps are ledge too; a lip comes down to the ground where the ledge ends.
 """
 
 import argparse
+import bisect
 import collections
 import itertools
 import json
 import math
 import operator
 import os
+import re
 import shutil
 import struct
 import sys
@@ -90,7 +92,9 @@ def _hash64(o):
         m, n = int(o), 1
     else:
         raise TypeError("no portable hash for %r" % type(o).__name__)
-    h = (abs(m) % _P61) * pow(n, _P61 - 2, _P61) % _P61
+    h = abs(m) % _P61
+    if n != 1:
+        h = h * pow(n, _P61 - 2, _P61) % _P61
     if m < 0:
         h = -h
     return -2 if h == -1 else h
@@ -115,7 +119,8 @@ def _insert_clean(table, mask, key, h):
 def set_order(seq):
     """list(set(seq)) as 64-bit CPython orders it."""
     mask, table, used = 7, [None] * 8, 0
-    for key in seq:
+    # Duplicate insertions do not change the table or its resize history.
+    for key in dict.fromkeys(seq):
         h = _hash64(key)
         perturb = h & _M64
         i = perturb & mask
@@ -157,7 +162,10 @@ def set_order(seq):
 def commonest(seq):
     """max(set(seq), key=seq.count) with 64-bit CPython's tie-break, anywhere."""
     counts = collections.Counter(seq)
-    return max(set_order(seq), key=counts.__getitem__)
+    leaders = counts.most_common(2)
+    if leaders and (len(leaders) == 1 or leaders[0][1] > leaders[1][1]):
+        return leaders[0][0]
+    return max(set_order(counts), key=counts.__getitem__)
 
 
 import voxel_building as vb  # noqa: E402
@@ -1264,20 +1272,23 @@ LOOSE_WEIGHT = 0.01  # a block nothing places: kept near its group's ground
 WORLD_ROOT = "LAYOUT_LITTLEROOT_TOWN"
 
 
-def map_links():
-    """[(a, b, direction, offset)]: every connection between two outdoor
-    layouts, as map.json states it (b is `direction` of a, shifted by
-    `offset`). A layout a script swaps in has its map's."""
-    root = vb.ROOT
-    maps_dir = os.path.join(root, "data", "maps")
+def map_topology():
+    """Outdoor connections and alternate layouts from one read of the maps."""
+    maps_dir = os.path.join(vb.ROOT, "data", "maps")
     layout_of, found = {}, []
+    outdoor = set()
     for name in sorted(os.listdir(maps_dir)):
         path = os.path.join(maps_dir, name, "map.json")
         if os.path.exists(path):
-            m = json.load(open(path, encoding="utf-8"))
-            layout_of[m.get("id")] = m.get("layout")
+            with open(path, encoding="utf-8") as f:
+                m = json.load(f)
+            layout = m.get("layout")
+            layout_of[m.get("id")] = layout
             found.append(m)
-    outdoor = vc.MapEvents().outdoor
+            if layout and m.get("map_type") in vc.OUTDOOR_MAP_TYPES:
+                outdoor.add(layout)
+    alternates = vc.alternate_layouts({m.get("layout") for m in found})
+    outdoor.update(alt for alt, base in alternates.items() if base in outdoor)
     links = set()
     for m in found:
         a = m.get("layout")
@@ -1287,14 +1298,19 @@ def map_links():
             b = layout_of.get(c.get("map"))
             if b in outdoor and b != a and c.get("direction") in ("up", "down", "left", "right"):
                 links.add((a, b, c["direction"], c.get("offset", 0)))
-    for alt, base in vc.alternate_layouts().items():
+    for alt, base in alternates.items():
         if alt in outdoor:
             for (a, b, d, off) in list(links):
                 if a == base:
                     links.add((alt, b, d, off))
                 if b == base:
                     links.add((a, alt, d, off))
-    return sorted(links)
+    return sorted(links), alternates
+
+
+def map_links():
+    """Outdoor layout connections as (source, target, direction, offset)."""
+    return map_topology()[0]
 
 
 def _seam_cells(a, b, direction, offset, size):
@@ -1323,12 +1339,14 @@ def _gauss_seidel(n, pairs, fixed, iterations=4000):
     for (a, b), (d, w) in pairs.items():
         adj[a].append((b, d, w))
         adj[b].append((a, -d, w))
+    # Weights do not change between sweeps. Keep the same node and
+    # neighbor order, floating-point sums and division.
+    active = [(r, neighbors, sum(w for _, _, w in neighbors))
+              for r, neighbors in enumerate(adj) if r not in fixed and neighbors]
     for _ in range(iterations):
         delta = 0.0
-        for r in range(n):
-            if r in fixed or not adj[r]:
-                continue
-            v = sum(w * (h[o] + d) for (o, d, w) in adj[r]) / sum(w for (_, _, w) in adj[r])
+        for r, neighbors, weight in active:
+            v = sum(w * (h[o] + d) for o, d, w in neighbors) / weight
             delta = max(delta, abs(v - h[r]))
             h[r] = v
         if delta < 0.001:
@@ -1848,25 +1866,26 @@ def drawn_canvas(name):
     # tops' colours and the tops with the faces'
     voted = [row[:] for row in kind]
     R = MAJORITY
-    # the votes are counted off running sums (top or rim, face) over the canvas
-    st = [[0] * (W + 1) for _ in range(H + 1)]
-    sf = [[0] * (W + 1) for _ in range(H + 1)]
+    # One summed-area table holds top/rim votes minus face votes. A
+    # positive sum still means top wins, and a tie still means face.
+    vote_by_kind = (0, 1, -1, 0, 1, 0, 0)  # GROUND through FREE
+    balance = [[0] * (W + 1) for _ in range(H + 1)]
     for y in range(H):
-        row = kind[y]
-        t = itertools.accumulate([k == TOP or k == RIM for k in row])
-        f = itertools.accumulate([k == FACE for k in row])
-        st[y + 1][1:] = map(operator.add, st[y][1:], t)
-        sf[y + 1][1:] = map(operator.add, sf[y][1:], f)
-    for y in range(H):
+        scores = itertools.accumulate(map(vote_by_kind.__getitem__, kind[y]))
+        balance[y + 1][1:] = map(operator.add, balance[y][1:], scores)
+    bounds = [(max(0, x - R), min(W, x + R + 1)) for x in range(W)]
+    # Find runs of pixels that can change without testing each ground
+    # pixel in Python. Rim pixels contribute votes but keep their kind.
+    rock_runs = re.compile(b"[" + re.escape(bytes((TOP, FACE, FLECK))) + b"]+")
+    for y, row in enumerate(kind):
         y0, y1 = max(0, y - R), min(H, y + R + 1)
-        row = kind[y]
-        for x in range(W):
-            if row[x] not in (TOP, FACE, FLECK):
-                continue
-            x0, x1 = max(0, x - R), min(W, x + R + 1)
-            t = st[y1][x1] - st[y0][x1] - st[y1][x0] + st[y0][x0]
-            f = sf[y1][x1] - sf[y0][x1] - sf[y1][x0] + sf[y0][x0]
-            voted[y][x] = TOP if t > f else FACE
+        above, below = balance[y0], balance[y1]
+        target = voted[y]
+        for run in rock_runs.finditer(bytes(row)):
+            for x in range(run.start(), run.end()):
+                x0, x1 = bounds[x]
+                net = below[x1] - above[x1] - below[x0] + above[x0]
+                target[x] = TOP if net > 0 else FACE
     return layouts, CW, CH, voted, blocked, side, flat, face_low
 
 
@@ -2170,6 +2189,113 @@ def split_wrapped(region, sizes, kind, side, south, W, H):
             return made
 
 
+def drawn_regions(kind, W, H, crosses):
+    """Label ground and top regions by horizontal runs of connected pixels."""
+    region = [[-1] * W for _ in range(H)]
+    sizes = []
+
+    def label_run(x, y, material, number):
+        kinds, labels = kind[y], region[y]
+        left = right = x
+        while (left > 0 and labels[left - 1] < 0 and kinds[left - 1] == material
+               and (left & 15 or crosses(left, y, left - 1, y))):
+            left -= 1
+        while (right + 1 < W and labels[right + 1] < 0 and kinds[right + 1] == material
+               and ((right + 1) & 15 or crosses(right, y, right + 1, y))):
+            right += 1
+        labels[left:right + 1] = [number] * (right - left + 1)
+        return left, right, y
+
+    # Row-major seeds give the same region numbers independently of the
+    # order in which a region's pixels are visited.
+    for y, (kinds, labels) in enumerate(zip(kind, region)):
+        for x, material in enumerate(kinds):
+            if material not in (GROUND, TOP) or labels[x] >= 0:
+                continue
+            number = len(sizes)
+            stack = [label_run(x, y, material, number)]
+            count = 0
+            while stack:
+                left, right, row = stack.pop()
+                count += right - left + 1
+                for other in (row + 1, row - 1):
+                    if not 0 <= other < H:
+                        continue
+                    adjacent_kinds, adjacent_labels = kind[other], region[other]
+                    across_seam = row // 16 != other // 16
+                    x = left
+                    while x <= right:
+                        if adjacent_labels[x] >= 0 or adjacent_kinds[x] != material:
+                            x += 1
+                        elif across_seam and not crosses(x, row, x, other):
+                            # The seam rule is shared by all 16 pixels of
+                            # these neighboring cells.
+                            x = (x // 16 + 1) * 16
+                        else:
+                            run = label_run(x, other, material, number)
+                            stack.append(run)
+                            x = run[1] + 1
+            sizes.append(count)
+    return region, sizes
+
+
+def drawn_region_widths(region, count):
+    """Count the distinct columns occupied by each labeled region."""
+    columns = [0] * count
+    for row in region:
+        start = 0
+        for label, group in itertools.groupby(row):
+            length = len(list(group))
+            if label >= 0:
+                columns[label] |= ((1 << length) - 1) << start
+            start += length
+    return [mask.bit_count() for mask in columns]
+
+
+_FACE_RUN = re.escape(bytes([FACE])) + b"+"
+_ROW_FACES = re.compile(_FACE_RUN)
+_COLUMN_DROPS = re.compile(_FACE_RUN + b"|" + re.escape(bytes([RIM])) + b"+")
+
+
+def drawn_drop_runs(kind, region, big, blocked, side, W, H):
+    """Collect the drops drawn between regions, in column then row order."""
+    runs = {}
+    # Process one compact byte column at a time. The pattern walks the
+    # pixels in native code and yields separate runs for faces and rims.
+    for x, column in enumerate(zip(*kind)):
+        for match in _COLUMN_DROPS.finditer(bytes(column)):
+            y0, y = match.span()
+            if y0 == 0 or y == H:
+                continue
+            a, b = region[y0 - 1][x], region[y][x]
+            if a < 0 or b < 0 or a == b or not (big[a] and big[b]):
+                continue
+            if column[y] == GROUND and blocked[y // 16][x // 16]:
+                continue  # its foot is behind a roof or a tree
+            if column[y0] == FACE:
+                if sum(side[j // 16][x // 16] != 0 for j in range(y0, y)) * 2 > y - y0:
+                    continue  # down a west or east face, not across a south one
+                drop = y - y0
+            else:
+                drop = -RIM_RISE
+            runs.setdefault((a, b), []).append(drop)
+
+    for y, row in enumerate(kind):
+        for match in _ROW_FACES.finditer(bytes(row)):
+            x0, x = match.span()
+            if x0 == 0 or x == W:
+                continue
+            turn = sum(side[y // 16][i // 16] for i in range(x0, x))
+            if abs(turn) * 2 <= x - x0:
+                continue
+            left, right = region[y][x0 - 1], region[y][x]
+            if left < 0 or right < 0 or left == right or not (big[left] and big[right]):
+                continue
+            pair = (right, left) if turn > 0 else (left, right)
+            runs.setdefault(pair, []).append(SIDE_RISE)
+    return runs
+
+
 def drawn_prepare(name):
     """What a group's drawing says, the pixels read and let go: its regions
     (terraces and ground), the drops between them, and per cell what it is
@@ -2185,6 +2311,9 @@ def drawn_prepare(name):
         text = open(os.path.join(here, "gen_voxel_relief.py"), encoding="utf-8").read()
         key = hashlib.sha1((text[:text.index("def find_drawn")]     # the constants
                             + inspect.getsource(drawn_prepare) + inspect.getsource(drawn_canvas)
+                            + inspect.getsource(drawn_regions)
+                            + inspect.getsource(drawn_region_widths) + inspect.getsource(drawn_drop_runs)
+                            + repr((_ROW_FACES.pattern, _COLUMN_DROPS.pattern))
                             + inspect.getsource(drawn_role) + repr(sorted(ROLE_REFERENCE.items()))
                             + ((inspect.getsource(split_wrapped) + inspect.getsource(_neck)
                                 + inspect.getsource(_wrapped) + inspect.getsource(_rim_gaps)
@@ -2213,8 +2342,6 @@ def drawn_prepare(name):
     W, H = CW * 16, CH * 16
 
     # regions
-    region = [[-1] * W for _ in range(H)]
-    sizes = []
     pier = _PIER[name]
 
     def apart(a, b, i, j):
@@ -2253,94 +2380,15 @@ def drawn_prepare(name):
         if v is None:
             v = crossing[key] = not apart(a, b, i, j) and not band_seam(a, b, i, j)
         return v
-    for y in range(H):
-        krow, rrow = kind[y], region[y]
-        for x in range(W):
-            k = krow[x]
-            if (k != GROUND and k != TOP) or rrow[x] >= 0:
-                continue
-            n = len(sizes)
-            stack, count = [(x, y)], 0
-            rrow[x] = n
-            while stack:
-                a, b = stack.pop()
-                count += 1
-                ra, ka = region[b], kind[b]
-                # west and east, in the row
-                if a + 1 < W and ra[a + 1] < 0 and ka[a + 1] == k and ((a + 1) & 15 or crosses(a, b, a + 1, b)):
-                    ra[a + 1] = n
-                    stack.append((a + 1, b))
-                if a > 0 and ra[a - 1] < 0 and ka[a - 1] == k and (a & 15 or crosses(a, b, a - 1, b)):
-                    ra[a - 1] = n
-                    stack.append((a - 1, b))
-                # south and north
-                if b + 1 < H and region[b + 1][a] < 0 and kind[b + 1][a] == k and ((b + 1) & 15 or crosses(a, b, a, b + 1)):
-                    region[b + 1][a] = n
-                    stack.append((a, b + 1))
-                if b > 0 and region[b - 1][a] < 0 and kind[b - 1][a] == k and (b & 15 or crosses(a, b, a, b - 1)):
-                    region[b - 1][a] = n
-                    stack.append((a, b - 1))
-            sizes.append(count)
+    region, sizes = drawn_regions(kind, W, H, crosses)
     cut_apart = set() if name not in WRAP_GROUPS else split_wrapped(region, sizes, kind, side,
                   {(cx, cy) for cy in range(CH) for cx in range(CW)
                               if (cx, cy) in face_low or metatile_at(cx, cy) in FACE_SOUTH}, W, H)
     # a strip of top a few pixels thick - the light lip between two faces
     # stacked one on the other - is part of the face, not a terrace
-    columns = [set() for _ in sizes]
-    for y in range(H):
-        row = region[y]
-        for x in range(W):
-            if row[x] >= 0:
-                columns[row[x]].add(x)
-    big = [s >= REGION_MIN and (s >= THIN * len(columns[n]) or n in cut_apart) for n, s in enumerate(sizes)]
-
-    # what the columns say: (upper, lower) -> drops
-    runs = {}
-    for x in range(W):
-        y = 0
-        while y < H:
-            k = kind[y][x]
-            if k not in (FACE, RIM):
-                y += 1
-                continue
-            y0 = y
-            while y < H and kind[y][x] == k:
-                y += 1
-            if y0 == 0 or y == H:
-                continue
-            a, b = region[y0 - 1][x], region[y][x]
-            if a < 0 or b < 0 or a == b or not (big[a] and big[b]):
-                continue
-            if kind[y][x] == GROUND and blocked[y // 16][x // 16]:
-                continue  # its foot is behind a roof or a tree: not all of it shows
-            if k == FACE and sum(side[j // 16][x // 16] != 0 for j in range(y0, y)) * 2 > y - y0:
-                continue  # down a west or east face, not across a south one
-            drop = y - y0 if k == FACE else -RIM_RISE
-            runs.setdefault((a, b), []).append(drop)
-
-    # across the rows: the west and east faces
-    for y in range(H):
-        x = 0
-        row = kind[y]
-        while x < W:
-            if row[x] != FACE:
-                x += 1
-                continue
-            x0 = x
-            while x < W and row[x] == FACE:
-                x += 1
-            if x0 == 0 or x == W:
-                continue
-            turn = sum(side[y // 16][i // 16] for i in range(x0, x))
-            if abs(turn) * 2 <= x - x0:
-                continue
-            left, right = region[y][x0 - 1], region[y][x]
-            if left < 0 or right < 0 or left == right or not (big[left] and big[right]):
-                continue
-            if turn > 0:
-                runs.setdefault((right, left), []).append(SIDE_RISE)
-            else:
-                runs.setdefault((left, right), []).append(SIDE_RISE)
+    widths = drawn_region_widths(region, len(sizes))
+    big = [s >= REGION_MIN and (s >= THIN * widths[n] or n in cut_apart) for n, s in enumerate(sizes)]
+    runs = drawn_drop_runs(kind, region, big, blocked, side, W, H)
 
     # a flight of two bands or more down a row, all turned the same way, is
     # as many levels between the terraces at its two ends - a gorge's walls
@@ -3556,19 +3604,35 @@ def _cut_mask(art, layout, x, y, rock_cells):
     """Rows of bits, 1 where cell (x, y) draws the ground behind its rock;
     None where nothing beside it is flat ground."""
     import voxel_sign_mask
+    palettes = art.__dict__.setdefault("_cut_ground_palettes", {})
     ground = set()
     for dy in (-1, 0, 1):
         for dx in (-1, 0, 1):
             nx, ny = x + dx, y + dy
             if (dx or dy) and 0 <= nx < layout.w and 0 <= ny < layout.h and (nx, ny) not in rock_cells:
-                img = art.cell_image(art.metatile(nx, ny)).convert("RGB")
-                ground.update(c for c in img.getdata() if c not in ROCK_ALL)
+                m = art.metatile(nx, ny)
+                if m not in palettes:
+                    img = art.cell_image(m).convert("RGB")
+                    palettes[m] = set(img.getdata()) - ROCK_ALL
+                ground.update(palettes[m])
     if not ground:
         return None
-    img = art.cell_image(art.metatile(x, y)).convert("RGB").load()
-    opaque = [(i, j) for j in range(16) for i in range(16) if img[i, j] not in ground]
-    rows = voxel_sign_mask.cutout_mask(opaque)
-    return [(~r) & 0xFFFF for r in rows]
+    # A metatile's pixel positions are fixed. Combine the masks for the
+    # colours present on nearby ground instead of scanning all 256 pixels.
+    by_metatile = art.__dict__.setdefault("_cut_colour_masks", {})
+    m = art.metatile(x, y)
+    if m not in by_metatile:
+        colours = collections.defaultdict(int)
+        for i, pixel in enumerate(art.cell_image(m).convert("RGB").getdata()):
+            colours[pixel] |= 1 << i
+        by_metatile[m] = dict(colours)
+    empty = 0
+    for colour, mask in by_metatile[m].items():
+        if colour in ground:
+            empty |= mask
+    solid = ((1 << 256) - 1) ^ empty
+    outside = voxel_sign_mask.exterior_mask(solid, 16, 16)
+    return [(outside >> (y * 16)) & 0xFFFF for y in range(16)]
 
 
 def _lifted(grid, mask):
@@ -3641,13 +3705,14 @@ def plain_ground(art, layout, content, x, y, side=None, kind=None, half=False):
     `half`: only a tile that colour at least half over (voxel_terraces, a
     map read in its own colours: Route 114's dirt edged half in orange has
     fewer far colours than its plain dirt, flecked darker)."""
+    known = art.__dict__.setdefault("_plain", {})
+
     def main(m):
         """(its commonest colour, how many pixels of it, how many pixels are
         another colour altogether - a shore's few drops of the sea on a sand)
         Cached on the art: an id over 0x200 is its secondary tileset's own
         (keyed by the id alone, Route 114's Fallarbor tiles gave Pacifidlog
         its ground)."""
-        known = art.__dict__.setdefault("_plain", {})
         if m not in known:
             px = list(art.cell_image(m).convert("RGB").getdata())
             c = commonest(px)
@@ -3656,31 +3721,68 @@ def plain_ground(art, layout, content, x, y, side=None, kind=None, half=False):
         return known[m]
     m0 = art.metatile(x, y)
     forced = kind is not None
-    if forced:
-        pass
-    elif side is None:
+    if not forced and side is None:
         kind = main(m0)[0]
-    else:
-        # a shore tile's commonest colour can be the sea beyond it: what the
-        # rock stands on is the ground at the edge the rock is on
-        im = art.cell_image(m0).convert("RGB")
-        part = [im.getpixel((i, j)) for j in range(16) for i in range(16) if _SIDE_PIXELS[side](i, j)]
-        kind = commonest(part)
+    elif not forced:
+        # A shore tile's commonest colour can be the sea beyond it. Sample
+        # the edge where the rock stands, once per tile and direction.
+        edges = art.__dict__.setdefault("_plain_ground_edges", {})
+        edge = (m0, side)
+        if edge not in edges:
+            im = art.cell_image(m0).convert("RGB")
+            part = [im.getpixel((i, j)) for j in range(16) for i in range(16) if _SIDE_PIXELS[side](i, j)]
+            edges[edge] = commonest(part)
+        kind = edges[edge]
+
+    # Quality outranks distance. In each row, find the closest available
+    # tile of the first usable quality, then compare the row winners.
+    rows = art.__dict__.setdefault("_plain_ground_quality_rows", {}).setdefault(layout.w, {})
     best = None
-    for dy in range(-24, 25):
-        for dx in range(-24, 25):
-            c = (x + dx, y + dy)
-            if c in content or not (0 <= c[0] < layout.w and 0 <= c[1] < layout.h):
+    for ny in range(max(0, y - 24), min(layout.h, y + 25)):
+        if ny not in rows:
+            by_colour = collections.defaultdict(lambda: collections.defaultdict(list))
+            for nx in range(layout.w):
+                m = art.metatile(nx, ny)
+                colour, pixels, foreign = main(m)
+                by_colour[colour][foreign, -pixels].append((nx, m))
+            rows[ny] = {colour: sorted(qualities.items()) for colour, qualities in by_colour.items()}
+        for quality, candidates in rows[ny].get(kind, ()):
+            if best is not None and quality > best[0][:2]:
+                break
+            if half and quality[1] > -128:
                 continue
-            m = art.metatile(*c)
-            if main(m)[0] != kind or (half and 2 * main(m)[1] < 256):
-                continue
-            k = (main(m)[2], -main(m)[1], abs(dx) + abs(dy))
-            if best is None or k < best[0]:
-                best = (k, m)
+            nearest = _nearest_plain_tile(candidates, content, x, ny)
+            if nearest is not None:
+                nx, m = nearest
+                k = (*quality, abs(nx - x) + abs(ny - y))
+                if best is None or k < best[0]:
+                    best = (k, m)
+                break
     if best:
         return best[1]
     return None if forced else art.metatile(x, y)
+
+
+def _nearest_plain_tile(candidates, content, x, y):
+    """Find the closest eligible column, breaking distance ties to the left."""
+    right = bisect.bisect_left(candidates, (x,))
+    left = right - 1
+    while left >= 0:
+        nx, _ = candidates[left]
+        if nx < x - 24:
+            break
+        if (nx, y) not in content:
+            break
+        left -= 1
+    left_tile = candidates[left] if left >= 0 and candidates[left][0] >= x - 24 else None
+    while right < len(candidates):
+        nx, m = candidates[right]
+        if nx > x + 24 or (left_tile is not None and nx - x >= x - left_tile[0]):
+            break
+        if (nx, y) not in content:
+            return nx, m
+        right += 1
+    return left_tile
 
 
 def _plain_tile(art, m):
@@ -4880,12 +4982,22 @@ def main():
     ap.add_argument("--preview", default=None)
     ap.add_argument("--layouts", default=None,
                     help="default: the solved maps and every map with a ledge")
-    ap.add_argument("--output", default=None)
+    output = ap.add_mutually_exclusive_group()
+    output.add_argument("--output", help="write the finished relief")
+    output.add_argument("--base-output", help="write only the terrain solve, before building-aware terraces")
+    ap.add_argument("--base-input", help="finish the terrain solve from --base-output; requires --output")
+    ap.add_argument("--terrace-jobs", type=int, default=1, help="workers for the final terrace solve")
     ap.add_argument("--at", default=None, help="x,z of the preview target")
     ap.add_argument("--proof", default=None,
                     help="directory: each drawn group's terraces over its drawing")
     args = ap.parse_args()
-    if args.layouts:
+    if args.terrace_jobs < 1:
+        ap.error("--terrace-jobs must be positive")
+    if args.base_input and (not args.output or args.layouts or args.preview or args.proof):
+        ap.error("--base-input requires --output and uses the layouts already in that input")
+    if args.base_input:
+        lids = []
+    elif args.layouts:
         lids = args.layouts.split(",")
     else:
         drawn = [l for members in DRAWN.values() for l in members]
@@ -4905,8 +5017,13 @@ def main():
         os.makedirs(args.proof, exist_ok=True)
         for name in DRAWN:
             print("proof:", proof(name, os.path.join(args.proof, "terraces_%s.png" % name)))
+    if args.base_output:
+        export(lids, args.base_output)
     if args.output:
-        export(lids, args.output)
+        if args.base_input:
+            shutil.copyfile(args.base_input, args.output)
+        else:
+            export(lids, args.output)
         # the export as the terraces read it (their reference: the world
         # placement they keep), for the voxel editor to solve its groups
         # against the same relief the build does
@@ -4915,7 +5032,7 @@ def main():
         # the mountains of the maps chosen so far, counted tile by tile
         # (voxel_terraces.py) over the solve, in the world it placed
         import voxel_terraces
-        voxel_terraces.apply_file(args.output)
+        voxel_terraces.apply_file(args.output, jobs=args.terrace_jobs)
         # the level a step seam gives up, as a slope across the open sea
         apply_sea_ramps(args.output)
         # no cut tile's ground in a pit under the ground beside it
