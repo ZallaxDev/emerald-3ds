@@ -65,11 +65,22 @@ static void OpenAsked(u8 mode)
         else if (FieldIdle() && CtrStartMenu_Available())
         {
             u8 pocket = sLiveBagPocket;
-            if (pocket < POCKETS_COUNT)
+            unsigned total, position = LiveBagNativeIndex(pocket, sLiveBagCursor[pocket], &total);
+
+            if (position != 0xFFFF)
             {
+                unsigned offset = sLiveBagCursor[pocket] >= sLiveBagScroll[pocket]
+                                ? sLiveBagCursor[pocket] - sLiveBagScroll[pocket] : 0;
+                unsigned scroll = position > offset ? position - offset : 0;
+                /* The native list also has a Close Bag entry and shows up
+                 * to eight rows, even when the live list has fewer. */
+                unsigned maxScroll = total + 1 > CTR_BAG_ROWS ? total + 1 - CTR_BAG_ROWS : 0;
+
+                if (scroll > maxScroll)
+                    scroll = maxScroll;
                 gBagPosition.pocket = pocket;
-                gBagPosition.scrollPosition[pocket] = sLiveBagScroll[pocket];
-                gBagPosition.cursorPosition[pocket] = sLiveBagCursor[pocket] - sLiveBagScroll[pocket];
+                gBagPosition.scrollPosition[pocket] = scroll;
+                gBagPosition.cursorPosition[pocket] = position - scroll;
                 if (OpenGameScreen(SCR_BAG))
                     sLiveBagPending = FALSE;
             }
@@ -103,6 +114,14 @@ static void CompleteLivePartyHandoff(u8 mode)
     {
         struct CtrPartyView v;
 
+        /* CtrParty_InWindow() also covers scripted selectors. Only a
+         * field-started party menu from our live tab may take this tap. */
+        if (!sSession.active || gMain.inBattle || sScreen != SCR_POKEMON
+         || gPartyMenu.menuType != PARTY_MENU_TYPE_FIELD)
+        {
+            sLivePartyHandoff = PARTY_SIZE;
+            return;
+        }
         if (CtrParty_InWindow() && CtrParty_GetView(&v) && v.state == CTR_PARTY_VIEW_LIST
          && sLivePartyHandoff < gPlayerPartyCount)
         {
@@ -111,7 +130,12 @@ static void CompleteLivePartyHandoff(u8 mode)
             return;
         }
     }
-    if (mode == MODE_OFF || mode >= MODE_BATTLE_INFO || ++sLivePartyHandoffFrames > 180)
+    /* A different game screen, battle or a new action request invalidates
+     * the handoff; it must not linger for an unrelated party selector. */
+    if ((mode != MODE_FIELD && mode != MODE_PARTY_MENU) || gMain.inBattle
+     || sScreen != SCR_POKEMON || !sSession.active
+     || (sPlan.kind == PLAN_START && sPlan.target != START_POKEMON)
+     || ++sLivePartyHandoffFrames > 180)
         sLivePartyHandoff = PARTY_SIZE;
 }
 
@@ -129,10 +153,14 @@ static void LivePartyTap(u8 id)
             PlaySE(SE_SELECT);
         }
     }
-    else if (id == HIT_CANCEL && gPlayerPartyCount && sLivePartyCursor < gPlayerPartyCount)
+    else if (id == HIT_CANCEL)
     {
-        sLivePartyPending = sLivePartyCursor;
-        PlaySE(SE_SELECT);
+        NormalizeLivePartyCursor();
+        if (gPlayerPartyCount && sLivePartyCursor < gPlayerPartyCount)
+        {
+            sLivePartyPending = sLivePartyCursor;
+            PlaySE(SE_SELECT);
+        }
     }
 }
 

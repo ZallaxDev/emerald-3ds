@@ -270,6 +270,10 @@ static void SnapshotLiveBag(ViewState *s)
     struct CtrBagView *v = &s->bv;
     u8 pocket = sLiveBagPocket < POCKETS_COUNT ? sLiveBagPocket : ITEMS_POCKET;
     struct BagPocket *items = &gBagPockets[pocket];
+    /* Bag pockets are not always compacted: RemoveBagItem can leave holes
+     * between occupied slots until the real Bag next opens. Display a
+     * read-only, compact list without modifying the save or its order. */
+    u8 occupied[256];  /* BagPocket.capacity is u8: every slot fits. */
     unsigned total = 0, maxScroll, scroll, selected;
 
     v->state = CTR_BAG_VIEW_LIST;
@@ -278,8 +282,9 @@ static void SnapshotLiveBag(ViewState *s)
     v->female = s->gender == FEMALE;
     v->pocketSwitch = TRUE;
     if (items->itemSlots != NULL)
-        while (total < items->capacity && items->itemSlots[total].itemId != ITEM_NONE)
-            ++total;
+        for (unsigned slot = 0; slot < items->capacity; ++slot)
+            if (items->itemSlots[slot].itemId != ITEM_NONE)
+                occupied[total++] = slot;
     maxScroll = total > CTR_BAG_ROWS ? total - CTR_BAG_ROWS : 0;
     selected = total && sLiveBagCursor[pocket] < total ? sLiveBagCursor[pocket] : 0;
     scroll = sLiveBagScroll[pocket];
@@ -300,7 +305,7 @@ static void SnapshotLiveBag(ViewState *s)
     v->item = ITEM_NONE;
     for (unsigned i = 0; i < v->numRows; ++i)
     {
-        unsigned index = scroll + i;
+        unsigned index = occupied[scroll + i];
         u16 item = BagGetItemIdByPocketPosition(pocket + 1, index);
 
         v->items[i] = item;
@@ -313,9 +318,62 @@ static void SnapshotLiveBag(ViewState *s)
     }
     if (total)
     {
-        v->item = BagGetItemIdByPocketPosition(pocket + 1, selected);
+        v->item = BagGetItemIdByPocketPosition(pocket + 1, occupied[selected]);
         CopyText(v->text, sizeof(v->text), GetItemDescription(v->item));
     }
+}
+
+/* Return the item position after the native Bag compacts (and for TMs and
+ * berries, sorts) its slots in UpdatePocketItemLists. The live cursor counts
+ * occupied stacks, whereas the underlying save can contain gaps.
+ * Never sort or compact the actual save just to calculate this index. */
+static unsigned LiveBagNativeIndex(u8 pocket, unsigned displayIndex, unsigned *total)
+{
+    const struct BagPocket *bag;
+    unsigned slot = 0xFFFF, seen = 0;
+
+    *total = 0;
+    if (pocket >= POCKETS_COUNT)
+        return 0xFFFF;
+    bag = &gBagPockets[pocket];
+    if (!bag->itemSlots)
+        return 0xFFFF;
+    for (unsigned i = 0; i < bag->capacity; ++i)
+    {
+        if (bag->itemSlots[i].itemId == ITEM_NONE)
+            continue;
+        if (seen == displayIndex)
+            slot = i;
+        ++seen;
+    }
+    *total = seen;
+    if (slot == 0xFFFF)
+        return 0xFFFF;
+    if (pocket == TMHM_POCKET || pocket == BERRIES_POCKET)
+    {
+        /* The native menu sorts these pockets by item ID, stably. */
+        unsigned nativeIndex = 0;
+        u16 id = bag->itemSlots[slot].itemId;
+
+        for (unsigned i = 0; i < bag->capacity; ++i)
+        {
+            u16 other = bag->itemSlots[i].itemId;
+
+            if (other != ITEM_NONE && (other < id || (other == id && i < slot)))
+                ++nativeIndex;
+        }
+        return nativeIndex;
+    }
+    return displayIndex;
+}
+
+/* A stored selection can outlive a party member (e.g., depositing Pokémon
+ * in the PC). Normalize it, not just the displayed cursor. */
+static void NormalizeLivePartyCursor(void)
+{
+    if (sLivePartyCursor >= gPlayerPartyCount
+     || (gPlayerPartyCount && GetMonData(&gPlayerParty[sLivePartyCursor], MON_DATA_SPECIES) == SPECIES_NONE))
+        sLivePartyCursor = 0;
 }
 
 /* Which native view the mode on show has, NATIVE_NONE for none. */
@@ -369,8 +427,9 @@ static void SnapshotNative(ViewState *s)
         /* This is a view, not an emulated running menu. Never call
          * CtrParty_GetView or the game-side touch handler for it. */
         s->liveParty = TRUE;
+        NormalizeLivePartyCursor();
         s->pv.state = CTR_PARTY_VIEW_LIST;
-        s->pv.cursor = sLivePartyCursor < gPlayerPartyCount ? sLivePartyCursor : 0;
+        s->pv.cursor = sLivePartyCursor;
         s->pv.moving = -1;
         s->pv.chosen = -1;
         s->pv.cancelEntry = -1;
