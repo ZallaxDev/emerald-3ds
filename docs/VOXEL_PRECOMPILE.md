@@ -192,9 +192,10 @@ made on the player's machine. For the record:
 
 ## Releasing
 
-One fixed Python makes the data (`upstream.lock` `[python]`, 3.13, the web
-builder's): `build_release.py` and `voxel_precompile.py` refuse another, and
-`make` runs the generators with it. It matters: under 3.11 `relief.bin`
+The Python version in `upstream.lock` (`[python]`) makes the release data.
+`build_release.py` and `voxel_precompile.py` require that version, and `make`
+runs the generators with it. The web builder uses its own Pyodide runtime.
+The generator version matters: under 3.11 `relief.bin`
 comes out different - since 3.12 `sum()` adds floats with Neumaier's
 compensation, which moves the last bit of the world solve
 (`gen_voxel_relief._gauss_seidel`), and that bit decides an exact tie in

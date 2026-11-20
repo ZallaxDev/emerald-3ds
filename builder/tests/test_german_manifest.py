@@ -143,13 +143,19 @@ class GermanPortTextTests(unittest.TestCase):
                 for match in re.finditer(r"\bCTR_TEXT_PT\(\s*(" + literal + ")", source):
                     self.assertTrue(match.group(1).startswith('"Only Pokemon Emerald (USA'),
                                     "%s: %s" % (path.name, match.group(1)))
-                for match in re.finditer(r"\bCTR_TEXT_PT_DE\(((?:\s*" + literal + r"\s*,?)+)\)", source):
-                    parts = re.split(r",\s*(?=\")", match.group(1).strip())
-                    self.assertEqual(len(parts), 3, path.name)
-                    german = "".join(ast.literal_eval(p) for p in re.findall(literal, parts[2]))
-                    self.assertTrue(german.strip(), path.name)
-                    self.assertTrue(german.isascii(), "%s: %r" % (path.name, german))
-                    german_hints += 1
+                for macro, arity, german_index in (("CTR_TEXT_PT_DE", 3, 2),
+                                                   ("CTR_TEXT_FR_IT_PT_DE", 5, 4)):
+                    pattern = r"\b" + macro + r"\(((?:\s*" + literal + r"\s*,?)+)\)"
+                    for match in re.finditer(pattern, source):
+                        parts = re.split(r",\s*(?=\")", match.group(1).strip())
+                        self.assertEqual(len(parts), arity, path.name)
+                        texts = ["".join(ast.literal_eval(p) for p in re.findall(literal, part))
+                                 for part in parts]
+                        for text in texts:
+                            self.assertTrue(text.strip(), path.name)
+                            self.assertTrue(text.isascii(), "%s: %r" % (path.name, text))
+                        german = texts[german_index]
+                        german_hints += 1
         self.assertGreaterEqual(german_hints, 5)
 
 
