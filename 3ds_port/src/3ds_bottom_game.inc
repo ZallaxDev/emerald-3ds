@@ -669,7 +669,10 @@ static void SummaryRow(int x, int w, int ry, int h, const u8 *label, const u8 *v
 
 static void DrawSummaryInfo(const struct CtrSummaryView *v, int x, int y, int w, int h)
 {
-    int oy, memoY = y + 88;
+    const int rowH = 18;
+    const int rowsY = y + 4;
+    /* Fit the trainer memo's third line below the four info rows. */
+    int oy, memoY = rowsY + 4 * rowH + 4;
 
     if (!v->isEgg)
     {
@@ -677,19 +680,19 @@ static void DrawSummaryInfo(const struct CtrSummaryView *v, int x, int y, int w,
 
         for (int i = 0; i < 4; ++i)
         {
-            int ry = y + 4 + i * 20;
+            int ry = rowsY + i * rowH;
 
             if (i)
                 FillRect(x + 8, ry, w - 16, 1, PackRgb(228, 218, 202));
         }
-        SummaryRow(x, w, y + 4, 20, Ascii(CTR_TEXT("TYPE", "TIPO", "TYPE", "TIPO", "TIPO", "TYP", "タイプ")), NULL);
-        DrawTypeIcon(v->types[0], x + 90, y + 6);
+        SummaryRow(x, w, rowsY, rowH, Ascii(CTR_TEXT("TYPE", "TIPO", "TYPE", "TIPO", "TIPO", "TYP", "タイプ")), NULL);
+        DrawTypeIcon(v->types[0], x + 90, rowsY + 1);
         if (v->types[1] != v->types[0])
-            DrawTypeIcon(v->types[1], x + 124, y + 6);
-        SummaryRow(x, w, y + 24, 20, Ascii(CTR_TEXT("OT", "EO", "DO", "AO", "TO", "OT", "おや")), v->ot);
-        SummaryRow(x, w, y + 44, 20, Ascii(CTR_TEXT("ID No.", "Nº ID", "No. ID", "N. ID", "Nº ID", "ID-Nr.", "IDNo.")),
+            DrawTypeIcon(v->types[1], x + 124, rowsY + 1);
+        SummaryRow(x, w, rowsY + rowH, rowH, Ascii(CTR_TEXT("OT", "EO", "DO", "AO", "TO", "OT", "おや")), v->ot);
+        SummaryRow(x, w, rowsY + 2 * rowH, rowH, Ascii(CTR_TEXT("ID No.", "Nº ID", "No. ID", "N. ID", "Nº ID", "ID-Nr.", "IDNo.")),
                    Number(v->otId, 5, STR_CONV_MODE_LEADING_ZEROS));
-        SummaryRow(x, w, y + 64, 20, Ascii(CTR_TEXT("ITEM", "OBJETO", "OBJET", "STRUMENTO", "ITEM", "ITEM", "どうぐ")), item);
+        SummaryRow(x, w, rowsY + 3 * rowH, rowH, Ascii(CTR_TEXT("ITEM", "OBJETO", "OBJET", "STRUMENTO", "ITEM", "ITEM", "どうぐ")), item);
     }
     else
     {
