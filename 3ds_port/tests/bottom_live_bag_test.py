@@ -11,7 +11,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[2]
 snapshot = (ROOT / "3ds_port/src/3ds_bottom_snapshot.inc").read_text(encoding="utf-8")
 start = snapshot.index("static void SnapshotLiveBag(ViewState *s)\n{")
-end = snapshot.index("\n/* Which native view the mode on show has", start)
+end = snapshot.index("\n/* A stored selection can outlive", start)
 fn = snapshot[start:end]
 
 fixture = r'''
