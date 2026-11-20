@@ -109,3 +109,48 @@ with `--profiler none`. The harness records versions, elapsed time, completion
 status, file sizes, hashes and readable hotspot summaries.
 
 Raw measurements: [voxel-python315.json](benchmarks/voxel-python315.json).
+
+## Terrain generation follow-up
+
+One complete local comparison took **370.235 seconds before and 368.321
+seconds after**. The 1.914-second difference is about 0.5% on this pair.
+The complete `relief.bin` matched byte for byte (3,325,150 bytes, SHA-256
+`4d8fc4962c12b3ab603dcbff42f8aaab4bbe533203377c1017d6cce98ffe5c70`).
+Both runs used the same prepared English source tree and building input,
+with the JIT and profiling disabled. The timing includes terrace and map
+corrections. The project's host C relief test passed against the candidate
+file, and all eight terrace-mark and ledge tests passed.
+
+Terrain classifies rock pixels by counting nearby top/rim and face pixels.
+The candidate keeps one summed-area table of the difference between the
+two counts. Positive values still select the top and ties still select the
+face. The height solver also precomputes each active node's total weight
+before iterating, with the same update order and floating-point operations.
+
+| Synthetic workload | Original median | Candidate median |
+| --- | ---: | ---: |
+| Terrain voting on a 640×480 canvas | 148 ms | 83 ms |
+| Height solve on a 100-node graph | 72 ms | 44 ms |
+
+Each median comes from six alternating before/after pairs. Separate checks
+matched the original results on 200 randomly generated canvases and 200
+height-solver inputs. The solver comparisons checked exact floating-point
+values.
+
+A separate `tracemalloc` pass on the same synthetic canvas measured peak
+temporary Python allocations of 23.1 MiB before and 14.0 MiB after. This
+measurement covers the voting calculation.
+
+To repeat the full comparison, keep the same generated `buildings.bin` at
+`build/upstream/3ds_port/romfs/voxel/buildings.bin` for both runs. Use the
+same Python 3.15.2 / Pillow 13.0.0 environment and start with the source
+graphics already prepared. The earlier building experiment commit contains
+the original terrain generator.
+
+```sh
+git show 2783f57:3ds_port/scripts/gen_voxel_relief.py > build/upstream/3ds_port/scripts/gen_voxel_relief.py
+PYTHONHASHSEED=0 uv run --python 3.15.2 --with Pillow==13.0.0 python tools/profile_voxel.py --tree build/upstream --out build/terrain-baseline --steps relief --profiler none
+cp 3ds_port/scripts/gen_voxel_relief.py build/upstream/3ds_port/scripts/
+PYTHONHASHSEED=0 uv run --python 3.15.2 --with Pillow==13.0.0 python tools/profile_voxel.py --tree build/upstream --out build/terrain-candidate --steps relief --profiler none
+cmp build/terrain-baseline/relief.bin build/terrain-candidate/relief.bin
+```

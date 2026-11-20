@@ -1323,12 +1323,14 @@ def _gauss_seidel(n, pairs, fixed, iterations=4000):
     for (a, b), (d, w) in pairs.items():
         adj[a].append((b, d, w))
         adj[b].append((a, -d, w))
+    # Weights do not change between sweeps. Keep the same node and
+    # neighbor order, floating-point sums and division.
+    active = [(r, neighbors, sum(w for _, _, w in neighbors))
+              for r, neighbors in enumerate(adj) if r not in fixed and neighbors]
     for _ in range(iterations):
         delta = 0.0
-        for r in range(n):
-            if r in fixed or not adj[r]:
-                continue
-            v = sum(w * (h[o] + d) for (o, d, w) in adj[r]) / sum(w for (_, _, w) in adj[r])
+        for r, neighbors, weight in active:
+            v = sum(w * (h[o] + d) for o, d, w in neighbors) / weight
             delta = max(delta, abs(v - h[r]))
             h[r] = v
         if delta < 0.001:
@@ -1848,25 +1850,23 @@ def drawn_canvas(name):
     # tops' colours and the tops with the faces'
     voted = [row[:] for row in kind]
     R = MAJORITY
-    # the votes are counted off running sums (top or rim, face) over the canvas
-    st = [[0] * (W + 1) for _ in range(H + 1)]
-    sf = [[0] * (W + 1) for _ in range(H + 1)]
+    # One summed-area table holds top/rim votes minus face votes. A
+    # positive sum still means top wins, and a tie still means face.
+    vote_by_kind = (0, 1, -1, 0, 1, 0, 0)  # GROUND through FREE
+    balance = [[0] * (W + 1) for _ in range(H + 1)]
     for y in range(H):
-        row = kind[y]
-        t = itertools.accumulate([k == TOP or k == RIM for k in row])
-        f = itertools.accumulate([k == FACE for k in row])
-        st[y + 1][1:] = map(operator.add, st[y][1:], t)
-        sf[y + 1][1:] = map(operator.add, sf[y][1:], f)
+        scores = itertools.accumulate(map(vote_by_kind.__getitem__, kind[y]))
+        balance[y + 1][1:] = map(operator.add, balance[y][1:], scores)
+    bounds = [(max(0, x - R), min(W, x + R + 1)) for x in range(W)]
     for y in range(H):
         y0, y1 = max(0, y - R), min(H, y + R + 1)
-        row = kind[y]
-        for x in range(W):
-            if row[x] not in (TOP, FACE, FLECK):
+        above, below = balance[y0], balance[y1]
+        for x, pixel in enumerate(kind[y]):
+            if pixel not in (TOP, FACE, FLECK):
                 continue
-            x0, x1 = max(0, x - R), min(W, x + R + 1)
-            t = st[y1][x1] - st[y0][x1] - st[y1][x0] + st[y0][x0]
-            f = sf[y1][x1] - sf[y0][x1] - sf[y1][x0] + sf[y0][x0]
-            voted[y][x] = TOP if t > f else FACE
+            x0, x1 = bounds[x]
+            net = below[x1] - above[x1] - below[x0] + above[x0]
+            voted[y][x] = TOP if net > 0 else FACE
     return layouts, CW, CH, voted, blocked, side, flat, face_low
 
 
