@@ -659,3 +659,36 @@ exports byte for byte. The timings cover the building generator through
 export. The hosted `build-3ds` job was outside this comparison.
 
 [Raw timing, output sizes, and hashes](benchmarks/voxel-building-verification-python315.json).
+
+## Furniture search and placement reuse follow-up
+
+Build an index of cell drawings once per room. Exact furniture matches
+start at positions with the right first tile. Loose matches test each
+distinct tile drawing for the anchor and visit matching positions in
+the original row order. Both passes keep the same priority and bounds,
+so overlapping placements claim pixels in the same order.
+
+When a build verifies and exports, the exporter reuses the model
+placements that verification already found. An export by itself still
+finds its own placements.
+
+| Local building generator measurement | Before | After |
+| --- | ---: | ---: |
+| Complete generation, verification and export | 231.81 s | 221.95 s |
+| Model generation | 143.46 s | 133.85 s |
+| Furniture reuse searches | 11.45 s | 3.81 s |
+| Placement lookup, including export | 12.88 s | 10.43 s |
+| Export | 41.47 s | 39.23 s |
+
+This pair saved **9.86 seconds (4.3%)** against
+`1809f55`. Both versions ran on the same prepared English inputs with
+Python 3.15.2 and Pillow 13.0.0, pinned to the same logical CPU.
+Both ran full verification and wrote proof images for failures only.
+The focused timings overlap with the enclosing steps.
+
+All 500 generated room cases returned the same ordered furniture
+placements, including overlaps and edge positions. Every full-build
+verification result matched. Both `buildings.bin` and `windowlights.bin`
+matched the baseline and original exports byte for byte.
+
+[Raw timing and output hashes](benchmarks/voxel-building-reuse-python315.json).

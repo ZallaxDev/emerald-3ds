@@ -763,7 +763,10 @@ def reuse_pieces(layout):
     the gyms' statue stands in every gym. A pixel is drawn once: of two
     pieces drawn alike (two stools), the first placed takes it."""
     keys = cell_keys(layout)
-    drawn = {k for row in keys for k in row}
+    positions = collections.defaultdict(list)
+    for y, row in enumerate(keys):
+        for x, key in enumerate(row):
+            positions[key].append((x, y))
     placed, taken = [], set()
     rooms = {}
     candidates = []
@@ -772,7 +775,7 @@ def reuse_pieces(layout):
         if src == layout.id:
             continue
         if src not in rooms:
-            rooms[src] = same_room(vb.LayoutArt(src), layout)
+            rooms[src] = same_room(_layout_art(src), layout)
         if not rooms[src]:      # the same room: its own pieces stand in it already
             candidates.append(p)
     # the same tiles first: two pieces drawn alike may stand at different
@@ -782,23 +785,20 @@ def reuse_pieces(layout):
             if not exact and not p["loose"]:
                 continue
             w, h = p["size"]
-            first = p["keys"][0][0]
-            if exact and first not in drawn:
-                continue    # its first cell is drawn nowhere here
-            loose = set() if exact else _loose_starts(p, layout, keys)
-            for y in range(layout.h - h + 1):
-                for x in range(layout.w - w + 1):
-                    if exact:
-                        if keys[y][x] != first or any(keys[y + j][x:x + w] != p["keys"][j]
-                                                      for j in range(h)):
-                            continue
-                    elif (x, y) not in loose or not _drawn_at(p, keys, x, y):
+            starts = positions.get(p["keys"][0][0], ()) if exact else _loose_starts(p, positions)
+            for x, y in starts:
+                if not (0 <= x <= layout.w - w and 0 <= y <= layout.h - h):
+                    continue
+                if exact:
+                    if any(keys[y + j][x:x + w] != p["keys"][j] for j in range(h)):
                         continue
-                    pts = {(x * 16 + u, y * 16 + v) for (u, v) in p["pixels"]}
-                    if pts & taken:
-                        continue
-                    taken |= pts
-                    placed.append((p, x, y, pts, exact))
+                elif not _drawn_at(p, keys, x, y):
+                    continue
+                pts = {(x * 16 + u, y * 16 + v) for (u, v) in p["pixels"]}
+                if pts & taken:
+                    continue
+                taken |= pts
+                placed.append((p, x, y, pts, exact))
     return placed
 
 
@@ -811,20 +811,15 @@ def _cell_drawn(key, want):
     return all(key[o:o + 3] == c for (o, c) in want)
 
 
-def _loose_starts(p, layout, keys):
-    """The cells a loose piece's rectangle may start at: wherever its
-    anchor cell's pixels are drawn."""
+def _loose_starts(p, positions):
+    """The cells where the piece's anchor matches, in room scan order."""
     ai, aj = p["anchor"]
     want = p["cells"][(ai, aj)]
-    seen, out = {}, set()
-    for y in range(layout.h):
-        for x in range(layout.w):
-            key = keys[y][x]
-            if key not in seen:
-                seen[key] = _cell_drawn(key, want)
-            if seen[key]:
-                out.add((x - ai, y - aj))
-    return out
+    starts = [(x - ai, y - aj) for key, cells in positions.items() if _cell_drawn(key, want)
+              for x, y in cells]
+    # Tiles are grouped by their drawing. Restore row order so overlapping
+    # placements still give the first position the same claim on pixels.
+    return sorted(starts, key=lambda cell: (cell[1], cell[0]))
 
 
 def _drawn_at(p, keys, x, y):
@@ -4408,7 +4403,7 @@ def read_crop(model):
             max(b[2] for b in boxes), max(b[3] for b in boxes))
 
 
-def export(models, path):
+def export(models, path, *, placement_cache=None):
     """Write buildings.bin (VXB9).
 
     Geometry is stored once per model, texture coordinates in pixels of the
@@ -4456,7 +4451,10 @@ def export(models, path):
     found = []
     per_map = {i: {} for i in range(len(models))}   # placements of each model in each map
     for index, m in enumerate(models):
-        for lid, px, py, ground, name, odd in find_placements(m, layouts_json):
+        placements = placement_cache.get(index) if placement_cache is not None else None
+        if placements is None:
+            placements = find_placements(m, layouts_json)
+        for lid, px, py, ground, name, odd in placements:
             cells = placement_patches(m, name, layouts, px, py, odd)
             found.append((lid, index, px, py, ground, cells, name))
             per_map.setdefault(index, {})
@@ -4866,7 +4864,7 @@ def room_check(placements, layout_id, out_dir, draw=None, suffix="", *, all_diag
     return bad
 
 
-def verify(models, out, complete=True, *, all_diagnostics=True):
+def verify(models, out, complete=True, *, all_diagnostics=True, placement_cache=None):
     """The proofs: each model against its drawing, each room as composed, and
     each room's pieces by the interior lint. Writes the diagnostic images to
     `out` for every check or just failures. True when all of them pass.
@@ -4912,10 +4910,13 @@ def verify(models, out, complete=True, *, all_diagnostics=True):
     placed = collections.defaultdict(list)
     if rooms or bridges:
         layouts_json = vb._layouts_json()
-        for model in models:
+        for index, model in enumerate(models):
             if not rooms and model.spec.get("deck_of") not in bridges:
                 continue
-            for _, px, py, ground, lid, odd in find_placements(model, layouts_json):
+            placements = find_placements(model, layouts_json)
+            if placement_cache is not None:
+                placement_cache[index] = placements
+            for _, px, py, ground, lid, odd in placements:
                 placed[lid].append((model, px, py, ground, odd))
     for lid in rooms:
         bad = room_check(placed[lid], lid, out, all_diagnostics=all_diagnostics)
@@ -5128,12 +5129,14 @@ def main():
     if args.preview:
         for model in models:
             preview(model, out, args.cams.split(",") if args.cams else None)
+    placement_cache = {} if checks and args.output else None
     if checks and not verify(models, out, complete=not args.only,
-                             all_diagnostics=args.diagnostics == "all"):
+                             all_diagnostics=args.diagnostics == "all",
+                             placement_cache=placement_cache):
         raise SystemExit("a model does not reproduce its drawing, or a room fails its "
                          "interior lint (see above, and %s)" % os.path.join(out, "interior_lint.txt"))
     if args.output:
-        export(models, args.output)
+        export(models, args.output, placement_cache=placement_cache)
     if args.town:
         for path in town_preview(models, args.town, out):
             print("town preview:", path)
