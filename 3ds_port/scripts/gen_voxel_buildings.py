@@ -3800,29 +3800,62 @@ def _skyline(order, tw, th):
         if aw > tw:
             return None
         best = None
-        for x in range(tw - aw + 1):
-            y = max(sky[x:x + aw])
+        floor = min(sky)
+        peaks = collections.deque()
+        # The front is the highest column under the current image. Columns
+        # no higher than a newer one can leave the queue before they expire.
+        for right, height in enumerate(sky):
+            x = right - aw + 1
+            if peaks and peaks[0] < x:
+                peaks.popleft()
+            while peaks and sky[peaks[-1]] <= height:
+                peaks.pop()
+            peaks.append(right)
+            if x < 0:
+                continue
+            y = sky[peaks[0]]
             if y + ah <= th and (best is None or y < best[0]):
                 best = (y, x)
+            # We scan left to right, so the first hit at this lower bound
+            # is the same placement a full search would pick.
+            if y == floor:
+                break
         if best is None:
             return None
         y, x = best
         spots[key] = (x, y)
-        for k in range(x, x + aw):
-            sky[k] = y + ah
+        sky[x:x + aw] = [y + ah] * aw
     return spots
 
 
 MAX_TEXTURE = (512, 512)   # one page in VRAM; ctr_voxel.c caches four
 MAX_TEXTURE_SIDE = 1024    # the GPU's largest texture
+_MORTON_AXIS = (0, 1, 4, 5, 16, 17, 20, 21)  # three bits in even positions
 
 
 def texel_offset(x, y, width):
     """8x8 Morton tiles, the PICA200 order (as gen_voxel_trees.py)."""
-    morton = 0
-    for bit in range(3):
-        morton |= ((x >> bit) & 1) << (2 * bit) | ((y >> bit) & 1) << (2 * bit + 1)
+    morton = _MORTON_AXIS[x % 8] | (_MORTON_AXIS[y % 8] << 1)
     return ((y // 8) * (width // 8) + x // 8) * 64 + morton
+
+
+def write_page_image(tex, glow, art, glass, origin, column_offsets, row_offsets):
+    """Write RGBA5551 and optional glass using the page's Morton offsets."""
+    ox, oy = origin
+    w, h = art.size
+    columns = column_offsets[ox:ox + w]
+    rows = row_offsets[oy:oy + h]
+    pixels = art.load()
+    glass_pixels = glass.load() if glass is not None else None
+    pack = struct.Struct("<H").pack_into
+    for y, row in enumerate(rows):
+        for x, column in enumerate(columns):
+            r, g, b, a = pixels[x, y]
+            value = (r >> 3) << 11 | (g >> 3) << 6 | (b >> 3) << 1 | int(a >= 128)
+            offset = row + column
+            pack(tex, 2 * offset, value)
+            if glass_pixels is not None:
+                glow[offset] = glass_pixels[x, y]
 
 
 def ground_patch(model, layout, px, py, i, j):
@@ -4553,17 +4586,11 @@ def export(models, path):
         page = len(pages)
         tex = bytearray(tw * rows * 2)
         glow = bytearray(tw * rows)
+        column_offsets = [texel_offset(x, 0, tw) for x in range(tw)]
+        row_offsets = [texel_offset(0, y, tw) for y in range(rows)]
         for key, img in images:
-            ox, oy = spots[key]
-            apx = img.load()
-            gpx = art_glass[key].load() if key in art_glass else None
-            for y in range(img.size[1]):
-                for x in range(img.size[0]):
-                    r_, g_, b_, a_ = apx[x, y]
-                    value = (r_ >> 3) << 11 | (g_ >> 3) << 6 | (b_ >> 3) << 1 | int(a_ >= 128)
-                    struct.pack_into("<H", tex, 2 * texel_offset(ox + x, oy + y, tw), value)
-                    if gpx is not None:
-                        glow[texel_offset(ox + x, oy + y, tw)] = gpx[x, y]
+            write_page_image(tex, glow, img, art_glass.get(key), spots[key],
+                             column_offsets, row_offsets)
         pages.append((tw, rows))
         glows.append(glow if any(glow) else b"")
         texels.append(tex)

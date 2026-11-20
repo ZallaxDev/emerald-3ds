@@ -226,3 +226,36 @@ They exclude the rest of model generation and the export itself.
 All 152 fits matched. The full export also produced `buildings.bin` and
 `windowlights.bin` byte for byte equal to the bridge follow-up's export.
 The hashes are listed under Output identity.
+
+## Texture page loops follow-up
+
+The atlas packer keeps a queue of column heights for the current image
+width. Advancing by one column updates the queue and reads its maximum
+instead of slicing and scanning the whole width. The scan stops at the
+lowest possible placement height. A left-to-right scan preserves the
+existing leftmost tie break.
+
+The texture writer splits each GPU texture address into a row offset and a
+column offset. Each page calculates those offsets once, and each pixel
+adds the two values. Colour and optional window glow use the same address.
+The colour still uses little-endian RGBA5551 with the same alpha cutoff.
+
+The candidate matched the original on 1,000 randomized atlas packing
+inputs and six texture widths, including offsets on either side of tile
+boundaries. The existing building crop tests passed.
+
+| Timed work | Calls | Original | Candidate | Saved |
+| --- | ---: | ---: | ---: | ---: |
+| Atlas placement search | 5,420 | 11.758 s | 3.582 s | 8.176 s |
+| Texture and glow image writes | 3,878 | 5.703 s | 1.995 s | 3.709 s |
+| Combined | | 17.462 s | 5.577 s | 11.885 s |
+
+These are summed paired call times from a complete export using the same
+Python 3.15.2 and Pillow 13.0.0 environment and JIT disabled. Each pair
+used the same inputs, and the order alternated. The write timing covers
+7,482,550 pixels, including 827,499 with a glow lookup. The timing excludes
+preparing the page offset tables and the rest of the export.
+
+Every packing result and each page's colour and glow buffers matched the
+original. The complete `buildings.bin` and `windowlights.bin` also matched
+the previous export byte for byte.
