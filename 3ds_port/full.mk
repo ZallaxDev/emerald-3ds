@@ -585,10 +585,11 @@ build/voxel_relief_base.bin: scripts/gen_voxel_relief.py scripts/voxel_cells.py 
 	@mkdir -p $(@D)
 	"$(PYTHON)" scripts/gen_voxel_relief.py --base-output $@.tmp && mv -f $@.tmp $@
 
+VOXEL_TERRACE_JOBS ?= 1
 romfs/voxel/relief.bin: build/voxel_relief_base.bin romfs/voxel/buildings.bin \
 		scripts/voxel_terraces.py scripts/voxel_engine_view.py assets/voxel/relief_fixes.json
 	@mkdir -p $(@D)
-	"$(PYTHON)" scripts/gen_voxel_relief.py --base-input $< --output $@.tmp && mv -f $@.tmp $@
+	"$(PYTHON)" scripts/gen_voxel_relief.py --base-input $< --output $@.tmp --terrace-jobs "$(VOXEL_TERRACE_JOBS)" && mv -f $@.tmp $@
 
 romfs/bottom/battle.bin: scripts/gen_battle_art.py
 	@mkdir -p $(@D)

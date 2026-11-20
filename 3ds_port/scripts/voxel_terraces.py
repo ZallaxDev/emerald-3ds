@@ -55,6 +55,7 @@ import argparse
 import collections
 import copy
 import functools
+import itertools
 import math
 import os
 import sys
@@ -5938,23 +5939,71 @@ def chosen_layouts():
     return chosen + [e["id"] for e in vb._layouts_json() if gr.is_cave(e["id"]) and e["id"] not in chosen]
 
 
-def apply_file(path, layouts=None, quiet=False):
-    """Rebuild the chosen groups of a relief.bin written by gen_voxel_relief
-    (its world placement kept: the bases and every map's ground stay where
-    the world solver put them)."""
-    import voxel_relief_fixes as vrf
-    blob = open(path, "rb").read()
-    relief = vrf.parse(blob)
-    reference = vrf.parse(blob)
+def _serial_solves(layouts, reference):
     done = set()
     topology = None
-    for lid in (chosen_layouts() if layouts is None else layouts):
+    for lid in layouts:
         if lid in done:
             continue
         if topology is None:
             topology = gr.map_topology()
         sol = solve(lid, reference, topology=topology)
-        done.update(m[0] for m in sol["cells"].members)
+        done.update(lid for lid, _, _ in sol["cells"].members)
+        yield sol
+
+
+_worker_reference = _worker_topology = None
+
+
+def _prepare_worker(blob):
+    global _worker_reference, _worker_topology
+    _worker_reference = vrf.parse(blob)
+    _worker_topology = gr.map_topology()
+
+
+def _solve_in_worker(lid):
+    return solve(lid, _worker_reference, topology=_worker_topology)
+
+
+def _parallel_solves(layouts, blob, jobs):
+    # The default serial path is also used in environments without processes.
+    from concurrent.futures import ProcessPoolExecutor
+    from multiprocessing import get_context
+
+    # Keep the first selected layout for each group, as the serial pass does.
+    representatives = []
+    done = set()
+    for lid in layouts:
+        if lid not in done:
+            representatives.append(lid)
+            done.update(member for member, _, _ in group_of(lid))
+    if not representatives:
+        return
+    remaining = iter(representatives)
+    jobs = min(jobs, len(representatives))
+    with ProcessPoolExecutor(max_workers=jobs, mp_context=get_context("spawn"),
+                             initializer=_prepare_worker, initargs=(blob,)) as pool:
+        # Bound queued results and yield in input order. The parent assigns
+        # variant indices during merge, so completion order must never matter.
+        pending = collections.deque(pool.submit(_solve_in_worker, lid)
+                                    for lid in itertools.islice(remaining, jobs * 2))
+        while pending:
+            sol = pending.popleft().result()
+            lid = next(remaining, None)
+            if lid is not None:
+                pending.append(pool.submit(_solve_in_worker, lid))
+            yield sol
+
+
+def apply_file(path, layouts=None, quiet=False, *, jobs=1):
+    """Rebuild the chosen groups of a relief.bin written by gen_voxel_relief
+    (its world placement kept: the bases and every map's ground stay where
+    the world solver put them)."""
+    blob = open(path, "rb").read()
+    relief = vrf.parse(blob)
+    layouts = chosen_layouts() if layouts is None else layouts
+    solves = _parallel_solves(layouts, blob, jobs) if jobs > 1 else _serial_solves(layouts, vrf.parse(blob))
+    for sol in solves:
         merge(sol, relief)
         if not quiet:
             print("terraces %-40s %3d terraces, %d votes dropped" % (

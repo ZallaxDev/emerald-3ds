@@ -113,6 +113,7 @@ jobs:
           echo "::group::Bootstrap and build"
           python3 -m py_compile tools/port_common/gen_asset_table.py
           python3 builder/tests/test_asset_table_compatibility.py
+          export VOXEL_TERRACE_JOBS=4
           python3 tools/bootstrap.py --make -j4 --python python3
           echo "::endgroup::"
 

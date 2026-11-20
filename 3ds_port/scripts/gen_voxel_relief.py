@@ -4986,10 +4986,13 @@ def main():
     output.add_argument("--output", help="write the finished relief")
     output.add_argument("--base-output", help="write only the terrain solve, before building-aware terraces")
     ap.add_argument("--base-input", help="finish the terrain solve from --base-output; requires --output")
+    ap.add_argument("--terrace-jobs", type=int, default=1, help="workers for the final terrace solve")
     ap.add_argument("--at", default=None, help="x,z of the preview target")
     ap.add_argument("--proof", default=None,
                     help="directory: each drawn group's terraces over its drawing")
     args = ap.parse_args()
+    if args.terrace_jobs < 1:
+        ap.error("--terrace-jobs must be positive")
     if args.base_input and (not args.output or args.layouts or args.preview or args.proof):
         ap.error("--base-input requires --output and uses the layouts already in that input")
     if args.base_input:
@@ -5029,7 +5032,7 @@ def main():
         # the mountains of the maps chosen so far, counted tile by tile
         # (voxel_terraces.py) over the solve, in the world it placed
         import voxel_terraces
-        voxel_terraces.apply_file(args.output)
+        voxel_terraces.apply_file(args.output, jobs=args.terrace_jobs)
         # the level a step seam gives up, as a slope across the open sea
         apply_sea_ramps(args.output)
         # no cut tile's ground in a pit under the ground beside it
