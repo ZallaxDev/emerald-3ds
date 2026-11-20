@@ -262,14 +262,74 @@ static void SnapshotPartyFull(ViewState *s)
     }
 }
 
+/* Populate the approved v4.2 Bag renderer without running the game's Bag
+ * menu task. The game encrypts item quantities in save data: always use
+ * BagGetQuantityByPocketPosition, not ItemSlot.quantity directly. */
+static void SnapshotLiveBag(ViewState *s)
+{
+    struct CtrBagView *v = &s->bv;
+    u8 pocket = sLiveBagPocket < POCKETS_COUNT ? sLiveBagPocket : ITEMS_POCKET;
+    struct BagPocket *items = &gBagPockets[pocket];
+    unsigned total = 0, maxScroll, scroll, selected;
+
+    v->state = CTR_BAG_VIEW_LIST;
+    v->pocket = pocket;
+    v->bagFrame = pocket;
+    v->female = s->gender == FEMALE;
+    v->pocketSwitch = TRUE;
+    if (items->itemSlots != NULL)
+        while (total < items->capacity && items->itemSlots[total].itemId != ITEM_NONE)
+            ++total;
+    maxScroll = total > CTR_BAG_ROWS ? total - CTR_BAG_ROWS : 0;
+    selected = total && sLiveBagCursor[pocket] < total ? sLiveBagCursor[pocket] : 0;
+    scroll = sLiveBagScroll[pocket];
+    if (scroll > maxScroll)
+        scroll = maxScroll;
+    if (selected < scroll)
+        scroll = selected;
+    if (total && selected >= scroll + CTR_BAG_ROWS)
+        scroll = selected - CTR_BAG_ROWS + 1;
+    sLiveBagCursor[pocket] = selected;
+    sLiveBagScroll[pocket] = scroll;
+
+    v->scroll = scroll;
+    v->total = total;
+    v->numRows = total - scroll < CTR_BAG_ROWS ? total - scroll : CTR_BAG_ROWS;
+    v->cursor = selected - scroll;
+    v->swapRow = -1;
+    v->item = ITEM_NONE;
+    for (unsigned i = 0; i < v->numRows; ++i)
+    {
+        unsigned index = scroll + i;
+        u16 item = BagGetItemIdByPocketPosition(pocket + 1, index);
+
+        v->items[i] = item;
+        v->counts[i] = BagGetQuantityByPocketPosition(pocket + 1, index);
+        if (pocket != KEYITEMS_POCKET)
+            v->flags[i] = CTR_BAG_ROW_COUNT;
+        else if (item == gSaveBlock1Ptr->registeredItem)
+            v->flags[i] = CTR_BAG_ROW_REGISTERED;
+        CopyText(v->names[i], sizeof(v->names[i]), GetItemName(item));
+    }
+    if (total)
+    {
+        v->item = BagGetItemIdByPocketPosition(pocket + 1, selected);
+        CopyText(v->text, sizeof(v->text), GetItemDescription(v->item));
+    }
+}
+
 /* Which native view the mode on show has, NATIVE_NONE for none. */
 static u8 NativeKind(const ViewState *s)
 {
     if (sClassicMenus)
         return NATIVE_NONE;
-    if (s->mode == MODE_FIELD && s->dock && s->screen == SCR_POKEMON
-     && !s->fm.count && !s->fl.count && CtrExtras_Get("live_party") == 1)
-        return NATIVE_PARTY;
+    if (s->mode == MODE_FIELD && s->dock && !s->fm.count && !s->fl.count)
+    {
+        if (s->screen == SCR_POKEMON && CtrExtras_Get("live_party") == 1)
+            return NATIVE_PARTY;
+        if (s->screen == SCR_BAG && CtrExtras_Get("live_bag") == 1)
+            return NATIVE_BAG;
+    }
     if (s->mode == MODE_SUMMARY)
         return NATIVE_SUMMARY;
     if (s->mode == MODE_POKEDEX)
@@ -298,7 +358,13 @@ static void SnapshotNative(ViewState *s)
     sNativeStale = kind == NATIVE_NONE && sShown.native != NATIVE_NONE;
     if (kind == NATIVE_NONE)
         return;
-    if (kind == NATIVE_PARTY && s->mode == MODE_FIELD)
+    if (kind == NATIVE_BAG && s->mode == MODE_FIELD)
+    {
+        s->liveBag = TRUE;
+        SnapshotLiveBag(s);
+        got = TRUE;
+    }
+    else if (kind == NATIVE_PARTY && s->mode == MODE_FIELD)
     {
         /* This is a view, not an emulated running menu. Never call
          * CtrParty_GetView or the game-side touch handler for it. */

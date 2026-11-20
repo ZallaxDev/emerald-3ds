@@ -496,6 +496,7 @@ typedef struct
      * NATIVE_NONE for its picture in the window; what it reads. */
     u8 native;
     bool8 liveParty;        /* read-only field party; never forwards taps to a menu that is not running */
+    bool8 liveBag;          /* read-only inventory view; no GBA bag task running */
     struct CtrPartyView pv;
     struct CtrSummaryView sv;
     struct CtrBagView bv;
@@ -577,6 +578,12 @@ static u8 sLivePartyCursor;
 static u8 sLivePartyPending = PARTY_SIZE;
 static u8 sLivePartyHandoff = PARTY_SIZE;
 static u16 sLivePartyHandoffFrames;
+/* Live Bag: independent pocket scroll/selection, touched only while browsing.
+ * The original BagPosition is updated only when the player requests ACTIONS. */
+static u8 sLiveBagPocket;
+static u8 sLiveBagCursor[POCKETS_COUNT];
+static u8 sLiveBagScroll[POCKETS_COUNT];
+static bool8 sLiveBagPending;
 
 /* The game's menus drawn here (not the classic menus): pokedex.c skips its
  * fades, which nobody sees then. */
