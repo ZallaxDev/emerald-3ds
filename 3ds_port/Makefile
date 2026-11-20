@@ -402,9 +402,9 @@ VERIFY_HOST_CHECKS += verify-battle-speed
 verify-battle-speed: build/battle_speed_test$(EXESUFFIX)
 	./build/battle_speed_test$(EXESUFFIX)
 
-build/battle_speed_test$(EXESUFFIX): tests/battle_speed_test.c src/3ds_settings.c include/3ds_platform.h
+build/battle_speed_test$(EXESUFFIX): tests/battle_speed_test.c tests/settings_host/3ds.h src/3ds_settings.c src/3ds_save_io.c include/3ds_platform.h include/3ds_save_io.h
 	@mkdir -p $(@D)
-	$(HOSTCC) -std=gnu99 -O2 -Wall -Wextra -Werror -Itests/settings_host -Iinclude $< -pthread -o $@
+	$(HOSTCC) -std=gnu99 -O2 -Wall -Wextra -Werror -Itests/settings_host -Iinclude $< src/3ds_save_io.c -pthread -o $@
 verify-rng-seeding:
 	"$(PYTHON)" tests/rng_seeding_test.py --cc "$(HOSTCC)"
 
