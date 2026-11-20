@@ -1141,7 +1141,19 @@ def find_supports(pieces, grids, W, H):
     return out
 
 
-def auto_leave(pieces, grids, ground, hexes, supports, W, H):
+def _pack_shape(grid, W, H):
+    return Image.frombytes("L", (W, H), b"".join(map(bytes, grid)))
+
+
+def _combine_shapes(masks, W, H, combine=ImageChops.lighter):
+    coverage = Image.new("L", (W, H))
+    for mask in masks:
+        coverage = combine(coverage, mask)
+    pixels = coverage.tobytes()
+    return [pixels[offset:offset + W] for offset in range(0, len(pixels), W)]
+
+
+def auto_leave(pieces, grids, ground, hexes, supports, W, H, *, masks=None):
     """The colours each piece leaves where they run on into its shape from
     round it, beyond its own `leave`: the room round it - the colours that
     make the room's walls and floor and are more theirs than its own, not
@@ -1154,9 +1166,10 @@ def auto_leave(pieces, grids, ground, hexes, supports, W, H):
              if pc.get("facet") or pc.get("walls") or pc["name"].split("_")[0] in SHELL_PIECES]
     # the room round the pieces: everything outside the furniture's shapes
     # (the walls, the floor, its shades and marks)
-    things = [k for k in range(len(pieces)) if k not in shell]
-    roomy = [[not any(grids[k][y][x] for k in things) for x in range(W)] for y in range(H)]
-    room = collections.Counter(hexes[y][x] for y in range(H) for x in range(W) if roomy[y][x])
+    if masks is None:
+        masks = [_pack_shape(grid, W, H) for grid in grids]
+    occupied = _combine_shapes((mask for k, mask in enumerate(masks) if k not in shell), W, H)
+    room = collections.Counter(hexes[y][x] for y in range(H) for x in range(W) if not occupied[y][x])
     main = commonest(room)
     out = []
     for k, pc in enumerate(pieces):
@@ -1167,7 +1180,7 @@ def auto_leave(pieces, grids, ground, hexes, supports, W, H):
         ours = collections.Counter(hexes[y][x] for (x, y) in inside)
         # the room but what is drawn in this piece's own shape (a plant
         # drawn over the wall it stands against)
-        theirs = room - collections.Counter(hexes[y][x] for (x, y) in inside if roomy[y][x])
+        theirs = room - collections.Counter(hexes[y][x] for (x, y) in inside if not occupied[y][x])
         if pc.get("card"):
             # a card's leaves have the wall between them, deep in its shape,
             # and every stuff of the room round it: its band, its shadows.
@@ -2011,7 +2024,8 @@ def interior_specs(spec):
                     if g[y][x]:
                         tile, pixel, _ = layout.upper_source(x, y)
                         g[y][x] = lo <= tile <= hi and layout.tile_pixel(tile, pixel) != 0
-    shaped = [[any(g[y][x] for g in grids) for x in range(W)] for y in range(H)]
+    masks = [_pack_shape(grid, W, H) for grid in grids]
+    shaped = _combine_shapes(masks, W, H)
     ground = [[match[y][x] and not shaped[y][x] for x in range(W)] for y in range(H)]
     # The room's front corners: black in the drawing, the outside of a room
     # whose front wall the GBA never draws. Seen from the console's camera, a
@@ -2039,10 +2053,9 @@ def interior_specs(spec):
     # the room's shell, where a piece's copies never take a pixel
     # Shell membership is constant for the room: do not reclassify every
     # furniture piece (and split its name) for every pixel of the drawing.
-    shell_grids = [grids[j] for j, p_ in enumerate(pieces)
-                   if p_.get("fill") or p_["name"].split("_")[0] in SHELL_PIECES]
-    walls_at = [[any(grid[y][x] for grid in shell_grids)
-                 for x in range(W)] for y in range(H)]
+    shell_masks = (mask for mask, pc in zip(masks, pieces)
+                   if pc.get("fill") or pc["name"].split("_")[0] in SHELL_PIECES)
+    walls_at = _combine_shapes(shell_masks, W, H)
     # (the floor the terrain lays under a piece's cells)
     floor_hexes = {"%02x%02x%02x" % c[:3] for c in layout.cell_image(room["ground"][0]).getdata()}
 
@@ -2108,10 +2121,14 @@ def interior_specs(spec):
     hexes = [["%02x%02x%02x" % fpx[x, y][:3] for x in range(W)] for y in range(H)]
     supports = find_supports(pieces, grids, W, H)
     # how many things' shapes hold each pixel (a room's walls hold them all)
-    things = [g for g, pc in zip(grids, pieces) if not (pc.get("fill") or pc.get("facet")
-                                                        or pc.get("walls"))]
-    shapes_at = [[sum(g[y][x] for g in things) for x in range(W)] for y in range(H)]
-    leaves = auto_leave(pieces, grids, ground, hexes, supports, W, H)
+    things = [k for k, pc in enumerate(pieces)
+              if not (pc.get("fill") or pc.get("facet") or pc.get("walls"))]
+    if len(things) <= 255:
+        shapes_at = _combine_shapes((masks[k] for k in things), W, H, ImageChops.add)
+    else:
+        # Pillow's 8-bit addition saturates at 255.
+        shapes_at = [[sum(grids[k][y][x] for k in things) for x in range(W)] for y in range(H)]
+    leaves = auto_leave(pieces, grids, ground, hexes, supports, W, H, masks=masks)
     parts_of = {}
 
     def leave_parts(colours):
