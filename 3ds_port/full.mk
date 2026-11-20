@@ -557,7 +557,7 @@ romfs/voxel/buildings.bin: scripts/gen_voxel_buildings.py scripts/voxel_building
 		scripts/voxel_defect_scan.py assets/voxel/interior_lint_allow.toml \
 		$(ROOT)/data/layouts/layouts.json
 	@mkdir -p $(@D)
-	"$(PYTHON)" scripts/gen_voxel_buildings.py --verify --output $@
+	"$(PYTHON)" scripts/gen_voxel_buildings.py --verify --diagnostics failures --output $@
 
 # The light lit windows throw on the ground, written beside buildings.bin
 # by the same run.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the voxel building models, prove them, and preview them.
 
-    python gen_voxel_buildings.py [--verify] [--output BIN] [--preview DIR] [--only NAME]
+    python gen_voxel_buildings.py [--verify] [--diagnostics {all,failures}] [--output BIN] [--preview DIR] [--only NAME]
 
 For every spec in voxel_building_specs.py:
   * extracts the art with the ground made transparent;
@@ -4780,7 +4780,7 @@ def town_preview(models, layout_id, out_dir):
     return shots
 
 
-def room_check(models, layout_id, out_dir, draw=None, suffix=""):
+def room_check(placements, layout_id, out_dir, draw=None, suffix="", *, all_diagnostics=True):
     """A whole room as the console composes it, against its drawing.
 
     The terrain draws each cell a model covers with the placement's floor
@@ -4788,25 +4788,22 @@ def room_check(models, layout_id, out_dir, draw=None, suffix=""):
     Rendered in the GBA projection, the room must be its drawing again,
     pixel for pixel. Returns the pixels that differ.
     """
-    layouts_json = json.load(open(os.path.join(vb.ROOT, "data", "layouts", "layouts.json"),
-                                  encoding="utf-8"))["layouts"]
     layout = drawn_as(layout_id, draw)
     W, H = layout.w * 16, layout.h * 16
     ras = vb.Raster(W, H, bg=(0, 0, 0))
     covered, items, patches, hidden = {}, [], [], set()
-    for m in models:
+    for m, px, py, ground, odd in placements:
+        if not when_holds(m, layout, px, py):
+            continue    # (or switched off in this state of the room)
         w, h = m.cells
-        for lid, px, py, ground, name, odd in find_placements(m, layouts_json):
-            if name != layout_id or not when_holds(m, layout, px, py):
-                continue    # (or switched off in this state of the room)
-            for j in range(h):
-                for i in range(w):
-                    if (i, j) in m.owned:   # (the rest stays the map's)
-                        covered[(px + i, py + j)] = ground
-            items.append((m, px, py))
-            hidden |= {(px * 16 + u, py * 16 + v) for (u, v) in m.spec.get("behind_wall", ())}
-            patches += [(px + i, py + j, img) for (i, j, img)
-                        in placement_patches(m, layout_id, {layout_id: layout}, px, py, odd)]
+        for j in range(h):
+            for i in range(w):
+                if (i, j) in m.owned:  # the rest stays the map's
+                    covered[(px + i, py + j)] = ground
+        items.append((m, px, py))
+        hidden |= {(px * 16 + u, py * 16 + v) for (u, v) in m.spec.get("behind_wall", ())}
+        patches += [(px + i, py + j, img) for (i, j, img)
+                    in placement_patches(m, layout_id, {layout_id: layout}, px, py, odd)]
     for y in range(layout.h):
         for x in range(layout.w):
             img = layout.cell_image(covered.get((x, y), layout.metatile(x, y)))
@@ -4860,20 +4857,21 @@ def room_check(models, layout_id, out_dir, draw=None, suffix=""):
         print("    %-34s %4d px (not judged)" % ("tops behind the wall", len(hidden)))
     for r, why in room.get("redrawn", ()):
         print("    %-34s %s (not judged: %s)" % ("redrawn", r, why))
-    sheet = Image.new("RGB", (W * 2 + 4, H))
-    sheet.paste(full, (0, 0))
-    sheet.paste(diff, (W + 4, 0))
-    sheet.resize((sheet.width * 3, sheet.height * 3), Image.NEAREST).save(
-        os.path.join(out_dir, layout_id.lower() + suffix + "_room_check.png"))
+    if bad or all_diagnostics:
+        sheet = Image.new("RGB", (W * 2 + 4, H))
+        sheet.paste(full, (0, 0))
+        sheet.paste(diff, (W + 4, 0))
+        sheet.resize((sheet.width * 3, sheet.height * 3), Image.NEAREST).save(
+            os.path.join(out_dir, layout_id.lower() + suffix + "_room_check.png"))
     return bad
 
 
-def verify(models, out, complete=True):
+def verify(models, out, complete=True, *, all_diagnostics=True):
     """The proofs: each model against its drawing, each room as composed, and
     each room's pieces by the interior lint. Writes the diagnostic images to
-    `out`; True when all of them pass. `complete` when the models are the
-    whole game's (not --only): only then is an allowance for a piece that was
-    not built a stale one."""
+    `out` for every check or just failures. True when all of them pass.
+    `complete` when the models are the whole game's (not --only): only then
+    is an allowance for a piece that was not built a stale one."""
     failed = False
     for model in models:
         judged = model
@@ -4893,21 +4891,34 @@ def verify(models, out, complete=True):
             reference = _without(reference, {(u, v) for v in range(model.cells[1] * 16)
                                              for u in range(model.cells[0] * 16)
                                              if (u, v) not in model.own})
-        wrong, missing, extra = vb.ortho_check(judged, os.path.join(out, model.name + "_ortho.png"),
-                                               exact=model.spec.get("exact"),
-                                               reference=reference)
         bad = vb.density_check(model)
+        tolerance = model.spec.get("tolerance", 0)
+        wrong, missing, extra = vb.ortho_check(
+            judged, os.path.join(out, model.name + "_ortho.png"),
+            exact=model.spec.get("exact"), reference=reference,
+            diagnostic_limit=None if all_diagnostics or bad else tolerance)
         print("%-22s %4d tris  exact: wrong=%d missing=%d extra=%d  texel density: %d bad"
               % (model.name, model.triangle_count(), wrong, missing, extra, len(bad)))
         for tag, along, down, shear in bad[:8]:
             print("    %-28s along=%.3f down=%.3f shear=%.3f" % (tag, along, down, shear))
         # a model whose outline is a polygon (BakedLathe) declares how many
         # pixels of it may differ; any more is a failure
-        if wrong + missing + extra > model.spec.get("tolerance", 0) or bad:
+        if wrong + missing + extra > tolerance or bad:
             failed = True
     rooms = sorted({m.spec["layout"] for m in models if "interior" in m.spec})
+    bridges = sorted({m.spec["deck_of"] for m in models if m.spec.get("deck_of") in voxel_bridge.BRIDGES})
+    # Every room (including alternate puzzle states) reads the same placements.
+    # Keep model and placement order so coincident geometry is judged as before.
+    placed = collections.defaultdict(list)
+    if rooms or bridges:
+        layouts_json = vb._layouts_json()
+        for model in models:
+            if not rooms and model.spec.get("deck_of") not in bridges:
+                continue
+            for _, px, py, ground, lid, odd in find_placements(model, layouts_json):
+                placed[lid].append((model, px, py, ground, odd))
     for lid in rooms:
-        bad = room_check(models, lid, out)
+        bad = room_check(placed[lid], lid, out, all_diagnostics=all_diagnostics)
         print("room %-28s composed with the terrain: %d pixel(s) differ from the drawing"
               % (lid, bad))
         failed = failed or bad != 0
@@ -4916,23 +4927,23 @@ def verify(models, out, complete=True):
                                          for s in specs.SPECS
                                          if s.get("interior", {}).get("layout") == lid
                                          and s["interior"].get("draw")}.items())):
-            bad = room_check(models, lid, out, draw[1], "_state%d" % (n + 1))
+            bad = room_check(placed[lid], lid, out, draw[1], "_state%d" % (n + 1),
+                             all_diagnostics=all_diagnostics)
             print("room %-28s in its state %d: %d pixel(s) differ from the drawing"
                   % (lid, n + 1, bad))
             failed = failed or bad != 0
-    for lid in sorted(voxel_bridge.BRIDGES):
-        mine = [m for m in models if m.spec.get("deck_of") == lid]
-        if mine:
-            bad = bridge_check(mine, lid, out)
-            print("bridge %-26s composed with the terrain: %d pixel(s) differ from the drawing"
-                  % (lid, bad))
-            failed = failed or bad != 0
+    for lid in bridges:
+        mine = [item for item in placed[lid] if item[0].spec.get("deck_of") == lid]
+        bad = bridge_check(mine, lid, out, all_diagnostics=all_diagnostics)
+        print("bridge %-26s composed with the terrain: %d pixel(s) differ from the drawing"
+              % (lid, bad))
+        failed = failed or bad != 0
     if interior_lint(models, rooms, out, complete):
         failed = True
     return not failed
 
 
-def bridge_check(models, layout_id, out_dir):
+def bridge_check(placements, layout_id, out_dir, *, all_diagnostics=True):
     """A bridge's models as the console lays them in their map, against its
     drawing. Each model is proved alone without the faces the drawing never
     shows (~depth); here they all stand together, those too, over the
@@ -4942,21 +4953,16 @@ def bridge_check(models, layout_id, out_dir):
     model owns but beside a ramp, where its rails are drawn coming down
     (voxel_bridge's stretched: its slot's walls stand there), and under a
     signpost (the console stands its own). Returns the pixels that differ."""
-    layouts_json = json.load(open(os.path.join(vb.ROOT, "data", "layouts", "layouts.json"),
-                                  encoding="utf-8"))["layouts"]
     layout = vb.LayoutArt(layout_id)
     W, H = layout.w * 16, layout.h * 16
     ras = vb.Raster(W, H, bg=(0, 0, 0))
     covered, items, patches = {}, [], []
-    for m in models:
-        for lid, px, py, ground, name, odd in find_placements(m, layouts_json):
-            if name != layout_id:
-                continue
-            for (i, j) in m.owned:
-                covered[(px + i, py + j)] = ground
-            items.append((m, px, py))
-            patches += [(px + i, py + j, img) for (i, j, img)
-                        in placement_patches(m, layout_id, {layout_id: layout}, px, py, odd)]
+    for m, px, py, ground, odd in placements:
+        for i, j in m.owned:
+            covered[(px + i, py + j)] = ground
+        items.append((m, px, py))
+        patches += [(px + i, py + j, img) for (i, j, img)
+                    in placement_patches(m, layout_id, {layout_id: layout}, px, py, odd)]
     for y in range(layout.h):
         for x in range(layout.w):
             img = layout.cell_image(covered.get((x, y), layout.metatile(x, y)))
@@ -4998,10 +5004,11 @@ def bridge_check(models, layout_id, out_dir):
                 culprits.setdefault(tag, []).append((x, y))
     for tag, pts in sorted(culprits.items(), key=lambda kv: -len(kv[1])):
         print("    %-34s %4d px, e.g. %s" % (tag, len(pts), pts[:3]))
-    sheet = Image.new("RGB", (W * 2 + 4, H))
-    sheet.paste(full, (0, 0))
-    sheet.paste(diff, (W + 4, 0))
-    sheet.save(os.path.join(out_dir, layout_id.lower() + "_bridge_check.png"))
+    if culprits or all_diagnostics:
+        sheet = Image.new("RGB", (W * 2 + 4, H))
+        sheet.paste(full, (0, 0))
+        sheet.paste(diff, (W + 4, 0))
+        sheet.save(os.path.join(out_dir, layout_id.lower() + "_bridge_check.png"))
     return sum(len(v) for v in culprits.values())
 
 
@@ -5107,6 +5114,8 @@ def main():
     ap.add_argument("--output", default=None)
     ap.add_argument("--verify", action="store_true",
                     help="prove every model and room against its drawing (the default without --output)")
+    ap.add_argument("--diagnostics", choices=("all", "failures"), default="all",
+                    help="save all verification images or just failures")
     ap.add_argument("--town", default=None, help="render a whole layout, e.g. LAYOUT_OLDALE_TOWN")
     args = ap.parse_args()
     out = args.preview or os.path.join(PORT, "build", "buildings")
@@ -5119,7 +5128,8 @@ def main():
     if args.preview:
         for model in models:
             preview(model, out, args.cams.split(",") if args.cams else None)
-    if checks and not verify(models, out, complete=not args.only):
+    if checks and not verify(models, out, complete=not args.only,
+                             all_diagnostics=args.diagnostics == "all"):
         raise SystemExit("a model does not reproduce its drawing, or a room fails its "
                          "interior lint (see above, and %s)" % os.path.join(out, "interior_lint.txt"))
     if args.output:

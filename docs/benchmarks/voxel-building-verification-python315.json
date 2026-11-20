@@ -1,0 +1,133 @@
+{
+  "baseline_commit": "e495cebb70a6b9d5c3af781d38cef0ce089766ab",
+  "source_assets_commit": "76463dac15cad36aca5e2b3f6366abf9e53f814f",
+  "scope": "Two local sequential generator runs with --verify --output. Baseline writes all diagnostic images, candidate writes only failures. Both pinned to logical CPU 3 and run with hash seed 0 and JIT disabled. Timed functions can overlap.",
+  "baseline": {
+    "python": "3.15.2 (main, Nov 11 2026, 00:19:20) [Clang 23.1.3 ]",
+    "pillow": "13.0.0",
+    "wall_seconds": 908.8929518320001,
+    "peak_kib": 2401708,
+    "timings": {
+      "png/image saves": {
+        "seconds": 29.98354505595489,
+        "calls": 3461
+      },
+      "build_models": {
+        "seconds": 150.52810163899994,
+        "calls": 1
+      },
+      "ortho_check": {
+        "seconds": 44.96911794199514,
+        "calls": 3074
+      },
+      "density_check": {
+        "seconds": 0.8585352479985886,
+        "calls": 3074
+      },
+      "find_placements": {
+        "seconds": 634.4884069578584,
+        "calls": 596656
+      },
+      "room_check": {
+        "seconds": 665.4143329189719,
+        "calls": 193
+      },
+      "bridge_check": {
+        "seconds": 2.2604869489987323,
+        "calls": 1
+      },
+      "interior_lint": {
+        "seconds": 1.0960883439984173,
+        "calls": 1
+      },
+      "verify": {
+        "seconds": 714.7983821859998,
+        "calls": 1
+      },
+      "export": {
+        "seconds": 43.367587458000344,
+        "calls": 1
+      }
+    },
+    "assets": {
+      "buildings.bin": {
+        "bytes": 42485196,
+        "sha256": "9cec5168e808c0299a0bbff5301800aafc01677267999578cc8bf4dca9f4b2ad"
+      },
+      "windowlights.bin": {
+        "bytes": 2984,
+        "sha256": "4640b06c85d305c6fa63ff3d2afbf529812e1442eabf85f58084be789f89f8af"
+      }
+    }
+  },
+  "candidate": {
+    "python": "3.15.2 (main, Nov 11 2026, 00:19:20) [Clang 23.1.3 ]",
+    "pillow": "13.0.0",
+    "wall_seconds": 253.20654982999986,
+    "peak_kib": 2387808,
+    "timings": {
+      "png/image saves": {
+        "seconds": 1.949623597014579,
+        "calls": 193
+      },
+      "build_models": {
+        "seconds": 159.24803237300148,
+        "calls": 1
+      },
+      "density_check": {
+        "seconds": 0.7982521719568467,
+        "calls": 3074
+      },
+      "ortho_check": {
+        "seconds": 7.443564128952858,
+        "calls": 3074
+      },
+      "find_placements": {
+        "seconds": 14.77124356790955,
+        "calls": 6156
+      },
+      "room_check": {
+        "seconds": 26.02687825500834,
+        "calls": 193
+      },
+      "bridge_check": {
+        "seconds": 2.1077713209997455,
+        "calls": 1
+      },
+      "interior_lint": {
+        "seconds": 1.0911096689997066,
+        "calls": 1
+      },
+      "verify": {
+        "seconds": 49.107355280000775,
+        "calls": 1
+      },
+      "export": {
+        "seconds": 44.56503207800051,
+        "calls": 1
+      }
+    },
+    "assets": {
+      "buildings.bin": {
+        "bytes": 42485196,
+        "sha256": "9cec5168e808c0299a0bbff5301800aafc01677267999578cc8bf4dca9f4b2ad"
+      },
+      "windowlights.bin": {
+        "bytes": 2984,
+        "sha256": "4640b06c85d305c6fa63ff3d2afbf529812e1442eabf85f58084be789f89f8af"
+      }
+    }
+  },
+  "seconds_saved": 655.6864020020002,
+  "verification_seconds_saved": 665.691026905999,
+  "verified_counts": {
+    "models": 3074,
+    "rooms": 188,
+    "alternate_room_states": 5,
+    "bridges": 1
+  },
+  "byte_identical_to_original": [
+    "buildings.bin",
+    "windowlights.bin"
+  ]
+}

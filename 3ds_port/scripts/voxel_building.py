@@ -3118,7 +3118,36 @@ class Raster:
         return img
 
 
-def ortho_check(model, out_png=None, exact=None, margin=32, reference=None):
+def _ortho_differences(ras, apx, regions, M, dpx=None):
+    wrong = missing = extra = 0
+    for region in regions:
+        rx0, ry0, rx1, ry1 = region[:4]
+        behind = len(region) > 4 and region[4]
+        for y in range(ry0, ry1):
+            for x in range(rx0, rx1):
+                r, g, b, a = apx[x, y]
+                idx = (y + M) * ras.w + x + M
+                got = ras.owner[idx]
+                col = ras.color[idx]
+                if a >= 128:
+                    if got is None:
+                        missing += 1
+                        if dpx is not None:
+                            dpx[x + M, y + M] = (255, 0, 255)
+                    elif col != (r, g, b):
+                        wrong += 1
+                        if dpx is not None:
+                            dpx[x + M, y + M] = (255, 0, 0)
+                    elif dpx is not None:
+                        dpx[x + M, y + M] = (r, g, b)
+                elif got is not None and not behind:
+                    extra += 1
+                    if dpx is not None:
+                        dpx[x + M, y + M] = (0, 255, 255)
+    return wrong, missing, extra
+
+
+def ortho_check(model, out_png=None, exact=None, margin=32, reference=None, *, diagnostic_limit=None):
     """Render the model in the GBA projection and compare it with the art.
 
     `exact` lists art rectangles (x0, y0, x1, y1[, behind]) the model must
@@ -3133,6 +3162,9 @@ def ortho_check(model, out_png=None, exact=None, margin=32, reference=None):
     With `reference`, the render (textured with the model's own art) is
     judged against that drawing instead: a model whose texture is laid out
     otherwise than the drawing (a rock's foam on a band of its own).
+
+    With a diagnostic limit, save the image only if the mismatch count
+    exceeds that limit.
     """
     art = model.art
     W, H = art.size
@@ -3145,38 +3177,13 @@ def ortho_check(model, out_png=None, exact=None, margin=32, reference=None):
         for (x, y, z, u, v) in tri:
             vs.append((x + M, z - y + M, y + z, 1.0, u, v))
         ras.draw(vs, art, shade, tag)
-    regions = exact if exact is not None else [(0, 0, W, H)]
+    regions = tuple(exact) if exact is not None else ((0, 0, W, H),)
     apx = (reference if reference is not None else art).load()
-    wrong = missing = extra = 0
-    img = ras.image()
-    diff = img.copy()
-    dpx = diff.load()
-    for y in range(H + M):
-        for x in range(W + 2 * M):
-            c = dpx[x, y]
-            dpx[x, y] = (c[0] // 3, c[1] // 3, c[2] // 3)
-    for region in regions:
-        rx0, ry0, rx1, ry1 = region[:4]
-        behind = len(region) > 4 and region[4]
-        for y in range(ry0, ry1):
-            for x in range(rx0, rx1):
-                r, g, b, a = apx[x, y]
-                idx = (y + M) * ras.w + x + M
-                got = ras.owner[idx]
-                col = ras.color[idx]
-                if a >= 128:
-                    if got is None:
-                        missing += 1
-                        dpx[x + M, y + M] = (255, 0, 255)
-                    elif col != (r, g, b):
-                        wrong += 1
-                        dpx[x + M, y + M] = (255, 0, 0)
-                    else:
-                        dpx[x + M, y + M] = (r, g, b)
-                elif got is not None and not behind:
-                    extra += 1
-                    dpx[x + M, y + M] = (0, 255, 255)
-    if out_png:
+    counts = _ortho_differences(ras, apx, regions, M)
+    if out_png and (diagnostic_limit is None or sum(counts) > diagnostic_limit):
+        img = ras.image()
+        diff = img.point([v // 3 for v in range(256)] * 3)
+        _ortho_differences(ras, apx, regions, M, diff.load())
         sheet = Image.new("RGB", ((W + 2 * M) * 3 + 8, H + M), (0, 0, 0))
         bgart = Image.new("RGB", (W, H), (0, 0, 0))
         bgart.paste(art, (0, 0), art)
@@ -3185,7 +3192,7 @@ def ortho_check(model, out_png=None, exact=None, margin=32, reference=None):
         sheet.paste(diff, (2 * (W + 2 * M) + 8, 0))
         sheet = sheet.resize((sheet.width * 3, sheet.height * 3), Image.NEAREST)
         sheet.save(out_png)
-    return wrong, missing, extra
+    return counts
 
 
 # --- true voxels -------------------------------------------------------------

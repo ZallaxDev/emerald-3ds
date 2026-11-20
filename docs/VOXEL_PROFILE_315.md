@@ -625,3 +625,37 @@ optional follower downloads disabled.
 
 Raw measurements and hashes:
 [voxel-terrain-topology-python315.json](benchmarks/voxel-terrain-topology-python315.json).
+
+## Building verification follow-up
+
+Room and bridge verification now indexes model placements once for the
+pass and looks up the placements for each layout. Alternate room states
+reuse the index and still evaluate their placement conditions. The
+normal build checks every model, room and bridge, and writes proof images
+for failures. Running the verifier directly still writes all images by
+default. The focused diagnostic test also checks that a failed model
+writes the same image as the full-diagnostics mode.
+
+| Local building generator measurement | Before | After |
+| --- | ---: | ---: |
+| Complete generation, verification and export | 908.89 s | 253.21 s |
+| Verification | 714.80 s | 49.11 s |
+| Model pixel checks | 44.97 s | 7.44 s |
+| Room checks, including alternate states | 665.41 s | 26.03 s |
+| Placement searches, including export | 634.49 s | 14.77 s |
+| Image writes across the generator | 29.98 s | 1.95 s |
+
+The complete generator saved **655.69 seconds** in this local
+pair. The rows overlap and describe where time was spent. Both versions
+ran on the same prepared English source inputs with Python 3.15.2 and
+Pillow 13.0.0, pinned to the same logical CPU with the JIT disabled.
+The baseline wrote all diagnostic images. The candidate used the normal
+build's new failure-only setting.
+
+The results matched for 3,074 model checks, 188 rooms, 5
+alternate room states, the Route 110 bridge, and interior lint.
+`buildings.bin` and `windowlights.bin` matched the baseline and original
+exports byte for byte. The timings cover the building generator through
+export. The hosted `build-3ds` job was outside this comparison.
+
+[Raw timing, output sizes, and hashes](benchmarks/voxel-building-verification-python315.json).
