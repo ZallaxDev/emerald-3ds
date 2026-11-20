@@ -562,10 +562,12 @@ static u8 ProcessTouch(u8 mode)
          * menu or a yes/no box, and the map picks no place meanwhile. On the
          * map a tap may slide a little and still be one, as the map takes it
          * below: it goes on with the message too, rather than pick a place,
-         * as long as it is let go over the map. One that ends on the dock or
-         * another button is no tap, as anywhere else on the screen. */
+         * as long as it is let go over the map. A touch let go anywhere but
+         * where it began (the dock or another button, even a few pixels off
+         * the map's edge) is no tap, as anywhere else on the screen. */
         if (mode == MODE_FIELD && FieldMessageUp()
-         && (!sTouch.dragged || (sTouch.pressed == HIT_MAP && HitTest(sTouch.lastX, sTouch.lastY) == HIT_MAP))
+         && (!sTouch.dragged || sTouch.pressed == HIT_MAP)
+         && HitTest(sTouch.lastX, sTouch.lastY) == sTouch.pressed
          && (sTouch.pressed == HIT_NONE || sTouch.pressed == HIT_MAP || sTouch.pressed == HIT_MAP_PANEL))
         {
             CtrMenu_PostAck();
