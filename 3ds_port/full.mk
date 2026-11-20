@@ -556,7 +556,7 @@ romfs/voxel/trees.rgba5551: scripts/gen_voxel_trees.py \
 # verify-voxel-buildings runs the proofs alone, even when the file is
 # up to date: the release build asks for it.
 romfs/voxel/buildings.bin romfs/voxel/windowlights.bin &: scripts/gen_voxel_buildings.py scripts/voxel_building.py scripts/voxel_night.py scripts/voxel_windows.py \
-		scripts/voxel_floor.py \
+		scripts/voxel_floor.py scripts/voxel_cache.py \
 		scripts/voxel_building_specs.py scripts/voxel_bridge.py scripts/voxel_fence.py scripts/voxel_fortree.py scripts/dump_region_art.py scripts/voxel_props.py \
 		scripts/voxel_relief_fixes.py assets/voxel/relief_fixes.json \
 		scripts/gen_voxel_relief.py \
@@ -579,7 +579,7 @@ verify-voxel-buildings:
 # still waits for the verified buildings.
 build/voxel_relief_base.bin: scripts/gen_voxel_relief.py scripts/voxel_cells.py scripts/voxel_props.py \
 		scripts/voxel_art.py scripts/voxel_building.py scripts/dump_region_art.py \
-		scripts/voxel_relief_fixes.py $(VOXEL_MAP_INPUTS)
+		scripts/voxel_relief_fixes.py scripts/voxel_cache.py $(VOXEL_MAP_INPUTS)
 	@mkdir -p $(@D)
 	"$(PYTHON)" scripts/gen_voxel_relief.py --base-output $@.tmp && mv -f $@.tmp $@
 
@@ -886,3 +886,12 @@ verify-voxel-sprite-slots: build/voxel_sprite_slots_test.exe
 build/voxel_sprite_slots_test.exe: tests/voxel_sprite_slots_test.c src/voxel/voxel_sprite_slots.c src/voxel/voxel_sprite_slots.h
 	@mkdir -p $(@D)
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Isrc/voxel tests/voxel_sprite_slots_test.c src/voxel/voxel_sprite_slots.c -o $@
+
+.PHONY: verify-voxel-vertex-pack
+VERIFY_HOST_CHECKS += verify-voxel-vertex-pack
+verify-voxel-vertex-pack: build/voxel_vertex_pack_test$(EXESUFFIX)
+	./build/voxel_vertex_pack_test$(EXESUFFIX)
+
+build/voxel_vertex_pack_test$(EXESUFFIX): tests/voxel_vertex_pack_test.c src/voxel/voxel_vertex_pack.h src/voxel/voxel_mesh_builder.h
+	@mkdir -p $(@D)
+	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude -Isrc/voxel $< -lm -o $@

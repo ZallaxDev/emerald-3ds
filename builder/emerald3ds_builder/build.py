@@ -259,13 +259,17 @@ def build_pack(rom_path: Path, payload: Payload, out_pak: Path, progress=None,
     for the default one (local copies, the cache, the network), False for
     none, or a Fetcher. They go into the pack but not into its ABI; what
     cannot be had is left out and the build goes on."""
+    started = time.perf_counter()
     report = Progress(progress)
     timings: list[tuple[str, float]] = []
     payload.check(need_executables=False)
     report(0.0, "Checking the ROM")
     if rom is None:
+        start = time.perf_counter()
         rom = load_rom(rom_path)
+        timings.append(("rom", time.perf_counter() - start))
     reject_unsupported_rom(rom.sha1)
+    start = time.perf_counter()
     payload = select_payload(payload, rom.sha1, need_executables, language)
     try:
         recipe = Recipe.load(payload.recipe)
@@ -277,6 +281,8 @@ def build_pack(rom_path: Path, payload: Payload, out_pak: Path, progress=None,
                            "Each language needs its own executable and recipe in the release; "
                            "this one does not include them for that ROM.",
                            code="rom_mismatch")
+
+    timings.append(("recipe", time.perf_counter() - start))
 
     files: dict[str, bytes] = {}
     start = time.perf_counter()
@@ -322,12 +328,14 @@ def build_pack(rom_path: Path, payload: Payload, out_pak: Path, progress=None,
             if not keep_workdir:
                 shutil.rmtree(work, ignore_errors=True)
 
+    start = time.perf_counter()
     items = [(p, len(d), zlib.crc32(d) & 0xFFFFFFFF) for p, d in files.items()]
     abi = pak.engine_abi(items)
     if abi != recipe.engine_abi:
         raise BuilderError("The generated data does not match this release (ABI %08x, expected %08x)."
                            % (abi, recipe.engine_abi), code="abi_mismatch")
 
+    timings.append(("abi", time.perf_counter() - start))
     optional: dict[str, bytes] = {}
     follower_info = None
     if follower_fetcher is True:
@@ -340,11 +348,16 @@ def build_pack(rom_path: Path, payload: Payload, out_pak: Path, progress=None,
             languages=[followers.ROM_LANGUAGES.get(rom.code[3:4], "en")])
         timings.append(("followers", time.perf_counter() - start))
     report(0.92, "Writing the data pack")
+    start = time.perf_counter()
     info = pak.write_pak(out_pak, sorted({**files, **optional}.items()), abi, bytes.fromhex(rom.sha1))
+    timings.append(("write_pack", time.perf_counter() - start))
     report(0.96, "Verifying the data pack")
+    start = time.perf_counter()
     with pak.PakReader(out_pak) as reader:
         reader.verify()
+    timings.append(("verify_pack", time.perf_counter() - start))
     report(1.0, "Done")
     return {"entries": info["entries"], "bytes": info["bytes"], "abi": abi, "release": recipe.release,
-            "rom": rom.code, "timings": [(name, round(sec, 2)) for name, sec in timings],
+            "rom": rom.code, "timings": [(name, round(sec, 4)) for name, sec in timings],
+            "total_seconds": round(time.perf_counter() - started, 4),
             "followers": follower_info, "payload": payload}
