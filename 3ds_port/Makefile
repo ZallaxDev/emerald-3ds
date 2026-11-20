@@ -52,7 +52,7 @@ HOSTCC ?= gcc
 ROOT := ..
 SCRIPTS := ../tools/port_common
 EXESUFFIX := $(if $(filter Windows_NT,$(OS)),.exe,)
-SOURCES := src/main_3ds.c src/3ds_log.c src/3ds_platform.c src/3ds_input.c src/3ds_input_decode.c src/3ds_fs.c src/3ds_audio.c src/3ds_icons_ptbr.c
+SOURCES := src/main_3ds.c src/3ds_log.c src/3ds_platform.c src/3ds_input.c src/3ds_input_decode.c src/3ds_fs.c src/3ds_save_io.c src/3ds_audio.c src/3ds_icons_ptbr.c
 SOURCES += src/3ds_data.c src/3ds_pak.c src/3ds_settings.c src/3ds_prof.c src/3ds_gpumem.c src/3ds_scenario.c
 SOURCES += src/3ds_video.c src/3ds_video_decode.c src/3ds_bottom_screen.c
 # The OAM's draw list, published by the sprite engine (include/3ds_obj_list.h).
@@ -456,17 +456,17 @@ verify-daynight: build/daynight_test.exe
 verify-clock-store: build/clock_store_test$(EXESUFFIX)
 	./build/clock_store_test$(EXESUFFIX)
 
-build/clock_store_test$(EXESUFFIX): tests/clock_store_test.c src/3ds_clock_store.c src/3ds_daynight.c src/3ds_pak.c include/3ds_clock_store.h include/3ds_daynight.h
+build/clock_store_test$(EXESUFFIX): tests/clock_store_test.c src/3ds_save_io.c src/3ds_clock_store.c src/3ds_daynight.c src/3ds_pak.c include/3ds_clock_store.h include/3ds_daynight.h include/3ds_save_io.h
 	@mkdir -p build
-	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Drename=CtrTestRename -Iinclude tests/clock_store_test.c src/3ds_clock_store.c src/3ds_daynight.c src/3ds_pak.c -lm -o $@
+	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Drename=CtrTestRename -Iinclude tests/clock_store_test.c src/3ds_save_io.c src/3ds_clock_store.c src/3ds_daynight.c src/3ds_pak.c -lm -o $@
 
 .PHONY: verify-nuzlocke
 verify-nuzlocke: build/nuzlocke_test$(EXESUFFIX)
 	./build/nuzlocke_test$(EXESUFFIX)
 
-build/nuzlocke_test$(EXESUFFIX): tests/nuzlocke_test.c src/3ds_nuzlocke_core.c src/3ds_nuzlocke_store.c include/3ds_nuzlocke_core.h include/3ds_nuzlocke_store.h
+build/nuzlocke_test$(EXESUFFIX): tests/nuzlocke_test.c src/3ds_save_io.c src/3ds_nuzlocke_core.c src/3ds_nuzlocke_store.c include/3ds_nuzlocke_core.h include/3ds_nuzlocke_store.h include/3ds_save_io.h
 	@mkdir -p build
-	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Drename=CtrTestRename -Iinclude tests/nuzlocke_test.c src/3ds_nuzlocke_core.c src/3ds_nuzlocke_store.c -o $@
+	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Drename=CtrTestRename -Iinclude tests/nuzlocke_test.c src/3ds_save_io.c src/3ds_nuzlocke_core.c src/3ds_nuzlocke_store.c -o $@
 
 build/daynight_test.exe: tests/daynight_test.c src/3ds_daynight.c include/3ds_daynight.h include/3ds_platform.h
 	@mkdir -p build

@@ -9,6 +9,7 @@
 #include "3ds_nuzlocke_store.h"
 #include "3ds_data.h"
 #include "3ds_platform.h"
+#include "3ds_save_io.h"
 
 #define NUZ_FILE "emerald3ds.nuzlocke"
 #define NUZ_TEMP "emerald3ds.nuzlocke.tmp"
@@ -81,8 +82,6 @@ CtrNuzLink CtrNuzStore_Load(const void *save, size_t size, CtrNuzState *state)
 bool CtrNuzStore_Save(const CtrNuzState *state, const void *save, size_t size)
 {
     uint8_t bytes[CTR_NUZ_RECORD_BYTES];
-    FILE *file;
-    bool valid;
 
     /* A scenario being played saves into memory only (Port_WriteFlash): the
      * player's record stays the one that matches the player's save. */
@@ -91,31 +90,8 @@ bool CtrNuzStore_Save(const CtrNuzState *state, const void *save, size_t size)
     if (state == NULL || save == NULL || size == 0 || (size_t)(uint32_t)size != size)
         return false;
     CtrNuz_Encode(state, CtrNuz_Crc32(0, save, size), (uint32_t)size, bytes);
-    file = CtrFs_OpenData(NUZ_TEMP, "wb");
-    if (file == NULL)
-        goto fail;
-    valid = fwrite(bytes, 1, sizeof(bytes), file) == sizeof(bytes) && fflush(file) == 0;
-    if (fclose(file) != 0)
-        valid = false;
-    if (valid && rename(CTR_DATA_DIR NUZ_TEMP, CTR_DATA_DIR NUZ_FILE) == 0)
+    if (CtrSave_Replace(NUZ_FILE, NUZ_TEMP, NUZ_BACKUP, bytes, sizeof(bytes)))
         return true;
-    if (valid)
-    {
-        file = CtrFs_OpenData(NUZ_FILE, "rb");
-        if (file != NULL)
-        {
-            fclose(file);
-            remove(CTR_DATA_DIR NUZ_BACKUP);
-            if (rename(CTR_DATA_DIR NUZ_FILE, CTR_DATA_DIR NUZ_BACKUP) == 0)
-            {
-                if (rename(CTR_DATA_DIR NUZ_TEMP, CTR_DATA_DIR NUZ_FILE) == 0)
-                    return true;
-                rename(CTR_DATA_DIR NUZ_BACKUP, CTR_DATA_DIR NUZ_FILE);
-            }
-        }
-    }
-    remove(CTR_DATA_DIR NUZ_TEMP);
-fail:
     CtrLog_Write(CTR_LOG_ERROR, "nuzlocke: record write failed; game save is unchanged");
     return false;
 }

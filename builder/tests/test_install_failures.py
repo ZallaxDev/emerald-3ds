@@ -85,7 +85,7 @@ class InstallFailureTests(unittest.TestCase):
         with patch.object(Path, "open", fake_open):
             with self.assertRaises(BuilderError) as ctx:
                 install(self.sd, self.files)
-        self.assertEqual(opened, [EXE, PAK])   # the executable was copied first
+        self.assertEqual([name for name in opened if name != installmod.INSTALL_LOCK], [EXE, PAK])   # the executable was copied first
         self.assertEqual(ctx.exception.code, "install_failed")
         self.assertIn(PAK, str(ctx.exception))
         self._assert_untouched(before)
@@ -122,7 +122,7 @@ class InstallFailureTests(unittest.TestCase):
                 install(self.sd, self.files)
         self._assert_untouched(before)
 
-    def test_rename_failure_reports_incomplete_install_and_cleans_up(self):
+    def test_rename_failure_recovers_on_next_install(self):
         before = self._old_install()
         real_replace = os.replace
         calls = []
@@ -142,7 +142,19 @@ class InstallFailureTests(unittest.TestCase):
         # Honest about what happened: the executable was replaced, the pak was not.
         self.assertEqual(after[EXE], self.exe_src.read_bytes())
         self.assertEqual(after[PAK], b"OLD-PAK")
-        self.assertEqual(sorted(after), sorted(before))   # no temporary files left over
+        self.assertIn(installmod.INSTALL_JOURNAL, after)
+        self.assertEqual(install(self.sd, {}), self.dest)
+        recovered = self._snapshot()
+        self.assertEqual(recovered[EXE], self.exe_src.read_bytes())
+        self.assertEqual(recovered[PAK], self.pak_src.read_bytes())
+        self.assertEqual(sorted(recovered), sorted(before))
+
+    def test_concurrent_attempt_does_not_touch_the_install(self):
+        before = self._old_install()
+        with installmod._install_lock(self.dest.parent):
+            with self.assertRaises(BuilderError):
+                install(self.sd, self.files)
+        self._assert_untouched(before)
 
     def test_first_rename_failure_keeps_old_files_and_says_nothing_changed(self):
         before = self._old_install()

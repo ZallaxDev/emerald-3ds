@@ -18,6 +18,7 @@
 #include "3ds_data.h"
 #include "3ds_assets.h"
 #include "3ds_platform.h"
+#include "3ds_save_io.h"
 #include "../../include/constants/global.h"
 #include "3ds_audio.h"
 #include "gba/flash_internal.h"
@@ -466,10 +467,6 @@ bool Port_SaveIsAvailable(void)
 
 u16 Port_WriteFlash(u32 offset, const void *data, u32 size)
 {
-    FILE *file;
-    long fileSize;
-    bool ok;
-
     if (!sSaveAvailable || data == NULL || offset > sizeof(FLASH_BASE)
      || size > sizeof(FLASH_BASE) - offset)
         return 1;
@@ -480,37 +477,9 @@ u16 Port_WriteFlash(u32 offset, const void *data, u32 size)
         return 0;
     }
 
-    file = fopen(CTR_SAVE_PATH, "r+b");
-    if (file == NULL && errno == ENOENT)
-        file = fopen(CTR_SAVE_PATH, "w+b");
-    if (file == NULL)
-        goto fail;
-
-    /* Writing past the end of a short file would leave a hole, so the image is
-     * grown from the mirror first and only then is the range written. */
-    ok = fseek(file, 0, SEEK_END) == 0;
-    fileSize = ok ? ftell(file) : -1;
-    /* longer than the flash: the trailer after it (Port_SaveInit) stays */
-    ok = fileSize >= 0 && (u32)fileSize <= sizeof(FLASH_BASE) + SAVE_TRAILER_MAX;
-    if (ok && (u32)fileSize < sizeof(FLASH_BASE))
-    {
-        u32 remaining = sizeof(FLASH_BASE) - (u32)fileSize;
-
-        ok = fwrite(FLASH_BASE + fileSize, 1, remaining, file) == remaining;
-    }
-    if (ok)
-        ok = fseek(file, (long)offset, SEEK_SET) == 0 && fwrite(data, 1, size, file) == size;
-    if (ok)
-        ok = fflush(file) == 0;
-    if (fclose(file) != 0)
-        ok = false;
-    if (!ok)
-        goto fail;
-
-    memmove(FLASH_BASE + offset, data, size);
-    return 0;
-
-fail:
+    if (CtrFlash_WriteRange(CTR_SAVE_PATH, FLASH_BASE, sizeof(FLASH_BASE), SAVE_TRAILER_MAX,
+                            offset, data, size))
+        return 0;
     CtrLog_Write(CTR_LOG_ERROR, "save write failed: offset=%lu size=%lu errno=%d",
                  (unsigned long)offset, (unsigned long)size, errno);
     return 1;
