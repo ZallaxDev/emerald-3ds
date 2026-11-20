@@ -63,6 +63,7 @@ sys.path.insert(0, HERE)
 
 import gen_voxel_relief as gr  # noqa: E402
 import voxel_building as vb  # noqa: E402
+from voxel_image import image_pixels  # noqa: E402
 import voxel_props  # noqa: E402
 import voxel_relief_fixes as vrf  # noqa: E402
 
@@ -196,7 +197,7 @@ def twin(art, m):
             # of its own, the face between two of them laid flat; Route
             # 113's patches of soil read in the 068 set, not the 080 set
             # they are drawn as, stood its west end up in blocks)
-            img = art.cell_image(m).convert("RGB").getdata()
+            img = image_pixels(art.cell_image(m).convert("RGB"))
             far = None
             for r in sorted(MOUNTAIN):
                 if r >= 0x200:
@@ -206,7 +207,7 @@ def twin(art, m):
                 same = sum(1 for (x, y) in both if theirs[y][x] == mine[y][x]) / len(both)
                 if same < score or same < TWIN_MATCH:
                     continue
-                d = sum(abs(a - b) for p, q in zip(img, art.cell_image(r).convert("RGB").getdata())
+                d = sum(abs(a - b) for p, q in zip(img, image_pixels(art.cell_image(r).convert("RGB")))
                         for a, b in zip(p, q))
                 if same > score or d < far:
                     best, score, far = r, same, d
@@ -4551,9 +4552,9 @@ def tree_ground(c, cell):
     lid, x, y = c.src[cell]
     art, m = c.arts[lid], c.metatile(cell)
     if tree_card(c, cell):
-        px = list(art.cell_image(m, (0,)).convert("RGB").getdata())
+        px = image_pixels(art.cell_image(m, (0,)).convert("RGB"))
     else:
-        img = list(art.cell_image(m).convert("RGB").getdata())
+        img = image_pixels(art.cell_image(m).convert("RGB"))
         rows = canopy_mask(art, m) or [0] * 16
         px = [p for k, p in enumerate(img) if not (rows[k // 16] >> (k % 16)) & 1]
     drawn = [p for p in px if p not in OUTLINE_GREY]
@@ -4700,7 +4701,7 @@ def plain_top(c, lid):
             m = c.metatile(cell)
             if m in ON_TOP:
                 continue
-            px = list(art.cell_image(m).convert("RGB").getdata())
+            px = image_pixels(art.cell_image(m).convert("RGB"))
             score = sum(1 for p in px if p in gr.ROCK_TOP)
             if best is None or (score, -m) > best[0]:
                 best = ((score, -m), m)
@@ -4866,7 +4867,7 @@ def wall_from(art, m, water):
     its bricks down to the waterline and the dark water at their foot) goes
     on as that water: the sea lower than the drawing's wall is tall, its
     bricks stood again under their own waterline."""
-    px = list(art.cell_image(m).convert("RGB").getdata())
+    px = image_pixels(art.cell_image(m).convert("RGB"))
     rows = [set(px[16 * r:16 * r + 16]) for r in range(16)]
     wall = set().union(*rows[12:])
     if wall <= water:
@@ -4880,7 +4881,7 @@ def wall_from(art, m, water):
 def drawn_rock_pixels(art, m):
     """How many pixels of metatile m are drawn in the mountains' colours."""
     img = art.cell_image(m).convert("RGB")
-    return sum(1 for px in img.getdata() if px in gr.ROCK_ALL)
+    return sum(1 for px in image_pixels(img) if px in gr.ROCK_ALL)
 
 
 def records(sol):
@@ -4971,7 +4972,7 @@ def records(sol):
             water_of[lid] = set()
             for m in {art.metatile(i, j) for j in range(art.h) for i in range(art.w)
                       if roles.role_at(i, j) == "water"}:
-                water_of[lid] |= set(art.cell_image(m).convert("RGB").getdata())
+                water_of[lid] |= set(image_pixels(art.cell_image(m).convert("RGB")))
         return water_of[lid]
 
     def level_of(cell):

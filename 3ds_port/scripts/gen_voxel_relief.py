@@ -162,6 +162,7 @@ def commonest(seq):
 
 import voxel_building as vb  # noqa: E402
 import voxel_cells as vc  # noqa: E402
+from voxel_image import image_pixels  # noqa: E402
 import voxel_props  # noqa: E402
 import voxel_relief_fixes  # noqa: E402
 
@@ -432,7 +433,7 @@ _TERRACE_ART = {}
 def _drawing(img):
     """A tile's drawing without its palette: colours numbered as they come."""
     lab = {}
-    return tuple(lab.setdefault(p, len(lab)) for p in img.convert("RGB").getdata())
+    return tuple(lab.setdefault(p, len(lab)) for p in image_pixels(img.convert("RGB")))
 
 
 def alias_of(lid, layouts=ALIAS_LAYOUTS):
@@ -463,7 +464,9 @@ def alias_of(lid, layouts=ALIAS_LAYOUTS):
         if g is None:
             continue
         alias[m] = g
-        for a, b in zip(art.cell_image(m).convert("RGB").getdata(), ref.cell_image(g).convert("RGB").getdata()):
+        source_pixels = image_pixels(art.cell_image(m).convert("RGB"))
+        reference_pixels = image_pixels(ref.cell_image(g).convert("RGB"))
+        for a, b in zip(source_pixels, reference_pixels):
             votes[a][b] += n
     # a boulder's head is drawn as a band's head turning the corner under a
     # rim is (093 is 06b's drawing): it is the boulder only where the map
@@ -661,7 +664,7 @@ def _cave_blocked(art, x, y):
 
 
 def _light(img):
-    px = [p for p in img.convert("RGB").getdata() if p != (0, 0, 0)]
+    px = [p for p in image_pixels(img.convert("RGB")) if p != (0, 0, 0)]
     return sum(0.299 * r + 0.587 * g + 0.114 * b for r, g, b in px) / len(px) if px else 0.0
 
 
@@ -835,7 +838,7 @@ class CaveArt(vb.LayoutArt):
             m = self.own_metatile(x, y)
             if m not in lipped:
                 img = vb.LayoutArt.cell_image(self, m).convert("RGB")
-                px = [0.299 * r + 0.587 * g + 0.114 * b for r, g, b in img.getdata()]
+                px = [0.299 * r + 0.587 * g + 0.114 * b for r, g, b in image_pixels(img)]
                 rows = [sum(px[j * 16:(j + 1) * 16]) / 16 for j in range(16)]
                 lipped[m] = rows[0] < 0.7 * floor and sum(rows[4:]) / 12 >= 0.85 * floor
             return lipped[m]
@@ -1761,7 +1764,7 @@ def drawn_canvas(name):
                     continue
                 tile_key = (L.secondary, m)     # a secondary tileset's ids are its own
                 if role == "water" and tile_key not in _ROCKY_WATER:
-                    px = list(A.cell_image(m).convert("RGB").getdata())
+                    px = image_pixels(A.cell_image(m).convert("RGB"))
                     _ROCKY_WATER[tile_key] = sum(1 for c in px if c in ROCK_ALL) >= ROCKY_WATER * len(px)
                 if drawn_as[0] != "face" and m not in FACE_SOUTH and ((role in FLAT_ROLES and (cx, cy) not in L.warps
                                              and not L.covers(m)
@@ -3315,10 +3318,10 @@ def awash(layout, mass, kind):
     for (x, y) in mass:
         for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
             if 0 <= nx < layout.w and 0 <= ny < layout.h and kind[ny][nx] == "water":
-                water.update(art.cell_image(art.metatile(nx, ny)).getdata())
+                water.update(image_pixels(art.cell_image(art.metatile(nx, ny))))
     same = total = 0
     for (x, y) in mass:
-        for p in art.cell_image(art.metatile(x, y)).getdata():
+        for p in image_pixels(art.cell_image(art.metatile(x, y))):
             total += 1
             same += p in water
     return total and same > total // 2
@@ -3562,7 +3565,7 @@ def _cut_mask(art, layout, x, y, rock_cells):
             nx, ny = x + dx, y + dy
             if (dx or dy) and 0 <= nx < layout.w and 0 <= ny < layout.h and (nx, ny) not in rock_cells:
                 img = art.cell_image(art.metatile(nx, ny)).convert("RGB")
-                ground.update(c for c in img.getdata() if c not in ROCK_ALL)
+                ground.update(c for c in image_pixels(img) if c not in ROCK_ALL)
     if not ground:
         return None
     img = art.cell_image(art.metatile(x, y)).convert("RGB").load()
@@ -3649,7 +3652,7 @@ def plain_ground(art, layout, content, x, y, side=None, kind=None, half=False):
         its ground)."""
         known = art.__dict__.setdefault("_plain", {})
         if m not in known:
-            px = list(art.cell_image(m).convert("RGB").getdata())
+            px = image_pixels(art.cell_image(m).convert("RGB"))
             c = commonest(px)
             foreign = sum(1 for p in px if sum(abs(p[i] - c[i]) for i in range(3)) > 150)
             known[m] = (c, px.count(c), foreign)
@@ -3689,7 +3692,7 @@ def _plain_tile(art, m):
     # ledges' own reading of an aliased map) could reuse a freed one's id
     known = art.__dict__.setdefault("_plain_tile", {})
     if m not in known:
-        px = list(art.cell_image(m).convert("RGB").getdata())
+        px = image_pixels(art.cell_image(m).convert("RGB"))
         known[m] = sum(1 for p in px if p in ROCK_ALL) < len(px) // 10
     return known[m]
 
@@ -3701,8 +3704,7 @@ def _plain_background(art, m, mask, ground):
     rock does not cover them as a dark wedge on the sand - are gone."""
     img = art.cell_image(m).convert("RGB").load()
     g = art.cell_image(ground).convert("RGB")
-    gp = list(g.getdata())
-    gc = commonest(gp)
+    gc = commonest(image_pixels(g))
     bg = [img[i, j] for j in range(16) for i in range(16) if (mask[j] >> i) & 1]
     if len(bg) < 8:
         return False
@@ -3735,7 +3737,7 @@ def _behind(art, layout, x, y, rock, mask=None, half=False, content=None, ignore
             for ny in (y - 1, y, y + 1):
                 for nx in (x - 1, x, x + 1):
                     if (nx, ny) != (x, y) and 0 <= nx < layout.w and 0 <= ny < layout.h:
-                        around += [p for p in art.cell_image(art.metatile(nx, ny)).convert("RGB").getdata()
+                        around += [p for p in image_pixels(art.cell_image(art.metatile(nx, ny)).convert("RGB"))
                                    if p not in ROCK_ALL and p not in ignore]
             # (a background of a few pixels in a colour the ground round the
             # cell has little of - under a quarter of its commonest - is the
