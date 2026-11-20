@@ -1,0 +1,88 @@
+{
+  "python": "3.15.2 (main, Nov 11 2026, 00:19:20) [Clang 23.1.3 ]",
+  "pillow": "13.0.0",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "source_assets": "76463dac15cad36aca5e2b3f6366abf9e53f814f",
+  "hash_seed": "0",
+  "jit": false,
+  "scope": "Five serial generator invocations on pre-staged English source inputs, without --verify",
+  "compared": {
+    "baseline": {
+      "commit": "6699c19a2a36bcf90be62859f43f70f405a2e777",
+      "steps": {
+        "regions": 6.666840709000098,
+        "signposts": 2.7513320919988473,
+        "buildings": 268.8543701079998,
+        "relief": 392.07395032599925,
+        "intro": 0.2897584040001675
+      },
+      "wall_seconds": 670.6362516389981,
+      "outputs": {
+        "voxel/regions.bin": {
+          "bytes": 329879,
+          "sha256": "d153de9b634364d001459e1b6507cd1ece8ef4939d8ef221bc778113619e0aa0"
+        },
+        "voxel/signposts.bin": {
+          "bytes": 21616,
+          "sha256": "63c2b343de6869cbda67a299aad4ce6984281950346f09f4f1d547380cc1b42a"
+        },
+        "voxel/buildings.bin": {
+          "bytes": 42485196,
+          "sha256": "9cec5168e808c0299a0bbff5301800aafc01677267999578cc8bf4dca9f4b2ad"
+        },
+        "voxel/windowlights.bin": {
+          "bytes": 2984,
+          "sha256": "4640b06c85d305c6fa63ff3d2afbf529812e1442eabf85f58084be789f89f8af"
+        },
+        "voxel/relief.bin": {
+          "bytes": 3325150,
+          "sha256": "4d8fc4962c12b3ab603dcbff42f8aaab4bbe533203377c1017d6cce98ffe5c70"
+        },
+        "stage/leaves.bin": {
+          "bytes": 122892,
+          "sha256": "0e81414b33d8d5e7554511684f02e55df9dd33fc51a76dd04b39553e1665b881"
+        }
+      }
+    },
+    "optimized": {
+      "commit": "a32152e49b27b6e51982d8ed7b933033ca731ddc",
+      "steps": {
+        "regions": 5.172841564000919,
+        "signposts": 2.906983938999474,
+        "buildings": 194.76231444699988,
+        "relief": 269.4503481690008,
+        "intro": 0.24522304099991743
+      },
+      "wall_seconds": 472.537711160001,
+      "outputs": {
+        "voxel/regions.bin": {
+          "bytes": 329879,
+          "sha256": "d153de9b634364d001459e1b6507cd1ece8ef4939d8ef221bc778113619e0aa0"
+        },
+        "voxel/signposts.bin": {
+          "bytes": 21616,
+          "sha256": "63c2b343de6869cbda67a299aad4ce6984281950346f09f4f1d547380cc1b42a"
+        },
+        "voxel/buildings.bin": {
+          "bytes": 42485196,
+          "sha256": "9cec5168e808c0299a0bbff5301800aafc01677267999578cc8bf4dca9f4b2ad"
+        },
+        "voxel/windowlights.bin": {
+          "bytes": 2984,
+          "sha256": "4640b06c85d305c6fa63ff3d2afbf529812e1442eabf85f58084be789f89f8af"
+        },
+        "voxel/relief.bin": {
+          "bytes": 3325150,
+          "sha256": "4d8fc4962c12b3ab603dcbff42f8aaab4bbe533203377c1017d6cce98ffe5c70"
+        },
+        "stage/leaves.bin": {
+          "bytes": 122892,
+          "sha256": "0e81414b33d8d5e7554511684f02e55df9dd33fc51a76dd04b39553e1665b881"
+        }
+      }
+    }
+  },
+  "byte_identical": true,
+  "seconds_saved": 198.09854047899717,
+  "percent_less_wall_time": 29.538895339292385
+}

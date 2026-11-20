@@ -86,12 +86,7 @@ void CtrNaming_NativeTap(u8 kind, u8 a, u8 b)
 static u8 CtrNaming_PageColumns(u8 page)
 {
 #ifdef JAPANESE_KEYBOARD
-    u8 i, count = 0;
-
-    for (i = 0; i < KBROW_COUNT; i++)
-        if (StringLength(sNamingScreenKeyboardText[sPageToKeyboardId[page]][i]) > count)
-            count = StringLength(sNamingScreenKeyboardText[sPageToKeyboardId[page]][i]);
-    return count;
+    return GetJapanesePageColumnCount(sPageToKeyboardId[page]);
 #else
     return sPageColumnCounts[sPageToKeyboardId[page]];
 #endif
@@ -100,9 +95,7 @@ static u8 CtrNaming_PageColumns(u8 page)
 static u8 CtrNaming_PageChar(u8 page, s16 x, s16 y)
 {
 #ifdef JAPANESE_KEYBOARD
-    const u8 *row = sNamingScreenKeyboardText[sPageToKeyboardId[page]][y];
-
-    return x < StringLength(row) ? row[x] : CHAR_SPACE;
+    return GetJapaneseKeyboardChar(sPageToKeyboardId[page], x, y);
 #else
     return sKeyboardChars[sPageToKeyboardId[page]][y][x];
 #endif
@@ -194,6 +187,21 @@ static s16 CtrNaming_CursorColumnOn(u8 shown, s16 x)
     return x;
 }
 
+// The pages go round one way (symbols, upper, lower). A tab two turns away
+// turns there in one: the page between is put behind the one shown, as the
+// end of a turn would put it (MainState_WaitPageSwap), so the next turn shows
+// the page tapped and never the one between.
+static void CtrNaming_SkipPage(void)
+{
+    s16 x, y;
+
+    GetCursorPos(&x, &y);
+    x = CtrNaming_CursorColumnOn(CtrNaming_NextPage(sNamingScreen->currentPage), x);
+    sNamingScreen->currentPage = CtrNaming_NextPage(sNamingScreen->currentPage);
+    SetCursorPos(x, y);
+    DrawKeyboardPageOnDeck();
+}
+
 #define tKeyboardEvent data[1] // as the input handler's, undefined after it
 // The event a tap gives, from Input_Enabled: the keyboard is waiting for input.
 static bool8 CtrNaming_TakeTap(struct Task *task)
@@ -232,6 +240,8 @@ static bool8 CtrNaming_TakeTap(struct Task *task)
     case CTR_NAMING_TAP_PAGE:
         if (sCtrTap.a >= KBPAGE_COUNT || sCtrTap.a == sNamingScreen->currentPage)
             return FALSE;
+        if (CtrNaming_NextPage(sNamingScreen->currentPage) != sCtrTap.a)
+            CtrNaming_SkipPage();
         sCtrPageTarget = sCtrTap.a;
         task->tKeyboardEvent = INPUT_SELECT;
         return TRUE;

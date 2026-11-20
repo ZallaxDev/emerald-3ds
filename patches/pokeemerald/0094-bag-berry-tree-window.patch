@@ -1,0 +1,28 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: the bag to plant a berry in the bottom screen's window
+Applies after 0092-touch-message-ack.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/item_menu.c b/src/item_menu.c
+--- a/src/item_menu.c
++++ b/src/item_menu.c
+@@ -2760,16 +2760,17 @@
+ }
+ 
+ // The bag in the bottom screen's window: from the field, from the field's
+-// party menu (GIVE), from a battle's own menu, from the PC to deposit and
+-// from a shop to sell (the dock locked for these two, 3ds_bottom_ui.c: the
+-// bag goes back to the PC or the shop); from a berry machine and the rest it
+-// has the whole screen.
++// party menu (GIVE), from a battle's own menu, from the PC to deposit, from
++// a shop to sell and from a berry patch to plant (the dock locked for these
++// three, 3ds_bottom_ui.c: the bag goes back to the PC, the shop or the
++// patch); from a berry machine and the rest it has the whole screen.
+ bool8 CtrBag_InWindow(void)
+ {
+     return gBagPosition.location == ITEMMENULOCATION_FIELD
+         || gBagPosition.location == ITEMMENULOCATION_BATTLE
+         || gBagPosition.location == ITEMMENULOCATION_ITEMPC
+         || gBagPosition.location == ITEMMENULOCATION_SHOP
++        || gBagPosition.location == ITEMMENULOCATION_BERRY_TREE
+         || (gBagPosition.location == ITEMMENULOCATION_PARTY && !gMain.inBattle);
+ }
+ 

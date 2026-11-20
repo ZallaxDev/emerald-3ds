@@ -529,14 +529,16 @@ static bool8 BagShown(u8 mode)
     return mode == MODE_BAG_MENU;
 }
 
-/* The bag to deposit from at the PC or to sell from at a shop: in the window,
- * but it goes back to the PC's or the shop's menu as it closes, never to
- * another screen (CtrBottom_LeaveTo), so the dock is locked to its own BAG,
- * which closes it as B does. */
+/* The bag to deposit from at the PC, to sell from at a shop or to plant a
+ * berry from at a soft patch: in the window, but it goes back to the PC's or
+ * the shop's menu, or to the patch, as it closes, never to another screen
+ * (CtrBottom_LeaveTo), so the dock is locked to its own BAG, which closes it
+ * as B does. */
 static bool8 BagReturnsToMenu(u8 mode)
 {
     return mode == MODE_BAG_MENU
-        && (gBagPosition.location == ITEMMENULOCATION_ITEMPC || gBagPosition.location == ITEMMENULOCATION_SHOP);
+        && (gBagPosition.location == ITEMMENULOCATION_ITEMPC || gBagPosition.location == ITEMMENULOCATION_SHOP
+            || gBagPosition.location == ITEMMENULOCATION_BERRY_TREE);
 }
 
 /* A party menu a script or a facility opened to choose a Pokemon, and the summary opened from it, go
@@ -713,7 +715,8 @@ enum
 #define HIT_OPTION_BACK 16
 
 typedef struct { s16 x, y, w, h; u8 id; } Hit;
-static Hit sHits[64];
+/* The widest naming keyboard can register 80 keys plus name cells, tabs and buttons. */
+static Hit sHits[128];
 static u8 sHitCount;
 
 static void AddHit(int x, int y, int w, int h, u8 id)
@@ -746,6 +749,7 @@ static u8 HitTest(int x, int y)
 #include "3ds_bottom_easychat.inc"
 #include "3ds_bottom_factory.inc"
 #include "3ds_bottom_factory_top.inc"
+#include "3ds_bottom_title_top.inc"
 #include "3ds_bottom_battleplate.inc"
 #include "3ds_bottom_battledraw.inc"
 #include "3ds_bottom_battlewarm.inc"
@@ -1246,6 +1250,8 @@ void CtrBottom_Frame(void)
         sIconsReady = sIconsIn = TRUE;
     /* The Rental Pokemon's panel on the top screen. */
     FactoryTopFrame(&sState);
+    /* The main menu's saved game, as its trainer card on the top screen. */
+    TitleTopFrame();
 
     ticks[2] = CtrPlatform_Ticks();
     if (sAreaRedraw)

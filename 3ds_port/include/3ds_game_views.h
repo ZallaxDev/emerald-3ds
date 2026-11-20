@@ -318,6 +318,10 @@ void CtrMenu_PostEntry(s8 entry);
 void CtrMenu_PostAck(void);
 bool8 CtrMenu_YesNoOpen(void);
 
+/* The main menu is up with a saved game to continue (main_menu.c,
+ * 0095-main-menu-top-card.patch): its trainer card is on the top screen. */
+bool8 CtrMainMenu_CardUp(void);
+
 /* ------------------------------------------------------------ naming screen */
 
 enum
@@ -329,7 +333,7 @@ enum
 };
 
 #define CTR_NAMING_ROWS 4
-#define CTR_NAMING_COLS 16      /* the widest row: the Japanese kana rows */
+#define CTR_NAMING_COLS CTR_NAMING_LAYOUT_COLS
 #define CTR_NAMING_TEXT 16      /* the game's text buffer */
 
 /* The game's tap kinds (CtrNaming_NativeTap). */
@@ -352,8 +356,8 @@ struct CtrNamingView
     u8 text[CTR_NAMING_TEXT]; /* as typed: EOS where there is nothing yet */
     u8 page;                /* the keyboard page shown, the game's own number (0 symbols, 1 upper, 2 lower) */
     u8 cols;                /* the keys in a row on this page */
-    u16 gapAfter;           /* bit n: a gap after column n (the keys come in groups) */
-    u16 spacer;             /* bit n: column n holds no key (a Japanese row's space between groups) */
+    u32 gapAfter;           /* bit n: a gap after column n (the keys come in groups) */
+    u32 spacer;             /* bit n: column n holds no key (a Japanese row's space between groups) */
     u8 keys[CTR_NAMING_ROWS][CTR_NAMING_COLS]; /* the character each key writes */
     s8 cursorX, cursorY;    /* the game's cursor, for the focus ring; x == cols is the buttons' column */
     u8 gender;              /* a Pokémon's: MON_MALE, MON_FEMALE or MON_GENDERLESS */

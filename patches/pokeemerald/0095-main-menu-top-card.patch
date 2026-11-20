@@ -1,0 +1,32 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: when the main menu offers a saved game to continue
+Applies after 0092-touch-message-ack.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/main_menu.c b/src/main_menu.c
+--- a/src/main_menu.c
++++ b/src/main_menu.c
+@@ -1378,6 +1378,25 @@
+     }
+ }
+ 
++#ifdef PLATFORM_3DS
++// The menu with a saved game to continue, from its first highlight until it
++// fades out: the top screen shows that game's trainer card in place of the
++// menu's own windows (3ds_bottom_title_top.inc), the entries being the bottom
++// screen's buttons.
++bool8 CtrMainMenu_CardUp(void)
++{
++    u8 taskId = FindTaskIdByFunc(Task_HandleMainMenuInput);
++
++    if (taskId == TASK_NONE)
++        taskId = FindTaskIdByFunc(Task_HighlightSelectedMainMenuItem);
++    if (taskId == TASK_NONE)
++        taskId = FindTaskIdByFunc(Task_HandleMainMenuAPressed);
++    if (taskId == TASK_NONE)
++        taskId = FindTaskIdByFunc(Task_HandleMainMenuBPressed);
++    return taskId != TASK_NONE && gTasks[taskId].tMenuType != HAS_NO_SAVED_GAME;
++}
++#endif
++
+ #undef tMenuType
+ #undef tCurrItem
+ #undef tItemCount

@@ -185,8 +185,8 @@ Without these options the release is English-only, as before.
 
 ## Prerequisites (maintainer machine)
 
-- Python of the version `upstream.lock` names under `[python]` (3.13), with
-  Pillow (`pillow` there: 12.3.0), to run `build_release.py`: the voxel data
+- Python of the version `upstream.lock` names under `[python]`, with
+  the Pillow version pinned there, to run `build_release.py`: the voxel data
   depends on the interpreter, so the release refuses any other and makes
   `make` run the generators with the same one (`PYTHON=` is set for it).
   `tools/docker_release.py` brings all of it (see *Release environment*).
@@ -232,7 +232,7 @@ python tools/docker_release.py --rom baserom.gba \
 
 PyInstaller makes an executable for the system it runs on, so the Windows
 builder's `.exe` is not made there: make the release on Windows as below
-(native devkitPro, Python 3.13 - `build_release.py` refuses another) when the
+(native devkitPro and the Python version in `upstream.lock`) when the
 Windows ZIP is wanted, or attach the Docker release's other assets and the
 Windows ZIP of a native run of the same commit (its data is the same: same
 pins, and `voxel_precompile.py` proves it against the recipe).
@@ -273,12 +273,10 @@ extracted command-line and graphical builders on that architecture.
 The official standalone download remains the Windows ZIP. Linux uses the
 source builder.
 
-The macOS packaging CI separately tests Python 3.15.2 and Pillow 13.0.0
-with a synthetic payload. Those versions test compatibility of PyInstaller,
-archive extraction and both builder executables; they do not replace the
-release-generation versions in `upstream.lock`. Continue using those pinned
-versions to generate and precompile real game data, preserving the proven
-native/browser parity.
+The macOS packaging CI uses a synthetic payload to check PyInstaller,
+archive extraction and both builder executables. Use the versions pinned
+in `upstream.lock` when generating and precompiling real game data to keep
+the native and web builders compatible.
 
 The web payload can also be made on its own from any release's `payload/`
 folder, for example the one inside an already published Windows ZIP:

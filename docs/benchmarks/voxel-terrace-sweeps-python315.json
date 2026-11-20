@@ -1,0 +1,58 @@
+{
+  "baseline_commit": "cd6a48b551b3a49f301002fab78ea865cc37a440",
+  "source_assets_commit": "76463dac15cad36aca5e2b3f6366abf9e53f814f",
+  "python": "3.15.2 (main, Nov 11 2026, 00:19:20) [Clang 23.1.3 ]",
+  "pillow": "13.0.0",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "profiler": "none",
+  "seconds_limit": null,
+  "jit": false,
+  "hash_seed": "0",
+  "mode": "generator --output (without --verify)",
+  "scope": "One sequential local terrain generator pair on the same prepared English inputs; separate focused terrace validation also ran on the host",
+  "baseline": {
+    "name": "relief",
+    "wall_seconds": 232.79696192099982,
+    "completed": true,
+    "bytes": 3325150,
+    "sha256": "4d8fc4962c12b3ab603dcbff42f8aaab4bbe533203377c1017d6cce98ffe5c70"
+  },
+  "candidate": {
+    "name": "relief",
+    "wall_seconds": 215.96558691099926,
+    "completed": true,
+    "bytes": 3325150,
+    "sha256": "4d8fc4962c12b3ab603dcbff42f8aaab4bbe533203377c1017d6cce98ffe5c70"
+  },
+  "saved_seconds": 16.831375010000556,
+  "percent_less_wall_time": 7.230066436911802,
+  "focused_comparisons": {
+    "synthetic blocks": {
+      "groups": 180,
+      "cells": 8195,
+      "baseline_seconds": 1.671822694985167,
+      "candidate_seconds": 1.2544864819883514
+    },
+    "authored terraces": {
+      "groups": 76,
+      "cells": 188300,
+      "baseline_seconds": 7.169240132998311,
+      "candidate_seconds": 3.815165670002898
+    },
+    "authored blocks": {
+      "groups": 76,
+      "cells": 188300,
+      "baseline_seconds": 26.07665572499718,
+      "candidate_seconds": 9.510691616002077
+    }
+  },
+  "generated_component_cases": 300,
+  "raw_output": {
+    "bytes": 1468424,
+    "sha256": "0b25a31bdc98a7c42130bc62d1196530175af01dfad6d8ddacecbacf370f3edb"
+  },
+  "byte_identical": [
+    "raw relief",
+    "relief.bin"
+  ]
+}

@@ -137,6 +137,13 @@ static u8 CardStars(void)
          + (CountPlayerMuseumPaintings() >= CONTEST_CATEGORIES_COUNT);
 }
 
+/* The Pokédex's caught count as the card shows it (walks every species). */
+static u16 CardDexCount(bool8 hasDex)
+{
+    return !hasDex ? 0 : IsNationalPokedexEnabled() ? GetNationalPokedexCount(FLAG_GET_CAUGHT)
+                                                    : GetHoennPokedexCount(FLAG_GET_CAUGHT);
+}
+
 static void SnapshotCard(ViewState *s)
 {
     static u16 dex, frames;
@@ -152,8 +159,7 @@ static void SnapshotCard(ViewState *s)
     /* Counting the Pokédex walks every species; twice a second is plenty. */
     if ((frames++ % 30) == 0)
     {
-        dex = !s->hasDex ? 0 : IsNationalPokedexEnabled() ? GetNationalPokedexCount(FLAG_GET_CAUGHT)
-                                                         : GetHoennPokedexCount(FLAG_GET_CAUGHT);
+        dex = CardDexCount(s->hasDex);
         stars = CardStars();
     }
     s->dex = dex;
@@ -529,8 +535,29 @@ static const struct WildPokemonHeader *EncHeader(void)
     return NULL;
 }
 
+/* Compare only the save bytes the Pokédex uses to validate seen/caught. */
+typedef struct {
+    u8 owned[sizeof(gSaveBlock2Ptr->pokedex.owned)];
+    u8 seen[sizeof(gSaveBlock2Ptr->pokedex.seen)];
+    u8 seen1[sizeof(gSaveBlock1Ptr->seen1)];
+    u8 seen2[sizeof(gSaveBlock1Ptr->seen2)];
+} EncDexFlags;
+
+static void CaptureEncDexFlags(EncDexFlags *flags)
+{
+    memcpy(flags->owned, gSaveBlock2Ptr->pokedex.owned, sizeof(flags->owned));
+    memcpy(flags->seen, gSaveBlock2Ptr->pokedex.seen, sizeof(flags->seen));
+    memcpy(flags->seen1, gSaveBlock1Ptr->seen1, sizeof(flags->seen1));
+    memcpy(flags->seen2, gSaveBlock1Ptr->seen2, sizeof(flags->seen2));
+}
+
+typedef struct {
+    u8 page, pages, method, count, total, caught, togglePage;
+    EncRow rows[ENC_SHOWN];
+} EncPage;
+
 /* Each method with a table, ENC_SHOWN rows a page: the page on show. */
-static void SnapshotEncounters(ViewState *s)
+static void BuildEncounterPage(EncPage *s, bool8 uncaught)
 {
     const struct WildPokemonHeader *header = EncHeader();
     const struct WildPokemonInfo *info[ENC_METHODS] = {NULL};
@@ -540,7 +567,6 @@ static void SnapshotEncounters(ViewState *s)
     u8 totals[ENC_METHODS] = {0}, visible[ENC_METHODS] = {0}, caught[ENC_METHODS] = {0};
     u8 pages = 0, togglePage = 0, page;
 
-    s->encUncaught = sEncUncaught;
     if (header)
     {
         info[ENC_LAND] = CtrEncounters_Land(header->landMonsInfo, gSaveBlock1Ptr->location.mapGroup,
@@ -566,7 +592,7 @@ static void SnapshotEncounters(ViewState *s)
             {
                 row.seen = ENC_CAUGHT;
                 ++caught[m];
-                if (s->encUncaught)
+                if (uncaught)
                     continue;
             }
             else
@@ -575,10 +601,10 @@ static void SnapshotEncounters(ViewState *s)
         }
         pages += visible[m] ? (visible[m] + ENC_SHOWN - 1) / ENC_SHOWN : 1;
     }
-    s->encPages = pages;
+    s->pages = pages;
     if (pages == 0)
         return;
-    s->encPage = page = sEncPage % pages;
+    s->page = page = sEncPage % pages;
     for (u8 m = 0; m < ENC_METHODS; ++m)
     {
         u8 n, alternate, remaining;
@@ -589,19 +615,71 @@ static void SnapshotEncounters(ViewState *s)
         if (page >= n)
         {
             page -= n;
-            alternate = s->encUncaught ? totals[m] : totals[m] - caught[m];
+            alternate = uncaught ? totals[m] : totals[m] - caught[m];
             togglePage += alternate ? (alternate + ENC_SHOWN - 1) / ENC_SHOWN : 1;
             continue;
         }
-        s->encMethod = m;
-        s->encTotal = totals[m];
-        s->encCaught = caught[m];
-        s->encTogglePage = togglePage;
+        s->method = m;
+        s->total = totals[m];
+        s->caught = caught[m];
+        s->togglePage = togglePage;
         remaining = visible[m] - page * ENC_SHOWN;
-        s->encCount = remaining > ENC_SHOWN ? ENC_SHOWN : remaining;
-        memcpy(s->enc, rows[m] + page * ENC_SHOWN, s->encCount * sizeof(EncRow));
+        s->count = remaining > ENC_SHOWN ? ENC_SHOWN : remaining;
+        memcpy(s->rows, rows[m] + page * ENC_SHOWN, s->count * sizeof(EncRow));
         break;
     }
+}
+
+/* The bottom view snapshots every frame, even while its contents stand still. */
+static void SnapshotEncounters(ViewState *s)
+{
+    static struct {
+        bool8 valid;
+        u8 group, num, requestedPage;
+        u16 caveSet;
+        unsigned phase;
+        unsigned randomSeed;
+        bool8 randomized, uncaught;
+        EncDexFlags flags;
+        EncPage page;
+    } cache;
+    u8 group = gSaveBlock1Ptr->location.mapGroup, num = gSaveBlock1Ptr->location.mapNum;
+    u16 caveSet = group == MAP_GROUP(MAP_ALTERING_CAVE) && num == MAP_NUM(MAP_ALTERING_CAVE)
+                ? VarGet(VAR_ALTERING_CAVE_WILD_SET) : 0;
+    unsigned phase = CtrEncounters_LandPhase();
+    bool8 randomized = CtrSettings_GetInt("rand_wild", 0) == 1;
+    unsigned randomSeed = randomized ? (unsigned)CtrSettings_GetInt("rand_seed", 0) : 0;
+    EncDexFlags flags;
+
+    CaptureEncDexFlags(&flags);
+    if (!cache.valid || cache.group != group || cache.num != num || cache.requestedPage != sEncPage
+     || cache.caveSet != caveSet || cache.phase != phase || cache.randomized != randomized
+     || cache.randomSeed != randomSeed || cache.uncaught != sEncUncaught
+     || memcmp(&cache.flags, &flags, sizeof(flags)) != 0)
+    {
+        memset(&cache.page, 0, sizeof(cache.page));
+        BuildEncounterPage(&cache.page, sEncUncaught);
+        cache.valid = TRUE;
+        cache.group = group;
+        cache.num = num;
+        cache.requestedPage = sEncPage;
+        cache.caveSet = caveSet;
+        cache.phase = phase;
+        cache.randomized = randomized;
+        cache.randomSeed = randomSeed;
+        cache.uncaught = sEncUncaught;
+        /* The game's flag readers can repair inconsistent copies. */
+        CaptureEncDexFlags(&cache.flags);
+    }
+    s->encPages = cache.page.pages;
+    s->encPage = cache.page.page;
+    s->encMethod = cache.page.method;
+    s->encCount = cache.page.count;
+    s->encTotal = cache.page.total;
+    s->encCaught = cache.page.caught;
+    s->encTogglePage = cache.page.togglePage;
+    s->encUncaught = cache.uncaught;
+    memcpy(s->enc, cache.page.rows, sizeof(s->enc));
 }
 
 static void SnapshotMapExtras(ViewState *s)
