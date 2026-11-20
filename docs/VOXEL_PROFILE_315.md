@@ -296,7 +296,8 @@ for byte.
 | Texture compaction | 2.1 |
 | Terrace edge scoring | 86.6 |
 | Terrain region labeling | 8.3 |
-| Approximate sum of separate measurements | **237.9** |
+| Terrain canvas scans | 6.2 |
+| Approximate sum of separate measurements | **244.1** |
 
 The sum combines individual experiments with different baselines and
 workloads. Treat it as an estimate of build work saved. An end-to-end
@@ -383,3 +384,30 @@ produced the same region numbers, label grids and sizes.
 The complete `relief.bin` matched the previous terrain export byte for
 byte, with the SHA-256 recorded in the terrain generation follow-up.
 The host C relief reader and its terrain assertions passed.
+
+## Terrain canvas scan follow-up
+
+The region-width pass groups neighboring labels and marks their columns
+in an integer bit mask. Counting set bits gives each region's distinct
+width. The drop pass uses byte patterns to skip pixels outside face and
+rim runs. It processes columns and rows in the same order and applies
+the existing rules for orientation, covered ground and drop height.
+
+Both scans matched their original versions on 350 randomized canvases,
+including adjacent faces and rims, blocked ground, and west- and
+east-facing terrain. The eight terrace and ledge fixtures passed.
+
+| Paired scan calls | Original | Candidate | Saved |
+| --- | ---: | ---: | ---: |
+| Distinct columns per region | 2.822 s | 0.937 s | 1.884 s |
+| Row and column drop runs | 8.363 s | 4.058 s | 4.305 s |
+| Combined | 11.185 s | 4.995 s | 6.189 s |
+
+Each comparison covered 33 map groups and 59,703,808 canvas pixels on
+Python 3.15.2 and Pillow 13.0.0 with JIT disabled. The paired call order
+alternated by group. Region widths and ordered drop samples matched for
+every group.
+
+The complete `relief.bin` matched the previous export byte for byte,
+with the SHA-256 listed in the terrain generation follow-up. The host C
+relief reader and its terrain assertions passed.

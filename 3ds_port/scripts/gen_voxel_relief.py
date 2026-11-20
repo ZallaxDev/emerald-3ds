@@ -56,6 +56,7 @@ import json
 import math
 import operator
 import os
+import re
 import shutil
 import struct
 import sys
@@ -2220,6 +2221,63 @@ def drawn_regions(kind, W, H, crosses):
     return region, sizes
 
 
+def drawn_region_widths(region, count):
+    """Count the distinct columns occupied by each labeled region."""
+    columns = [0] * count
+    for row in region:
+        start = 0
+        for label, group in itertools.groupby(row):
+            length = len(list(group))
+            if label >= 0:
+                columns[label] |= ((1 << length) - 1) << start
+            start += length
+    return [mask.bit_count() for mask in columns]
+
+
+_FACE_RUN = re.escape(bytes([FACE])) + b"+"
+_ROW_FACES = re.compile(_FACE_RUN)
+_COLUMN_DROPS = re.compile(_FACE_RUN + b"|" + re.escape(bytes([RIM])) + b"+")
+
+
+def drawn_drop_runs(kind, region, big, blocked, side, W, H):
+    """Collect the drops drawn between regions, in column then row order."""
+    runs = {}
+    # Process one compact byte column at a time. The pattern walks the
+    # pixels in native code and yields separate runs for faces and rims.
+    for x, column in enumerate(zip(*kind)):
+        for match in _COLUMN_DROPS.finditer(bytes(column)):
+            y0, y = match.span()
+            if y0 == 0 or y == H:
+                continue
+            a, b = region[y0 - 1][x], region[y][x]
+            if a < 0 or b < 0 or a == b or not (big[a] and big[b]):
+                continue
+            if column[y] == GROUND and blocked[y // 16][x // 16]:
+                continue  # its foot is behind a roof or a tree
+            if column[y0] == FACE:
+                if sum(side[j // 16][x // 16] != 0 for j in range(y0, y)) * 2 > y - y0:
+                    continue  # down a west or east face, not across a south one
+                drop = y - y0
+            else:
+                drop = -RIM_RISE
+            runs.setdefault((a, b), []).append(drop)
+
+    for y, row in enumerate(kind):
+        for match in _ROW_FACES.finditer(bytes(row)):
+            x0, x = match.span()
+            if x0 == 0 or x == W:
+                continue
+            turn = sum(side[y // 16][i // 16] for i in range(x0, x))
+            if abs(turn) * 2 <= x - x0:
+                continue
+            left, right = region[y][x0 - 1], region[y][x]
+            if left < 0 or right < 0 or left == right or not (big[left] and big[right]):
+                continue
+            pair = (right, left) if turn > 0 else (left, right)
+            runs.setdefault(pair, []).append(SIDE_RISE)
+    return runs
+
+
 def drawn_prepare(name):
     """What a group's drawing says, the pixels read and let go: its regions
     (terraces and ground), the drops between them, and per cell what it is
@@ -2236,6 +2294,8 @@ def drawn_prepare(name):
         key = hashlib.sha1((text[:text.index("def find_drawn")]     # the constants
                             + inspect.getsource(drawn_prepare) + inspect.getsource(drawn_canvas)
                             + inspect.getsource(drawn_regions)
+                            + inspect.getsource(drawn_region_widths) + inspect.getsource(drawn_drop_runs)
+                            + repr((_ROW_FACES.pattern, _COLUMN_DROPS.pattern))
                             + inspect.getsource(drawn_role) + repr(sorted(ROLE_REFERENCE.items()))
                             + ((inspect.getsource(split_wrapped) + inspect.getsource(_neck)
                                 + inspect.getsource(_wrapped) + inspect.getsource(_rim_gaps)
@@ -2308,61 +2368,9 @@ def drawn_prepare(name):
                               if (cx, cy) in face_low or metatile_at(cx, cy) in FACE_SOUTH}, W, H)
     # a strip of top a few pixels thick - the light lip between two faces
     # stacked one on the other - is part of the face, not a terrace
-    columns = [set() for _ in sizes]
-    for y in range(H):
-        row = region[y]
-        for x in range(W):
-            if row[x] >= 0:
-                columns[row[x]].add(x)
-    big = [s >= REGION_MIN and (s >= THIN * len(columns[n]) or n in cut_apart) for n, s in enumerate(sizes)]
-
-    # what the columns say: (upper, lower) -> drops
-    runs = {}
-    for x in range(W):
-        y = 0
-        while y < H:
-            k = kind[y][x]
-            if k not in (FACE, RIM):
-                y += 1
-                continue
-            y0 = y
-            while y < H and kind[y][x] == k:
-                y += 1
-            if y0 == 0 or y == H:
-                continue
-            a, b = region[y0 - 1][x], region[y][x]
-            if a < 0 or b < 0 or a == b or not (big[a] and big[b]):
-                continue
-            if kind[y][x] == GROUND and blocked[y // 16][x // 16]:
-                continue  # its foot is behind a roof or a tree: not all of it shows
-            if k == FACE and sum(side[j // 16][x // 16] != 0 for j in range(y0, y)) * 2 > y - y0:
-                continue  # down a west or east face, not across a south one
-            drop = y - y0 if k == FACE else -RIM_RISE
-            runs.setdefault((a, b), []).append(drop)
-
-    # across the rows: the west and east faces
-    for y in range(H):
-        x = 0
-        row = kind[y]
-        while x < W:
-            if row[x] != FACE:
-                x += 1
-                continue
-            x0 = x
-            while x < W and row[x] == FACE:
-                x += 1
-            if x0 == 0 or x == W:
-                continue
-            turn = sum(side[y // 16][i // 16] for i in range(x0, x))
-            if abs(turn) * 2 <= x - x0:
-                continue
-            left, right = region[y][x0 - 1], region[y][x]
-            if left < 0 or right < 0 or left == right or not (big[left] and big[right]):
-                continue
-            if turn > 0:
-                runs.setdefault((right, left), []).append(SIDE_RISE)
-            else:
-                runs.setdefault((left, right), []).append(SIDE_RISE)
+    widths = drawn_region_widths(region, len(sizes))
+    big = [s >= REGION_MIN and (s >= THIN * widths[n] or n in cut_apart) for n, s in enumerate(sizes)]
+    runs = drawn_drop_runs(kind, region, big, blocked, side, W, H)
 
     # a flight of two bands or more down a row, all turned the same way, is
     # as many levels between the terraces at its two ends - a gorge's walls
