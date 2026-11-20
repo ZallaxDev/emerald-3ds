@@ -297,7 +297,8 @@ for byte.
 | Terrace edge scoring | 86.6 |
 | Terrain region labeling | 8.3 |
 | Terrain canvas scans | 6.2 |
-| Approximate sum of separate measurements | **244.1** |
+| Terrain neighborhood lookups | 11.4 |
+| Approximate sum of separate measurements | **255.5** |
 
 The sum combines individual experiments with different baselines and
 workloads. Treat it as an estimate of build work saved. An end-to-end
@@ -411,3 +412,28 @@ every group.
 The complete `relief.bin` matched the previous export byte for byte,
 with the SHA-256 listed in the terrain generation follow-up. The host C
 relief reader and its terrain assertions passed.
+
+## Terrain neighborhood lookup follow-up
+
+The plain-ground search builds an index of each visited row by dominant
+colour. A lookup scans matching entries in the original 49×49 search
+window and filters the caller's excluded cells at query time. The
+colour quality, distance and row-order tie break still select the tile.
+For rock cut masks, the generator reuses each neighboring metatile's
+ground-colour palette before feeding the original silhouette flood fill.
+
+Both changes matched the original on 360 randomized queries apiece,
+including changing exclusions, forced colours and map edges. All eight
+terrace and ledge fixtures passed.
+
+| Paired lookup calls | Calls | Original | Candidate | Saved |
+| --- | ---: | ---: | ---: | ---: |
+| Plain-ground search | 18,559 | 28.166 s | 21.268 s | 6.898 s |
+| Rock cut masks | 97,578 | 9.948 s | 5.415 s | 4.533 s |
+| Combined | 116,137 | 38.114 s | 26.682 s | 11.431 s |
+
+Times sum paired calls from one complete terrain export on Python 3.15.2
+and Pillow 13.0.0 with the JIT disabled. The order alternated between
+calls, and the original and candidate used separate per-art lookup caches.
+Every tile choice and mask matched. The complete `relief.bin` matched the
+previous export byte for byte, and the host C relief reader passed.

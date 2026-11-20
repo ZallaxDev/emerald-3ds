@@ -50,6 +50,7 @@ steps are ledge too; a lip comes down to the ground where the ledge ends.
 """
 
 import argparse
+import bisect
 import collections
 import itertools
 import json
@@ -3586,17 +3587,21 @@ def _cut_mask(art, layout, x, y, rock_cells):
     """Rows of bits, 1 where cell (x, y) draws the ground behind its rock;
     None where nothing beside it is flat ground."""
     import voxel_sign_mask
+    palettes = art.__dict__.setdefault("_cut_ground_palettes", {})
     ground = set()
     for dy in (-1, 0, 1):
         for dx in (-1, 0, 1):
             nx, ny = x + dx, y + dy
             if (dx or dy) and 0 <= nx < layout.w and 0 <= ny < layout.h and (nx, ny) not in rock_cells:
-                img = art.cell_image(art.metatile(nx, ny)).convert("RGB")
-                ground.update(c for c in img.getdata() if c not in ROCK_ALL)
+                m = art.metatile(nx, ny)
+                if m not in palettes:
+                    img = art.cell_image(m).convert("RGB")
+                    palettes[m] = set(img.getdata()) - ROCK_ALL
+                ground.update(palettes[m])
     if not ground:
         return None
-    img = art.cell_image(art.metatile(x, y)).convert("RGB").load()
-    opaque = [(i, j) for j in range(16) for i in range(16) if img[i, j] not in ground]
+    img = art.cell_image(art.metatile(x, y)).convert("RGB")
+    opaque = [(i % 16, i // 16) for i, pixel in enumerate(img.getdata()) if pixel not in ground]
     rows = voxel_sign_mask.cutout_mask(opaque)
     return [(~r) & 0xFFFF for r in rows]
 
@@ -3671,13 +3676,14 @@ def plain_ground(art, layout, content, x, y, side=None, kind=None, half=False):
     `half`: only a tile that colour at least half over (voxel_terraces, a
     map read in its own colours: Route 114's dirt edged half in orange has
     fewer far colours than its plain dirt, flecked darker)."""
+    known = art.__dict__.setdefault("_plain", {})
+
     def main(m):
         """(its commonest colour, how many pixels of it, how many pixels are
         another colour altogether - a shore's few drops of the sea on a sand)
         Cached on the art: an id over 0x200 is its secondary tileset's own
         (keyed by the id alone, Route 114's Fallarbor tiles gave Pacifidlog
         its ground)."""
-        known = art.__dict__.setdefault("_plain", {})
         if m not in known:
             px = list(art.cell_image(m).convert("RGB").getdata())
             c = commonest(px)
@@ -3696,16 +3702,28 @@ def plain_ground(art, layout, content, x, y, side=None, kind=None, half=False):
         im = art.cell_image(m0).convert("RGB")
         part = [im.getpixel((i, j)) for j in range(16) for i in range(16) if _SIDE_PIXELS[side](i, j)]
         kind = commonest(part)
+    # Rows are indexed by colour on demand. The layout art is fixed, while
+    # the caller's excluded cells can differ, so filter exclusions at lookup.
+    rows = art.__dict__.setdefault("_plain_ground_rows", {}).setdefault(layout.w, {})
     best = None
-    for dy in range(-24, 25):
-        for dx in range(-24, 25):
-            c = (x + dx, y + dy)
-            if c in content or not (0 <= c[0] < layout.w and 0 <= c[1] < layout.h):
+    for ny in range(max(0, y - 24), min(layout.h, y + 25)):
+        if ny not in rows:
+            by_colour = collections.defaultdict(list)
+            for nx in range(layout.w):
+                m = art.metatile(nx, ny)
+                colour, pixels, foreign = main(m)
+                by_colour[colour].append((nx, m, pixels, foreign))
+            rows[ny] = by_colour
+        candidates = rows[ny].get(kind)
+        if not candidates:
+            continue
+        first = bisect.bisect_left(candidates, (x - 24,))
+        last = bisect.bisect_left(candidates, (x + 25,))
+        dy = abs(ny - y)
+        for nx, m, pixels, foreign in candidates[first:last]:
+            if (half and pixels < 128) or (nx, ny) in content:
                 continue
-            m = art.metatile(*c)
-            if main(m)[0] != kind or (half and 2 * main(m)[1] < 256):
-                continue
-            k = (main(m)[2], -main(m)[1], abs(dx) + abs(dy))
+            k = (foreign, -pixels, abs(nx - x) + dy)
             if best is None or k < best[0]:
                 best = (k, m)
     if best:
