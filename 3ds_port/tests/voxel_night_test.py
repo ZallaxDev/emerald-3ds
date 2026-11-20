@@ -26,9 +26,17 @@ def sanitize(cc):
         temporary = Path(directory)
         (temporary / "probe.c").write_text("int main(void) { return 0; }\n", encoding="utf-8")
         flags = ["-fsanitize=address,undefined"]
+        if sys.platform.startswith("linux"):
+            # Avoid ASan shadow collisions with high-entropy executable ASLR.
+            flags += ["-fno-pie", "-no-pie"]
         probe = subprocess.run([cc, *flags, str(temporary / "probe.c"), "-o", str(temporary / "probe")],
                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return flags if probe.returncode == 0 else []
+        if probe.returncode == 0:
+            print("Night-window fixture sanitizer flags: %s %s" % (cc, " ".join(flags)), flush=True)
+            return flags
+        print("SKIP night-window fixture sanitizers: %s cannot link %s"
+              % (cc, " ".join(flags)), flush=True)
+        return []
 
 
 def mask_tests():

@@ -34,9 +34,10 @@ static FILE *Open(const char *base, const char *path, const char *mode)
         CtrLog_Write(CTR_LOG_ERROR, "invalid filesystem path/mode");
         return NULL;
     }
-    if (snprintf(full, sizeof(full), "%s%s", base, path) >= (int)sizeof(full))
+    int length = snprintf(full, sizeof(full), "%s%s", base, path);
+    if (length < 0 || (size_t)length >= sizeof(full))
     {
-        errno = ENAMETOOLONG;
+        errno = length < 0 ? EINVAL : ENAMETOOLONG;
         return NULL;
     }
     FILE *file = fopen(full, mode);
