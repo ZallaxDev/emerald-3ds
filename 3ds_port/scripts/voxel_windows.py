@@ -15,7 +15,7 @@ a shape, judged in this order:
      (a door of the Pokemon Center is 14 x 16), and under 3 times longer than
      wide (a pillar or a strip of pale wall is not a window);
   4. a pane is a rectangle (or an arch): its texels fill 80 % of its box;
-  5. a pane is framed: on at least three of its four sides, 75 % of the
+  5. a pane is framed: on at least three of its four sides, 70 % of the
      texels touching it are a darker frame colour (anything opaque and not
      glass whose r + g + b is under 420; the drawing's edge is not a frame:
      a pale wall strip along it is not a window). A white-blue wall panel

@@ -11,7 +11,6 @@ Without --models it takes every model of an outdoor map that has glass.
 The models come from gen_voxel_buildings.build_models (some minutes).
 """
 import argparse
-import json
 import os
 import sys
 
@@ -28,14 +27,13 @@ SCALE = 3
 def night_panel(art, mask, colour=GLOW):
     out = Image.new("RGBA", art.size, (20, 26, 48, 255))
     src, dst = art.load(), out.load()
-    mpx = mask
     for y in range(art.height):
         for x in range(art.width):
             r, g, b, a = src[x, y]
             if a < 128:
                 continue
             r, g, b = r * NIGHT[0], g * NIGHT[1], b * NIGHT[2]
-            k = mpx[y * art.width + x] / 255.0
+            k = mask[y * art.width + x] / 255.0
             if k:
                 r, g, b = (r + (colour[0] - r) * k, g + (colour[1] - g) * k,
                            b + (colour[2] - b) * k)
@@ -89,8 +87,10 @@ def main():
     os.makedirs(args.out, exist_ok=True)
     entries = []
     if args.art_dir:
-        names = args.models.split(",")
-        for name in names:
+        if not args.models:
+            parser.error("--art-dir needs --models (the drawings' names)")
+        # (a drawing alone: no mesh, so glass no upright face reads shows too)
+        for name in args.models.split(","):
             art = Image.open(os.path.join(args.art_dir, name + ".png")).convert("RGBA")
             entries.append((name, art, voxel_night.building_mask(art, name)))
     else:
@@ -99,7 +99,7 @@ def main():
         for model in generator.build_models(None):
             if wanted is not None and model.name not in wanted:
                 continue
-            mask = voxel_night.building_mask(model.art, model.name)
+            mask = voxel_night.building_mask(model.art, model.name, model.mesh.tris)
             if any(mask) or wanted is not None:
                 entries.append((model.name, model.art.convert("RGBA"), mask))
     per = args.per_sheet

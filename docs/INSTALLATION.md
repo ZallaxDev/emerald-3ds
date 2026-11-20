@@ -1,9 +1,10 @@
 # Install and update Emerald 3DS
 
 These instructions apply to the latest
-[release](https://github.com/ZallaxDev/pokeemerald-3Ds-dualscreen/releases/latest).
+[release](https://github.com/ZallaxDev/emerald-3ds/releases/latest).
 Download the ZIP attached to the release, not the automatically generated
-source-code archives.
+source-code archives (those are only needed for the builder on Linux and
+macOS, below).
 
 The download **does not contain the game**. You need a clean dump of your own
 Pokémon Emerald (USA, Europe), Pokémon Esmeralda (Spain), Pokémon Émeraude
@@ -102,12 +103,45 @@ emerald3ds-builder-cli.exe install --rom "Pokemon Emerald.gba" --sd E:\
 emerald3ds-builder-cli.exe verify  --pak E:\3ds\emerald3ds\emerald3ds.pak
 ```
 
-On Linux and macOS, run the builder from source with Python 3.11+ and Pillow,
-using the `payload/` folder from the matching release ZIP:
+### Linux and macOS
 
-```text
-python -m emerald3ds_builder --payload /path/to/payload install --rom /path/to/rom.gba --sd /path/to/card
-```
+The easiest way is the **web builder at <https://emerald-3ds.com>**: it runs in
+the browser and needs nothing installed. To use the builder on your own
+computer instead:
+
+1. Download `Emerald3DS-vX.Y.Z-Windows.zip` from the release and extract it.
+   You only need its `payload/` folder; it works on every system.
+2. Download the **source code** of the same release (*Source code (zip)* or
+   *(tar.gz)* under the release's assets, or
+   `git clone --branch vX.Y.Z https://github.com/ZallaxDev/emerald-3ds`) and
+   extract it. The builder is its `builder/` folder. Use the source of the
+   release you install: an older or newer builder does not match the payload.
+3. Install Python 3.11 or newer and Pillow, for example in a virtual
+   environment inside the source folder:
+
+   ```sh
+   cd emerald-3ds-X.Y.Z
+   python3 -m venv .venv
+   . .venv/bin/activate
+   python -m pip install "Pillow>=10"
+   ```
+
+4. Still in the source folder, run the builder with `PYTHONPATH=builder`
+   (or run it from inside `builder/`). Point `--sd` at the mounted SD card,
+   usually `/media/$USER/<name>` or `/run/media/$USER/<name>` on Linux and
+   `/Volumes/<name>` on macOS, or at any folder to copy to the card later:
+
+   ```sh
+   PYTHONPATH=builder python -m emerald3ds_builder \
+       --payload /path/to/Emerald3DS-vX.Y.Z-Windows/payload \
+       install --rom /path/to/rom.gba --sd /media/$USER/3DS
+   ```
+
+   Generating the 3D scenery takes several minutes; let it finish.
+
+5. If you installed to a folder, copy its `3ds` folder to the root of the SD
+   card. Add `SD:/3ds/dspfirm.cdc` for sound (see [Sound](#sound)), eject the
+   card and launch **Emerald 3DS** from the Homebrew Launcher.
 
 See the [builder documentation](../builder/README.md) for other source-builder commands.
 

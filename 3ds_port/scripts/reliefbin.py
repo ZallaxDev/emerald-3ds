@@ -50,7 +50,7 @@ def tail_tables(b):
     """{tag: (offset of the table, its bytes)} of the optional tables after the
     cuts, in file order. "EDGE": u16 n, u16 0, n x 18; "UPRT": u16 n, u16 0,
     n x 4; "STEP": u16 n, u16 0, n x 6 (u16 layout, u8 x, u8 y, u16 riser mask)."""
-    sizes = {b"EDGE": 18, b"UPRT": 4, b"STEP": 6}
+    sizes = {b"EDGE": 18, b"UNDR": 58, b"UPRT": 4, b"STEP": 6}
     at, end = tail_start(b)
     out = {}
     while at + 8 <= end and b[at:at + 4] in sizes:

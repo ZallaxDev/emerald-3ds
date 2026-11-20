@@ -84,6 +84,8 @@ typedef struct { bool valid; uint32_t generation, extension; bool extendPending;
     const void *primaryTileset, *secondaryTileset; } VoxelAtlasSlot;
 typedef struct { float x, y, z, w; } VoxelPlane;
 typedef struct { ChunkSite site; unsigned key, need, waitIndex; } BuildRequest;
+#define VOXEL_PARTS 4u
+typedef struct { bool on; uint16_t end[VOXEL_ATLAS_PAGES][VOXEL_PARTS - 1u]; float box[VOXEL_PARTS][6]; } VoxelChunkParts;
 typedef struct {
     bool used, border;
     int mapGroup, mapNum, cx, cy;
@@ -94,6 +96,8 @@ typedef struct {
     VoxelAtlasSlot *atlas; uint32_t atlasGeneration;
     VoxelGpuVertex *vram;
     unsigned bytes, count, terrainCount, terrainFirst[VOXEL_ATLAS_PAGES + 1u], buildingFirst;
+    VoxelChunkParts parts;
+    unsigned treeShadow, treeCrowns;
     int buildingPage;
     uint32_t stamp, viewStamp;
     int gx0, gz0, gx1, gz1; float gy0, gy1, buildMs;
@@ -366,11 +370,13 @@ static void TestDraft(void)
     }
     assert(chunk->gx0 == 0 && chunk->gz0 == 0 && chunk->gx1 == 8 && chunk->gz1 == 8);
     assert(chunk->gy0 == 0.0f && chunk->gy1 > 0.0f && chunk->gy1 <= 0.75f + 1e-6f);
-    /* the same square again reuses its slot and its block, and draws none of
-     * the static models a build placed in it */
+    /* The same square reuses its slot and block but clears the previous
+     * build's static models, tree ranges and terrain partition flag. */
     uploadAllowed = 8; chunk->staticCount = 2; sAheadNoRoomBytes = 4096;
+    chunk->treeShadow = 12; chunk->treeCrowns = 6; chunk->parts.on = true;
     again = DraftChunk(&site, &atlas, chunk);
     assert(again == chunk && FindChunk(false, 1, 2, 1, 2) == chunk && again->staticCount == 0);
+    assert(again->treeShadow == 0 && again->treeCrowns == 0 && !again->parts.on);
     assert(sAheadNoRoomBytes == 4096); /* (no block given back) */
     /* a block too small for the draft: a new one, the old given back, and
      * with it the room a build ahead of time found none of is asked again */

@@ -429,6 +429,10 @@ void CtrVideo_SetStageFaded(bool faded);
  * of it, centred (the legendaries' cutscenes; 3ds_video.c, RenderEye). */
 void CtrVideo_SetStageZoomed(bool zoomed);
 bool CtrVideo_StageZoomed(void);
+/* A stage scaled up until it covers the whole top screen, its top and bottom
+ * rows cut to fit (the cable car); the bottom screen is not darkened for it,
+ * as it is for a zoomed one. */
+void CtrVideo_SetStageCovered(bool covered);
 /* Whether a field move's banner is up: BG0 then wraps across the whole
  * screen instead of being the text band (src/field_effect.c). */
 void CtrVideo_SetFieldBanner(bool banner);

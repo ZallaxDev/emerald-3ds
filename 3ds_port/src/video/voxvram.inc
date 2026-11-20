@@ -82,24 +82,38 @@ static void VoxelPagesManage(void)
 }
 
 /* With the world up: SHADOW QUALITY HIGH's map, if the world was claimed
- * without it (the option changed since). The quality is the option's all
- * the while; only its shadows wait for the room. */
+ * without it (the option changed since, or there was no room). The quality
+ * is the option's all the while; only its shadows wait for the room. And the
+ * other way: the option back to LOW, its map is given back once the world
+ * has not been drawn for two frames (the OPTIONS screen), as for a park.
+ *
+ * Never in a battle, a transition or the swoop: no VRAM changes hands there,
+ * and a release stalls the frame. The 2D surfaces go for it only on the
+ * field with the world drawn the frame before - on another screen they are
+ * that screen's. The first try may drop the world's idle atlases; the
+ * retries only what makes the room by itself (CtrVoxel_ClaimShadowMap). */
 static void VoxelShadowManage(void)
 {
     static uint32_t sShadowRetryFrame, sShadowClaimFails;
 
-    if (!CtrVoxel_ShadowMapMissing() || sStats.frames < sShadowRetryFrame)
+    if (sStats.frames - sWorldDrawnFrame >= 2u)
+        CtrVoxel_DropShadowMap();
+    if (!CtrVoxel_ShadowMapMissing())
+    {
+        sShadowClaimFails = 0;
         return;
-    /* None of these is drawn from on the voxel field; they come back on
-     * demand. Not a battle's or a transition's own. */
-    if (!CtrVoxel_InBattle() && !sBattle && !sBattleRequested && !sTransition && !sTransitionRequested)
+    }
+    if (sStats.frames < sShadowRetryFrame || CtrVoxel_InBattle() || sBattle || sBattleRequested
+        || sTransition || sTransitionRequested || VoxelSwoop_Active(&sSwoop))
+        return;
+    if (sStats.frames - sWorldDrawnFrame <= 1u)
     {
         if (sBandsReady) BandsRelease();
         SceneRelease();
         SlotsRelease();
         if (sBottom && !sBottomInUse) BottomRelease();
     }
-    if (CtrVoxel_ClaimShadowMap())
+    if (CtrVoxel_ClaimShadowMap(sShadowClaimFails == 0))
         return;
     if (sShadowClaimFails++ == 0)
         CtrLog_Write(CTR_LOG_ERROR, "VOXEL: no room for the shadow map yet (free=%lu, largest=%lu); "

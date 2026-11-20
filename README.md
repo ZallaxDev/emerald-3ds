@@ -184,7 +184,7 @@ Other languages and ROM hacks are not supported.
 
 ### Windows
 
-1. Download `Emerald3DS-vX.Y.Z-Windows.zip` from the [latest GitHub release](https://github.com/ZallaxDev/pokeemerald-3Ds-dualscreen/releases/latest) and extract the whole ZIP.
+1. Download `Emerald3DS-vX.Y.Z-Windows.zip` from the [latest GitHub release](https://github.com/ZallaxDev/emerald-3ds/releases/latest) and extract the whole ZIP.
 2. Run `Emerald3DS-Builder.exe`, choose your supported ROM and your SD card, then press **Install**.
 3. Follow the [installation guide](docs/INSTALLATION.md), including sound setup, and launch the game from the Homebrew Launcher.
 

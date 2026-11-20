@@ -16,6 +16,7 @@ import re
 import subprocess
 import tempfile
 from voxel_runtime_test import function, ROOT
+from bottom_text import read_bottom
 
 
 def between(source, start, end):
@@ -37,7 +38,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cc', default='gcc')
     args = parser.parse_args()
-    bottom = (ROOT / 'src/3ds_bottom_ui.c').read_text(encoding='utf-8')
+    # The file with its pieces in place: every piece in src/ is one it includes.
+    bottom = read_bottom(ROOT / 'src/3ds_bottom_ui.c')
     shell = (ROOT / 'src/3ds_bottom_shell.inc').read_text(encoding='utf-8')
     plate = (ROOT / 'src/3ds_bottom_plate.inc').read_text(encoding='utf-8')
     options = (ROOT / 'src/3ds_bottom_options.inc').read_text(encoding='utf-8')
@@ -62,9 +64,6 @@ def main():
         assert init.index(reset) < init.index('gSaveFileStatus')
     for key in ('map_encounters', 'repel_steps', 'clock_notice'):
         assert f'"{key}", 2, 0, gCtrExtrasOffOn' in table
-    # Every section's .inc is part of the build.
-    for inc in ('plate', 'shell', 'field', 'options'):
-        assert f'#include "3ds_bottom_{inc}.inc"' in bottom
     source = r'''
 #include <assert.h>
 #include <stdbool.h>
@@ -105,7 +104,32 @@ struct CtrPartyView { u8 state, cursor, data[350]; u8 iconFrame[6]; s8 iconLift[
 struct CtrSummaryView { u8 state, page, data[400]; const u8 *picTiles; u32 picSum; };
 struct CtrBagView { u8 state, pocket, data[700]; };
 struct CtrDexView { u8 state, national, data[300]; };
+#define CTR_VIEW_TEXT 160
+#define CTR_FM_MAX 12
+#define CTR_FM_TEXT 24
 '''
+    views = (ROOT / 'include/3ds_game_views.h').read_text(encoding='utf-8')
+    for name in ('CTR_NAMING_ROWS', 'CTR_NAMING_COLS', 'CTR_NAMING_TEXT', 'CTR_CHAT_COLS', 'CTR_CHAT_ROWS', 'CTR_CHAT_LINES',
+                 'CTR_CHAT_LINE_LEN', 'CTR_CHAT_MAX', 'CTR_CHAT_ITEMS', 'CTR_CHAT_PAGE_REGISTER'):
+        source += define(views, name)
+    source += between(views, 'enum\n{\n    CTR_NAMING_VIEW_NONE', '};')
+    source += between(views, 'enum\n{\n    CTR_CHAT_VIEW_NONE', '};')
+    source += between(views, 'struct CtrNamingView\n{', '};')
+    source += between(views, 'struct CtrFieldMenuView\n{', '};')
+    source += define(views, 'CTR_FL_ROWS')
+    source += between(views, 'struct CtrFieldListView\n{', '};')
+    source += define(views, 'CTR_BLENDER_PLAYERS')
+    source += between(views, 'struct CtrBlenderView\n{', '};')
+    for name in ('CTR_EC_WORDS', 'CTR_EC_TEXT', 'CTR_EC_GROUPS'):
+        source += define(views, name)
+    source += between(views, 'enum { CTR_EC_NONE,', '};')
+    source += between(views, 'struct CtrEasyChatView\n{', '};')
+    source += define(views, 'CTR_FAC_MONS')
+    source += between(views, 'struct CtrFactoryView\n{', '};')
+    for name in ('CTR_CONTEST_MOVES', 'CTR_CONTEST_NICK'):
+        source += define(views, name)
+    source += between(views, 'struct CtrContestView\n{', '};')
+    source += between(views, 'struct CtrChatView\n{', '};')
     source += between(bottom, 'enum { SCR_MAP,', '};')
     source += between(bottom, 'enum { COL_Y = SCR_COUNT', '};')
     source += between(bottom, 'enum { OPT_TEXT_SPEED,', '};')
@@ -172,20 +196,29 @@ static const struct WildPokemonHeader gWildMonHeaders[] = {
     {24,5,&caveAInfo,NULL,NULL,NULL}, {24,5,&caveBInfo,NULL,NULL,NULL}, {24,5,&caveCInfo,NULL,NULL,NULL},
     {0,3,&wideInfo,&seaWaterInfo,NULL,NULL},
     {0xFF,0xFF,NULL,NULL,NULL,NULL}};
-static struct { struct { int8_t mapGroup, mapNum; } location; } sSave1, *gSaveBlock1Ptr=&sSave1;
+static struct { struct { int8_t mapGroup, mapNum; } location; u8 seen1[256],seen2[256]; } sSave1, *gSaveBlock1Ptr=&sSave1;
 static u16 sVars[0x100];
 static u16 VarGet(u16 id) {return sVars[id-0x4000];}
-static bool sTimed; static unsigned landGroup=99, landNum=99;
+static bool sTimed; static unsigned landGroup=99, landNum=99, landCalls, dexCalls;
+static unsigned CtrEncounters_LandPhase(void) {return sTimed?1:3;}
 static const struct WildPokemonInfo *CtrEncounters_Land(const struct WildPokemonInfo *o,unsigned g,unsigned n) {
-    landGroup=g;landNum=n;return sTimed&&o==&routeLandInfo?&timedInfo:o;
+    ++landCalls;landGroup=g;landNum=n;return sTimed&&o==&routeLandInfo?&timedInfo:o;
 }
 static unsigned sMapped;
 static u16 CtrEncounters_DisplaySpecies(u16 species) {return sMapped&&species==1?(sMapped==2?2:7):species;}
-static int8_t sSeen[256],sCaught[256];
+static struct { struct { u8 owned[256],seen[256]; } pokedex; } sSave2,*gSaveBlock2Ptr=&sSave2;
+#define sSeen sSave2.pokedex.seen
+#define sCaught sSave2.pokedex.owned
+static int CtrSettings_GetInt(const char *key,int fallback) {
+    if(!strcmp(key,"rand_wild"))return sMapped!=0;
+    if(!strcmp(key,"rand_seed"))return sMapped;
+    return fallback;
+}
 static u16 SpeciesToNationalPokedexNum(u16 species) {return species+100;}
 /* FLAG_GET_CAUGHT clears a species' flags when they disagree, as the game's does:
  * so it is never to be asked of a species not seen, as a save could say caught. */
 static int8_t GetSetPokedexFlag(u16 national,u8 caseId) {
+    ++dexCalls;
     if(caseId==FLAG_GET_SEEN)return sSeen[national];
     assert(caseId==FLAG_GET_CAUGHT);
     assert(sSeen[national]);
@@ -200,7 +233,7 @@ static int CtrExtras_Get(const char *key) {
 static CtrClockStoreStatus sStatus; static unsigned sSerial;
 CtrClockStoreStatus CtrClockStore_Status(void) {return sStatus;}
 unsigned CtrClockStore_LoadSerial(void) {return sSerial;}
-static bool8 sEncView; static u8 sEncPage; static unsigned sClockNoticeSerial;
+static bool8 sEncView, sEncUncaught; static u8 sEncPage; static unsigned sClockNoticeSerial;
 static u8 sPickMapsec;
 #define SE_SELECT 1
 static unsigned selectSounds;
@@ -213,8 +246,9 @@ static u8 BattleCursorHit(const ViewState *s,u8 cursor) {(void)s;return cursor;}
     source += between(bottom, 'enum { ENC_LAND', '};')
     for name in ('sEncLandRates', 'sEncWaterRates', 'sEncFishRates', 'sEncFirst', 'sEncSlots'):
         source += statement(bottom, 'static const u8 ' + name)
+    source += between(bottom, '/* Compare only the save bytes', '} EncPage;')
     for name in ('static void AddHit(', 'static u8 EncCollect(', 'static const struct WildPokemonHeader *EncHeader(',
-                 'static void SnapshotEncounters(', 'static void SnapshotMapExtras(', 'static void MapExtrasTap(',
+                 'static void BuildEncounterPage(', 'static void SnapshotEncounters(', 'static void SnapshotMapExtras(', 'static void MapExtrasTap(',
                  'static bool8 MapCursorOnlyMoved(', 'static void BlitAroundWindow('):
         source += function(bottom, name)
     for name in ('static int DockCount(', 'static void DockButton(', 'static int TitleWidth(',
@@ -223,9 +257,26 @@ static u8 BattleCursorHit(const ViewState *s,u8 cursor) {(void)s;return cursor;}
     source += function(options, 'static void OptionsPanelRect(')
     source += between(bottom, 'typedef struct { int x0, y0, x1, y1; } Rect;', '} Rect;')
     for name in ('static void RectInit(', 'static void RectAdd(', 'static bool8 RectAddHitOf(',
-                 'static bool8 RectAddHit(', 'static void AreaRect(', 'static bool8 RectAddFocus(',
-                 'static bool8 DirtyRect('):
+                 'static bool8 RectAddHit(', 'static void AreaRect(', 'static bool8 RectAddFocus('):
         source += function(bottom, name).replace('RectAddPlate(r,', 'RectAddPlate((void *)r,')
+    # The keyboards' parts (3ds_bottom_keys_dirty.inc), with the real plate rectangle of a hit.
+    naming = (ROOT / 'src/3ds_bottom_naming.inc').read_text(encoding='utf-8')
+    chat = (ROOT / 'src/3ds_bottom_chat.inc').read_text(encoding='utf-8')
+    for name in ('NAME_KEY_COLS', 'NAME_PORTRAIT_Y', 'NAME_TITLE_X', 'NAME_TITLE_W', 'NAME_TITLE_H', 'NAME_ENTRY_Y',
+                 'NAME_ENTRY_H', 'NAME_TABS'):
+        source += define(naming, name)
+    source += between(naming, 'enum\n{\n    HIT_NAME_KEY = 0,', '};')
+    source += statement(naming, 'static const u8 sNameTabPages')
+    for name in ('static u8 NameNextPage(', 'static u8 NameTabOfPage('):
+        source += function(naming, name)
+    for name in ('CHAT_LOG_Y', 'CHAT_LOG_H', 'CHAT_ENTRY_Y', 'CHAT_ENTRY_H'):
+        source += define(chat, name)
+    source += between(chat, 'enum\n{\n    HIT_CHAT_KEY = 0,', '};')
+    source += function(bottom, 'static bool8 RectAddPlate(').replace('RectAddPlate(', 'RectAddPlateReal(')
+    source += '#define RectAddPlate RectAddPlateReal\n'
+    source += (ROOT / 'src/3ds_bottom_keys_dirty.inc').read_text(encoding='utf-8')
+    source += '#undef RectAddPlate\n'
+    source += function(bottom, 'static bool8 DirtyRect(').replace('RectAddPlate(r,', 'RectAddPlate((void *)r,')
     source += r'''
 static void Extras(ViewState *s) {
     u8 mapsec=s->mapsec,cx=s->cursorX,cy=s->cursorY,pick=s->pickMapsec;
@@ -248,6 +299,23 @@ static void TestTables(void) {
     sSave1.location.mapGroup=0;sSave1.location.mapNum=1;sExtra[0]=1;sEncView=1;sEncPage=0;sTimed=false;
     memset(&s,0,sizeof(s));SnapshotEncounters(&s);
     assert(s.encPages==4&&s.encPage==0&&s.encMethod==ENC_LAND&&s.encCount==6&&s.enc[0].species==1);
+    {unsigned builds=landCalls, reads=dexCalls; ViewState next={0};
+     SnapshotEncounters(&next);
+     assert(landCalls==builds&&dexCalls==reads&&memcmp(&s,&next,sizeof(s))==0);
+     sSave1.seen2[101]=1;SnapshotEncounters(&next);
+     assert(landCalls==builds+1&&dexCalls>reads);
+     sSave1.seen2[101]=0;}
+    {ViewState next={0};
+     sSeen[101]=sCaught[101]=1;SnapshotEncounters(&next);
+     assert(next.encPage==0&&next.enc[0].species==1&&next.enc[0].seen==ENC_CAUGHT);
+     unsigned builds=landCalls, reads=dexCalls;
+     sEncUncaught=1;SnapshotEncounters(&next);
+     assert(landCalls==builds+1&&dexCalls>reads);
+     assert(next.encUncaught&&next.encPage==0&&next.encCaught==1&&next.enc[0].species!=1);
+     builds=landCalls;reads=dexCalls;
+     SnapshotEncounters(&next);
+     assert(landCalls==builds&&dexCalls==reads);
+     sEncUncaught=0;sSeen[101]=sCaught[101]=0;}
     assert(landGroup==0&&landNum==1);
     /* The timed tables: the grass page is what CtrEncounters_Land gives. */
     sTimed=true;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
@@ -261,11 +329,26 @@ static void TestTables(void) {
     assert(s.enc[2].species==7&&s.enc[2].percent==5&&s.enc[2].minLevel==20&&s.enc[2].maxLevel==45);
     /* More species than a page holds: the method's rows go on to its next page,
      * then the next method. Every row once, in slot order. */
+    sSeen[108]=sCaught[108]=1; /* A caught species on the second grass page. */
     sTimed=false;sSave1.location.mapNum=3;sEncPage=0;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
     assert(s.encPages==3&&s.encMethod==ENC_LAND&&s.encCount==ENC_SHOWN&&s.enc[0].species==1&&s.enc[5].species==6);
+    assert(s.encTotal==9&&s.encCaught==1);
     assert(s.enc[0].percent==24&&s.enc[1].percent==21&&s.enc[2].percent==11);
     sEncPage=1;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
     assert(s.encPage==1&&s.encMethod==ENC_LAND&&s.encCount==3&&s.enc[0].species==7&&s.enc[2].species==9);
+    assert(s.encTotal==9&&s.encCaught==1&&s.enc[1].seen==ENC_CAUGHT);
+    sEncUncaught=1;sEncPage=1;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
+    assert(s.encUncaught&&s.encTotal==9&&s.encCaught==1&&s.encCount==2);
+    assert(s.enc[0].species==7&&s.enc[1].species==9&&s.enc[0].seen==ENC_UNSEEN);
+    sEncPage=2;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
+    assert(s.encMethod==ENC_WATER&&s.encTogglePage==2);
+    for(int i=101;i<=109;++i)sSeen[i]=sCaught[i]=1;
+    sEncPage=0;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
+    assert(s.encMethod==ENC_LAND&&s.encPages==2&&s.encTotal==9&&s.encCaught==9&&s.encCount==0);
+    sEncPage=1;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
+    assert(s.encMethod==ENC_WATER&&s.encTogglePage==2);
+    for(int i=101;i<=109;++i)sSeen[i]=sCaught[i]=0;
+    sEncUncaught=0;
     sEncPage=2;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
     assert(s.encMethod==ENC_WATER&&s.encCount==3);
     sEncPage=3;memset(&s,0,sizeof(s));SnapshotEncounters(&s);
@@ -345,12 +428,16 @@ static void TestInput(void) {
     sShown.encPages=1;sEncPage=0;MapExtrasTap(HIT_MAP_PAGE);assert(sEncPage==0);
     sShown.encPages=0;MapExtrasTap(HIT_MAP_PAGE);assert(sEncPage==0);
     sShown.encPages=4;sShown.encView=0;MapExtrasTap(HIT_MAP_PAGE);assert(sEncPage==0);
+    sShown.encView=1;sShown.encTotal=5;sShown.encTogglePage=2;
+    MapExtrasTap(HIT_MAP_FILTER);assert(sEncUncaught&&sEncPage==2);
+    sShown.encUncaught=1;sShown.encTogglePage=3;
+    MapExtrasTap(HIT_MAP_FILTER);assert(!sEncUncaught&&sEncPage==3);
     sShown.encView=1;MapExtrasTap(HIT_MAP_INFO);assert(!sEncView&&sEncPage==0);
     sShown.clockNotice=0;sSerial=20;sClockNoticeSerial=5;
     MapExtrasTap(HIT_CLOCK_NOTICE);assert(sClockNoticeSerial==5);
     sShown.clockNotice=1;MapExtrasTap(HIT_CLOCK_NOTICE);assert(sClockNoticeSerial==20);
     MapExtrasTap(HIT_MAP);assert(sClockNoticeSerial==20);
-    assert(selectSounds==4);
+    assert(selectSounds==6);
 }
 /* The dock: inside the screen, a gap between buttons, the same width each. */
 static void TestDock(void) {
@@ -406,6 +493,71 @@ static ViewState Field(u8 screen) {
     return s;
 }
 static bool Inside(Rect r,int x0,int y0,int x1,int y1) {return r.x0<=x0&&r.y0<=y0&&r.x1>=x1&&r.y1>=y1;}
+/* The keyboards: only the key, the cursor or the text that changed is redrawn. */
+static void TestKeyboardDirty(void) {
+    static ViewState a,b;
+    Rect r;
+    memset(&a,0,sizeof(a));
+    a.mode=MODE_NAMING;a.screen=SCR_COUNT;a.nm.state=CTR_NAMING_VIEW_KEYS;a.nm.cols=8;a.nm.cursorX=3;a.nm.cursorY=1;
+    a.pressed=HIT_NONE;
+    sShown=a;sHitCount=0;
+    AddHit(60,150,26,23,HIT_NAME_KEY+1*NAME_KEY_COLS+3);
+    AddHit(90,176,26,23,HIT_NAME_KEY+2*NAME_KEY_COLS+4);
+    AddHit(246,173,66,49,HIT_NAME_OK);
+    AddHit(8,98,98,18,HIT_NAME_TAB+0);   /* the tab of the next page: page 0 turns to 1, the first tab */
+    AddHit(110,98,98,18,HIT_NAME_TAB+1);
+    /* A key pressed: its plate, and nothing else. */
+    b=a;b.pressed=HIT_NAME_KEY+1*NAME_KEY_COLS+3;assert(DirtyRect(&b,&a,&r)&&Inside(r,60,150,86,173)&&r.y0>=130&&r.y1<=190);
+    /* The cursor on another key: both plates. */
+    b=a;b.nm.cursorX=4;b.nm.cursorY=2;assert(DirtyRect(&b,&a,&r)&&Inside(r,60,150,86,173)&&Inside(r,90,176,116,199));
+    /* Onto OK, in the buttons' column. */
+    b=a;b.nm.cursorX=8;b.nm.cursorY=2;assert(DirtyRect(&b,&a,&r)&&Inside(r,246,173,312,222));
+    /* The game's cursor on its page button (the buttons' column, first row): on the tab it turns to, for page 0 the first. */
+    b=a;b.nm.cursorX=8;b.nm.cursorY=0;assert(DirtyRect(&b,&a,&r)&&Inside(r,8,98,106,116)&&Inside(r,60,150,86,173));
+    assert(NameCursorHit(&b.nm)==HIT_NAME_TAB+0);
+    b.nm.page=1;assert(NameCursorHit(&b.nm)==HIT_NAME_TAB+1);   /* the upper letters turn to the lower ones */
+    b.nm.page=2;assert(NameCursorHit(&b.nm)==HIT_NAME_TAB+2);   /* and those to the symbols: the third tab */
+    /* A cursor on a column that has no zone (a spacer, an empty column): the whole screen. */
+    b=a;b.nm.cursorX=5;b.nm.cursorY=0;assert(!DirtyRect(&b,&a,&r));
+    /* The text: the entry and the counter above it, not the keys. */
+    b=a;b.nm.text[0]=5;b.nm.caret=1;assert(DirtyRect(&b,&a,&r)&&Inside(r,NAME_TITLE_X,NAME_ENTRY_Y,NAME_TITLE_X+NAME_TITLE_W,NAME_ENTRY_Y+NAME_ENTRY_H)
+        &&Inside(r,NAME_TITLE_X,NAME_PORTRAIT_Y,NAME_TITLE_X+NAME_TITLE_W,NAME_PORTRAIT_Y+NAME_TITLE_H)&&r.y1<=110);
+    /* A page, the question, a message, the keys busy: the whole screen. */
+    b=a;b.nm.page=2;assert(!DirtyRect(&b,&a,&r));
+    b=a;b.nm.title[0]=1;assert(!DirtyRect(&b,&a,&r));
+    b=a;b.nm.state=CTR_NAMING_VIEW_MESSAGE;assert(!DirtyRect(&b,&a,&r));
+    b=a;b.nm.state=CTR_NAMING_VIEW_NONE;assert(!DirtyRect(&b,&a,&r));
+    b=a;b.nm.cols=9;assert(!DirtyRect(&b,&a,&r));
+    /* Busy is drawn as the keys are, without the ring: to and from it is the cursor's plate, and only that. */
+    b=a;b.nm.state=CTR_NAMING_VIEW_BUSY;assert(DirtyRect(&b,&a,&r)&&Inside(r,60,150,86,173)&&r.y1<=190&&r.x1<=130);
+    {ViewState busy=b;
+     assert(DirtyRect(&a,&busy,&r)&&Inside(r,60,150,86,173)&&r.y1<=190);
+     /* The cursor gone to OK as it comes back to the keys: where it was and where it is. */
+     b=a;b.nm.cursorX=8;b.nm.cursorY=2;assert(DirtyRect(&b,&busy,&r)&&Inside(r,60,150,86,173)&&Inside(r,246,173,312,222));
+     /* Busy with the text written and the page turned in the same step: the entry too, or all of it. */
+     b=a;b.nm.text[0]=5;b.nm.caret=1;assert(DirtyRect(&b,&busy,&r)&&Inside(r,NAME_TITLE_X,NAME_ENTRY_Y,NAME_TITLE_X+NAME_TITLE_W,NAME_ENTRY_Y+NAME_ENTRY_H));
+     b=a;b.nm.page=2;assert(!DirtyRect(&b,&busy,&r));
+     /* A key held while busy shows nothing and is a plate to redraw, nothing more. */
+     b=busy;b.pressed=HIT_NAME_KEY+1*NAME_KEY_COLS+3;assert(DirtyRect(&b,&busy,&r)&&Inside(r,60,150,86,173));}
+    b=a;b.chat=1;assert(!DirtyRect(&b,&a,&r));
+    /* The chat. */
+    memset(&a,0,sizeof(a));
+    a.mode=MODE_NAMING;a.screen=SCR_COUNT;a.chat=1;a.ch.state=CTR_CHAT_VIEW_KEYS;a.ch.row=1;a.ch.col=2;a.pressed=HIT_NONE;
+    sShown=a;sHitCount=0;
+    AddHit(80,141,28,18,HIT_CHAT_KEY+1*CTR_CHAT_COLS+2);
+    b=a;b.pressed=HIT_CHAT_KEY+1*CTR_CHAT_COLS+2;assert(DirtyRect(&b,&a,&r)&&Inside(r,80,141,108,159));
+    b=a;b.ch.length=1;b.ch.text[0]=7;assert(DirtyRect(&b,&a,&r)&&Inside(r,8,CHAT_ENTRY_Y,170,CHAT_ENTRY_Y+CHAT_ENTRY_H)&&r.y1<=110);
+    b=a;b.ch.numLines=1;b.ch.lines[0][0]=3;assert(DirtyRect(&b,&a,&r)&&Inside(r,8,CHAT_LOG_Y,312,CHAT_LOG_Y+CHAT_LOG_H));
+    b=a;b.ch.page=1;assert(!DirtyRect(&b,&a,&r));
+    b=a;b.ch.state=CTR_CHAT_VIEW_YESNO;assert(!DirtyRect(&b,&a,&r));
+    b=a;b.ch.state=CTR_CHAT_VIEW_MENU;assert(!DirtyRect(&b,&a,&r));
+    /* Busy while the game waits for its display is the keys without the ring: the cursor's plate alone, either way. */
+    b=a;b.ch.state=CTR_CHAT_VIEW_BUSY;assert(DirtyRect(&b,&a,&r)&&Inside(r,80,141,108,159)&&r.y1<=190);
+    {ViewState busy=b;
+     assert(DirtyRect(&a,&busy,&r)&&Inside(r,80,141,108,159)&&r.y1<=190);
+     b=a;b.ch.length=1;b.ch.text[0]=7;assert(DirtyRect(&b,&busy,&r)&&Inside(r,8,CHAT_ENTRY_Y,170,CHAT_ENTRY_Y+CHAT_ENTRY_H));
+     b=a;b.ch.page=1;assert(!DirtyRect(&b,&busy,&r));}
+}
 static void TestDirty(void) {
     ViewState a=Field(SCR_MAP),b;
     Rect r;
@@ -501,10 +653,11 @@ int main(void) {
     TestDock();
     TestBlit();
     TestDirty();
+    TestKeyboardDirty();
     TestMark();
     puts("PASS bottom screen: wild list tables/timed grass/methods/pages of rows/Altering Cave, seen-only masking, "
          "taps and clock banner gating; dock and header layout; copies round the game's window; partial redraws "
-         "(clock, Repel, held button and title, focus, options panel and tabs, native views) and whole-redraw fallbacks; the mark moving alone, zoomed too, never on the Fly map");
+         "(clock, Repel, held button and title, focus, options panel and tabs, native views, the keyboards' key, cursor and text) and whole-redraw fallbacks; the mark moving alone, zoomed too, never on the Fly map");
 }
 '''
     (ROOT / 'build').mkdir(exist_ok=True)

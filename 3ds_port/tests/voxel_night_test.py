@@ -371,7 +371,7 @@ def renderer_tests(cc):
     text = (ROOT / "src/voxel/ctr_voxel.c").read_text(encoding="utf-8")
     functions = []
     for name in ("MoonlightColour", "TerrainTexEnv", "ReleaseGlowUnit", "HazeTexEnv", "FadeColour",
-                 "FadeTexEnv", "BuildingGlowEnv", "LampTexEnv"):
+                 "FadeTexEnv", "BuildingGlowShadowEnv", "BuildingGlowEnv", "LampTexEnv"):
         result_type = "uint32_t" if name in ("MoonlightColour", "FadeColour") else "void"
         start = text.index("static " + result_type + " " + name + "(")
         position = text.index("{", start) + 1
@@ -392,7 +392,9 @@ typedef struct { int rgb[3], alpha[3], alphaOp[3], rgbOp[3], rgbFunc, alphaFunc;
 enum { C3D_RGB, C3D_Alpha, GPU_TEXTURE0, GPU_TEXTURE2, GPU_CONSTANT, GPU_PREVIOUS,
        GPU_TEVOP_A_SRC_R, GPU_TEVOP_A_SRC_ALPHA, GPU_MODULATE, GPU_TEVOP_RGB_SRC_COLOR,
        GPU_TEVOP_RGB_SRC_ALPHA, GPU_INTERPOLATE, GPU_REPLACE, GPU_PRIMARY_COLOR, GPU_TEVSCALE_2,
-       GPU_TEXTURE1, GPU_MULTIPLY_ADD };
+       GPU_TEXTURE1, GPU_MULTIPLY_ADD, GPU_PREVIOUS_BUFFER };
+#define GPU_TEV_BUFFER_WRITE_CONFIG(s0, s1, s2, s3) \
+    (((s0) & 1) | (((s1) & 1) << 1) | (((s2) & 1) << 2) | (((s3) & 1) << 3))
 enum { GPU_BLEND_ADD = 1, GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA, GPU_DST_COLOR, GPU_ONE, GPU_ZERO };
 static int sBlend[6];
 static void C3D_AlphaBlend(int colorEq, int alphaEq, int srcClr, int dstClr, int srcAlpha, int dstAlpha)
@@ -401,9 +403,25 @@ static void C3D_AlphaBlend(int colorEq, int alphaEq, int srcClr, int dstClr, int
     sBlend[3] = dstClr; sBlend[4] = srcAlpha; sBlend[5] = dstAlpha;
 }
 typedef struct { float dappleLow, dappleHigh; } VoxelLight;
-/* These texture-stage cases exercise rendering with shadow maps off. */
-static bool sShadowOn;
-static void ShadowTexEnv(void) { assert(0 && "unexpected shadow-map path"); }
+/* Shadow maps are off except in the cases that turn them on. The map's
+ * stages 0-2 are only marked here (their own test is elsewhere): what the
+ * glow code does with them is what is checked. */
+static bool sShadowOn, sGlowShadows = true;
+static int sShadowCalls, sBufMode = -1, sBufConfig = -1;
+static C3D_TexEnv sEnvs[6];
+static void C3D_TexEnvInit(C3D_TexEnv *env);
+static void ShadowTexEnv(void)
+{
+    assert(sShadowOn);
+    ++sShadowCalls;
+    for (unsigned stage = 0; stage < 3; ++stage)
+    {
+        C3D_TexEnvInit(&sEnvs[stage]);
+        sEnvs[stage].rgbFunc = GPU_REPLACE;
+        sEnvs[stage].colour = 0x5AD00000u + stage;
+    }
+}
+static void C3D_TexEnvBufUpdate(int mode, int config) { sBufMode = mode; sBufConfig = config; }
 static float sMoonlight;
 static uint32_t sMoonlightColour;
 static uint32_t DappleConstant(const VoxelLight *light) { (void)light; return 0x12345678u; }
@@ -413,7 +431,6 @@ static uint8_t __C3D_Context[512] __attribute__((aligned(16)));
 #define C3DI_CONTEXT_TEX 0x118u
 #define C3DI_FLAG_TEX(unit) (1u << (23 + (unit)))
 static C3D_Tex sTreeAtlas, *sGlowBound;
-static C3D_TexEnv sEnvs[6];
 static int sBinds;
 static int sAlphaScale;
 static C3D_TexEnv *C3D_GetTexEnv(unsigned index) { return &sEnvs[index]; }
@@ -440,6 +457,7 @@ static void C3D_TexEnvScale(C3D_TexEnv *env, int mode, int scale)
 { (void)env; if (mode == C3D_Alpha) sAlphaScale = scale; }
 '''
     source += re.search(r"#define VOXEL_LAMP_POOL_GAIN .*", text).group(0) + "\n"
+    source += re.search(r"#define VOXEL_WINDOW_GLOW_COLOUR .*", text).group(0) + "\n"
     source += re.search(r"typedef struct\s*\{\s*float amount, rgb\[3\];\s*\} VoxelFade;", text).group(0) + "\n"
     source += "static VoxelFade sWorldFade;\n"
     source += "\n".join(functions)
@@ -520,6 +538,60 @@ int main(void)
     assert(sEnvs[3].rgb[2] == GPU_PRIMARY_COLOR && sEnvs[3].colour == FadeColour(1.0f, sHazeRgb));
     assert(sEnvs[4].colour == FadeColour(0.5f, sWorldFade.rgb));
     assert(sEnvs[5].rgbFunc == 0 && sEnvs[5].colour == 0);
+    /* the plain paths left the combiner buffer alone */
+    assert(sBufMode == C3D_Alpha && sBufConfig == 0 && sShadowCalls == 0);
+    /* with the shadow map, no fade, voxel_glow_shadows on: stages 0-2 the
+       map's, the shadow's alpha kept in the buffer (stage 2 written), the
+       mask x strength in stage 3's alpha, the glow mixed in by it in 4 with
+       the shadow taken back from the buffer, the haze in 5 */
+    sShadowOn = true;
+    sWorldFade.amount = 0.0f;
+    BuildingGlowEnv(&mask, 0.5f, &dapple);
+    assert(sShadowCalls == 1 && sBufMode == C3D_Alpha && sBufConfig == GPU_TEV_BUFFER_WRITE_CONFIG(0, 0, 1, 0));
+    assert(bound[2] == &mask && sGlowBound == &mask);
+    for (unsigned stage = 0; stage < 3; ++stage)
+        assert(sEnvs[stage].rgbFunc == GPU_REPLACE && sEnvs[stage].colour == 0x5AD00000u + stage);
+    assert(sEnvs[3].rgbFunc == GPU_REPLACE && sEnvs[3].rgb[0] == GPU_PREVIOUS);
+    assert(sEnvs[3].alpha[0] == GPU_TEXTURE2 && sEnvs[3].alpha[1] == GPU_CONSTANT);
+    assert(sEnvs[3].alphaOp[0] == GPU_TEVOP_A_SRC_R && sEnvs[3].alphaFunc == GPU_MODULATE);
+    assert(sEnvs[3].colour == 0x80000000u);
+    assert(sEnvs[4].rgbFunc == GPU_INTERPOLATE && sEnvs[4].rgb[0] == GPU_CONSTANT);
+    assert(sEnvs[4].rgb[1] == GPU_PREVIOUS && sEnvs[4].rgbOp[2] == GPU_TEVOP_RGB_SRC_ALPHA);
+    assert(sEnvs[4].alpha[0] == GPU_PREVIOUS_BUFFER && sEnvs[4].alphaFunc == GPU_REPLACE);
+    assert(sEnvs[4].colour == 0xFF54C4FFu);
+    assert(sEnvs[5].rgbFunc == GPU_INTERPOLATE && sEnvs[5].rgb[0] == GPU_PREVIOUS);
+    assert(sEnvs[5].rgb[2] == GPU_PRIMARY_COLOR && sEnvs[5].colour == FadeColour(1.0f, sHazeRgb));
+    /* the strength reaches the alpha whole */
+    BuildingGlowEnv(&mask, 1.0f, NULL);
+    assert(sEnvs[3].colour == 0xFF000000u && sBufConfig == GPU_TEV_BUFFER_WRITE_CONFIG(0, 0, 1, 0));
+    /* the same page, the screen fading: no shadow kept, the plain glow over
+       the map's stages (stage 2 passes the mask's alpha on), then the haze
+       and the fade */
+    sWorldFade.amount = 0.5f;
+    sShadowCalls = 0;
+    BuildingGlowEnv(&mask, 0.5f, NULL);
+    assert(sShadowCalls == 1 && sBufConfig == 0 && bound[2] == &mask);
+    assert(sEnvs[0].colour == 0x5AD00000u && sEnvs[1].alpha[0] == GPU_TEXTURE2);
+    assert(sEnvs[1].colour == 0x80000000u && sEnvs[2].alpha[0] == GPU_PREVIOUS);
+    assert(sEnvs[2].alphaFunc == GPU_REPLACE);
+    assert(sEnvs[3].rgbFunc == GPU_INTERPOLATE && sEnvs[3].rgb[0] == GPU_CONSTANT);
+    assert(sEnvs[3].alpha[0] == GPU_TEXTURE1 && sEnvs[3].colour == 0xFF54C4FFu);
+    assert(sEnvs[4].colour == FadeColour(1.0f, sHazeRgb) && sEnvs[5].colour == FadeColour(0.5f, sWorldFade.rgb));
+    /* voxel_glow_shadows off: the same, whatever the fade */
+    sWorldFade.amount = 0.0f;
+    sGlowShadows = false;
+    BuildingGlowEnv(&mask, 0.5f, NULL);
+    assert(sBufConfig == 0 && sEnvs[3].alpha[0] == GPU_TEXTURE1 && sEnvs[3].colour == 0xFF54C4FFu);
+    assert(sEnvs[1].alpha[0] == GPU_TEXTURE2 && sEnvs[2].alpha[0] == GPU_PREVIOUS);
+    sGlowShadows = true;
+    /* no mask or no strength: never the shadow-keeping stages */
+    BuildingGlowEnv(&mask, 0.0f, NULL);
+    assert(sBufConfig == 0 && sGlowBound == NULL);
+    assert(sEnvs[3].colour == FadeColour(1.0f, sHazeRgb) && sEnvs[3].rgb[2] == GPU_PRIMARY_COLOR);
+    BuildingGlowEnv(&mask, 0.5f, NULL);
+    BuildingGlowEnv(NULL, 1.0f, NULL);
+    assert(sBufConfig == 0 && sGlowBound == NULL && sEnvs[3].colour == FadeColour(1.0f, sHazeRgb));
+    sShadowOn = false;
     /* the glow: a flat colour over the scene by its alpha */
     LampTexEnv(1.0f, false);
     assert(sEnvs[0].rgbFunc == GPU_REPLACE && sEnvs[0].alphaFunc == GPU_REPLACE);
@@ -559,7 +631,7 @@ def compositor_tests(cc):
     start = video.index("    if (night)\n", video.index("static void Blend("))
     end = video.index("    /* A semi-transparent sprite", start)
     cycle = (ROOT / "src/3ds_daynight.c").read_text(encoding="utf-8")
-    moon = cycle[cycle.index("CtrDayNightBlend CtrDayNight_Moonlight("):
+    moon = cycle[cycle.index("#define CTR_DAYNIGHT_MOON_AMOUNT"):
                  cycle.index("static unsigned SunKey(")]
     source = r'''
 #include <assert.h>
@@ -599,12 +671,22 @@ static void Compose(bool night, const CtrDayNightLight *light, bool paletteTint,
 }
 int main(void)
 {
-    CtrDayNightLight light = {{0.66f, 0.74f, 0.92f}, 0, 1};
+    CtrDayNightLight light = {.rgb = {0.66f, 0.74f, 0.92f}, .daylight = 0, .glow = 1};
     Compose(false, &light, false, false, 0, 0, 0, 0);
     assert(!sDayNightEnv && sEnvs[4].colour == 0 && sEnvs[5].colour == 0);
     Compose(true, &light, false, false, 0, 0, 0, 0);
     assert(sDayNightEnv && sEnvs[4].function == GPU_MODULATE);
-    assert(sEnvs[5].function == GPU_INTERPOLATE && sEnvs[5].colour == 0x0F885C46u);
+    /* the moon's own colour and amount (3ds_daynight.c), full glow, packed
+       as the compositor does: R in the low byte, alpha in the high */
+    {
+        const float moonRgb[3] = CTR_DAYNIGHT_MOON_RGB;
+        uint32_t expected = C2D_Color32((unsigned)(moonRgb[0] * 255.0f + 0.5f),
+                                        (unsigned)(moonRgb[1] * 255.0f + 0.5f),
+                                        (unsigned)(moonRgb[2] * 255.0f + 0.5f),
+                                        (unsigned)(CTR_DAYNIGHT_MOON_AMOUNT * 255.0f + 0.5f));
+        assert(sEnvs[5].function == GPU_INTERPOLATE && sEnvs[5].colour == expected);
+        assert(expected != 0 && (expected >> 24) != 0);
+    }
     sPaletteFade = 1;
     Compose(true, &light, true, false, 0, 0, 0, 0);
     assert(sEnvs[5].colour == 0xFF000000u);

@@ -32,8 +32,12 @@ GLASS_COUNTS = {"dewford_house": 60, "dewford_hall": 60, "dewford_gym_exterior":
 
 def check_glass(model, night):
     width, height = model.art.size
-    mask = night.building_mask(model.art, model.name)
+    # as the generator calls it: with the model's faces, so a pane has to
+    # stand on a wall (no roof tiles) - and without them nothing is dropped
+    mask = night.building_mask(model.art, model.name, model.mesh.tris)
     assert len(mask) == width * height
+    loose = night.building_mask(model.art, model.name)
+    assert all(loose[index] >= value for index, value in enumerate(mask))
     if model.name not in GLASS:
         return
     expected = {(xpos, ypos) for left, top, right, bottom in GLASS[model.name]

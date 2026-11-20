@@ -257,6 +257,11 @@ float VoxelRelief_DrawnTop(const VoxelMapInstance *inst);
  */
 #define VOXEL_RELIEF_NO_FACE 0xFFFE
 #define VOXEL_RELIEF_BLOCK_WALLS (4u << 8)
+/* A block's walls take no edge columns: the low byte of its `sides` is 0xFF,
+ * or 0xF0 + k (k 1..3) - the wall is the part of its tile from row 4k down
+ * (what a built wall draws under its kerb), that part again every (4 - k)/4
+ * of a level. 0 for the whole tile. */
+#define VOXEL_RELIEF_WALL_FROM(sides)     ((((sides) & VOXEL_RELIEF_BLOCK_WALLS) && ((sides) & 0xFFu) >= 0xF1u && ((sides) & 0xFFu) <= 0xF3u)          ? ((sides) & 3u) : 0u)
 /*
  * With VOXEL_RELIEF_THIN_DECK in `sides` (a bridge's deck over the water)
  * its walls go down only VOXEL_RELIEF_DECK_EDGE below the deck - the edge of
@@ -276,6 +281,18 @@ float VoxelRelief_DrawnTop(const VoxelMapInstance *inst);
  * as with no variant. The crown is the tree model's. */
 #define VOXEL_RELIEF_CANOPY (128u << 8)
 #define VOXEL_RELIEF_DECK_EDGE (4.0f / 16.0f)
+/*
+ * The ground under a raised floor where it is no flat run of one tile: a
+ * second layer under a thin deck, laid by hand (relief_fixes.json "below",
+ * relief.bin "UNDR") - the terraces of a mountain under a bridge, the river
+ * between them. Its 25 heights (pixels over the base, as VoxelRelief_Cell's),
+ * the metatile it is drawn with and the one its walls are (-1: none), or NULL
+ * for a cell with none: the cut record's `ground` at `foot` then, flat.
+ * VoxelRelief_UnderAt: its height in tiles over the base at a world position
+ * (0 where there is none).
+ */
+const int16_t *VoxelRelief_Under(const VoxelMapInstance *inst, int x, int y, int *tile, int *wall);
+float VoxelRelief_UnderAt(const VoxelMapInstance *inst, float worldX, float worldZ);
 int VoxelRelief_Cut(const VoxelMapInstance *inst, int x, int y, float *foot, int *ground,
                     int *wall, unsigned *sides);
 /* Every cut record of a map's layout, in its own cells (x, y from the

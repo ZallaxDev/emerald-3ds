@@ -201,6 +201,40 @@ int VoxelTree_Part(const void *secondaryTileset, int metatileId)
     }
 }
 
+/* Tall grass, and the ground it grows on. */
+static const struct
+{
+    const void *secondaryTileset; /* NULL: the General's own */
+    uint16_t metatile, floor;
+} kTufts[VOXEL_TUFT_COUNT] = {
+    { NULL, VOXEL_TUFT_SHAPE, VOXEL_TUFT_SHAPE_FLOOR },
+    { &gTileset_Lavaridge, 0x206, 0x271 }, /* Jagged Pass: on its soil */
+};
+
+int VoxelTree_Tuft(const void *secondaryTileset, int metatileId, int *floor)
+{
+    for (int i = 0; i < VOXEL_TUFT_COUNT; ++i)
+        if (kTufts[i].metatile == metatileId
+         && (kTufts[i].secondaryTileset == NULL || kTufts[i].secondaryTileset == secondaryTileset))
+        {
+            if (floor != NULL)
+                *floor = kTufts[i].floor;
+            return i;
+        }
+    return -1;
+}
+
+bool VoxelTree_TuftSource(unsigned i, const void **secondaryTileset, unsigned *metatile,
+                          unsigned *floor)
+{
+    if (i >= VOXEL_TUFT_COUNT)
+        return false;
+    *secondaryTileset = kTufts[i].secondaryTileset;
+    *metatile = kTufts[i].metatile;
+    *floor = kTufts[i].floor;
+    return true;
+}
+
 int VoxelTree_GroundMetatile(const void *secondaryTileset, int metatileId)
 {
     if (metatileId >= SECONDARY_ID)
