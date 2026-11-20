@@ -510,7 +510,7 @@ VOXEL_GFX_OUTPUTS += $(patsubst %.pal,%.gbapal,$(filter %.pal,$(VOXEL_GFX_SOURCE
 ifneq ($(strip $(VOXEL_GFX_OUTPUTS)),)
 $(VOXEL_GFX_OUTPUTS) &: $(VOXEL_GFX_SOURCES)
 	+$(MAKE) -C $(ROOT) $(patsubst $(ROOT)/%,%,$(VOXEL_GFX_OUTPUTS))
-romfs/voxel/regions.bin romfs/voxel/signposts.bin romfs/voxel/buildings.bin romfs/voxel/relief.bin romfs/stage/leaves.bin: $(VOXEL_GFX_OUTPUTS)
+romfs/voxel/regions.bin romfs/voxel/signposts.bin romfs/voxel/buildings.bin build/voxel_relief_base.bin romfs/stage/leaves.bin: $(VOXEL_GFX_OUTPUTS)
 endif
 
 # What every cell of every layout IS (the console reads its signposts).
@@ -569,17 +569,26 @@ romfs/voxel/windowlights.bin: romfs/voxel/buildings.bin
 verify-voxel-buildings:
 	"$(PYTHON)" scripts/gen_voxel_buildings.py --verify
 
-# Terrain relief read off the drawing: gen_voxel_relief.py explains it.
-# It leaves a building's cells to its model and reads which cells those are
-# from buildings.bin (voxel_terraces.modelled), so it comes after it: made
-# beside it, the relief depended on which of the two finished first.
-romfs/voxel/relief.bin: scripts/gen_voxel_relief.py scripts/voxel_cells.py scripts/voxel_props.py \
+# The base can survive a buildings-only rebuild. Track the maps and metatiles
+# it reads so their edits still regenerate it.
+RELIEF_MAP_INPUTS := $(ROOT)/data/layouts/layouts.json $(HOST_MAP_JSONS) \
+	$(ROOT)/src/data/tilesets/metatiles.h $(ROOT)/include/constants/metatile_behaviors.h \
+	$(wildcard $(ROOT)/data/layouts/*/map.bin $(ROOT)/data/tilesets/*/*/metatiles.bin \
+		$(ROOT)/data/tilesets/*/*/metatile_attributes.bin)
+
+# Solve the terrain from the map art while the buildings are being verified.
+# The terrace pass reads the building footprints, so the finished relief
+# still waits for the verified buildings.
+build/voxel_relief_base.bin: scripts/gen_voxel_relief.py scripts/voxel_cells.py scripts/voxel_props.py \
 		scripts/voxel_art.py scripts/voxel_building.py scripts/dump_region_art.py \
-		scripts/voxel_relief_fixes.py scripts/voxel_terraces.py assets/voxel/relief_fixes.json \
-		scripts/voxel_engine_view.py romfs/voxel/buildings.bin \
-		$(ROOT)/data/layouts/layouts.json
+		scripts/voxel_relief_fixes.py $(RELIEF_MAP_INPUTS)
 	@mkdir -p $(@D)
-	"$(PYTHON)" scripts/gen_voxel_relief.py --output $@
+	"$(PYTHON)" scripts/gen_voxel_relief.py --base-output $@.tmp && mv -f $@.tmp $@
+
+romfs/voxel/relief.bin: build/voxel_relief_base.bin romfs/voxel/buildings.bin \
+		scripts/voxel_terraces.py scripts/voxel_engine_view.py assets/voxel/relief_fixes.json
+	@mkdir -p $(@D)
+	"$(PYTHON)" scripts/gen_voxel_relief.py --base-input $< --output $@.tmp && mv -f $@.tmp $@
 
 romfs/bottom/battle.bin: scripts/gen_battle_art.py
 	@mkdir -p $(@D)

@@ -4982,12 +4982,19 @@ def main():
     ap.add_argument("--preview", default=None)
     ap.add_argument("--layouts", default=None,
                     help="default: the solved maps and every map with a ledge")
-    ap.add_argument("--output", default=None)
+    output = ap.add_mutually_exclusive_group()
+    output.add_argument("--output", help="write the finished relief")
+    output.add_argument("--base-output", help="write only the terrain solve, before building-aware terraces")
+    ap.add_argument("--base-input", help="finish the terrain solve from --base-output; requires --output")
     ap.add_argument("--at", default=None, help="x,z of the preview target")
     ap.add_argument("--proof", default=None,
                     help="directory: each drawn group's terraces over its drawing")
     args = ap.parse_args()
-    if args.layouts:
+    if args.base_input and (not args.output or args.layouts or args.preview or args.proof):
+        ap.error("--base-input requires --output and uses the layouts already in that input")
+    if args.base_input:
+        lids = []
+    elif args.layouts:
         lids = args.layouts.split(",")
     else:
         drawn = [l for members in DRAWN.values() for l in members]
@@ -5007,8 +5014,13 @@ def main():
         os.makedirs(args.proof, exist_ok=True)
         for name in DRAWN:
             print("proof:", proof(name, os.path.join(args.proof, "terraces_%s.png" % name)))
+    if args.base_output:
+        export(lids, args.base_output)
     if args.output:
-        export(lids, args.output)
+        if args.base_input:
+            shutil.copyfile(args.base_input, args.output)
+        else:
+            export(lids, args.output)
         # the export as the terraces read it (their reference: the world
         # placement they keep), for the voxel editor to solve its groups
         # against the same relief the build does
