@@ -1,0 +1,136 @@
+Emerald 3DS: apply Japanese naming marks to the preceding kana.
+
+diff --git a/src/naming_screen.c b/src/naming_screen.c
+--- a/src/naming_screen.c
++++ b/src/naming_screen.c
+@@ -31,6 +31,7 @@
+ #include "constants/rgb.h"
+ #ifdef PLATFORM_3DS
+ #include "3ds_game_views.h"
++#include "3ds_naming_kana.h"
+
+ // The bottom screen's own keyboard (CtrNaming_GetView, CtrNaming_NativeTap).
+ bool8 CtrMenu_TakeAck(void);
+@@ -1248,16 +1249,34 @@
+         return sButtonKeyRoles[cursorY];
+ }
+
++#ifdef JAPANESE_KEYBOARD
++static u8 GetJapaneseKeyboardColumnCount(u8 keyboard)
++{
++    u8 i, count = 0;
++
++    for (i = 0; i < KBROW_COUNT; i++)
++        if (StringLength(sNamingScreenKeyboardText[keyboard][i]) > count)
++            count = StringLength(sNamingScreenKeyboardText[keyboard][i]);
++    return count;
++}
++
++static u8 GetJapanesePageColumnCount(u8 keyboard)
++{
++    u8 count = GetJapaneseKeyboardColumnCount(keyboard);
++
++#ifdef PLATFORM_3DS
++    if (keyboard != KEYBOARD_SYMBOLS)
++        count++; // One additional column holds the two kana marks.
++#endif
++    return count;
++}
++#endif
++
+ // If the cursor's x is equal to the column count, cursor is in the button column
+ static u8 GetCurrentPageColumnCount(void)
+ {
+ #ifdef JAPANESE_KEYBOARD
+-    u8 i, count = 0;
+-
+-    for (i = 0; i < KBROW_COUNT; i++)
+-        if (StringLength(sNamingScreenKeyboardText[CurrentPageToKeyboardId()][i]) > count)
+-            count = StringLength(sNamingScreenKeyboardText[CurrentPageToKeyboardId()][i]);
+-    return count;
++    return GetJapanesePageColumnCount(CurrentPageToKeyboardId());
+ #else
+     return sPageColumnCounts[CurrentPageToKeyboardId()];
+ #endif
+@@ -1866,12 +1885,28 @@
+     }
+ }
+
++#ifdef JAPANESE_KEYBOARD
++static u8 GetJapaneseKeyboardChar(u8 keyboard, s16 x, s16 y)
++{
++    const u8 *row = sNamingScreenKeyboardText[keyboard][y];
++
++#ifdef PLATFORM_3DS
++    if (keyboard != KEYBOARD_SYMBOLS && x == GetJapaneseKeyboardColumnCount(keyboard))
++    {
++        if (y == 0)
++            return CTR_NAMING_DAKUTEN;
++        if (y == 1)
++            return CTR_NAMING_HANDAKUTEN;
++    }
++#endif
++    return x < StringLength(row) ? row[x] : CHAR_SPACE;
++}
++#endif
++
+ static u8 GetCharAtKeyboardPos(s16 x, s16 y)
+ {
+ #ifdef JAPANESE_KEYBOARD
+-    const u8 *row = sNamingScreenKeyboardText[CurrentPageToKeyboardId()][y];
+-
+-    return x < StringLength(row) ? row[x] : CHAR_SPACE;
++    return GetJapaneseKeyboardChar(CurrentPageToKeyboardId(), x, y);
+ #else
+     return sKeyboardChars[CurrentPageToKeyboardId()][y][x];
+ #endif
+@@ -1938,6 +1973,10 @@
+ {
+     s16 x;
+     s16 y;
++    u8 key;
++#if defined(JAPANESE_KEYBOARD) && defined(PLATFORM_3DS)
++    bool8 kanaMark;
++#endif
+ #ifdef PLATFORM_3DS
+     // A character written inside the text, at the caret a tap set, is a
+     // correction: the text being full does not send the cursor to OK.
+@@ -1945,11 +1984,37 @@
+ #endif
+
+     GetCursorPos(&x, &y);
+-    BufferCharacter(GetCharAtKeyboardPos(x, y));
++    key = GetCharAtKeyboardPos(x, y);
++#if defined(JAPANESE_KEYBOARD) && defined(PLATFORM_3DS)
++    kanaMark = CurrentPageToKeyboardId() != KEYBOARD_SYMBOLS
++            && x == GetJapaneseKeyboardColumnCount(CurrentPageToKeyboardId()) && CtrNaming_IsKanaMark(key);
++    if (kanaMark)
++    {
++        u8 index = GetPreviousTextCaretPosition();
++        u8 composed;
++
++        if (sCtrCaret < sNamingScreen->template->maxChars)
++        {
++            if (sCtrCaret == 0)
++                return FALSE;
++            index = sCtrCaret - 1;
++        }
++        composed = CtrNaming_ApplyKanaMark(sNamingScreen->textBuffer[index], key);
++        if (composed == sNamingScreen->textBuffer[index])
++            return FALSE;
++        sNamingScreen->textBuffer[index] = composed;
++    }
++    else
++#endif
++        BufferCharacter(key);
+     DrawTextEntry();
+     CopyBgTilemapBufferToVram(3);
+     PlaySE(SE_SELECT);
+
++#if defined(JAPANESE_KEYBOARD) && defined(PLATFORM_3DS)
++    if (kanaMark)
++        return FALSE;
++#endif
+     if (GetPreviousTextCaretPosition() != sNamingScreen->template->maxChars - 1)
+         return FALSE;
+ #ifdef PLATFORM_3DS

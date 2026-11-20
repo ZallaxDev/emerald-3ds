@@ -86,12 +86,7 @@ void CtrNaming_NativeTap(u8 kind, u8 a, u8 b)
 static u8 CtrNaming_PageColumns(u8 page)
 {
 #ifdef JAPANESE_KEYBOARD
-    u8 i, count = 0;
-
-    for (i = 0; i < KBROW_COUNT; i++)
-        if (StringLength(sNamingScreenKeyboardText[sPageToKeyboardId[page]][i]) > count)
-            count = StringLength(sNamingScreenKeyboardText[sPageToKeyboardId[page]][i]);
-    return count;
+    return GetJapanesePageColumnCount(sPageToKeyboardId[page]);
 #else
     return sPageColumnCounts[sPageToKeyboardId[page]];
 #endif
@@ -100,9 +95,7 @@ static u8 CtrNaming_PageColumns(u8 page)
 static u8 CtrNaming_PageChar(u8 page, s16 x, s16 y)
 {
 #ifdef JAPANESE_KEYBOARD
-    const u8 *row = sNamingScreenKeyboardText[sPageToKeyboardId[page]][y];
-
-    return x < StringLength(row) ? row[x] : CHAR_SPACE;
+    return GetJapaneseKeyboardChar(sPageToKeyboardId[page], x, y);
 #else
     return sKeyboardChars[sPageToKeyboardId[page]][y][x];
 #endif
