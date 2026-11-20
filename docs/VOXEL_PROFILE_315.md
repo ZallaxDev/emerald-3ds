@@ -294,9 +294,37 @@ for byte.
 | Round furniture fitting | 18.9 |
 | Texture page packing and writing | 11.9 |
 | Texture compaction | 2.1 |
-| Approximate sum of separate measurements | **143.0** |
+| Terrace edge scoring | 86.6 |
+| Approximate sum of separate measurements | **229.6** |
 
 The sum combines individual experiments with different baselines and
 workloads. Treat it as an estimate of build work saved. An end-to-end
 benchmark of the original and current branches under the same conditions
 can establish the actual wall time difference.
+
+## Terrace edge scoring follow-up
+
+The terrace solver tries several shapes and heights for each editable tile.
+Only the four borders are used in those comparisons. The candidate caches
+the border heights for repeated pieces and the step penalty for identical
+border pairs. Both caches are bounded and local to one group of maps.
+
+Each tile's trial pieces share a snapshot of its neighbors. The solver
+still applies the chosen piece immediately, so the next tile sees the
+updated border. The direction order, floating-point sums, and the rules
+for held tiles, fins and pits stay the same.
+
+The comparison matched 100 randomized solves with different heights, tile
+types, and held edges. The eight terrace and ledge fixtures passed.
+
+Across **76 map groups and 188,300 tile decisions**, the original block
+solver took **107.692 seconds** and the candidate took **21.074 seconds**,
+a difference of **86.617 seconds (80.4%)**. The timings sum paired calls
+from one complete terrain export under Python 3.15.2 and Pillow 13.0.0
+with JIT disabled. Run order alternated by group, and both versions used
+the same inputs. The timings cover the block solver within terrain export.
+
+The two solvers returned identical ordered tile choices for every group.
+The final `relief.bin` matched the previous terrain export byte for byte,
+with the same SHA-256 in the terrain follow-up. The host C relief reader
+and its terrain assertions passed against the new file.

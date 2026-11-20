@@ -54,6 +54,7 @@ gen_voxel_relief.py runs it over its own output for the maps in GROUPS
 import argparse
 import collections
 import copy
+import functools
 import math
 import os
 import sys
@@ -1802,12 +1803,33 @@ def blocks(c, U, flat, kept=None):
         else:
             pref[cell] = "S" if is_face(c, cell) else "F"
             out[cell] = (pref[cell], U[cell])
-    grid = {cell: piece_grid(*p) for cell, p in out.items()}
+    WEST, EAST, NORTH, SOUTH = range(4)
+    directions = ((WEST, EAST, -1, 0), (EAST, WEST, 1, 0),
+                  (NORTH, SOUTH, 0, -1), (SOUTH, NORTH, 0, 1))
+
+    def edges(g):
+        return tuple(tuple(edge(g, side)) for side in ("W", "E", "N", "S"))
+
+    @functools.lru_cache(maxsize=4096)
+    def piece_edges(piece):
+        return edges(piece_grid(*piece))
+
     kept = kept or {}
-    grid.update(kept)
+    borders = {cell: piece_edges(p) for cell, p in out.items()}
+    borders.update((cell, edges(g)) for cell, g in kept.items())
     trees = {cell for cell, k in c.kind.items() if k == UNKNOWN and c.role(cell) == "tree"}
     free = sorted(cell for cell in out if cell not in flat and cell not in c.keep
                   and c.kind[cell] in (ROCK, TOP))
+    neighbors = {}
+    for cell in free:
+        x, y = cell
+        adjacent = []
+        for mine, theirs, dx, dy in directions:
+            n = (x + dx, y + dy)
+            # A tree's ground is hidden and contributes no edge cost.
+            if n in borders and n not in trees:
+                adjacent.append((n, mine, theirs, n in kept))
+        neighbors[cell] = adjacent
 
     def step(p, q, back):
         """The cost of an edge point at heights p (north/west) and q. `back`:
@@ -1822,44 +1844,38 @@ def blocks(c, U, flat, kept=None):
             return 0.5 * k          # west/east: a block's side, a wall
         return k * (back if q > p else 1.0)
 
-    def kind_at(n, piece):
-        return piece[0] if n is None else (out[n][0] if n in out and n not in kept else "F")
+    @functools.lru_cache(maxsize=16384)
+    def edge_steps(a, b, back):
+        return sum(step(p, q, back) for p, q in zip(a, b)) / (N + 1)
 
-    def cost(cell, g, piece):
-        x, y = cell
+    def cost(cell, own_edges, piece, adjacent):
         total = 0.0
-        for n, mine, theirs, ns in (((x - 1, y), "W", "E", False), ((x + 1, y), "E", "W", False),
-                                    ((x, y - 1), "N", "S", True), ((x, y + 1), "S", "N", True)):
-            if n not in grid or n in trees:
-                # (a tree's ground is not drawn: the face behind it goes on
-                # down to it, whatever meets it - behind_trees)
-                continue
-            a, b = edge(g, mine), edge(grid[n], theirs)
-            if n in kept and any(q - p > 0.5 for p, q in zip(a, b)):
+        kind = piece[0]
+        for mine, b, fixed, other_kind in adjacent:
+            a = own_edges[mine]
+            if fixed and any(q - p > 0.5 for p, q in zip(a, b)):
                 # a ledge or berry soil keeps its own relief and walls: it
                 # never stands over a piece beside it (no wall would close it)
                 total += 10.0
-            if mine in ("W", "N"):
+            if mine in (WEST, NORTH):
                 a, b = b, a         # p is the north / west one
             back = None
-            if not ns:
+            if mine in (WEST, EAST):
                 # a band standing over the terrace on its high side (or a
                 # neighbour band over us on its high side) is a fin: the
                 # flank climbs past what it is the flank of
-                west, east = (n, cell) if mine == "W" else (cell, n)
-                kw, ke = kind_at(west, piece) if west != cell else piece[0],                     kind_at(east, piece) if east != cell else piece[0]
-                kw, ke = kw[0], ke[0]
+                west, east = (other_kind, kind) if mine == WEST else (kind, other_kind)
+                kw, ke = west[0], east[0]
                 fin = (kw == "W" and max(p - q for p, q in zip(a, b)) > 0.5) or                       (ke == "E" and max(q - p for p, q in zip(a, b)) > 0.5)
                 if fin:
                     total += FIN
-            if ns:
-                north = kind_at(n, piece) if mine == "N" else piece[0]
-                south = piece[0] if mine == "N" else kind_at(n, piece)
+            else:
+                north, south = (other_kind, kind) if mine == NORTH else (kind, other_kind)
                 # behind a top the ground runs on under the next (a back);
                 # behind a face's foot, or a band's under a face or a band,
                 # rock rising is a pit between two walls
                 back = 0.3 if north == "F" or (north != "S" and south == "F") else pit[0]
-            total += sum(step(p, q, back) for p, q in zip(a, b)) / (N + 1)
+            total += edge_steps(a, b, back)
         total += 0.25 * abs(piece[1] - U[cell]) / LEVEL
         if piece[0] in CORNERS:
             total += CORNER
@@ -1883,18 +1899,23 @@ def blocks(c, U, flat, kept=None):
                     continue
                 kinds = [c.band[cell], c.band[cell] + "2"] if cell in c.band else ["F", "S"] + CORNER_KINDS
                 tops = {U[cell] + LEVEL * k for k in (-2, -1, 0, 1, 2)} | {top}
-                best, best_cost = out[cell], cost(cell, grid[cell], out[cell])
+                # Capture neighboring pieces once for this cell's trials.
+                # The next cell still sees any update made by this one.
+                adjacent = [(mine, borders[n][theirs], fixed,
+                             out[n][0] if n in out and not fixed else "F")
+                            for n, mine, theirs, fixed in neighbors[cell]]
+                best, best_cost = out[cell], cost(cell, borders[cell], out[cell], adjacent)
                 for k2 in kinds:
                     for t in sorted(tops):
                         piece = (k2, t)
                         if piece == out[cell]:
                             continue
-                        cc = cost(cell, piece_grid(*piece), piece)
+                        cc = cost(cell, piece_edges(piece), piece, adjacent)
                         if cc < best_cost - 1e-6:
                             best, best_cost = piece, cc
                 if best != out[cell]:
                     out[cell] = best
-                    grid[cell] = piece_grid(*best)
+                    borders[cell] = piece_edges(best)
                     moved += 1
             if not moved:
                 break
