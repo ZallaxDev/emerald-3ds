@@ -7,34 +7,15 @@
 /*
  * CRC-32 (zlib's), four bytes a step ("slicing by 4"): every payload read
  * from the pack is checked, on the game's thread too, and a byte at a time
- * was some 9 cycles a byte on an ARM11. The tables are made on first use,
- * published to the other threads by sCrcReady; made twice, by two threads
- * at once, they come out the same.
+ * was some 9 cycles a byte on an ARM11. The read-only tables are ready
+ * before any thread reads a payload.
  */
-static uint32_t sCrcTable[4][256];
-static int sCrcReady;
-
-static void BuildCrcTable(void)
-{
-    for (uint32_t i = 0; i < 256; ++i)
-    {
-        uint32_t c = i;
-        for (int k = 0; k < 8; ++k)
-            c = (c & 1) ? 0xEDB88320u ^ (c >> 1) : c >> 1;
-        sCrcTable[0][i] = c;
-    }
-    for (int t = 1; t < 4; ++t)
-        for (uint32_t i = 0; i < 256; ++i)
-            sCrcTable[t][i] = (sCrcTable[t - 1][i] >> 8) ^ sCrcTable[0][sCrcTable[t - 1][i] & 0xFF];
-    __atomic_store_n(&sCrcReady, 1, __ATOMIC_RELEASE);
-}
+#include "3ds_pak_crc_table.h"
 
 uint32_t CtrPak_Crc32(uint32_t crc, const void *data, size_t size)
 {
     const uint8_t *p = data;
 
-    if (!__atomic_load_n(&sCrcReady, __ATOMIC_ACQUIRE))
-        BuildCrcTable();
     crc = ~crc;
     /* A byte at a time up to a word's boundary, then a word at a time. */
     for (; size != 0 && ((uintptr_t)p & 3) != 0; --size)

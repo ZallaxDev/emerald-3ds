@@ -134,6 +134,30 @@ int main(int argc, char **argv)
         CHECK(CtrPak_Crc32(0, "123456789", 9) == 0xCBF43926u, "CRC-32 check value");
     }
 
+    {
+        /* All 256 indices of each slice. Four zero bytes appended to an
+         * incoming CRC make the inverted seed select the four entries. */
+        const uint32_t zeroWord = 0;
+        const uint8_t *zeroBytes = (const uint8_t *)&zeroWord;
+        const uint32_t zeroCrc = BitwiseCrc(zeroBytes, sizeof(zeroWord));
+        int same = 1;
+
+        for (unsigned byte = 0; byte < 4; ++byte)
+        {
+            for (unsigned value = 0; value < 256; ++value)
+            {
+                uint32_t seed = ~((uint32_t)value << (byte * 8));
+                uint32_t reflected = ~seed;
+
+                for (unsigned bit = 0; bit < 32; ++bit)
+                    reflected = (reflected >> 1) ^ ((reflected & 1) ? 0xEDB88320u : 0);
+                same &= CtrPak_Crc32(seed, zeroBytes, sizeof(zeroWord)) == ~reflected;
+            }
+        }
+        CHECK(same, "every CRC table entry matches bitwise advancement");
+        CHECK(CtrPak_Crc32(0, zeroBytes, sizeof(zeroWord)) == zeroCrc, "zero word CRC");
+    }
+
     CHECK(Parse(pak, abi ^ 1, kRom, entries, &header) == CTR_PAK_BAD_ABI, "other release is refused");
     CHECK(header.engineAbi == abi, "pack ABI still reported");
     memcpy(bad, kRom, sizeof(bad));
