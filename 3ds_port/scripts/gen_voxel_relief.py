@@ -1272,20 +1272,23 @@ LOOSE_WEIGHT = 0.01  # a block nothing places: kept near its group's ground
 WORLD_ROOT = "LAYOUT_LITTLEROOT_TOWN"
 
 
-def map_links():
-    """[(a, b, direction, offset)]: every connection between two outdoor
-    layouts, as map.json states it (b is `direction` of a, shifted by
-    `offset`). A layout a script swaps in has its map's."""
-    root = vb.ROOT
-    maps_dir = os.path.join(root, "data", "maps")
+def map_topology():
+    """Outdoor connections and alternate layouts from one read of the maps."""
+    maps_dir = os.path.join(vb.ROOT, "data", "maps")
     layout_of, found = {}, []
+    outdoor = set()
     for name in sorted(os.listdir(maps_dir)):
         path = os.path.join(maps_dir, name, "map.json")
         if os.path.exists(path):
-            m = json.load(open(path, encoding="utf-8"))
-            layout_of[m.get("id")] = m.get("layout")
+            with open(path, encoding="utf-8") as f:
+                m = json.load(f)
+            layout = m.get("layout")
+            layout_of[m.get("id")] = layout
             found.append(m)
-    outdoor = vc.MapEvents().outdoor
+            if layout and m.get("map_type") in vc.OUTDOOR_MAP_TYPES:
+                outdoor.add(layout)
+    alternates = vc.alternate_layouts({m.get("layout") for m in found})
+    outdoor.update(alt for alt, base in alternates.items() if base in outdoor)
     links = set()
     for m in found:
         a = m.get("layout")
@@ -1295,14 +1298,19 @@ def map_links():
             b = layout_of.get(c.get("map"))
             if b in outdoor and b != a and c.get("direction") in ("up", "down", "left", "right"):
                 links.add((a, b, c["direction"], c.get("offset", 0)))
-    for alt, base in vc.alternate_layouts().items():
+    for alt, base in alternates.items():
         if alt in outdoor:
             for (a, b, d, off) in list(links):
                 if a == base:
                     links.add((alt, b, d, off))
                 if b == base:
                     links.add((a, alt, d, off))
-    return sorted(links)
+    return sorted(links), alternates
+
+
+def map_links():
+    """Outdoor layout connections as (source, target, direction, offset)."""
+    return map_topology()[0]
 
 
 def _seam_cells(a, b, direction, offset, size):

@@ -578,3 +578,50 @@ follower downloads disabled.
 
 Raw measurements and hashes:
 [voxel-terrace-sweeps-python315.json](benchmarks/voxel-terrace-sweeps-python315.json).
+
+## Terrain topology and corners follow-up
+
+The terrace batch reads outdoor connections and alternate layouts once
+from the map metadata and shares them across groups. A standalone solve
+reads a fresh snapshot. All 150 ordered connections and
+13 alternate layout mappings matched the
+previous implementation. A temporary-map check verified that a later
+standalone read picks up a change to a map's outdoor status.
+
+Corner scoring now intersects the heights of neighbouring tiles once
+per visit and reuses those heights for the three candidate levels. The
+height trials, tie break and update order are preserved. All
+76 authored solves and
+350 generated corner grids
+returned identical heights.
+
+| Paired calls | Calls | Before | After |
+| --- | ---: | ---: | ---: |
+| Full topology read | 12 | 1.294 s | 0.326 s |
+| Authored corner solving | 76 | 2.007 s | 0.804 s |
+
+Call order alternated within each focused comparison. The topology row
+measures the cost of reading the same connections and alternate layouts
+once. In the full terrace batch, the previous implementation rebuilt
+the connections twice per group. The new batch shares one read for those two steps. The relief fixes
+reader makes its own separate read.
+
+The first complete terrain generator pair took
+206.683 seconds before and
+218.958 seconds after, with targeted
+checks also running on the host. A sequential repeat ran the candidate
+first and pinned both runs to the same logical CPU without overlapping
+benchmarks. It took **195.975 seconds before** and
+**188.337 seconds after**, a saving of **7.638 seconds
+(3.9%)** in that pair. Both pairs compared against `298ea00` on
+the same prepared English source tree with Python 3.15.2, Pillow 13.0.0,
+hash seed 0, and JIT and profiling disabled. These timings include final
+terrain corrections.
+
+The intermediate terrain export and final `relief.bin` matched byte for
+byte. The host relief reader, signpost check, and eight terrace and ledge
+checks passed. The builder suite recorded 264 passes and two skips with
+optional follower downloads disabled.
+
+Raw measurements and hashes:
+[voxel-terrain-topology-python315.json](benchmarks/voxel-terrain-topology-python315.json).

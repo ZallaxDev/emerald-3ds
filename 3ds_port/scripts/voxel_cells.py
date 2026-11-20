@@ -478,16 +478,18 @@ def post_metatiles(events):
     return events.posts
 
 
-def alternate_layouts():
+def alternate_layouts(used=None):
     """{layout no map uses: the layout of the map it stands in for} - one
-    named after a map's layout and drawn the same size."""
-    maps_dir = os.path.join(ROOT, "data", "maps")
-    used = set()
-    for name in os.listdir(maps_dir):
-        path = os.path.join(maps_dir, name, "map.json")
-        if os.path.exists(path):
-            with open(path, encoding="utf-8") as f:
-                used.add(json.load(f).get("layout"))
+    named after a map's layout and drawn the same size. Callers that already
+    read the maps can supply the set of layout IDs they use."""
+    if used is None:
+        maps_dir = os.path.join(ROOT, "data", "maps")
+        used = set()
+        for name in os.listdir(maps_dir):
+            path = os.path.join(maps_dir, name, "map.json")
+            if os.path.exists(path):
+                with open(path, encoding="utf-8") as f:
+                    used.add(json.load(f).get("layout"))
     size = {e["id"]: (e["width"], e["height"]) for e in load_layouts() if e.get("id")}
     out = {}
     for lid in size:

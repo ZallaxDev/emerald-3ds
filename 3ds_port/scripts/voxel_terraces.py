@@ -1469,29 +1469,41 @@ def settle(c, U, flat, fixed):
             return {flat[cell]}
         return {U[cell], U[cell] - LEVEL}
 
-    def score(x, y):
-        n = 0
-        for gx, gy in ((x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1)):
-            common = None
-            for cell in ((gx - 1, gy - 1), (gx, gy - 1), (gx - 1, gy), (gx, gy)):
-                if cell in c.kind:
-                    o = options(cell)
-                    common = set(o) if common is None else common & o
-            n += bool(common)
-        return n
+    def corner_levels(neighbors):
+        common = None
+        for neighbor in neighbors:
+            levels = options(neighbor)
+            common = levels if common is None else common & levels
+            if not common:
+                break
+        return common
 
-    # a band is the step of the level it climbs to: it is not moved
+    def score(common, high, low):
+        return sum(levels is None or high in levels or low in levels for levels in common)
+
+    # A band is the step of the level it climbs to: it is not moved.
     rock = sorted(cell for cell, k in c.kind.items() if k == ROCK and cell not in c.band)
+    corners = {
+        (x, y): [tuple(n for n in ((gx - 1, gy - 1), (gx, gy - 1), (gx - 1, gy), (gx, gy))
+                       if n != (x, y) and n in c.kind)
+                 for gx, gy in ((x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1))]
+        for x, y in rock
+    }
     for _ in range(8):
         moved = 0
         for cell in rock:
+            # The other tiles don't change during this tile's three trials.
+            common = [corner_levels(neighbors) for neighbors in corners[cell]]
+
             here = U[cell]
-            best, best_score = here, score(*cell)
+            best = here
+            flat_height = flat.get(cell)
+            best_score = (score(common, here, here - LEVEL) if flat_height is None
+                          else score(common, flat_height, flat_height))
             x, y = cell
+            need = 2 if cell in fixed else 1
             for u in (here + LEVEL, here - LEVEL):
-                U[cell] = u
-                sc = score(*cell)
-                need = 2 if cell in fixed else 1
+                sc = score(common, u, u - LEVEL) if flat_height is None else best_score
                 # as good, and hung from the rock above or beside at that
                 # level: a face's end goes on with its face
                 held = u > here and cell not in fixed and any(
@@ -2890,7 +2902,7 @@ def seam_meets(relief, members):
     return {cell for cell, (_, meet, _) in seam_faces(relief, members).items() if meet}
 
 
-def seam_faces(relief, members):
+def seam_faces(relief, members, *, topology=None):
     """{canvas cell: (map across, meets, edge, cell across)}: every edge
     cell of a group with a map connected across it, whether the two meet
     (seam_meets), the edge it is on ("left", "right", "up", "down") and the
@@ -2918,11 +2930,10 @@ def seam_faces(relief, members):
     # Tower) is the member itself: its seams are the group's own, and
     # taken as a neighbour's they pinned the group to the old solve's
     # heights of its twin
-    import voxel_cells as vc
-    alt = vc.alternate_layouts()
+    links, alt = gr.map_topology() if topology is None else topology
     same = set(at) | {k for k, v in alt.items() if v in at} | {v for k, v in alt.items() if k in at}
     out = {}
-    for a, b, direction, offset in gr.map_links():
+    for a, b, direction, offset in links:
         if a not in at or b in same:
             continue
         a_art, b_art = gr.layout_art(a), gr.layout_art(b)
@@ -2974,13 +2985,15 @@ BACK_IN = 0.5           # a level of back inside the mountain (a ridge's end)
 FACE_LIT = 1.0          # ...as a face
 
 
-def seam_cells(c):
+def seam_cells(c, *, links=None):
     """The cells of a group on a border where its map meets another (the
     next map's own: never moved); a border with no map past it is free."""
     size = {lid: (art.w, art.h) for lid, art in c.arts.items()}
     at = {lid: (ox, oy) for lid, ox, oy in c.members}
     out = set()
-    for a, b, direction, offset in gr.map_links():
+    if links is None:
+        links = gr.map_links()
+    for a, b, direction, offset in links:
         if a not in at:
             continue
         w, h = size[a]
@@ -2993,7 +3006,7 @@ def seam_cells(c):
     return out
 
 
-def rough_fields(c, pieces, flat, kept):
+def rough_fields(c, pieces, flat, kept, *, links=None):
     """The pieces of each rough-rock mountain, laid as one surface (above).
     Its cells' flat levels are its own (the lowest of each piece): a tree
     on it was laid flat at the terraces' level by behind_trees, a pit down
@@ -3008,7 +3021,7 @@ def rough_fields(c, pieces, flat, kept):
         m = own_id(cell)
         return m is not None and m >= vb.NUM_PRIMARY
 
-    seams = seam_cells(c)
+    seams = seam_cells(c, links=links)
     sets = {e["id"]: e["secondary_tileset"] for e in vb._layouts_json()}
 
     def tileset(cell):
@@ -3922,22 +3935,24 @@ def faces_at_landings(c, pieces, grids, steps=()):
                 g[j][i] = min(g[j][i], q[1])
 
 
-def solve(layout_id, reference=None, marks=None):
+def solve(layout_id, reference=None, marks=None, *, topology=None):
     """The terraces of the group a layout is drawn in. `reference`: a parsed
     relief.bin whose world placement is kept. `marks`: the hand marks over
     them ({canvas cell: mark}, load_marks), the fixes file's if None."""
-    return finish(solve_auto(layout_id, reference), marks)
+    return finish(solve_auto(layout_id, reference, topology=topology), marks)
 
 
-def solve_auto(layout_id, reference=None):
+def solve_auto(layout_id, reference=None, *, topology=None):
     """solve before the hand marks: what the drawing alone reads (the
     editor keeps it, and lays the marks over it as they change)."""
+    if topology is None:
+        topology = gr.map_topology()
     members = group_of(layout_id)
     c = Cells(members)
     runs = runs_of(c)
     comp = terraces(c, runs)
     ref = reference_heights(reference, members) if reference is not None else None
-    meets = seam_faces(reference, members) if reference is not None else None
+    meets = seam_faces(reference, members, topology=topology) if reference is not None else None
     level, dropped = solve_levels(c, comp, runs, ref, meets)
     # a scrap of ground no face or band counts, held apart from the ground
     # round it (Route 115's two cells of grass between the dirt patch and the
@@ -4190,7 +4205,7 @@ def solve_auto(layout_id, reference=None):
     hidden_drops(c, pieces, flat, kept)
     hidden_face_ends(c, pieces, flat, kept)
     rim_backs(c, pieces, flat, kept)
-    rough_fields(c, pieces, flat, kept)
+    rough_fields(c, pieces, flat, kept, links=topology[0])
     cave_bands(c, pieces, flat)
     if meets is not None:
         seam_edges(c, pieces, ref, meets, kept)
@@ -5932,10 +5947,13 @@ def apply_file(path, layouts=None, quiet=False):
     relief = vrf.parse(blob)
     reference = vrf.parse(blob)
     done = set()
+    topology = None
     for lid in (chosen_layouts() if layouts is None else layouts):
         if lid in done:
             continue
-        sol = solve(lid, reference)
+        if topology is None:
+            topology = gr.map_topology()
+        sol = solve(lid, reference, topology=topology)
         done.update(m[0] for m in sol["cells"].members)
         merge(sol, relief)
         if not quiet:
