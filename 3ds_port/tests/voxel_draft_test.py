@@ -59,8 +59,6 @@ def main():
 #define VOXEL_CHUNK_SLOTS 128u
 #define VOXEL_ATLAS_PAGES 4u
 #define VOXEL_ATLAS_MAX_SLOTS 512u
-#define VOXEL_POS_SCALE 512.0f
-#define VOXEL_SHADE_SCALE 16384.0f
 #define VOXEL_STAGING_VERTICES 12288u
 #define VOXEL_CHUNK_UPLOADS_MAX 8u
 #define VOXEL_REQUESTS_MAX 192u
@@ -74,8 +72,10 @@ def main():
 #define CTR_LOG_VIDEO 1
 #define u32 uint32_t
 typedef struct { float x, y, z, u, v, shade; } VoxelVertex;
-typedef struct { float u, v; int16_t x, y, z, shade; } VoxelGpuVertex;
-typedef struct { int32_t lo[3], hi[3]; } PackBounds;
+/* This fixture supplies its own mesh builder. Use production packing with
+ * the fixture's equivalent input vertex and the real GPU output layout. */
+#define CTR_VOXEL_MESH_BUILDER_H
+#include "voxel_vertex_pack.h"
 typedef struct { uint16_t slotOf[2048]; } VoxelAtlasMap;
 typedef struct { int mapGroup, mapNum, originX, originY, width, height;
     const void *primaryTileset, *secondaryTileset, *layout; } VoxelMapInstance;
@@ -128,7 +128,7 @@ static void EvictChunk(VoxelChunk *chunk) { ReleaseChunk(chunk); }
 static unsigned long copiedBytes;
 static Stats sStats U;
 static unsigned sDrafts;
-static unsigned sPackErrors; static float sPackWorst; static char sPackAxis;
+static VoxelPackStats sPackStats;
 static int reported;
 static void CtrLog_Write(int cat, const char *fmt, ...) { (void)cat; (void)fmt; ++reported; }
 static void GSPGPU_FlushDataCache(const void *p, unsigned n) { (void)p; (void)n; }
@@ -164,8 +164,8 @@ static void VoxelMesh_DraftCell(VoxelBuilder *b, const VoxelMapInstance *inst, i
                                                 page * 2.0f + col / 512.0f, 0.5f, 1.0f};
 }
 '''
-    for signature in ['static int16_t Quantise(', 'static void Pack(', 'static void ReportPackErrors(',
-                      'static void GrowBounds(', 'static void PackDraft(', 'static int PackedFloor(', 'static int PackedCeil(',
+    for signature in ['static void Pack(', 'static void ReportPackErrors(', 'static void PackDraft(',
+                      'static int PackedFloor(', 'static int PackedCeil(',
                       'static unsigned ChunkBucket(', 'static unsigned ChunkBucketOf(',
                       'static void ChunkUnindex(', 'static void ChunkIndex(', 'static void ChunkBlockFree(',
                       'static void ReleaseChunk(',

@@ -87,6 +87,8 @@ jobs:
           make -C 3ds_port verify-voxel-lighting verify-voxel-trees build/voxel_ground_mesh_test.exe
           cd 3ds_port
           ./build/voxel_ground_mesh_test.exe
+      - name: Voxel runtime, draft and GPU vertex packing
+        run: make -C 3ds_port verify-voxel-runtime verify-voxel-draft verify-voxel-vertex-pack
       - name: Night window masks and building-page compatibility
         env:
           PILLOW: ${{ needs.release-versions.outputs.pillow }}
