@@ -715,7 +715,8 @@ enum
 #define HIT_OPTION_BACK 16
 
 typedef struct { s16 x, y, w, h; u8 id; } Hit;
-static Hit sHits[64];
+/* The widest naming keyboard can register 80 keys plus name cells, tabs and buttons. */
+static Hit sHits[128];
 static u8 sHitCount;
 
 static void AddHit(int x, int y, int w, int h, u8 id)

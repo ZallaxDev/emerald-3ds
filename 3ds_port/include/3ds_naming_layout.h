@@ -11,7 +11,7 @@
 
 #include <stdint.h>
 
-#define CTR_NAMING_LAYOUT_COLS 12
+#define CTR_NAMING_LAYOUT_COLS 20
 #define CTR_NAMING_KEY_GAP 2        /* between keys of a group */
 #define CTR_NAMING_GROUP_GAP 6      /* between groups */
 #define CTR_NAMING_KEY_MAX_W 30
@@ -58,7 +58,7 @@ struct CtrNamingKeys
  * does a gap flagged after a column. The keys are as wide as the room allows,
  * up to CTR_NAMING_KEY_MAX_W.
  */
-static inline void CtrNaming_LayoutKeys(uint16_t spacer, uint16_t gapAfter, int cols, int areaX, int areaW,
+static inline void CtrNaming_LayoutKeys(uint32_t spacer, uint32_t gapAfter, int cols, int areaX, int areaW,
                                          struct CtrNamingKeys *out)
 {
     int n = 0, groups = 0, prev = -1, x;

@@ -2,12 +2,13 @@
  * The naming keyboard's geometry (include/3ds_naming_layout.h) for the shapes
  * the game's languages give it: the groups found from the game's own column
  * positions, and the keys laid out in the room the buttons leave - inside it,
- * apart, centred, and no narrower than a finger-sized 16 pixels.
+ * apart and centred, plus the Japanese naming keys’ kana composition.
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "3ds_naming_layout.h"
+#include "3ds_naming_kana.h"
 
 #define AREA_X 8
 #define AREA_W 230
@@ -23,14 +24,14 @@ static void check(int ok, const char *what, const char *name)
     }
 }
 
-static void layout(const char *name, uint16_t spacer, uint16_t gaps, int cols, int keys, int groups)
+static void layout(const char *name, uint32_t spacer, uint32_t gaps, int cols, int keys, int minWidth)
 {
     struct CtrNamingKeys k;
     int first = -1, last = -1, prev = -1, widths = 0;
 
     CtrNaming_LayoutKeys(spacer, gaps, cols, AREA_X, AREA_W, &k);
     check(k.count == keys, "the number of keys", name);
-    check(k.width >= 16 && k.width <= CTR_NAMING_KEY_MAX_W, "the key's width", name);
+    check(k.width >= minWidth && k.width <= CTR_NAMING_KEY_MAX_W, "the key's width", name);
     for (int c = 0; c < cols; ++c)
     {
         if (k.x[c] < 0)
@@ -48,7 +49,38 @@ static void layout(const char *name, uint16_t spacer, uint16_t gaps, int cols, i
     }
     check(widths == keys, "the keys placed", name);
     check(abs((first - AREA_X) - (AREA_X + AREA_W - last)) <= 1, "centred", name);
-    (void)groups;
+}
+
+static void checkKanaMarks(void)
+{
+    for (int script = 0; script <= 0x50; script += 0x50)
+    {
+        for (int i = 0; i < 15; ++i)
+        {
+            int base = script + 0x06 + i;
+            check(CtrNaming_ApplyKanaMark(base, CTR_NAMING_DAKUTEN) == script + 0x37 + i,
+                  "dakuten applies to every K/S/T-row kana", "kana marks");
+            check(CtrNaming_ApplyKanaMark(base, CTR_NAMING_HANDAKUTEN) == base,
+                  "handakuten leaves K/S/T-row kana alone", "kana marks");
+        }
+        for (int i = 0; i < 5; ++i)
+        {
+            int base = script + 0x1A + i;
+            int voiced = script + 0x46 + i;
+            int semivoiced = script + 0x4B + i;
+            check(CtrNaming_ApplyKanaMark(base, CTR_NAMING_DAKUTEN) == voiced,
+                  "dakuten applies to every H-row kana", "kana marks");
+            check(CtrNaming_ApplyKanaMark(base, CTR_NAMING_HANDAKUTEN) == semivoiced,
+                  "handakuten applies to every H-row kana", "kana marks");
+            check(CtrNaming_ApplyKanaMark(voiced, CTR_NAMING_HANDAKUTEN) == semivoiced
+                  && CtrNaming_ApplyKanaMark(semivoiced, CTR_NAMING_DAKUTEN) == voiced,
+                  "one mark can replace the other", "kana marks");
+        }
+    }
+    check(CtrNaming_ApplyKanaMark(0x6D, CTR_NAMING_DAKUTEN) == 0x99, "ヘ becomes ベ", "kana marks");
+    check(CtrNaming_ApplyKanaMark(0xFF, CTR_NAMING_DAKUTEN) == 0xFF, "empty name stays empty", "kana marks");
+    check(CtrNaming_ApplyKanaMark(0x00, CTR_NAMING_DAKUTEN) == 0x00, "space stays a space", "kana marks");
+    check(CtrNaming_ApplyKanaMark(0xA1, CTR_NAMING_HANDAKUTEN) == 0xA1, "number stays a number", "kana marks");
 }
 
 int main(void)
@@ -81,23 +113,24 @@ int main(void)
     CtrNaming_LayoutKeys(0, g, 8, AREA_X, AREA_W, &k);
     check(k.width == 26 && k.x[0] == 8 && k.x[3] == 8 + 3 * 28 + 4 && k.x[7] == 8 + 230 - 26, "the mockup's letters", "letters");
 
-    layout("letters", 0, g, 8, 8, 3);
-    layout("symbols", 0, 0, 6, 6, 1);
+    layout("letters", 0, g, 8, 8, 16);
+    layout("symbols", 0, 0, 6, 6, 16);
     /* The nine-slot page with its last column empty (a spacer): the eight keys of the letters, as with eight columns. */
-    layout("slots9", 1u << 8, CtrNaming_GapsFromPositions(slots9, 9), 9, 8, 2);
+    layout("slots9", 1u << 8, CtrNaming_GapsFromPositions(slots9, 9), 9, 8, 16);
     CtrNaming_LayoutKeys(1u << 8, CtrNaming_GapsFromPositions(slots9, 9), 9, AREA_X, AREA_W, &k);
     check(k.width == 26 && k.x[8] == -1 && k.x[7] == 8 + 230 - 26, "an empty ninth column leaves the letters as they were", "slots9");
-    layout("nine", 0, CtrNaming_GapsFromPositions(nine, 9), 9, 9, 3);
+    layout("nine", 0, CtrNaming_GapsFromPositions(nine, 9), 9, 9, 16);
     /* Japanese: eleven columns, the sixth a space in every row between two groups of five. */
-    layout("kana", 1u << 5, (1u << 4) | (1u << 5), 11, 10, 2);
-    /* The widest page the view carries, with no groups. */
-    layout("twelve", 0, 0, 12, 12, 1);
+    layout("kana", 1u << 5, (1u << 4) | (1u << 5), 11, 10, 16);
+    /* The rightmost native key and the added mark column must remain reachable. */
+    layout("wide kana", (1u << 5) | (1u << 16), 0, CTR_NAMING_LAYOUT_COLS, 18, 10);
+    checkKanaMarks();
     /* Nothing laid out is no keys, not a division by zero. */
     CtrNaming_LayoutKeys(0xFFF, 0, 12, AREA_X, AREA_W, &k);
     check(k.count == 0 && k.width == 0, "a page of spacers", "empty");
 
     if (failures)
         return 1;
-    printf("PASS naming layout: groups from the game's columns, letters, symbols, nine columns, kana, twelve; inside, apart, centred\n");
+    printf("PASS naming layout and Japanese kana marks\n");
     return 0;
 }

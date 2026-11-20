@@ -353,7 +353,7 @@ build/menu_view_test$(EXESUFFIX): tests/menu_view_test.c include/3ds_menu_view.i
 verify-naming-layout: build/naming_layout_test$(EXESUFFIX)
 	./build/naming_layout_test$(EXESUFFIX)
 
-build/naming_layout_test$(EXESUFFIX): tests/naming_layout_test.c include/3ds_naming_layout.h
+build/naming_layout_test$(EXESUFFIX): tests/naming_layout_test.c include/3ds_naming_layout.h include/3ds_naming_kana.h
 	@mkdir -p build
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/naming_layout_test.c -o $@
 
