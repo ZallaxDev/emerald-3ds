@@ -1488,8 +1488,8 @@ index 644048f..cc60c99 100644
 +        return;
 +#endif
      int fillSize = gWindows[windowId].window.width * gWindows[windowId].window.height;
-     CpuFastFill8(fillValue, gWindows[windowId].tileData, 32 * fillSize);
- }
+ #ifdef PLATFORM_3DS
+     CtrMenu_ForgetWindow(windowId); // whole again: the strings printed before are gone from it
 @@ -524,6 +540,10 @@ void ScrollWindow(u8 windowId, u8 direction, u8 distance, u8 fillValue)
  
  void CallWindowFunction(u8 windowId, void ( *func)(u8, u8, u8, u8, u8, u8))

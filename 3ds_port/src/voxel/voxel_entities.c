@@ -1593,6 +1593,37 @@ static void EmitDecal(VoxelBuilder *builder, const VoxelSpriteSlot *slot, unsign
 }
 
 /*
+ * The grass rustling on a tall grass cell whose tufts stand on a card
+ * (VoxelMesh_TuftAt): on that card, as the mesh builder's EmitTufts stands it
+ * - its foot on the cell's south edge, its north edge VOXEL_TUFT_HEIGHT up
+ * and as far south as the drawing puts a point that high, less the lean.
+ * Laid on the ground it was under the card, hidden.
+ */
+static void EmitTuftDecal(VoxelBuilder *builder, const VoxelSpriteSlot *slot, unsigned index,
+                          float cx, float cz, float shade)
+{
+    unsigned baseX = (index % VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
+    unsigned baseY = (index / VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
+    float u0 = baseX / (float)VOXEL_SPRITE_ATLAS_W;
+    float u1 = (baseX + slot->atlasWidth) / (float)VOXEL_SPRITE_ATLAS_W;
+    float v0 = 1.0f - baseY / (float)VOXEL_SPRITE_ATLAS_H;
+    float v1 = 1.0f - (baseY + slot->height) / (float)VOXEL_SPRITE_ATLAS_H;
+    float halfW = slot->width / VOXEL_PIXELS_PER_TILE * 0.5f;
+    float halfH = slot->height / VOXEL_PIXELS_PER_TILE * 0.5f;
+    float y = VoxelRelief_LiftAt(cx, cz) + VOXEL_DECAL_LIFT;
+    float z = cz + VoxelRelief_ShiftAt(cx, cz);
+    /* the card's rise over the picture's rows (a tile's, as the card's are) */
+    float rise = VOXEL_TUFT_HEIGHT * 2.0f * halfH;
+    float back = rise * (1.0f - VoxelRelief_Lean());
+
+    VoxelBuilder_Quad(builder,
+        &(VoxelVertex){cx - halfW, y,        z + halfH,        u0, v1, shade},
+        &(VoxelVertex){cx + halfW, y,        z + halfH,        u1, v1, shade},
+        &(VoxelVertex){cx + halfW, y + rise, z - halfH + back, u1, v0, shade},
+        &(VoxelVertex){cx - halfW, y + rise, z - halfH + back, u0, v0, shade});
+}
+
+/*
  * A rotating gate (rotating_gate.c) turns about its middle on an OAM matrix, and
  * only a picture lying on the ground can show that: its arms are what says which
  * way it can be pushed, and they have to lie over the cells they block. The
@@ -2923,7 +2954,11 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
 #endif
                 continue;
             }
-            EmitDecal(builder, &sSlots[effect->slot], effect->slot, cx, cz, 0.0f, shade);
+            if (sprite->template == gFieldEffectObjectTemplatePointers[FLDEFFOBJ_TALL_GRASS]
+             && VoxelMesh_TuftAt((int)floorf(cx), (int)floorf(cz)))
+                EmitTuftDecal(builder, &sSlots[effect->slot], effect->slot, cx, cz, shade);
+            else
+                EmitDecal(builder, &sSlots[effect->slot], effect->slot, cx, cz, 0.0f, shade);
             continue;
         }
         if (effect->owner >= 0)
