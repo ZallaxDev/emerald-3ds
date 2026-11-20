@@ -507,3 +507,37 @@ exclusions, and 1,800 terrain cut masks. The builder suite passed
 
 Raw measurements and hashes:
 [voxel-terrain-algorithms-python315.json](benchmarks/voxel-terrain-algorithms-python315.json).
+
+## Terrain colour and tile matching follow-up
+
+The colour-frequency lookup now returns a sole winner directly. On a tie,
+the original 64-bit CPython set ordering still decides, with one insertion
+per distinct value in first-seen order. Integer hashes use the same modulus
+and skip the modular inverse when the denominator is one. The portable
+ordering is also used by the building generator.
+
+Terrace matching now indexes rendered reference tiles by RGB bytes and
+uses two 256-bit masks per tile to compare top and face pixels. The
+reference order, exact match precedence, overlap thresholds, and RGB
+distance tie breaks are preserved. Each layout's rendering owns its index
+so alternate readings can keep their own palettes.
+
+The complete terrain generator took **286.991 seconds before** and
+**231.173 seconds after**, a saving of **55.818 seconds
+(19.4%)**. This is one local pair against `36bc44b` on the same
+prepared English source tree with Python 3.15.2, Pillow 13.0.0, hash seed 0,
+and JIT and profiling disabled. A separate building verification also ran
+on the same host. The timing covers terrain generation through the final
+corrections.
+
+The intermediate terrain export and the final `relief.bin` matched byte
+for byte. A fresh building generation produced identical `buildings.bin`
+and `windowlights.bin`. Focused comparisons also matched 797 real metatile
+lookups across ten layouts and 800 cases each for colour frequency and
+portable set order, including ties and equal numeric values of different
+types. The host relief reader, eight terrace and ledge checks, and builder
+suite passed. The builder suite recorded 264 passes and two skips with
+optional follower downloads disabled.
+
+Raw measurements and hashes:
+[voxel-terrain-matching-python315.json](benchmarks/voxel-terrain-matching-python315.json).

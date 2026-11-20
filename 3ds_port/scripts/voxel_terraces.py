@@ -171,6 +171,34 @@ TWIN_MATCH = 0.85       # share of rock pixels (and their kind) that must agree
 HEAD_MATCH = 0.6        # share of a band head's face pixels (twin, maps read in alias)
 
 
+def _rock_masks(art, m):
+    """Top and face pixel positions in a metatile, packed in row order."""
+    masks = art.__dict__.setdefault("_terrace_rock_masks", {})
+    if m not in masks:
+        top, face = 0, 0
+        for y, row in enumerate(pixel_classes(art, m)):
+            for x, kind in enumerate(row):
+                if kind == "T":
+                    top |= 1 << (y * 16 + x)
+                elif kind == "F":
+                    face |= 1 << (y * 16 + x)
+        masks[m] = (top, face)
+    return masks[m]
+
+
+def _mountain_drawings(art):
+    """The original candidate order, with rendered RGB bytes indexed once."""
+    drawings = art.__dict__.get("_terrace_mountain_drawings")
+    if drawings is None:
+        candidates = [(r, art.cell_image(r).convert("RGB").tobytes())
+                      for r in sorted(MOUNTAIN) if r < 0x200]
+        exact = {}
+        for r, rgb in candidates:
+            exact.setdefault(rgb, r)
+        drawings = art._terrace_mountain_drawings = (candidates, exact)
+    return drawings
+
+
 def twin(art, m):
     """The General tileset's mountain tile a map's own tile is drawn as (a
     copy in its secondary tileset: Dewford's bands), or m itself."""
@@ -178,48 +206,35 @@ def twin(art, m):
         return m
     key = (art.primary, art.secondary, m, gr.reading(art))
     if key not in _TWINS:
-        mine = pixel_classes(art, m)
-        rock = {(x, y) for y in range(16) for x in range(16) if mine[y][x] != "G"}
         best, score = m, 0.0
-        # the very drawing of one first (a tile recoloured, read in the
-        # General's colours: gen_voxel_relief.alias_of): pixel classes alone
-        # cannot tell a terrace's top from its rim (both all top), and
-        # Route 115's tops were read as rims, every row a terrace of its own
-        drawing = art.cell_image(m).convert("RGB").tobytes()
-        exact = [r for r in sorted(MOUNTAIN) if r < 0x200
-                 and art.cell_image(r).convert("RGB").tobytes() == drawing]
-        if exact and art.primary == "gTileset_General":
-            best, score = exact[0], 1.0
-        elif len(rock) >= 64 and art.primary == "gTileset_General":
-            # a tie goes to the tile drawn nearest it, colour by colour: a
-            # top drawn all top is the plain top, not the rim with its lip
-            # (Lavaridge's 271 read as 06c, every row of its top a terrace
-            # of its own, the face between two of them laid flat; Route
-            # 113's patches of soil read in the 068 set, not the 080 set
-            # they are drawn as, stood its west end up in blocks)
-            img = art.cell_image(m).convert("RGB").getdata()
+        if art.primary == "gTileset_General":
+            drawing = art.cell_image(m).convert("RGB").tobytes()
+            candidates, exact = _mountain_drawings(art)
+            hit = exact.get(drawing)
+            if hit is not None:
+                _TWINS[key] = hit
+                return hit
+            top, face = _rock_masks(art, m)
+            rock = top | face
             far = None
-            for r in sorted(MOUNTAIN):
-                if r >= 0x200:
-                    continue
-                theirs = pixel_classes(art, r)
-                both = {(x, y) for y in range(16) for x in range(16) if theirs[y][x] != "G"} | rock
-                same = sum(1 for (x, y) in both if theirs[y][x] == mine[y][x]) / len(both)
-                if same < score or same < TWIN_MATCH:
-                    continue
-                d = sum(abs(a - b) for p, q in zip(img, art.cell_image(r).convert("RGB").getdata())
-                        for a, b in zip(p, q))
-                if same > score or d < far:
-                    best, score, far = r, same, d
+            if rock.bit_count() >= 64:
+                # Compare the same pixels and use RGB distance on ties.
+                for r, rgb in candidates:
+                    their_top, their_face = _rock_masks(art, r)
+                    both = rock | their_top | their_face
+                    agree = (top & their_top).bit_count() + (face & their_face).bit_count()
+                    same = agree / both.bit_count()
+                    if same < score or same < TWIN_MATCH:
+                        continue
+                    d = sum(abs(a - b) for a, b in zip(drawing, rgb))
+                    if same > score or d < far:
+                        best, score, far = r, same, d
         if best == m and hasattr(art, "own_metatile"):
-            # a band's head drawn over the map's own ground (Route 114's
-            # 220/222 over Fallarbor's dirt, a rim along their top): its
-            # face is the head's, the rest of it is not to be matched
-            face = {(x, y) for y in range(16) for x in range(16) if mine[y][x] == "F"}
+            # For a band's head drawn over its own ground, compare just its face.
+            _, face = _rock_masks(art, m)
             for r in sorted(HEADS):
-                cls = pixel_classes(art, r)
-                theirs = {(x, y) for y in range(16) for x in range(16) if cls[y][x] == "F"}
-                same = len(face & theirs) / float(len(face | theirs) or 1)
+                _, theirs = _rock_masks(art, r)
+                same = (face & theirs).bit_count() / float((face | theirs).bit_count() or 1)
                 if same > score and same >= HEAD_MATCH:
                     best, score = r, same
         _TWINS[key] = best

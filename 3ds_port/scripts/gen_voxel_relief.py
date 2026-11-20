@@ -92,7 +92,9 @@ def _hash64(o):
         m, n = int(o), 1
     else:
         raise TypeError("no portable hash for %r" % type(o).__name__)
-    h = (abs(m) % _P61) * pow(n, _P61 - 2, _P61) % _P61
+    h = abs(m) % _P61
+    if n != 1:
+        h = h * pow(n, _P61 - 2, _P61) % _P61
     if m < 0:
         h = -h
     return -2 if h == -1 else h
@@ -117,7 +119,8 @@ def _insert_clean(table, mask, key, h):
 def set_order(seq):
     """list(set(seq)) as 64-bit CPython orders it."""
     mask, table, used = 7, [None] * 8, 0
-    for key in seq:
+    # Duplicate insertions do not change the table or its resize history.
+    for key in dict.fromkeys(seq):
         h = _hash64(key)
         perturb = h & _M64
         i = perturb & mask
@@ -159,7 +162,10 @@ def set_order(seq):
 def commonest(seq):
     """max(set(seq), key=seq.count) with 64-bit CPython's tie-break, anywhere."""
     counts = collections.Counter(seq)
-    return max(set_order(seq), key=counts.__getitem__)
+    leaders = counts.most_common(2)
+    if leaders and (len(leaders) == 1 or leaders[0][1] > leaders[1][1]):
+        return leaders[0][0]
+    return max(set_order(counts), key=counts.__getitem__)
 
 
 import voxel_building as vb  # noqa: E402
