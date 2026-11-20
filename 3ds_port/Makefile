@@ -320,7 +320,9 @@ pak: romfs/engine/abi.bin
 devdata: romfs/engine/abi.bin
 	"$(PYTHON)" $(SCRIPTS)/staging.py devdata --romfs romfs --out build/devdata
 
-verify: all verify-input
+VERIFY_HOST_CHECKS += verify-input
+
+verify: all verify-host
 	"$(PYTHON)" scripts/verify_build.py --devkitarm "$(DEVKITARM)" --stage 9 --video 1 --full 1
 
 .PHONY: verify-input
@@ -363,18 +365,18 @@ build/memcpy_test$(EXESUFFIX): tests/memcpy_test.c src/3ds_memcpy.c
 	@mkdir -p build
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror tests/memcpy_test.c -o $@
 
-verify: verify-video
-verify: verify-memcpy
-verify: verify-naming-layout
-verify: verify-menu-view
-verify: verify-list-view
-verify: verify-daynight
-verify: verify-clock-store
-verify: verify-nuzlocke
-verify: verify-night-windows
-verify: verify-night-lamps
-verify: verify-encounters
-verify: verify-field-view verify-field-fade-hold verify-voxel-overlay-depth
+VERIFY_HOST_CHECKS += verify-video
+VERIFY_HOST_CHECKS += verify-memcpy
+VERIFY_HOST_CHECKS += verify-naming-layout
+VERIFY_HOST_CHECKS += verify-menu-view
+VERIFY_HOST_CHECKS += verify-list-view
+VERIFY_HOST_CHECKS += verify-daynight
+VERIFY_HOST_CHECKS += verify-clock-store
+VERIFY_HOST_CHECKS += verify-nuzlocke
+VERIFY_HOST_CHECKS += verify-night-windows
+VERIFY_HOST_CHECKS += verify-night-lamps
+VERIFY_HOST_CHECKS += verify-encounters
+VERIFY_HOST_CHECKS += verify-field-view verify-field-fade-hold verify-voxel-overlay-depth
 
 .PHONY: verify-field-fade-hold verify-voxel-overlay-depth
 verify-field-fade-hold:
@@ -384,19 +386,19 @@ verify-voxel-overlay-depth:
 	"$(PYTHON)" tests/voxel_overlay_depth_test.py --cc "$(HOSTCC)"
 
 .PHONY: verify-logo-ptbr
-verify: verify-logo-ptbr
+VERIFY_HOST_CHECKS += verify-logo-ptbr
 verify-logo-ptbr:
 	"$(PYTHON)" tests/logo_ptbr_test.py --cc "$(HOSTCC)"
 
 .PHONY: verify-battle-hud-fill
-verify: verify-battle-hud-fill
+VERIFY_HOST_CHECKS += verify-battle-hud-fill
 verify-battle-hud-fill:
 	"$(PYTHON)" tests/battle_hud_fill_test.py --cc "$(HOSTCC)" --python "$(PYTHON)"
 
 .PHONY: verify-rng-seeding
-verify: verify-rng-seeding
+VERIFY_HOST_CHECKS += verify-rng-seeding
 .PHONY: verify-battle-speed
-verify: verify-battle-speed
+VERIFY_HOST_CHECKS += verify-battle-speed
 verify-battle-speed: build/battle_speed_test$(EXESUFFIX)
 	./build/battle_speed_test$(EXESUFFIX)
 
@@ -407,7 +409,7 @@ verify-rng-seeding:
 	"$(PYTHON)" tests/rng_seeding_test.py --cc "$(HOSTCC)"
 
 .PHONY: verify-bottom-taps
-verify: verify-bottom-taps
+VERIFY_HOST_CHECKS += verify-bottom-taps
 verify-bottom-taps:
 	"$(PYTHON)" tests/bottom_taps_test.py --cc "$(HOSTCC)"
 .PHONY: verify-field-view
@@ -425,7 +427,7 @@ verify-encounters: build/encounters_test.exe
 # Reads the decomp's maps and headers, so it needs the bootstrapped tree:
 # part of `verify` there, not of the standalone host tests
 .PHONY: verify-underwater-encounters
-verify: verify-underwater-encounters
+VERIFY_HOST_CHECKS += verify-underwater-encounters
 verify-underwater-encounters:
 	"$(PYTHON)" -B tests/underwater_encounters_test.py --tree $(ROOT)
 
@@ -478,13 +480,13 @@ build/video_decode_test.exe: tests/video_decode_test.c src/3ds_video_decode.c in
 	@mkdir -p build
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/video_decode_test.c src/3ds_video_decode.c -o $@
 
-verify: verify-randomizer
+VERIFY_HOST_CHECKS += verify-randomizer
 .PHONY: verify-randomizer
 verify-randomizer: build/randomizer_test$(EXESUFFIX)
 	./build/randomizer_test$(EXESUFFIX)
 
 # Hash guards and edit positions must match the complete patched English tree.
-verify: verify-randomizer-locales
+VERIFY_HOST_CHECKS += verify-randomizer-locales
 .PHONY: verify-randomizer-locales
 verify-randomizer-locales:
 	$(PYTHON) tests/randomizer_locale_test.py --tree $(ROOT)
@@ -493,7 +495,7 @@ build/randomizer_test$(EXESUFFIX): tests/randomizer_test.c src/3ds_randomizer_co
 	@mkdir -p build
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/randomizer_test.c src/3ds_randomizer_core.c -o $@
 
-verify: verify-pak
+VERIFY_HOST_CHECKS += verify-pak
 .PHONY: verify-pak
 verify-pak: build/pak_test.exe tests/make_test_pak.py
 	./build/pak_test.exe build/test.pak $$("$(PYTHON)" tests/make_test_pak.py build/test.pak)
@@ -501,6 +503,17 @@ verify-pak: build/pak_test.exe tests/make_test_pak.py
 build/pak_test.exe: tests/pak_test.c src/3ds_pak.c include/3ds_pak.h
 	@mkdir -p build
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude tests/pak_test.c src/3ds_pak.c -o $@
+
+.PHONY: verify-host
+verify-host: $(VERIFY_HOST_CHECKS)
+
+# The checks may compile their own fixtures early, but they only run once
+# the full build's generated assets are ready. Package only after verify,
+# including its link audit, when CI asks for both goals in parallel.
+ifneq ($(filter verify,$(MAKECMDGOALS)),)
+$(VERIFY_HOST_CHECKS): | all
+release: | verify
+endif
 
 clean:
 	rm -rf build dist $(TARGET).elf $(TARGET).3dsx $(TARGET).smdh
