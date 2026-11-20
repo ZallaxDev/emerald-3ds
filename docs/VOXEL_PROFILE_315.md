@@ -328,3 +328,29 @@ The two solvers returned identical ordered tile choices for every group.
 The final `relief.bin` matched the previous terrain export byte for byte,
 with the same SHA-256 in the terrain follow-up. The host C relief reader
 and its terrain assertions passed against the new file.
+
+## Terrain record generation follow-up
+
+The record writer turns solved heights into walls, decks, cuts and ground
+under raised tiles. The trial reused sorted tile order, cached the minimum
+and maximum of each tile's 5×5 lattice, and cached wall and floor
+classifications. The bridge discovery pass cleared the classification
+caches when it added bridge cells.
+
+| Paired record writer calls | Seconds |
+| --- | ---: |
+| Existing writer | 42.291 |
+| Cached trial | 41.926 |
+| Difference | 0.365 (0.9%) |
+
+The timed calls covered **76 map groups**, **188,300 input tiles** and
+**39,680 written records** in one terrain export on Python 3.15.2 and
+Pillow 13.0.0 with JIT disabled. Order alternated by group and both
+implementations started with independent copies of the bridge-cell set.
+The ordered records and discovered bridge cells matched. The resulting
+`relief.bin` matched the terrace scoring follow-up byte for byte. The
+eight terrace and ledge fixtures and the host C relief reader passed.
+
+The branch retains the existing writer because the observed difference
+was only 0.365 seconds in one comparison and the caches add state for
+each map group. The cumulative estimate counts the accepted changes.
