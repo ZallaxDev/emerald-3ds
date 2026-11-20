@@ -81,8 +81,13 @@ paths = [
 "3ds_port/assets/artwork/bottom/tiny_x.png" = "bottom screen cross on a fallen Pokémon (3ds_port/scripts/gen_bottom_art.py), original pixel art by the Emerald 3DS author"
 
 [local_paths]
-# Files allowed to mention a local path (documentation of the audit itself).
-paths = ["tools/release_audit.py"]
+# The audit documents the patterns it checks. The bundled macOS CPython
+# framework binary contains a build-machine path from the upstream runtime.
+# Neither exception affects the ROM or secret checks.
+paths = [
+    "tools/release_audit.py",
+    "Emerald3DS-v*-macOS/_internal/Python.framework/Versions/*/Python",
+]
 
 [skip]
 globs = []
