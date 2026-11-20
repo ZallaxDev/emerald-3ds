@@ -423,7 +423,8 @@ static void DrawGameParty(const ViewState *s)
         }
         oy = Plate(cx, AREA_Y + 134, bw, 30, pressed ? sEmerald : sSlate,
                    s->pressed == HIT_CANCEL ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
-        TextIn(gText_Cancel2, cx, oy, bw, 30, &sNormal, 'c', STYLE_WHITE, 4);
+        TextIn(s->liveParty ? Ascii(CTR_TEXT("ACTIONS", "ACCIONES", "ACTIONS", "AZIONI", "AÇÕES", "AKTIONEN", "こうどう"))
+                            : gText_Cancel2, cx, oy, bw, 30, &sNormal, 'c', STYLE_WHITE, 4);
         AddHit(cx, AREA_Y + 134, bw, 30, HIT_CANCEL);
     }
     if (stats)

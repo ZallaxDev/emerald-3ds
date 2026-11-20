@@ -495,6 +495,7 @@ typedef struct
     /* The game's screen drawn here from its state (3ds_bottom_game.inc),
      * NATIVE_NONE for its picture in the window; what it reads. */
     u8 native;
+    bool8 liveParty;        /* read-only field party; never forwards taps to a menu that is not running */
     struct CtrPartyView pv;
     struct CtrSummaryView sv;
     struct CtrBagView bv;
@@ -570,6 +571,12 @@ static u8 sScreen = SCR_MAP;
  * (the default) the bottom screen draws them itself and never shows their
  * picture. Read once a frame. */
 static bool8 sClassicMenus;
+/* #202: a passive party snapshot has no GBA menu task. ACTIONS requests a
+ * real menu only once the current walking step has completed. */
+static u8 sLivePartyCursor;
+static u8 sLivePartyPending = PARTY_SIZE;
+static u8 sLivePartyHandoff = PARTY_SIZE;
+static u16 sLivePartyHandoffFrames;
 
 /* The game's menus drawn here (not the classic menus): pokedex.c skips its
  * fades, which nobody sees then. */
@@ -1150,6 +1157,7 @@ void CtrBottom_Frame(void)
     sFrames = frames;
     sClassicMenus = CtrExtras_Get("classic_menus") == 1;
     mode = CurrentMode();
+    CompleteLivePartyHandoff(mode);
     /* Away from the action menu its labels may give way: looked at again. */
     if (mode != MODE_BATTLE_ACTION)
         sQuickWarmBall = ITEM_NONE;

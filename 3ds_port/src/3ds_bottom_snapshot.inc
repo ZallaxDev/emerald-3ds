@@ -267,6 +267,9 @@ static u8 NativeKind(const ViewState *s)
 {
     if (sClassicMenus)
         return NATIVE_NONE;
+    if (s->mode == MODE_FIELD && s->dock && s->screen == SCR_POKEMON
+     && !s->fm.count && !s->fl.count && CtrExtras_Get("live_party") == 1)
+        return NATIVE_PARTY;
     if (s->mode == MODE_SUMMARY)
         return NATIVE_SUMMARY;
     if (s->mode == MODE_POKEDEX)
@@ -295,7 +298,21 @@ static void SnapshotNative(ViewState *s)
     sNativeStale = kind == NATIVE_NONE && sShown.native != NATIVE_NONE;
     if (kind == NATIVE_NONE)
         return;
-    switch (kind)
+    if (kind == NATIVE_PARTY && s->mode == MODE_FIELD)
+    {
+        /* This is a view, not an emulated running menu. Never call
+         * CtrParty_GetView or the game-side touch handler for it. */
+        s->liveParty = TRUE;
+        s->pv.state = CTR_PARTY_VIEW_LIST;
+        s->pv.cursor = sLivePartyCursor < gPlayerPartyCount ? sLivePartyCursor : 0;
+        s->pv.moving = -1;
+        s->pv.chosen = -1;
+        s->pv.cancelEntry = -1;
+        memset(s->pv.desc, CTR_PARTY_DESC_NONE, sizeof(s->pv.desc));
+        CopyText(s->pv.prompt, sizeof(s->pv.prompt), gText_ChoosePokemon);
+        got = TRUE;
+    }
+    else switch (kind)
     {
     case NATIVE_SUMMARY:
         got = CtrSummary_GetView(&s->sv) && s->sv.state != CTR_SUM_VIEW_NONE;

@@ -38,6 +38,24 @@ static void OpenAsked(u8 mode)
         lastMode = mode;
         waited = 0;
     }
+    /* A live browser is not a START menu. Only its explicit ACTIONS request
+     * starts the original menu, after walking ends and while the field is safe. */
+    if (sLivePartyPending != PARTY_SIZE)
+    {
+        if (mode != MODE_FIELD || sScreen != SCR_POKEMON || sClassicMenus
+         || CtrExtras_Get("live_party") != 1 || gMain.callback2 != CB2_Overworld
+         || ScriptContext_IsEnabled() || ArePlayerFieldControlsLocked() || gPaletteFade.active)
+            sLivePartyPending = PARTY_SIZE;
+        else if (FieldIdle() && CtrStartMenu_Available() && OpenGameScreen(SCR_POKEMON))
+        {
+            sLivePartyHandoff = sLivePartyPending;
+            sLivePartyHandoffFrames = 0;
+            sLivePartyPending = PARTY_SIZE;
+        }
+    }
+    if (mode == MODE_FIELD && sScreen == SCR_POKEMON && !sClassicMenus
+     && CtrExtras_Get("live_party") == 1)
+        return;
     if (mode != MODE_FIELD || !AskedScreen(sScreen) || sSession.active || sPlan.kind != PLAN_NONE)
         return;
     if (!(EnabledScreens() & (1 << sScreen)))
@@ -47,6 +65,50 @@ static void OpenAsked(u8 mode)
     /* Two seconds without the field coming back idle: given up. */
     else if (++waited > 120)
         sScreen = SCR_MAP;
+}
+
+/* The game menu is now ready: send exactly one selection to its own handler,
+ * preserving its animations, checks and later actions. Never force a menu
+ * input during a battle, script or a different screen. */
+static void CompleteLivePartyHandoff(u8 mode)
+{
+    if (sLivePartyHandoff == PARTY_SIZE)
+        return;
+    if (mode == MODE_PARTY_MENU)
+    {
+        struct CtrPartyView v;
+
+        if (CtrParty_InWindow() && CtrParty_GetView(&v) && v.state == CTR_PARTY_VIEW_LIST
+         && sLivePartyHandoff < gPlayerPartyCount)
+        {
+            CtrParty_TapSlot(sLivePartyHandoff);
+            sLivePartyHandoff = PARTY_SIZE;
+            return;
+        }
+    }
+    if (mode == MODE_OFF || mode >= MODE_BATTLE_INFO || ++sLivePartyHandoffFrames > 180)
+        sLivePartyHandoff = PARTY_SIZE;
+}
+
+/* The passive view only changes a selection. ACTIONS enters the real menu;
+ * no bag, party or event data are mutated by touching the live snapshot. */
+static void LivePartyTap(u8 id)
+{
+    if (id >= HIT_NAT_SLOT && id < HIT_NAT_SLOT + PARTY_SIZE)
+    {
+        u8 slot = id - HIT_NAT_SLOT;
+
+        if (slot < gPlayerPartyCount && GetMonData(&gPlayerParty[slot], MON_DATA_SPECIES) != SPECIES_NONE)
+        {
+            sLivePartyCursor = slot;
+            PlaySE(SE_SELECT);
+        }
+    }
+    else if (id == HIT_CANCEL && gPlayerPartyCount && sLivePartyCursor < gPlayerPartyCount)
+    {
+        sLivePartyPending = sLivePartyCursor;
+        PlaySE(SE_SELECT);
+    }
 }
 
 /* The dock's buttons for a screen of the game's own, which takes the buttons
@@ -231,6 +293,20 @@ static void Activate(u8 id, u8 mode)
         }
         if (mode != MODE_FIELD)
             return;
+        /* The optional read-only Pokémon view never starts a hidden menu.
+         * Pressing its own dock icon again returns to MAP. */
+        if (screen == SCR_POKEMON && !sClassicMenus && CtrExtras_Get("live_party") == 1)
+        {
+            sScreen = sScreen == SCR_POKEMON ? SCR_MAP : SCR_POKEMON;
+            sLivePartyPending = PARTY_SIZE;
+            PlaySE(SE_SELECT);
+            return;
+        }
+        if (sScreen == SCR_POKEMON && !sClassicMenus && CtrExtras_Get("live_party") == 1)
+        {
+            sScreen = SCR_MAP;
+            sLivePartyPending = PARTY_SIZE;
+        }
         /* The PokéNav takes the area when it opens; the top keeps the world
          * from the moment it is asked for, fade included. */
         if (screen == SCR_POKENAV)
@@ -291,7 +367,12 @@ static void Activate(u8 id, u8 mode)
     if (sShown.native)
     {
         if (!sNativeStale)
-            GameViewTap(&sShown, id);
+        {
+            if (sShown.liveParty)
+                LivePartyTap(id);
+            else
+                GameViewTap(&sShown, id);
+        }
         return;
     }
     switch (sShown.screen)
