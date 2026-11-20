@@ -14,6 +14,7 @@ paths = [
     "3ds_port/assets/voxel/relief_fixes.json",
     # the same file as the builders' voxel generators read it
     "Emerald3DS-v*-Windows/payload/voxelgen/assets/voxel/relief_fixes.json",
+    "Emerald3DS-v*-macOS/payload/voxelgen/assets/voxel/relief_fixes.json",
     "payload/voxelgen/assets/voxel/relief_fixes.json",
     "Emerald3DS-v*-Windows/Emerald3DS-Builder.exe",
     "Emerald3DS-v*-Windows/emerald3ds-builder-cli.exe",
@@ -33,6 +34,8 @@ paths = [
     # ROM's bytes and fails on any texel written literally (audit_programs).
     "Emerald3DS-v*-Windows/payload/emerald3ds.recipe",
     "Emerald3DS-v*-Windows/payload/*/emerald3ds.recipe",
+    "Emerald3DS-v*-macOS/payload/emerald3ds.recipe",
+    "Emerald3DS-v*-macOS/payload/*/emerald3ds.recipe",
     "payload/emerald3ds.recipe",
     "payload/*/emerald3ds.recipe",
 ]

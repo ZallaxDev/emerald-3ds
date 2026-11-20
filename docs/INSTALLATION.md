@@ -111,12 +111,18 @@ python -m emerald3ds_builder --payload /path/to/payload install --rom /path/to/r
 
 ### macOS (if you build the standalone package yourself)
 
-Official releases are built on Windows. If you build the macOS standalone package yourself (`tools/build_release.py --platform macOS`):
+Official releases provide the Windows standalone builder. To package the
+builder on your Mac, see the [release build instructions](RELEASING.md).
 
-1. Open the resulting `Emerald3DS-vX.Y.Z-macOS` folder.
-2. Double-click `Emerald3DS-Builder`. If Gatekeeper blocks it because of an unidentified developer, right-click the file and select **Open**.
-   *(Note: if transferred or downloaded, macOS App Translocation may isolate the executable from the `payload/` folder. Removing the quarantine attribute with `xattr -d com.apple.quarantine <path-to-folder>` resolves this).*
-3. Follow the same steps as Windows to select your ROM and SD card.
+1. Extract the whole `Emerald3DS-vX.Y.Z-macOS.zip` with Archive Utility or
+   `unzip` so the runtime's symbolic links are preserved.
+2. From Terminal, change to the extracted folder and run
+   `./Emerald3DS-Builder`. Keep it beside `payload/` and `_internal/`.
+3. Select your ROM and SD card as described above. For the command line,
+   run `./emerald3ds-builder-cli --help` from the same folder.
+
+If macOS blocks a copy transferred from another machine, build it locally
+or use the source builder above.
 
 See the [builder documentation](../builder/README.md) for other source-builder commands.
 

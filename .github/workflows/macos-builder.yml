@@ -1,0 +1,31 @@
+name: macOS builder packaging
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/macos-builder.yml"
+      - "builder/**"
+      - "tools/build_release.py"
+      - "tools/build_web_payload.py"
+      - "tools/release_audit*.py"
+      - "tools/release_audit_allow.toml"
+      - "tools/test_macos_builder.py"
+      - "upstream.lock"
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install packaging dependencies
+        run: |
+          pillow=$(python -c 'import tomllib; print(tomllib.load(open("upstream.lock", "rb"))["python"]["pillow"])')
+          python -m pip install "Pillow==$pillow" PyInstaller
+      - name: Audit and run the extracted macOS builders
+        run: python tools/test_macos_builder.py
