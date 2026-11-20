@@ -54,6 +54,8 @@ gen_voxel_relief.py runs it over its own output for the maps in GROUPS
 import argparse
 import collections
 import copy
+import functools
+import itertools
 import math
 import os
 import sys
@@ -170,6 +172,34 @@ TWIN_MATCH = 0.85       # share of rock pixels (and their kind) that must agree
 HEAD_MATCH = 0.6        # share of a band head's face pixels (twin, maps read in alias)
 
 
+def _rock_masks(art, m):
+    """Top and face pixel positions in a metatile, packed in row order."""
+    masks = art.__dict__.setdefault("_terrace_rock_masks", {})
+    if m not in masks:
+        top, face = 0, 0
+        for y, row in enumerate(pixel_classes(art, m)):
+            for x, kind in enumerate(row):
+                if kind == "T":
+                    top |= 1 << (y * 16 + x)
+                elif kind == "F":
+                    face |= 1 << (y * 16 + x)
+        masks[m] = (top, face)
+    return masks[m]
+
+
+def _mountain_drawings(art):
+    """The original candidate order, with rendered RGB bytes indexed once."""
+    drawings = art.__dict__.get("_terrace_mountain_drawings")
+    if drawings is None:
+        candidates = [(r, art.cell_image(r).convert("RGB").tobytes())
+                      for r in sorted(MOUNTAIN) if r < 0x200]
+        exact = {}
+        for r, rgb in candidates:
+            exact.setdefault(rgb, r)
+        drawings = art._terrace_mountain_drawings = (candidates, exact)
+    return drawings
+
+
 def twin(art, m):
     """The General tileset's mountain tile a map's own tile is drawn as (a
     copy in its secondary tileset: Dewford's bands), or m itself."""
@@ -177,48 +207,35 @@ def twin(art, m):
         return m
     key = (art.primary, art.secondary, m, gr.reading(art))
     if key not in _TWINS:
-        mine = pixel_classes(art, m)
-        rock = {(x, y) for y in range(16) for x in range(16) if mine[y][x] != "G"}
         best, score = m, 0.0
-        # the very drawing of one first (a tile recoloured, read in the
-        # General's colours: gen_voxel_relief.alias_of): pixel classes alone
-        # cannot tell a terrace's top from its rim (both all top), and
-        # Route 115's tops were read as rims, every row a terrace of its own
-        drawing = art.cell_image(m).convert("RGB").tobytes()
-        exact = [r for r in sorted(MOUNTAIN) if r < 0x200
-                 and art.cell_image(r).convert("RGB").tobytes() == drawing]
-        if exact and art.primary == "gTileset_General":
-            best, score = exact[0], 1.0
-        elif len(rock) >= 64 and art.primary == "gTileset_General":
-            # a tie goes to the tile drawn nearest it, colour by colour: a
-            # top drawn all top is the plain top, not the rim with its lip
-            # (Lavaridge's 271 read as 06c, every row of its top a terrace
-            # of its own, the face between two of them laid flat; Route
-            # 113's patches of soil read in the 068 set, not the 080 set
-            # they are drawn as, stood its west end up in blocks)
-            img = art.cell_image(m).convert("RGB").getdata()
+        if art.primary == "gTileset_General":
+            drawing = art.cell_image(m).convert("RGB").tobytes()
+            candidates, exact = _mountain_drawings(art)
+            hit = exact.get(drawing)
+            if hit is not None:
+                _TWINS[key] = hit
+                return hit
+            top, face = _rock_masks(art, m)
+            rock = top | face
             far = None
-            for r in sorted(MOUNTAIN):
-                if r >= 0x200:
-                    continue
-                theirs = pixel_classes(art, r)
-                both = {(x, y) for y in range(16) for x in range(16) if theirs[y][x] != "G"} | rock
-                same = sum(1 for (x, y) in both if theirs[y][x] == mine[y][x]) / len(both)
-                if same < score or same < TWIN_MATCH:
-                    continue
-                d = sum(abs(a - b) for p, q in zip(img, art.cell_image(r).convert("RGB").getdata())
-                        for a, b in zip(p, q))
-                if same > score or d < far:
-                    best, score, far = r, same, d
+            if rock.bit_count() >= 64:
+                # Compare the same pixels and use RGB distance on ties.
+                for r, rgb in candidates:
+                    their_top, their_face = _rock_masks(art, r)
+                    both = rock | their_top | their_face
+                    agree = (top & their_top).bit_count() + (face & their_face).bit_count()
+                    same = agree / both.bit_count()
+                    if same < score or same < TWIN_MATCH:
+                        continue
+                    d = sum(abs(a - b) for a, b in zip(drawing, rgb))
+                    if same > score or d < far:
+                        best, score, far = r, same, d
         if best == m and hasattr(art, "own_metatile"):
-            # a band's head drawn over the map's own ground (Route 114's
-            # 220/222 over Fallarbor's dirt, a rim along their top): its
-            # face is the head's, the rest of it is not to be matched
-            face = {(x, y) for y in range(16) for x in range(16) if mine[y][x] == "F"}
+            # For a band's head drawn over its own ground, compare just its face.
+            _, face = _rock_masks(art, m)
             for r in sorted(HEADS):
-                cls = pixel_classes(art, r)
-                theirs = {(x, y) for y in range(16) for x in range(16) if cls[y][x] == "F"}
-                same = len(face & theirs) / float(len(face | theirs) or 1)
+                _, theirs = _rock_masks(art, r)
+                same = (face & theirs).bit_count() / float((face | theirs).bit_count() or 1)
                 if same > score and same >= HEAD_MATCH:
                     best, score = r, same
         _TWINS[key] = best
@@ -847,7 +864,6 @@ def terraces(c, runs):
     for _, hi, cells, lo in runs:
         apart[hi].add(lo)
         apart[lo].add(hi)
-    members = {}
 
     def find(a):
         while uf.setdefault(a, a) != a:
@@ -876,18 +892,19 @@ def terraces(c, runs):
             return
         if ea or eb:
             elevs[ra] = (ea or set()) | (eb or set())
-        ma, mb = members.get(ra, ()), members.get(rb, ())
-        # a cell kept apart from one of the other side's
-        if not force and (any(find(o) == rb for m in ma for o in apart[m]) or
-                          any(find(o) == ra for m in mb for o in apart[m])):
+        # Track blocked joins by current terrace roots. A face's endpoints
+        # do not need to be found again for every candidate edge.
+        if not force and rb in apart.get(ra, ()):
             return
         uf[rb] = ra
-        if mb:
-            members.setdefault(ra, set()).update(mb)
-            members.pop(rb, None)
+        for other in apart.pop(rb, ()):
+            if other == ra:
+                apart[ra].discard(rb)
+            elif other != rb:
+                apart[other].discard(rb)
+                apart[other].add(ra)
+                apart[ra].add(other)
 
-    for cell in apart:
-        members[cell] = {cell}
     # a cave's bridge passes over what lies along its sides (Victory Road's
     # decks over the floor and the faces under them): it meets the ground
     # only at its ends, across its run
@@ -1453,29 +1470,41 @@ def settle(c, U, flat, fixed):
             return {flat[cell]}
         return {U[cell], U[cell] - LEVEL}
 
-    def score(x, y):
-        n = 0
-        for gx, gy in ((x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1)):
-            common = None
-            for cell in ((gx - 1, gy - 1), (gx, gy - 1), (gx - 1, gy), (gx, gy)):
-                if cell in c.kind:
-                    o = options(cell)
-                    common = set(o) if common is None else common & o
-            n += bool(common)
-        return n
+    def corner_levels(neighbors):
+        common = None
+        for neighbor in neighbors:
+            levels = options(neighbor)
+            common = levels if common is None else common & levels
+            if not common:
+                break
+        return common
 
-    # a band is the step of the level it climbs to: it is not moved
+    def score(common, high, low):
+        return sum(levels is None or high in levels or low in levels for levels in common)
+
+    # A band is the step of the level it climbs to: it is not moved.
     rock = sorted(cell for cell, k in c.kind.items() if k == ROCK and cell not in c.band)
+    corners = {
+        (x, y): [tuple(n for n in ((gx - 1, gy - 1), (gx, gy - 1), (gx - 1, gy), (gx, gy))
+                       if n != (x, y) and n in c.kind)
+                 for gx, gy in ((x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1))]
+        for x, y in rock
+    }
     for _ in range(8):
         moved = 0
         for cell in rock:
+            # The other tiles don't change during this tile's three trials.
+            common = [corner_levels(neighbors) for neighbors in corners[cell]]
+
             here = U[cell]
-            best, best_score = here, score(*cell)
+            best = here
+            flat_height = flat.get(cell)
+            best_score = (score(common, here, here - LEVEL) if flat_height is None
+                          else score(common, flat_height, flat_height))
             x, y = cell
+            need = 2 if cell in fixed else 1
             for u in (here + LEVEL, here - LEVEL):
-                U[cell] = u
-                sc = score(*cell)
-                need = 2 if cell in fixed else 1
+                sc = score(common, u, u - LEVEL) if flat_height is None else best_score
                 # as good, and hung from the rock above or beside at that
                 # level: a face's end goes on with its face
                 held = u > here and cell not in fixed and any(
@@ -1802,12 +1831,37 @@ def blocks(c, U, flat, kept=None):
         else:
             pref[cell] = "S" if is_face(c, cell) else "F"
             out[cell] = (pref[cell], U[cell])
-    grid = {cell: piece_grid(*p) for cell, p in out.items()}
+    WEST, EAST, NORTH, SOUTH = range(4)
+    directions = ((WEST, EAST, -1, 0), (EAST, WEST, 1, 0),
+                  (NORTH, SOUTH, 0, -1), (SOUTH, NORTH, 0, 1))
+
+    def edges(g):
+        return tuple(tuple(edge(g, side)) for side in ("W", "E", "N", "S"))
+
+    @functools.lru_cache(maxsize=4096)
+    def piece_edges(piece):
+        return edges(piece_grid(*piece))
+
     kept = kept or {}
-    grid.update(kept)
+    borders = {cell: piece_edges(p) for cell, p in out.items()}
+    borders.update((cell, edges(g)) for cell, g in kept.items())
     trees = {cell for cell, k in c.kind.items() if k == UNKNOWN and c.role(cell) == "tree"}
     free = sorted(cell for cell in out if cell not in flat and cell not in c.keep
                   and c.kind[cell] in (ROCK, TOP))
+    neighbors = {}
+    dependents = collections.defaultdict(list)
+    movable = set(free)
+    for cell in free:
+        x, y = cell
+        adjacent = []
+        for mine, theirs, dx, dy in directions:
+            n = (x + dx, y + dy)
+            # A tree's ground is hidden and contributes no edge cost.
+            if n in borders and n not in trees:
+                adjacent.append((n, mine, theirs, n in kept))
+                if n in movable:
+                    dependents[n].append(cell)
+        neighbors[cell] = adjacent
 
     def step(p, q, back):
         """The cost of an edge point at heights p (north/west) and q. `back`:
@@ -1822,44 +1876,38 @@ def blocks(c, U, flat, kept=None):
             return 0.5 * k          # west/east: a block's side, a wall
         return k * (back if q > p else 1.0)
 
-    def kind_at(n, piece):
-        return piece[0] if n is None else (out[n][0] if n in out and n not in kept else "F")
+    @functools.lru_cache(maxsize=16384)
+    def edge_steps(a, b, back):
+        return sum(step(p, q, back) for p, q in zip(a, b)) / (N + 1)
 
-    def cost(cell, g, piece):
-        x, y = cell
+    def cost(cell, own_edges, piece, adjacent):
         total = 0.0
-        for n, mine, theirs, ns in (((x - 1, y), "W", "E", False), ((x + 1, y), "E", "W", False),
-                                    ((x, y - 1), "N", "S", True), ((x, y + 1), "S", "N", True)):
-            if n not in grid or n in trees:
-                # (a tree's ground is not drawn: the face behind it goes on
-                # down to it, whatever meets it - behind_trees)
-                continue
-            a, b = edge(g, mine), edge(grid[n], theirs)
-            if n in kept and any(q - p > 0.5 for p, q in zip(a, b)):
+        kind = piece[0]
+        for mine, b, fixed, other_kind in adjacent:
+            a = own_edges[mine]
+            if fixed and any(q - p > 0.5 for p, q in zip(a, b)):
                 # a ledge or berry soil keeps its own relief and walls: it
                 # never stands over a piece beside it (no wall would close it)
                 total += 10.0
-            if mine in ("W", "N"):
+            if mine in (WEST, NORTH):
                 a, b = b, a         # p is the north / west one
             back = None
-            if not ns:
+            if mine in (WEST, EAST):
                 # a band standing over the terrace on its high side (or a
                 # neighbour band over us on its high side) is a fin: the
                 # flank climbs past what it is the flank of
-                west, east = (n, cell) if mine == "W" else (cell, n)
-                kw, ke = kind_at(west, piece) if west != cell else piece[0],                     kind_at(east, piece) if east != cell else piece[0]
-                kw, ke = kw[0], ke[0]
+                west, east = (other_kind, kind) if mine == WEST else (kind, other_kind)
+                kw, ke = west[0], east[0]
                 fin = (kw == "W" and max(p - q for p, q in zip(a, b)) > 0.5) or                       (ke == "E" and max(q - p for p, q in zip(a, b)) > 0.5)
                 if fin:
                     total += FIN
-            if ns:
-                north = kind_at(n, piece) if mine == "N" else piece[0]
-                south = piece[0] if mine == "N" else kind_at(n, piece)
+            else:
+                north, south = (other_kind, kind) if mine == NORTH else (kind, other_kind)
                 # behind a top the ground runs on under the next (a back);
                 # behind a face's foot, or a band's under a face or a band,
                 # rock rising is a pit between two walls
                 back = 0.3 if north == "F" or (north != "S" and south == "F") else pit[0]
-            total += sum(step(p, q, back) for p, q in zip(a, b)) / (N + 1)
+            total += edge_steps(a, b, back)
         total += 0.25 * abs(piece[1] - U[cell]) / LEVEL
         if piece[0] in CORNERS:
             total += CORNER
@@ -1875,26 +1923,40 @@ def blocks(c, U, flat, kept=None):
     # over a face needs the face to give way first)
     pit = [0.3]
     for pit[0], sweeps in ((0.3, 10), (1.0, 10), (3.0, 10), (10.0, 30)):
+        # A stable piece needs another trial only after its inputs change.
+        # Keep the original sweep order: a later dependent sees the update
+        # immediately, while an earlier one sees it on the next sweep.
+        dirty = movable.copy()
         for _ in range(sweeps):
             moved = 0
             for cell in free:
+                if cell not in dirty:
+                    continue
+                dirty.remove(cell)
                 kind, top = out[cell]
                 if cell in c.band and kind == "F":
                     continue
                 kinds = [c.band[cell], c.band[cell] + "2"] if cell in c.band else ["F", "S"] + CORNER_KINDS
-                tops = {U[cell] + LEVEL * k for k in (-2, -1, 0, 1, 2)} | {top}
-                best, best_cost = out[cell], cost(cell, grid[cell], out[cell])
+                tops = sorted({U[cell] + LEVEL * k for k in (-2, -1, 0, 1, 2)} | {top})
+                # Capture neighboring pieces once for this cell's trials.
+                # The next cell still sees any update made by this one.
+                adjacent = [(mine, borders[n][theirs], fixed,
+                             out[n][0] if n in out and not fixed else "F")
+                            for n, mine, theirs, fixed in neighbors[cell]]
+                best, best_cost = out[cell], cost(cell, borders[cell], out[cell], adjacent)
                 for k2 in kinds:
-                    for t in sorted(tops):
+                    for t in tops:
                         piece = (k2, t)
                         if piece == out[cell]:
                             continue
-                        cc = cost(cell, piece_grid(*piece), piece)
+                        cc = cost(cell, piece_edges(piece), piece, adjacent)
                         if cc < best_cost - 1e-6:
                             best, best_cost = piece, cc
                 if best != out[cell]:
                     out[cell] = best
-                    grid[cell] = piece_grid(*best)
+                    borders[cell] = piece_edges(best)
+                    dirty.add(cell)
+                    dirty.update(dependents[cell])
                     moved += 1
             if not moved:
                 break
@@ -2841,7 +2903,7 @@ def seam_meets(relief, members):
     return {cell for cell, (_, meet, _) in seam_faces(relief, members).items() if meet}
 
 
-def seam_faces(relief, members):
+def seam_faces(relief, members, *, topology=None):
     """{canvas cell: (map across, meets, edge, cell across)}: every edge
     cell of a group with a map connected across it, whether the two meet
     (seam_meets), the edge it is on ("left", "right", "up", "down") and the
@@ -2869,11 +2931,10 @@ def seam_faces(relief, members):
     # Tower) is the member itself: its seams are the group's own, and
     # taken as a neighbour's they pinned the group to the old solve's
     # heights of its twin
-    import voxel_cells as vc
-    alt = vc.alternate_layouts()
+    links, alt = gr.map_topology() if topology is None else topology
     same = set(at) | {k for k, v in alt.items() if v in at} | {v for k, v in alt.items() if k in at}
     out = {}
-    for a, b, direction, offset in gr.map_links():
+    for a, b, direction, offset in links:
         if a not in at or b in same:
             continue
         a_art, b_art = gr.layout_art(a), gr.layout_art(b)
@@ -2925,13 +2986,15 @@ BACK_IN = 0.5           # a level of back inside the mountain (a ridge's end)
 FACE_LIT = 1.0          # ...as a face
 
 
-def seam_cells(c):
+def seam_cells(c, *, links=None):
     """The cells of a group on a border where its map meets another (the
     next map's own: never moved); a border with no map past it is free."""
     size = {lid: (art.w, art.h) for lid, art in c.arts.items()}
     at = {lid: (ox, oy) for lid, ox, oy in c.members}
     out = set()
-    for a, b, direction, offset in gr.map_links():
+    if links is None:
+        links = gr.map_links()
+    for a, b, direction, offset in links:
         if a not in at:
             continue
         w, h = size[a]
@@ -2944,7 +3007,7 @@ def seam_cells(c):
     return out
 
 
-def rough_fields(c, pieces, flat, kept):
+def rough_fields(c, pieces, flat, kept, *, links=None):
     """The pieces of each rough-rock mountain, laid as one surface (above).
     Its cells' flat levels are its own (the lowest of each piece): a tree
     on it was laid flat at the terraces' level by behind_trees, a pit down
@@ -2959,7 +3022,7 @@ def rough_fields(c, pieces, flat, kept):
         m = own_id(cell)
         return m is not None and m >= vb.NUM_PRIMARY
 
-    seams = seam_cells(c)
+    seams = seam_cells(c, links=links)
     sets = {e["id"]: e["secondary_tileset"] for e in vb._layouts_json()}
 
     def tileset(cell):
@@ -3873,22 +3936,24 @@ def faces_at_landings(c, pieces, grids, steps=()):
                 g[j][i] = min(g[j][i], q[1])
 
 
-def solve(layout_id, reference=None, marks=None):
+def solve(layout_id, reference=None, marks=None, *, topology=None):
     """The terraces of the group a layout is drawn in. `reference`: a parsed
     relief.bin whose world placement is kept. `marks`: the hand marks over
     them ({canvas cell: mark}, load_marks), the fixes file's if None."""
-    return finish(solve_auto(layout_id, reference), marks)
+    return finish(solve_auto(layout_id, reference, topology=topology), marks)
 
 
-def solve_auto(layout_id, reference=None):
+def solve_auto(layout_id, reference=None, *, topology=None):
     """solve before the hand marks: what the drawing alone reads (the
     editor keeps it, and lays the marks over it as they change)."""
+    if topology is None:
+        topology = gr.map_topology()
     members = group_of(layout_id)
     c = Cells(members)
     runs = runs_of(c)
     comp = terraces(c, runs)
     ref = reference_heights(reference, members) if reference is not None else None
-    meets = seam_faces(reference, members) if reference is not None else None
+    meets = seam_faces(reference, members, topology=topology) if reference is not None else None
     level, dropped = solve_levels(c, comp, runs, ref, meets)
     # a scrap of ground no face or band counts, held apart from the ground
     # round it (Route 115's two cells of grass between the dirt patch and the
@@ -4141,7 +4206,7 @@ def solve_auto(layout_id, reference=None):
     hidden_drops(c, pieces, flat, kept)
     hidden_face_ends(c, pieces, flat, kept)
     rim_backs(c, pieces, flat, kept)
-    rough_fields(c, pieces, flat, kept)
+    rough_fields(c, pieces, flat, kept, links=topology[0])
     cave_bands(c, pieces, flat)
     if meets is not None:
         seam_edges(c, pieces, ref, meets, kept)
@@ -5874,20 +5939,71 @@ def chosen_layouts():
     return chosen + [e["id"] for e in vb._layouts_json() if gr.is_cave(e["id"]) and e["id"] not in chosen]
 
 
-def apply_file(path, layouts=None, quiet=False):
+def _serial_solves(layouts, reference):
+    done = set()
+    topology = None
+    for lid in layouts:
+        if lid in done:
+            continue
+        if topology is None:
+            topology = gr.map_topology()
+        sol = solve(lid, reference, topology=topology)
+        done.update(lid for lid, _, _ in sol["cells"].members)
+        yield sol
+
+
+_worker_reference = _worker_topology = None
+
+
+def _prepare_worker(blob):
+    global _worker_reference, _worker_topology
+    _worker_reference = vrf.parse(blob)
+    _worker_topology = gr.map_topology()
+
+
+def _solve_in_worker(lid):
+    return solve(lid, _worker_reference, topology=_worker_topology)
+
+
+def _parallel_solves(layouts, blob, jobs):
+    # The default serial path is also used in environments without processes.
+    from concurrent.futures import ProcessPoolExecutor
+    from multiprocessing import get_context
+
+    # Keep the first selected layout for each group, as the serial pass does.
+    representatives = []
+    done = set()
+    for lid in layouts:
+        if lid not in done:
+            representatives.append(lid)
+            done.update(member for member, _, _ in group_of(lid))
+    if not representatives:
+        return
+    remaining = iter(representatives)
+    jobs = min(jobs, len(representatives))
+    with ProcessPoolExecutor(max_workers=jobs, mp_context=get_context("spawn"),
+                             initializer=_prepare_worker, initargs=(blob,)) as pool:
+        # Bound queued results and yield in input order. The parent assigns
+        # variant indices during merge, so completion order must never matter.
+        pending = collections.deque(pool.submit(_solve_in_worker, lid)
+                                    for lid in itertools.islice(remaining, jobs * 2))
+        while pending:
+            sol = pending.popleft().result()
+            lid = next(remaining, None)
+            if lid is not None:
+                pending.append(pool.submit(_solve_in_worker, lid))
+            yield sol
+
+
+def apply_file(path, layouts=None, quiet=False, *, jobs=1):
     """Rebuild the chosen groups of a relief.bin written by gen_voxel_relief
     (its world placement kept: the bases and every map's ground stay where
     the world solver put them)."""
-    import voxel_relief_fixes as vrf
     blob = open(path, "rb").read()
     relief = vrf.parse(blob)
-    reference = vrf.parse(blob)
-    done = set()
-    for lid in (chosen_layouts() if layouts is None else layouts):
-        if lid in done:
-            continue
-        sol = solve(lid, reference)
-        done.update(m[0] for m in sol["cells"].members)
+    layouts = chosen_layouts() if layouts is None else layouts
+    solves = _parallel_solves(layouts, blob, jobs) if jobs > 1 else _serial_solves(layouts, vrf.parse(blob))
+    for sol in solves:
         merge(sol, relief)
         if not quiet:
             print("terraces %-40s %3d terraces, %d votes dropped" % (

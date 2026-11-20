@@ -22,7 +22,7 @@
 #define TEX_RETRY_FRAMES 120
 
 static uint16_t sPicture[PW * PH];
-static bool sHas, sDirty, sTexAllocated, sTexFailLogged;
+static bool sHas, sDirty, sTexAllocated, sTexFailLogged, sWhite;
 static unsigned sKeep, sTexRetry, sDark;
 static C3D_Tex sTex;
 
@@ -33,6 +33,7 @@ void CtrTopPanel_Show(void)
     sHas = sDirty = true;
     sKeep = KEEP_FRAMES;
     sDark = 0;
+    sWhite = false;
 }
 
 void CtrTopPanel_Keep(unsigned dark)
@@ -40,6 +41,15 @@ void CtrTopPanel_Keep(unsigned dark)
     if (!sHas) return;
     sKeep = KEEP_FRAMES;
     sDark = dark > 16 ? 16 : dark;
+    sWhite = false;
+}
+
+void CtrTopPanel_KeepWhite(unsigned light)
+{
+    if (!sHas) return;
+    sKeep = KEEP_FRAMES;
+    sDark = light > 16 ? 16 : light;
+    sWhite = true;
 }
 
 bool CtrTopPanel_Active(void) { return sHas && sKeep != 0; }
@@ -101,18 +111,18 @@ void CtrTopPanel_Draw(void)
     if (!CtrTopPanel_Active()) return;
     if (!sTexAllocated)
     {
-        unsigned level = 16 - sDark;
+        unsigned level = 16 - sDark, toward = sWhite ? 255 * sDark / 16 : 0;
 
         C2D_DrawRectSolid(0.0f, 0.0f, 0.0f, (float)PW, (float)PH,
-                          C2D_Color32(140 * level / 16, 208 * level / 16, 170 * level / 16, 255));
+                          C2D_Color32(140 * level / 16 + toward, 208 * level / 16 + toward, 170 * level / 16 + toward, 255));
         return;
     }
     if (sDirty) return;
     const Tex3DS_SubTexture part = {PW, PH, 0.0f, 1.0f, (float)PW / TEX_W, 1.0f - (float)PH / TEX_H};
     C2D_ImageTint tint;
 
-    /* Dark: towards black by the tint's blend, as the game's fade is. */
-    C2D_PlainImageTint(&tint, C2D_Color32(0, 0, 0, 255), sDark / 16.0f);
+    /* Towards black (or white) by the tint's blend, as the game's fade is. */
+    C2D_PlainImageTint(&tint, sWhite ? C2D_Color32(255, 255, 255, 255) : C2D_Color32(0, 0, 0, 255), sDark / 16.0f);
     C2D_DrawImageAt((C2D_Image){&sTex, &part}, 0.0f, 0.0f, 0.0f, sDark ? &tint : NULL, 1.0f, 1.0f);
 }
 

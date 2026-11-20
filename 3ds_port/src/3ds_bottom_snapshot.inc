@@ -137,6 +137,13 @@ static u8 CardStars(void)
          + (CountPlayerMuseumPaintings() >= CONTEST_CATEGORIES_COUNT);
 }
 
+/* The Pokédex's caught count as the card shows it (walks every species). */
+static u16 CardDexCount(bool8 hasDex)
+{
+    return !hasDex ? 0 : IsNationalPokedexEnabled() ? GetNationalPokedexCount(FLAG_GET_CAUGHT)
+                                                    : GetHoennPokedexCount(FLAG_GET_CAUGHT);
+}
+
 static void SnapshotCard(ViewState *s)
 {
     static u16 dex, frames;
@@ -152,8 +159,7 @@ static void SnapshotCard(ViewState *s)
     /* Counting the Pokédex walks every species; twice a second is plenty. */
     if ((frames++ % 30) == 0)
     {
-        dex = !s->hasDex ? 0 : IsNationalPokedexEnabled() ? GetNationalPokedexCount(FLAG_GET_CAUGHT)
-                                                         : GetHoennPokedexCount(FLAG_GET_CAUGHT);
+        dex = CardDexCount(s->hasDex);
         stars = CardStars();
     }
     s->dex = dex;

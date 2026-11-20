@@ -190,19 +190,19 @@ static void PartyHeldSign(const ViewState *s, int slot, int cx, int cy)
         DrawSprite(sRes.holdTiles + (held == HELD_MAIL ? 32 : 0), 1, 1, cx, cy + 6, sRes.holdPal.c);
 }
 
-/*
- * The status icon in the level's place, as the party menu shows it
- * (DisplayPartyPokemonLevelCheck): the game's own 32x8 icon, one row of the
- * sheet for each of PSN, PAR, SLP, FRZ, BRN, PKRS, FNT. Pokérus keeps the
- * level, as in the game. FALSE when there is none to show.
- */
+/* The game's 32x8 status icons, one row per ailment. */
+static bool8 DrawStatusIcon(u8 ailment, int x, int y)
+{
+    if (ailment == AILMENT_NONE || ailment > AILMENT_FNT || !sRes.statusTiles)
+        return FALSE;
+    DrawSprite(sRes.statusTiles + (ailment - 1) * 4 * 32, 4, 1, x, y, sRes.statusPal.c);
+    return TRUE;
+}
+
+/* In the party list, Pokérus keeps the level visible as in Emerald. */
 static bool8 PartyStatusIcon(const MonView *mon, int x, int y)
 {
-    if (mon->ailment == AILMENT_NONE || mon->ailment == AILMENT_PKRS || mon->ailment > AILMENT_FNT
-     || !sRes.statusTiles)
-        return FALSE;
-    DrawSprite(sRes.statusTiles + (mon->ailment - 1) * 4 * 32, 4, 1, x, y, sRes.statusPal.c);
-    return TRUE;
+    return mon->ailment != AILMENT_PKRS && DrawStatusIcon(mon->ailment, x, y);
 }
 
 static void DrawPartyLead(const ViewState *s, int slot)
@@ -651,6 +651,7 @@ static void DrawSummaryMon(const ViewState *s)
         text[1] = CHAR_o;
         ConvertIntToDecimalStringN(text + 2, v->dexNum, STR_CONV_MODE_LEADING_ZEROS, 3);
         StyledStr(&sSmall, text, x + 32, oy + 110, STYLE_GRAY);
+        DrawStatusIcon(v->ailment, x + 58, oy + 125);
     }
     if (v->canChangeMon)
     {
@@ -668,7 +669,10 @@ static void SummaryRow(int x, int w, int ry, int h, const u8 *label, const u8 *v
 
 static void DrawSummaryInfo(const struct CtrSummaryView *v, int x, int y, int w, int h)
 {
-    int oy, memoY = y + 88;
+    const int rowH = 18;
+    const int rowsY = y + 4;
+    /* Fit the trainer memo's third line below the four info rows. */
+    int oy, memoY = rowsY + 4 * rowH + 4;
 
     if (!v->isEgg)
     {
@@ -676,19 +680,19 @@ static void DrawSummaryInfo(const struct CtrSummaryView *v, int x, int y, int w,
 
         for (int i = 0; i < 4; ++i)
         {
-            int ry = y + 4 + i * 20;
+            int ry = rowsY + i * rowH;
 
             if (i)
                 FillRect(x + 8, ry, w - 16, 1, PackRgb(228, 218, 202));
         }
-        SummaryRow(x, w, y + 4, 20, Ascii(CTR_TEXT("TYPE", "TIPO", "TYPE", "TIPO", "TIPO", "TYP", "タイプ")), NULL);
-        DrawTypeIcon(v->types[0], x + 90, y + 6);
+        SummaryRow(x, w, rowsY, rowH, Ascii(CTR_TEXT("TYPE", "TIPO", "TYPE", "TIPO", "TIPO", "TYP", "タイプ")), NULL);
+        DrawTypeIcon(v->types[0], x + 90, rowsY + 1);
         if (v->types[1] != v->types[0])
-            DrawTypeIcon(v->types[1], x + 124, y + 6);
-        SummaryRow(x, w, y + 24, 20, Ascii(CTR_TEXT("OT", "EO", "DO", "AO", "TO", "OT", "おや")), v->ot);
-        SummaryRow(x, w, y + 44, 20, Ascii(CTR_TEXT("ID No.", "Nº ID", "No. ID", "N. ID", "Nº ID", "ID-Nr.", "IDNo.")),
+            DrawTypeIcon(v->types[1], x + 124, rowsY + 1);
+        SummaryRow(x, w, rowsY + rowH, rowH, Ascii(CTR_TEXT("OT", "EO", "DO", "AO", "TO", "OT", "おや")), v->ot);
+        SummaryRow(x, w, rowsY + 2 * rowH, rowH, Ascii(CTR_TEXT("ID No.", "Nº ID", "No. ID", "N. ID", "Nº ID", "ID-Nr.", "IDNo.")),
                    Number(v->otId, 5, STR_CONV_MODE_LEADING_ZEROS));
-        SummaryRow(x, w, y + 64, 20, Ascii(CTR_TEXT("ITEM", "OBJETO", "OBJET", "STRUMENTO", "ITEM", "ITEM", "どうぐ")), item);
+        SummaryRow(x, w, rowsY + 3 * rowH, rowH, Ascii(CTR_TEXT("ITEM", "OBJETO", "OBJET", "STRUMENTO", "ITEM", "ITEM", "どうぐ")), item);
     }
     else
     {

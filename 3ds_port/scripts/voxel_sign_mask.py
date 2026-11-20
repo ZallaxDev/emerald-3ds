@@ -28,21 +28,35 @@ def ground_colours(pair, layout, x, y):
 
 def cutout_mask(opaque, width=16, height=16):
     """Rows of bits: pixels not reachable from the border through empty ones."""
-    solid = set(opaque)
-    outside = set()
-    queue = deque((x, y) for y in range(height) for x in range(width)
-                  if x in (0, width - 1) or y in (0, height - 1))
-    while queue:
-        x, y = queue.popleft()
-        if (x, y) in outside or (x, y) in solid:
-            continue
-        outside.add((x, y))
-        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < width and 0 <= ny < height:
-                queue.append((nx, ny))
-    return [sum(1 << x for x in range(width) if (x, y) not in outside)
-            for y in range(height)]
+    if width <= 0 or height <= 0:
+        return [0] * height
+    solid = 0
+    for x, y in opaque:
+        if 0 <= x < width and 0 <= y < height:
+            solid |= 1 << (y * width + x)
+    row_mask = (1 << width) - 1
+    outside = exterior_mask(solid, width, height)
+    return [row_mask ^ ((outside >> (y * width)) & row_mask) for y in range(height)]
+
+
+def exterior_mask(solid, width, height):
+    """Find exterior pixels in a nonempty rectangle packed in row order."""
+    row_mask = (1 << width) - 1
+    full = (1 << (width * height)) - 1
+    left = full // row_mask
+    right = left << (width - 1)
+    border = left | right | row_mask | (row_mask << ((height - 1) * width))
+    empty = full ^ solid
+    outside = border & empty
+    frontier = outside
+    while frontier:
+        # Horizontal shifts must stop at the edge of each row. Vertical
+        # shifts can simply be clipped to the empty pixels of the image.
+        neighbors = (((frontier & ~right) << 1) | ((frontier & ~left) >> 1)
+                     | (frontier << width) | (frontier >> width))
+        frontier = neighbors & empty & ~outside
+        outside |= frontier
+    return outside
 
 
 def metatile_mask(pair, layout, x, y):

@@ -3772,6 +3772,20 @@ static void AtlasPagesReturn(void)
         }
 }
 
+/*
+ * Whether a pair of tilesets is the map the player stands in's. Only that
+ * map's missing atlas makes the frame the 2D picture: a neighbour in view
+ * without one is drawn as flat colour (VisitSite, AddFill) until its atlas
+ * finds VRAM - a patch of the view, not the world switched off.
+ */
+static bool PairIsCurrent(const void *primary, const void *secondary)
+{
+    const VoxelMapInstance *current = VoxelWorld_Instance(0);
+
+    return current == NULL
+        || (current->primaryTileset == primary && current->secondaryTileset == secondary);
+}
+
 static VoxelAtlasSlot *AcquireAtlas(const VoxelMapInstance *inst, bool mayEvict)
 {
     VoxelAtlasSlot *victim = &sAtlases[0];
@@ -3853,7 +3867,8 @@ static VoxelAtlasSlot *AcquireAtlas(const VoxelMapInstance *inst, bool mayEvict)
         victim = LeastRecentlyUsedAllocated();
         if (victim == NULL)
         {
-            sAtlasCapacityBlocked = mayEvict;
+            if (mayEvict && PairIsCurrent(inst->primaryTileset, inst->secondaryTileset))
+                sAtlasCapacityBlocked = true;
             return NULL;
         }
     }
@@ -3892,7 +3907,8 @@ static VoxelAtlasSlot *AcquireAtlas(const VoxelMapInstance *inst, bool mayEvict)
              */
             static bool sReported;
 
-            sAtlasCapacityBlocked = true;
+            if (PairIsCurrent(inst->primaryTileset, inst->secondaryTileset))
+                sAtlasCapacityBlocked = true;
             CtrVideo_RequestPlaneRelease();
             if (!sReported)
             {
@@ -4040,7 +4056,8 @@ static void RunAtlasJob(uint64_t started, float budget, bool inFrame)
         }
         if (!sAtlasWaitsForGap)
         {
-            sAtlasCapacityBlocked = true;
+            if (PairIsCurrent(job->primary, job->secondary))
+                sAtlasCapacityBlocked = true;
             CtrVideo_RequestPlaneRelease();
         }
         return; /* Keep the completed page: retry without recomposing it. */
@@ -10215,14 +10232,24 @@ bool CtrVoxel_Update(void)
     sStats.updateMs = (float)((svcGetSystemTick() - started) * 1000.0 / SYSCLOCK_ARM11);
     if (sStats.updateMs > sStats.updatePeakMs)
         sStats.updatePeakMs = sStats.updateMs;
-    /* A map on screen without its atlas: the frame is the 2D picture (or
-     * the battle's 2D scenery). Logged once the run of them is over, so a
-     * console log tells a flash of 2D from the world switched off. */
+    /* The map the player stands in without its atlas: the frame is the 2D
+     * picture (or the battle's 2D scenery). Logged at its start and once
+     * the run of them is over, so a console log tells a flash of 2D from
+     * the world switched off. */
     {
         static unsigned sBlockedRun;
 
         if (sAtlasCapacityBlocked)
-            ++sBlockedRun;
+        {
+            /* A run is logged when it ends; its start is too, for a run
+             * that is still going when a log is read. */
+            if (sBlockedRun++ == 0)
+                CtrLog_Write(CTR_LOG_VIDEO, "VOXEL: drawing flat for want of an atlas's VRAM from frame %lu "
+                             "(VRAM free=%lu largest=%lu, %u atlas pages held)%s",
+                             (unsigned long)sFrame, (unsigned long)vramSpaceFree(),
+                             (unsigned long)CtrGpuMem_LargestVram(), CountAllocatedAtlases(),
+                             sBattle.on ? " (battle)" : "");
+        }
         else if (sBlockedRun != 0)
         {
             CtrLog_Write(CTR_LOG_VIDEO, "VOXEL: %u frame%s drawn flat for want of an atlas's VRAM%s",

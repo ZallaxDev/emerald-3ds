@@ -715,7 +715,8 @@ enum
 #define HIT_OPTION_BACK 16
 
 typedef struct { s16 x, y, w, h; u8 id; } Hit;
-static Hit sHits[64];
+/* The widest naming keyboard can register 80 keys plus name cells, tabs and buttons. */
+static Hit sHits[128];
 static u8 sHitCount;
 
 static void AddHit(int x, int y, int w, int h, u8 id)
@@ -748,6 +749,7 @@ static u8 HitTest(int x, int y)
 #include "3ds_bottom_easychat.inc"
 #include "3ds_bottom_factory.inc"
 #include "3ds_bottom_factory_top.inc"
+#include "3ds_bottom_title_top.inc"
 #include "3ds_bottom_battleplate.inc"
 #include "3ds_bottom_battledraw.inc"
 #include "3ds_bottom_battlewarm.inc"
@@ -1248,6 +1250,8 @@ void CtrBottom_Frame(void)
         sIconsReady = sIconsIn = TRUE;
     /* The Rental Pokemon's panel on the top screen. */
     FactoryTopFrame(&sState);
+    /* The main menu's saved game, as its trainer card on the top screen. */
+    TitleTopFrame();
 
     ticks[2] = CtrPlatform_Ticks();
     if (sAreaRedraw)

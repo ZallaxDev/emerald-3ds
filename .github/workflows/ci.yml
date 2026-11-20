@@ -113,11 +113,14 @@ jobs:
           echo "::group::Bootstrap and build"
           python3 -m py_compile tools/port_common/gen_asset_table.py
           python3 builder/tests/test_asset_table_compatibility.py
+          export VOXEL_TERRACE_JOBS=4
           python3 tools/bootstrap.py --make -j4 --python python3
           echo "::endgroup::"
 
-          echo "::group::Host tests and link audit"
-          make -C build/upstream/3ds_port verify PYTHON=python3
+          echo "::group::Host tests, link audit and engine-only 3DSX"
+          # Both goals use the same build graph, so package the verified engine
+          # without rechecking build metadata and rebuilding its bundles.
+          make -C build/upstream/3ds_port -j4 --output-sync=target verify release PYTHON=python3
           echo "::endgroup::"
 
           echo "::group::Production encounter and berry clock tests"
@@ -125,8 +128,7 @@ jobs:
           python3 3ds_port/tests/berry_clock_test.py --tree build/upstream
           echo "::endgroup::"
 
-          echo "::group::Engine-only 3DSX and publication audit"
-          make -C build/upstream/3ds_port release PYTHON=python3
+          echo "::group::Publication audit"
           mkdir -p ship
           cp build/upstream/3ds_port/dist/Emerald3DS.3dsx build/upstream/3ds_port/dist/Emerald3DS.smdh ship/
           # In payload/, where the release ships them (release_audit_allow.toml [large]).

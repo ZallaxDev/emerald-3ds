@@ -26,6 +26,7 @@ degrees and each hidden side a quad of its wide strip
 import collections
 import pathlib
 import sys
+import tempfile
 import types
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -547,6 +548,23 @@ backs = collections.Counter(tag.split(".")[0] for (_, _, tag) in model.mesh.tris
                             if tag.endswith(".side~behind"))
 check("stool in blocks: a hidden side a quad, its strip wide",
       backs == {"cushion": 10, "base": 12, "foot": 6}, dict(backs))
+
+with tempfile.TemporaryDirectory() as folder:
+    diagnostic = pathlib.Path(folder) / "stool.png"
+    judged = types.SimpleNamespace(art=stool, mesh=model.mesh)
+    counts = vb.ortho_check(judged, diagnostic, diagnostic_limit=0)
+    check("proof image: no file on a pass", counts == (0, 0, 0) and not diagnostic.exists())
+    changed = stool.copy()
+    changed.putpixel(min(own_of(stool)), (0, 0, 0, 255))
+    counts = vb.ortho_check(judged, diagnostic, reference=changed, diagnostic_limit=1)
+    check("proof image: allowed mismatch skips file",
+          counts == (1, 0, 0) and not diagnostic.exists())
+    counts = vb.ortho_check(judged, diagnostic, reference=changed, diagnostic_limit=0)
+    full = pathlib.Path(folder) / "full.png"
+    vb.ortho_check(judged, full, reference=changed)
+    check("proof image: same file on a failure",
+          counts == (1, 0, 0) and diagnostic.exists() and diagnostic.read_bytes() == full.read_bytes())
+
 
 if FAILED:
     raise SystemExit("%d interior parts case(s) failed: %s" % (len(FAILED), ", ".join(FAILED)))

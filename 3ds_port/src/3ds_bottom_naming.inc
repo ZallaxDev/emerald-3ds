@@ -1,5 +1,7 @@
 /* Part of 3ds_bottom_ui.c: the naming screen's keyboard (included after 3ds_bottom_game.inc). */
 
+#include "3ds_naming_kana.h"
+
 /* ------------------------------------------------------------------------ */
 /* The naming screen                                                        */
 /* ------------------------------------------------------------------------ */
@@ -21,7 +23,8 @@ enum
     HIT_NAME_CELL = HIT_ACTION, /* + the text's character cell */
 };
 
-#define NAME_KEY_COLS 12
+#define NAME_KEY_COLS CTR_NAMING_COLS
+_Static_assert(CTR_NAMING_ROWS * NAME_KEY_COLS <= HIT_NAME_TAB, "naming key hits must fit below tab hits");
 #define NAME_PORTRAIT_X 8
 #define NAME_PORTRAIT_Y 16
 #define NAME_PORTRAIT_S 76
@@ -44,6 +47,8 @@ enum
 /* The pages as the tabs show them: the game's page numbers (0 symbols, 1 upper, 2 lower). */
 #define NAME_TABS 3
 static const u8 sNameTabPages[NAME_TABS] = {1, 2, 0};
+_Static_assert(CTR_NAMING_ROWS * NAME_KEY_COLS + CTR_NAMING_TEXT + NAME_TABS + 2 <= ARRAY_COUNT(sHits),
+               "hit regions must fit the widest naming screen, including DEL and OK");
 
 /* The page the game's own page button turns to: the next of its one-way cycle. */
 static u8 NameNextPage(u8 page)
@@ -202,7 +207,7 @@ static void DrawNameTabs(const ViewState *s, bool8 live, bool8 hit)
 static void DrawNameKeys(const ViewState *s, bool8 live, bool8 hit)
 {
     const struct CtrNamingView *v = &s->nm;
-    int cols = v->cols > NAME_KEY_COLS ? NAME_KEY_COLS : v->cols;
+    int cols = v->cols;
     struct CtrNamingKeys keys;
 
     CtrNaming_LayoutKeys(v->spacer, v->gapAfter, cols, NAME_KEYS_X, NAME_KEYS_W, &keys);
@@ -223,6 +228,27 @@ static void DrawNameKeys(const ViewState *s, bool8 live, bool8 hit)
                        pressed ? PLATE_STATE_PRESSED : focus ? PLATE_STATE_FOCUS : PLATE_STATE_NORMAL);
             if (blank)
                 FillRect(x + (keys.width - 10) / 2, oy + NAME_KEY_H - 8, 10, 2, PackRgb(150, 156, 166));
+            else if (CtrNaming_IsKanaMark(ch))
+            {
+                int cx = x + keys.width / 2, cy = oy + NAME_KEY_H / 2;
+                u16 ink = pressed ? PackRgb(255, 255, 255) : PackRgb(31, 49, 47);
+
+                if (ch == CTR_NAMING_DAKUTEN)
+                {
+                    for (int i = 0; i < 3; ++i)
+                    {
+                        FillRect(cx - 5 + i, cy - 2 + i, 2, 2, ink);
+                        FillRect(cx + i, cy - 2 + i, 2, 2, ink);
+                    }
+                }
+                else
+                {
+                    FillRect(cx - 2, cy - 3, 4, 1, ink);
+                    FillRect(cx - 3, cy - 2, 1, 4, ink);
+                    FillRect(cx + 2, cy - 2, 1, 4, ink);
+                    FillRect(cx - 2, cy + 2, 4, 1, ink);
+                }
+            }
             else
                 TextIn(NameOne(ch), x, oy, keys.width, NAME_KEY_H, &sNormal, 'c',
                        pressed ? STYLE_WHITE : ch == CHAR_MALE ? STYLE_MALE : ch == CHAR_FEMALE ? STYLE_FEMALE : STYLE_INK, 0);

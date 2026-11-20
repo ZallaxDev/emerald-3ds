@@ -71,6 +71,7 @@ def main():
 #include <string.h>
 #include <stdio.h>
 #include "3ds_clock_store.h"
+#include "3ds_naming_layout.h"
 typedef uint8_t u8; typedef uint16_t u16; typedef uint32_t u32; typedef int8_t s8; typedef int16_t s16;
 typedef bool bool8;
 #define TRUE true
