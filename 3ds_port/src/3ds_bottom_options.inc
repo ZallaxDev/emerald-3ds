@@ -74,6 +74,9 @@ static const OptRowDef sRowsHelpers[] = {
     EXTRA_ROW("repel_steps"),
     EXTRA_ROW("repel_prompt"),
 };
+static const OptRowDef sRowsEnhancements[] = {
+    EXTRA_ROW("remote_pc"),
+};
 static const OptRowDef sRowsClock[] = {
     EXTRA_ROW("day_night"),
     EXTRA_ROW("clock_speed"),
@@ -139,6 +142,7 @@ static const OptRowDef sRowsGraphics[] = {
 static const OptGroupDef sGroupsGeneral[] = {
     GROUP(CTR_TEXT("INTERFACE", "INTERFAZ", "INTERFACE", "INTERFACCIA", "INTERFACE", "OBERFLÄCHE", "がめん"), sRowsUi),
     GROUP(CTR_TEXT("SYSTEM", "SISTEMA", "SYSTÈME", "SISTEMA", "SISTEMA", "SYSTEM", "システム"), sRowsSystem),
+    GROUP(CTR_TEXT("ENHANCEMENTS", "MEJORAS", "AMÉLIORATIONS", "MIGLIORIE", "MELHORIAS", "VERBESSERUNGEN", "かいぜん"), sRowsEnhancements),
     GROUP(CTR_TEXT("GRAPHICS", "GRÁFICOS", "GRAPHISMES", "GRAFICA", "GRÁFICOS", "GRAFIK", "グラフィック"), sRowsGraphics),
 };
 static const OptGroupDef sGroupsWorld[] = {

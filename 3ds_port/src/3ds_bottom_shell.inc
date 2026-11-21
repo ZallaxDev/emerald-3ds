@@ -392,6 +392,24 @@ static void DrawRun(const ViewState *s)
         AddHit(RUN_X - 1, HEAD_Y - 2, W - RUN_X + 1, HEAD_H + 4, HIT_COLUMN + COL_RUN);
 }
 
+/* A small R + PC affordance in the unused dark strip above the header.
+ * Drawn only with the dock focused, when remote storage is safe to open. */
+static void DrawRemotePcHint(const ViewState *s)
+{
+    if (!s->remotePcHint)
+        return;
+
+    FillRgb(249, 0, 71, 11, sSlate);
+    FillRgb(250, 1, 69, 9, sLight);
+    /* Little monitor and stand, beside the text and the R shoulder badge. */
+    FillRgb(254, 2, 12, 7, sSlate);
+    FillRgb(255, 3, 10, 4, sCreamPlate);
+    FillRgb(258, 9, 4, 1, sSlate);
+    TextIn(Ascii("PC"), 269, 1, 25, 9, &sSmall, 'c', STYLE_INK, 0);
+    FillRgb(299, 1, 17, 9, sEmerald);
+    TextIn(Ascii("R"), 299, 1, 17, 9, &sSmall, 'c', STYLE_WHITE, 0);
+}
+
 static void DrawFlyHeader(const ViewState *s);
 static void DrawMapFlyButton(const ViewState *s);
 
@@ -414,6 +432,7 @@ static void DrawHeader(const ViewState *s)
             DrawClock(s);
     }
     DrawRun(s);
+    DrawRemotePcHint(s);
 }
 
 /* The header's parts on screen, shadows included: for partial redraws. */

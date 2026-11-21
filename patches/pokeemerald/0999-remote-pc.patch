@@ -1,0 +1,69 @@
+diff --git a/src/pokemon_storage_system.c b/src/pokemon_storage_system.c
+--- a/src/pokemon_storage_system.c
++++ b/src/pokemon_storage_system.c
+@@ -575,6 +575,10 @@ EWRAM_DATA static bool8 sIsMonBeingMoved = 0;
+ EWRAM_DATA static u8 sMovingMonOrigBoxId = 0;
+ EWRAM_DATA static u8 sMovingMonOrigBoxPos = 0;
+ EWRAM_DATA static bool8 sAutoActionOn = 0;
++#ifdef PLATFORM_3DS
++/* The special return path belongs only to a remote, opt-in PC launch. */
++static bool8 sCtrRemotePc;
++#endif
+ 
+ // Main tasks
+ static void EnterPokeStorage(u8);
+@@ -1647,6 +1651,37 @@ static void Task_PCMainMenu(u8 taskId)
+     }
+ }
+ 
++#ifdef PLATFORM_3DS
++/* Enter the existing box mover without a physical PC's script/menu.  Let
++ * the ordinary overworld task drive the fade before replacing its callback. */
++static void Task_CtrRemotePc(u8 taskId)
++{
++    (void)taskId;
++    if (gPaletteFade.active)
++        return;
++    CleanupOverworldWindowsAndTilemaps();
++    EnterPokeStorage(OPTION_MOVE_MONS); /* Resets the field's tasks. */
++}
++
++bool8 CtrStorage_OpenRemote(void)
++{
++    u8 i;
++
++    /* CreateTask returns task 0 on exhaustion, so check for a free slot. */
++    for (i = 0; i < NUM_TASKS && gTasks[i].isActive; ++i)
++        ;
++    if (i == NUM_TASKS)
++        return FALSE;
++
++    sCtrRemotePc = TRUE;
++    LockPlayerFieldControls();
++    CreateTask(Task_CtrRemotePc, 80);
++    CtrBottom_KeepWorld();
++    FadeScreen(FADE_TO_BLACK, 0);
++    return TRUE;
++}
++#endif
++
+ void ShowPokemonStorageSystemPC(void)
+ {
+     u8 taskId = CreateTask(Task_PCMainMenu, 80);
+@@ -1691,7 +1726,15 @@ static void CreateMainMenu(u8 whichMenu, s16 *windowIdPtr)
+ static void CB2_ExitPokeStorage(void)
+ {
+     sPreviousBoxOption = GetCurrentBoxOption();
+-    gFieldCallback = FieldTask_ReturnToPcMenu;
++#ifdef PLATFORM_3DS
++    if (sCtrRemotePc)
++    {
++        sCtrRemotePc = FALSE;
++        gFieldCallback = FieldCB_ReturnToFieldNoScript;
++    }
++    else
++#endif
++        gFieldCallback = FieldTask_ReturnToPcMenu;
+     SetMainCallback2(CB2_ReturnToField);
+ }
+ 

@@ -255,6 +255,7 @@ const CtrExtra gCtrExtras[] =
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("REPEL PROMPT", "AVISO REPELENTE", "RAPPEL REPOUSSE", "AVVISO REPELL.", "AVISO REPELENTE", "SCHUTZ-HINWEIS", "むしよけ かくにん"), "repel_prompt", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("INFINITE TMS", "MT INFINITAS", "CT INFINIES", "MT INFINITE", "MTS INFINITAS", "ENDLOSE TMS", "わざマシン むげん"), "infinite_tms", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("RUN INDOORS", "CORRER DENTRO", "COURSE INTÉR.", "CORRI DENTRO", "CORRER DENTRO", "DRINNEN RENNEN", "へやでも はしる"), "run_indoors", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
+    {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("REMOTE PC", "PC A DISTANCIA", "PC À DISTANCE", "PC REMOTO", "PC REMOTO", "FERN-PC", "どこでもPC"), "remote_pc", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
     /* Moves physical or special by their own category, as from Gen IV on
      * (pokemon.c, MoveSplitEnabled). */
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("PHYS/SPEC SPLIT", "FÍSICO / ESPECIAL", "PHYS./SPÉC.", "FIS./SPEC.", "FÍS./ESP.", "PHYS./SPEZ.", "ぶつり/とくしゅ"), "move_split", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},

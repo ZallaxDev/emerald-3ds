@@ -838,6 +838,8 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
     s->registered = s->dockLocked ? ITEM_NONE : gSaveBlock1Ptr->registeredItem;
     s->run = s->dockLocked ? 0 : (CtrSettings_RunAlways() ? 1 : 0) | (FlagGet(FLAG_SYS_B_DASH) ? 2 : 0);
     s->focus = sFocus;
+    s->remotePcHint = mode == MODE_FIELD && sFocus != FOCUS_NONE && sInside == INSIDE_NONE
+                   && RemotePcAvailable();
     s->optFocus = FOCUS_NONE;
 
     if (s->dock)
