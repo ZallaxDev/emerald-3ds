@@ -56,6 +56,8 @@ def main():
     parser.add_argument("--profiler", choices=("tracing", "sampling", "none"), default="tracing")
     parser.add_argument("--seconds", type=float,
                         help="bound each tracing pass (POSIX only); saves a partial profile")
+    parser.add_argument("--verify-buildings", action="store_true",
+                        help="include the full image/raster verification in the buildings profile")
     parser.add_argument("--steps", nargs="+", choices=("buildings", "relief"),
                         default=["buildings", "relief"])
     args = parser.parse_args()
@@ -68,7 +70,9 @@ def main():
               "seconds_limit": args.seconds,
               "jit": sys._jit.is_enabled() if hasattr(sys, "_jit") else None,
               "hash_seed": os.environ.get("PYTHONHASHSEED", "random"),
-              "mode": "generator --output (without --verify)", "steps": []}
+              "mode": "generator --verify --output" if args.verify_buildings
+                      else "generator --output (without --verify)",
+              "verify_buildings": args.verify_buildings, "steps": []}
     # Relief reads buildings.bin, so always order buildings before relief.
     for name in (step for step in ("buildings", "relief") if step in args.steps):
         script = tree / "3ds_port/scripts" / ("gen_voxel_" + name + ".py")
@@ -82,6 +86,8 @@ def main():
         elif args.profiler == "sampling":
             command += ["-m", "profiling.sampling", "run", "--pstats", "-o", str(profile)]
         command += [str(script), "--output", str(binary)]
+        if name == "buildings" and args.verify_buildings:
+            command += ["--verify", "--diagnostics", "failures"]
         print("Profiling", name, flush=True)
         start = time.perf_counter()
         with (out / (name + ".log")).open("w", encoding="utf-8") as log:
