@@ -90,6 +90,25 @@ def _remove(paths) -> None:
             pass
 
 
+def _stage_file(dest: Path, name: str, source: Path, advance=None) -> tuple[Path, str]:
+    """Copy, hash and sync the exact bytes that will be installed."""
+    tmp, fd = _create_temp(dest, name)
+    digest = hashlib.sha256()
+    try:
+        with os.fdopen(fd, "wb") as fout, source.open("rb") as fin:
+            while chunk := fin.read(1 << 20):
+                fout.write(chunk)
+                digest.update(chunk)
+                if advance is not None:
+                    advance(len(chunk))
+            fout.flush()
+            os.fsync(fout.fileno())
+    except BaseException:
+        _remove([tmp])
+        raise
+    return tmp, digest.hexdigest()
+
+
 def _backup_stamp() -> str:
     """Local time, to the second; uniqueness comes from _make_backup_dir."""
     return time.strftime("%Y%m%d-%H%M%S")
@@ -265,7 +284,17 @@ def _clear_journal(dest: Path) -> None:
     _sync_directory(dest)
 
 
-def _recover_install(dest: Path) -> None:
+def _matches_digest(path: Path, digest: str) -> bool:
+    try:
+        if not stat.S_ISREG(path.lstat().st_mode):
+            return False
+        with path.open("rb") as stream:
+            return hashlib.file_digest(stream, "sha256").hexdigest() == digest
+    except FileNotFoundError:
+        return False
+
+
+def _recover_install(dest: Path, files: dict[str, Path]) -> None:
     journal = dest / INSTALL_JOURNAL
     try:
         with journal.open("rb") as stream:
@@ -277,7 +306,7 @@ def _recover_install(dest: Path) -> None:
     payload = json.loads(data)
     if not isinstance(payload, dict) or payload.get("version") != 1 or not isinstance(payload.get("files"), list):
         raise ValueError("unrecognized install journal")
-    pending = []
+    entries = []
     seen = set()
     for record in payload["files"]:
         if not isinstance(record, list) or len(record) != 3:
@@ -289,17 +318,37 @@ def _recover_install(dest: Path) -> None:
                 or not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest)):
             raise ValueError("invalid install journal entry")
         seen.add(name.casefold())
-        staged, final = dest / temp, dest / name
-        source = staged if staged.exists() else final
-        with source.open("rb") as stream:
-            if hashlib.file_digest(stream, "sha256").hexdigest() != digest:
-                raise ValueError("file does not match interrupted install: %s" % name)
-        if source == staged:
-            pending.append((staged, final))
-    for staged, final in pending:
-        os.replace(staged, final)
-    _sync_directory(dest)
-    _clear_journal(dest)
+        entries.append((dest / temp, dest / name, digest))
+
+    sources = {name.casefold(): Path(source) for name, source in files.items()}
+    pending = []
+    repairs = []
+    stale = []
+    try:
+        for staged, final, digest in entries:
+            if _matches_digest(staged, digest):
+                pending.append((staged, final, None))
+            elif _matches_digest(final, digest):
+                stale.append(staged)
+            else:
+                source = sources.get(final.name.casefold())
+                if source is None or not source.is_file():
+                    raise ValueError("missing a source for the interrupted install: %s" % final.name)
+                repaired, actual = _stage_file(dest, final.name, source)
+                repairs.append(repaired)
+                if actual != digest:
+                    raise ValueError("source does not match the interrupted install: %s" % final.name)
+                pending.append((staged, final, repaired))
+        for staged, final, repaired in pending:
+            if repaired is not None:
+                # Keep a journal-owned, verified stage if the final rename fails.
+                os.replace(repaired, staged)
+            os.replace(staged, final)
+        _remove(stale)
+        _sync_directory(dest)
+        _clear_journal(dest)
+    finally:
+        _remove(repairs)
 
 
 def install(sd_root: Path, files: dict[str, Path], progress=None, warn=None) -> Path:
@@ -315,12 +364,12 @@ def install(sd_root: Path, files: dict[str, Path], progress=None, warn=None) -> 
     dest = sd_root / APP_DIR
     try:
         with _install_lock(dest.parent):
-            _recover_install(dest)
+            _recover_install(dest, files)
             if files:
                 _install(sd_root, dest, files, progress)
     except (OSError, ValueError, RecursionError) as exc:
         raise BuilderError("Could not prepare or recover the install in %s:\n%s" % (dest, exc),
-                           "Check the card and run the installer again.", code="install_failed") from exc
+                           "Check the card and retry with the same release and build options.", code="install_failed") from exc
     _warn_missing_dsp(sd_root, warn)
     return dest
 
@@ -365,20 +414,9 @@ def _install(sd_root: Path, dest: Path, files: dict[str, Path], progress) -> Non
     name = None
     try:
         for name, src in files.items():
-            tmp, fd = _create_temp(dest, name)
+            tmp, digest = _stage_file(dest, name, Path(src), advance)
             temps.append(tmp)
-            digest = hashlib.sha256()
-            with os.fdopen(fd, "wb") as fout, Path(src).open("rb") as fin:
-                while True:
-                    chunk = fin.read(1 << 20)
-                    if not chunk:
-                        break
-                    fout.write(chunk)
-                    digest.update(chunk)
-                    advance(len(chunk))
-                fout.flush()
-                os.fsync(fout.fileno())
-            staged.append((tmp, dest / name, digest.hexdigest()))
+            staged.append((tmp, dest / name, digest))
     except OSError as exc:
         _remove(temps)
         raise BuilderError("Copying %s to %s failed:\n%s" % (name, dest, exc), _RETRY_HINT,
