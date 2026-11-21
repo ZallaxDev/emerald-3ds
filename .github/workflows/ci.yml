@@ -97,6 +97,8 @@ jobs:
           python 3ds_port/tests/voxel_night_test.py --cc gcc
       - name: Bottom map and clock footer
         run: python 3ds_port/tests/bottom_map_test.py
+      - name: Voxel Pillow bulk pixel and alpha equivalence
+        run: python 3ds_port/tests/voxel_pillow_hotspots_test.py
 
   build-3ds:
     runs-on: ubuntu-26.04

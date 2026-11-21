@@ -37,7 +37,7 @@ import voxel_bridge  # noqa: E402
 import voxel_fence  # noqa: E402
 import gen_voxel_sign_masks  # noqa: E402
 import voxel_fortree  # noqa: E402
-from voxel_image import image_pixels  # noqa: E402
+from voxel_image import image_pixels, opaque_bottom  # noqa: E402
 import voxel_props  # noqa: E402
 import voxel_relief_fixes  # noqa: E402
 import voxel_night
@@ -171,8 +171,7 @@ def prop_specs(spec):
             # a thing of leaves or fruit: it stands at its foot, facing the
             # camera, like a potted plant
             parts = (lambda a, f: (lambda: [vb.Card("card", a, f)]))(
-                art, max(y for (x, y) in [(u, v) for v in range(art.size[1]) for u in range(art.size[0])
-                                           if art.getpixel((u, v))[3] >= 128]) + 1)
+                art, opaque_bottom(art))
         elif shape == "flag":
             # a flag on its pole: a card standing at the pole's foot, over
             # the whole grid (a frame of the cloth's animation reaches where
