@@ -156,3 +156,51 @@ jobs:
         with:
           name: emerald3ds-engine
           path: ship/
+
+  # Investigation only. The long comparison runs only on the draft PR branch;
+  # remove this job before merging.
+  pillow-ab-benchmark:
+    if: github.event_name == 'pull_request' && github.head_ref == 'investigate/pillow-bulk-pixel-processing'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v7.0.1
+        with:
+          repository: ZallaxDev/emerald-3ds
+          ref: b7ec5630c36cb2d0fbde1db3801114fa7552b879
+          path: benchmark-base
+          persist-credentials: false
+      - name: Prepare pinned Python, Pillow and devkitPro release image
+        id: image
+        run: |
+          python3 - <<'PY'
+          import os
+          import tomllib
+          from pathlib import Path
+          from tools.docker_release import image
+
+          lock = tomllib.loads(Path("upstream.lock").read_text(encoding="utf-8"))
+          tag = image(lock)
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              print(f"tag={tag}", file=output)
+          PY
+      - name: Generate shared inputs; run 5 alternating full-generator A/B pairs
+        env:
+          RELEASE_IMAGE: ${{ steps.image.outputs.tag }}
+        run: |
+          docker run --rm -i --user "$(id -u):$(id -g)" -e HOME=/tmp \
+            -e PYTHONHASHSEED=0 -e PYTHONDONTWRITEBYTECODE=1 \
+            -v "$GITHUB_WORKSPACE:/work" -w /work "$RELEASE_IMAGE" bash -e <<'BENCH'
+          export VOXEL_TERRACE_JOBS=4
+          python3 tools/bootstrap.py --make -j4 --python python3
+          python3 tools/benchmark_pillow_generators_ab.py \
+            --tree build/upstream --baseline-dir benchmark-base \
+            --runs 5 --output benchmark-results
+          BENCH
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: pillow-ab-benchmark
+          path: benchmark-results/
+          retention-days: 10
