@@ -27,7 +27,7 @@ from pathlib import Path
 from PIL import __version__ as pillow_version
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCES = ("voxel_image.py", "gen_voxel_buildings.py", "gen_voxel_relief.py")
+SOURCES = ("voxel_image.py", "voxel_building.py", "gen_voxel_buildings.py", "gen_voxel_relief.py")
 STEPS = ("buildings", "relief")
 
 
@@ -72,14 +72,16 @@ def execute(script: Path, destination: Path, tree: Path, extra_args=()) -> dict:
 
 
 def run_pass(version: str, iteration: int, source: Path,
-             scripts: Path, tree: Path, destination: Path) -> dict:
+             scripts: Path, tree: Path, destination: Path,
+             verify_buildings: bool = False) -> dict:
     print(f"=== {version} #{iteration} ===", flush=True)
     select_version(scripts, source)
     out = destination / f"{iteration:02d}-{version}"
     out.mkdir(parents=True, exist_ok=True)
     results = {}
     for step in STEPS:
-        args = ("--terrace-jobs", "4") if step == "relief" else ()
+        args = (("--terrace-jobs", "4") if step == "relief" else
+                ("--verify", "--diagnostics", "failures") if verify_buildings else ())
         results[step] = execute(scripts / f"gen_voxel_{step}.py", out, tree, args)
         print(f"{version} #{iteration} {step}: "
               f"{results[step]['seconds']:.3f}s, {results[step]['sha256']}", flush=True)
@@ -105,6 +107,7 @@ def summarize(report: dict, dest: Path) -> None:
         f"Hash seed: {report['hash_seed']}",
         f"Runs per variant: {report['runs']}",
         "Order alternates baseline→candidate and candidate→baseline.",
+        "Building verification enabled: %s" % report["verify_buildings"],
         "",
         "| Generator | Baseline median | Candidate median | Saved | Improvement | SHA-256 |",
         "|---|---:|---:|---:|---:|---|",
@@ -134,7 +137,8 @@ def summarize(report: dict, dest: Path) -> None:
             raise AssertionError("windowlights sidecar differs between runs")
         lines.append(f"\nWindow-light sidecar SHA-256: \`{sidecars[0]['sha256']}\`.")
     lines += ["", "All measured output hashes match across both variants and every run.",
-              "Results are generator --output timings, not full build/verification times.", ""]
+              "Building times include image proofs when --verify-buildings is enabled; "
+              "relief times are full --output export.", ""]
     (dest / "summary.md").write_text("\n".join(lines), encoding="utf-8")
     write_report(report, dest)
     print("\n".join(lines), flush=True)
@@ -146,6 +150,8 @@ def main() -> None:
     parser.add_argument("--baseline-dir", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--runs", type=int, default=5)
+    parser.add_argument("--verify-buildings", action="store_true",
+                        help="also time the full building-image verification proofs")
     args = parser.parse_args()
     if args.runs < 2:
         parser.error("--runs must be >= 2")
@@ -163,7 +169,8 @@ def main() -> None:
     report = {
         "python": sys.version, "pillow": pillow_version,
         "platform": platform.platform(), "hash_seed": os.environ["PYTHONHASHSEED"],
-        "runs": args.runs, "method": "sequential full export, alternate AB/BA",
+        "runs": args.runs, "verify_buildings": args.verify_buildings,
+        "method": "sequential full export, alternate AB/BA",
         "samples": [], "summary": {},
     }
     out.mkdir(parents=True, exist_ok=True)
@@ -173,7 +180,8 @@ def main() -> None:
                      else ("candidate", "baseline"))
             for version in order:
                 sources = baseline if version == "baseline" else candidate
-                result = run_pass(version, iteration, sources, staged, tree, out)
+                result = run_pass(version, iteration, sources, staged, tree, out,
+                                  args.verify_buildings)
                 report["samples"].append({"version": version, "iteration": iteration,
                                           "results": result})
                 write_report(report, out)

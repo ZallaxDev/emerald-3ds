@@ -99,6 +99,8 @@ jobs:
         run: python 3ds_port/tests/bottom_map_test.py
       - name: Voxel Pillow bulk pixel and alpha equivalence
         run: python 3ds_port/tests/voxel_pillow_hotspots_test.py
+      - name: Voxel image composition, raster and comparison equivalence
+        run: python 3ds_port/tests/voxel_image_semantics_test.py
       - name: Sampling profiler output format regression
         run: python tools/test_profile_voxel.py
       - name: Experimental Pillow hotspots benchmark (non-gating)

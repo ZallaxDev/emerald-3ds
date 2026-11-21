@@ -1977,6 +1977,36 @@ def anim_box(layout, shape, tiles, frames):
 LIVE_BG = (1, 2, 3)
 
 
+def _row_under_colours(owners, ground, opened, art, y):
+    """Find each column's unobscured floor colour in one pair of row scans.
+
+    The original algorithm walked outward from every owned pixel separately.
+    Preserve its exact rule: the nearest unowned pixel on EACH side must be
+    in-bounds, neither ground nor open, and have identical RGBA colours.
+    """
+    width = len(owners)
+    left = [-1] * width
+    free = -1
+    for x in range(width):
+        if owners[x] is None:
+            free = x
+        left[x] = free
+
+    free = width
+    out = [None] * width
+    for x in range(width - 1, -1, -1):
+        if owners[x] is None:
+            free = x
+        lx = left[x]
+        if (lx < 0 or free >= width or ground[lx] or opened[lx]
+                or ground[free] or opened[free]):
+            continue
+        colour = art[lx, y]
+        if colour == art[free, y]:
+            out[x] = colour
+    return out
+
+
 def interior_specs(spec):
     """Expand an `interior` spec: a room cut into pieces, one model each.
 
@@ -2351,27 +2381,16 @@ def interior_specs(spec):
         xs = [x for x, _ in pts]
         ys = [y for _, y in pts]
         rects.append((min(xs) // 16, min(ys) // 16, max(xs) // 16 + 1, max(ys) // 16 + 1))
-    under_marks = {}
+    under_rows = {}
 
     def mark_under(x, y):
-        """The floor mark a piece hides at (x, y): the same mark where the
-        row runs out of the piece both ways - a rug under a chair, a stripe
-        running on under it. Anything else (the shade down a room's edge on
-        one side) is left to the floor."""
-        if (x, y) not in under_marks:
-            under_marks[x, y] = _mark_under(x, y)
-        return under_marks[x, y]
-
-    def _mark_under(x, y):
-        found = []
-        for step in (-1, 1):
-            xx = x
-            while 0 <= xx < W and owner[y][xx] is not None:
-                xx += step
-            if not (0 <= xx < W) or ground[y][xx] or opened[y][xx]:
-                return None
-            found.append(fpx[xx, y])
-        return found[0] if found[0] == found[1] else None
+        """The floor mark a piece hides at (x, y), matching the nearest
+        unobscured colours on both sides of its row. Compute the whole row
+        once so repeated furniture pixels do not rescan the same owners."""
+        if y not in under_rows:
+            under_rows[y] = _row_under_colours(
+                owner[y], ground[y], opened[y], fpx, y)
+        return under_rows[y][x]
 
     # the cells a piece stands again in (`at`): its copies', where no other
     # piece lays the drawing (the post a side wall's rectangle reaches)

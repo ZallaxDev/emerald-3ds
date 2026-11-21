@@ -178,6 +178,12 @@ class LayoutArt:
         """
         img = Image.new("RGBA", (w * 16, h * 16), (0, 0, 0, 0))
         px = img.load()
+        # The surrounding ground drawings repeat at the same 16x16 positions
+        # for every cell. Build their colour membership once, rather than
+        # scanning every ground tile for every painted building pixel.
+        ground_at = ([{g[ly][lx] for g in ground_px}
+                      for ly in range(16) for lx in range(16)]
+                     if ground_px else None)
         for cy in range(h):
             for cx in range(w):
                 if cells is not None and (cx, cy) not in cells:
@@ -198,7 +204,7 @@ class LayoutArt:
                         elif upper:
                             continue
                         elif not is_ground:
-                            if ground_px and any(g[ly][lx] == rgb0 for g in ground_px):
+                            if ground_at is not None and rgb0 in ground_at[ly * 16 + lx]:
                                 continue
                             px[X, Y] = rgb0 + (255,)
         return img
@@ -212,15 +218,20 @@ class LayoutArt:
         return _CELL_IMAGES[key].copy()
 
     def _cell_image(self, m, layers):
-        img = Image.new("RGBA", (16, 16), (0, 0, 0, 255))
-        px = img.load()
+        # Compose each distinct (tileset pair, metatile, layers) only once
+        # in cell_image(). Submit the first 16x16 image to Pillow as one batch
+        # instead of crossing the Python/Pillow pixel boundary 256 times.
         low, high = self.subtiles(m, 0), self.subtiles(m, 1)
+        pixels = [None] * 256
+        upper = 1 in layers
         for q in range(4):
+            row, col = (q >> 1) * 8, (q & 1) * 8
             for k in range(64):
-                X = (q & 1) * 8 + k % 8
-                Y = (q >> 1) * 8 + k // 8
                 rgb1, i1 = high[q][k]
-                px[X, Y] = (rgb1 if i1 and 1 in layers else low[q][k][0]) + (255,)
+                pixels[(row + k // 8) * 16 + col + k % 8] = (
+                    (rgb1 if i1 and upper else low[q][k][0]) + (255,))
+        img = Image.new("RGBA", (16, 16))
+        img.putdata(pixels)
         return img
 
     # ── animated tiles ─────────────────────────────────────────────────────
@@ -3085,18 +3096,27 @@ class Raster:
         tw, th = tex.size
         tpx = tex.load()
         inv = 1.0 / area
+        width, depth, owners, colours = self.w, self.depth, self.owner, self.color
         for py in range(miny, maxy + 1):
             cy = py + 0.5
+            row = py * width
             for px_ in range(minx, maxx + 1):
                 cx = px_ + 0.5
+                # Preserve barycentric evaluation order and its floating-point
+                # pixel boundaries. Skip the remaining work as soon as a pixel
+                # is known to be outside the triangle.
                 a = ((x1 - cx) * (y2 - cy) - (x2 - cx) * (y1 - cy)) * inv
+                if a < -1e-7:
+                    continue
                 b = ((x2 - cx) * (y0 - cy) - (x0 - cx) * (y2 - cy)) * inv
+                if b < -1e-7:
+                    continue
                 c = 1.0 - a - b
-                if a < -1e-7 or b < -1e-7 or c < -1e-7:
+                if c < -1e-7:
                     continue
                 d = a * d0 + b * d1 + c * d2
-                idx = py * self.w + px_
-                if d <= self.depth[idx]:
+                idx = row + px_
+                if d <= depth[idx]:
                     continue
                 iw = a * w0 + b * w1 + c * w2
                 u = (a * u0 + b * u1 + c * u2) / iw
@@ -3108,9 +3128,9 @@ class Raster:
                 r, g, bb, al = tpx[tu, tv]
                 if al < 128:
                     continue
-                self.depth[idx] = d
-                self.owner[idx] = owner
-                self.color[idx] = (int(r * shade), int(g * shade), int(bb * shade))
+                depth[idx] = d
+                owners[idx] = owner
+                colours[idx] = (int(r * shade), int(g * shade), int(bb * shade))
 
     def image(self):
         img = Image.new("RGB", (self.w, self.h))
@@ -3120,27 +3140,27 @@ class Raster:
 
 def _ortho_differences(ras, apx, regions, M, dpx=None):
     wrong = missing = extra = 0
+    width, owners, colours = ras.w, ras.owner, ras.color
     for region in regions:
         rx0, ry0, rx1, ry1 = region[:4]
         behind = len(region) > 4 and region[4]
         for y in range(ry0, ry1):
+            row = (y + M) * width + M
             for x in range(rx0, rx1):
                 r, g, b, a = apx[x, y]
-                idx = (y + M) * ras.w + x + M
-                got = ras.owner[idx]
-                col = ras.color[idx]
+                idx = row + x
                 if a >= 128:
-                    if got is None:
+                    if owners[idx] is None:
                         missing += 1
                         if dpx is not None:
                             dpx[x + M, y + M] = (255, 0, 255)
-                    elif col != (r, g, b):
+                    elif colours[idx] != (r, g, b):
                         wrong += 1
                         if dpx is not None:
                             dpx[x + M, y + M] = (255, 0, 0)
                     elif dpx is not None:
                         dpx[x + M, y + M] = (r, g, b)
-                elif got is not None and not behind:
+                elif not behind and owners[idx] is not None:
                     extra += 1
                     if dpx is not None:
                         dpx[x + M, y + M] = (0, 255, 255)
