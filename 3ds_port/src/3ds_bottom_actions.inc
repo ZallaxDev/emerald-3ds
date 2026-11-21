@@ -38,6 +38,60 @@ static void OpenAsked(u8 mode)
         lastMode = mode;
         waited = 0;
     }
+    /* A live browser is not a START menu. Only its explicit ACTIONS request
+     * starts the original menu, after walking ends and while the field is safe. */
+    if (sLivePartyPending != PARTY_SIZE)
+    {
+        if (mode != MODE_FIELD || sScreen != SCR_POKEMON || sClassicMenus
+         || CtrExtras_Get("live_party") != 1 || gMain.callback2 != CB2_Overworld
+         || ScriptContext_IsEnabled() || ArePlayerFieldControlsLocked() || gPaletteFade.active)
+            sLivePartyPending = PARTY_SIZE;
+        else if (FieldIdle() && CtrStartMenu_Available() && OpenGameScreen(SCR_POKEMON))
+        {
+            sLivePartyHandoff = sLivePartyPending;
+            sLivePartyHandoffFrames = 0;
+            sLivePartyPending = PARTY_SIZE;
+        }
+    }
+    /* The normal bag initializes its list from BagPosition, including the
+     * pocket and row. Keep these untouched while browsing; transfer the
+     * selection only when ACTIONS really opens the original game menu. */
+    if (sLiveBagPending)
+    {
+        if (mode != MODE_FIELD || sScreen != SCR_BAG || sClassicMenus
+         || CtrExtras_Get("live_bag") != 1 || gMain.callback2 != CB2_Overworld
+         || ScriptContext_IsEnabled() || ArePlayerFieldControlsLocked() || gPaletteFade.active)
+            sLiveBagPending = FALSE;
+        else if (FieldIdle() && CtrStartMenu_Available())
+        {
+            u8 pocket = sLiveBagPocket;
+            unsigned total, position = LiveBagNativeIndex(pocket, sLiveBagCursor[pocket], &total);
+
+            if (position != 0xFFFF)
+            {
+                unsigned offset = sLiveBagCursor[pocket] >= sLiveBagScroll[pocket]
+                                ? sLiveBagCursor[pocket] - sLiveBagScroll[pocket] : 0;
+                unsigned scroll = position > offset ? position - offset : 0;
+                /* The native list also has a Close Bag entry and shows up
+                 * to eight rows, even when the live list has fewer. */
+                unsigned maxScroll = total + 1 > CTR_BAG_ROWS ? total + 1 - CTR_BAG_ROWS : 0;
+
+                if (scroll > maxScroll)
+                    scroll = maxScroll;
+                gBagPosition.pocket = pocket;
+                gBagPosition.scrollPosition[pocket] = scroll;
+                gBagPosition.cursorPosition[pocket] = position - scroll;
+                if (OpenGameScreen(SCR_BAG))
+                    sLiveBagPending = FALSE;
+            }
+            else
+                sLiveBagPending = FALSE;
+        }
+    }
+    if (mode == MODE_FIELD && !sClassicMenus
+     && ((sScreen == SCR_POKEMON && CtrExtras_Get("live_party") == 1)
+      || (sScreen == SCR_BAG && CtrExtras_Get("live_bag") == 1)))
+        return;
     if (mode != MODE_FIELD || !AskedScreen(sScreen) || sSession.active || sPlan.kind != PLAN_NONE)
         return;
     if (!(EnabledScreens() & (1 << sScreen)))
@@ -47,6 +101,104 @@ static void OpenAsked(u8 mode)
     /* Two seconds without the field coming back idle: given up. */
     else if (++waited > 120)
         sScreen = SCR_MAP;
+}
+
+/* The game menu is now ready: send exactly one selection to its own handler,
+ * preserving its animations, checks and later actions. Never force a menu
+ * input during a battle, script or a different screen. */
+static void CompleteLivePartyHandoff(u8 mode)
+{
+    if (sLivePartyHandoff == PARTY_SIZE)
+        return;
+    if (mode == MODE_PARTY_MENU)
+    {
+        struct CtrPartyView v;
+
+        /* CtrParty_InWindow() also covers scripted selectors. Only a
+         * field-started party menu from our live tab may take this tap. */
+        if (!sSession.active || gMain.inBattle || sScreen != SCR_POKEMON
+         || gPartyMenu.menuType != PARTY_MENU_TYPE_FIELD)
+        {
+            sLivePartyHandoff = PARTY_SIZE;
+            return;
+        }
+        if (CtrParty_InWindow() && CtrParty_GetView(&v) && v.state == CTR_PARTY_VIEW_LIST
+         && sLivePartyHandoff < gPlayerPartyCount)
+        {
+            CtrParty_TapSlot(sLivePartyHandoff);
+            sLivePartyHandoff = PARTY_SIZE;
+            return;
+        }
+    }
+    /* A different game screen, battle or a new action request invalidates
+     * the handoff; it must not linger for an unrelated party selector. */
+    if ((mode != MODE_FIELD && mode != MODE_PARTY_MENU) || gMain.inBattle
+     || sScreen != SCR_POKEMON || !sSession.active
+     || (sPlan.kind == PLAN_START && sPlan.target != START_POKEMON)
+     || ++sLivePartyHandoffFrames > 180)
+        sLivePartyHandoff = PARTY_SIZE;
+}
+
+/* Horizontal gestures and minor vertical jitter must never scroll the Bag. */
+static int LiveBagSwipeRows(int startY, int endY)
+{
+    int dy = startY - endY;
+    int rows;
+
+    if (dy >= -8 && dy <= 8)
+        return 0;
+    rows = dy / BAG_ROW_H;
+    return rows ? rows : (dy > 0 ? 1 : -1);
+}
+
+/* The passive view only changes a selection. ACTIONS enters the real menu;
+ * no bag, party or event data are mutated by touching the live snapshot. */
+static void LivePartyTap(u8 id)
+{
+    if (id >= HIT_NAT_SLOT && id < HIT_NAT_SLOT + PARTY_SIZE)
+    {
+        u8 slot = id - HIT_NAT_SLOT;
+
+        if (slot < gPlayerPartyCount && GetMonData(&gPlayerParty[slot], MON_DATA_SPECIES) != SPECIES_NONE)
+        {
+            sLivePartyCursor = slot;
+            PlaySE(SE_SELECT);
+        }
+    }
+    else if (id == HIT_CANCEL)
+    {
+        NormalizeLivePartyCursor();
+        if (gPlayerPartyCount && sLivePartyCursor < gPlayerPartyCount)
+        {
+            sLivePartyPending = sLivePartyCursor;
+            PlaySE(SE_SELECT);
+        }
+    }
+}
+
+/* A live Bag tap reads only selection and pocket state. A swipe can scroll
+ * the list; item use, giving, tossing and reordering are game-menu actions. */
+static void LiveBagTap(u8 id)
+{
+    if (id == HIT_BAG_PREV || id == HIT_BAG_NEXT)
+    {
+        sLiveBagPocket = (sLiveBagPocket + (id == HIT_BAG_PREV ? POCKETS_COUNT - 1 : 1)) % POCKETS_COUNT;
+        PlaySE(SE_SELECT);
+    }
+    else if (id >= HIT_BAG_LIVE_ROW && id < HIT_BAG_LIVE_ROW + CTR_BAG_ROWS)
+    {
+        unsigned row = id - HIT_BAG_LIVE_ROW;
+        if (row < sShown.bv.numRows)
+        {
+            sLiveBagCursor[sLiveBagPocket] = sShown.bv.scroll + row;
+            PlaySE(SE_SELECT);
+        }
+    }
+    else if (id == HIT_BAG_DESC && sShown.bv.total)
+    {
+        sLiveBagPending = TRUE;
+        PlaySE(SE_SELECT);
+    }
 }
 
 /* The dock's buttons for a screen of the game's own, which takes the buttons
@@ -231,6 +383,28 @@ static void Activate(u8 id, u8 mode)
         }
         if (mode != MODE_FIELD)
             return;
+        /* The optional read-only Pokémon view never starts a hidden menu.
+         * Pressing its own dock icon again returns to MAP. */
+        if (!sClassicMenus
+         && ((screen == SCR_POKEMON && CtrExtras_Get("live_party") == 1)
+          || (screen == SCR_BAG && CtrExtras_Get("live_bag") == 1)))
+        {
+            sScreen = sScreen == screen ? SCR_MAP : screen;
+            sLivePartyPending = PARTY_SIZE;
+            sLiveBagPending = FALSE;
+            PlaySE(SE_SELECT);
+            return;
+        }
+        if (!sClassicMenus && sScreen == SCR_POKEMON && CtrExtras_Get("live_party") == 1)
+        {
+            sScreen = SCR_MAP;
+            sLivePartyPending = PARTY_SIZE;
+        }
+        if (!sClassicMenus && sScreen == SCR_BAG && CtrExtras_Get("live_bag") == 1)
+        {
+            sScreen = SCR_MAP;
+            sLiveBagPending = FALSE;
+        }
         /* The PokéNav takes the area when it opens; the top keeps the world
          * from the moment it is asked for, fade included. */
         if (screen == SCR_POKENAV)
@@ -291,7 +465,14 @@ static void Activate(u8 id, u8 mode)
     if (sShown.native)
     {
         if (!sNativeStale)
-            GameViewTap(&sShown, id);
+        {
+            if (sShown.liveParty)
+                LivePartyTap(id);
+            else if (sShown.liveBag)
+                LiveBagTap(id);
+            else
+                GameViewTap(&sShown, id);
+        }
         return;
     }
     switch (sShown.screen)
@@ -497,6 +678,32 @@ static u8 ProcessTouch(u8 mode)
     else if (in->touchUp && sTouch.active)
     {
         sTouch.active = FALSE;
+        /* Swiping a passive bag's list scrolls its own snapshot, never
+         * CtrBag_Touch (which requires a running original bag task). */
+        if (mode == MODE_FIELD && sShown.liveBag && sTouch.dragged
+         && sTouch.startX >= BAG_LIST_X && sTouch.startX < BAG_LIST_X + BAG_LIST_W
+         && sTouch.startY >= BAG_LIST_TOP && sTouch.startY < BAG_LIST_TOP + BAG_LIST_H)
+        {
+            int shift = LiveBagSwipeRows(sTouch.startY, sTouch.lastY);
+            int maxScroll, scroll;
+
+            if (shift == 0)
+                return HIT_NONE;
+            maxScroll = sShown.bv.total > CTR_BAG_ROWS ? sShown.bv.total - CTR_BAG_ROWS : 0;
+            scroll = sLiveBagScroll[sLiveBagPocket] + shift;
+
+            if (scroll < 0) scroll = 0;
+            if (scroll > maxScroll) scroll = maxScroll;
+            if (scroll != sLiveBagScroll[sLiveBagPocket])
+            {
+                sLiveBagScroll[sLiveBagPocket] = scroll;
+                if (sLiveBagCursor[sLiveBagPocket] < scroll)
+                    sLiveBagCursor[sLiveBagPocket] = scroll;
+                if (sLiveBagCursor[sLiveBagPocket] >= scroll + CTR_BAG_ROWS)
+                    sLiveBagCursor[sLiveBagPocket] = scroll + CTR_BAG_ROWS - 1;
+            }
+            return HIT_NONE;
+        }
         /* The game's party menu, its picture in its window: the tap goes to
          * whatever waits for input in it (a mon, the buttons, its menu, a
          * question, a message), in pixels of that picture. The header's and

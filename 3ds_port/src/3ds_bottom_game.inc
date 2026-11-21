@@ -423,7 +423,8 @@ static void DrawGameParty(const ViewState *s)
         }
         oy = Plate(cx, AREA_Y + 134, bw, 30, pressed ? sEmerald : sSlate,
                    s->pressed == HIT_CANCEL ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
-        TextIn(gText_Cancel2, cx, oy, bw, 30, &sNormal, 'c', STYLE_WHITE, 4);
+        TextIn(s->liveParty ? Ascii(CTR_TEXT("ACTIONS", "ACCIONES", "ACTIONS", "AZIONI", "AÇÕES", "AKTIONEN", "こうどう"))
+                            : gText_Cancel2, cx, oy, bw, 30, &sNormal, 'c', STYLE_WHITE, 4);
         AddHit(cx, AREA_Y + 134, bw, 30, HIT_CANCEL);
     }
     if (stats)
@@ -979,6 +980,7 @@ enum
     HIT_BAG_DESC,           /* moving an item: left where it was */
     HIT_BAG_ENTRY = HIT_ROW + 4,    /* + entry shown */
     HIT_BAG_COUNT = HIT_ROW + 12,   /* -10, -1, +1, +10 */
+    HIT_BAG_LIVE_ROW = HIT_ACTION,   /* + passive list row, never a GBA bag touch */
 };
 #define BAG_LEFT_W 104
 #define BAG_LIST_X (AREA_X + BAG_LEFT_W + 4)
@@ -1048,6 +1050,8 @@ static void DrawBagList(const ViewState *s)
         }
         else if (v->flags[i] & CTR_BAG_ROW_REGISTERED)
             TextIn(Ascii("SELECT"), x + w - 60, oy, 54, BAG_ROW_H, &sSmall, 'r', chosen ? STYLE_WHITE : STYLE_GRAY, 4);
+        if (s->liveBag)
+            AddHit(x + 4, ry, w - 8, BAG_ROW_H, HIT_BAG_LIVE_ROW + i);
         /* Where the item being moved would go: a line over that row. */
         if (v->state == CTR_BAG_VIEW_SWAP && i == v->cursor && !moving)
             FillRect(x + 4, ry - 1, w - 8, 2, PackRgb(sEmerald.r, sEmerald.g, sEmerald.b));
@@ -1071,11 +1075,23 @@ static void DrawBagList(const ViewState *s)
 static void DrawBagDesc(const ViewState *s)
 {
     const struct CtrBagView *v = &s->bv;
-    int oy = PlateEx(AREA_X, BAG_FOOT_Y, AREA_W, BAG_FOOT_H, sCreamPlate, PLATE_STATE_NORMAL, 0, 25, 4, 0);
+    int descW = s->liveBag ? AREA_W - 108 : AREA_W;
+    int oy = PlateEx(AREA_X, BAG_FOOT_Y, descW, BAG_FOOT_H, sCreamPlate, PLATE_STATE_NORMAL, 0, 25, 4, 0);
 
     DrawItemIcon(v->item != ITEM_NONE ? v->item : ITEM_LIST_END, AREA_X + 8, oy + (BAG_FOOT_H - 24) / 2);
-    TextLines(v->text, AREA_X + 40, oy + 2, AREA_W - 48, 13, 3, &sNormal, STYLE_INK, TRUE);
-    if (v->state == CTR_BAG_VIEW_SWAP)
+    TextLines(v->text, AREA_X + 40, oy + 2, descW - 48, 13, 3, &sNormal, STYLE_INK, TRUE);
+    if (s->liveBag)
+    {
+        int bx = AREA_X + descW + 4, bw = AREA_W - descW - 4;
+        bool8 enabled = v->item != ITEM_NONE;
+        int by = Plate(bx, BAG_FOOT_Y, bw, BAG_FOOT_H, enabled ? sSlate : sCancelGrey, PLATE_STATE_NORMAL);
+
+        TextIn(Ascii(CTR_TEXT("ACTIONS", "ACCIONES", "ACTIONS", "AZIONI", "AÇÕES", "AKTIONEN", "こうどう")),
+               bx, by, bw, BAG_FOOT_H, &sNormal, 'c', STYLE_WHITE, 3);
+        if (enabled)
+            AddHit(bx, BAG_FOOT_Y, bw, BAG_FOOT_H, HIT_BAG_DESC);
+    }
+    else if (v->state == CTR_BAG_VIEW_SWAP)
         AddHit(AREA_X, BAG_FOOT_Y, AREA_W, BAG_FOOT_H, HIT_BAG_DESC);
 }
 
