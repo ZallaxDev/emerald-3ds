@@ -262,11 +262,132 @@ static void SnapshotPartyFull(ViewState *s)
     }
 }
 
+/* Populate the approved v4.2 Bag renderer without running the game's Bag
+ * menu task. The game encrypts item quantities in save data: always use
+ * BagGetQuantityByPocketPosition, not ItemSlot.quantity directly. */
+static void SnapshotLiveBag(ViewState *s)
+{
+    struct CtrBagView *v = &s->bv;
+    u8 pocket = sLiveBagPocket < POCKETS_COUNT ? sLiveBagPocket : ITEMS_POCKET;
+    struct BagPocket *items = &gBagPockets[pocket];
+    /* Bag pockets are not always compacted: RemoveBagItem can leave holes
+     * between occupied slots until the real Bag next opens. Display a
+     * read-only, compact list without modifying the save or its order. */
+    u8 occupied[256];  /* BagPocket.capacity is u8: every slot fits. */
+    unsigned total = 0, maxScroll, scroll, selected;
+
+    v->state = CTR_BAG_VIEW_LIST;
+    v->pocket = pocket;
+    v->bagFrame = pocket;
+    v->female = s->gender == FEMALE;
+    v->pocketSwitch = TRUE;
+    if (items->itemSlots != NULL)
+        for (unsigned slot = 0; slot < items->capacity; ++slot)
+            if (items->itemSlots[slot].itemId != ITEM_NONE)
+                occupied[total++] = slot;
+    maxScroll = total > CTR_BAG_ROWS ? total - CTR_BAG_ROWS : 0;
+    selected = total && sLiveBagCursor[pocket] < total ? sLiveBagCursor[pocket] : 0;
+    scroll = sLiveBagScroll[pocket];
+    if (scroll > maxScroll)
+        scroll = maxScroll;
+    if (selected < scroll)
+        scroll = selected;
+    if (total && selected >= scroll + CTR_BAG_ROWS)
+        scroll = selected - CTR_BAG_ROWS + 1;
+    sLiveBagCursor[pocket] = selected;
+    sLiveBagScroll[pocket] = scroll;
+
+    v->scroll = scroll;
+    v->total = total;
+    v->numRows = total - scroll < CTR_BAG_ROWS ? total - scroll : CTR_BAG_ROWS;
+    v->cursor = selected - scroll;
+    v->swapRow = -1;
+    v->item = ITEM_NONE;
+    for (unsigned i = 0; i < v->numRows; ++i)
+    {
+        unsigned index = occupied[scroll + i];
+        u16 item = BagGetItemIdByPocketPosition(pocket + 1, index);
+
+        v->items[i] = item;
+        v->counts[i] = BagGetQuantityByPocketPosition(pocket + 1, index);
+        if (pocket != KEYITEMS_POCKET)
+            v->flags[i] = CTR_BAG_ROW_COUNT;
+        else if (item == gSaveBlock1Ptr->registeredItem)
+            v->flags[i] = CTR_BAG_ROW_REGISTERED;
+        CopyText(v->names[i], sizeof(v->names[i]), GetItemName(item));
+    }
+    if (total)
+    {
+        v->item = BagGetItemIdByPocketPosition(pocket + 1, occupied[selected]);
+        CopyText(v->text, sizeof(v->text), GetItemDescription(v->item));
+    }
+}
+
+/* Return the item position after the native Bag compacts (and for TMs and
+ * berries, sorts) its slots in UpdatePocketItemLists. The live cursor counts
+ * occupied stacks, whereas the underlying save can contain gaps.
+ * Never sort or compact the actual save just to calculate this index. */
+static unsigned LiveBagNativeIndex(u8 pocket, unsigned displayIndex, unsigned *total)
+{
+    const struct BagPocket *bag;
+    unsigned slot = 0xFFFF, seen = 0;
+
+    *total = 0;
+    if (pocket >= POCKETS_COUNT)
+        return 0xFFFF;
+    bag = &gBagPockets[pocket];
+    if (!bag->itemSlots)
+        return 0xFFFF;
+    for (unsigned i = 0; i < bag->capacity; ++i)
+    {
+        if (bag->itemSlots[i].itemId == ITEM_NONE)
+            continue;
+        if (seen == displayIndex)
+            slot = i;
+        ++seen;
+    }
+    *total = seen;
+    if (slot == 0xFFFF)
+        return 0xFFFF;
+    if (pocket == TMHM_POCKET || pocket == BERRIES_POCKET)
+    {
+        /* The native menu sorts these pockets by item ID, stably. */
+        unsigned nativeIndex = 0;
+        u16 id = bag->itemSlots[slot].itemId;
+
+        for (unsigned i = 0; i < bag->capacity; ++i)
+        {
+            u16 other = bag->itemSlots[i].itemId;
+
+            if (other != ITEM_NONE && (other < id || (other == id && i < slot)))
+                ++nativeIndex;
+        }
+        return nativeIndex;
+    }
+    return displayIndex;
+}
+
+/* A stored selection can outlive a party member (e.g., depositing Pokémon
+ * in the PC). Normalize it, not just the displayed cursor. */
+static void NormalizeLivePartyCursor(void)
+{
+    if (sLivePartyCursor >= gPlayerPartyCount
+     || (gPlayerPartyCount && GetMonData(&gPlayerParty[sLivePartyCursor], MON_DATA_SPECIES) == SPECIES_NONE))
+        sLivePartyCursor = 0;
+}
+
 /* Which native view the mode on show has, NATIVE_NONE for none. */
 static u8 NativeKind(const ViewState *s)
 {
     if (sClassicMenus)
         return NATIVE_NONE;
+    if (s->mode == MODE_FIELD && s->dock && !s->fm.count && !s->fl.count)
+    {
+        if (s->screen == SCR_POKEMON && CtrExtras_Get("live_party") == 1)
+            return NATIVE_PARTY;
+        if (s->screen == SCR_BAG && CtrExtras_Get("live_bag") == 1)
+            return NATIVE_BAG;
+    }
     if (s->mode == MODE_SUMMARY)
         return NATIVE_SUMMARY;
     if (s->mode == MODE_POKEDEX)
@@ -295,7 +416,28 @@ static void SnapshotNative(ViewState *s)
     sNativeStale = kind == NATIVE_NONE && sShown.native != NATIVE_NONE;
     if (kind == NATIVE_NONE)
         return;
-    switch (kind)
+    if (kind == NATIVE_BAG && s->mode == MODE_FIELD)
+    {
+        s->liveBag = TRUE;
+        SnapshotLiveBag(s);
+        got = TRUE;
+    }
+    else if (kind == NATIVE_PARTY && s->mode == MODE_FIELD)
+    {
+        /* This is a view, not an emulated running menu. Never call
+         * CtrParty_GetView or the game-side touch handler for it. */
+        s->liveParty = TRUE;
+        NormalizeLivePartyCursor();
+        s->pv.state = CTR_PARTY_VIEW_LIST;
+        s->pv.cursor = sLivePartyCursor;
+        s->pv.moving = -1;
+        s->pv.chosen = -1;
+        s->pv.cancelEntry = -1;
+        memset(s->pv.desc, CTR_PARTY_DESC_NONE, sizeof(s->pv.desc));
+        CopyText(s->pv.prompt, sizeof(s->pv.prompt), gText_ChoosePokemon);
+        got = TRUE;
+    }
+    else switch (kind)
     {
     case NATIVE_SUMMARY:
         got = CtrSummary_GetView(&s->sv) && s->sv.state != CTR_SUM_VIEW_NONE;

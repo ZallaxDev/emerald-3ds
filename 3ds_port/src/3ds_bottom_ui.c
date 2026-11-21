@@ -498,6 +498,8 @@ typedef struct
     /* The game's screen drawn here from its state (3ds_bottom_game.inc),
      * NATIVE_NONE for its picture in the window; what it reads. */
     u8 native;
+    bool8 liveParty;        /* read-only field party; never forwards taps to a menu that is not running */
+    bool8 liveBag;          /* read-only inventory view; no GBA bag task running */
     struct CtrPartyView pv;
     struct CtrSummaryView sv;
     struct CtrBagView bv;
@@ -573,6 +575,18 @@ static u8 sScreen = SCR_MAP;
  * (the default) the bottom screen draws them itself and never shows their
  * picture. Read once a frame. */
 static bool8 sClassicMenus;
+/* #202: a passive party snapshot has no GBA menu task. ACTIONS requests a
+ * real menu only once the current walking step has completed. */
+static u8 sLivePartyCursor;
+static u8 sLivePartyPending = PARTY_SIZE;
+static u8 sLivePartyHandoff = PARTY_SIZE;
+static u16 sLivePartyHandoffFrames;
+/* Live Bag: independent pocket scroll/selection, touched only while browsing.
+ * The original BagPosition is updated only when the player requests ACTIONS. */
+static u8 sLiveBagPocket;
+static u8 sLiveBagCursor[POCKETS_COUNT];
+static u8 sLiveBagScroll[POCKETS_COUNT];
+static bool8 sLiveBagPending;
 
 /* The game's menus drawn here (not the classic menus): pokedex.c skips its
  * fades, which nobody sees then. */
@@ -1082,6 +1096,14 @@ void CtrBottom_SoftReset(void)
     sInside = INSIDE_NONE;
     sSwallow = FALSE;
     sScreen = SCR_MAP;
+    /* No stale selection or queued ACTIONS may survive a soft reset. */
+    sLivePartyCursor = 0;
+    sLivePartyPending = sLivePartyHandoff = PARTY_SIZE;
+    sLivePartyHandoffFrames = 0;
+    sLiveBagPocket = ITEMS_POCKET;
+    memset(sLiveBagCursor, 0, sizeof(sLiveBagCursor));
+    memset(sLiveBagScroll, 0, sizeof(sLiveBagScroll));
+    sLiveBagPending = FALSE;
     sMapZoom = sMapFly = FALSE;
     sOptPage = CAT_GENERAL;
     sOptSub = 0;
@@ -1153,6 +1175,7 @@ void CtrBottom_Frame(void)
     sFrames = frames;
     sClassicMenus = CtrExtras_Get("classic_menus") == 1;
     mode = CurrentMode();
+    CompleteLivePartyHandoff(mode);
     /* Away from the action menu its labels may give way: looked at again. */
     if (mode != MODE_BATTLE_ACTION)
         sQuickWarmBall = ITEM_NONE;
