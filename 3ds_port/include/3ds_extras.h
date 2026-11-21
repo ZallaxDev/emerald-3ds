@@ -44,6 +44,10 @@ typedef struct
     const uint8_t *(*text)(void);
 } CtrExtra;
 
+/* Optional timing-based RNG seed at boot and soft reset (OFF by default).
+ * Original proposal: ZallaxDev/emerald-3ds#140. */
+#define CTR_BOOT_SEED_KEY "boot_seed"
+
 extern const CtrExtra gCtrExtras[];
 extern const char *const gCtrExtrasOffOn[2];   /* "OFF", "ON" */
 extern const unsigned gCtrExtraCount;
