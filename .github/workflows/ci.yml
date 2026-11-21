@@ -193,10 +193,20 @@ jobs:
             -e PYTHONHASHSEED=0 -e PYTHONDONTWRITEBYTECODE=1 \
             -v "$GITHUB_WORKSPACE:/work" -w /work "$RELEASE_IMAGE" bash -e <<'BENCH'
           export VOXEL_TERRACE_JOBS=4
-          python3 tools/bootstrap.py --make -j4 --python python3
-          python3 tools/benchmark_pillow_generators_ab.py \
+          echo "::group::Prepare the upstream tree and voxel inputs (no complete 3DS build)"
+          python3 tools/bootstrap.py
+          make -C build/upstream tools -j4
+          # Only the tileset/region/terrain inputs are needed for the measured
+          # generators. The full 'bootstrap --make' unnecessarily rebuilds
+          # the entire game's graphics and 3DS executable before trial 1.
+          make -C build/upstream/3ds_port -j4 PYTHON=python3 \
+            romfs/voxel/regions.bin romfs/voxel/signposts.bin build/voxel_relief_base.bin
+          echo "::endgroup::"
+          echo "::group::Five paired A/B rounds, same prepared tree"
+          python3 -u tools/benchmark_pillow_generators_ab.py \
             --tree build/upstream --baseline-dir benchmark-base \
             --runs 5 --output benchmark-results
+          echo "::endgroup::"
           BENCH
       - uses: actions/upload-artifact@v7.0.2
         if: always()
