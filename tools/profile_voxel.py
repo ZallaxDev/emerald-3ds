@@ -84,7 +84,11 @@ def main():
         elif args.profiler == "tracing":
             command += ["-m", "cProfile", "-o", str(profile)]
         elif args.profiler == "sampling":
-            command += ["-m", "profiling.sampling", "run", "--pstats", "-o", str(profile)]
+            # Sampling pstats is already human-readable on stdout. Avoid writing
+            # and re-parsing a binary profile with pstats.Stats: Python 3.15
+            # sampling output is not always compatible with the cProfile reader.
+            command += ["-m", "profiling.sampling", "run", "--pstats",
+                        "--sort", "cumtime", "--limit", "60"]
         command += [str(script), "--output", str(binary)]
         if name == "buildings" and args.verify_buildings:
             command += ["--verify", "--diagnostics", "failures"]
@@ -110,7 +114,20 @@ def main():
         elif not limited:
             raise RuntimeError("generator succeeded without producing " + str(binary))
         report["steps"].append(step)
-        if profile.exists() and args.profiler != "none":
+        if args.profiler == "sampling":
+            # Capture the profiler's own formatted table from the step log.
+            # This avoids a fragile binary pstats round trip while retaining
+            # the raw full log for investigating failures and sampling output.
+            log_text = (out / (name + ".log")).read_text(encoding="utf-8",
+                                                       errors="replace")
+            marker = "Profile Stats (Mode:"
+            start = log_text.rfind(marker)
+            if start < 0:
+                raise RuntimeError("sampling profiler produced no stats table "
+                                   "(see %s)" % (out / (name + ".log")))
+            (out / (name + "-hotspots.txt")).write_text(
+                log_text[start:], encoding="utf-8")
+        elif args.profiler == "tracing" and profile.exists():
             with (out / (name + "-hotspots.txt")).open("w", encoding="utf-8") as summary:
                 stats = pstats.Stats(str(profile), stream=summary)
                 stats.strip_dirs().sort_stats("cumulative").print_stats(40)
