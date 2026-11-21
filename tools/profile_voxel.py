@@ -48,6 +48,20 @@ if limited:
 '''
 
 
+def sampling_hotspots(log_text):
+    """Read Python 3.15's printed sampling table (not cProfile's binary pstats).
+
+    The sampler currently labels it `Profile Stats:`. Accept optional heading
+    details from other CPython builds, but require the actual sample table to
+    avoid silently treating ordinary generator output as profiler data.
+    """
+    lines = log_text.splitlines(keepends=True)
+    for i in range(len(lines) - 2, -1, -1):
+        if lines[i].strip().startswith("Profile Stats") and "nsamples" in lines[i + 1]:
+            return "".join(lines[i:])
+    return None
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tree", type=Path, required=True,
@@ -120,13 +134,13 @@ def main():
             # the raw full log for investigating failures and sampling output.
             log_text = (out / (name + ".log")).read_text(encoding="utf-8",
                                                        errors="replace")
-            marker = "Profile Stats (Mode:"
-            start = log_text.rfind(marker)
-            if start < 0:
-                raise RuntimeError("sampling profiler produced no stats table "
-                                   "(see %s)" % (out / (name + ".log")))
+            summary_text = sampling_hotspots(log_text)
+            if summary_text is None:
+                raise RuntimeError("sampler finished without a recognizable "
+                                   "Profile Stats sample table (see %s)"
+                                   % (out / (name + ".log")))
             (out / (name + "-hotspots.txt")).write_text(
-                log_text[start:], encoding="utf-8")
+                summary_text, encoding="utf-8")
         elif args.profiler == "tracing" and profile.exists():
             with (out / (name + "-hotspots.txt")).open("w", encoding="utf-8") as summary:
                 stats = pstats.Stats(str(profile), stream=summary)
