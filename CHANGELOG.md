@@ -2,6 +2,39 @@
 
 ## Unreleased
 
+- Bottom screen: the summary shows the Pokémon's status icon, and the trainer
+  memo has room for a third line. By @mkrieger95 (pull requests #270, #269).
+- Bottom screen: the wild list is not drawn again while nothing in it has
+  changed. By @mkrieger95 (pull request #273).
+- Naming screen: a tab turns straight to its page; in Japanese the dakuten and
+  handakuten marks are back and the touch rows are whole. By @DannyM90 (pull
+  request #287) and @mkrieger95 (pull request #275).
+- Main menu: the saved game's trainer card on the top screen. By @DannyM90
+  (pull requests #284, #298).
+- Bag: planting a berry opens the bag in the bottom screen's window. By
+  @DannyM90 (pull request #283).
+- Frontier Pass map: the picture half as big again, filling its plate. By
+  @DannyM90 (pull request #282).
+- Bottom screen: a tap on the map that slides a little still goes on with a
+  message. By @DannyM90 (pull request #281).
+- Startup: the data pack errors and the START hint in French and Italian. By
+  @andyst-dev (pull request #209).
+- Runtime and builder hardening: checked pack reads (CRC), safer asset warm-up
+  and save writes, interrupted installs repaired, bounded string formatting
+  and number parsing. By @mkrieger95 (pull requests #300, #279).
+- Builder: an opt-in standalone macOS builder. By @mkrieger95 (pull request
+  #295).
+- Releases are built with Python 3.15.2 and Pillow 13.0.0, and the voxel
+  generators are much faster, which shortens development builds. By
+  @mkrieger95 (pull requests #288, #289, #293, #294).
+- Release: `bottom/menu_top.bin` ships with the engine files. By @DannyM90
+  (pull request #280).
+- Docs: installing on Linux. By @DannyM90 (pull request #190).
+- The Fly map's +Control Pad and the visible wild Pokémon's IVs, below: by
+  @Johannes-Sch (pull requests #267, #266).
+- CI and tests: the release toolchain, Ubuntu 26.04, current GitHub Actions
+  and updated voxel fixtures. By @mkrieger95 (pull requests #286, #290, #292,
+  #262, #277).
 - Bottom screen: the Fly map (from the party or from the Bag's HM02) takes
   the +Control Pad and the Circle Pad as the game's Fly map does: a press
   moves the pick to the next place that way, held it goes on, and A flies
