@@ -46,6 +46,7 @@ from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[1]
 OVERLAY = ["3ds_port", "builder", "tools"]
+REMOTE_PC_PATCH_NAME = "0999-remote-pc.patch"
 
 if "/opt/devkitpro" not in os.environ.get("PATH", ""):
     extra_paths = [p for p in ("/opt/homebrew/opt/make/libexec/gnubin", "/opt/homebrew/bin",
@@ -129,6 +130,14 @@ def sync_overlay(tree: Path) -> None:
     temporary = manifest.with_suffix(".tmp")
     temporary.write_text(json.dumps(sorted(current)) + "\n", encoding="utf-8")
     temporary.replace(manifest)
+    # The staged tree contains the precise patch needed to validate the
+    # original locale source hashes even when remote storage is enabled.
+    remote_patch = ROOT / "patches" / "pokeemerald" / REMOTE_PC_PATCH_NAME
+    copied_patch = tree / ".emerald3ds-remote-pc.patch"
+    if remote_patch.is_file():
+        shutil.copy2(remote_patch, copied_patch)
+    else:
+        copied_patch.unlink(missing_ok=True)
 
 
 def main() -> int:
@@ -169,6 +178,7 @@ def main() -> int:
         locale = ("japanese", args.japanese_rom, "localize_japanese.py", "japanese.json.gz")
     portuguese = args.port_lang == "pt_br"
     patches = sorted((ROOT / "patches" / "pokeemerald").glob("*.patch"))
+    remote_patch = next((patch for patch in patches if patch.name == REMOTE_PC_PATCH_NAME), None)
     marker = tree / ".emerald3ds-patches"
     digest = patch_digest(patches)
 
@@ -177,7 +187,8 @@ def main() -> int:
         head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=tree, capture_output=True,
                               text=True).stdout.strip()
     stale = not marker.exists() or marker.read_text().strip() != digest
-    if args.clean or locale or portuguese or previous_locale or head != commit or stale:
+    rebuilt = bool(args.clean or locale or portuguese or previous_locale or head != commit or stale)
+    if rebuilt:
         if head != commit:
             fetch(tree, repo, commit)
         run(["git", "reset", "-q", "--hard", commit], cwd=tree)
@@ -214,8 +225,11 @@ def main() -> int:
                             capture_output=True).returncode != 0:
                         created.unlink()
         for patch in patches:
+            # Locale manifests pin source hashes and offsets before this
+            # optional feature. Apply it *after* staging translated strings.
+            if locale and patch == remote_patch:
+                continue
             run(["git", "apply", "--whitespace=nowarn", patch], cwd=tree)
-        marker.write_text(digest + "\n")
     else:
         print("bootstrap: upstream %s with %d patches already in place" % (commit[:12], len(patches)))
 
@@ -229,6 +243,12 @@ def main() -> int:
     if locale:
         run([args.python, ROOT / "tools" / locale[2], "--tree", tree,
              "--rom", locale[1].resolve()])
+        if remote_patch:
+            run(["git", "apply", "--whitespace=nowarn", remote_patch], cwd=tree)
+    if rebuilt:
+        # A failed locale stage should not leave a valid patch-set marker on
+        # a tree that has not received the deferred patch.
+        marker.write_text(digest + "\n")
     if portuguese:
         run([args.python, ROOT / "tools/localize_portuguese.py", "--tree", tree])
     if args.make:

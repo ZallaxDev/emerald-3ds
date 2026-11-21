@@ -12,6 +12,7 @@ import importlib
 import io
 import json
 from pathlib import Path
+import subprocess
 import struct
 import sys
 import tempfile
@@ -68,6 +69,23 @@ class RandomizerLocaleTests(unittest.TestCase):
             for relative, file in manifest["files"].items():
                 with self.subTest(language=language, file=relative):
                     text = (TREE / relative).read_text(encoding="utf-8")
+                    if relative == "src/pokemon_storage_system.c":
+                        overlay = ROOT / ".emerald3ds-remote-pc.patch"
+                        if overlay.is_file():
+                            # Check the manifest against its original, pinned
+                            # source. Revert only the known Remote PC patch in
+                            # a temporary copy; a mismatched patch or any
+                            # unrelated source drift still fails the hash.
+                            with tempfile.TemporaryDirectory() as temp:
+                                path = Path(temp) / relative
+                                path.parent.mkdir(parents=True)
+                                path.write_text(text, encoding="utf-8")
+                                result = subprocess.run(
+                                    ["git", "apply", "--reverse", "--whitespace=nowarn", str(overlay)],
+                                    cwd=temp, capture_output=True, text=True,
+                                )
+                                self.assertEqual(result.returncode, 0, result.stderr)
+                                text = path.read_text(encoding="utf-8")
                     self.assertEqual(digest(text.encode()), file["sha256"])
                     previous_end = 0
                     for start, end, *_ in sorted(file["edits"]):
