@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- OPTIONS: RANDOM BOOT SEED is OFF by default, preserving Emerald's zero
+  seed on boot and soft reset; ON seeds from console timing. New-game trainer
+  IDs still reseed from timing in either mode. By @ZallaxDev (original pull
+  request #140; forward-ported for current integration by @mkrieger95).
+
 - Bottom screen: the summary shows the Pokémon's status icon, and the trainer
   memo has room for a third line. By @mkrieger95 (pull requests #270, #269).
 - Bottom screen: the wild list is not drawn again while nothing in it has
