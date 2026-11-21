@@ -12,6 +12,57 @@ static bool8 FieldIdle(void)
         && gPlayerAvatar.tileTransitionState == T_NOT_MOVING && !gPaletteFade.active && !CtrStartMenu_Busy();
 }
 
+/* These interiors commit the party to a challenge. Keep the normal lobbies
+ * and Pokémon Centers available, including after a challenge has ended. */
+static bool8 RemotePcChallengeMap(void)
+{
+    u16 map = (u8)gSaveBlock1Ptr->location.mapGroup << 8 | (u8)gSaveBlock1Ptr->location.mapNum;
+
+    switch (map)
+    {
+    case MAP_EVER_GRANDE_CITY_SIDNEYS_ROOM:
+    case MAP_EVER_GRANDE_CITY_PHOEBES_ROOM:
+    case MAP_EVER_GRANDE_CITY_GLACIAS_ROOM:
+    case MAP_EVER_GRANDE_CITY_DRAKES_ROOM:
+    case MAP_EVER_GRANDE_CITY_CHAMPIONS_ROOM:
+    case MAP_EVER_GRANDE_CITY_HALL1:
+    case MAP_EVER_GRANDE_CITY_HALL2:
+    case MAP_EVER_GRANDE_CITY_HALL3:
+    case MAP_EVER_GRANDE_CITY_HALL4:
+    case MAP_EVER_GRANDE_CITY_HALL5:
+    case MAP_EVER_GRANDE_CITY_HALL_OF_FAME:
+    case MAP_BATTLE_FRONTIER_BATTLE_TOWER_ELEVATOR:
+    case MAP_BATTLE_FRONTIER_BATTLE_TOWER_CORRIDOR:
+    case MAP_BATTLE_FRONTIER_BATTLE_TOWER_BATTLE_ROOM:
+    case MAP_BATTLE_FRONTIER_BATTLE_TOWER_MULTI_CORRIDOR:
+    case MAP_BATTLE_FRONTIER_BATTLE_TOWER_MULTI_BATTLE_ROOM:
+    case MAP_BATTLE_FRONTIER_BATTLE_DOME_CORRIDOR:
+    case MAP_BATTLE_FRONTIER_BATTLE_DOME_PRE_BATTLE_ROOM:
+    case MAP_BATTLE_FRONTIER_BATTLE_DOME_BATTLE_ROOM:
+    case MAP_BATTLE_FRONTIER_BATTLE_PALACE_CORRIDOR:
+    case MAP_BATTLE_FRONTIER_BATTLE_PALACE_BATTLE_ROOM:
+    case MAP_BATTLE_FRONTIER_BATTLE_ARENA_CORRIDOR:
+    case MAP_BATTLE_FRONTIER_BATTLE_ARENA_BATTLE_ROOM:
+    case MAP_BATTLE_FRONTIER_BATTLE_FACTORY_PRE_BATTLE_ROOM:
+    case MAP_BATTLE_FRONTIER_BATTLE_FACTORY_BATTLE_ROOM:
+    case MAP_SLATEPORT_CITY_BATTLE_TENT_CORRIDOR:
+    case MAP_SLATEPORT_CITY_BATTLE_TENT_BATTLE_ROOM:
+    case MAP_FALLARBOR_TOWN_BATTLE_TENT_CORRIDOR:
+    case MAP_FALLARBOR_TOWN_BATTLE_TENT_BATTLE_ROOM:
+    case MAP_VERDANTURF_TOWN_BATTLE_TENT_CORRIDOR:
+    case MAP_VERDANTURF_TOWN_BATTLE_TENT_BATTLE_ROOM:
+        return TRUE;
+    default:
+        return InTrainerHillChallenge();
+    }
+}
+
+static bool8 RemotePcAvailable(void)
+{
+    return CtrExtras_Get("remote_pc") && FlagGet(FLAG_SYS_POKEMON_GET)
+        && FieldIdle() && CtrStartMenu_Available() && !RemotePcChallengeMap();
+}
+
 /* A field message box is up (field_message_box.c), as when a person talks. */
 static bool8 FieldMessageUp(void)
 {

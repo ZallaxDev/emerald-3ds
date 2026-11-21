@@ -132,6 +132,7 @@
 #include "string_util.h"
 #include "strings.h"
 #include "task.h"
+#include "trainer_hill.h"
 #include "text.h"
 #include "text_window.h"
 #include "util.h"
@@ -192,6 +193,7 @@ void CtrPokenavList_SetSelected(u16 selected);
 void CtrPokenavMatchCall_SetOption(u16 cursor);
 void CtrMonMarkings_SetCursor(s8 cursor);
 bool8 CtrStorage_IsOpen(void);
+bool8 CtrStorage_OpenRemote(void);
 int CtrTitleScreen_RayquazaBg(void);
 void CtrStorage_Tap(s16 x, s16 y);
 void CtrSummary_Tap(s16 x, s16 y);
@@ -409,6 +411,7 @@ typedef struct
 typedef struct
 {
     u8 mode, screen, pressed, gender, inBattle;
+    u8 remotePcHint;
     u8 title;                         /* MODE_OFF on the title screen */
     u8 dim;                           /* MODE_OFF from the main menu to the field: the idle backdrop */
     u16 enabled;                      /* bit per section */

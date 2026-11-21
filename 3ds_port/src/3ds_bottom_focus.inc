@@ -228,6 +228,14 @@ static void ProcessKeys(u8 mode)
         LeaveFocus();
         PlaySE(SE_SELECT);
     }
+    /* Options handles R above. Cancel and the soft reset chord take priority. */
+    else if (mode == MODE_FIELD && (down & R_BUTTON)
+             && (in->held & CTR_SOFT_RESET_KEYS) != CTR_SOFT_RESET_KEYS
+             && RemotePcAvailable())
+    {
+        if (CtrStorage_OpenRemote())
+            LeaveFocus();
+    }
     else if (down & DPAD_LEFT)
         MoveFocus(&sFocus, ColumnStep(sFocus, -1));
     else if (down & DPAD_RIGHT)
