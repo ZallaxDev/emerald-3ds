@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Bottom screen: the Fly map (from the party or from the Bag's HM02) takes
+  the +Control Pad and the Circle Pad as the game's Fly map does: a press
+  moves the pick to the next place that way, held it goes on, and A flies
+  there, so a destination can be chosen without the touch screen.
 - Visible wild Pokémon: one caught has its IVs from the random numbers right
   after its personality, as a wild Pokémon of the game has, so save checkers
   such as PKHeX accept it (PID/IV "Method 1"); before, its IVs were rolled
