@@ -24,7 +24,7 @@ them, at the console's capacity. What it shows is what the console has.
         (a patch's edge, under a lifted roof) against the drawing round
         it: the cells where it shows a colour the drawing has not there
         (PREFIX_under.png: those cells in red on the map's drawing)
-    python voxel_engine_view.py check [LAYOUT ...]
+    python voxel_engine_view.py check [LAYOUT ...] [--jobs N]
         every map (or those): chunks that refuse triangles (the console
         drops them: holes), static models over their memory budget; with
         no layouts also connected maps whose building pages cannot share
@@ -43,6 +43,8 @@ import shutil
 import struct
 import subprocess
 import sys
+from functools import cache
+from itertools import repeat
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PORT = os.path.dirname(HERE)
@@ -257,9 +259,14 @@ def dump(layout_id):
     """[chunk dicts] of the layout as the console builds it."""
     build_dump()
     entry, index = layout_entry(layout_id)
+    return dump_layout(entry, index, vc.MapEvents()), index
+
+
+def dump_layout(entry, index, events, *, geometry=True):
+    layout_id = entry["id"]
     w, h = entry["width"], entry["height"]
     blocks = vb.read_u16(os.path.join(vb.ROOT, entry["blockdata_filepath"]))
-    cells = vc.Layout(entry, vc.MapEvents())
+    cells = vc.Layout(entry, events)
     shapes = bytes(SHAPE_WATER if cells.behaviour(x, y) in vc.WATER else SHAPE_FLAT
                    for y in range(h) for x in range(w))
     primary, secondary = entry["primary_tileset"], entry["secondary_tileset"]
@@ -288,13 +295,16 @@ def dump(layout_id):
             pm, lit, x, y, z = struct.unpack_from("<II3f", data, o)
             statics.append((pm, lit, (x, y, z)))
             o += 20
-        verts = struct.unpack_from("<%df" % (count * 6), data, o)
+        chunk = {"cx": cx, "cy": cy, "count": count, "dropped": dropped,
+                 "terrain": terrain, "first": first, "page": page, "statics": statics}
+        if geometry:
+            verts = struct.unpack_from("<%df" % (count * 6), data, o)
+            chunk["verts"] = [verts[i * 6:i * 6 + 6] for i in range(count)]
+        elif o + count * 24 > len(data):
+            raise struct.error("truncated scene vertex data")
         o += count * 24
-        vs = [verts[i * 6:i * 6 + 6] for i in range(count)]
-        chunks.append({"cx": cx, "cy": cy, "count": count, "dropped": dropped,
-                       "terrain": terrain, "first": first, "page": page, "statics": statics,
-                       "verts": vs})
-    return chunks, index
+        chunks.append(chunk)
+    return chunks
 
 
 # ── the picture ────────────────────────────────────────────────────────────
@@ -667,16 +677,52 @@ def page_pairs(bld):
     return sorted(bad)
 
 
+@cache
+def check_events():
+    # The map files are read-only during a check. Each worker reads them once.
+    return vc.MapEvents()
+
+
+def check_dump(layout):
+    entry, index = layout
+    try:
+        return dump_layout(entry, index, check_events(), geometry=False), None
+    except SystemExit as error:
+        return None, str(error)
+
+
+def check_dumps(names, by_name, jobs):
+    # Prepare the executable before starting any worker that could use it.
+    if not names:
+        return
+    try:
+        build_dump()
+    except SystemExit as error:
+        yield from repeat((None, str(error)), len(names))
+        return
+    check_events.cache_clear()
+    layouts = (by_name[name] for name in names)
+    if jobs == 1 or len(names) == 1:
+        yield from map(check_dump, layouts)
+    else:
+        # The browser's relief generator imports this module to read buildings.
+        from concurrent.futures import ProcessPoolExecutor
+        from multiprocessing import get_context
+
+        with ProcessPoolExecutor(max_workers=min(jobs, len(names)), mp_context=get_context("spawn")) as pool:
+            yield from pool.map(check_dump, layouts)
+
+
 def check(args):
-    names = args.layouts or [e["id"] for e in vl.layouts() if "id" in e
+    layouts = vl.layouts()
+    names = args.layouts or [e["id"] for e in layouts if "id" in e
                              and e.get("primary_tileset") == "gTileset_General"]
+    by_name = {e["id"]: (e, i) for i, e in reversed(list(enumerate(layouts, 1))) if "id" in e}
     bld = Buildings()
     failed = False
-    for name in names:
-        try:
-            chunks, _ = dump(name)
-        except SystemExit as e:
-            print("%-40s dump failed: %s" % (name, e))
+    for name, (chunks, error) in zip(names, check_dumps(names, by_name, args.jobs)):
+        if error is not None:
+            print("%-40s dump failed: %s" % (name, error))
             failed = True
             continue
         worst = max(chunks, key=lambda c: c["count"]) if chunks else None
@@ -730,6 +776,7 @@ def main():
     c = sub.add_parser("check")
     c.add_argument("layouts", nargs="*")
     c.add_argument("--verbose", action="store_true")
+    c.add_argument("--jobs", type=int, default=1, help="number of layouts to check concurrently")
     args = ap.parse_args()
     if args.cmd == "view":
         view(args)
@@ -738,6 +785,8 @@ def main():
         return gba(args)
     if args.cmd == "under":
         return under(args)
+    if args.jobs < 1:
+        c.error("--jobs must be positive")
     return check(args)
 
 
