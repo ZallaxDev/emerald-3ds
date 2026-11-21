@@ -64,6 +64,7 @@ static const OptRowDef sRows3d[] = {
 };
 static const OptRowDef sRowsField[] = {
     EXTRA_ROW("visible_wild"),
+    EXTRA_ROW("wild_chase"),
     EXTRA_ROW("follower"),
     EXTRA_ROW("run_indoors"),
     EXTRA_ROW("field_hms"),
