@@ -33,7 +33,9 @@ What you need
 Install
 -------
 1. Extract this whole ZIP to a folder.
-2. Run Emerald3DS-Builder.exe.
+2. On Windows, run Emerald3DS-Builder.exe. For a self-built macOS ZIP, use
+   Archive Utility or unzip to extract it, then run ./Emerald3DS-Builder
+   from Terminal in the extracted folder.
 3. Choose your ROM. The builder checks that it is the supported one.
    With the English ROM, choose the game language too (English or
    Português (Brasil)).
@@ -55,6 +57,8 @@ Command line
     emerald3ds-builder-cli.exe install --rom "Pokemon Emerald.gba" --sd E:\
     emerald3ds-builder-cli.exe install --rom "Pokemon Emerald.gba" --sd E:\ --language pt
     emerald3ds-builder-cli.exe verify  --pak E:\3ds\emerald3ds\emerald3ds.pak
+
+    macOS: ./emerald3ds-builder-cli install --rom "Pokemon Emerald.gba" --sd /Volumes/SD
 
 Updating
 --------

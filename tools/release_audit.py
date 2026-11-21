@@ -249,7 +249,7 @@ def audit(entries, allow: Allow, denylist, rom_index: RomIndex | None,
                 findings.append(Finding(name, "known-rom"))
 
         textual = suffix in TEXT_SUFFIXES or context == "repo"
-        if textual and name not in allow.local_paths:
+        if textual and not allow.matches(allow.local_paths, name):
             m = LOCAL_PATH.search(data)
             if m:
                 findings.append(Finding(name, "local-path", m.group(0)[:60].decode("latin-1")))

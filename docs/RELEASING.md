@@ -263,6 +263,21 @@ variant is precompiled from its own ROM and tree), assembles
 (including the ROM scan and, for the web payload, the manifest and its hashes)
 and writes `dist/SHA256SUMS.txt`.
 
+For a locally built macOS standalone package, run the same command on a Mac
+with `--platform macOS`. Use the Python and Pillow versions pinned in
+`upstream.lock`, PyInstaller, and the native release tools above. The script
+produces `Emerald3DS-v<version>-macOS.zip` and runs the strict release audit.
+The archive preserves PyInstaller's runtime symlinks and is intended for
+the architecture of the Python interpreter used to build it. Test the
+extracted command-line and graphical builders on that architecture.
+The official standalone download remains the Windows ZIP. Linux uses the
+source builder.
+
+The macOS packaging CI uses a synthetic payload to check PyInstaller,
+archive extraction and both builder executables. Use the versions pinned
+in `upstream.lock` when generating and precompiling real game data to keep
+the native and web builders compatible.
+
 The web payload can also be made on its own from any release's `payload/`
 folder, for example the one inside an already published Windows ZIP:
 
