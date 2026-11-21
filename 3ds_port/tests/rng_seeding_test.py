@@ -52,9 +52,12 @@ def main():
     row = rows[0]
     assert 'CTR_BOOT_SEED_KEY, 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL}' in row, (
         'OFF/ON switch must default to OFF')
-    label_match = re.search(r'CTR_TEXT\\((.*?)\\),\\s*CTR_BOOT_SEED_KEY', row)
-    assert label_match, 'boot seed option must have localized label'
-    labels = re.findall(r'"([^"]+)"', label_match.group(1))
+    # The row is a literal C initializer: check its delimiter and the seven
+    # quoted locale strings directly instead of depending on regex escaping.
+    assert row.count('CTR_TEXT(') == 1 and '), CTR_BOOT_SEED_KEY' in row, (
+        'boot seed option must have a localized CTR_TEXT label')
+    label_text = row.split('CTR_TEXT(', 1)[1].split('), CTR_BOOT_SEED_KEY', 1)[0]
+    labels = re.findall(r'"([^"]+)"', label_text)
     assert len(labels) == 7 and labels[0] == 'RANDOM BOOT SEED', (
         'all seven current language labels must exist')
     second_page = [line for line in extras.splitlines()
