@@ -97,6 +97,15 @@ jobs:
           python 3ds_port/tests/voxel_night_test.py --cc gcc
       - name: Bottom map and clock footer
         run: python 3ds_port/tests/bottom_map_test.py
+      - name: Live Bag snapshot bounds and selection
+        run: python 3ds_port/tests/bottom_live_bag_test.py
+      - name: Live Party cancelled handoffs and cursor normalization
+        run: python 3ds_port/tests/bottom_live_party_test.py
+      - name: Live Party/Bag settings persistence
+        run: |
+          gcc -std=gnu99 -O2 -Wall -Wextra -Werror -I3ds_port/tests/settings_host -I3ds_port/include \
+              3ds_port/tests/settings_shutdown_test.c -pthread -o settings_shutdown_test
+          ./settings_shutdown_test
 
   build-3ds:
     runs-on: ubuntu-26.04
