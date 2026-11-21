@@ -93,7 +93,8 @@ int main(int argc, char **argv) {
     CtrSettings_SetInt("day_night", 1); CtrSettings_SetInt("clock_speed", 5);
     CtrSettings_SetInt("timed_encounters", 1); CtrSettings_SetInt("show_clock", 1);
     /* Two independent extras enter the same SD serialization path. */
-    CtrSettings_SetInt("live_party", 1); CtrSettings_SetInt("live_bag", 0);
+    CtrSettings_SetInt("live_party", 1); CtrSettings_SetInt("live_bag", 1);
+    CtrSettings_SetInt("live_bag", 0); /* A genuine toggle back to OFF. */
     assert(CtrSettings_GetInt("live_party", 0) == 1);
     assert(CtrSettings_GetInt("live_bag", 1) == 0);
     assert(clockUpdates == 1);
