@@ -48,6 +48,7 @@ SCHEMA = 1
 HEADER = struct.Struct("<8sII20sIQQII")
 ENTRY = struct.Struct("<QIIQIIII")
 ALIGN = 32
+MAX_ENTRIES = 1 << 20
 TYPES = {"graphics/": 1, "data/": 1, "generated/": 1, "maps/": 2, "scripts/": 3,
          "sound/": 4, "gamedata/": 5, "voxel/": 6}
 
@@ -117,6 +118,8 @@ def write_pak(out: Path, files: Iterable[tuple[str, bytes]], abi: int, rom_sha1:
     items.sort()
     by_path = sorted(items, key=lambda item: item[1].encode("utf-8"))
     count = len(items)
+    if not 0 < count <= MAX_ENTRIES:
+        raise PakError("invalid entry count")
     index_offset = HEADER.size
     data_offset = (index_offset + count * ENTRY.size + ALIGN - 1) // ALIGN * ALIGN
     offsets: dict[int, int] = {}
@@ -162,10 +165,17 @@ class PakReader:
             raise PakError("not a Emerald 3DS data pack")
         if zlib.crc32(head[:60]) & 0xFFFFFFFF != struct.unpack_from("<I", head, 60)[0]:
             raise PakError("header CRC mismatch")
-        (_, self.schema, self.abi, self.rom_sha1, count, index_offset, self.data_offset,
+        (_, self.schema, self.abi, self.rom_sha1, count, index_offset, data_offset,
          index_crc, _) = HEADER.unpack(head)
         if self.schema != SCHEMA:
             raise PakError("unsupported schema %d" % self.schema)
+        self._file.seek(0, 2)
+        file_size = self._file.tell()
+        if not 0 < count <= MAX_ENTRIES:
+            raise PakError("invalid entry count")
+        if not HEADER.size <= index_offset <= data_offset <= file_size or count * ENTRY.size > data_offset - index_offset:
+            raise PakError("index outside the pack")
+        self.data_offset = data_offset
         self._file.seek(index_offset)
         index = self._file.read(count * ENTRY.size)
         if len(index) != count * ENTRY.size or zlib.crc32(index) & 0xFFFFFFFF != index_crc:
@@ -176,6 +186,8 @@ class PakReader:
             pid, typ, flags, off, stored, raw, crc, _ = ENTRY.unpack_from(index, i * ENTRY.size)
             if pid <= last:
                 raise PakError("index not sorted")
+            if flags & 1 or stored != raw or not data_offset <= off <= file_size or stored > file_size - off:
+                raise PakError("invalid payload range or encoding")
             last = pid
             self.entries[pid] = Entry(None, pid, typ, flags, off, stored, raw, crc)
 
@@ -194,7 +206,7 @@ class PakReader:
             raise KeyError(path)
         self._file.seek(entry.offset)
         data = self._file.read(entry.raw_size)
-        if zlib.crc32(data) & 0xFFFFFFFF != entry.crc32:
+        if len(data) != entry.raw_size or zlib.crc32(data) & 0xFFFFFFFF != entry.crc32:
             raise PakError("CRC mismatch in %s" % path)
         return data
 

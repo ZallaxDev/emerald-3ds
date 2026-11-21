@@ -21,6 +21,7 @@ is sent anywhere.
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 
 from . import __version__, followers, pak
@@ -60,10 +61,13 @@ def build_pack_for_web(rom_path, payload_path, output_path, progress_callback=No
     "scenery", "verify"; fraction is the overall position (0..1). The follower
     sprites come from jsDelivr one by one (followers.py), the one host the
     site's Content-Security-Policy lets the page reach besides its own."""
+    started = time.perf_counter()
     manifest = None
+    manifest_seconds = None
     if manifest_path is not None:
         try:
             manifest = validate(json.loads(Path(manifest_path).read_text(encoding="utf-8")))
+            manifest_seconds = time.perf_counter() - started
         except (OSError, ValueError, ManifestError) as exc:
             raise BuilderError("This release's web manifest is not valid.", str(exc),
                                code="manifest_invalid") from exc
@@ -73,7 +77,9 @@ def build_pack_for_web(rom_path, payload_path, output_path, progress_callback=No
             # "Generating the 3D scenery: buildings (4/5)" -> its stage, the text whole
             progress_callback(STAGES.get(message.split(": ", 1)[0], "data"), fraction, message)
 
+    rom_start = time.perf_counter()
     rom = load_rom(Path(rom_path), supported_sha1s(manifest))
+    rom_seconds = time.perf_counter() - rom_start
     fetcher = followers.Fetcher(followers.load_sources(), fetch=followers.xhr_fetch, workers=1,
                                 hosts=followers.HOSTS[1:])
     variant = variant_for(manifest, rom.sha1, language) if manifest is not None else None
@@ -89,6 +95,9 @@ def build_pack_for_web(rom_path, payload_path, output_path, progress_callback=No
                            code="abi_mismatch")
     info["abi"] = "%08x" % info["abi"]
     info["builderVersion"] = __version__
+    phases = [("manifest", round(manifest_seconds, 4))] if manifest_seconds is not None else []
+    info["timings"] = phases + [("rom", round(rom_seconds, 4))] + info["timings"]
+    info["total_seconds"] = round(time.perf_counter() - started, 4)
     return info
 
 

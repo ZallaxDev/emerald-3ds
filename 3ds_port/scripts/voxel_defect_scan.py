@@ -75,13 +75,14 @@ import argparse
 import json
 import math
 import os
-import pickle
 import sys
 import types
 from collections import Counter, defaultdict
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_voxel_buildings as g  # noqa: E402
+import voxel_cache
+import voxel_relief_fixes
 import voxel_building as vb  # noqa: E402
 from PIL import Image  # noqa: E402
 
@@ -541,13 +542,10 @@ def main():
     g.DIAGNOSTICS = opt.out
     layout = vb.LayoutArt(opt.layout)
     key = (opt.layout, opt.only)
-    if opt.cache and os.path.exists(opt.cache):
-        with open(opt.cache, "rb") as f:
-            cached = pickle.load(f)
-        if cached[0] != key:
-            cached = None
-    else:
-        cached = None
+    cached = None
+    if opt.cache:
+        key += (voxel_cache.fingerprint(vb.ROOT, g.PORT, voxel_relief_fixes.FIXES),)
+        cached = voxel_cache.read(opt.cache, key)
     if cached is None:
         lj = json.load(open(os.path.join(vb.ROOT, "data", "layouts", "layouts.json"),
                             encoding="utf-8"))["layouts"]
@@ -561,12 +559,11 @@ def main():
                                              mesh=types.SimpleNamespace(tris=m.mesh.tris),
                                              lint=m.spec.get("lint"))
                 found.append((slim, at))
-        cached = (key, found)
+        cached = found
         if opt.cache:
-            with open(opt.cache, "wb") as f:
-                pickle.dump(cached, f)
+            voxel_cache.write(opt.cache, key, cached)
     override, placements, taken = {}, [], set()
-    for m, at in cached[1]:
+    for m, at in cached:
         w, h = m.cells
         for px, py, gm in at:
             for j in range(h):

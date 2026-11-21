@@ -738,8 +738,6 @@ int main(void) {
 '''
     # The real static-mesh cache: lit meshes kept per sun, converted after
     # FrameEnd, their replacement placed in their own slot.
-    begin = voxel.rfind('typedef struct', 0, voxel.index('} VoxelGpuVertex;'))
-    end = voxel.index('\n', voxel.index('#define VOXEL_SHADE_SCALE')) + 1
     statics = r'''
 #include <assert.h>
 #include <math.h>
@@ -758,11 +756,10 @@ static uint32_t sFrame;
 enum { CTR_LOG_VIDEO, CTR_LOG_ERROR };
 static unsigned logs;
 static void CtrLog_Write(int channel, const char *format, ...) { (void)channel; (void)format; ++logs; }
-typedef struct { float x, y, z; float u, v; float shade; } VoxelVertex;
+#include "voxel_vertex_pack.h"
+static VoxelPackStats sPackStats;
 '''
-    statics += voxel[begin:end]
     statics += function(voxel, 'static float MsSince(') + function(voxel, 'static float TicksMs(')
-    statics += 'static unsigned sPackErrors;\nstatic float sPackWorst;\n' + function(voxel, 'static int16_t Quantise(')
     statics += r'''
 typedef struct { float dx, dz, strength; uint32_t key; } VoxelSun;
 static VoxelSun gVoxelSun = {0.85f, 0.55f, 1.0f, 0};
@@ -886,7 +883,7 @@ int main(void) {
         for name, text in (('test', source), ('jobs', jobs), ('statics', statics)):
             path = temp / (name + '.c'); path.write_text(text, encoding='utf-8')
             exe = temp / (name + '.exe')
-            subprocess.run([args.cc, '-std=c99', '-O2', '-Wall', '-Wextra', '-Werror', str(path), '-o', str(exe), '-lm'], check=True)
+            subprocess.run([args.cc, '-std=c99', '-O2', '-Wall', '-Wextra', '-Werror', '-I', str(ROOT / 'src/voxel'), str(path), '-o', str(exe), '-lm'], check=True)
             subprocess.run([str(exe)], check=True)
 if __name__ == '__main__':
     main()

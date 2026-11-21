@@ -31,7 +31,11 @@ static uint8_t *Load(const char *path, long *size)
     fseek(f, 0, SEEK_END);
     *size = ftell(f);
     fseek(f, 0, SEEK_SET);
-    data = malloc((size_t)*size);
+    if (*size < 0 || (data = malloc(*size ? (size_t)*size : 1)) == NULL)
+    {
+        fclose(f);
+        return NULL;
+    }
     if (fread(data, 1, (size_t)*size, f) != (size_t)*size)
     {
         fclose(f);
@@ -56,13 +60,15 @@ static uint32_t BitwiseCrc(const uint8_t *p, size_t n)
     return ~crc;
 }
 
-static CtrPakStatus Parse(const uint8_t *pak, uint32_t abi, const uint8_t *rom, CtrPakEntry *entries,
+static CtrPakStatus Parse(const uint8_t *pak, size_t size, uint32_t abi, const uint8_t *rom, CtrPakEntry *entries,
                           CtrPakHeader *header)
 {
-    CtrPakStatus status = CtrPak_ParseHeader(pak, abi, rom, header);
+    if (size < CTR_PAK_HEADER_BYTES)
+        return CTR_PAK_BAD_MAGIC;
+    CtrPakStatus status = CtrPak_ParseHeader(pak, abi, rom, size, header);
     if (status != CTR_PAK_OK)
         return status;
-    return CtrPak_ParseIndex(pak + header->indexOffset, header, entries);
+    return CtrPak_ParseIndex(pak + header->indexOffset, header, size, entries);
 }
 
 int main(int argc, char **argv)
@@ -77,14 +83,32 @@ int main(int argc, char **argv)
         "maps/layouts.bin", "graphics/fonts/normal.latfont", "gamedata/gamedata.bin", "voxel/relief.bin",
     };
 
-    if (argc != 3 || (pak = Load(argv[1], &size)) == NULL)
+    if ((argc != 3 && argc != 4) || (pak = Load(argv[1], &size)) == NULL)
     {
         fprintf(stderr, "usage: pak_test FILE ABI_HEX\n");
         return 2;
     }
     abi = (uint32_t)strtoul(argv[2], NULL, 16);
 
-    CHECK(Parse(pak, abi, kRom, entries, &header) == CTR_PAK_OK, "valid pack parses");
+    if (argc == 4 && strcmp(argv[3], "--check-layout") == 0)
+    {
+        CtrPakStatus status = size < CTR_PAK_HEADER_BYTES ? CTR_PAK_BAD_MAGIC
+                            : CtrPak_ParseHeader(pak, abi, kRom, size, &header);
+        if (status == CTR_PAK_OK)
+        {
+            CtrPakEntry *all = calloc(header.entryCount, sizeof(*all));
+            if (all == NULL)
+            {
+                free(pak);
+                return 2;
+            }
+            status = CtrPak_ParseIndex(pak + header.indexOffset, &header, size, all);
+            free(all);
+        }
+        free(pak);
+        return status == CTR_PAK_OK ? 0 : 1;
+    }
+    CHECK(Parse(pak, size, abi, kRom, entries, &header) == CTR_PAK_OK, "valid pack parses");
     CHECK(header.entryCount == 4, "entry count");
     for (unsigned i = 0; i < 4; ++i)
     {
@@ -134,22 +158,46 @@ int main(int argc, char **argv)
         CHECK(CtrPak_Crc32(0, "123456789", 9) == 0xCBF43926u, "CRC-32 check value");
     }
 
-    CHECK(Parse(pak, abi ^ 1, kRom, entries, &header) == CTR_PAK_BAD_ABI, "other release is refused");
+    {
+        /* All 256 indices of each slice. Four zero bytes appended to an
+         * incoming CRC make the inverted seed select the four entries. */
+        const uint32_t zeroWord = 0;
+        const uint8_t *zeroBytes = (const uint8_t *)&zeroWord;
+        const uint32_t zeroCrc = BitwiseCrc(zeroBytes, sizeof(zeroWord));
+        int same = 1;
+
+        for (unsigned byte = 0; byte < 4; ++byte)
+        {
+            for (unsigned value = 0; value < 256; ++value)
+            {
+                uint32_t seed = ~((uint32_t)value << (byte * 8));
+                uint32_t reflected = ~seed;
+
+                for (unsigned bit = 0; bit < 32; ++bit)
+                    reflected = (reflected >> 1) ^ ((reflected & 1) ? 0xEDB88320u : 0);
+                same &= CtrPak_Crc32(seed, zeroBytes, sizeof(zeroWord)) == ~reflected;
+            }
+        }
+        CHECK(same, "every CRC table entry matches bitwise advancement");
+        CHECK(CtrPak_Crc32(0, zeroBytes, sizeof(zeroWord)) == zeroCrc, "zero word CRC");
+    }
+
+    CHECK(Parse(pak, size, abi ^ 1, kRom, entries, &header) == CTR_PAK_BAD_ABI, "other release is refused");
     CHECK(header.engineAbi == abi, "pack ABI still reported");
     memcpy(bad, kRom, sizeof(bad));
     bad[0] ^= 1;
-    CHECK(Parse(pak, abi, bad, entries, &header) == CTR_PAK_BAD_ROM, "other ROM is refused");
+    CHECK(Parse(pak, size, abi, bad, entries, &header) == CTR_PAK_BAD_ROM, "other ROM is refused");
 
     pak[0] ^= 1;
-    CHECK(Parse(pak, abi, kRom, entries, &header) == CTR_PAK_BAD_MAGIC, "bad magic");
+    CHECK(Parse(pak, size, abi, kRom, entries, &header) == CTR_PAK_BAD_MAGIC, "bad magic");
     pak[0] ^= 1;
     pak[20] ^= 1;
-    CHECK(Parse(pak, abi, kRom, entries, &header) == CTR_PAK_BAD_HEADER_CRC, "damaged header");
+    CHECK(Parse(pak, size, abi, kRom, entries, &header) == CTR_PAK_BAD_HEADER_CRC, "damaged header");
     pak[20] ^= 1;
     pak[CTR_PAK_HEADER_BYTES + 5] ^= 1;
-    CHECK(Parse(pak, abi, kRom, entries, &header) == CTR_PAK_BAD_INDEX_CRC, "damaged index");
+    CHECK(Parse(pak, size, abi, kRom, entries, &header) == CTR_PAK_BAD_INDEX_CRC, "damaged index");
     pak[CTR_PAK_HEADER_BYTES + 5] ^= 1;
-    CHECK(Parse(pak, abi, kRom, entries, &header) == CTR_PAK_OK, "restored pack parses again");
+    CHECK(Parse(pak, size, abi, kRom, entries, &header) == CTR_PAK_OK, "restored pack parses again");
 
     free(pak);
     if (sFailures)

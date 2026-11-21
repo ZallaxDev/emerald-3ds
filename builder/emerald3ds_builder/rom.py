@@ -99,6 +99,7 @@ def reject_unsupported_rom(sha1: str) -> None:
 # Keep the fingerprint mapping used by the builder and staging tools.
 ROM_PROFILES = {profile.code: profile.sha1 for profile in SUPPORTED_PROFILES}
 ROM_SIZE = 16 * 1024 * 1024
+ROM_ZIP_LIMIT = 2 * ROM_SIZE
 KNOWN_CODES = {
     **{profile.code: profile.name for profile in SUPPORTED_PROFILES},
     "AXVE": "Pokemon Ruby",
@@ -172,6 +173,8 @@ def header(data: bytes) -> tuple[str, str]:
 def check_rom_bytes(data: bytes, source: Path, supported: tuple[str, ...] | None = None) -> Rom:
     """Recognise ROM bytes already in memory (the web builder has no file)."""
     if source.suffix.lower() == ".zip":
+        if len(data) > ROM_ZIP_LIMIT:
+            raise BuilderError("The ZIP exceeds the 32 MiB archive size limit.", code="rom_too_large")
         try:
             data = _unzip(data)
         except (zipfile.BadZipFile, EOFError, zlib.error) as exc:
@@ -214,7 +217,9 @@ def load_rom(path: Path, supported: tuple[str, ...] | None = None) -> Rom:
     if not path.is_file():
         raise BuilderError("The ROM file was not found:\n%s" % path.name, code="rom_not_found")
     try:
-        data = path.read_bytes()
+        limit = ROM_ZIP_LIMIT if path.suffix.lower() == ".zip" else ROM_SIZE
+        with path.open("rb") as stream:
+            data = stream.read(limit + 1)
     except OSError as exc:
         raise BuilderError("The ROM file could not be read.", str(exc), code="rom_unreadable") from exc
     return check_rom_bytes(data, path, supported)

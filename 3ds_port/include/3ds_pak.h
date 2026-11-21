@@ -39,6 +39,7 @@ typedef enum
     CTR_PAK_BAD_ABI,
     CTR_PAK_BAD_ROM,
     CTR_PAK_BAD_COUNT,
+    CTR_PAK_TRUNCATED_INDEX,
     CTR_PAK_BAD_INDEX_CRC,
     CTR_PAK_BAD_INDEX,
 } CtrPakStatus;
@@ -49,9 +50,9 @@ uint64_t CtrPak_PathId(const char *path);
  * header fields are filled even when the ABI or ROM check fails, so the
  * caller can report both ABIs. */
 CtrPakStatus CtrPak_ParseHeader(const uint8_t raw[CTR_PAK_HEADER_BYTES], uint32_t engineAbi,
-                                const uint8_t romSha1[20], CtrPakHeader *out);
+                                const uint8_t romSha1[20], uint64_t fileSize, CtrPakHeader *out);
 /* `raw` holds header->entryCount entries; checks the CRC and the order. */
-CtrPakStatus CtrPak_ParseIndex(const uint8_t *raw, const CtrPakHeader *header, CtrPakEntry *out);
+CtrPakStatus CtrPak_ParseIndex(const uint8_t *raw, const CtrPakHeader *header, uint64_t fileSize, CtrPakEntry *out);
 const CtrPakEntry *CtrPak_Find(const CtrPakEntry *entries, uint32_t count, const char *path);
 
 #endif

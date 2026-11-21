@@ -14,12 +14,17 @@ paths = [
     "3ds_port/assets/voxel/relief_fixes.json",
     # the same file as the builders' voxel generators read it
     "Emerald3DS-v*-Windows/payload/voxelgen/assets/voxel/relief_fixes.json",
+    "Emerald3DS-v*-macOS/payload/voxelgen/assets/voxel/relief_fixes.json",
     "payload/voxelgen/assets/voxel/relief_fixes.json",
     "Emerald3DS-v*-Windows/Emerald3DS-Builder.exe",
     "Emerald3DS-v*-Windows/emerald3ds-builder-cli.exe",
     "Emerald3DS-v*-Windows/payload/Emerald3DS.3dsx",
     # the other languages' executables (payload/es/, fr/, it/, de/ and ja/)
     "Emerald3DS-v*-Windows/payload/*/Emerald3DS.3dsx",
+    "Emerald3DS-v*-macOS/Emerald3DS-Builder",
+    "Emerald3DS-v*-macOS/emerald3ds-builder-cli",
+    "Emerald3DS-v*-macOS/payload/Emerald3DS.3dsx",
+    "Emerald3DS-v*-macOS/payload/*/Emerald3DS.3dsx",
     # the same executables inside Emerald3DS-WebPayload.zip
     "payload/Emerald3DS.3dsx",
     "payload/*/Emerald3DS.3dsx",
@@ -29,6 +34,8 @@ paths = [
     # ROM's bytes and fails on any texel written literally (audit_programs).
     "Emerald3DS-v*-Windows/payload/emerald3ds.recipe",
     "Emerald3DS-v*-Windows/payload/*/emerald3ds.recipe",
+    "Emerald3DS-v*-macOS/payload/emerald3ds.recipe",
+    "Emerald3DS-v*-macOS/payload/*/emerald3ds.recipe",
     "payload/emerald3ds.recipe",
     "payload/*/emerald3ds.recipe",
 ]
@@ -74,8 +81,14 @@ paths = [
 "3ds_port/assets/artwork/bottom/tiny_x.png" = "bottom screen cross on a fallen Pokémon (3ds_port/scripts/gen_bottom_art.py), original pixel art by the Emerald 3DS author"
 
 [local_paths]
-# Files allowed to mention a local path (documentation of the audit itself).
-paths = ["tools/release_audit.py"]
+# The audit documents the patterns it checks. The bundled macOS CPython
+# framework and its Tcl binary contain build-machine paths from the upstream runtime.
+# Neither exception affects the ROM or secret checks.
+paths = [
+    "tools/release_audit.py",
+    "Emerald3DS-v*-macOS/_internal/Python.framework/Versions/*/Python",
+    "Emerald3DS-v*-macOS/_internal/Tcl",
+]
 
 [skip]
 globs = []
@@ -84,4 +97,7 @@ globs = []
 # The builder's PyInstaller runtime: Python, Tcl/Tk, Pillow and their DLLs,
 # shipped unmodified under their own licenses. Checked for ROMs, data packs
 # and secrets, not for size or incidental byte runs.
-globs = ["Emerald3DS-v*-Windows/_internal/*"]
+globs = [
+    "Emerald3DS-v*-Windows/_internal/*",
+    "Emerald3DS-v*-macOS/_internal/*",
+]

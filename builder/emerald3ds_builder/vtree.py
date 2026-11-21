@@ -20,7 +20,7 @@ import struct
 from pathlib import Path
 
 from .errors import BuilderError
-from .recipe import Recipe, build_entry
+from .recipe import Recipe, RecipeError, build_entry, valid_path
 
 ROM_BASE = 0x08000000
 # BgEvent kinds 0-4 are signs (read from any side or from one); the others are
@@ -88,6 +88,14 @@ def read_map(rom: bytes, off: int, meta: dict) -> dict:
 
 
 def build_tree(rom: bytes, recipe: Recipe, root: Path, progress=None) -> None:
+    try:
+        _build_tree(rom, recipe, root, progress)
+    except (RecipeError, KeyError, TypeError, ValueError, IndexError, struct.error) as exc:
+        raise BuilderError("The release's voxel input recipe is invalid.", str(exc),
+                           code="recipe_unreadable") from exc
+
+
+def _build_tree(rom: bytes, recipe: Recipe, root: Path, progress) -> None:
     meta = recipe.vtree
     if not meta or not recipe.inputs:
         raise BuilderError("This release's recipe does not describe the voxel inputs.")
@@ -111,8 +119,10 @@ def build_tree(rom: bytes, recipe: Recipe, root: Path, progress=None) -> None:
             continue
         entry = {"id": item["id"], "name": item["name"]}
         entry.update(read_layout(rom, item["rom"], tilesets))
-        entry["border_filepath"] = item["border_filepath"]
-        entry["blockdata_filepath"] = item["blockdata_filepath"]
+        for key in ("border_filepath", "blockdata_filepath"):
+            if not valid_path(item[key]):
+                raise RecipeError("invalid %s in voxel layout" % key)
+            entry[key] = item[key]
         layouts.append(entry)
     path = root / "data" / "layouts" / "layouts.json"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -120,12 +130,17 @@ def build_tree(rom: bytes, recipe: Recipe, root: Path, progress=None) -> None:
                                indent=2), encoding="utf-8")
 
     for item in meta["maps"]:
+        folder = item["folder"]
+        if not valid_path(folder) or "/" in folder:
+            raise RecipeError("invalid voxel map folder")
         record = {"id": item["id"], "name": item["name"]}
         record.update(read_map(rom, item["rom"], meta))
-        path = root / "data" / "maps" / item["folder"] / "map.json"
+        path = root / "data" / "maps" / folder / "map.json"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(record, indent=2), encoding="utf-8")
 
+    if any(not valid_path(path) for _, path in meta["metatiles_h"]):
+        raise RecipeError("invalid tile path in voxel input recipe")
     inc = root / "src" / "data" / "tilesets"
     inc.mkdir(parents=True, exist_ok=True)
     (inc / "metatiles.h").write_text(

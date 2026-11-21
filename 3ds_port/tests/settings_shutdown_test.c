@@ -11,6 +11,7 @@ static int TestRename(const char *from, const char *to);
 #define remove TestRemove
 #define rename TestRename
 #include "../src/3ds_settings.c"
+#include "../src/3ds_save_io.c"
 #undef fclose
 #undef remove
 #undef rename
@@ -33,7 +34,7 @@ void CtrDayNight_Update(void) {
     ++clockUpdates;
 }
 FILE *CtrFs_OpenData(const char *name, const char *mode) {
-    assert(strcmp(name, "settings.txt.tmp") == 0 && strcmp(mode, "w") == 0);
+    assert(strcmp(name, "settings.txt.tmp") == 0 && strcmp(mode, "wb") == 0);
     pthread_mutex_lock(&diskMutex);
     entered = true; pthread_cond_signal(&diskCond);
     while (!releaseDisk) pthread_cond_wait(&diskCond, &diskMutex);

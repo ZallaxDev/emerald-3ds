@@ -55,6 +55,7 @@ import pickle
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from voxel_image import image_pixels  # noqa: E402
 
 STEP_PX = 4         # lattice spacing (gen_voxel_relief.STEP)
 SPREAD = 1.25       # how much steeper than true a fall spread evenly may be (gen_voxel_relief.SPREAD)
@@ -428,7 +429,7 @@ def view(G, at, path, pitch=40.0, distance=9.0, radius=9, scale=2, yaw=0.0, orth
     # relief drawn
     w, h = img.size
     mid = img.crop((w // 4, h // 4, w - w // 4, h - h // 4))
-    return path, sum(1 for c in mid.getdata() if c == HOLE)
+    return path, sum(1 for c in image_pixels(mid) if c == HOLE)
 
 
 def _legit(pitch):

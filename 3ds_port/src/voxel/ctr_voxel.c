@@ -46,6 +46,7 @@
 #include "voxel_entities.h"
 #include "voxel_regions.h"
 #include "voxel_mesh_builder.h"
+#include "voxel_vertex_pack.h"
 #include "voxel_world.h"
 #include "voxel_tree.h"
 #include "voxel_building.h"
@@ -77,29 +78,6 @@
  * because the viewport covers the whole texture. */
 #define VOXEL_SURFACE_W 512.0f
 #define VOXEL_SURFACE_H 256.0f
-
-/* â”€â”€ GPU vertex format â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
- *
- * The builder works in VoxelVertex (six floats, 24 bytes). What the GPU reads
- * is this: the texture coordinates stay float, because the building pages are
- * not powers of two and their texel edges must stay exact, while position and
- * shade become shorts - positions in 1/512 tile relative to the draw's own
- * origin (a chunk corner, or the camera for the billboards), shade in 1/16384.
- * voxel.v.pica undoes both scales.
- *
- * A third less of everything: VRAM per chunk, staging, GPU copies and vertex
- * fetch. 1/512 of a tile is 1/32 of a pixel, and the origin a vertex is
- * measured from is always a whole tile, so two chunks quantise a shared edge
- * to exactly the same place.
- */
-typedef struct
-{
-    float u, v;
-    int16_t x, y, z, shade;
-} VoxelGpuVertex;
-
-#define VOXEL_POS_SCALE 512.0f
-#define VOXEL_SHADE_SCALE 16384.0f
 
 /* Vertices a single chunk may produce before the builder refuses more. */
 #if CTR_VOXEL_LIGHTING
@@ -471,56 +449,11 @@ static bool StaticBuildHeld(void);
 static void StaticBuildPlaceHeld(void);
 static bool StaticWantsRun(uint64_t started, float budget, bool missing);
 
-static unsigned sPackErrors;
-/* The furthest value that did not fit, and which of x, y, z or shade it was:
- * what the log needs to say which builder produced it. */
-static float sPackWorst;
-static char sPackAxis;
-
-static int16_t Quantise(float value, float scale)
-{
-    float scaled = value * scale + 0.5f;
-    int whole;
-
-    /*
-     * Round half up, never half away from zero: that is what keeps the
-     * result of a shared edge independent of the origin it is measured from.
-     * floor() by truncation and one correction, not floorf: ARMv6 has no
-     * rounding instruction and the library call was a third of a chunk build.
-     */
-    if (scaled >= 32767.0f || scaled < -32768.0f)
-    {
-        if (scaled >= 32768.0f || scaled < -32768.0f)
-        {
-            ++sPackErrors;
-            if (fabsf(value) > fabsf(sPackWorst))
-                sPackWorst = value;
-        }
-        return scaled >= 0.0f ? 32767 : -32768;
-    }
-    whole = (int)scaled;
-    if ((float)whole > scaled)
-        --whole;
-    return (int16_t)whole;
-}
+static VoxelPackStats sPackStats;
 
 static void Pack(const VoxelVertex *src, unsigned count, VoxelGpuVertex *dst)
 {
-    for (unsigned i = 0; i < count; ++i)
-    {
-        dst[i].u = src[i].u;
-        dst[i].v = src[i].v;
-        unsigned before = sPackErrors;
-
-        dst[i].x = Quantise(src[i].x, VOXEL_POS_SCALE);
-        dst[i].y = Quantise(src[i].y, VOXEL_POS_SCALE);
-        dst[i].z = Quantise(src[i].z, VOXEL_POS_SCALE);
-        if (sPackErrors != before && sPackAxis == 0)
-            sPackAxis = 'p';
-        dst[i].shade = Quantise(src[i].shade, VOXEL_SHADE_SCALE);
-        if (sPackErrors != before && sPackAxis == 0)
-            sPackAxis = 's';
-    }
+    VoxelPack_Vertices(src, count, dst, &sPackStats);
 }
 
 /* Says which mesh held values the vertex format cannot carry, at most once
@@ -529,17 +462,17 @@ static void ReportPackErrors(const char *what, int a, int b, int c, int d)
 {
     static uint32_t sReported;
 
-    if (sPackErrors != 0 && (sReported == 0 || sFrame - sReported >= 300))
+    if (sPackStats.errors != 0 && (sReported == 0 || sFrame - sReported >= 300))
     {
         sReported = sFrame;
         ++sStats.errors;
         CtrLog_Write(CTR_LOG_ERROR, "VOXEL: %u vertices out of packing range in %s %d,%d of %d:%d "
-                     "(worst %s %.2f)", sPackErrors, what, a, b, c, d,
-                     sPackAxis == 's' ? "shade" : "position", sPackWorst);
+                     "(worst %s %.2f)", sPackStats.errors, what, a, b, c, d,
+                     sPackStats.axis == 's' ? "shade" : "position", sPackStats.worst);
     }
-    sPackErrors = 0;
-    sPackWorst = 0.0f;
-    sPackAxis = 0;
+    sPackStats.errors = 0;
+    sPackStats.worst = 0.0f;
+    sPackStats.axis = 0;
 }
 
 /*
@@ -556,22 +489,6 @@ static void ReportPackErrors(const char *what, int a, int b, int c, int d)
  * It also measures the chunk on the packed integers (min/max of each axis, in
  * 1/512 tile): what the GPU draws, and no float comparison either.
  */
-typedef struct
-{
-    int32_t lo[3], hi[3];
-} PackBounds;
-
-static void GrowBounds(PackBounds *bounds, const VoxelGpuVertex *out)
-{
-    int32_t q[3] = {out->x, out->y, out->z};
-
-    for (int a = 0; a < 3; ++a)
-    {
-        if (q[a] < bounds->lo[a]) bounds->lo[a] = q[a];
-        if (q[a] > bounds->hi[a]) bounds->hi[a] = q[a];
-    }
-}
-
 #if defined(__arm__)
 #define VOXEL_HAVE_FAST_PACK 1
 static bool sFastPack;
@@ -605,11 +522,11 @@ static inline int16_t Clamp16(int32_t i, float value, char axis)
 {
     if (i > 32767 || i < -32768)
     {
-        ++sPackErrors;
-        if (fabsf(value) > fabsf(sPackWorst))
-            sPackWorst = value;
-        if (sPackAxis == 0)
-            sPackAxis = axis;
+        ++sPackStats.errors;
+        if (fabsf(value) > fabsf(sPackStats.worst))
+            sPackStats.worst = value;
+        if (sPackStats.axis == 0)
+            sPackStats.axis = axis;
         return i > 0 ? 32767 : -32768;
     }
     return (int16_t)i;
@@ -618,7 +535,7 @@ static inline int16_t Clamp16(int32_t i, float value, char axis)
 /* Never inlined: nothing of the caller's arithmetic may land between the two
  * changes of rounding mode. */
 static __attribute__((noinline)) void PackFloor(const VoxelVertex *src, unsigned count,
-                                                VoxelGpuVertex *dst, PackBounds *bounds)
+                                                VoxelGpuVertex *dst, VoxelPackBounds *bounds)
 {
     uint32_t fpscr = FpscrFloor();
 
@@ -637,7 +554,7 @@ static __attribute__((noinline)) void PackFloor(const VoxelVertex *src, unsigned
         out.shade = Clamp16(ConvertFloor(v.shade * VOXEL_SHADE_SCALE + 0.5f), v.shade, 's');
         memcpy(&dst[i], &out, sizeof(out));
         if (bounds != NULL)
-            GrowBounds(bounds, &out);
+            VoxelPack_GrowBounds(bounds, &out);
     }
     FpscrRestore(fpscr);
 }
@@ -686,9 +603,9 @@ static void PackSelfTest(void)
         if (memcmp(&a, &b, sizeof(a)) != 0)
             ++mismatches;
     }
-    sPackErrors = 0;
-    sPackWorst = 0.0f;
-    sPackAxis = 0;
+    sPackStats.errors = 0;
+    sPackStats.worst = 0.0f;
+    sPackStats.axis = 0;
     sFastPack = mismatches == 0;
     CtrLog_Write(mismatches == 0 ? CTR_LOG_VIDEO : CTR_LOG_ERROR,
                  "VOXEL pack self-test: %u of %u vertices differ; %s packing", mismatches, tested,
@@ -697,7 +614,7 @@ static void PackSelfTest(void)
 #endif
 
 /* Packs [first, first + count) of the scratch in place, growing `bounds`. */
-static void PackRange(VoxelVertex *vertices, unsigned first, unsigned count, PackBounds *bounds)
+static void PackRange(VoxelVertex *vertices, unsigned first, unsigned count, VoxelPackBounds *bounds)
 {
     VoxelGpuVertex *packed = (VoxelGpuVertex *)(void *)vertices;
 
@@ -716,7 +633,7 @@ static void PackRange(VoxelVertex *vertices, unsigned first, unsigned count, Pac
         memcpy(&v, &vertices[i], sizeof(v));
         Pack(&v, 1, &out);
         memcpy(&packed[i], &out, sizeof(out));
-        GrowBounds(bounds, &out);
+        VoxelPack_GrowBounds(bounds, &out);
     }
 }
 
@@ -4239,7 +4156,7 @@ static struct
     /* Measured by JOB_PACK, a slice of vertices at a time: the chunk's gx0..
      * and gy0.. (VoxelChunk). */
     unsigned packed;
-    PackBounds bounds;
+    VoxelPackBounds bounds;
     int gx0, gz0, gx1, gz1;
     float gy0, gy1;
     /* Its packed vertices' checksum, slice by slice (SumVertices). */
@@ -5754,7 +5671,7 @@ static void PackDynamic(const VoxelVertex *src, unsigned count, VoxelGpuVertex *
 /* The draft's vertices a cell at a time, by the fast packing where the console
  * has proved it (PackSelfTest) and measuring them as it goes. */
 static void PackDraft(const VoxelVertex *src, unsigned count, VoxelGpuVertex *dst,
-                      PackBounds *bounds)
+                      VoxelPackBounds *bounds)
 {
 #ifdef VOXEL_HAVE_FAST_PACK
     if (sFastPack)
@@ -5765,7 +5682,7 @@ static void PackDraft(const VoxelVertex *src, unsigned count, VoxelGpuVertex *ds
 #endif
     Pack(src, count, dst);
     for (unsigned i = 0; i < count; ++i)
-        GrowBounds(bounds, &dst[i]);
+        VoxelPack_GrowBounds(bounds, &dst[i]);
 }
 
 static VoxelChunk *DraftChunk(const ChunkSite *site, VoxelAtlasSlot *atlas, VoxelChunk *chunk)
@@ -5777,7 +5694,7 @@ static VoxelChunk *DraftChunk(const ChunkSite *site, VoxelAtlasSlot *atlas, Voxe
     VoxelVertex quad[6];
     VoxelBuilder b;
     VoxelGpuVertex *staging;
-    PackBounds bounds;
+    VoxelPackBounds bounds;
 
     if (site->border)
         return NULL;
@@ -14288,10 +14205,10 @@ static bool StaticBuildSlice(unsigned triangles)
             memset(&g, 0, sizeof(g));
             g.u = (sStaticBuild.ox + v->u) * sStaticBuild.su;
             g.v = 1.0f - (sStaticBuild.oy + v->v) * sStaticBuild.sv;
-            g.x = Quantise(v->x, VOXEL_POS_SCALE);
-            g.y = Quantise(v->y, VOXEL_POS_SCALE);
-            g.z = Quantise(v->z, VOXEL_POS_SCALE);
-            g.shade = Quantise(sStaticBuild.lit ? shade : v->shade, VOXEL_SHADE_SCALE);
+            g.x = VoxelPack_Quantise(v->x, VOXEL_POS_SCALE, &sPackStats);
+            g.y = VoxelPack_Quantise(v->y, VOXEL_POS_SCALE, &sPackStats);
+            g.z = VoxelPack_Quantise(v->z, VOXEL_POS_SCALE, &sPackStats);
+            g.shade = VoxelPack_Quantise(sStaticBuild.lit ? shade : v->shade, VOXEL_SHADE_SCALE, &sPackStats);
             memcpy(words, &g, sizeof(g));
             for (unsigned t = 0; t < sizeof(words) / 4u; ++t)
                 h = (h ^ words[t]) * 16777619u;

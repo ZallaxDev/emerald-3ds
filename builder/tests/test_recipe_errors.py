@@ -126,12 +126,34 @@ class ContainerErrorTests(unittest.TestCase):
                 self.assertIn("literal pool", str(err))
 
 
+    def test_nested_entries_validated_at_load(self):
+        entry = {"path": "data/file.bin", "size": 1, "crc": 0, "ops": [["F", 0, 1]]}
+        invalid = ({"path": "data/file.bin"}, dict(entry, path="../file.bin"),
+                   dict(entry, ops=[["F", 0]]), dict(entry, ops=[["F", 0, True]]))
+        for value in invalid:
+            with self.subTest(entry=value):
+                self.assertRecipeError(container(good_meta(entries=[value])))
+        self.assertRecipeError(container(good_meta(entries=[entry, entry])))
+
+    def test_bad_ranges_rejected_before_recipe_output_grows(self):
+        for op in (["F", 0, 2], ["L", 0, 1], ["R", 0, 1, 2, 1, 0]):
+            with self.subTest(op=op), self.assertRaises(rcp.RecipeError):
+                rcp.build_entry({"path": "file.bin", "size": 1, "crc": 0, "ops": [op]},
+                                b"\0", b"", [[0]])
+
+    def test_decompression_limit_and_short_lz77_stream(self):
+        with self.assertRaisesRegex(rcp.RecipeError, "size limit"):
+            rcp._decompress(lzma.compress(b"abcdef"), "fixture", 4)
+        with self.assertRaisesRegex(rcp.RecipeError, "truncated LZ77"):
+            rcp.lz77_decompress(b"\x10\x01\0\0", 0)
+
+
 class ValidContainerTests(unittest.TestCase):
     def test_roundtrip_preserves_format_and_fields(self):
         r = rcp.Recipe(engine_abi=0xDEADBEEF, rom_sha1=SHA, release="v1",
                        entries=[{"path": "a", "size": 1, "crc": 2, "ops": [["F", 0, 1]]}],
                        bitmaps=[[0, 1, -1, -2]], generated=[{"path": "g", "size": 0, "crc": 0}],
-                       inputs=[{"path": "i"}], vtree={"k": 1}, literals=b"\x00\x01lit")
+                       inputs=[{"path": "i", "size": 0, "crc": 0, "ops": []}], vtree={"k": 1}, literals=b"\x00\x01lit")
         data = r.to_bytes()
         self.assertEqual(data[:8], rcp.MAGIC)
         (size,) = struct.unpack_from("<I", data, 8)

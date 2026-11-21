@@ -7,6 +7,7 @@
 #include "3ds_data.h"
 #include "3ds_pak.h"
 #include "3ds_platform.h"
+#include "3ds_save_io.h"
 
 #define CLOCK_FILE "emerald3ds.clock"
 #define CLOCK_TEMP "emerald3ds.clock.tmp"
@@ -106,8 +107,6 @@ bool CtrClockStore_Save(const void *save, size_t size)
 {
     unsigned char bytes[CLOCK_BYTES] = {0};
     CtrDayNightSnapshot snapshot;
-    FILE *file;
-    bool valid;
 
     /* A scenario being played saves into memory only (Port_WriteFlash): the
      * player's own clock file stays the one that matches the player's save. */
@@ -122,31 +121,8 @@ bool CtrClockStore_Save(const void *save, size_t size)
     WriteNumber(bytes + 20, snapshot.berryBonusMs, 8);
     WriteNumber(bytes + 28, (uint64_t)snapshot.wallSeconds, 8);
     WriteNumber(bytes + 36, CtrPak_Crc32(0, bytes, 36), 4);
-    file = CtrFs_OpenData(CLOCK_TEMP, "wb");
-    if (file == NULL)
-        goto fail;
-    valid = fwrite(bytes, 1, sizeof(bytes), file) == sizeof(bytes) && fflush(file) == 0;
-    if (fclose(file) != 0)
-        valid = false;
-    if (valid && rename(CTR_DATA_DIR CLOCK_TEMP, CTR_DATA_DIR CLOCK_FILE) == 0)
+    if (CtrSave_Replace(CLOCK_FILE, CLOCK_TEMP, CLOCK_BACKUP, bytes, sizeof(bytes)))
         return true;
-    if (valid)
-    {
-        file = CtrFs_OpenData(CLOCK_FILE, "rb");
-        if (file != NULL)
-        {
-            fclose(file);
-            remove(CTR_DATA_DIR CLOCK_BACKUP);
-            if (rename(CTR_DATA_DIR CLOCK_FILE, CTR_DATA_DIR CLOCK_BACKUP) == 0)
-            {
-                if (rename(CTR_DATA_DIR CLOCK_TEMP, CTR_DATA_DIR CLOCK_FILE) == 0)
-                    return true;
-                rename(CTR_DATA_DIR CLOCK_BACKUP, CTR_DATA_DIR CLOCK_FILE);
-            }
-        }
-    }
-    remove(CTR_DATA_DIR CLOCK_TEMP);
-fail:
     CtrLog_Write(CTR_LOG_ERROR, "clock: sidecar write failed; game save is unchanged");
     return false;
 }

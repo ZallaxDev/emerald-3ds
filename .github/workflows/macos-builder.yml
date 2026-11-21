@@ -1,0 +1,31 @@
+name: macOS builder packaging
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/macos-builder.yml"
+      - "builder/**"
+      - "tools/build_release.py"
+      - "tools/build_web_payload.py"
+      - "tools/release_audit*.py"
+      - "tools/release_audit_allow.toml"
+      - "tools/test_macos_builder.py"
+      - "upstream.lock"
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.1.0
+        with:
+          # Packaging compatibility is independent of the release generator pins.
+          python-version: "3.15.2"
+      - name: Install packaging dependencies
+        run: |
+          python -m pip install "Pillow==13.0.0" PyInstaller
+      - name: Audit and run the extracted macOS builders
+        run: python tools/test_macos_builder.py

@@ -187,6 +187,8 @@ static void ProcessKeys(u8 mode)
             FlyFromMap();
         else if (sShown.mapFly && (down & B_BUTTON))
             CancelFlyMap();
+        else if (sShown.mapFly)
+            FlyMapDpad(in->held & DPAD_ANY, down & DPAD_ANY);
         return;
     }
     /* A tap took the screen elsewhere. */

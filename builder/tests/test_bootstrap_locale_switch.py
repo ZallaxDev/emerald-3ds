@@ -68,6 +68,25 @@ class BootstrapLocaleSwitchTests(unittest.TestCase):
             self.assertTrue(kept.exists())
             self.assertFalse((tree / ".emerald3ds-locale").exists())
 
+    def test_overlay_prunes_only_previous_sources(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "source"
+            tree = Path(temp) / "tree"
+            (root / "3ds_port/scripts").mkdir(parents=True)
+            tree.mkdir()
+            source = root / "3ds_port/scripts/old.py"
+            source.write_text("old", encoding="utf-8")
+            with patch.object(bootstrap, "ROOT", root):
+                bootstrap.sync_overlay(tree)
+                generated = tree / "3ds_port/scripts/generated.bin"
+                generated.write_bytes(b"generated")
+                source.unlink()
+                (source.parent / "new.py").write_text("new", encoding="utf-8")
+                bootstrap.sync_overlay(tree)
+            self.assertFalse((tree / "3ds_port/scripts/old.py").exists())
+            self.assertEqual(generated.read_bytes(), b"generated")
+            self.assertEqual((tree / "3ds_port/scripts/new.py").read_text(), "new")
+
     def test_every_language_cleans_its_art(self):
         for marker, stem in (("BPES experimental", "spanish"), ("BPEF experimental", "french"),
                              ("BPEI experimental", "italian"), ("BPED experimental", "german")):

@@ -7,8 +7,9 @@ installs the game on an SD card, in that ROM's language - or, from the English
 ROM, in the Brazilian Portuguese fan translation when the release has it
 (`payload/pt/`, docs/PORTUGUESE.md).
 
-Release users get a standalone Windows executable (no Python needed). From
-source (any OS, Python 3.11+ and Pillow):
+Release users get a standalone Windows executable (no Python needed; a macOS
+standalone package can also be built with `tools/build_release.py --platform macOS`).
+From source (any OS, Python 3.11+ and Pillow):
 
 ```
 python -m emerald3ds_builder                          # window
@@ -42,8 +43,11 @@ choice, and the command line takes `--language pt` (English without it).
 | `web.py` | entry point of the web builder (Pyodide in the browser) |
 | `webmanifest.py` | `web-manifest.json`, the contract between a release and the website |
 
-Privacy: the ROM is read into memory and never copied, uploaded or modified;
-temporary files are removed even when a step fails.
+The builder reads the ROM into memory without copying, uploading, or modifying it.
+
+If the installer reports an interrupted SD update, reconnect the card and run
+the installer again. It checks the saved transaction and puts any remaining
+staged game files in place before starting the new install.
 
 Saves: before an install replaces any game file, an existing
 `emerald3ds.sav` and whichever of its optional companions exist are copied:

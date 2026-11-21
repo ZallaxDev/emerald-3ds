@@ -3,6 +3,7 @@ no game data. Run: python -m unittest discover builder/tests
 """
 
 import errno
+import json
 import os
 import sys
 import tempfile
@@ -85,7 +86,7 @@ class InstallFailureTests(unittest.TestCase):
         with patch.object(Path, "open", fake_open):
             with self.assertRaises(BuilderError) as ctx:
                 install(self.sd, self.files)
-        self.assertEqual(opened, [EXE, PAK])   # the executable was copied first
+        self.assertEqual([name for name in opened if name != installmod.INSTALL_LOCK], [EXE, PAK])   # the executable was copied first
         self.assertEqual(ctx.exception.code, "install_failed")
         self.assertIn(PAK, str(ctx.exception))
         self._assert_untouched(before)
@@ -122,7 +123,7 @@ class InstallFailureTests(unittest.TestCase):
                 install(self.sd, self.files)
         self._assert_untouched(before)
 
-    def test_rename_failure_reports_incomplete_install_and_cleans_up(self):
+    def test_rename_failure_recovers_on_next_install(self):
         before = self._old_install()
         real_replace = os.replace
         calls = []
@@ -142,7 +143,72 @@ class InstallFailureTests(unittest.TestCase):
         # Honest about what happened: the executable was replaced, the pak was not.
         self.assertEqual(after[EXE], self.exe_src.read_bytes())
         self.assertEqual(after[PAK], b"OLD-PAK")
-        self.assertEqual(sorted(after), sorted(before))   # no temporary files left over
+        self.assertIn(installmod.INSTALL_JOURNAL, after)
+        self.assertEqual(install(self.sd, {}), self.dest)
+        recovered = self._snapshot()
+        self.assertEqual(recovered[EXE], self.exe_src.read_bytes())
+        self.assertEqual(recovered[PAK], self.pak_src.read_bytes())
+        self.assertEqual(sorted(recovered), sorted(before))
+
+    def test_retry_repairs_missing_or_corrupted_stage_and_preserves_saves(self):
+        for damaged in (None, b"CORRUPTED-STAGE"):
+            with self.subTest(damaged=damaged), tempfile.TemporaryDirectory(dir=self.root) as folder:
+                sd = Path(folder)
+                dest = sd / APP_DIR
+                dest.mkdir(parents=True)
+                (dest / EXE).write_bytes(b"OLD-EXE")
+                (dest / PAK).write_bytes(b"OLD-PAK")
+                saves = {name: f"player data for {name}".encode() for name in installmod.SAVE_FILES}
+                for name, data in saves.items():
+                    (dest / name).write_bytes(data)
+                old_backup = dest / installmod.BACKUP_DIR / "existing" / installmod.SAVE_NAME
+                old_backup.parent.mkdir(parents=True)
+                old_backup.write_bytes(b"PREVIOUS-BACKUP")
+                real_replace = os.replace
+
+                def interrupt(source, target):
+                    if Path(target) == dest / PAK:
+                        raise OSError(errno.EIO, "injected interruption")
+                    return real_replace(source, target)
+
+                with patch.object(installmod.os, "replace", interrupt):
+                    with self.assertRaisesRegex(BuilderError, "incomplete"):
+                        install(sd, self.files)
+                self.assertEqual((dest / EXE).read_bytes(), self.exe_src.read_bytes())
+                self.assertEqual((dest / PAK).read_bytes(), b"OLD-PAK")
+                backups = {path: path.read_bytes()
+                           for path in (dest / installmod.BACKUP_DIR).rglob("*") if path.is_file()}
+                self.assertEqual(len(backups), len(saves) + 1)
+                journal = dest / installmod.INSTALL_JOURNAL
+                journal_bytes = journal.read_bytes()
+                (temp, _, _), = [row for row in json.loads(journal_bytes)["files"] if row[1] == PAK]
+                stage = dest / temp
+                if damaged is None:
+                    stage.unlink()
+                else:
+                    stage.write_bytes(damaged)
+                wrong = sd / "wrong.pak"
+                wrong.write_bytes(b"DIFFERENT-UPDATE")
+                before_retry = {path: path.read_bytes() for path in dest.rglob("*") if path.is_file()}
+                with self.assertRaises(BuilderError):
+                    install(sd, {EXE: self.exe_src, PAK: wrong})
+                self.assertEqual({path: path.read_bytes() for path in dest.rglob("*") if path.is_file()},
+                                 before_retry)
+
+                self.assertEqual(install(sd, self.files), dest)
+                self.assertEqual((dest / EXE).read_bytes(), self.exe_src.read_bytes())
+                self.assertEqual((dest / PAK).read_bytes(), self.pak_src.read_bytes())
+                self.assertFalse(journal.exists())
+                self.assertEqual(list(dest.glob("*.partial")), [])
+                self.assertEqual({name: (dest / name).read_bytes() for name in saves}, saves)
+                self.assertEqual({path: path.read_bytes() for path in backups}, backups)
+
+    def test_concurrent_attempt_does_not_touch_the_install(self):
+        before = self._old_install()
+        with installmod._install_lock(self.dest.parent):
+            with self.assertRaises(BuilderError):
+                install(self.sd, self.files)
+        self._assert_untouched(before)
 
     def test_first_rename_failure_keeps_old_files_and_says_nothing_changed(self):
         before = self._old_install()

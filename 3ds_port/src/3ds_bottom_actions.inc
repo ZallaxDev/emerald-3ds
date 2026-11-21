@@ -559,8 +559,15 @@ static u8 ProcessTouch(u8 mode)
         /* A message in the field (a sign, a person, the text after a
          * battle): a tap off the buttons goes on with it, as in a battle.
          * Only what waits on a message takes it (CtrMenu_PostAck), never a
-         * menu or a yes/no box, and the map picks no place meanwhile. */
-        if (mode == MODE_FIELD && !sTouch.dragged && FieldMessageUp()
+         * menu or a yes/no box, and the map picks no place meanwhile. On the
+         * map a tap may slide a little and still be one, as the map takes it
+         * below: it goes on with the message too, rather than pick a place,
+         * as long as it is let go over the map. A touch let go anywhere but
+         * where it began (the dock or another button, even a few pixels off
+         * the map's edge) is no tap, as anywhere else on the screen. */
+        if (mode == MODE_FIELD && FieldMessageUp()
+         && (!sTouch.dragged || sTouch.pressed == HIT_MAP)
+         && HitTest(sTouch.lastX, sTouch.lastY) == sTouch.pressed
          && (sTouch.pressed == HIT_NONE || sTouch.pressed == HIT_MAP || sTouch.pressed == HIT_MAP_PANEL))
         {
             CtrMenu_PostAck();
