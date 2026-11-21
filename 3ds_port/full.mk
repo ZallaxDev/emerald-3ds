@@ -551,7 +551,7 @@ romfs/voxel/trees.rgba5551: scripts/gen_voxel_trees.py \
 # verify-voxel-buildings runs the proofs alone, even when the file is
 # up to date: the release build asks for it.
 romfs/voxel/buildings.bin: scripts/gen_voxel_buildings.py scripts/voxel_building.py scripts/voxel_night.py scripts/voxel_windows.py \
-		scripts/voxel_floor.py \
+		scripts/voxel_floor.py scripts/voxel_image.py \
 		scripts/voxel_building_specs.py scripts/voxel_bridge.py scripts/voxel_fence.py scripts/voxel_fortree.py scripts/dump_region_art.py scripts/voxel_props.py \
 		scripts/voxel_relief_fixes.py assets/voxel/relief_fixes.json \
 		scripts/gen_voxel_relief.py \
@@ -580,7 +580,7 @@ RELIEF_MAP_INPUTS := $(ROOT)/data/layouts/layouts.json $(HOST_MAP_JSONS) \
 # Solve the terrain from the map art while the buildings are being verified.
 # The terrace pass reads the building footprints, so the finished relief
 # still waits for the verified buildings.
-build/voxel_relief_base.bin: scripts/gen_voxel_relief.py scripts/voxel_cells.py scripts/voxel_props.py \
+build/voxel_relief_base.bin: scripts/gen_voxel_relief.py scripts/voxel_cells.py scripts/voxel_image.py scripts/voxel_props.py \
 		scripts/voxel_art.py scripts/voxel_building.py scripts/dump_region_art.py \
 		scripts/voxel_relief_fixes.py $(RELIEF_MAP_INPUTS)
 	@mkdir -p $(@D)
@@ -588,7 +588,7 @@ build/voxel_relief_base.bin: scripts/gen_voxel_relief.py scripts/voxel_cells.py 
 
 VOXEL_TERRACE_JOBS ?= 1
 romfs/voxel/relief.bin: build/voxel_relief_base.bin romfs/voxel/buildings.bin \
-		scripts/voxel_terraces.py scripts/voxel_engine_view.py assets/voxel/relief_fixes.json
+		scripts/voxel_terraces.py scripts/voxel_image.py scripts/voxel_engine_view.py assets/voxel/relief_fixes.json
 	@mkdir -p $(@D)
 	"$(PYTHON)" scripts/gen_voxel_relief.py --base-input $< --output $@.tmp --terrace-jobs "$(VOXEL_TERRACE_JOBS)" && mv -f $@.tmp $@
 

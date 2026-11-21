@@ -37,6 +37,7 @@ import voxel_bridge  # noqa: E402
 import voxel_fence  # noqa: E402
 import gen_voxel_sign_masks  # noqa: E402
 import voxel_fortree  # noqa: E402
+from voxel_image import image_pixels  # noqa: E402
 import voxel_props  # noqa: E402
 import voxel_relief_fixes  # noqa: E402
 import voxel_night
@@ -957,7 +958,7 @@ def room_facts(spec, layout, pieces, drawn, owner, shade, fpx, legs_of=()):
     hexes = lambda x, y: "%02x%02x%02x" % fpx[x, y][:3]  # noqa: E731
     floorish = set(shade)
     for m in spec["interior"]["ground"]:
-        floorish.update("%02x%02x%02x" % c[:3] for c in layout.cell_image(m).getdata())
+        floorish.update("%02x%02x%02x" % c[:3] for c in image_pixels(layout.cell_image(m)))
     # the floor's dark grid lines are every piece's outline colour too
     floorish = {c for c in floorish if _hex_lum(c) >= 90}
     names = ["%s_%s" % (spec["name"], pc["name"]) for pc in pieces]
@@ -1919,7 +1920,7 @@ def floor_under(layout, pc, ground, places, w, h):
     `ground`'s - a cell's lower layer, if that is floor alone (a wall's
     shadow across it), not the post it draws itself."""
     floorish = set(pc.get("leave", ())) | {
-        "%02x%02x%02x" % c[:3] for c in layout.cell_image(ground).getdata()}
+        "%02x%02x%02x" % c[:3] for c in image_pixels(layout.cell_image(ground))}
     plain = layout.cell_image(ground, layers=(0,)).convert("RGBA").tobytes()
     under = {}
     for (ax, ay) in places:
@@ -1929,7 +1930,7 @@ def floor_under(layout, pc, ground, places, w, h):
                     continue
                 mt = layout.metatile(ax + i, ay + j)
                 lower = layout.cell_image(mt, layers=(0,)).convert("RGBA")
-                colours = {"%02x%02x%02x" % c[:3] for c in lower.getdata()}
+                colours = {"%02x%02x%02x" % c[:3] for c in image_pixels(lower)}
                 if mt != ground and colours <= floorish and lower.tobytes() != plain:
                     under.setdefault((ax, ay), []).append((i, j, lower))
     return under
@@ -2047,7 +2048,7 @@ def interior_specs(spec):
         if isinstance(m, str):
             shade.add(m)
         else:
-            shade.update("%02x%02x%02x" % c[:3] for c in layout.cell_image(m).getdata())
+            shade.update("%02x%02x%02x" % c[:3] for c in image_pixels(layout.cell_image(m)))
     owner = [[None] * W for _ in range(H)]
     variant_px = {}
     # the room's shell, where a piece's copies never take a pixel
@@ -2057,7 +2058,7 @@ def interior_specs(spec):
                    if pc.get("fill") or pc["name"].split("_")[0] in SHELL_PIECES)
     walls_at = _combine_shapes(shell_masks, W, H)
     # (the floor the terrain lays under a piece's cells)
-    floor_hexes = {"%02x%02x%02x" % c[:3] for c in layout.cell_image(room["ground"][0]).getdata()}
+    floor_hexes = {"%02x%02x%02x" % c[:3] for c in image_pixels(layout.cell_image(room["ground"][0]))}
 
     def variant_groups(k, pc, x0, y0, w, h):
         """{what it draws round its shape, a pixel out, then the marks on
@@ -3490,8 +3491,8 @@ def report_grounds(models, found):
                 # the patch where no model draws over it: the map's paint
                 # (not one the spec lays itself: its drawing, by design)
                 shows = ImageChops.multiply(patch, ImageChops.invert(drawn[(X, Y)]))
-                palette = set(tile.getdata())
-                seen = [c for c, v in zip(rgb.getdata(), shows.getdata()) if v]
+                palette = set(image_pixels(tile))
+                seen = [c for c, v in zip(image_pixels(rgb), image_pixels(shows)) if v]
                 off = sum(1 for c in seen if c not in palette)
                 if off >= GROUND_REPORT_PIXELS and off * 2 > len(seen):
                     bad.setdefault(k, []).append((X - px, Y - py, "patched", off, own))
