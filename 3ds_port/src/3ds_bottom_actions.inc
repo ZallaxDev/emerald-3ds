@@ -139,6 +139,18 @@ static void CompleteLivePartyHandoff(u8 mode)
         sLivePartyHandoff = PARTY_SIZE;
 }
 
+/* Horizontal gestures and minor vertical jitter must never scroll the Bag. */
+static int LiveBagSwipeRows(int startY, int endY)
+{
+    int dy = startY - endY;
+    int rows;
+
+    if (dy >= -8 && dy <= 8)
+        return 0;
+    rows = dy / BAG_ROW_H;
+    return rows ? rows : (dy > 0 ? 1 : -1);
+}
+
 /* The passive view only changes a selection. ACTIONS enters the real menu;
  * no bag, party or event data are mutated by touching the live snapshot. */
 static void LivePartyTap(u8 id)
@@ -672,9 +684,13 @@ static u8 ProcessTouch(u8 mode)
          && sTouch.startX >= BAG_LIST_X && sTouch.startX < BAG_LIST_X + BAG_LIST_W
          && sTouch.startY >= BAG_LIST_TOP && sTouch.startY < BAG_LIST_TOP + BAG_LIST_H)
         {
-            int shift = (sTouch.startY - sTouch.lastY) / BAG_ROW_H;
-            int maxScroll = sShown.bv.total > CTR_BAG_ROWS ? sShown.bv.total - CTR_BAG_ROWS : 0;
-            int scroll = sLiveBagScroll[sLiveBagPocket] + (shift ? shift : sTouch.startY > sTouch.lastY ? 1 : -1);
+            int shift = LiveBagSwipeRows(sTouch.startY, sTouch.lastY);
+            int maxScroll, scroll;
+
+            if (shift == 0)
+                return HIT_NONE;
+            maxScroll = sShown.bv.total > CTR_BAG_ROWS ? sShown.bv.total - CTR_BAG_ROWS : 0;
+            scroll = sLiveBagScroll[sLiveBagPocket] + shift;
 
             if (scroll < 0) scroll = 0;
             if (scroll > maxScroll) scroll = maxScroll;

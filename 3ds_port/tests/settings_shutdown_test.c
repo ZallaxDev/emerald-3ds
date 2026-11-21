@@ -27,7 +27,7 @@ static bool entered, releaseDisk;
 static unsigned writes, errors;
 static unsigned clockUpdates;
 static int fault;
-static char saved[256];
+static char saved[512];
 void CtrDayNight_Update(void) {
     assert(CtrSettings_GetInt("clock_speed", 0) == 0);
     ++clockUpdates;
@@ -92,6 +92,10 @@ int main(int argc, char **argv) {
     CtrSettings_SetVoxelBlur(false); CtrSettings_SetShowFps(true);
     CtrSettings_SetInt("day_night", 1); CtrSettings_SetInt("clock_speed", 5);
     CtrSettings_SetInt("timed_encounters", 1); CtrSettings_SetInt("show_clock", 1);
+    /* Two independent extras enter the same SD serialization path. */
+    CtrSettings_SetInt("live_party", 1); CtrSettings_SetInt("live_bag", 0);
+    assert(CtrSettings_GetInt("live_party", 0) == 1);
+    assert(CtrSettings_GetInt("live_bag", 1) == 0);
     assert(clockUpdates == 1);
     CtrSettings_SetInt("clock_speed", 5);
     assert(clockUpdates == 1);
@@ -106,6 +110,21 @@ int main(int argc, char **argv) {
         assert(writes == 2 && strstr(saved, "voxel=1\n") && strstr(saved, "voxel_blur=0\n") && strstr(saved, "fps=1\n"));
         assert(strstr(saved, "day_night=1\n") && strstr(saved, "clock_speed=5\n"));
         assert(strstr(saved, "timed_encounters=1\n") && strstr(saved, "show_clock=1\n"));
+        assert(strstr(saved, "live_party=1\n") && strstr(saved, "live_bag=0\n"));
+        /* Parse the saved snapshot as if starting the application anew. */
+        char reloaded[sizeof(saved)];
+        memcpy(reloaded, saved, sizeof(saved));
+        CtrSettings_Defaults();
+        assert(CtrSettings_GetInt("live_party", 0) == 0);
+        assert(CtrSettings_GetInt("live_bag", 0) == 0);
+        char *line = strtok(reloaded, "\n");
+        while (line) { CtrSettings_ApplyLine(line); line = strtok(NULL, "\n"); }
+        assert(CtrSettings_GetInt("live_party", 0) == 1);
+        assert(CtrSettings_GetInt("live_bag", 1) == 0);
+        CtrSettings_ApplyLine("live_party=0");
+        CtrSettings_ApplyLine("live_bag=1");
+        assert(CtrSettings_GetInt("live_party", 1) == 0);
+        assert(CtrSettings_GetInt("live_bag", 0) == 1);
         assert(errors == (fault == 2 ? 2u : 0u));
         assert(renames == (fault == 2 ? 0u : 2u));
     }

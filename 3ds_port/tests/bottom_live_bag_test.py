@@ -5,14 +5,36 @@ No Pokemon ROM or devkitARM is needed. Keep the production snapshot function
 in the test, not a reimplementation: this catches indexing and clamp errors.
 """
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
+options = (ROOT / "3ds_port/src/3ds_bottom_options.inc").read_text(encoding="utf-8")
+extras = (ROOT / "3ds_port/src/3ds_extras.c").read_text(encoding="utf-8")
+actions = (ROOT / "3ds_port/src/3ds_bottom_actions.inc").read_text(encoding="utf-8")
+# Both toggles are registered default-off and exposed once, with no silent
+# truncation of group rows or category tabs.
+for key in ("live_party", "live_bag"):
+    assert options.count(f'EXTRA_ROW("{key}")') == 1
+    assert re.search(rf'"{key}", 2, 0, gCtrExtrasOffOn', extras)
+rows = dict(re.findall(r'static const OptRowDef (sRows\w+)\[\] = \{(.*?)\n\};', options, re.S))
+groups = re.findall(r'static const OptGroupDef (sGroups\w+)\[\] = \{(.*?)\n\};', options, re.S)
+assert "sRowsLive" in rows
+assert len(re.findall(r'EXTRA_ROW\(', rows["sRowsLive"])) == 2
+assert any("sRowsLive" in body and name == "sGroupsGeneral" for name, body in groups)
+for name, body in rows.items():
+    assert len(re.findall(r'GAME_ROW\(|EXTRA_ROW\(|\{ROW_INFO', body)) <= 6, name
+for name, body in groups:
+    assert len(re.findall(r'\bGROUP\(', body)) <= 4, name
+
 snapshot = (ROOT / "3ds_port/src/3ds_bottom_snapshot.inc").read_text(encoding="utf-8")
 start = snapshot.index("static void SnapshotLiveBag(ViewState *s)\n{")
 end = snapshot.index("\n/* A stored selection can outlive", start)
 fn = snapshot[start:end]
+swipe_start = actions.index("static int LiveBagSwipeRows(int startY, int endY)\n{")
+swipe_end = actions.index("\n}\n", swipe_start) + len("\n}\n")
+swipe_fn = actions[swipe_start:swipe_end]
 
 fixture = r'''
 #include <assert.h>
@@ -31,6 +53,7 @@ typedef u8 bool8;
 #define KEYITEMS_POCKET 4
 #define POCKETS_COUNT 5
 #define CTR_BAG_ROWS 8
+#define BAG_ROW_H 18
 #define CTR_BAG_NAME 24
 #define CTR_VIEW_TEXT 160
 #define CTR_BAG_VIEW_LIST 1
@@ -87,6 +110,15 @@ int main(void)
     struct ItemSlot tms[4] = {{50, 1}, {0, 0}, {30, 1}, {40, 1}};
     unsigned total;
     ViewState state = {0};
+
+    /* Horizontal dragging and vertical jitter must not cause scrolling. */
+    assert(LiveBagSwipeRows(100, 100) == 0);
+    assert(LiveBagSwipeRows(100, 99) == 0);
+    assert(LiveBagSwipeRows(100, 108) == 0);
+    assert(LiveBagSwipeRows(100, 89) == 1);
+    assert(LiveBagSwipeRows(100, 111) == -1);
+    assert(LiveBagSwipeRows(100, 64) == 2);
+    assert(LiveBagSwipeRows(100, 136) == -2);
 
     /* Overfull list: selected row #12 must be visible in the final page. */
     for (unsigned i = 0; i < 13; ++i)
@@ -171,7 +203,7 @@ int main(void)
     return 0;
 }
 '''
-source = fixture.replace("/* PRODUCTION_SNAPSHOT */", fn)
+source = fixture.replace("/* PRODUCTION_SNAPSHOT */", fn + "\n" + swipe_fn)
 assert source != fixture
 with tempfile.TemporaryDirectory() as tmp:
     inp = Path(tmp) / "live_bag.c"
