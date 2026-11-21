@@ -36,12 +36,13 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import shutil
 import subprocess
 import sys
 import os
 import tomllib
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[1]
 OVERLAY = ["3ds_port", "builder", "tools"]
@@ -80,6 +81,54 @@ def fetch(tree: Path, repo: str, commit: str) -> None:
         run(["git", "remote", "add", "origin", repo], cwd=tree)
     run(["git", "fetch", "-q", "--depth", "1", "origin", commit], cwd=tree)
     run(["git", "checkout", "-q", "--force", "--detach", commit], cwd=tree)
+
+
+def sync_overlay(tree: Path) -> None:
+    """Remove stale copied source files while preserving generated build outputs."""
+    ignore = shutil.ignore_patterns("__pycache__", "*.pyc", "build", "dist")
+    manifest = tree / ".emerald3ds-overlay.json"
+    try:
+        previous = json.loads(manifest.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        previous = []
+    if not isinstance(previous, list):
+        previous = []
+
+    current = set()
+    for name in OVERLAY:
+        for directory, dirs, files in os.walk(ROOT / name, followlinks=True):
+            skipped = ignore(directory, dirs + files)
+            dirs[:] = [child for child in dirs if child not in skipped]
+            current.update((Path(directory) / child).relative_to(ROOT).as_posix()
+                           for child in files if child not in skipped)
+
+    root = tree.resolve()
+    for item in previous:
+        if not isinstance(item, str) or "\\" in item or item in current:
+            continue
+        relative = PurePosixPath(item)
+        if len(relative.parts) < 2 or relative.parts[0] not in OVERLAY or ".." in relative.parts:
+            continue
+        target = tree.joinpath(*relative.parts)
+        if not target.parent.resolve().is_relative_to(root):
+            continue
+        if target.is_file() or target.is_symlink():
+            target.unlink()
+        for directory in target.parents:
+            if directory.parent == tree:
+                break
+            try:
+                directory.rmdir()  # preserves nonempty directories with generated files
+            except OSError:
+                break
+
+    for name in OVERLAY:
+        source = ROOT / name
+        if source.is_dir():
+            shutil.copytree(source, tree / name, dirs_exist_ok=True, ignore=ignore)
+    temporary = manifest.with_suffix(".tmp")
+    temporary.write_text(json.dumps(sorted(current)) + "\n", encoding="utf-8")
+    temporary.replace(manifest)
 
 
 def main() -> int:
@@ -143,7 +192,6 @@ def main() -> int:
                          "BPED": "german.json.gz", "BPEJ": "japanese.json.gz"}.get(previous_name.split()[0] if previous_name else "")
         if manifest_name:
             import gzip
-            import json
             manifest = json.loads(gzip.decompress((ROOT / "tools/locales" / manifest_name).read_bytes()))
             for relative, _, _ in manifest["graphics"]:
                 for name in (relative, relative[:-3]) if relative.endswith(".lz") else (relative,):
@@ -171,11 +219,7 @@ def main() -> int:
     else:
         print("bootstrap: upstream %s with %d patches already in place" % (commit[:12], len(patches)))
 
-    for name in OVERLAY:
-        src = ROOT / name
-        if src.exists():
-            shutil.copytree(src, tree / name, dirs_exist_ok=True,
-                            ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "build", "dist"))
+    sync_overlay(tree)
     shutil.copy2(ROOT / "upstream.lock", tree / "upstream.lock")
     print("bootstrap: tree ready at %s" % tree)
 

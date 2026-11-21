@@ -169,6 +169,7 @@ def commonest(seq):
 
 
 import voxel_building as vb  # noqa: E402
+import voxel_cache
 import voxel_cells as vc  # noqa: E402
 from voxel_image import image_pixels  # noqa: E402
 import voxel_props  # noqa: E402
@@ -2304,32 +2305,16 @@ def drawn_prepare(name):
     and every map's seams together."""
     if name in _PREP:
         return _PREP[name]
-    cache = os.environ.get("VOXEL_RELIEF_CACHE")    # a developer's, between runs
+    cache = os.environ.get("VOXEL_RELIEF_CACHE")  # private developer cache
     if cache:
-        import hashlib, inspect, pickle
-        here = os.path.dirname(os.path.abspath(__file__))
-        # what the reading depends on: the constants, this function, the canvas, the cells
-        text = open(os.path.join(here, "gen_voxel_relief.py"), encoding="utf-8").read()
-        key = hashlib.sha1((text[:text.index("def find_drawn")]     # the constants
-                            + inspect.getsource(drawn_prepare) + inspect.getsource(drawn_canvas)
-                            + inspect.getsource(drawn_regions)
-                            + inspect.getsource(drawn_region_widths) + inspect.getsource(drawn_drop_runs)
-                            + repr((_ROW_FACES.pattern, _COLUMN_DROPS.pattern))
-                            + inspect.getsource(drawn_role) + repr(sorted(ROLE_REFERENCE.items()))
-                            + ((inspect.getsource(split_wrapped) + inspect.getsource(_neck)
-                                + inspect.getsource(_wrapped) + inspect.getsource(_rim_gaps)
-                                + inspect.getsource(_clusters)
-                                + repr((WRAP_DROP, WRAP_COLUMNS, WRAP_CUT, WRAP_POCKET, WRAP_REACH, WRAP_DEEP))
-                                + os.environ.get("NO_WRAP", "")) if name in WRAP_GROUPS else "")
-                            + open(os.path.join(here, "voxel_cells.py"), encoding="utf-8").read()
-                            + open(os.path.join(here, "voxel_props.py"), encoding="utf-8").read()
-                            ).encode("utf-8")).hexdigest()[:12]
-        path = os.path.join(cache, "prep_%s_%s.pickle" % (name, key))
-        if os.path.exists(path):
-            _PREP[name] = pickle.load(open(path, "rb"))
+        stamp = voxel_cache.fingerprint(vb.ROOT, PORT, voxel_relief_fixes.FIXES)
+        key = (stamp, name, WRAP_GROUPS, os.environ.get("NO_WRAP"))
+        path = os.path.join(cache, "prep_%s_%s.bin" % (name, stamp))
+        cached = voxel_cache.read(path, key)
+        if cached is not None:
             for lid in DRAWN[name]:
-                if lid not in _ART:
-                    layout_art(lid)
+                layout_art(lid)
+            _PREP[name] = dict(cached, layouts={lid: open_roles(lid) for lid in DRAWN[name]})
             return _PREP[name]
     members = DRAWN[name]
     layouts, CW, CH, kind, blocked, side, flat, face_low = drawn_canvas(name)
@@ -2520,8 +2505,7 @@ def drawn_prepare(name):
                 edges=edges)
     _PREP[name] = prep
     if cache:
-        os.makedirs(cache, exist_ok=True)
-        pickle.dump(prep, open(path, "wb"))
+        voxel_cache.write(path, key, {k: v for k, v in prep.items() if k != "layouts"})
     return prep
 
 

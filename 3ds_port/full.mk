@@ -510,8 +510,14 @@ VOXEL_GFX_OUTPUTS += $(patsubst %.pal,%.gbapal,$(filter %.pal,$(VOXEL_GFX_SOURCE
 ifneq ($(strip $(VOXEL_GFX_OUTPUTS)),)
 $(VOXEL_GFX_OUTPUTS) &: $(VOXEL_GFX_SOURCES)
 	+$(MAKE) -C $(ROOT) $(patsubst $(ROOT)/%,%,$(VOXEL_GFX_OUTPUTS))
-romfs/voxel/regions.bin romfs/voxel/signposts.bin romfs/voxel/buildings.bin build/voxel_relief_base.bin romfs/stage/leaves.bin: $(VOXEL_GFX_OUTPUTS)
+romfs/voxel/regions.bin romfs/voxel/signposts.bin build/voxel_relief_base.bin romfs/stage/leaves.bin: $(VOXEL_GFX_OUTPUTS)
 endif
+
+# Map and tileset inputs read by the voxel generators.
+VOXEL_MAP_INPUTS := $(ROOT)/data/layouts/layouts.json $(HOST_MAP_JSONS) \
+	$(ROOT)/src/data/tilesets/metatiles.h $(ROOT)/include/constants/metatile_behaviors.h \
+	$(wildcard $(ROOT)/data/layouts/*/map.bin $(ROOT)/data/tilesets/*/*/metatiles.bin \
+		$(ROOT)/data/tilesets/*/*/metatile_attributes.bin)
 
 # What every cell of every layout IS (the console reads its signposts).
 # Solved on the host because it needs the map's warps, its neighbours and a
@@ -519,8 +525,7 @@ endif
 # Depends on the header because the generator parses the role names out of it
 # rather than keeping a copy that could drift.
 romfs/voxel/regions.bin: scripts/gen_voxel_regions.py scripts/voxel_cells.py scripts/voxel_art.py \
-		src/voxel/voxel_regions.h \
-		$(ROOT)/data/layouts/layouts.json
+		src/voxel/voxel_regions.h $(VOXEL_MAP_INPUTS)
 	@mkdir -p $(@D)
 	"$(PYTHON)" scripts/gen_voxel_regions.py
 
@@ -550,39 +555,31 @@ romfs/voxel/trees.rgba5551: scripts/gen_voxel_trees.py \
 # in any room - see build/buildings/interior_lint.txt.
 # verify-voxel-buildings runs the proofs alone, even when the file is
 # up to date: the release build asks for it.
-romfs/voxel/buildings.bin: scripts/gen_voxel_buildings.py scripts/voxel_building.py scripts/voxel_night.py scripts/voxel_windows.py \
-		scripts/voxel_floor.py scripts/voxel_image.py \
+romfs/voxel/buildings.bin romfs/voxel/windowlights.bin &: scripts/gen_voxel_buildings.py scripts/voxel_building.py scripts/voxel_night.py scripts/voxel_windows.py \
+		scripts/voxel_floor.py scripts/voxel_cache.py scripts/voxel_image.py \
 		scripts/voxel_building_specs.py scripts/voxel_bridge.py scripts/voxel_fence.py scripts/voxel_fortree.py scripts/dump_region_art.py scripts/voxel_props.py \
 		scripts/voxel_relief_fixes.py assets/voxel/relief_fixes.json \
 		scripts/gen_voxel_relief.py \
 		scripts/voxel_defect_scan.py assets/voxel/interior_lint_allow.toml \
-		$(ROOT)/data/layouts/layouts.json
+		scripts/voxel_cells.py scripts/voxel_art.py scripts/gen_voxel_sign_masks.py \
+		scripts/voxel_sign_mask.py $(VOXEL_MAP_INPUTS) $(VOXEL_GFX_OUTPUTS)
 	@mkdir -p $(@D)
-	"$(PYTHON)" scripts/gen_voxel_buildings.py --verify --diagnostics failures --output $@
-
-# The light lit windows throw on the ground, written beside buildings.bin
-# by the same run.
-romfs/voxel/windowlights.bin: romfs/voxel/buildings.bin
-	@test -f $@ || { rm -f $<; $(MAKE) $<; }
-	@touch $@
+	@set -e; work=$$(mktemp -d "$(@D)/.buildings.XXXXXX"); trap 'rm -rf "$$work"' EXIT; \
+		"$(PYTHON)" scripts/gen_voxel_buildings.py --verify --diagnostics failures --output "$$work/buildings.bin"; \
+		test -f "$$work/buildings.bin"; test -f "$$work/windowlights.bin"; \
+		mv -f "$$work/windowlights.bin" "$(@D)/windowlights.bin"; \
+		mv -f "$$work/buildings.bin" "$(@D)/buildings.bin"
 
 .PHONY: verify-voxel-buildings
 verify-voxel-buildings:
 	"$(PYTHON)" scripts/gen_voxel_buildings.py --verify
-
-# The base can survive a buildings-only rebuild. Track the maps and metatiles
-# it reads so their edits still regenerate it.
-RELIEF_MAP_INPUTS := $(ROOT)/data/layouts/layouts.json $(HOST_MAP_JSONS) \
-	$(ROOT)/src/data/tilesets/metatiles.h $(ROOT)/include/constants/metatile_behaviors.h \
-	$(wildcard $(ROOT)/data/layouts/*/map.bin $(ROOT)/data/tilesets/*/*/metatiles.bin \
-		$(ROOT)/data/tilesets/*/*/metatile_attributes.bin)
 
 # Solve the terrain from the map art while the buildings are being verified.
 # The terrace pass reads the building footprints, so the finished relief
 # still waits for the verified buildings.
 build/voxel_relief_base.bin: scripts/gen_voxel_relief.py scripts/voxel_cells.py scripts/voxel_image.py scripts/voxel_props.py \
 		scripts/voxel_art.py scripts/voxel_building.py scripts/dump_region_art.py \
-		scripts/voxel_relief_fixes.py $(RELIEF_MAP_INPUTS)
+		scripts/voxel_relief_fixes.py scripts/voxel_cache.py $(VOXEL_MAP_INPUTS)
 	@mkdir -p $(@D)
 	"$(PYTHON)" scripts/gen_voxel_relief.py --base-output $@.tmp && mv -f $@.tmp $@
 
@@ -755,9 +752,19 @@ verify-settings: build/settings_shutdown_test.exe
 	./build/settings_shutdown_test.exe 1
 	./build/settings_shutdown_test.exe 2
 
-build/settings_shutdown_test.exe: tests/settings_shutdown_test.c tests/settings_host/3ds.h src/3ds_settings.c
+build/settings_shutdown_test.exe: tests/settings_shutdown_test.c tests/settings_host/3ds.h src/3ds_settings.c src/3ds_save_io.c include/3ds_save_io.h
 	@mkdir -p $(@D)
 	$(HOSTCC) -std=gnu99 -O2 -Wall -Wextra -Werror -Itests/settings_host -Iinclude $< -pthread -o $@
+
+.PHONY: verify-flash-write
+VERIFY_HOST_CHECKS += verify-flash-write
+verify-flash-write: build/flash_write_test$(EXESUFFIX)
+	./build/flash_write_test$(EXESUFFIX) build/flash_write_test.sav
+
+build/flash_write_test$(EXESUFFIX): tests/flash_write_test.c src/3ds_save_io.c include/3ds_save_io.h
+	@mkdir -p $(@D)
+	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Dfwrite=CtrTestWrite -Iinclude $(filter %.c,$^) -o $@
+
 .PHONY: verify-voxel-runtime
 VERIFY_HOST_CHECKS += verify-voxel-runtime
 verify-voxel-runtime:
@@ -879,3 +886,12 @@ verify-voxel-sprite-slots: build/voxel_sprite_slots_test.exe
 build/voxel_sprite_slots_test.exe: tests/voxel_sprite_slots_test.c src/voxel/voxel_sprite_slots.c src/voxel/voxel_sprite_slots.h
 	@mkdir -p $(@D)
 	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Isrc/voxel tests/voxel_sprite_slots_test.c src/voxel/voxel_sprite_slots.c -o $@
+
+.PHONY: verify-voxel-vertex-pack
+VERIFY_HOST_CHECKS += verify-voxel-vertex-pack
+verify-voxel-vertex-pack: build/voxel_vertex_pack_test$(EXESUFFIX)
+	./build/voxel_vertex_pack_test$(EXESUFFIX)
+
+build/voxel_vertex_pack_test$(EXESUFFIX): tests/voxel_vertex_pack_test.c src/voxel/voxel_vertex_pack.h src/voxel/voxel_mesh_builder.h
+	@mkdir -p $(@D)
+	$(HOSTCC) -std=c99 -O2 -Wall -Wextra -Werror -Iinclude -Isrc/voxel $< -lm -o $@

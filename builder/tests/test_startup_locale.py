@@ -167,6 +167,17 @@ static inline Result FSUSER_OpenFileDirectly(Handle *out, u32 archive, FS_Path e
     fclose(stream);
     return 1;
 }
+static inline Result FSFILE_GetSize(Handle handle, u64 *size)
+{
+    if (handle < 1 || handle > FS_MAX_FILES || fsFiles[handle - 1] == NULL)
+        return 1;
+    FILE *stream = fsFiles[handle - 1];
+    long end = fseek(stream, 0, SEEK_END) == 0 ? ftell(stream) : -1;
+    if (end < 0)
+        return 1;
+    *size = (u64)end;
+    return 0;
+}
 static inline Result FSFILE_Read(Handle handle, u32 *read, u64 offset, void *buffer, u32 size)
 {
     if (handle < 1 || handle > FS_MAX_FILES || fsFiles[handle - 1] == NULL)

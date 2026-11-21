@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import errno
+import hashlib
+import json
+import re
 import os
 import shutil
 import stat
@@ -10,6 +13,7 @@ import string
 import sys
 import time
 import uuid
+from contextlib import contextmanager
 from pathlib import Path
 
 from .errors import BuilderError
@@ -20,6 +24,8 @@ APP_DIR = Path("3ds") / "emerald3ds"
 SAVE_NAME = "emerald3ds.sav"
 SAVE_FILES = (SAVE_NAME, "emerald3ds.clock", "emerald3ds.clock.tmp", "emerald3ds.clock.bak",
               "emerald3ds.nuzlocke", "emerald3ds.nuzlocke.tmp", "emerald3ds.nuzlocke.bak")
+INSTALL_JOURNAL = ".install.json"
+INSTALL_LOCK = ".emerald3ds-install.lock"
 BACKUP_DIR = "backup"   # <app folder>/backup/<timestamp>/
 
 # The 3DS sound firmware dump that homebrew needs for audio.
@@ -58,7 +64,8 @@ _RETRY_HINT = ("Nothing already on the card was changed. Check that the card is 
 def _check_name(name) -> None:
     """Destination names must be plain file names: no folders, no drive letters."""
     if (not isinstance(name, str) or name in ("", ".", "..") or any(c in name for c in "/\\:\0")
-            or Path(name).name != name):
+            or Path(name).name != name
+            or name.casefold() in {INSTALL_JOURNAL, BACKUP_DIR, *SAVE_FILES}):
         raise BuilderError("Refusing to install a file with an unsafe name: %r" % (name,),
                            code="install_failed")
 
@@ -81,6 +88,25 @@ def _remove(paths) -> None:
             path.unlink()
         except OSError:
             pass
+
+
+def _stage_file(dest: Path, name: str, source: Path, advance=None) -> tuple[Path, str]:
+    """Copy, hash and sync the exact bytes that will be installed."""
+    tmp, fd = _create_temp(dest, name)
+    digest = hashlib.sha256()
+    try:
+        with os.fdopen(fd, "wb") as fout, source.open("rb") as fin:
+            while chunk := fin.read(1 << 20):
+                fout.write(chunk)
+                digest.update(chunk)
+                if advance is not None:
+                    advance(len(chunk))
+            fout.flush()
+            os.fsync(fout.fileno())
+    except BaseException:
+        _remove([tmp])
+        raise
+    return tmp, digest.hexdigest()
 
 
 def _backup_stamp() -> str:
@@ -209,31 +235,146 @@ def _warn_missing_dsp(sd_root: Path, warn) -> None:
             pass   # the install already succeeded; a broken display must not undo that
 
 
+@contextmanager
+def _install_lock(parent: Path):
+    """A process lock released by the OS even if the builder exits mid-install."""
+    parent.mkdir(parents=True, exist_ok=True)
+    with (parent / INSTALL_LOCK).open("a+b") as lock:
+        lock.seek(0)
+        if os.name == "nt":
+            import msvcrt
+
+            msvcrt.locking(lock.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        yield
+
+
+def _sync_directory(path: Path) -> None:
+    if os.name == "nt":
+        return
+    fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(fd)
+    except OSError as exc:
+        if exc.errno not in (errno.EINVAL, errno.ENOTSUP):
+            raise
+    finally:
+        os.close(fd)
+
+
+def _publish_journal(dest: Path, staged) -> None:
+    records = [(tmp.name, final.name, digest) for tmp, final, digest in staged]
+    tmp, fd = _create_temp(dest, INSTALL_JOURNAL)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            json.dump({"version": 1, "files": records}, stream)
+            stream.flush()
+            os.fsync(stream.fileno())
+        tmp.rename(dest / INSTALL_JOURNAL)
+        _sync_directory(dest)
+    finally:
+        _remove([tmp])
+
+
+def _clear_journal(dest: Path) -> None:
+    (dest / INSTALL_JOURNAL).unlink()
+    _sync_directory(dest)
+
+
+def _matches_digest(path: Path, digest: str) -> bool:
+    try:
+        if not stat.S_ISREG(path.lstat().st_mode):
+            return False
+        with path.open("rb") as stream:
+            return hashlib.file_digest(stream, "sha256").hexdigest() == digest
+    except FileNotFoundError:
+        return False
+
+
+def _recover_install(dest: Path, files: dict[str, Path]) -> None:
+    journal = dest / INSTALL_JOURNAL
+    try:
+        with journal.open("rb") as stream:
+            data = stream.read(64 * 1024 + 1)
+    except FileNotFoundError:
+        return
+    if len(data) > 64 * 1024:
+        raise ValueError("install journal exceeds its size limit")
+    payload = json.loads(data)
+    if not isinstance(payload, dict) or payload.get("version") != 1 or not isinstance(payload.get("files"), list):
+        raise ValueError("unrecognized install journal")
+    entries = []
+    seen = set()
+    for record in payload["files"]:
+        if not isinstance(record, list) or len(record) != 3:
+            raise ValueError("invalid install journal entry")
+        temp, name, digest = record
+        _check_name(name)
+        if (name.casefold() in seen or not isinstance(temp, str)
+                or not re.fullmatch(re.escape(name) + r"\.[0-9a-f]{12}\.partial", temp)
+                or not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest)):
+            raise ValueError("invalid install journal entry")
+        seen.add(name.casefold())
+        entries.append((dest / temp, dest / name, digest))
+
+    sources = {name.casefold(): Path(source) for name, source in files.items()}
+    pending = []
+    repairs = []
+    stale = []
+    try:
+        for staged, final, digest in entries:
+            if _matches_digest(staged, digest):
+                pending.append((staged, final, None))
+            elif _matches_digest(final, digest):
+                stale.append(staged)
+            else:
+                source = sources.get(final.name.casefold())
+                if source is None or not source.is_file():
+                    raise ValueError("missing a source for the interrupted install: %s" % final.name)
+                repaired, actual = _stage_file(dest, final.name, source)
+                repairs.append(repaired)
+                if actual != digest:
+                    raise ValueError("source does not match the interrupted install: %s" % final.name)
+                pending.append((staged, final, repaired))
+        for staged, final, repaired in pending:
+            if repaired is not None:
+                # Keep a journal-owned, verified stage if the final rename fails.
+                os.replace(repaired, staged)
+            os.replace(staged, final)
+        _remove(stale)
+        _sync_directory(dest)
+        _clear_journal(dest)
+    finally:
+        _remove(repairs)
+
+
 def install(sd_root: Path, files: dict[str, Path], progress=None, warn=None) -> Path:
-    """Copy `files` ({name: source}) into <sd_root>/3ds/emerald3ds/.
-
-    Every file is first copied (and synced) under a new, unique temporary name.
-    Only when all of them are copied are they renamed into place, so a failed
-    copy leaves the files already installed untouched and removes its own
-    temporary files. The renames themselves are not one transaction: if one of
-    them fails, the install can be left part old, part new, and the error says
-    so. Behaviour when a card is pulled out or loses power is not verified.
-
-    If a save (emerald3ds.sav) is already there, it and any clock companions
-    (emerald3ds.clock, emerald3ds.clock.tmp, emerald3ds.clock.bak) and Nuzlocke
-    tracker companions (emerald3ds.nuzlocke, emerald3ds.nuzlocke.tmp,
-    emerald3ds.nuzlocke.bak) are first copied, in full, into a new folder
-    backup/<timestamp>/ next to them; if that backup fails, nothing
-    is replaced. The originals are never written, older backups never removed.
-
-    `warn(message)`, if given, receives non-fatal warnings after a successful
-    install (currently: <sd_root>/3ds/dspfirm.cdc is missing)."""
+    """Stage and sync a complete update, with recovery if file replacement is interrupted."""
     sd_root = Path(sd_root)
     if not sd_root.is_dir():
         raise BuilderError("The destination folder does not exist:\n%s" % sd_root)
     for name in files:
         _check_name(name)
+    if len({name.casefold() for name in files}) != len(files):
+        raise BuilderError("The update contains duplicate destination names.", code="install_failed")
+
     dest = sd_root / APP_DIR
+    try:
+        with _install_lock(dest.parent):
+            _recover_install(dest, files)
+            if files:
+                _install(sd_root, dest, files, progress)
+    except (OSError, ValueError, RecursionError) as exc:
+        raise BuilderError("Could not prepare or recover the install in %s:\n%s" % (dest, exc),
+                           "Check the card and retry with the same release and build options.", code="install_failed") from exc
+    _warn_missing_dsp(sd_root, warn)
+    return dest
+
+
+def _install(sd_root: Path, dest: Path, files: dict[str, Path], progress) -> None:
     need = 0
     for src in files.values():
         try:
@@ -260,7 +401,8 @@ def install(sd_root: Path, files: dict[str, Path], progress=None, warn=None) -> 
         raise BuilderError("Could not create the folder %s:\n%s" % (dest, exc), _RETRY_HINT,
                            code="install_failed") from exc
 
-    staged: list[tuple[Path, Path]] = []
+    staged: list[tuple[Path, Path, str]] = []
+    temps: list[Path] = []
     done = 0
 
     def advance(count: int) -> None:
@@ -272,23 +414,15 @@ def install(sd_root: Path, files: dict[str, Path], progress=None, warn=None) -> 
     name = None
     try:
         for name, src in files.items():
-            tmp, fd = _create_temp(dest, name)
-            staged.append((tmp, dest / name))
-            with os.fdopen(fd, "wb") as fout, Path(src).open("rb") as fin:
-                while True:
-                    chunk = fin.read(1 << 20)
-                    if not chunk:
-                        break
-                    fout.write(chunk)
-                    advance(len(chunk))
-                fout.flush()
-                os.fsync(fout.fileno())
+            tmp, digest = _stage_file(dest, name, Path(src), advance)
+            temps.append(tmp)
+            staged.append((tmp, dest / name, digest))
     except OSError as exc:
-        _remove(tmp for tmp, _ in staged)
+        _remove(temps)
         raise BuilderError("Copying %s to %s failed:\n%s" % (name, dest, exc), _RETRY_HINT,
                            code="install_failed") from exc
     except BaseException:
-        _remove(tmp for tmp, _ in staged)
+        _remove(temps)
         raise
 
     # Back up the save set, complete, before any game file is replaced.
@@ -296,29 +430,34 @@ def install(sd_root: Path, files: dict[str, Path], progress=None, warn=None) -> 
         try:
             _backup_saves(dest, saves, advance)
         except OSError as exc:
-            _remove(tmp for tmp, _ in staged)
+            _remove(temps)
             raise BuilderError("Backing up the save in %s failed, so the game was not updated:\n%s"
                                % (dest, exc), _RETRY_HINT, code="install_failed") from exc
         except BaseException:
-            _remove(tmp for tmp, _ in staged)
+            _remove(temps)
             raise
+
+    try:
+        _publish_journal(dest, staged)
+    except BaseException:
+        # Once the journal is visible, its stages belong to recovery.
+        if not (dest / INSTALL_JOURNAL).exists():
+            _remove(temps)
+        raise
 
     committed = 0
     try:
-        for tmp, final in staged:
+        for tmp, final, _ in staged:
             os.replace(tmp, final)
             committed += 1
+        _sync_directory(dest)
+        _clear_journal(dest)
     except OSError as exc:
-        _remove(tmp for tmp, _ in staged[committed:])
         if committed == 0:
+            _clear_journal(dest)
+            _remove(temps)
             raise BuilderError("Putting %s in place in %s failed:\n%s" % (staged[0][1].name, dest, exc),
                                _RETRY_HINT, code="install_failed") from exc
         raise BuilderError("The install in %s is incomplete: %d of %d files were updated before "
                            "an error (%s)." % (dest, committed, len(staged), exc),
-                           "The game may not start until it is installed again. Check the card, "
-                           "then run the install again.", code="install_failed") from exc
-    except BaseException:
-        _remove(tmp for tmp, _ in staged[committed:])
-        raise
-    _warn_missing_dsp(sd_root, warn)
-    return dest
+                           "Run the installer again to finish the interrupted update.", code="install_failed") from exc

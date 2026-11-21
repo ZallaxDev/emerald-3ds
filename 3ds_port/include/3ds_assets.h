@@ -29,11 +29,11 @@ struct CtrAssetStats
 };
 
 void CtrAssets_Collect(void);
-/* Reads every payload into the cache from a background worker (see 3ds_assets.c). */
+/* Game-thread controls. Start is a no-op while the worker is active.
+ * Stop requests cancellation and returns true once the worker is joined.
+ * A timeout retains the handle; Stop can retry and Start cannot overlap it. */
 void CtrAssets_StartWarmup(void);
-/* Stops the warm-up and joins its worker before the file systems close (at
- * exit; one log line if it is still reading after a second). */
-void CtrAssets_StopWarmup(void);
+bool CtrAssets_StopWarmup(void);
 /* Whether the warm-up worker is still reading (the frame profiler's flag). */
 bool CtrAssets_WarmingUp(void);
 const struct CtrAssetStats *CtrAssets_GetStats(void);

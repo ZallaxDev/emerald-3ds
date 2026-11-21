@@ -686,13 +686,26 @@ static int CompareWarmEntries(const void *a, const void *b)
     return x->idx < y->idx ? -1 : x->idx > y->idx;
 }
 
-/* Set at exit (CtrAssets_StopWarmup): the worker stops before the file
- * system it reads from is closed. */
-static volatile bool sWarmStop, sWarmRunning;
+/* Start/stop and the handle belong to the game thread. Cancellation and
+ * the frame profiler's running flag use atomic accesses. */
+static CtrThread sWarmThread;
+static bool sWarmStop, sWarmRunning;
+
+static bool WarmStopping(void)
+{
+    return __atomic_load_n(&sWarmStop, __ATOMIC_ACQUIRE);
+}
 
 static bool WarmRoom(void)
 {
-    return !sWarmStop && sStats.bytes < sBudget / WARM_BUDGET_SHARE;
+    bool room;
+
+    if (WarmStopping())
+        return false;
+    CtrLock_Lock(&sLock);
+    room = sStats.bytes < sBudget / WARM_BUDGET_SHARE;
+    CtrLock_Unlock(&sLock);
+    return room;
 }
 
 /* Reserves the payloads of list[first, end) that nobody has, reads or failed
@@ -702,6 +715,11 @@ static unsigned WarmClaim(WarmEntry *list, unsigned first, unsigned end)
     unsigned claimed = 0;
 
     CtrLock_Lock(&sLock);
+    if (WarmStopping())
+    {
+        CtrLock_Unlock(&sLock);
+        return 0;
+    }
     for (unsigned i = first; i < end; ++i)
     {
         list[i].claimed = sState[list[i].idx] == PAYLOAD_EMPTY;
@@ -845,7 +863,8 @@ static void WarmHinted(WarmEntry *list, unsigned count, u8 *run)
     {
         unsigned end = i;
 
-        while (end < count && strncmp(GetAssetPathByIndex(list[end].idx), hint, length) == 0)
+        while (end < count && !WarmStopping()
+               && strncmp(GetAssetPathByIndex(list[end].idx), hint, length) == 0)
             ++end;
         if (end == i)
             ++i;
@@ -880,10 +899,12 @@ static void WarmWorker(void *arg)
     unsigned count = 0;
     u8 *run = NULL;
     u64 begin = CtrPlatform_Ticks();
+    struct CtrAssetStats stats;
+    bool packRuns = false;
 
     /* Where the pack holds each payload. One it lacks, or holds with another
      * size, is left to the requests, which say why it does not read. */
-    for (u32 idx = 0; idx < sEntryCount; ++idx)
+    for (u32 idx = 0; idx < sEntryCount && !WarmStopping(); ++idx)
     {
         WarmEntry *entry = &list[count];
         u32 size = 0;
@@ -898,46 +919,55 @@ static void WarmWorker(void *arg)
             ++count;
         }
     }
-    if (count != 0 && (run = malloc(WARM_RUN)) != NULL)
-        WarmAll(list, count, run);
-    else
+    if (!WarmStopping())
     {
-        /* RomFS or loose files (or no room for a run): a file at a time. */
-        for (u32 idx = 0; idx < sEntryCount; ++idx)
-            list[idx] = (WarmEntry){0, sEntries[idx].size, idx, 0, (u16)WarmRank(GetAssetPathByIndex(idx)), 0};
-        count = 0;
-        WarmAll(list, sEntryCount, NULL);
+        if (count != 0 && (run = malloc(WARM_RUN)) != NULL)
+        {
+            packRuns = true;
+            WarmAll(list, count, run);
+        }
+        else
+        {
+            /* RomFS or loose files (or no room for a run): a file at a time. */
+            count = 0;
+            while (count < sEntryCount && !WarmStopping())
+            {
+                list[count] = (WarmEntry){0, sEntries[count].size, count, 0,
+                                         (u16)WarmRank(GetAssetPathByIndex(count)), 0};
+                ++count;
+            }
+            if (!WarmStopping())
+                WarmAll(list, count, NULL);
+        }
     }
     free(run);
     free(list);
+    CtrLock_Lock(&sLock);
+    stats = sStats;
+    CtrLock_Unlock(&sLock);
     CtrLog_Write(CTR_LOG_FS, "assets warmed%s: %lu KiB of %lu payloads in %.0f ms (%s), "
                  "%lu requests waited for a reader, %lu reads failed",
-                 sWarmStop ? " until exit" : "", (unsigned long)(sStats.bytes >> 10),
-                 (unsigned long)sStats.loads, CtrPlatform_TickMs(CtrPlatform_Ticks() - begin),
-                 count ? "pack runs" : "file by file", (unsigned long)sStats.waits,
-                 (unsigned long)sStats.failures);
+                 WarmStopping() ? " before stop" : "", (unsigned long)(stats.bytes >> 10),
+                 (unsigned long)stats.loads, CtrPlatform_TickMs(CtrPlatform_Ticks() - begin),
+                 packRuns ? "pack runs" : "file by file", (unsigned long)stats.waits,
+                 (unsigned long)stats.failures);
     __atomic_store_n(&sWarmRunning, false, __ATOMIC_RELEASE);
 }
 
-/* At most this long for the worker to finish the read it is in at exit:
- * a run or a file, some tens of milliseconds. */
 #define WARM_JOIN_MS 1000u
-static CtrThread sWarmThread;
-static bool sWarmStarted;
 
-/* Exiting with the warm-up under way, its reads failed in the log as the
- * RomFS went away under them: it stops first, a read at most later, and is
- * joined before the file systems close. */
-void CtrAssets_StopWarmup(void)
+bool CtrAssets_StopWarmup(void)
 {
-    sWarmStop = true;
     if (sWarmThread == NULL)
-        return;
-    if (CtrPlatform_JoinThread(sWarmThread, WARM_JOIN_MS))
-        sWarmThread = NULL;
-    else
-        CtrLog_Write(CTR_LOG_ERROR, "assets: the warm-up worker was still reading after %u ms; "
-                     "exiting under it", WARM_JOIN_MS);
+        return true;
+    __atomic_store_n(&sWarmStop, true, __ATOMIC_RELEASE);
+    if (!CtrPlatform_JoinThread(sWarmThread, WARM_JOIN_MS))
+    {
+        CtrLog_Write(CTR_LOG_ERROR, "assets: the warm-up worker did not stop after %u ms", WARM_JOIN_MS);
+        return false;
+    }
+    sWarmThread = NULL;
+    return true;
 }
 
 bool CtrAssets_WarmingUp(void)
@@ -949,11 +979,20 @@ void CtrAssets_StartWarmup(void)
 {
     WarmEntry *list;
 
-    if (!LoadAssetMap() || sWarmStarted)
+    if (sWarmThread != NULL)
+    {
+        if (CtrAssets_WarmingUp() || !CtrPlatform_JoinThread(sWarmThread, 0))
+            return;
+        sWarmThread = NULL;
+    }
+    if (!LoadAssetMap())
         return;
-    sWarmStarted = true;
     list = malloc(sEntryCount * sizeof(*list));
-    sWarmRunning = true;
+    if (list != NULL)
+    {
+        __atomic_store_n(&sWarmStop, false, __ATOMIC_RELEASE);
+        __atomic_store_n(&sWarmRunning, true, __ATOMIC_RELEASE);
+    }
     /*
      * On the system core, beside the game rather than in the gaps it leaves:
      * the worker waits on the FS service far more than it computes. From
@@ -965,7 +1004,7 @@ void CtrAssets_StartWarmup(void)
     if (list == NULL || (sWarmThread = CtrPlatform_StartJoinable(WarmWorker, list, 16 * 1024, 1)) == NULL)
     {
         free(list);
-        sWarmRunning = false;
+        __atomic_store_n(&sWarmRunning, false, __ATOMIC_RELEASE);
         CtrLog_Write(CTR_LOG_ERROR, "assets: no warm-up worker; payloads load on demand");
     }
 }
@@ -984,11 +1023,11 @@ void CtrAssets_Collect(void)
 {
     u32 i;
 
-    ++sStamp;
-    if (!sLoaded || sStats.bytes <= sBudget)
+    if (!sLoaded)
         return;
 
     CtrLock_Lock(&sLock);
+    ++sStamp;
     for (i = 0; i < sEntryCount && sStats.bytes > sBudget; i++)
     {
         u32 age = sStamp - sPayloads[i].stamp;

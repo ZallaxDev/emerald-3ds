@@ -583,6 +583,8 @@ void CtrPlatform_EndFrame(void)
 
 void CtrPlatform_Shutdown(void)
 {
+    bool warmStopped;
+
     if (!sInitialized)
         return;
     sInitialized = false;
@@ -591,7 +593,7 @@ void CtrPlatform_Shutdown(void)
     /* The workers that read or write files first (the asset warm-up, then
      * those registered: the plate file's, the battle boxes'), each joined or
      * given up after a bound; the voxel stream stops with the video. */
-    CtrAssets_StopWarmup();
+    warmStopped = CtrAssets_StopWarmup();
     while (sStopCount != 0)
         sStops[--sStopCount]();
     CtrSettings_Shutdown();
@@ -600,13 +602,22 @@ void CtrPlatform_Shutdown(void)
     LocalLink_Shutdown();
     CtrVideo_Shutdown();
     CtrAudio_Shutdown();
-    /* Nothing reads game data past here: the pack is closed. */
-    CtrData_Shutdown();
-    CtrLog_Write(CTR_LOG_BOOT, "clean shutdown, platform frames=%llu", (unsigned long long)sFrames);
+    /* Give a slow asset read another chance while the other workers stop.
+     * Leave its data, filesystem and logger available if it outlasts exit. */
+    if (!warmStopped)
+        warmStopped = CtrAssets_StopWarmup();
+    if (warmStopped)
+    {
+        CtrData_Shutdown();
+        CtrLog_Write(CTR_LOG_BOOT, "clean shutdown, platform frames=%llu", (unsigned long long)sFrames);
+    }
     CtrScenario_Close();
     aptUnhook(&sAptHook);
-    CtrFs_Shutdown();
-    CtrLog_Close();
+    if (warmStopped)
+    {
+        CtrFs_Shutdown();
+        CtrLog_Close();
+    }
     gfxExit();
 }
 

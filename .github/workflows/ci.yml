@@ -65,6 +65,16 @@ jobs:
           gcc -std=c99 -O2 -Wall -Wextra -Werror -I3ds_port/include \
               3ds_port/tests/pak_test.c 3ds_port/src/3ds_pak.c -o pak_test
           ./pak_test test.pak "$(python 3ds_port/tests/make_test_pak.py test.pak)"
+          python 3ds_port/tests/pak_bounds_test.py ./pak_test
+      - name: Asset warm-up worker lifecycle
+        run: |
+          gcc -std=gnu99 -O2 -Wall -Wextra -Werror -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast \
+              -ffunction-sections -fdata-sections -Wl,--gc-sections -pthread \
+              -I3ds_port/tests/assets_host -I3ds_port/include -I3ds_port/compat \
+              3ds_port/tests/assets_warmup_test.c 3ds_port/src/3ds_pak.c -o assets_warmup_test
+          timeout 10s ./assets_warmup_test
+      - name: Incremental voxel build dependencies
+        run: python 3ds_port/tests/voxel_make_deps_test.py
       - name: Input and video decoding
         run: |
           cd 3ds_port
@@ -77,6 +87,8 @@ jobs:
           make -C 3ds_port verify-voxel-lighting verify-voxel-trees build/voxel_ground_mesh_test.exe
           cd 3ds_port
           ./build/voxel_ground_mesh_test.exe
+      - name: Voxel runtime, draft and GPU vertex packing
+        run: make -C 3ds_port verify-voxel-runtime verify-voxel-draft verify-voxel-vertex-pack
       - name: Night window masks and building-page compatibility
         env:
           PILLOW: ${{ needs.release-versions.outputs.pillow }}

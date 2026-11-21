@@ -208,6 +208,7 @@ static bool OpenPak(void)
     uint8_t header[CTR_PAK_HEADER_BYTES];
     uint8_t *index = NULL;
     CtrPakHeader info;
+    uint64_t fileSize;
     CtrPakStatus status;
     char detail[512];
 
@@ -240,11 +241,13 @@ static bool OpenPak(void)
                              "  /3ds/emerald3ds/emerald3ds.pak"));
         return false;
     }
-    status = PakReadAt(0, header, sizeof(header))
-           ? CtrPak_ParseHeader(header, sEngineAbi, sSupportedRomSha1, &info) : CTR_PAK_BAD_MAGIC;
+    status = !R_FAILED(FSFILE_GetSize(sPakFile, &fileSize)) && fileSize >= sizeof(header)
+           && PakReadAt(0, header, sizeof(header))
+           ? CtrPak_ParseHeader(header, sEngineAbi, sSupportedRomSha1, fileSize, &info) : CTR_PAK_BAD_MAGIC;
     switch (status)
     {
     case CTR_PAK_OK:
+    case CTR_PAK_TRUNCATED_INDEX:
         break;
     case CTR_PAK_BAD_MAGIC:
         SetError(CTR_TEXT("This is not a game data pack.", "This is not a game data pack.", "Ce fichier n'est pas un pack de donnees.", "Questo non e' un pacchetto di dati.", "Isto nao e um pacote de dados.", "Das ist kein Datenpaket des Spiels.", "This is not a game data pack."),
@@ -308,16 +311,19 @@ static bool OpenPak(void)
                              "Starte den Builder erneut."));
         goto fail;
     }
-    index = malloc((size_t)info.entryCount * CTR_PAK_ENTRY_BYTES);
-    sEntries = malloc((size_t)info.entryCount * sizeof(*sEntries));
-    if (index == NULL || sEntries == NULL
+    if (status == CTR_PAK_OK)
+    {
+        index = malloc((size_t)info.entryCount * CTR_PAK_ENTRY_BYTES);
+        sEntries = malloc((size_t)info.entryCount * sizeof(*sEntries));
+    }
+    if (status != CTR_PAK_OK || index == NULL || sEntries == NULL
      || !PakReadAt(info.indexOffset, index, info.entryCount * CTR_PAK_ENTRY_BYTES))
     {
         SetError(CTR_TEXT("The data pack could not be read.", "The data pack could not be read.", "Lecture du pack de donnees impossible.", "Impossibile leggere il pacchetto di dati.", "Nao foi possivel ler o pacote de dados.", "Das Datenpaket konnte nicht gelesen werden.", "The data pack could not be read."),
                  CTR_TEXT("The SD card could not deliver its index.", "The SD card could not deliver its index.", "La carte SD n'a pas pu fournir l'index.", "Impossibile leggere l'indice\ndalla scheda SD.", "O cartao SD nao entregou o seu indice.", "Die SD-Karte lieferte kein Verzeichnis.", "The SD card could not deliver its index."));
         goto fail;
     }
-    if (CtrPak_ParseIndex(index, &info, sEntries) != CTR_PAK_OK)
+    if (CtrPak_ParseIndex(index, &info, fileSize, sEntries) != CTR_PAK_OK)
     {
         SetError(CTR_TEXT("The data pack is damaged.", "The data pack is damaged.", "Le pack de donnees est endommage.", "Il pacchetto di dati e' danneggiato.", "O pacote de dados esta corrompido.", "Das Datenpaket ist beschaedigt.", "The data pack is damaged."),
                  CTR_TEXT_FR_IT_PT_DE("Its index does not pass the integrity\n"

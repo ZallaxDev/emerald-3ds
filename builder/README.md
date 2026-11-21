@@ -43,8 +43,11 @@ choice, and the command line takes `--language pt` (English without it).
 | `web.py` | entry point of the web builder (Pyodide in the browser) |
 | `webmanifest.py` | `web-manifest.json`, the contract between a release and the website |
 
-Privacy: the ROM is read into memory and never copied, uploaded or modified;
-temporary files are removed even when a step fails.
+The builder reads the ROM into memory without copying, uploading, or modifying it.
+
+If the installer reports an interrupted SD update, reconnect the card and run
+the installer again. It checks the saved transaction and puts any remaining
+staged game files in place before starting the new install.
 
 Saves: before an install replaces any game file, an existing
 `emerald3ds.sav` and whichever of its optional companions exist are copied:
