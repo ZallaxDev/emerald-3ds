@@ -647,10 +647,13 @@ static void DrawSummaryMon(const ViewState *s)
         GenderSign(x + 70, oy + 88, v->gender);
         if (v->ball)
             DrawItemIcon(v->ball, x + 6, oy + 104);
-        text[0] = CHAR_N;
-        text[1] = CHAR_o;
-        ConvertIntToDecimalStringN(text + 2, v->dexNum, STR_CONV_MODE_LEADING_ZEROS, 3);
-        StyledStr(&sSmall, text, x + 32, oy + 110, STYLE_GRAY);
+        if (v->dexNum != 0xFFFF)
+        {
+            text[0] = CHAR_N;
+            text[1] = CHAR_o;
+            ConvertIntToDecimalStringN(text + 2, v->dexNum, STR_CONV_MODE_LEADING_ZEROS, 3);
+            StyledStr(&sSmall, text, x + 32, oy + 110, STYLE_GRAY);
+        }
     }
     if (v->canChangeMon)
     {

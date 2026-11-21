@@ -81,14 +81,16 @@ typedef struct
      * sprite clears exactly what it used to cover instead of the whole 64x64
      * slot. */
     int drawnWidth, drawnHeight;
-    /* Empty rows under the feet of the standing pose: the art's feet sit this
-     * far up the cell, and the card leaves them out to put them on the
-     * ground (VisibleRows). Measured once per picture table (StandingFootPad). */
+    /* Empty rows under the feet of the standing pose (the visible frame for
+     * berry trees). The card leaves them out to put the feet on the ground. */
     int footPad;
     const struct SpriteFrameImage *footPadImages;
-    /* Measured on the standing pose itself; else, until that picture is in
-     * memory, on the frame the object first showed (StandingFootPad). */
+    /* Measured on the requested picture itself; until it is in memory,
+     * use the slot's own copy (PictureFootPad). */
     bool footPadExact;
+    /* Which frame and size footPad was measured for; only a berry tree's
+     * changes it (BerryTreeFrame). */
+    u32 footPadKey;
 } VoxelSpriteSlot;
 
 static VoxelSpriteSlot sSlots[VOXEL_SPRITE_SLOTS];
@@ -646,11 +648,10 @@ static int FootPadOf(const u8 *tiles, int width, int height)
  * nearly always, and at worst a row off for as long as it takes the game to
  * load the picture - it is looked for again every frame.
  */
-static int StandingFootPad(const struct ObjectEventGraphicsInfo *info,
-                           const VoxelSpriteSlot *slot, bool *exact)
+static int PictureFootPad(const struct SpriteFrameImage *frame, int width, int height,
+                          const VoxelSpriteSlot *slot, bool *exact)
 {
-    const struct SpriteFrameImage *frame = &info->images[0];
-    int tilesX = info->width / 8, tilesY = info->height / 8;
+    int tilesX = width / 8, tilesY = height / 8;
     u32 size = Port_GetSpriteFrameSize(frame->data, frame->size);
     const u8 *tiles = Port_PeekSpriteFramePointer(frame->data, size, frame->offset);
 
@@ -659,14 +660,31 @@ static int StandingFootPad(const struct ObjectEventGraphicsInfo *info,
         return 0;
     if (tiles == NULL)
     {
-        if (slot->color256 || slot->width != info->width || slot->height != info->height
+        if (slot->color256 || slot->width != width || slot->height != height
          || slot->sourceBytes < (u32)(tilesX * tilesY) * TILE_SIZE_4BPP)
             return 0;
-        return FootPadOf(slot->source, info->width, info->height);
+        return FootPadOf(slot->source, width, height);
     }
     if (size < (u32)(tilesX * tilesY) * TILE_SIZE_4BPP)
         return 0;
-    return FootPadOf(tiles, info->width, info->height);
+    return FootPadOf(tiles, width, height);
+}
+
+/*
+ * Berry animations contain only FRAME and END, and AnimCmd_end leaves
+ * animCmdIndex on the last FRAME. Its imageValue is the picture index, not
+ * the command index: for example, the ripe animation starts on picture 7.
+ */
+static int BerryTreeFrame(const struct Sprite *sprite)
+{
+    const union AnimCmd *anim;
+
+    if (sprite->anims == NULL || sprite->usingSheet || sprite->images == NULL)
+        return -1;
+    anim = sprite->anims[sprite->animNum];
+    if (anim == NULL || anim[sprite->animCmdIndex].type < 0)
+        return -1;
+    return anim[sprite->animCmdIndex].frame.imageValue;
 }
 
 /*
@@ -2644,14 +2662,27 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
         {
             const struct ObjectEventGraphicsInfo *info = GetObjectEventGraphicsInfo(obj->graphicsId);
 
-            bool changed = sSlots[i].footPadImages != info->images;
-
+            /* A berry tree's feet follow its growth stage, and its pictures are
+             * the sprite's own table: every berry's info names Pecha's. The
+             * key holds the frame and the size the pad was measured for (0:
+             * the standing pose, as every other object). */
+            int image = obj->movementType == MOVEMENT_TYPE_BERRY_TREE_GROWTH
+                      ? BerryTreeFrame(sprite) : -1;
+            const struct SpriteFrameImage *images = image < 0 ? info->images : sprite->images;
+            u32 key = image < 0 ? 0 : ((u32)(image + 1) << 16) | ((u32)sSlots[i].width << 8)
+                                    | (u32)sSlots[i].height;
+            bool changed = sSlots[i].footPadImages != images || sSlots[i].footPadKey != key;
             if (changed || !sSlots[i].footPadExact)
             {
                 bool exact = true;
-                int pad = info->images != NULL ? StandingFootPad(info, &sSlots[i], &exact) : 0;
+                int pad = images != NULL
+                        ? PictureFootPad(&images[image < 0 ? 0 : image],
+                                         image < 0 ? info->width : sSlots[i].width,
+                                         image < 0 ? info->height : sSlots[i].height,
+                                         &sSlots[i], &exact) : 0;
 
-                sSlots[i].footPadImages = info->images;
+                sSlots[i].footPadImages = images;
+                sSlots[i].footPadKey = key;
                 /* A provisional pad is taken once, never from each frame of a
                  * walk: that would undo its bob. */
                 if (changed || exact)
@@ -2793,6 +2824,7 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
         sSlots[s].valid = false;
         sSlots[s].footPad = 0;
         sSlots[s].footPadImages = NULL;
+        sSlots[s].footPadKey = 0;
     }
     /* In sprite order, as they were drawn before. */
     for (unsigned c = 0; c < candidateCount && effectCount < VOXEL_EFFECTS_MAX; ++c)
