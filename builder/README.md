@@ -7,8 +7,9 @@ installs the game on an SD card, in that ROM's language - or, from the English
 ROM, in the Brazilian Portuguese fan translation when the release has it
 (`payload/pt/`, docs/PORTUGUESE.md).
 
-Release users get a standalone Windows executable (no Python needed). From
-source (any OS, Python 3.11+ and Pillow):
+Release users get a standalone Windows executable (no Python needed; a macOS
+standalone package can also be built with `tools/build_release.py --platform macOS`).
+From source (any OS, Python 3.11+ and Pillow):
 
 ```
 python -m emerald3ds_builder                          # window

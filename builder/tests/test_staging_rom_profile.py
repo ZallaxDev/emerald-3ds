@@ -11,6 +11,24 @@ spec.loader.exec_module(staging)
 
 
 class StagingRomProfileTests(unittest.TestCase):
+    def test_port_menu_art_ships_in_engine_without_changing_data_abi(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            folder = Path(temporary)
+            romfs = folder / "romfs"
+            (romfs / "bottom").mkdir(parents=True)
+            (romfs / "maps").mkdir()
+            (romfs / "maps/a.bin").write_bytes(b"synthetic map")
+            before, _ = staging.compute_abi(romfs)
+            art = romfs / "bottom/menu_top.bin"
+            art.write_bytes(b"synthetic original port artwork")
+            after, items = staging.compute_abi(romfs)
+            self.assertEqual(before, after)
+            self.assertEqual([item[0] for item in items], ["maps/a.bin"])
+            engine = folder / "engine"
+            staging.main(["engine", "--romfs", str(romfs), "--out", str(engine)])
+            self.assertEqual((engine / "bottom/menu_top.bin").read_bytes(), art.read_bytes())
+            self.assertFalse((engine / "maps/a.bin").exists())
+
     def test_pack_fingerprint_matches_compiled_language(self):
         for language, code in (("ENGLISH", "BPEE"), ("SPANISH", "BPES"),
                                ("FRENCH", "BPEF"), ("ITALIAN", "BPEI"), ("GERMAN", "BPED")):

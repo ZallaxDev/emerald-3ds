@@ -105,9 +105,10 @@ emerald3ds-builder-cli.exe verify  --pak E:\3ds\emerald3ds\emerald3ds.pak
 
 ### Linux and macOS
 
-The easiest way is the **web builder at <https://emerald-3ds.com>**: it runs in
-the browser and needs nothing installed. To use the builder on your own
-computer instead:
+The recommended option is the **web builder at <https://emerald-3ds.com>**.
+It runs in the browser without installing a builder.
+
+#### Run the builder from source (Linux and macOS)
 
 1. Download `Emerald3DS-vX.Y.Z-Windows.zip` from the release and extract it.
    You only need its `payload/` folder; it works on every system.
@@ -142,6 +143,22 @@ computer instead:
 5. If you installed to a folder, copy its `3ds` folder to the root of the SD
    card. Add `SD:/3ds/dspfirm.cdc` for sound (see [Sound](#sound)), eject the
    card and launch **Emerald 3DS** from the Homebrew Launcher.
+
+#### Build the standalone package yourself (macOS)
+
+You can also build a native standalone package on your Mac using the
+[release build instructions](RELEASING.md). Official releases provide the
+Windows standalone builder.
+
+1. Extract the whole `Emerald3DS-vX.Y.Z-macOS.zip` with Archive Utility or
+   `unzip` so the runtime's symbolic links are preserved.
+2. From Terminal, change to the extracted folder and run
+   `./Emerald3DS-Builder`. Keep it beside `payload/` and `_internal/`.
+3. Select your ROM and SD card as described above. For the command line,
+   run `./emerald3ds-builder-cli --help` from the same folder.
+
+If macOS blocks a copy transferred from another machine, build it locally
+or use the source builder above.
 
 See the [builder documentation](../builder/README.md) for other source-builder commands.
 

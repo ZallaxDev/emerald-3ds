@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Assemble a Emerald 3DS release.
 
-    python tools/build_release.py --version 0.1.0 --rom baserom.gba \\
+    python tools/build_release.py --version 0.1.0 --rom baserom.gba \
         --gba-elf path/to/pokeemerald.elf
+
+Pass --platform macOS to produce a macOS builder ZIP instead of Windows.
 
 Steps (each can be skipped when its output is already there):
 
@@ -22,8 +24,8 @@ Steps (each can be skipped when its output is already there):
    texts of tools/locales/pt_br as the translation's own (gen_recipe.py
    --translation);
 5. the standalone builder (PyInstaller, one folder, no UPX);
-6. dist/Emerald3DS-v<version>-Windows.zip with the builder, the payload,
-   README.txt and LICENSES/;
+6. dist/Emerald3DS-v<version>-<platform>.zip with the builder, the payload,
+   README.txt and LICENSES/ (Windows by default, or macOS with --platform macOS);
 7. the standalone dist/Emerald3DS.3dsx and dist/Emerald3DS.smdh (quick update
    of the executable when the data ABI did not change; dist/Emerald3DS-es.3dsx,
    -fr, -it, -de, -ja and -pt for the other languages), and the HOME Menu
@@ -49,6 +51,7 @@ import hashlib
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import zipfile
@@ -170,6 +173,35 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def bundle_builder(release: Path, external: set[str], platform: str) -> None:
+    build = ROOT / "builder" / "build"
+    build.mkdir(parents=True, exist_ok=True)
+    (build / "hidden-imports.txt").write_text("\n".join(sorted(external)) + "\n", encoding="utf-8")
+    run([sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean",
+         "--distpath", build / "dist", "--workpath", build / "pyi", "emerald3ds-builder.spec"],
+        cwd=ROOT / "builder")
+    shutil.copytree(build / "dist" / "Emerald3DS-Builder", release,
+                    dirs_exist_ok=True, symlinks=platform == "macOS")
+
+
+def write_builder_zip(release: Path, archive: Path, platform: str) -> None:
+    with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+        for path in sorted(release.rglob("*")):
+            name = path.relative_to(release.parent).as_posix()
+            if platform == "macOS" and path.is_symlink():
+                # Frameworks and dylib aliases in PyInstaller's onedir bundle
+                # must remain links after extraction.
+                target = path.readlink()
+                if target.is_absolute() or not path.resolve(strict=True).is_relative_to(release.resolve()):
+                    raise ValueError(f"Builder symlink escapes the release: {name}")
+                entry = zipfile.ZipInfo(name)
+                entry.create_system = 3
+                entry.external_attr = (stat.S_IFLNK | 0o777) << 16
+                zf.writestr(entry, os.fsencode(target))
+            elif path.is_file():
+                zf.write(path, name)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--version", required=True)
@@ -187,6 +219,8 @@ def main() -> None:
                     help="clean Japanese (BPEJ) ROM: also build the Japanese variant (payload/ja/)")
     ap.add_argument("--portuguese", action="store_true",
                     help="also build the Brazilian Portuguese translation from the English ROM (payload/pt/)")
+    ap.add_argument("--platform", choices=["Windows", "macOS"], default="Windows",
+                    help="platform of the standalone builder ZIP (default: Windows)")
     ap.add_argument("--nm", default=os.environ.get("NM", "arm-none-eabi-nm"))
     ap.add_argument("--make", default=None, help="command that runs make in 3ds_port (default: make)")
     ap.add_argument("--skip-make", action="store_true")
@@ -199,6 +233,10 @@ def main() -> None:
                     help="a voxel file (e.g. voxel/signposts.bin) the release does not precompile: "
                          "the builders generate it as before (repeatable)")
     args = ap.parse_args()
+    if args.platform == "macOS" and sys.platform != "darwin":
+        ap.error("--platform macOS requires a native macOS build")
+    if args.platform == "Windows" and not args.skip_exe and sys.platform != "win32":
+        ap.error("the Windows builder must be built on Windows; use --skip-exe for engine assets")
     VOXEL_GENERATE[:] = args.voxel_generate
     # The voxel data depends on the interpreter: one fixed Python makes it
     # (upstream.lock [python]), for make's generators as for the precompile.
@@ -219,7 +257,7 @@ def main() -> None:
         sys.exit("3ds_port/Makefile has APP_VERSION %s, not %s: bump it first"
                  % (shown.group(1) if shown else "(none)", args.version))
     tag = "v" + args.version
-    release = DIST / ("Emerald3DS-%s-Windows" % tag)
+    release = DIST / ("Emerald3DS-%s-%s" % (tag, args.platform))
     payload = release / "payload"
 
     if not args.skip_make:
@@ -276,13 +314,7 @@ def main() -> None:
         build_localized_variant(args, tag, payload / locale["code"], locale)
 
     if not args.skip_exe:
-        build = ROOT / "builder" / "build"
-        build.mkdir(parents=True, exist_ok=True)
-        (build / "hidden-imports.txt").write_text("\n".join(sorted(external)) + "\n", encoding="utf-8")
-        run([sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean",
-             "--distpath", build / "dist", "--workpath", build / "pyi", "emerald3ds-builder.spec"],
-            cwd=ROOT / "builder")
-        shutil.copytree(build / "dist" / "Emerald3DS-Builder", release, dirs_exist_ok=True)
+        bundle_builder(release, external, args.platform)
 
     shutil.copy2(ROOT / "builder" / "README-release.txt", release / "README.txt")
     licenses = release / "LICENSES"
@@ -294,13 +326,8 @@ def main() -> None:
     for rel in ("3ds_port/src/voxel/NOTICE.md",):
         shutil.copy2(ROOT / rel, licenses / "voxel-NOTICE.md")
 
-    archive = DIST / ("Emerald3DS-%s-Windows.zip" % tag)
-    if archive.exists():
-        archive.unlink()
-    with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
-        for path in sorted(release.rglob("*")):
-            if path.is_file():
-                zf.write(path, path.relative_to(DIST).as_posix())
+    archive = DIST / ("Emerald3DS-%s-%s.zip" % (tag, args.platform))
+    write_builder_zip(release, archive, args.platform)
 
     standalone = []
     for name in ("Emerald3DS.3dsx", "Emerald3DS.smdh"):
