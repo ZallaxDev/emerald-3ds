@@ -171,7 +171,7 @@ def commonest(seq):
 import voxel_building as vb  # noqa: E402
 import voxel_cache
 import voxel_cells as vc  # noqa: E402
-from voxel_image import image_pixels  # noqa: E402
+from voxel_image import image_pixels, rgb_palette  # noqa: E402
 import voxel_props  # noqa: E402
 import voxel_relief_fixes  # noqa: E402
 
@@ -3144,7 +3144,7 @@ def ledge_lip(layout, art):
                 if (nx, ny) in cells or layout.off_map(nx, ny) or layout.blocked(nx, ny):
                     continue
                 img = art.cell_image(art.metatile(nx, ny))
-                ground.update(img.getpixel((i, j))[:3] for j in range(16) for i in range(16))
+                ground.update(rgb_palette(img))
             if ground:
                 break
         if not ground:
@@ -4874,7 +4874,10 @@ def riser_mask(img):
     of the stair pattern it draws (bit r for pixel row r), 0 when it does not
     draw one cleanly."""
     cols = range(STEP_EDGE, 16 - STEP_EDGE)
-    lum = [[0.3 * img.getpixel((c, r))[0] + 0.59 * img.getpixel((c, r))[1] + 0.11 * img.getpixel((c, r))[2]
+    # Read the 16x16 tile once, rather than crossing the Pillow/Python
+    # boundary for each colour channel on every selected pixel.
+    pixels = image_pixels(img)
+    lum = [[0.3 * pixels[r * 16 + c][0] + 0.59 * pixels[r * 16 + c][1] + 0.11 * pixels[r * 16 + c][2]
             for c in cols] for r in range(16)]
     mean = [sum(row) / len(row) for row in lum]
     spread = max((sum((v - mean[r]) ** 2 for v in lum[r]) / len(lum[r])) ** 0.5 for r in range(16))
