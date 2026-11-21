@@ -35,6 +35,9 @@ static Plan MakePlan(u8 kind, s16 target)
 
 static void StartPlan(u8 kind, s16 target)
 {
+    /* Replacing the planned field-party open means its live selection is
+     * no longer valid. OpenAsked arms a new handoff AFTER StartPlan. */
+    sLivePartyHandoff = PARTY_SIZE;
     sPlan = MakePlan(kind, target);
 }
 
@@ -53,7 +56,11 @@ static void FinishPlan(void)
 static void CancelPlan(void)
 {
     if (sPlan.kind == PLAN_START)
+    {
+        if (sPlan.target == START_POKEMON)
+            sLivePartyHandoff = PARTY_SIZE;
         CtrStartMenu_Request(START_NONE);
+    }
     sPlan.kind = PLAN_NONE;
 }
 
