@@ -91,3 +91,16 @@ until 3D Pokémon is enabled. Even a persisted manually edited
 also attempts the original early texture reservation; failure still
 falls back to original flat sprites. No other options, cheating modes,
 or gameplay defaults are changed.
+
+## Phase 3B — fail-closed pack validation
+
+`collapse_stereo_planes.py --fill-only` now validates the complete
+`EM3DSTM1` index and payload before normalizing any third-party pack:
+version/magic, dimensions, plane/frame limits, max 520 entries, strictly
+ordered unique identifiers, contiguous bounded frames, no trailing data,
+and valid pixel plane numbers. Its output is deterministic and idempotent.
+The native reader also validates each index and payload range before
+declaring an asset available to the settings UI. A bad or truncated pack
+therefore cannot advertise an active feature; the original sprite
+renderer is the fallback. New synthetic tests cover malformed indexes,
+short/trailing payloads, invalid planes and valid no-outline copies.

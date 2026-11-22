@@ -67,14 +67,43 @@ def fill_transparent(data):
 
 
 def fill_pack(data):
-    """A finished pack with every frame filled (fill_transparent): the header
-    and index as they are, the frames (contiguous after the index) with no
-    15 left, so a pack copied into a build carries no outline either."""
+    """Validate and normalize a finished depth-only pack for 3DS RomFS.
+
+    The runtime loader reads a bounded index and then seeks to each frame.
+    Reject malformed offsets, overlapping/trailing payloads, duplicate or
+    unsorted ids and pixel values outside the advertised plane count *before*
+    any file is packaged. The transform is idempotent: only transparency
+    nibbles (15) are filled with their nearest plane as in the original
+    stereoscopic design.
+    """
     if len(data) < 16 or data[:8] != b'EM3DSTM1':
-        raise ValueError('not a planes pack')
-    count = struct.unpack_from('<H', data, 8)[0]
-    body = 16 + 8 * count
-    return bytes(data[:body]) + fill_transparent(data[body:])
+        raise ValueError('not an EM3DSTM1 planes pack')
+    count, planes, frames, width, height = struct.unpack_from('<HBBHH', data, 8)
+    start = 16 + count * 8
+    if (count > 520 or not 2 <= planes <= 15 or not 1 <= frames <= 5
+            or (width, height) != (64, 64) or start > len(data)):
+        raise ValueError('invalid stereo pack header or truncated index')
+    offset = start
+    last_ident = 0
+    for i in range(count):
+        ident, entry_frames, at = struct.unpack_from('<HHI', data, 16 + i * 8)
+        if ident <= last_ident or entry_frames > frames:
+            raise ValueError('invalid or unsorted stereo pack index entry')
+        n = entry_frames or frames
+        size = n * 2048
+        if at != offset or size > len(data) - offset:
+            raise ValueError('overlapping, noncontiguous or truncated stereo pack frames')
+        for value in data[offset:offset + size]:
+            lo, hi = value & 15, value >> 4
+            if (lo != 15 and lo >= planes) or (hi != 15 and hi >= planes):
+                raise ValueError('stereo pack pixel exceeds its plane count')
+        offset += size
+        last_ident = ident
+    if offset != len(data):
+        raise ValueError('trailing data in stereo pack')
+    # Existing collapse_pack already owns the authored transparency fill.
+    # For finished packs keep the plane labels exactly as authored.
+    return collapse_pack(data, target=planes)
 
 
 def collapse_pack(data, target=4, annotations=None, report=None, smart=False, cleanup=False):

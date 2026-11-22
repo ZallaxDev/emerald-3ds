@@ -21,6 +21,39 @@ typedef struct
     bool loaded, tried;
 } PlanesFile;
 static PlanesFile sFront = {.path = CTR_STEREO_MON_FILE}, sBacks = {.path = CTR_STEREO_BACKS_FILE};
+/* A nonempty pack is only usable when every indexed frame is in bounds.
+ * Validate at first load so a corrupt manually copied RomFS file cannot
+ * expose controls or suppress a flat sprite despite a broken entry. */
+static bool ValidateFile(const PlanesFile *pf, uint32_t size)
+{
+    uint32_t offset = CTR_STEREO_MON_HEADER_BYTES
+                    + pf->header.count * CTR_STEREO_MON_INDEX_BYTES;
+    uint16_t lastId = 0;
+
+    for (unsigned i = 0; i < pf->header.count; ++i)
+    {
+        uint16_t id;
+        uint32_t at, bytes;
+        unsigned rawFrames, frames;
+
+        if (!CtrStereoMon_IndexEntry(pf->index, pf->indexBytes, &pf->header, i, &id, &at))
+            return false;
+        rawFrames = pf->index[CTR_STEREO_MON_HEADER_BYTES
+                             + i * CTR_STEREO_MON_INDEX_BYTES + 2]
+                  | ((unsigned)pf->index[CTR_STEREO_MON_HEADER_BYTES
+                             + i * CTR_STEREO_MON_INDEX_BYTES + 3] << 8);
+        if (id <= lastId || rawFrames > pf->header.frames)
+            return false;
+        frames = rawFrames ? rawFrames : pf->header.frames;
+        bytes = CtrStereoMon_FramesBytes(&pf->header, frames);
+        if (at != offset || offset > size || bytes > size - offset)
+            return false;
+        offset += bytes;
+        lastId = id;
+    }
+    return offset == size;
+}
+
 /* Shorthands for the fronts file. */
 #define sIndex sFront.index
 #define sIndexBytes sFront.indexBytes
@@ -45,7 +78,8 @@ static bool LoadFile(PlanesFile *pf)
     pf->indexBytes = (uint32_t)fread(pf->index, 1, sizeof(pf->index), f);
     fclose(f);
     if (size > 0 && CtrStereoMon_ParseHeader(pf->index, pf->indexBytes, &pf->header)
-        && pf->header.count <= CTR_STEREO_MON_MAX_COUNT)
+        && pf->header.count <= CTR_STEREO_MON_MAX_COUNT
+        && ValidateFile(pf, (uint32_t)size))
     {
         /* A build without a plane source writes the header alone: no
          * planes, nothing to say. */
