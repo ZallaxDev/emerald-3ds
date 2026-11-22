@@ -63,10 +63,10 @@ class CollapseTest(unittest.TestCase):
         # Synthetic one-frame and two-frame entries with valid packed planes.
         header = b'EM3DSTM1' + struct.pack('<HBBHH', 2, 4, 2, 64, 64)
         index = struct.pack('<HHI', 1, 1, 32) + struct.pack('<HHI', 2, 0, 2080)
-        source = header + index + b'\\xf2' * 2048 + b'\\x23' * 4096
+        source = header + index + b'\xf2' * 2048 + b'\x23' * 4096
         output = fill_pack(source)
         self.assertEqual(output[:32], source[:32])
-        self.assertEqual(output[32:2080], b'\\x22' * 2048)
+        self.assertEqual(output[32:2080], b'\x22' * 2048)
         self.assertEqual(output[2080:], source[2080:])
         self.assertEqual(fill_pack(output), output)
         self.assertEqual(fill_pack(b'EM3DSTM1' + struct.pack('<HBBHH', 0, 4, 2, 64, 64)),
@@ -82,7 +82,7 @@ class CollapseTest(unittest.TestCase):
         x = bytearray(source); struct.pack_into('<I', x, 20, 33); invalid.append(x) # gap
         x = bytearray(source); x[32] = 0x45; invalid.append(x)  # plane >= 4
         invalid.append(source[:-1])    # missing payload byte
-        invalid.append(source + b'\\x00') # trailing data
+        invalid.append(source + b'\x00') # trailing data
         invalid.append(source[:23])    # missing index
         for case in invalid:
             with self.subTest(length=len(case), beginning=bytes(case[:32])):
