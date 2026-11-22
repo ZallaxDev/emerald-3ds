@@ -668,6 +668,11 @@ VIDEO_PIECE void BattleEyeRows(float top)
 /* Whole per eye, as RenderEye composes it, at the same depths. */
 VIDEO_PIECE void StereoWholeEyes(float slider, C3D_Tex *world, uint32_t clear)
 {
+#ifndef CTR_STEREO_BATTLE
+    /* Clear color is only needed by the optional non-voxel battle path.
+     * Preserve the original whole-eye renderer in feature-disabled builds. */
+    (void)clear;
+#endif
     PORT_PROF_BEGIN(bsWhole);
 
     for (int eye = 0; eye < 2; ++eye)
