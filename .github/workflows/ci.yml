@@ -240,12 +240,25 @@ jobs:
           make -C build/upstream/3ds_port -j4 PYTHON=python3 \
             romfs/voxel/regions.bin romfs/voxel/signposts.bin build/voxel_relief_base.bin
           mkdir -p relief-profile
-          python3 -m profiling.sampling run --pstats -o relief-profile/terraces.pstats \
+          # The Python 3.15 sampler emits its readable summary directly
+          # during "run". A .pstats file is not a cProfile-readable report,
+          # and the module's top-level CLI requires a subcommand.
+          python3 -m profiling.sampling run --pstats --sort cumtime --limit 70 \
             build/upstream/3ds_port/scripts/gen_voxel_relief.py \
             --base-input build/upstream/3ds_port/build/voxel_relief_base.bin \
             --output relief-profile/relief.bin --terrace-jobs 1 > relief-profile/run.log 2>&1
-          python3 -m profiling.sampling --pstats --sort cumtime --limit 70 \
-            relief-profile/terraces.pstats > relief-profile/hotspots.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          log = Path("relief-profile/run.log").read_text(encoding="utf-8", errors="replace")
+          lines = log.splitlines()
+          headings = [i for i in range(len(lines) - 1)
+                      if lines[i].strip().startswith("Profile Stats")
+                      and "nsamples" in lines[i + 1]]
+          if not headings:
+              raise RuntimeError("Sampler completed without a Profile Stats table; inspect run.log")
+          Path("relief-profile/hotspots.txt").write_text(
+              "\n".join(lines[headings[-1]:]) + "\n", encoding="utf-8")
+          PY
           sed -n '1,85p' relief-profile/hotspots.txt
           sha256sum relief-profile/relief.bin
           PROFILE
