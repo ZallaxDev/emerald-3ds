@@ -78,6 +78,11 @@ BACKEND_SRCS += src/3ds_battle_hud.c
 build/bridge/3ds_bottom_ui.o: FULLCFLAGS += -DCTR_APP_VERSION='"$(APP_VERSION)"'
 # The ENHANCEMENTS and CHEATS pages of OPTIONS (include/3ds_extras.h).
 BACKEND_SRCS += src/3ds_extras.c
+# Original author's #68 battler identification, compile-only during
+# compatibility port. Not called by the game's frame yet.
+ifeq ($(STEREO_BATTLE),1)
+BACKEND_SRCS += src/3ds_stereo_mon_game.c
+endif
 # The optional Nuzlocke tracker's game side: save hooks and its OPTIONS cells
 # (include/3ds_nuzlocke.h, include/3ds_nuzlocke_ui.h).
 BACKEND_SRCS += src/3ds_nuzlocke_game.c

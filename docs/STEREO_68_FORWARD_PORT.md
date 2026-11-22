@@ -21,3 +21,22 @@ The actual runtime stereoscopic compositor, game-side battler detection, option 
 5. Test New 3DS and Old 3DS hardware for 2D/split/voxel battles (front/back/intro/Transform/Substitute/faint/doubles), compare the 3D-disabled path against baseline and inspect frame pacing, memory, VRAM, and weather. Hardware testing is outstanding.
 
 **Review gate:** keep this PR draft until the renderer is integrated, the full build and visual checks pass, and the original author and maintainer have a fair opportunity to review the credited recovery.
+
+## Phase 2 staging: compiled battle modules, without runtime activation
+
+The original author's native plane-file loader, asynchronous battle-plane compositor,
+and game-side battler identification source have been imported unchanged except that
+the battle opt-in default is **OFF** (no automatic changes to current battles).
+
+`STEREO_BATTLE=1` is a *temporary developer-only compile switch* during the port.
+The draft PR's 3DS CI build uses it so all three new sources must compile/link;
+an ordinary build omits them entirely (`STEREO_BATTLE=0`, default).
+There are deliberately **no** battle-frame, sprite-filter, or drawing hooks
+in the current engine yet: do not claim this phase produces visible stereo.
+
+The next stage is a safe adapter for the split `video/*.inc` compositor, first
+with disabled-path equivalence and weather regression tests. Only then should
+runtime opt-in and optional pack setup be wired. The original `0057` wild-only
+patch and UI changes are explicitly out of scope for this stage.
+
+Original source: https://github.com/ZallaxDev/emerald-3ds/pull/68

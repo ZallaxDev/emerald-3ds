@@ -73,6 +73,12 @@ SOURCES += src/3ds_nuzlocke_core.c src/3ds_nuzlocke_store.c
 SOURCES += src/3ds_encounters.c
 # The part of the overworld on screen, for the map objects.
 SOURCES += src/3ds_field_view.c
+# Staged, credited #68 battle compositor. OFF by default: no native modules,
+# memory, video-hook or gameplay changes in an ordinary build.
+STEREO_BATTLE ?= 0
+ifeq ($(STEREO_BATTLE),1)
+SOURCES += src/3ds_stereo_mon.c src/3ds_stereo_battle.c
+endif
 LIBS := -lcitro2d -lcitro3d $(LIBS)
 OBJECTS := $(patsubst src/%.c,build/%.o,$(SOURCES))
 GAMEFLAGS := -DPORTABLE -DPLATFORM_3DS -D__3DS__ -DMODERN=1 -DUBFIX -D__INTELLISENSE__

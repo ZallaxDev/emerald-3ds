@@ -154,7 +154,7 @@ jobs:
           echo "::group::3DS build, verification and engine-only release"
           # verify builds all first, and release waits for verification.
           VOXEL_TERRACE_JOBS=4 VOXEL_BUILDING_JOBS=4 VOXEL_SCENE_JOBS=4 \
-            make -C build/upstream/3ds_port -j4 --output-sync=target verify release PYTHON=python3 PORT_LANG=en
+            make -C build/upstream/3ds_port -j4 --output-sync=target verify release PYTHON=python3 PORT_LANG=en STEREO_BATTLE=1
           echo "::endgroup::"
 
           echo "::group::Production encounter and berry clock tests"
