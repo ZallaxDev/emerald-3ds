@@ -77,7 +77,7 @@ SOURCES += src/3ds_field_view.c
 # memory, video-hook or gameplay changes in an ordinary build.
 STEREO_BATTLE ?= 0
 ifeq ($(STEREO_BATTLE),1)
-SOURCES += src/3ds_stereo_mon.c src/3ds_stereo_battle.c
+SOURCES += src/3ds_stereo_mon.c src/3ds_stereo_mon_decode.c src/3ds_stereo_battle.c
 endif
 LIBS := -lcitro2d -lcitro3d $(LIBS)
 OBJECTS := $(patsubst src/%.c,build/%.o,$(SOURCES))
