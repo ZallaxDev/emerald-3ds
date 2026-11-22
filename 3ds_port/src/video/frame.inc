@@ -154,6 +154,13 @@ static unsigned sObjWinPass;
  * the level-up box was drawn (DrawBattleTextLayer). */
 static bool sTextAbove;
 static uint32_t sObjMask[4];
+#ifdef CTR_STEREO_BATTLE
+/* Shared with the optional renderer; the depth coordinate is also declared
+ * later by the existing scene module. */
+static float sEyeParallax;
+static uint32_t sStereoMonSkip[4];
+static unsigned sStereoMonCount;
+#endif
 /*
  * The Wireless Adapter's status indicator: link_rfu puts it in OAM entry 125
  * itself, at the GBA screen's top right. In the 2D battle (RenderEye) it is

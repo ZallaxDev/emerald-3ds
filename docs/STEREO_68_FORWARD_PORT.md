@@ -40,3 +40,19 @@ runtime opt-in and optional pack setup be wired. The original `0057` wild-only
 patch and UI changes are explicitly out of scope for this stage.
 
 Original source: https://github.com/ZallaxDev/emerald-3ds/pull/68
+
+## Phase 2B — experimental, guarded native video adapter
+
+Current `video/*.inc` hooks run only in developer builds made with
+`STEREO_BATTLE=1`; their runtime `battle_mon_3d` preference defaults
+**OFF**. The original game-side battler snapshot is taken only when enabled.
+Within actual stereo eyes, the native plane compositor can replace only an
+OAM sprite that the original decoder validates as a matching 64×64 battler;
+the normal drawing, particle wrapping, OBJ windows and 2D flat path remain.
+A depth battler uses the existing **whole-per-eye** battle compositor to
+avoid doubling its flat slot sprite. This extra work may cost performance,
+particularly on Old 3DS; benchmarking and visual/hardware validation are
+outstanding. No unrelated renderer code was copied from the old monolith.
+
+Depth-file packaging, UI exposure, completeness, and New/Old 3DS hardware
+validation are still outstanding. This is **not** a public-ready feature.

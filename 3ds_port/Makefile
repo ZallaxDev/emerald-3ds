@@ -78,11 +78,15 @@ SOURCES += src/3ds_field_view.c
 STEREO_BATTLE ?= 0
 ifeq ($(STEREO_BATTLE),1)
 SOURCES += src/3ds_stereo_mon.c src/3ds_stereo_mon_decode.c src/3ds_stereo_battle.c
+CPPFLAGS += -DCTR_STEREO_BATTLE=1
 endif
 LIBS := -lcitro2d -lcitro3d $(LIBS)
 OBJECTS := $(patsubst src/%.c,build/%.o,$(SOURCES))
 GAMEFLAGS := -DPORTABLE -DPLATFORM_3DS -D__3DS__ -DMODERN=1 -DUBFIX -D__INTELLISENSE__
 GAMEFLAGS += -iquote include -iquote ../include -iquote ../include/constants -iquote ..
+ifeq ($(STEREO_BATTLE),1)
+GAMEFLAGS += -DCTR_STEREO_BATTLE=1
+endif
 # Baked clock-driven lighting and contact shadows, targeting Old 3DS.
 VOXEL_LIGHTING ?= 1
 ifneq ($(VOXEL_LIGHTING),0)

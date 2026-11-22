@@ -683,7 +683,19 @@ VIDEO_PIECE void StereoWholeEyes(float slider, C3D_Tex *world)
         HudDrawCrisp(HUD_SPRITE_DEPTH);
         BattleBoxCompose();
         C3D_FrameSplit(0);
-        BattleWorldEye(target, world);
+#ifdef CTR_STEREO_BATTLE
+        if (!world)
+        {
+            /* Normally whole-per-eye means a voxel battle. For the optional
+             * flat battle, paint a clean eye before copying the composed
+             * logical scene, rather than dereferencing a missing world. */
+            SceneOn(target);
+            C2D_ViewReset();
+            C2D_TargetClear(target, C2D_Color32(0, 0, 0, 255));
+        }
+        else
+#endif
+            BattleWorldEye(target, world);
         Blend(5, false, false);
         BattleEyeRows(0);
         C2D_Flush();
@@ -878,6 +890,16 @@ static void RenderBattleStereo(uint32_t clear, float slider, C3D_Tex *world)
     StereoPrepared(&p);
     PORT_PROF_END(bsPrep, PORT_PROF_BS_PREP);
 
+#ifdef CTR_STEREO_BATTLE
+    /* No sprite-slot double draw: when an actual depth battler exists,
+     * compose the scene per eye. All feature-off frames keep this engine's
+     * exact previous split/whole decisions and slot behavior. */
+    if (sStereoMonCount)
+    {
+        StereoWholeEyes(slider, world);
+        return;
+    }
+#endif
     if (!p.apart && !world) StereoFlat(&p);
     else if (!p.apart)
     {

@@ -24,6 +24,9 @@
 #include "ctr_battle_layout.h"
 #include "3ds_battle_hud.h"
 #include "3ds_local.h"
+#ifdef CTR_STEREO_BATTLE
+#include "3ds_stereo_mon.h"
+#endif
 #include "3ds_obj_list.h"
 #include "../compat/port_prof.h"
 #include "../compat/ctr_gba_battle.h"
@@ -183,6 +186,10 @@ bool CtrVideo_Init(void)
     C2D_Prepare();
     Flat2D();
     FastInit();
+#ifdef CTR_STEREO_BATTLE
+    /* The developer feature is OFF unless selected explicitly. */
+    if (CtrStereoBattle_Enabled()) CtrStereoBattle_Reserve();
+#endif
     LeavesLoad();
     /* The intro's margins are made now, before the voxel world takes its
      * share of linear memory: made on the scene's first frame they could
