@@ -307,6 +307,16 @@ else
 ROMFS_FOLLOWERS :=
 endif
 
+# A developer may switch this tree from an experimental stereo build back
+# to normal. Never accidentally keep a previous pack in an ordinary RomFS
+# or release. The ordinary feature-disabled source and options remain intact.
+ifeq ($(STEREO_BATTLE),0)
+.PHONY: stereo-prune
+stereo-prune:
+	@rm -f romfs/stereo/mons.bin romfs/stereo/backs.bin
+$(TARGET).3dsx release: stereo-prune
+endif
+
 $(TARGET).3dsx: build/$(TARGET)_3dsx.elf $(TARGET).smdh romfs/boot.txt $(ROMFS_DATA_OUTS) romfs/engine/abi.bin romfs/engine/build_id.bin $(EMBED_MARKER) \
 	$(ROMFS_FOLLOWERS)
 	$(DEVKITPRO)/tools/bin/3dsxtool $< $@ --smdh=$(TARGET).smdh --romfs=romfs

@@ -104,3 +104,31 @@ declaring an asset available to the settings UI. A bad or truncated pack
 therefore cannot advertise an active feature; the original sprite
 renderer is the fallback. New synthetic tests cover malformed indexes,
 short/trailing payloads, invalid planes and valid no-outline copies.
+
+## Phase 3C — deterministic staging and stale-pack protection
+
+The feature-on build now tracks `STEREO_MONS_PACK` and
+`STEREO_BACKS_PACK` selections using a separate lightweight make
+configuration stamp, so switching from one source pack to another,
+or from a pack to a header-only empty container, regenerates RomFS
+assets without forcing recompilation of the engine.
+
+Switching back to `STEREO_BATTLE=0` prunes any previously generated
+`romfs/stereo/*.bin` from the normal 3DSX and release stage. The
+files classify as optional-feature **engine RomFS** for a developer
+build, not game-derived content: they cannot affect the game-data
+ABI or the `emerald3ds.pak` output. A synthetic staging test
+guards these boundaries.
+
+Example opt-in developer build (using the original author's own
+separately obtained depth-only release files):
+
+```sh
+make -C 3ds_port release STEREO_BATTLE=1 \
+  STEREO_MONS_PACK=/path/to/mons.bin \
+  STEREO_BACKS_PACK=/path/to/backs.bin
+```
+
+Without the source paths a feature-on build generates two valid empty
+containers, the settings stay hidden, and all Pokémon remain flat.
+This draft has no automatic network downloads or redistributed artwork.

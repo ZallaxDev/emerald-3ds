@@ -623,22 +623,29 @@ romfs/battle/hud.bin: scripts/gen_battle_hud.py
 # The author distributes ready-to-use outline-free depth files separately.
 ifeq ($(STEREO_BATTLE),1)
 .PHONY: FORCE_STEREO
+# Rebuild the staged asset if its *input selection* changes between calls.
+# The usual build/config would needlessly recompile every object for this.
+build/stereo_pack_config: FORCE_STEREO
+	@mkdir -p $(@D)
+	@printf '%s\n' '$(STEREO_MONS_PACK)' '$(STEREO_BACKS_PACK)' > $@.new
+	@cmp -s $@.new $@ || cp $@.new $@
+	@rm -f $@.new
 ifneq ($(strip $(STEREO_MONS_PACK)),)
-romfs/stereo/mons.bin: $(STEREO_MONS_PACK) scripts/collapse_stereo_planes.py
+romfs/stereo/mons.bin: $(STEREO_MONS_PACK) scripts/collapse_stereo_planes.py build/stereo_pack_config
 	@mkdir -p $(@D)
 	"$(PYTHON)" scripts/collapse_stereo_planes.py --fill-only --input "$(STEREO_MONS_PACK)" --output $@
 else
-romfs/stereo/mons.bin: scripts/gen_stereo_mons.py
+romfs/stereo/mons.bin: scripts/gen_stereo_mons.py build/stereo_pack_config
 	@mkdir -p $(@D)
 	"$(PYTHON)" scripts/gen_stereo_mons.py --output $@
 endif
 
 ifneq ($(strip $(STEREO_BACKS_PACK)),)
-romfs/stereo/backs.bin: $(STEREO_BACKS_PACK) scripts/collapse_stereo_planes.py
+romfs/stereo/backs.bin: $(STEREO_BACKS_PACK) scripts/collapse_stereo_planes.py build/stereo_pack_config
 	@mkdir -p $(@D)
 	"$(PYTHON)" scripts/collapse_stereo_planes.py --fill-only --input "$(STEREO_BACKS_PACK)" --output $@
 else
-romfs/stereo/backs.bin: scripts/gen_stereo_backs.py
+romfs/stereo/backs.bin: scripts/gen_stereo_backs.py build/stereo_pack_config
 	@mkdir -p $(@D)
 	"$(PYTHON)" scripts/gen_stereo_backs.py --output $@
 endif
