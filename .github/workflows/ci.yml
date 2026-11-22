@@ -189,7 +189,7 @@ jobs:
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               print("tag=" + image(lock), file=output)
           PY
-      - name: Prepare shared relief base and run five alternating A/B pairs
+      - name: Compare five A/B pairs, recording runtime and process-tree RSS
         env:
           RELEASE_IMAGE: ${{ steps.image.outputs.tag }}
         run: |
