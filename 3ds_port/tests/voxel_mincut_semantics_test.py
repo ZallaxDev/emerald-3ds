@@ -80,7 +80,33 @@ def production(name, namespace):
     return namespace[name]
 
 
+def test_gc_threshold_restore():
+    """The tuning is bounded to a solve, even after a failure."""
+    import gc
+    from unittest.mock import patch
+    source = production("_solve_gc_tuned", {"gc": gc, "solve": lambda *a, **k: "ok"})
+    original = gc.get_threshold()
+    assert source("layout", None, None) == "ok"
+    assert gc.get_threshold() == original
+    observed = []
+
+    def observe(*a, **k):
+        observed.append(gc.get_threshold())
+        raise RuntimeError("synthetic solver failure")
+
+    broken = production("_solve_gc_tuned", {"gc": gc, "solve": observe})
+    try:
+        broken("layout", None, None)
+    except RuntimeError as exc:
+        assert str(exc) == "synthetic solver failure"
+    else:
+        raise AssertionError("expected synthetic failure")
+    assert observed and observed[0][0] >= 3000
+    assert gc.get_threshold() == original
+
+
 def main():
+    test_gc_threshold_restore()
     rng = random.Random(0x303702)
     cut = production("_source_side", {})
     # Include graphs with zero edges, cycles, repeated edges, and tiny flows.
@@ -116,7 +142,7 @@ def main():
         want = old_ns["_convex_labels"](k, unary, hinges)
         got = new_ns["_convex_labels"](k, unary, hinges)
         assert got == want, ("convex labels", i, k, hinges, want, got)
-    print("PASS exact mincut reachability (2000 graphs) and convex labels (160 problems)")
+    print("PASS exact mincut reachability (2000 graphs), convex labels (160 problems), GC threshold restoration")
 
 
 if __name__ == "__main__":

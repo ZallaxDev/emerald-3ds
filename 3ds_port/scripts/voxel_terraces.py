@@ -55,6 +55,7 @@ import argparse
 import collections
 import copy
 import functools
+import gc
 import itertools
 import math
 import os
@@ -3114,62 +3115,44 @@ def _woods_at_foot(c, field, pieces, flat, kept, seams):
 
 
 def _source_side(n, arcs, s, t):
-    """Return the source side of a minimum cut using Dinic's blocking flows.
-
-    Build each vertex's outgoing edge list once in the same *reverse insertion*
-    order as the previous linked-edge implementation. Keep residual edge IDs,
-    path order, epsilon and floating-point capacity updates unchanged. An arc
-    from a vertex to itself exposed only its reverse half in the original
-    linked heads, so skip the unreachable forward half here as well.
-    """
-    to, cap = [], []
-    adjacent = [[] for _ in range(n)]
+    """The nodes on the source's side of a minimum s-t cut (Dinic's
+    blocking flows) of a graph of `n` nodes and arcs (u, v, capacity)."""
+    to, cap, nxt, head = [], [], [], [-1] * n
     for u, v, w in arcs:
-        e = len(to)
-        to.extend((v, u))
-        cap.extend((w, 0.0))
-        if u != v:
-            adjacent[u].append(e)
-        adjacent[v].append(e + 1)
-    for edges in adjacent:
-        edges.reverse()
+        to += [v, u]
+        cap += [w, 0.0]
+        nxt += [head[u], head[v]]
+        head[u], head[v] = len(to) - 2, len(to) - 1
     eps = 1e-9
     while True:
         level = [-1] * n
         level[s] = 0
         queue = [s]
         for u in queue:
-            next_level = level[u] + 1
-            for e in adjacent[u]:
-                if cap[e] > eps:
-                    v = to[e]
-                    if level[v] < 0:
-                        level[v] = next_level
-                        queue.append(v)
+            e = head[u]
+            while e >= 0:
+                if cap[e] > eps and level[to[e]] < 0:
+                    level[to[e]] = level[u] + 1
+                    queue.append(to[e])
+                e = nxt[e]
         if level[t] < 0:
             break
-        it = [0] * n
+        it = head[:]
         while True:
-            # Same greedy path and backtracking as the original; cursor indexes
-            # replace traversing the next-edge linked list at each vertex.
+            # one path along the levels, as deep as it goes
             path, u = [], s
             while u != t:
-                edges = adjacent[u]
-                cursor = it[u]
-                wanted = level[u] + 1
-                while cursor < len(edges):
-                    e = edges[cursor]
-                    if cap[e] > eps and level[to[e]] == wanted:
-                        break
-                    cursor += 1
-                it[u] = cursor
-                if cursor == len(edges):
+                e = it[u]
+                while e >= 0 and not (cap[e] > eps and level[to[e]] == level[u] + 1):
+                    e = nxt[e]
+                it[u] = e
+                if e < 0:
                     if not path:
                         break
-                    level[u] = -1
+                    level[u] = -1           # a dead end: never again this phase
                     e = path.pop()
                     u = to[e ^ 1]
-                    it[u] += 1
+                    it[u] = nxt[it[u]]
                     continue
                 path.append(e)
                 u = to[e]
@@ -3183,12 +3166,12 @@ def _source_side(n, arcs, s, t):
     seen[s] = True
     queue = [s]
     for u in queue:
-        for e in adjacent[u]:
-            if cap[e] > eps:
-                v = to[e]
-                if not seen[v]:
-                    seen[v] = True
-                    queue.append(v)
+        e = head[u]
+        while e >= 0:
+            if cap[e] > eps and not seen[to[e]]:
+                seen[to[e]] = True
+                queue.append(to[e])
+            e = nxt[e]
     return seen
 
 
@@ -5958,6 +5941,22 @@ def chosen_layouts():
     return chosen + [e["id"] for e in vb._layouts_json() if gr.is_cave(e["id"]) and e["id"] not in chosen]
 
 
+def _solve_gc_tuned(lid, reference, topology):
+    """Try a higher generation-0 GC threshold while building one terrace group.
+
+    The original solver, traversal and generated data remain untouched. Restore
+    the previous thresholds even if the solve raises; this policy should never
+    leak into unrelated build or verification work. Peak RAM may increase and
+    must be evaluated along with any wall-clock benefit.
+    """
+    previous = gc.get_threshold()
+    try:
+        gc.set_threshold(max(previous[0], 3000), previous[1], previous[2])
+        return solve(lid, reference, topology=topology)
+    finally:
+        gc.set_threshold(*previous)
+
+
 def _serial_solves(layouts, reference):
     done = set()
     topology = None
@@ -5966,7 +5965,7 @@ def _serial_solves(layouts, reference):
             continue
         if topology is None:
             topology = gr.map_topology()
-        sol = solve(lid, reference, topology=topology)
+        sol = _solve_gc_tuned(lid, reference, topology)
         done.update(lid for lid, _, _ in sol["cells"].members)
         yield sol
 
@@ -5981,7 +5980,7 @@ def _prepare_worker(blob):
 
 
 def _solve_in_worker(lid):
-    return solve(lid, _worker_reference, topology=_worker_topology)
+    return _solve_gc_tuned(lid, _worker_reference, _worker_topology)
 
 
 def _parallel_solves(layouts, blob, jobs):
