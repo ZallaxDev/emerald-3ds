@@ -179,6 +179,58 @@ int main(int argc, char **argv)
     CHECK(texture[CtrVideo_Texel(15, 7, 256)] == 0);
     CHECK(texture[CtrVideo_Texel(20, 3, 256)] == 0);
     CHECK(texture[CtrVideo_Texel(0, 0, 256)] == 0);
+
+    /*
+     * Full no-parallax reconstruction, synthetic front sprites in both
+     * animation frames. Compositing the far-to-near depth cards at exactly
+     * the same pixel coordinates must yield every original RGBA5551 pixel
+     * byte-for-byte. This includes arbitrary palette colors, holes in the
+     * silhouette and the 2px skirts that conceal gaps between cards.
+     * It guards faded/tinted/shiny palettes and transparency without a ROM.
+     */
+    {
+        static uint16_t reconstructed[64 * 64];
+        static uint16_t tinted[64 * 64];
+        const unsigned groupCounts[] = {2, 3, 4};
+        for (unsigned frame = 0; frame < 2; ++frame)
+            for (unsigned tint = 0; tint < 2; ++tint)
+            {
+                for (unsigned y = 0; y < 64; ++y)
+                    for (unsigned x = 0; x < 64; ++x)
+                    {
+                        unsigned i = y * 64 + x;
+                        unsigned colour = tint ? ((i * 31 + 7) ^ 0x4d21u)
+                                               : (i * 71 + x * 17 + y * 3);
+                        /* RGB5551: alpha is the top bit in the port's
+                         * texture convention; zero is fully transparent. */
+                        tinted[i] = ((x + y * 3 + tint * 7) % 11 == 0)
+                                     ? 0 : (uint16_t)(0x8000u | (colour & 0x7fffu));
+                    }
+                for (unsigned ci = 0; ci < sizeof(groupCounts) / sizeof(groupCounts[0]); ++ci)
+                {
+                    unsigned groups = groupCounts[ci];
+
+                    memset(texture, 0, sizeof(texture));
+                    memset(reconstructed, 0, sizeof(reconstructed));
+                    for (unsigned g = 0; g < groups; ++g)
+                    {
+                        /* Unique 64px tile per plane; no card overwrites
+                         * another before final composition. */
+                        CtrStereoMon_ComposeTile(tinted, planes, &h, frame,
+                                                 groups, g, texture, 256,
+                                                 g * 64, 0, 2);
+                    }
+                    for (unsigned g = 0; g < groups; ++g)
+                        for (unsigned y = 0; y < 64; ++y)
+                            for (unsigned x = 0; x < 64; ++x)
+                            {
+                                uint16_t v = texture[CtrVideo_Texel(g * 64 + x, y, 256)];
+                                if (v != 0) reconstructed[y * 64 + x] = v;
+                            }
+                    CHECK(memcmp(reconstructed, tinted, sizeof(reconstructed)) == 0);
+                }
+            }
+    }
     free(f);
 
     for (int a = 1; a < argc; ++a)
