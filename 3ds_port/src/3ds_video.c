@@ -26,6 +26,7 @@
 #include "3ds_local.h"
 #ifdef CTR_STEREO_BATTLE
 #include "3ds_stereo_mon.h"
+#include "3ds_stereo_gate.h"
 #endif
 #include "3ds_obj_list.h"
 #include "../compat/port_prof.h"

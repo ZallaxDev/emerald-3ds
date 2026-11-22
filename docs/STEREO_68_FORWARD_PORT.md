@@ -132,3 +132,46 @@ make -C 3ds_port release STEREO_BATTLE=1 \
 Without the source paths a feature-on build generates two valid empty
 containers, the settings stay hidden, and all Pokémon remain flat.
 This draft has no automatic network downloads or redistributed artwork.
+
+## Phase 4A — guardrails for the visual and hardware test matrix
+
+**Source-level corrections:** The experimental whole-per-eye route now
+honors the current battle clear color, rather than always painting its flat
+eye black. It also explicitly releases the existing compositor's OBJ-window
+slot and edge-store flags on its early return, preventing stale state from
+leaking into subsequent battle frames. The existing branch for games without
+the stereoscopic opt-in is unchanged.
+
+**Host regression gate:** `stereo_draw_gate_test.c` exhaustively checks all
+128 synthetic OAM entries under left/right/flat eyes, empty/missing masks,
+the normal disabled state, all three weather categories, and all 128-bit
+mask boundaries. Only a validated battler in an actual stereoscopic eye
+can reach the new plane-rendering branch. Every other sprite continues to
+use the existing engine. This tests the eligibility logic, **not** actual
+pixel output or framerate.
+
+### Manual Azahar / hardware verification (not yet performed)
+
+Use an original compatible ROM via the user-owned builder and the original
+author's separately obtained `mons.bin` and `backs.bin` files. Record the
+base `integration` build and this experimental branch using identical
+saves, scenes, and identical settings (first with 3D Pokémon OFF, then ON).
+
+| Scenario | OFF-path parity | ON appearance | Old/New 3DS timing |
+| --- | --- | --- | --- |
+| Classic single battle, front/back Pokémon | Pending | Pending | Pending |
+| Double battle, four Pokémon and priority | Pending | Pending | Pending |
+| Trainer entry/throw, player back/intro | Pending | Pending | Pending |
+| Fainting, recall, send-out, Substitute | Pending | Pending | Pending |
+| Transform, palette tint, shiny and affine moves | Pending | Pending | Pending |
+| Rain/snow/sand/bubbles and OAM wrapping | Pending | Pending | Pending |
+| Voxel battle scenery and stereo slider sweep | Pending | Pending | Pending |
+| Battle text/HUD, fades and OBJ windows | Pending | Pending | Pending |
+| Battles with no/partial/corrupt depth packs | Pending | Pending | Pending |
+| Outside battle: field, follower, menus, Pokédex | Pending | Pending | Pending |
+
+For each case, capture **left and right eye images**, OAM sprite alignment,
+any missing pixels, baseline-vs-OFF screenshots, GPU/CPU frame and VBlank
+statistics, VRAM/linear memory before/after, and any error logs. Profile
+at full slider on both New 3DS and Old 3DS. Do not call this review-ready
+until the baseline OFF comparisons and ON-path visuals have been inspected.

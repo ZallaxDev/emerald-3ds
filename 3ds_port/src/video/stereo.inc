@@ -666,7 +666,7 @@ VIDEO_PIECE void BattleEyeRows(float top)
 }
 
 /* Whole per eye, as RenderEye composes it, at the same depths. */
-VIDEO_PIECE void StereoWholeEyes(float slider, C3D_Tex *world)
+VIDEO_PIECE void StereoWholeEyes(float slider, C3D_Tex *world, uint32_t clear)
 {
     PORT_PROF_BEGIN(bsWhole);
 
@@ -691,7 +691,7 @@ VIDEO_PIECE void StereoWholeEyes(float slider, C3D_Tex *world)
              * logical scene, rather than dereferencing a missing world. */
             SceneOn(target);
             C2D_ViewReset();
-            C2D_TargetClear(target, C2D_Color32(0, 0, 0, 255));
+            C2D_TargetClear(target, clear);
         }
         else
 #endif
@@ -896,14 +896,19 @@ static void RenderBattleStereo(uint32_t clear, float slider, C3D_Tex *world)
      * exact previous split/whole decisions and slot behavior. */
     if (sStereoMonCount)
     {
-        StereoWholeEyes(slider, world);
+        StereoWholeEyes(slider, world, clear);
+        /* The original slot/edge pipeline normally resets these after
+         * presenting both eyes. This early path must leave the same state
+         * for the next frame, including OBJ-window and text-edge cases. */
+        sEdgeStore.on = false;
+        sObjWinSlotted = false;
         return;
     }
 #endif
     if (!p.apart && !world) StereoFlat(&p);
     else if (!p.apart)
     {
-        StereoWholeEyes(slider, world);
+        StereoWholeEyes(slider, world, clear);
         return;
     }
     StereoSlotsOnce(&p);

@@ -452,8 +452,8 @@ static void DrawObjectEntry(int i, unsigned priority, bool effects, bool *fogDra
     /* The only alternate drawing path: a validated battle sprite, while
      * composing a real stereo eye. Weather and all other OAM entries retain
      * their original drawing and wrapping behavior below. */
-    if (sStereoMonCount && sEyeParallax != 0.0f && !fog && !lattice && !particle
-        && (sStereoMonSkip[(unsigned)i >> 5] & (1u << ((unsigned)i & 31))))
+    if (CtrStereoMon_DrawEligible((unsigned)i, sStereoMonCount, sEyeParallax,
+                                  sStereoMonSkip, fog, lattice, particle))
     {
         if (x < sClipX1 && x + (int)boxW > sClipX0
          && y < sClipY1 && y + (int)boxH > sClipY0)
