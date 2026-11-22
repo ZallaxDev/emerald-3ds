@@ -555,6 +555,7 @@ romfs/voxel/trees.rgba5551: scripts/gen_voxel_trees.py \
 # in any room - see build/buildings/interior_lint.txt.
 # verify-voxel-buildings runs the proofs alone, even when the file is
 # up to date: the release build asks for it.
+VOXEL_BUILDING_JOBS ?= 1
 romfs/voxel/buildings.bin romfs/voxel/windowlights.bin &: scripts/gen_voxel_buildings.py scripts/voxel_building.py scripts/voxel_night.py scripts/voxel_windows.py \
 		scripts/voxel_floor.py scripts/voxel_cache.py scripts/voxel_image.py \
 		scripts/voxel_building_specs.py scripts/voxel_bridge.py scripts/voxel_fence.py scripts/voxel_fortree.py scripts/dump_region_art.py scripts/voxel_props.py \
@@ -565,7 +566,7 @@ romfs/voxel/buildings.bin romfs/voxel/windowlights.bin &: scripts/gen_voxel_buil
 		scripts/voxel_sign_mask.py $(VOXEL_MAP_INPUTS) $(VOXEL_GFX_OUTPUTS)
 	@mkdir -p $(@D)
 	@set -e; work=$$(mktemp -d "$(@D)/.buildings.XXXXXX"); trap 'rm -rf "$$work"' EXIT; \
-		"$(PYTHON)" scripts/gen_voxel_buildings.py --verify --diagnostics failures --output "$$work/buildings.bin"; \
+		"$(PYTHON)" scripts/gen_voxel_buildings.py --verify --diagnostics failures --jobs "$(VOXEL_BUILDING_JOBS)" --output "$$work/buildings.bin"; \
 		test -f "$$work/buildings.bin"; test -f "$$work/windowlights.bin"; \
 		mv -f "$$work/windowlights.bin" "$(@D)/windowlights.bin"; \
 		mv -f "$$work/buildings.bin" "$(@D)/buildings.bin"
@@ -873,10 +874,11 @@ verify-voxel-dewford:
 # the shipped data (scripts/voxel_engine_view.py check, tests/voxel_scene_dump.c):
 # chunks that would refuse triangles, static models over their memory. A
 # warning for now - the report is build/voxel_check.report.
+VOXEL_SCENE_JOBS ?= 1
 all: build/voxel_check.report
 build/voxel_check.report: romfs/voxel/buildings.bin romfs/voxel/relief.bin romfs/voxel/regions.bin 		romfs/voxel/signposts.bin scripts/voxel_engine_view.py tests/voxel_scene_dump.c 		$(wildcard src/voxel/voxel_*.c) $(wildcard src/voxel/voxel_*.h)
 	@mkdir -p $(@D)
-	@"$(PYTHON)" scripts/voxel_engine_view.py check > $@ 2>&1 		&& echo "voxel check: ok" 		|| { echo "voxel check: WARNING, see $@"; grep -E "DROPS|OVER|failed" $@ || true; }
+	@"$(PYTHON)" scripts/voxel_engine_view.py check --jobs "$(VOXEL_SCENE_JOBS)" > $@ 2>&1 		&& echo "voxel check: ok" 		|| { echo "voxel check: WARNING, see $@"; grep -E "DROPS|OVER|failed" $@ || true; }
 
 .PHONY: verify-voxel-sprite-slots
 VERIFY_HOST_CHECKS += verify-voxel-sprite-slots

@@ -131,17 +131,18 @@ jobs:
         run: |
           docker run --rm -i --user "$(id -u):$(id -g)" -e HOME=/tmp \
             -v "$GITHUB_WORKSPACE:/work" -w /work "$RELEASE_IMAGE" bash -e <<'BUILD'
-          echo "::group::Bootstrap and build"
+          echo "::group::Bootstrap and prepare upstream sources"
           python3 -m py_compile tools/port_common/gen_asset_table.py
           python3 builder/tests/test_asset_table_compatibility.py
-          export VOXEL_TERRACE_JOBS=4
-          python3 tools/bootstrap.py --make -j4 --python python3
+          python3 tools/bootstrap.py
+          make -C build/upstream -j4 tools
+          make -C build/upstream -j4 generated
           echo "::endgroup::"
 
-          echo "::group::Host tests, link audit and engine-only 3DSX"
-          # Both goals use the same build graph, so package the verified engine
-          # without rechecking build metadata and rebuilding its bundles.
-          make -C build/upstream/3ds_port -j4 --output-sync=target verify release PYTHON=python3
+          echo "::group::3DS build, verification and engine-only release"
+          # verify builds all first, and release waits for verification.
+          VOXEL_TERRACE_JOBS=4 VOXEL_BUILDING_JOBS=4 VOXEL_SCENE_JOBS=4 \
+            make -C build/upstream/3ds_port -j4 --output-sync=target verify release PYTHON=python3 PORT_LANG=en
           echo "::endgroup::"
 
           echo "::group::Production encounter and berry clock tests"

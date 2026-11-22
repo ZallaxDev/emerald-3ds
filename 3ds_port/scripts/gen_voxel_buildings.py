@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the voxel building models, prove them, and preview them.
 
-    python gen_voxel_buildings.py [--verify] [--diagnostics {all,failures}] [--output BIN] [--preview DIR] [--only NAME]
+    python gen_voxel_buildings.py [--verify] [--diagnostics {all,failures}] [--output BIN] [--preview DIR] [--only NAME] [--jobs N]
 
 For every spec in voxel_building_specs.py:
   * extracts the art with the ground made transparent;
@@ -28,6 +28,7 @@ import os
 import struct
 import sys
 import types
+from functools import cache
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import voxel_building as vb  # noqa: E402
@@ -1978,28 +1979,8 @@ def anim_box(layout, shape, tiles, frames):
 LIVE_BG = (1, 2, 3)
 
 
-def interior_specs(spec):
-    """Expand an `interior` spec: a room cut into pieces, one model each.
-
-    A room's drawing is walls, furniture and floor. Every pixel equal to the
-    floor metatile's own at that place in its cell is floor, left to the
-    terrain; the rest is claimed by the first piece (front first) whose shape
-    holds it. A piece is read column by column off the pixels it claimed
-    (vb.Relief: its top, and its front `height` rows at its foot), standing on
-    `base` - a machine on a counter. A piece does not claim the colours it
-    `leave`s where they run on out of its shape: the wall seen between a
-    plant's leaves or round a machine's corners. With `fill` = P, what the pieces in front
-    of it hide of it is drawn from its own pixels P columns away, so the wall
-    behind a bookcase is a wall and not a hole in the shape of one. Pixels no
-    piece claims are the floor's own marks (an emblem, a mat, shadows), laid
-    flat by the pieces whose cells hold them.
-
-    Each piece is its own model, of the cells it covers: a room would not fit
-    one chunk's vertices whole, and apart the pieces spread over the chunks
-    they stand in.
-    """
-    room = spec["interior"]
-    layout = drawn_as(room["layout"], room.get("draw"))
+def prepare_interior(layout, room, pieces):
+    """Calculate each room's pixel data independently of furniture reuse."""
     W, H = layout.w * 16, layout.h * 16
     full = Image.new("RGBA", (W, H))
     for y in range(layout.h):
@@ -2007,7 +1988,6 @@ def interior_specs(spec):
             full.paste(layout.cell_image(layout.metatile(x, y)), (x * 16, y * 16))
     fpx = full.load()
     floors = [layout.cell_image(m) for m in room["ground"]]
-    pieces = voxel_relief_fixes.furniture_pieces(spec["name"], room["pieces"])
     # Floor is a pixel the floor metatile has there too - and, inside a
     # piece's shape, one that the open floor reaches through such pixels: a
     # counter top can be painted in the floor's own cream, but its outline
@@ -2049,8 +2029,6 @@ def interior_specs(spec):
             shade.add(m)
         else:
             shade.update("%02x%02x%02x" % c[:3] for c in image_pixels(layout.cell_image(m)))
-    owner = [[None] * W for _ in range(H)]
-    variant_px = {}
     # the room's shell, where a piece's copies never take a pixel
     # Shell membership is constant for the room: do not reclassify every
     # furniture piece (and split its name) for every pixel of the drawing.
@@ -2059,6 +2037,83 @@ def interior_specs(spec):
     walls_at = _combine_shapes(shell_masks, W, H)
     # (the floor the terrain lays under a piece's cells)
     floor_hexes = {"%02x%02x%02x" % c[:3] for c in image_pixels(layout.cell_image(room["ground"][0]))}
+
+    # Reuse the room's colour strings so worker results stay compact.
+    @cache
+    def pixel_hex(rgb):
+        return "%02x%02x%02x" % rgb
+
+    hexes = [[pixel_hex(fpx[x, y][:3]) for x in range(W)] for y in range(H)]
+    supports = find_supports(pieces, grids, W, H)
+    # how many things' shapes hold each pixel (a room's walls hold them all)
+    things = [k for k, pc in enumerate(pieces)
+              if not (pc.get("fill") or pc.get("facet") or pc.get("walls"))]
+    if len(things) <= 255:
+        shapes_at = _combine_shapes((masks[k] for k in things), W, H, ImageChops.add)
+    else:
+        # Pillow's 8-bit addition saturates at 255.
+        shapes_at = [[sum(grids[k][y][x] for k in things) for x in range(W)] for y in range(H)]
+    leaves = auto_leave(pieces, grids, ground, hexes, supports, W, H, masks=masks)
+    grids = [[bytes(row) for row in grid] for grid in grids]
+    return (full, grids, list(map(bytes, ground)), list(map(bytes, opened)), shade, walls_at, floor_hexes,
+            hexes, supports, shapes_at, leaves)
+
+
+def prepare_interior_at(index):
+    spec = specs.SPECS[index]
+    room = spec["interior"]
+    layout = drawn_as(room["layout"], room.get("draw"))
+    pieces = voxel_relief_fixes.furniture_pieces(spec["name"], room["pieces"])
+    return prepare_interior(layout, room, pieces)
+
+
+def prepare_interiors(indices, pool, jobs):
+    """Keep the ordered lookahead bounded because each room holds pixel grids."""
+    indices = iter(indices)
+    pending = collections.deque()
+    for index in indices:
+        pending.append(pool.submit(prepare_interior_at, index))
+        if len(pending) == jobs:
+            break
+    for index in indices:
+        current = pending.popleft()
+        pending.append(pool.submit(prepare_interior_at, index))
+        yield current.result()
+    while pending:
+        yield pending.popleft().result()
+
+
+def interior_specs(spec, prepared=None):
+    """Expand an `interior` spec: a room cut into pieces, one model each.
+
+    A room's drawing is walls, furniture and floor. Every pixel equal to the
+    floor metatile's own at that place in its cell is floor, left to the
+    terrain; the rest is claimed by the first piece (front first) whose shape
+    holds it. A piece is read column by column off the pixels it claimed
+    (vb.Relief: its top, and its front `height` rows at its foot), standing on
+    `base` - a machine on a counter. A piece does not claim the colours it
+    `leave`s where they run on out of its shape: the wall seen between a
+    plant's leaves or round a machine's corners. With `fill` = P, what the pieces in front
+    of it hide of it is drawn from its own pixels P columns away, so the wall
+    behind a bookcase is a wall and not a hole in the shape of one. Pixels no
+    piece claims are the floor's own marks (an emblem, a mat, shadows), laid
+    flat by the pieces whose cells hold them.
+
+    Each piece is its own model, of the cells it covers: a room would not fit
+    one chunk's vertices whole, and apart the pieces spread over the chunks
+    they stand in.
+    """
+    room = spec["interior"]
+    layout = drawn_as(room["layout"], room.get("draw"))
+    W, H = layout.w * 16, layout.h * 16
+    pieces = voxel_relief_fixes.furniture_pieces(spec["name"], room["pieces"])
+    if prepared is None:
+        prepared = prepare_interior(layout, room, pieces)
+    (full, grids, ground, opened, shade, walls_at, floor_hexes,
+     hexes, supports, shapes_at, leaves) = prepared
+    fpx = full.load()
+    owner = [[None] * W for _ in range(H)]
+    variant_px = {}
 
     def variant_groups(k, pc, x0, y0, w, h):
         """{what it draws round its shape, a pixel out, then the marks on
@@ -2118,18 +2173,6 @@ def interior_specs(spec):
     reused, reused_cells = place_reused(layout, room["ground"][0], room.get("pit", ()))
     for (x, y) in reused:
         owner[y][x] = -1
-    # each pixel's colour as `leave` names it
-    hexes = [["%02x%02x%02x" % fpx[x, y][:3] for x in range(W)] for y in range(H)]
-    supports = find_supports(pieces, grids, W, H)
-    # how many things' shapes hold each pixel (a room's walls hold them all)
-    things = [k for k, pc in enumerate(pieces)
-              if not (pc.get("fill") or pc.get("facet") or pc.get("walls"))]
-    if len(things) <= 255:
-        shapes_at = _combine_shapes((masks[k] for k in things), W, H, ImageChops.add)
-    else:
-        # Pillow's 8-bit addition saturates at 255.
-        shapes_at = [[sum(grids[k][y][x] for k in things) for x in range(W)] for y in range(H)]
-    leaves = auto_leave(pieces, grids, ground, hexes, supports, W, H, masks=masks)
     parts_of = {}
 
     def leave_parts(colours):
@@ -2943,9 +2986,7 @@ def anim_table(anims, offset):
     return table + struct.pack("<I", offset) + b"ANIM"
 
 
-def build_models(only=None):
-    models = []
-    layouts = {}
+def expand_model_specs(layouts, prepared_rooms=None):
     expanded = []
     for spec in specs.SPECS:
         if "components" in spec:
@@ -2955,11 +2996,28 @@ def build_models(only=None):
         elif "props" in spec:
             expanded += prop_specs(spec)
         elif "interior" in spec:
-            expanded += interior_specs(spec)
+            room = next(prepared_rooms) if prepared_rooms is not None else None
+            expanded += interior_specs(spec, room)
         elif "bridge" in spec:
             expanded += voxel_bridge.block_specs(spec)
         else:
             expanded.append(spec)
+    return expanded
+
+
+def build_models(only=None, *, jobs=1):
+    models = []
+    layouts = {}
+    if jobs == 1:
+        expanded = expand_model_specs(layouts)
+    else:
+        # The browser builder uses the serial path without multiprocessing.
+        from concurrent.futures import ProcessPoolExecutor
+        from multiprocessing import get_context
+
+        indices = [i for i, spec in enumerate(specs.SPECS) if "interior" in spec]
+        with ProcessPoolExecutor(max_workers=jobs, mp_context=get_context("spawn")) as pool:
+            expanded = expand_model_specs(layouts, prepare_interiors(indices, pool, jobs))
     reuse_everywhere()
     for spec in expanded:
         if only and not spec["name"].startswith(only):
@@ -4823,10 +4881,7 @@ def room_check(placements, layout_id, out_dir, draw=None, suffix="", *, all_diag
     for y in range(layout.h):
         for x in range(layout.w):
             img = layout.cell_image(covered.get((x, y), layout.metatile(x, y)))
-            q = [(x * 16, 0, y * 16, 0, 0), (x * 16 + 16, 0, y * 16, 16, 0),
-                 (x * 16 + 16, 0, y * 16 + 16, 16, 16), (x * 16, 0, y * 16 + 16, 0, 16)]
-            for tri in ((q[0], q[1], q[2]), (q[0], q[2], q[3])):
-                ras.draw([(X, Z - Y, Y + Z, 1.0, U, V) for (X, Y, Z, U, V) in tri], img, 1.0)
+            ras.draw_ground_tile(x * 16, y * 16, img)
     # the map's own paint round a piece found on another floor, laid flat
     # over the placement's floor as the console lays it
     for (x, y, img) in patches:
@@ -4985,10 +5040,7 @@ def bridge_check(placements, layout_id, out_dir, *, all_diagnostics=True):
     for y in range(layout.h):
         for x in range(layout.w):
             img = layout.cell_image(covered.get((x, y), layout.metatile(x, y)))
-            q = [(x * 16, 0, y * 16, 0, 0), (x * 16 + 16, 0, y * 16, 16, 0),
-                 (x * 16 + 16, 0, y * 16 + 16, 16, 16), (x * 16, 0, y * 16 + 16, 0, 16)]
-            for tri in ((q[0], q[1], q[2]), (q[0], q[2], q[3])):
-                ras.draw([(X, Z - Y, Y + Z, 1.0, U, V) for (X, Y, Z, U, V) in tri], img, 1.0)
+            ras.draw_ground_tile(x * 16, y * 16, img)
     for (x, y, img) in patches:
         q = [(x * 16, 0, y * 16, 0, 0), (x * 16 + 16, 0, y * 16, 16, 0),
              (x * 16 + 16, 0, y * 16 + 16, 16, 16), (x * 16, 0, y * 16 + 16, 0, 16)]
@@ -5136,14 +5188,17 @@ def main():
     ap.add_argument("--diagnostics", choices=("all", "failures"), default="all",
                     help="save all verification images or just failures")
     ap.add_argument("--town", default=None, help="render a whole layout, e.g. LAYOUT_OLDALE_TOWN")
+    ap.add_argument("--jobs", type=int, default=1, help="number of rooms to prepare concurrently")
     args = ap.parse_args()
+    if args.jobs < 1:
+        ap.error("--jobs must be positive")
     out = args.preview or os.path.join(PORT, "build", "buildings")
     checks = args.verify or not (args.output or args.town)
     if checks or args.preview or args.town:
         os.makedirs(out, exist_ok=True)
         global DIAGNOSTICS
         DIAGNOSTICS = out
-    models = build_models(args.only)
+    models = build_models(args.only, jobs=args.jobs)
     if args.preview:
         for model in models:
             preview(model, out, args.cams.split(",") if args.cams else None)
