@@ -92,6 +92,9 @@ jobs:
           gcc -std=c99 -O2 -Wall -Wextra -Werror -I3ds_port/include \
             3ds_port/tests/stereo_draw_gate_test.c -o stereo_draw_gate_test
           ./stereo_draw_gate_test
+          gcc -std=c99 -O2 -Wall -Wextra -Werror -I3ds_port/include \
+            3ds_port/tests/stereo_cache_test.c -o stereo_cache_test
+          ./stereo_cache_test
       - name: Input and video decoding
         run: |
           cd 3ds_port

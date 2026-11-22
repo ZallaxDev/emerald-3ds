@@ -175,3 +175,23 @@ any missing pixels, baseline-vs-OFF screenshots, GPU/CPU frame and VBlank
 statistics, VRAM/linear memory before/after, and any error logs. Profile
 at full slider on both New 3DS and Old 3DS. Do not call this review-ready
 until the baseline OFF comparisons and ON-path visuals have been inspected.
+
+## Phase 5A — battle sprite cache invalidation (implemented, verification pending)
+
+The native experimental compositor stores the depth-pack ID as well as its
+mutable plane-storage pointer when caching a composed texture. Switching
+Pokémon/trainer IDs with the same OAM slot, animation frame and palette
+must not reuse the previous battler's card stack. Updates to the copied
+sprite buffer or player-back sheet, and clearing a battle, also invalidate
+the cache even if the depth-pack identity has not changed.
+
+An SDK-free host test verifies pointer/ID combinations, including player
+back-sheet IDs. CI still builds the full feature-on and ordinary feature-off
+engines. This is a source-level correctness fix, **not** proof of native GPU
+pixel parity or physical hardware timing.
+
+**Still required in Phase 5:** Azahar left/right eye screenshots with the
+author's original packs; baseline vs feature-OFF visual comparisons; battle
+animations (fainting, Substitute, Transform), weather and HUD review;
+and Old/New 3DS VRAM/linear-memory and frame-pacing measurements.
+No emulator or hardware results are claimed.

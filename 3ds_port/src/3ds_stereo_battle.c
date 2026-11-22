@@ -26,6 +26,7 @@
 #include "3ds_video.h"
 #include "3ds_log.h"
 #include "3ds_stereo_mon.h"
+#include "3ds_stereo_cache.h"
 
 #define DIM CTR_STEREO_MON_DIM
 #define FRAME_BYTES CTR_STEREO_BATTLE_FRAME_BYTES
@@ -120,6 +121,7 @@ typedef struct
     /* What the texture holds for it: the planes, frame, groups and tile base. */
     bool composed;
     const Planes *composedPlanes;
+    uint16_t composedId; /* mutable Planes pointer alone is not an identity */
     int composedFrame;
     unsigned composedGroups, composedBase, composedShows, composedCut;
     uint16_t composedPal[16];
@@ -378,6 +380,7 @@ void CtrStereoBattle_SetSlot(unsigned position, unsigned tileNum, const uint8_t 
     if (buffer == NULL || bufferFrames == 0)
     {
         s->set = false;
+        s->composed = false;
         return;
     }
     if (bufferFrames > BUFFER_FRAMES) bufferFrames = BUFFER_FRAMES;
@@ -399,6 +402,8 @@ void CtrStereoBattle_SetSlot(unsigned position, unsigned tileNum, const uint8_t 
     {
         memcpy(s->buffer, buffer, bufferFrames * FRAME_BYTES);
         s->bufferFrames = bufferFrames;
+        /* Same species/frame/palette can still contain different pixels. */
+        s->composed = false;
     }
     PlanesFor(&s->mon, monId, BUFFER_FRAMES);
     PlanesFor(&s->trainer, trainerId, 1);
@@ -425,6 +430,7 @@ void CtrStereoBattle_SetSlot(unsigned position, unsigned tileNum, const uint8_t 
         {
             memcpy(s->back, backSheet, backFrames * FRAME_BYTES);
             s->backFrames = backFrames;
+            s->composed = false;
         }
         PlanesFor(&s->playerBack, playerId, BACK_FRAMES);
     }
@@ -455,6 +461,7 @@ void CtrStereoBattle_ClearBattlers(void)
     for (unsigned i = 0; i < SLOTS; ++i)
     {
         sSlots[i].set = false;
+        sSlots[i].composed = false;
         sSlots[i].oam = -1;
     }
 }
@@ -532,6 +539,7 @@ static void Compose(Slot *s, const Planes *p, const uint16_t *pal, unsigned grou
     C3D_TexFlush(&sTex);
     s->composed = true;
     s->composedPlanes = p;
+    s->composedId = p->id;
     s->composedFrame = s->frame;
     s->composedGroups = groups;
     s->composedBase = base;
@@ -659,7 +667,9 @@ unsigned CtrStereoBattle_Frame(const void *memory, bool battle, uint32_t skip[4]
         pal = mem->palette + (16 + (attr2 >> 12)) * 16;
         spriteGroups = HeaderOf(shownPlanes[i])->planes;
         if (spriteGroups > groups) spriteGroups = groups;
-        if (!s->composed || s->composedPlanes != shownPlanes[i] || s->composedFrame != s->frame
+        if (!s->composed || !CtrStereoBattle_SameSource(s->composedPlanes, s->composedId,
+                                                         shownPlanes[i], shownPlanes[i]->id)
+            || s->composedFrame != s->frame
             || s->composedGroups != spriteGroups || s->composedBase != base || s->composedShows != s->shows
             || s->composedCut != s->cut || memcmp(s->composedPal, pal, sizeof(s->composedPal)) != 0)
             Compose(s, shownPlanes[i], pal, spriteGroups, base);
