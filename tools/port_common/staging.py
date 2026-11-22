@@ -59,6 +59,9 @@ ENGINE_PATTERNS = [
     "bottom/menu.bin",
     "bottom/menu_top.bin",
     "battle/hud.bin",
+    # Only present in an explicit STEREO_BATTLE=1 developer build; generated
+    # from original author's depth-only release packs (not game art).
+    "stereo/*",
 ]
 OPTIONAL_PATTERNS = [
     "followers/*",

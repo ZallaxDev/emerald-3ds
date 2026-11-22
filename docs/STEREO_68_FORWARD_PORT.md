@@ -56,3 +56,21 @@ outstanding. No unrelated renderer code was copied from the old monolith.
 
 Depth-file packaging, UI exposure, completeness, and New/Old 3DS hardware
 validation are still outstanding. This is **not** a public-ready feature.
+
+
+## Optional author's binary packs for developer testing
+
+Only a `STEREO_BATTLE=1` build adds
+`romfs/stereo/mons.bin` and `romfs/stereo/backs.bin`.
+By default each is a valid **header-only empty file**, so no stereoscopic
+picture is activated. Supplying `STEREO_MONS_PACK=/path/to/mons.bin` and
+`STEREO_BACKS_PACK=/path/to/backs.bin` at build time copies the author's
+ready-made depth-only files through the original idempotent fill-only
+normalization. The builder does **not** download copyrighted assets or
+bundle any Pokémon artwork.
+
+Source of the finished packs: https://github.com/darkmattericecoffee/pokeemerald-3Ds-dualscreen/releases/tag/stereo-packs-2026-10-15
+
+The hidden developer runtime setting `battle_mon_3d=1` is **also**
+required to attempt stereoscopic sprite rendering; the default remains 0.
+Never enable it by default before visual/Old/New 3DS testing.

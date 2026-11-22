@@ -153,6 +153,14 @@ ROMFS_SHADER_OUTS += romfs/bottom/menu.bin
 ROMFS_SHADER_OUTS += romfs/bottom/menu_top.bin
 # The battle's info boxes and text box: the port's own art (scripts/gen_battle_hud.py).
 ROMFS_SHADER_OUTS += romfs/battle/hud.bin
+# Only explicit developer builds can stage the original #68 depth-plane packs.
+# The sources themselves contain no sprite art; files are path-supplied by the
+# local builder, not committed or downloaded by CI.
+ifeq ($(STEREO_BATTLE),1)
+STEREO_MONS_PACK ?=
+STEREO_BACKS_PACK ?=
+ROMFS_SHADER_OUTS += romfs/stereo/mons.bin romfs/stereo/backs.bin
+endif
 
 FULL_OBJECTS := $(FULL_C_OBJS) $(FULL_DATA_OBJS) $(BACKEND_OBJS)
 # The keep table is only referenced from the payload, which is not linked,
@@ -610,6 +618,32 @@ romfs/bottom/menu_top.bin: scripts/gen_menu_art.py scripts/gen_battle_art.py
 romfs/battle/hud.bin: scripts/gen_battle_hud.py
 	@mkdir -p $(@D)
 	"$(PYTHON)" scripts/gen_battle_hud.py --output $@
+
+# Optional #68 plane packs: no network calls and no source art copied.
+# The author distributes ready-to-use outline-free depth files separately.
+ifeq ($(STEREO_BATTLE),1)
+.PHONY: FORCE_STEREO
+ifneq ($(strip $(STEREO_MONS_PACK)),)
+romfs/stereo/mons.bin: $(STEREO_MONS_PACK) scripts/collapse_stereo_planes.py
+	@mkdir -p $(@D)
+	"$(PYTHON)" scripts/collapse_stereo_planes.py --fill-only --input "$(STEREO_MONS_PACK)" --output $@
+else
+romfs/stereo/mons.bin: scripts/gen_stereo_mons.py
+	@mkdir -p $(@D)
+	"$(PYTHON)" scripts/gen_stereo_mons.py --output $@
+endif
+
+ifneq ($(strip $(STEREO_BACKS_PACK)),)
+romfs/stereo/backs.bin: $(STEREO_BACKS_PACK) scripts/collapse_stereo_planes.py
+	@mkdir -p $(@D)
+	"$(PYTHON)" scripts/collapse_stereo_planes.py --fill-only --input "$(STEREO_BACKS_PACK)" --output $@
+else
+romfs/stereo/backs.bin: scripts/gen_stereo_backs.py
+	@mkdir -p $(@D)
+	"$(PYTHON)" scripts/gen_stereo_backs.py --output $@
+endif
+endif
+
 romfs/stage/leaves.bin: scripts/gen_intro_margins.py $(ROOT)/graphics/intro/scene_1/bg.4bpp \
 		$(wildcard $(ROOT)/graphics/intro/scene_1/bg?_map.bin)
 	@mkdir -p $(@D)
