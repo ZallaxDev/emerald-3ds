@@ -47,6 +47,12 @@ jobs:
         run: python -m compileall -q builder tools 3ds_port/scripts 3ds_port/tests
       - name: Builder tests (synthetic data, no ROM)
         run: python -m unittest discover -s builder/tests -v
+      - name: Stereo depth-pack exporters and mask tests (synthetic fixtures only)
+        run: |
+          python 3ds_port/tests/stereo_collapse_test.py
+          python 3ds_port/tests/stereo_depth_groups_test.py
+          python 3ds_port/tests/stereo_anatomy_test.py
+          python 3ds_port/tests/stereo_rom_extract_test.py
       - name: Synthetic web payload passes the release contract audit
         run: |
           python tools/build_web_payload.py --synthetic synthetic-web
@@ -75,6 +81,12 @@ jobs:
           timeout 10s ./assets_warmup_test
       - name: Incremental voxel build dependencies
         run: python 3ds_port/tests/voxel_make_deps_test.py
+      - name: Stereo plane pack format and composition (synthetic host tests)
+        run: |
+          gcc -std=c99 -O2 -Wall -Wextra -Werror -I3ds_port/include \
+            3ds_port/tests/stereo_mon_test.c 3ds_port/src/3ds_stereo_mon_decode.c \
+            3ds_port/src/3ds_video_decode.c -o stereo_mon_test
+          ./stereo_mon_test
       - name: Input and video decoding
         run: |
           cd 3ds_port
