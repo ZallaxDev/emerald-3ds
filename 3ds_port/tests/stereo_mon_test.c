@@ -203,7 +203,7 @@ int main(int argc, char **argv)
                                                : (i * 71 + x * 17 + y * 3);
                         /* RGB5551: alpha is the top bit in the port's
                          * texture convention; zero is fully transparent. */
-                        tinted[i] = ((x + y * 3 + tint * 7) % 11 == 0)
+                        tinted[i] = ((x == 0 && y == 0) || (x + y * 3 + tint * 7) % 11 == 0)
                                      ? 0 : (uint16_t)(0x8000u | (colour & 0x7fffu));
                     }
                 for (unsigned ci = 0; ci < sizeof(groupCounts) / sizeof(groupCounts[0]); ++ci)
