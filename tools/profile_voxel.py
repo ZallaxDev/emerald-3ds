@@ -48,20 +48,6 @@ if limited:
 '''
 
 
-def sampling_hotspots(log_text):
-    """Read Python 3.15's printed sampling table (not cProfile's binary pstats).
-
-    The sampler currently labels it `Profile Stats:`. Accept optional heading
-    details from other CPython builds, but require the actual sample table to
-    avoid silently treating ordinary generator output as profiler data.
-    """
-    lines = log_text.splitlines(keepends=True)
-    for i in range(len(lines) - 2, -1, -1):
-        if lines[i].strip().startswith("Profile Stats") and "nsamples" in lines[i + 1]:
-            return "".join(lines[i:])
-    return None
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tree", type=Path, required=True,
@@ -70,8 +56,6 @@ def main():
     parser.add_argument("--profiler", choices=("tracing", "sampling", "none"), default="tracing")
     parser.add_argument("--seconds", type=float,
                         help="bound each tracing pass (POSIX only); saves a partial profile")
-    parser.add_argument("--verify-buildings", action="store_true",
-                        help="include the full image/raster verification in the buildings profile")
     parser.add_argument("--steps", nargs="+", choices=("buildings", "relief"),
                         default=["buildings", "relief"])
     args = parser.parse_args()
@@ -84,9 +68,7 @@ def main():
               "seconds_limit": args.seconds,
               "jit": sys._jit.is_enabled() if hasattr(sys, "_jit") else None,
               "hash_seed": os.environ.get("PYTHONHASHSEED", "random"),
-              "mode": "generator --verify --output" if args.verify_buildings
-                      else "generator --output (without --verify)",
-              "verify_buildings": args.verify_buildings, "steps": []}
+              "mode": "generator --output (without --verify)", "steps": []}
     # Relief reads buildings.bin, so always order buildings before relief.
     for name in (step for step in ("buildings", "relief") if step in args.steps):
         script = tree / "3ds_port/scripts" / ("gen_voxel_" + name + ".py")
@@ -98,14 +80,8 @@ def main():
         elif args.profiler == "tracing":
             command += ["-m", "cProfile", "-o", str(profile)]
         elif args.profiler == "sampling":
-            # Sampling pstats is already human-readable on stdout. Avoid writing
-            # and re-parsing a binary profile with pstats.Stats: Python 3.15
-            # sampling output is not always compatible with the cProfile reader.
-            command += ["-m", "profiling.sampling", "run", "--pstats",
-                        "--sort", "cumtime", "--limit", "60"]
+            command += ["-m", "profiling.sampling", "run", "--pstats", "-o", str(profile)]
         command += [str(script), "--output", str(binary)]
-        if name == "buildings" and args.verify_buildings:
-            command += ["--verify", "--diagnostics", "failures"]
         print("Profiling", name, flush=True)
         start = time.perf_counter()
         with (out / (name + ".log")).open("w", encoding="utf-8") as log:
@@ -128,20 +104,7 @@ def main():
         elif not limited:
             raise RuntimeError("generator succeeded without producing " + str(binary))
         report["steps"].append(step)
-        if args.profiler == "sampling":
-            # Capture the profiler's own formatted table from the step log.
-            # This avoids a fragile binary pstats round trip while retaining
-            # the raw full log for investigating failures and sampling output.
-            log_text = (out / (name + ".log")).read_text(encoding="utf-8",
-                                                       errors="replace")
-            summary_text = sampling_hotspots(log_text)
-            if summary_text is None:
-                raise RuntimeError("sampler finished without a recognizable "
-                                   "Profile Stats sample table (see %s)"
-                                   % (out / (name + ".log")))
-            (out / (name + "-hotspots.txt")).write_text(
-                summary_text, encoding="utf-8")
-        elif args.profiler == "tracing" and profile.exists():
+        if profile.exists() and args.profiler != "none":
             with (out / (name + "-hotspots.txt")).open("w", encoding="utf-8") as summary:
                 stats = pstats.Stats(str(profile), stream=summary)
                 stats.strip_dirs().sort_stats("cumulative").print_stats(40)
