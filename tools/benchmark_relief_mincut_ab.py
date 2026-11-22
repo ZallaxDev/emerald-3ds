@@ -147,7 +147,7 @@ def main() -> None:
         memory_note = ("Sampled process-tree summed RSS (shared pages double-counted): "
                        f"baseline {rss_medians['baseline']} KiB, "
                        f"candidate {rss_medians['candidate']} KiB. "
-                       "Samples every 100ms; not an exact physical peak.\\n")
+                       "Samples every 100ms; not an exact physical peak.\n")
         summary = ("# Terrace finish A/B\n\n"
                    f"Python {sys.version.split()[0]}, Pillow {pillow_version}, {args.jobs} workers\n"
                    f"{args.runs} alternating pairs, identical baseline data and hash seed 0\n"
