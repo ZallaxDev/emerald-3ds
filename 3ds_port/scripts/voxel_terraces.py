@@ -3122,6 +3122,8 @@ def _source_side(n, arcs, s, t):
         cap += [w, 0.0]
         nxt += [head[u], head[v]]
         head[u], head[v] = len(to) - 2, len(to) - 1
+    # Keep edge iteration, floating-point updates and epsilon unchanged;
+    # reduce repeated list indexing during each residual-graph traversal.
     eps = 1e-9
     while True:
         level = [-1] * n
@@ -3130,9 +3132,11 @@ def _source_side(n, arcs, s, t):
         for u in queue:
             e = head[u]
             while e >= 0:
-                if cap[e] > eps and level[to[e]] < 0:
-                    level[to[e]] = level[u] + 1
-                    queue.append(to[e])
+                if cap[e] > eps:
+                    v = to[e]
+                    if level[v] < 0:
+                        level[v] = level[u] + 1
+                        queue.append(v)
                 e = nxt[e]
         if level[t] < 0:
             break
@@ -3142,7 +3146,10 @@ def _source_side(n, arcs, s, t):
             path, u = [], s
             while u != t:
                 e = it[u]
-                while e >= 0 and not (cap[e] > eps and level[to[e]] == level[u] + 1):
+                wanted = level[u] + 1
+                while e >= 0:
+                    if cap[e] > eps and level[to[e]] == wanted:
+                        break
                     e = nxt[e]
                 it[u] = e
                 if e < 0:
@@ -3167,9 +3174,11 @@ def _source_side(n, arcs, s, t):
     for u in queue:
         e = head[u]
         while e >= 0:
-            if cap[e] > eps and not seen[to[e]]:
-                seen[to[e]] = True
-                queue.append(to[e])
+            if cap[e] > eps:
+                v = to[e]
+                if not seen[v]:
+                    seen[v] = True
+                    queue.append(v)
             e = nxt[e]
     return seen
 
