@@ -189,7 +189,7 @@ jobs:
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               print("tag=" + image(lock), file=output)
           PY
-      - name: Prepare shared relief base and run three alternating A/B pairs
+      - name: Prepare shared relief base and run five alternating A/B pairs
         env:
           RELEASE_IMAGE: ${{ steps.image.outputs.tag }}
         run: |
@@ -202,7 +202,7 @@ jobs:
             romfs/voxel/regions.bin romfs/voxel/signposts.bin build/voxel_relief_base.bin
           python3 -u tools/benchmark_relief_mincut_ab.py \
             --tree build/upstream --baseline-dir benchmark-base \
-            --jobs 4 --runs 3 --out relief-ab-results
+            --jobs 4 --runs 5 --out relief-ab-results
           BENCH
       - uses: actions/upload-artifact@v7.0.2
         if: always()

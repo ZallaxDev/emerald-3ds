@@ -3114,51 +3114,62 @@ def _woods_at_foot(c, field, pieces, flat, kept, seams):
 
 
 def _source_side(n, arcs, s, t):
-    """The nodes on the source's side of a minimum s-t cut (Dinic's
-    blocking flows) of a graph of `n` nodes and arcs (u, v, capacity)."""
-    to, cap, nxt, head = [], [], [], [-1] * n
+    """Return the source side of a minimum cut using Dinic's blocking flows.
+
+    Build each vertex's outgoing edge list once in the same *reverse insertion*
+    order as the previous linked-edge implementation. Keep residual edge IDs,
+    path order, epsilon and floating-point capacity updates unchanged. An arc
+    from a vertex to itself exposed only its reverse half in the original
+    linked heads, so skip the unreachable forward half here as well.
+    """
+    to, cap = [], []
+    adjacent = [[] for _ in range(n)]
     for u, v, w in arcs:
-        to += [v, u]
-        cap += [w, 0.0]
-        nxt += [head[u], head[v]]
-        head[u], head[v] = len(to) - 2, len(to) - 1
-    # Keep edge iteration, floating-point updates and epsilon unchanged;
-    # reduce repeated list indexing during each residual-graph traversal.
+        e = len(to)
+        to.extend((v, u))
+        cap.extend((w, 0.0))
+        if u != v:
+            adjacent[u].append(e)
+        adjacent[v].append(e + 1)
+    for edges in adjacent:
+        edges.reverse()
     eps = 1e-9
     while True:
         level = [-1] * n
         level[s] = 0
         queue = [s]
         for u in queue:
-            e = head[u]
-            while e >= 0:
+            next_level = level[u] + 1
+            for e in adjacent[u]:
                 if cap[e] > eps:
                     v = to[e]
                     if level[v] < 0:
-                        level[v] = level[u] + 1
+                        level[v] = next_level
                         queue.append(v)
-                e = nxt[e]
         if level[t] < 0:
             break
-        it = head[:]
+        it = [0] * n
         while True:
-            # one path along the levels, as deep as it goes
+            # Same greedy path and backtracking as the original; cursor indexes
+            # replace traversing the next-edge linked list at each vertex.
             path, u = [], s
             while u != t:
-                e = it[u]
+                edges = adjacent[u]
+                cursor = it[u]
                 wanted = level[u] + 1
-                while e >= 0:
+                while cursor < len(edges):
+                    e = edges[cursor]
                     if cap[e] > eps and level[to[e]] == wanted:
                         break
-                    e = nxt[e]
-                it[u] = e
-                if e < 0:
+                    cursor += 1
+                it[u] = cursor
+                if cursor == len(edges):
                     if not path:
                         break
-                    level[u] = -1           # a dead end: never again this phase
+                    level[u] = -1
                     e = path.pop()
                     u = to[e ^ 1]
-                    it[u] = nxt[it[u]]
+                    it[u] += 1
                     continue
                 path.append(e)
                 u = to[e]
@@ -3172,14 +3183,12 @@ def _source_side(n, arcs, s, t):
     seen[s] = True
     queue = [s]
     for u in queue:
-        e = head[u]
-        while e >= 0:
+        for e in adjacent[u]:
             if cap[e] > eps:
                 v = to[e]
                 if not seen[v]:
                     seen[v] = True
                     queue.append(v)
-            e = nxt[e]
     return seen
 
 

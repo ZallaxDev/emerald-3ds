@@ -86,7 +86,7 @@ def main():
     # Include graphs with zero edges, cycles, repeated edges, and tiny flows.
     capacities = (0.0, 1e-12, 0.5e-9, 1e-9, 1.5e-9, 1e-6,
                   0.1, 0.5, 1.0, 2.0, 3.3, 10.0, 1000.0)
-    for i in range(500):
+    for i in range(2000):
         n = rng.randrange(2, 38)
         arcs = [(rng.randrange(n), rng.randrange(n), rng.choice(capacities))
                 for _ in range(rng.randrange(0, n * 5))]
@@ -116,7 +116,7 @@ def main():
         want = old_ns["_convex_labels"](k, unary, hinges)
         got = new_ns["_convex_labels"](k, unary, hinges)
         assert got == want, ("convex labels", i, k, hinges, want, got)
-    print("PASS exact mincut reachability (500 graphs) and convex labels (160 problems)")
+    print("PASS exact mincut reachability (2000 graphs) and convex labels (160 problems)")
 
 
 if __name__ == "__main__":
