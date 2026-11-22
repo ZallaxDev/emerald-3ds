@@ -12,6 +12,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+from collapse_stereo_planes import fill_transparent
 
 SPEC = importlib.util.spec_from_file_location(
     'stereo', Path(__file__).resolve().parents[1] / 'scripts/gen_stereo_mons.py')
@@ -116,7 +117,7 @@ class AnatomyTests(unittest.TestCase):
              patch.object(stereo, 'propagate', side_effect=expected) as legacy, \
              patch.object(stereo, 'anatomy_planes') as semantic:
             data, note = stereo.build(1, 'bulbasaur', args)
-        self.assertEqual(data, b''.join(stereo.pack(p) for p in expected))
+        self.assertEqual(data, fill_transparent(b''.join(stereo.pack(p) for p in expected)))
         self.assertEqual(legacy.call_count, 2)
         semantic.assert_not_called()
         self.assertIn('legacy colour transfer', note)
@@ -138,7 +139,7 @@ class AnatomyTests(unittest.TestCase):
              patch.object(stereo, 'align', return_value=(0, 0, 1)), \
              patch.object(stereo, 'propagate') as legacy:
             data, note = stereo.build(1, 'bulbasaur', args)
-            self.assertEqual(data, b''.join(stereo.pack(p) for p in self.run_map()))
+            self.assertEqual(data, fill_transparent(b''.join(stereo.pack(p) for p in self.run_map())))
             self.assertIn('anatomy masks', note)
             source.write_bytes(b'changed art')
             with self.assertRaisesRegex(ValueError, 'stale anatomy'):
