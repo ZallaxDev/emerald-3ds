@@ -152,7 +152,10 @@ void CtrStereoBattle_Reserve(void)
 
 bool CtrStereoBattle_Enabled(void)
 {
-    return CtrSettings_GetInt(ENABLED_KEY, 0) != 0;
+    /* Persisted settings from another build must not activate a feature
+     * with no valid plane packs. The default remains OFF. */
+    return CtrSettings_GetInt(ENABLED_KEY, 0) == 1
+        && (CtrStereoMon_Load() || CtrStereoMon_BacksHeader() != NULL);
 }
 
 static void SlotsInit(void)

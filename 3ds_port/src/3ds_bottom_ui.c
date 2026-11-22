@@ -606,7 +606,16 @@ static bool8 OptionLive(int row, bool8 voxel)
  * off, as the voxel camera's rows are. */
 static bool8 ExtraLive(const CtrExtra *extra, bool8 voxel)
 {
-    return voxel || !CtrExtras_NeedsVoxel(extra);
+    if (!voxel && CtrExtras_NeedsVoxel(extra))
+        return FALSE;
+#ifdef CTR_STEREO_BATTLE
+    /* Spacing and placement are inactive until the feature is turned on,
+     * matching the existing disabled-setting styling and touch protection. */
+    if (strcmp(extra->key, "battle_plane_spread") == 0
+        || strcmp(extra->key, "battle_plane_pivot") == 0)
+        return CtrSettings_GetInt("battle_mon_3d", 0) == 1 && CtrExtras_Available(extra);
+#endif
+    return TRUE;
 }
 
 /* The OPTIONS category (CAT_*) and group on show (3ds_bottom_options.inc). */

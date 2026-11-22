@@ -74,3 +74,20 @@ Source of the finished packs: https://github.com/darkmattericecoffee/pokeemerald
 The hidden developer runtime setting `battle_mon_3d=1` is **also**
 required to attempt stereoscopic sprite rendering; the default remains 0.
 Never enable it by default before visual/Old/New 3DS testing.
+
+## Phase 3A — translated Battle/STEREO settings
+
+The existing OPTIONS architecture is unchanged. When a developer build
+(`STEREO_BATTLE=1`) contains at least one valid nonempty plane pack,
+the Battle category gains a **STEREO** group with three localized controls:
+3D Pokémon (OFF by default), plane spread (1/2/3/4/6/8 pixels), and
+plane position (behind/around/in front). Labels and pivot values are
+translated in all seven currently supported locales.
+
+The entire group is **hidden** if either the feature is not compiled or
+both packs are absent/empty/invalid. Spread and position are greyed out
+until 3D Pokémon is enabled. Even a persisted manually edited
+`battle_mon_3d=1` is ineffective without a valid pack. Toggling ON
+also attempts the original early texture reservation; failure still
+falls back to original flat sprites. No other options, cheating modes,
+or gameplay defaults are changed.
