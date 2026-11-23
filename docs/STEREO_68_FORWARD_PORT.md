@@ -272,3 +272,50 @@ has no effect in the default-OFF binary. This removes repeated depth nibble
 decodes and plane-to-group calculations from inner card/skirt loops. CI
 establishes pixel equivalence for the synthetic fixtures; real-world speed
 and GPU timing remain unmeasured, so no FPS improvement is claimed.
+
+
+### 6D — reproducible visual-parity evidence (awaiting actual captures)
+
+There is now a strict, image-based comparison tool:
+`3ds_port/scripts/stereo_capture_compare.py`. It consumes synchronized
+**native-resolution 400x240 top-screen PNGs** for both left and right eyes.
+The CLI requires `scene.left.png` and `scene.right.png` pairs for
+every scenario, exactly matching capture names and count between builds.
+It compares **every RGBA pixel without tolerance or ignored rectangles**,
+writes normalized-image SHA-256 hashes and mismatch bounding boxes to JSON,
+and can generate red pixel-difference masks for any failures. Missing eyes,
+different scene coverage, an empty folder, bad names and wrong resolutions
+cannot pass. A fully synthetic suite runs in both Python CI audits.
+
+Prepare three builds (same legal ROM/game data, save, emulator version and
+settings): upstream `integration`, this PR with
+`STEREO_BATTLE=0`, and the feature-enabled experimental binary
+(with the original author's separately distributed depth-only packs).
+Capture synchronized left/right top-eye PNG pairs for the scenarios below.
+Optionally repeat with `STEREO_BATTLE=1` and 3D BATTLE MONS OFF.
+Run the exact parity gate on *upstream vs feature OFF*:
+
+```sh
+python 3ds_port/scripts/stereo_capture_compare.py \
+  --baseline captures/integration --candidate captures/stereo-off \
+  --report captures/parity.json --diff-dir captures/differences \
+  --require-scenes single,double,trainer,faint,transform,weather,hud,menus
+```
+
+Scene names above are examples, but the actual evidence should cover at least
+the manual Phase 4 matrix, including both voxel and 2D battles, trainer
+introductions, player backs, moves, weather, windows, fades and overworld.
+The feature-enabled build must be **visually inspected**, including both eyes,
+the slider at zero and full separation, and real frame-to-frame animation;
+a successful OFF comparison cannot certify its new 3D appearance. Track
+failed captures and approved intentional differences explicitly, never by
+silently relaxing byte comparison thresholds.
+
+Capture and retain independent `perf.bin` logs and experimental
+`stereo perf` diagnostics for fixed battle scenes in Azahar,
+Old 3DS and New 3DS. Use the existing `perf_report.py`
+`compare` and `battle` subcommands to calculate latency,
+render-route and dropped-VBlank differences; pin device, game data, save,
+slider, settings, 600-frame windows and warmup. No real device or emulator
+measurements/captures were available during this change, so neither FPS
+improvements nor true visual parity are asserted here.

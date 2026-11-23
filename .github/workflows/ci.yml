@@ -55,6 +55,7 @@ jobs:
           python 3ds_port/tests/stereo_pillow_test.py
           python 3ds_port/tests/stereo_asset_staging_test.py
           python 3ds_port/tests/stereo_rom_extract_test.py
+          python 3ds_port/tests/stereo_capture_compare_test.py
       - name: Synthetic web payload passes the release contract audit
         run: |
           python tools/build_web_payload.py --synthetic synthetic-web
