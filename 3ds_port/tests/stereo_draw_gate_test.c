@@ -38,6 +38,29 @@ int main(void)
         mask[oam >> 5] &= ~(1u << (oam & 31));
         CHECK(!Eligible(oam, 1, 1.0f, mask, false, false, false));
     }
+    /* Reusing the same OAM index in separate slots is ambiguous: draw
+     * the original flat sprite rather than assigning somebody else's art. */
+    {
+        int slots[4] = {31, 32, 127, -1};
+        CHECK(CtrStereoMon_DropAmbiguousOam(slots, 4) == 0);
+        CHECK(slots[0] == 31 && slots[1] == 32 && slots[2] == 127 && slots[3] == -1);
+    }
+    {
+        int slots[4] = {12, 12, 20, -1};
+        CHECK(CtrStereoMon_DropAmbiguousOam(slots, 4) == 3);
+        CHECK(slots[0] == -1 && slots[1] == -1 && slots[2] == 20);
+    }
+    {
+        int slots[4] = {127, 127, 127, 6};
+        CHECK(CtrStereoMon_DropAmbiguousOam(slots, 4) == 7);
+        CHECK(slots[0] == -1 && slots[1] == -1 && slots[2] == -1 && slots[3] == 6);
+    }
+    {
+        int slots[4] = {-1, -1, -1, -1};
+        CHECK(CtrStereoMon_DropAmbiguousOam(slots, 4) == 0);
+        CHECK(CtrStereoMon_DropAmbiguousOam(NULL, 4) == 0);
+        CHECK(CtrStereoMon_DropAmbiguousOam(slots, 5) == 0);
+    }
     printf("stereo_draw_gate_test: %s (%u failures)\n", failures ? "FAILED" : "PASS", failures);
     return failures ? 1 : 0;
 }

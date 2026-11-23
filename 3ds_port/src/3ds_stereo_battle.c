@@ -27,6 +27,7 @@
 #include "3ds_log.h"
 #include "3ds_stereo_mon.h"
 #include "3ds_stereo_cache.h"
+#include "3ds_stereo_gate.h"
 
 #define DIM CTR_STEREO_MON_DIM
 #define FRAME_BYTES CTR_STEREO_BATTLE_FRAME_BYTES
@@ -136,6 +137,57 @@ static C3D_Tex sTex;
 static bool sTexAllocated, sTexFailed;
 static Tex3DS_SubTexture sTiles[TEX_TILES];
 static unsigned sLogged;
+
+#ifdef CTR_STEREO_PROFILE
+/* Diagnostic build only. No counters, syscalls or logging in normal builds.
+ * Frame timing is CPU wall time (includes composing textures), not GPU time. */
+#define STEREO_PROFILE_FRAMES 600u
+static struct
+{
+    unsigned frames, matches, empty, allocFallbacks, ambiguous;
+    unsigned compositions, cacheHits, drawCalls, planeDraws;
+    uint64_t frameTicks, composeTicks, drawTicks;
+} sStereoProfile;
+
+static void StereoProfileReport(void)
+{
+    if (sStereoProfile.frames == 0) return;
+    CtrLog_Write(CTR_LOG_VIDEO,
+        "stereo perf: frames=%u matched=%u empty=%u allocFallback=%u ambiguous=%u "
+        "composes=%u cacheHits=%u draws=%u cards=%u "
+        "cpuFrame=%.3fms/frm cpuCompose=%.3fms/call cpuDraw=%.3fms/call "
+        "linearFree=%lu vramFree=%lu",
+        sStereoProfile.frames, sStereoProfile.matches, sStereoProfile.empty,
+        sStereoProfile.allocFallbacks, sStereoProfile.ambiguous,
+        sStereoProfile.compositions, sStereoProfile.cacheHits,
+        sStereoProfile.drawCalls, sStereoProfile.planeDraws,
+        (float)sStereoProfile.frameTicks * 1000.0f
+            / ((float)SYSCLOCK_ARM11 * sStereoProfile.frames),
+        sStereoProfile.compositions
+            ? (float)sStereoProfile.composeTicks * 1000.0f
+                  / ((float)SYSCLOCK_ARM11 * sStereoProfile.compositions) : 0.0f,
+        sStereoProfile.drawCalls
+            ? (float)sStereoProfile.drawTicks * 1000.0f
+                  / ((float)SYSCLOCK_ARM11 * sStereoProfile.drawCalls) : 0.0f,
+        (unsigned long)linearSpaceFree(), (unsigned long)vramSpaceFree());
+    memset(&sStereoProfile, 0, sizeof(sStereoProfile));
+}
+
+static void StereoProfileBeginFrame(void)
+{
+    /* Log at the NEXT frame, after all per-eye draws of the prior window. */
+    if (sStereoProfile.frames >= STEREO_PROFILE_FRAMES) StereoProfileReport();
+    ++sStereoProfile.frames;
+}
+
+static void StereoProfileEndFrame(uint64_t start, unsigned matched, bool failedTexture)
+{
+    sStereoProfile.frameTicks += svcGetSystemTick() - start;
+    sStereoProfile.matches += matched;
+    sStereoProfile.empty += matched == 0;
+    sStereoProfile.allocFallbacks += failedTexture;
+}
+#endif
 
 /* The texture made at boot, while the linear heap still has a run of
  * 128 KiB: made at a battle's start it failed on hardware once the voxel
@@ -456,6 +508,9 @@ void CtrStereoBattle_SetSlot(unsigned position, unsigned tileNum, const uint8_t 
 
 void CtrStereoBattle_ClearBattlers(void)
 {
+#ifdef CTR_STEREO_PROFILE
+    StereoProfileReport(); /* Include short battles, not only 600-frame runs. */
+#endif
     SlotsInit();
     sLogged = 0;    /* a few lines per battle, not per session */
     for (unsigned i = 0; i < SLOTS; ++i)
@@ -516,6 +571,9 @@ static void Picture(const uint8_t *tiles, const uint16_t *pal, uint16_t *out)
 /* The slot's planes into its tiles of the texture, with this palette. */
 static void Compose(Slot *s, const Planes *p, const uint16_t *pal, unsigned groups, unsigned base)
 {
+#ifdef CTR_STEREO_PROFILE
+    uint64_t profStart = svcGetSystemTick();
+#endif
     static uint16_t picture[DIM * DIM];
     static uint8_t cutTiles[FRAME_BYTES];
     const uint8_t *tiles = s->shows == SHOWS_BACK ? s->back + s->frame * FRAME_BYTES : s->buffer[s->frame];
@@ -546,6 +604,10 @@ static void Compose(Slot *s, const Planes *p, const uint16_t *pal, unsigned grou
     s->composedShows = s->shows;
     s->composedCut = s->cut;
     memcpy(s->composedPal, pal, sizeof(s->composedPal));
+#ifdef CTR_STEREO_PROFILE
+    ++sStereoProfile.compositions;
+    sStereoProfile.composeTicks += svcGetSystemTick() - profStart;
+#endif
 }
 
 /* Which picture and frame OBJ VRAM holds at the slot's tile, with the
@@ -594,6 +656,10 @@ unsigned CtrStereoBattle_Frame(const void *memory, bool battle, uint32_t skip[4]
     memset(skip, 0, 4 * sizeof(uint32_t));
     for (unsigned i = 0; i < SLOTS; ++i) sSlots[i].oam = -1;
     if (!battle || !CtrStereoBattle_Enabled() || !(mem->regs[0] & 0x1000) || !(mem->regs[0] & 0x40)) return 0;
+#ifdef CTR_STEREO_PROFILE
+    StereoProfileBeginFrame();
+    uint64_t profStart = svcGetSystemTick();
+#endif
     /* The sprites first: how many slots show, then the planes they share. */
     for (unsigned i = 0; i < SLOTS; ++i)
     {
@@ -649,7 +715,31 @@ unsigned CtrStereoBattle_Frame(const void *memory, bool battle, uint32_t skip[4]
             ++active;
         }
     }
-    if (active == 0 || !TextureReady()) return 0;
+    /* More than one battler matched the same visible OAM entry: neither can
+     * safely claim it. Keep the original flat drawing for all such slots. */
+    {
+        int matched[SLOTS];
+        unsigned ambiguous;
+        for (unsigned i = 0; i < SLOTS; ++i) matched[i] = sSlots[i].oam;
+        ambiguous = CtrStereoMon_DropAmbiguousOam(matched, SLOTS);
+        for (unsigned i = 0; i < SLOTS; ++i)
+            if (ambiguous & (1u << i))
+            {
+                sSlots[i].oam = -1;
+                shownPlanes[i] = NULL;
+                --active;
+#ifdef CTR_STEREO_PROFILE
+                ++sStereoProfile.ambiguous;
+#endif
+            }
+    }
+    if (active == 0 || !TextureReady())
+    {
+#ifdef CTR_STEREO_PROFILE
+        StereoProfileEndFrame(profStart, 0, active != 0);
+#endif
+        return 0;
+    }
     /* A double battle (a right-hand position in use) halves the planes. */
     setting = CtrSettings_GetInt(PLANES_KEY, GROUPS_MAX);
     groups = setting < GROUPS_MIN ? GROUPS_MIN : (unsigned)setting;
@@ -673,6 +763,10 @@ unsigned CtrStereoBattle_Frame(const void *memory, bool battle, uint32_t skip[4]
             || s->composedGroups != spriteGroups || s->composedBase != base || s->composedShows != s->shows
             || s->composedCut != s->cut || memcmp(s->composedPal, pal, sizeof(s->composedPal)) != 0)
             Compose(s, shownPlanes[i], pal, spriteGroups, base);
+#ifdef CTR_STEREO_PROFILE
+        else
+            ++sStereoProfile.cacheHits;
+#endif
         skip[s->oam >> 5] |= 1u << (s->oam & 31);
         ++found;
         if (sLogged < 8)
@@ -682,6 +776,9 @@ unsigned CtrStereoBattle_Frame(const void *memory, bool battle, uint32_t skip[4]
                          shownPlanes[i]->id, s->frame, spriteGroups, s->oam, s->x, s->y);
         }
     }
+#ifdef CTR_STEREO_PROFILE
+    StereoProfileEndFrame(profStart, found, false);
+#endif
     return found;
 }
 
@@ -724,6 +821,9 @@ void CtrStereoBattle_Draw(unsigned oam, float x, float y, float scale, float eye
     if (!s || !sTexAllocated || s->composedPlanes == NULL) return;
     header = HeaderOf(s->composedPlanes);
     if (header == NULL) return;
+#ifdef CTR_STEREO_PROFILE
+    uint64_t profStart = svcGetSystemTick();
+#endif
     if (smooth != sSmooth)
     {
         C2D_Flush();
@@ -783,4 +883,9 @@ void CtrStereoBattle_Draw(unsigned oam, float x, float y, float scale, float eye
         }
         if (!plain) { C2D_Flush(); C2D_ViewRestore(&saved); }
     }
+#ifdef CTR_STEREO_PROFILE
+    ++sStereoProfile.drawCalls;
+    sStereoProfile.planeDraws += groups;
+    sStereoProfile.drawTicks += svcGetSystemTick() - profStart;
+#endif
 }

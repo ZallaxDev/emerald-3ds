@@ -17,4 +17,22 @@ static inline bool CtrStereoMon_DrawEligible(unsigned oam, unsigned matched,
         && (skip[oam >> 5] & (1u << (oam & 31))) != 0;
 }
 
+/* The same OAM entry must never represent two different battler slots.
+ * Ambiguous matches are not depth-rendered; both use the original flat OAM
+ * path instead. Only values 0..127 are candidate visible OAM entries. */
+static inline unsigned CtrStereoMon_DropAmbiguousOam(int matched[4], unsigned count)
+{
+    unsigned ambiguous = 0;
+
+    if (matched == NULL || count > 4) return 0;
+    for (unsigned i = 0; i < count; ++i)
+        if (matched[i] >= 0 && matched[i] < 128)
+            for (unsigned j = i + 1; j < count; ++j)
+                if (matched[i] == matched[j])
+                    ambiguous |= (1u << i) | (1u << j);
+    for (unsigned i = 0; i < count; ++i)
+        if (ambiguous & (1u << i)) matched[i] = -1;
+    return ambiguous;
+}
+
 #endif

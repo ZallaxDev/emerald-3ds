@@ -195,3 +195,58 @@ author's original packs; baseline vs feature-OFF visual comparisons; battle
 animations (fainting, Substitute, Transform), weather and HUD review;
 and Old/New 3DS VRAM/linear-memory and frame-pacing measurements.
 No emulator or hardware results are claimed.
+
+## Phase 6 — diagnostic profiling and conservative renderer fallbacks
+
+### 6A: opt-in CPU profile
+
+`STEREO_PROFILE=1` requires `STEREO_BATTLE=1` and enables CPU diagnostic
+sampling without adding counters or timer calls to a normal release build.
+Build the feature with the author's separately acquired packs, for example:
+
+```sh
+make -C 3ds_port release STEREO_BATTLE=1 STEREO_PROFILE=1 \\
+  STEREO_MONS_PACK=/path/to/mons.bin \\
+  STEREO_BACKS_PACK=/path/to/backs.bin
+```
+
+The console log reports each 600-frame active sample (and partial samples at
+battle cleanup): mean CPU time in the battle's OAM matching/texture preparation
+path (inclusive of composition), number of matched sprites, cache hits,
+texture rebuilds and their mean CPU cost, draw calls/cards and mean CPU draw
+submission cost, unmatched frames, ambiguous OAM rejections, texture
+allocation fallbacks, and available linear/VRAM memory at each report.
+A separate per-eye summary reports CPU-side left/right whole-eye draw costs
+when stereoscopic Pokémon are present. All times are CPU wall-clock samples,
+not GPU draw duration. The existing `perf.bin` and 3DS profiling tools
+remain the sources for GPU, VBlank, framerate and command-queue behavior.
+These counters do not silently change the profiler binary record format.
+
+### 6C: ambiguous OAM matching fails flat
+
+When multiple battler positions both match the **same OAM entry**, neither
+position can safely claim that sprite. Those matches are removed before
+texture composition and the original flat OAM renderer owns it; unrelated
+battlers remain eligible for stereoscopic rendering. An SDK-free host test
+covers distinct entries, two-slot collisions, three-slot collisions, all
+invalid/unassigned entries, and boundary indices. Existing missing pack,
+disabled setting, and failed texture-allocation fallbacks remain intact.
+
+CI compiles the optional diagnostic mode within its non-shipping feature-on
+build and separately compiles and audits the ordinary `STEREO_BATTLE=0` build.
+This is **not** a performance win claim; review measured evidence before
+changing the whole-per-eye compositor or reducing fidelity.
+
+### 6B/6D: acceptance checks still pending
+
+- [ ] Compare baseline vs feature-OFF real-ROM left/right captures and battle
+      HUD, weather, OBJ windows, animations, palettes, fades and double battles.
+- [ ] Test feature-ON using the original author's actual depth-only packs.
+- [ ] Gather comparable 600-frame logs from Azahar and New/Old 3DS, with both
+      stereo ON and OFF, alongside perf.bin/vblank measurements.
+- [ ] Inspect GPU/CPU frame pacing, VRAM/linear-memory pressure, stalls and
+      allocation failure behavior; optimize only measured bottlenecks.
+- [ ] Original author and maintainer review before marking ready.
+
+**No emulator capture or physical Old/New 3DS hardware validation is claimed.**
+Keep this branch Draft and the new option OFF by default.
