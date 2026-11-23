@@ -363,3 +363,9 @@ sprite layout to the unchanged flat renderer. Host tests cover bases 0,
 959, 960, 961, 1023 and an invalid extreme. Invalid `STEREO_BATTLE`
 build values now fail at Makefile parsing rather than silently skipping
 feature isolation/pruning rules.
+
+**Phase 7C build correction:** Remove the legacy `volatile` qualifier from
+`Planes.pending`, since all reader/game-thread accesses now use the atomic
+acquire/release helpers. This fixes the 3DS toolchain's
+`-Werror=discarded-qualifiers` error in CI #946 without weakening
+cross-thread publication.

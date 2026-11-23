@@ -80,7 +80,7 @@ typedef struct
     uint16_t id;
     unsigned frames;
     bool ok, failed;        /* failed: read, nothing there; not asked again */
-    volatile bool pending;
+    bool pending;          /* accessed only via atomic acquire/release */
     uint8_t *planes;        /* frames * FRAME_BYTES */
 } Planes;
 
