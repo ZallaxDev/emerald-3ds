@@ -8,6 +8,9 @@
 #include "3ds_locale.h"
 #include "3ds_locale_text.h"
 #include "3ds_extras.h"
+#ifdef CTR_STEREO_BATTLE
+#include "3ds_stereo_mon.h"
+#endif
 #include "3ds_randomizer.h"
 #include "3ds_nuzlocke_ui.h"
 #include "3ds_platform.h"
@@ -235,6 +238,48 @@ static const u8 *SpeedText(void)
     return text;
 }
 
+#ifdef CTR_STEREO_BATTLE
+/* Original #68 battle planes are an opt-in enhancement, not a base-game
+ * setting. Without a nonempty validated front or back pack, the whole tab
+ * and its controls are hidden, not greyed or misleadingly enabled. */
+static bool StereoPacksReady(void)
+{
+    return CtrStereoMon_Load() || CtrStereoMon_BacksHeader() != NULL;
+}
+
+static void StereoEnabledChanged(void)
+{
+    /* A player changing the option after boot can request the texture now.
+     * If linear memory is insufficient, the original sprite path remains. */
+    if (CtrStereoBattle_Enabled())
+        CtrStereoBattle_Reserve();
+}
+
+static const char *const sPlaneSpreads[] = {"1PX", "2PX", "3PX", "4PX", "6PX", "8PX"};
+static const char *const sPlanePivots[] = {
+    CTR_TEXT("BEHIND", "DETRÁS", "DERRIÈRE", "DIETRO", "ATRÁS", "DAHINTER", "うしろ"),
+    CTR_TEXT("AROUND", "ALREDEDOR", "AUTOUR", "INTORNO", "AO REDOR", "UMHER", "まわり"),
+    CTR_TEXT("IN FRONT", "DELANTE", "DEVANT", "DAVANTI", "À FRENTE", "DAVOR", "まえ")
+};
+#endif
+
+/* Presence is tested when the bottom-screen OPTIONS list is assembled.
+ * Keep all unrelated extras identical, including build configurations
+ * without stereo support. */
+bool CtrExtras_Available(const CtrExtra *extra)
+{
+#ifdef CTR_STEREO_BATTLE
+    if (extra && extra->key
+        && (strcmp(extra->key, "battle_mon_3d") == 0
+            || strcmp(extra->key, "battle_plane_spread") == 0
+            || strcmp(extra->key, "battle_plane_pivot") == 0))
+        return StereoPacksReady();
+#else
+    (void)extra;
+#endif
+    return true;
+}
+
 const CtrExtra gCtrExtras[] =
 {
     /* Features add their lines here. */
@@ -242,6 +287,13 @@ const CtrExtra gCtrExtras[] =
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("3D DEPTH", "PROFUNDIDAD 3D", "PROFONDEUR 3D", "PROFOND. 3D", "PROFUNDIDADE 3D", "3D-TIEFE", "3D おくゆき"), "voxel_depth", 7, 3, sVoxelDepths, NULL, NULL, NULL},
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("SHADOW QUALITY", "CALIDAD DE SOMBRAS", "QUALITÉ OMBRES", "QUALITÀ OMBRE", "QUALID. SOMBRAS", "SCHATTENQUALITÄT", "かげの ひんしつ"), "voxel_shadows", 0, 0, sVoxelShadows, NULL, VoxelShadowsStep, VoxelShadowsText},
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("SPEED EFFECTS", "EFECTOS VELOC.", "EFFETS VITESSE", "EFFETTI VELOC.", "EFEITOS VELOC.", "TEMPO-EFFEKTE", "スピード こうか"), "battle_speed_fx", 2, 1, gCtrExtrasOffOn, NULL, NULL, NULL},
+#ifdef CTR_STEREO_BATTLE
+    /* Optional #68 stereoscopic Pokémon depth planes. These rows are present
+     * only in a developer build with valid depth packs; OFF by default. */
+    {CTR_EXTRAS_OPTIONS, CTR_TEXT("3D POKÉMON", "POKÉMON 3D", "POKÉMON 3D", "POKÉMON 3D", "POKÉMON 3D", "3D-POKÉMON", "3D ポケモン"), "battle_mon_3d", 2, 0, gCtrExtrasOffOn, StereoEnabledChanged, NULL, NULL},
+    {CTR_EXTRAS_OPTIONS, CTR_TEXT("PLANE SPREAD", "SEPARACIÓN 3D", "ÉCART PLANS", "DISTANZA PIANI", "DISTÂNCIA 3D", "EBENENABSTAND", "おくゆき はば"), "battle_plane_spread", 6, 2, sPlaneSpreads, NULL, NULL, NULL},
+    {CTR_EXTRAS_OPTIONS, CTR_TEXT("PLANES SIT", "POSICIÓN PLANOS", "POSITION PLANS", "POSIZ. PIANI", "POSIÇÃO PLANOS", "EBENENLAGE", "めんの いち"), "battle_plane_pivot", 3, 1, sPlanePivots, NULL, NULL, NULL},
+#endif
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("SPEED", "VELOC. JUEGO", "VITESSE", "VELOCITÀ", "VELOCIDADE", "TEMPO", "スピード"), "speed", 0, 0, NULL, NULL, SpeedStep, SpeedText},
     /* The game and the music keep real time on a slow frame; the sound
      * engine mixes on the DSP's clock (3ds_platform.c, 3ds_audio.c). */

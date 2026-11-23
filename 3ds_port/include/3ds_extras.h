@@ -49,6 +49,8 @@ extern const char *const gCtrExtrasOffOn[2];   /* "OFF", "ON" */
 extern const unsigned gCtrExtraCount;
 
 int CtrExtras_Value(const CtrExtra *extra);
+/* If false, this extra is absent from the OPTIONS page entirely. */
+bool CtrExtras_Available(const CtrExtra *extra);
 /* For the game code: the value of the extra with this key (0 when no build
  * line has it). */
 int CtrExtras_Get(const char *key);

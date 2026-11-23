@@ -47,6 +47,15 @@ jobs:
         run: python -m compileall -q builder tools 3ds_port/scripts 3ds_port/tests
       - name: Builder tests (synthetic data, no ROM)
         run: python -m unittest discover -s builder/tests -v
+      - name: Stereo depth-pack exporters and mask tests (synthetic fixtures only)
+        run: |
+          python 3ds_port/tests/stereo_collapse_test.py
+          python 3ds_port/tests/stereo_depth_groups_test.py
+          python 3ds_port/tests/stereo_anatomy_test.py
+          python 3ds_port/tests/stereo_pillow_test.py
+          python 3ds_port/tests/stereo_asset_staging_test.py
+          python 3ds_port/tests/stereo_rom_extract_test.py
+          python 3ds_port/tests/stereo_capture_compare_test.py
       - name: Synthetic web payload passes the release contract audit
         run: |
           python tools/build_web_payload.py --synthetic synthetic-web
@@ -75,6 +84,22 @@ jobs:
           timeout 10s ./assets_warmup_test
       - name: Incremental voxel build dependencies
         run: python 3ds_port/tests/voxel_make_deps_test.py
+      - name: Stereo plane pack format and composition (synthetic host tests)
+        run: |
+          gcc -std=c99 -O2 -Wall -Wextra -Werror -I3ds_port/include \
+            3ds_port/tests/stereo_mon_test.c 3ds_port/src/3ds_stereo_mon_decode.c \
+            3ds_port/src/3ds_video_decode.c -o stereo_mon_test
+          ./stereo_mon_test
+          gcc -std=c99 -O2 -Wall -Wextra -Werror -I3ds_port/include \
+            3ds_port/tests/stereo_compose_bench.c 3ds_port/src/3ds_stereo_mon_decode.c \
+            3ds_port/src/3ds_video_decode.c -o stereo_compose_bench
+          ./stereo_compose_bench
+          gcc -std=c99 -O2 -Wall -Wextra -Werror -I3ds_port/include \
+            3ds_port/tests/stereo_draw_gate_test.c -o stereo_draw_gate_test
+          ./stereo_draw_gate_test
+          gcc -std=c99 -O2 -Wall -Wextra -Werror -I3ds_port/include \
+            3ds_port/tests/stereo_cache_test.c -o stereo_cache_test
+          ./stereo_cache_test
       - name: Input and video decoding
         run: |
           cd 3ds_port
@@ -142,7 +167,7 @@ jobs:
           echo "::group::3DS build, verification and engine-only release"
           # verify builds all first, and release waits for verification.
           VOXEL_TERRACE_JOBS=4 VOXEL_BUILDING_JOBS=4 VOXEL_SCENE_JOBS=4 \
-            make -C build/upstream/3ds_port -j4 --output-sync=target verify release PYTHON=python3 PORT_LANG=en
+            make -C build/upstream/3ds_port -j4 --output-sync=target verify release PYTHON=python3 PORT_LANG=en STEREO_BATTLE=1 STEREO_PROFILE=1
           echo "::endgroup::"
 
           echo "::group::Production encounter and berry clock tests"
@@ -154,6 +179,21 @@ jobs:
           mkdir -p ship
           cp build/upstream/3ds_port/dist/Emerald3DS.3dsx build/upstream/3ds_port/dist/Emerald3DS.smdh ship/
           # In payload/, where the release ships them (release_audit_allow.toml [large]).
+          python3 -c "import zipfile,pathlib; z=zipfile.ZipFile('ship.zip','w'); [z.write(p, 'payload/' + p.name) for p in pathlib.Path('ship').iterdir()]"
+          python3 tools/release_audit.py --zip ship.zip --strict
+          echo "::endgroup::"
+
+          echo "::group::Default-off 3DS regression build (no stereo code or packs)"
+          # Rebuild with the feature *excluded* in the same pinned toolchain,
+          # catching disabled-path linkage, lingering compile options and
+          # stale developer depth packs before producing the CI artifact.
+          VOXEL_TERRACE_JOBS=4 VOXEL_BUILDING_JOBS=4 VOXEL_SCENE_JOBS=4 \
+            make -C build/upstream/3ds_port -j4 --output-sync=target verify release PYTHON=python3 PORT_LANG=en STEREO_BATTLE=0
+          ! grep -q CTR_STEREO_BATTLE build/upstream/3ds_port/build/config
+          test ! -f build/upstream/3ds_port/romfs/stereo/mons.bin
+          test ! -f build/upstream/3ds_port/romfs/stereo/backs.bin
+          # Publish the safer ordinary build, not the experimental one.
+          cp build/upstream/3ds_port/dist/Emerald3DS.3dsx build/upstream/3ds_port/dist/Emerald3DS.smdh ship/
           python3 -c "import zipfile,pathlib; z=zipfile.ZipFile('ship.zip','w'); [z.write(p, 'payload/' + p.name) for p in pathlib.Path('ship').iterdir()]"
           python3 tools/release_audit.py --zip ship.zip --strict
           echo "::endgroup::"

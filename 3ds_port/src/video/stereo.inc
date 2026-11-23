@@ -5,6 +5,15 @@
  */
 
 /* The stereo battle's scene composed whole, its sprites at the scenery's depth. */
+#ifdef CTR_STEREO_PROFILE
+/* The existing frame profiler measures bs.whole. These diagnostic counters
+ * split the inclusive CPU submission cost into left and right eye passes. */
+static struct
+{
+    unsigned frames;
+    uint64_t eyeTicks[2];
+} sStereoEyeProfile;
+#endif
 static bool sHudFlatScene;
 /* The last 2D stereo frame was composed whole (RenderBattleStereo). */
 static bool sFlatBefore;
@@ -666,13 +675,24 @@ VIDEO_PIECE void BattleEyeRows(float top)
 }
 
 /* Whole per eye, as RenderEye composes it, at the same depths. */
-VIDEO_PIECE void StereoWholeEyes(float slider, C3D_Tex *world)
+VIDEO_PIECE void StereoWholeEyes(float slider, C3D_Tex *world, uint32_t clear)
 {
+#ifndef CTR_STEREO_BATTLE
+    /* Clear color is only needed by the optional non-voxel battle path.
+     * Preserve the original whole-eye renderer in feature-disabled builds. */
+    (void)clear;
+#endif
     PORT_PROF_BEGIN(bsWhole);
+#ifdef CTR_STEREO_PROFILE
+    bool profileDepth = sStereoMonCount != 0;
+#endif
 
     for (int eye = 0; eye < 2; ++eye)
     {
         C3D_RenderTarget *target = eye ? sTopRight : sTop;
+#ifdef CTR_STEREO_PROFILE
+        uint64_t eyeStart = profileDepth ? svcGetSystemTick() : 0;
+#endif
 
         sEyeParallax = eye ? -slider : slider;
         BlendForget();
@@ -683,12 +703,41 @@ VIDEO_PIECE void StereoWholeEyes(float slider, C3D_Tex *world)
         HudDrawCrisp(HUD_SPRITE_DEPTH);
         BattleBoxCompose();
         C3D_FrameSplit(0);
-        BattleWorldEye(target, world);
+#ifdef CTR_STEREO_BATTLE
+        if (!world)
+        {
+            /* Normally whole-per-eye means a voxel battle. For the optional
+             * flat battle, paint a clean eye before copying the composed
+             * logical scene, rather than dereferencing a missing world. */
+            SceneOn(target);
+            C2D_ViewReset();
+            C2D_TargetClear(target, clear);
+        }
+        else
+#endif
+            BattleWorldEye(target, world);
         Blend(5, false, false);
         BattleEyeRows(0);
         C2D_Flush();
         C3D_FrameSplit(0);
+#ifdef CTR_STEREO_PROFILE
+        if (profileDepth) sStereoEyeProfile.eyeTicks[eye] += svcGetSystemTick() - eyeStart;
+#endif
     }
+#ifdef CTR_STEREO_PROFILE
+    if (profileDepth && ++sStereoEyeProfile.frames == 600)
+    {
+        CtrLog_Write(CTR_LOG_VIDEO,
+            "stereo eyes CPU submission: frames=%u left=%.3fms/frm right=%.3fms/frm "
+            "(GPU and VBlank timing: existing perf.bin)",
+            sStereoEyeProfile.frames,
+            (float)sStereoEyeProfile.eyeTicks[0] * 1000.0f
+                / ((float)SYSCLOCK_ARM11 * sStereoEyeProfile.frames),
+            (float)sStereoEyeProfile.eyeTicks[1] * 1000.0f
+                / ((float)SYSCLOCK_ARM11 * sStereoEyeProfile.frames));
+        memset(&sStereoEyeProfile, 0, sizeof(sStereoEyeProfile));
+    }
+#endif
     sEyeParallax = 0;
     PORT_PROF_END(bsWhole, PORT_PROF_BS_WHOLE);
 }
@@ -878,10 +927,25 @@ static void RenderBattleStereo(uint32_t clear, float slider, C3D_Tex *world)
     StereoPrepared(&p);
     PORT_PROF_END(bsPrep, PORT_PROF_BS_PREP);
 
+#ifdef CTR_STEREO_BATTLE
+    /* No sprite-slot double draw: when an actual depth battler exists,
+     * compose the scene per eye. All feature-off frames keep this engine's
+     * exact previous split/whole decisions and slot behavior. */
+    if (sStereoMonCount)
+    {
+        StereoWholeEyes(slider, world, clear);
+        /* The original slot/edge pipeline normally resets these after
+         * presenting both eyes. This early path must leave the same state
+         * for the next frame, including OBJ-window and text-edge cases. */
+        sEdgeStore.on = false;
+        sObjWinSlotted = false;
+        return;
+    }
+#endif
     if (!p.apart && !world) StereoFlat(&p);
     else if (!p.apart)
     {
-        StereoWholeEyes(slider, world);
+        StereoWholeEyes(slider, world, clear);
         return;
     }
     StereoSlotsOnce(&p);

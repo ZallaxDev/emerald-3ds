@@ -289,6 +289,10 @@ VIDEO_PIECE void FrameBegun(PresentFrame *f)
     }
     /* Before anything samples what the CPU wrote since the last frame. */
     TexCacheClear();
+#ifdef CTR_STEREO_BATTLE
+    /* Never skip a sprite without a successful validated plane match. */
+    sStereoMonCount = CtrStereoBattle_Frame(&sMemory, sBattle && !sTransition, sStereoMonSkip);
+#endif
     sUploadCommands = sAnimCommands = 0;
     sRenderReserve = sBattle ? RENDER_RESERVE_MOST : RENDER_RESERVE;
     Flat2D();

@@ -93,6 +93,13 @@ static const OptRowDef sRowsScene[] = {
     GAME_ROW(OPT_VOXEL_BATTLE, CTR_TEXT("3D BATTLE", "COMBATE 3D", "COMBAT 3D", "BATTAGLIA 3D", "BATALHA 3D", "3D-KAMPF", "3D バトル")),
     EXTRA_ROW("battle_speed_fx"),
 };
+#ifdef CTR_STEREO_BATTLE
+static const OptRowDef sRowsStereo[] = {
+    EXTRA_ROW("battle_mon_3d"),
+    EXTRA_ROW("battle_plane_spread"),
+    EXTRA_ROW("battle_plane_pivot"),
+};
+#endif
 static const OptRowDef sRowsRules[] = {
     EXTRA_ROW("move_split"),
     EXTRA_ROW("ivs_evs"),
@@ -157,6 +164,9 @@ static const OptGroupDef sGroupsBattle[] = {
     GROUP(CTR_TEXT("SCENE", "ESCENA", "SCÈNE", "SCENA", "CENA", "SZENE", "えんしゅつ"), sRowsScene),
     GROUP(CTR_TEXT("RULES", "REGLAS", "RÈGLES", "REGOLE", "REGRAS", "REGELN", "ルール"), sRowsRules),
     GROUP(CTR_TEXT("EXP", "EXP", "EXP.", "ESP.", "EXP", "EP", "けいけんち"), sRowsExp),
+#ifdef CTR_STEREO_BATTLE
+    GROUP(CTR_TEXT("STEREO", "ESTÉREO", "STÉRÉO", "STEREO", "ESTÉREO", "STEREO", "3D"), sRowsStereo),
+#endif
 };
 static const OptGroupDef sGroupsModes[] = {
     GROUP("NUZLOCKE", sRowsNuzlocke),
@@ -202,7 +212,15 @@ static bool8 RowExists(const OptRowDef *def)
     if (def->type == ROW_GAME)
         return OptionExists(def->game);
     if (def->type == ROW_EXTRA)
+#ifdef CTR_STEREO_BATTLE
+    {
+        const CtrExtra *extra = ExtraByKey(def->key);
+
+        return extra != NULL && CtrExtras_Available(extra);
+    }
+#else
         return ExtraByKey(def->key) != NULL;
+#endif
     return TRUE;
 }
 

@@ -448,6 +448,29 @@ static void DrawObjectEntry(int i, unsigned priority, bool effects, bool *fogDra
         else *latticeDrawn = true;
         return;
     }
+#ifdef CTR_STEREO_BATTLE
+    /* The only alternate drawing path: a validated battle sprite, while
+     * composing a real stereo eye. Weather and all other OAM entries retain
+     * their original drawing and wrapping behavior below. */
+    if (CtrStereoMon_DrawEligible((unsigned)i, sStereoMonCount, sEyeParallax,
+                                  sStereoMonSkip, fog, lattice, particle))
+    {
+        if (x < sClipX1 && x + (int)boxW > sClipX0
+         && y < sClipY1 && y + (int)boxH > sClipY0)
+        {
+            ++sStats.sprites;
+            SpriteBatchFlush();
+            Blend(4, effects, false);
+            ViewBase();
+            CtrStereoBattle_Draw((unsigned)i,
+                                  x + CTR_VIEW_X + sLayerShift + ((int)boxW - (int)width) / 2,
+                                  y + CTR_VIEW_Y + ((int)boxH - (int)height) / 2,
+                                  1.0f, sEyeParallax, 1.0f / sShiftZoom, false);
+            C2D_Flush();
+        }
+        return;
+    }
+#endif
     /*
      * Rain, snow, the sand swirls and the bubbles fall over the GBA's
      * 240x160 screen and wrap round its edges: copies of the screen side

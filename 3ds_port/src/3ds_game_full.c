@@ -87,6 +87,9 @@
 #include "3ds_assets.h"
 #include "3ds_audio.h"
 #include "3ds_bottom.h"
+#ifdef CTR_STEREO_BATTLE
+#include "3ds_stereo_mon.h"
+#endif
 #include "3ds_dex_top.h"
 #include "3ds_field_terrain.h"
 #include "3ds_sprite_ids.h"
@@ -1618,6 +1621,10 @@ void CtrGame_WaitFrame(void)
     CtrPlatform_SetBattleScene(gMain.inBattle && gMain.callback2 == BattleMainCB2);
     /* Before the frame is drawn: the copies made this frame get theirs. */
     CtrSprites_Track();
+#ifdef CTR_STEREO_BATTLE
+    /* Preserve the regular game frame when stereoscopic mons are disabled. */
+    if (CtrStereoBattle_Enabled()) CtrStereoMonGame_Frame();
+#endif
     CtrCycle_Frame();
     CtrPlatform_EndFrame();
     /* What the frame just shown was decides the game's next fade step. */

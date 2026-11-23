@@ -73,10 +73,34 @@ SOURCES += src/3ds_nuzlocke_core.c src/3ds_nuzlocke_store.c
 SOURCES += src/3ds_encounters.c
 # The part of the overworld on screen, for the map objects.
 SOURCES += src/3ds_field_view.c
+# Staged, credited #68 battle compositor. OFF by default: no native modules,
+# memory, video-hook or gameplay changes in an ordinary build.
+STEREO_BATTLE ?= 0
+ifneq ($(filter-out 0 1,$(STEREO_BATTLE)),)
+$(error STEREO_BATTLE must be 0 or 1)
+endif
+# Diagnostic sampling is opt-in, and never available outside a stereo build.
+STEREO_PROFILE ?= 0
+ifneq ($(filter-out 0 1,$(STEREO_PROFILE)),)
+$(error STEREO_PROFILE must be 0 or 1)
+endif
+ifeq ($(STEREO_PROFILE),1)
+ifneq ($(STEREO_BATTLE),1)
+$(error STEREO_PROFILE requires STEREO_BATTLE=1)
+endif
+CPPFLAGS += -DCTR_STEREO_PROFILE=1
+endif
+ifeq ($(STEREO_BATTLE),1)
+SOURCES += src/3ds_stereo_mon.c src/3ds_stereo_mon_decode.c src/3ds_stereo_battle.c
+CPPFLAGS += -DCTR_STEREO_BATTLE=1
+endif
 LIBS := -lcitro2d -lcitro3d $(LIBS)
 OBJECTS := $(patsubst src/%.c,build/%.o,$(SOURCES))
 GAMEFLAGS := -DPORTABLE -DPLATFORM_3DS -D__3DS__ -DMODERN=1 -DUBFIX -D__INTELLISENSE__
 GAMEFLAGS += -iquote include -iquote ../include -iquote ../include/constants -iquote ..
+ifeq ($(STEREO_BATTLE),1)
+GAMEFLAGS += -DCTR_STEREO_BATTLE=1
+endif
 # Baked clock-driven lighting and contact shadows, targeting Old 3DS.
 VOXEL_LIGHTING ?= 1
 ifneq ($(VOXEL_LIGHTING),0)
@@ -295,6 +319,16 @@ $(ROMFS_FOLLOWERS): $(FOLLOWERS_PY) ../builder/emerald3ds_builder/followers_sour
 	"$(PYTHON)" $(FOLLOWERS_PY) --sources $(FOLLOWERS_SRC) --out romfs --offline
 else
 ROMFS_FOLLOWERS :=
+endif
+
+# A developer may switch this tree from an experimental stereo build back
+# to normal. Never accidentally keep a previous pack in an ordinary RomFS
+# or release. The ordinary feature-disabled source and options remain intact.
+ifeq ($(STEREO_BATTLE),0)
+.PHONY: stereo-prune
+stereo-prune:
+	@rm -f romfs/stereo/mons.bin romfs/stereo/backs.bin
+$(TARGET).3dsx release: stereo-prune
 endif
 
 $(TARGET).3dsx: build/$(TARGET)_3dsx.elf $(TARGET).smdh romfs/boot.txt $(ROMFS_DATA_OUTS) romfs/engine/abi.bin romfs/engine/build_id.bin $(EMBED_MARKER) \
