@@ -254,3 +254,21 @@ changing the whole-per-eye compositor or reducing fidelity.
 
 **No emulator capture or physical Old/New 3DS hardware validation is claimed.**
 Keep this branch Draft and the new option OFF by default.
+
+
+### 6B — share quantized depth groups across a sprite's cards
+
+The feature-ON sprite compositor now decodes and groups each pixel's plane
+**once per picture/frame**, then reuses that 4096-byte lookup for all 2–8
+cards and their skirt lookups. The previous independent compositor is retained
+as the reference implementation for a deterministic test that compares
+**all bytes** of the PICA texture atlas, including untouched regions.
+Synthetic fixtures exercise 2/4/7/15 planes, both frames, requested 2/3/4/8
+cards, transparent pixels, palette values and skirt radii 0–2. The old
+nearest-colour tie order and texel layout are unchanged.
+
+The new map is a **4 KiB static buffer** in the opt-in battle module and
+has no effect in the default-OFF binary. This removes repeated depth nibble
+decodes and plane-to-group calculations from inner card/skirt loops. CI
+establishes pixel equivalence for the synthetic fixtures; real-world speed
+and GPU timing remain unmeasured, so no FPS improvement is claimed.

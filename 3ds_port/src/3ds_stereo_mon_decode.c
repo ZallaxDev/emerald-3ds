@@ -173,3 +173,60 @@ void CtrStereoMon_ComposeTile(const uint16_t *picture, const uint8_t *planes,
             texture[CtrVideo_Texel(tileX + x, tileY + y, texWidth)] = on ? pixel : 0;
         }
 }
+ 
+/* Prequantize a sprite frame once, rather than repeatedly decode packed
+ * nibbles and regroup them for each depth card and each skirt neighbour.
+ * Only used on the experimental battle route; the reference composer above
+ * remains unchanged for deterministic byte-for-byte comparisons. */
+void CtrStereoMon_GroupFrame(const uint8_t *planes, const CtrStereoMonHeader *header,
+                             unsigned frame, unsigned groups, uint8_t out[CTR_STEREO_MON_DIM * CTR_STEREO_MON_DIM])
+{
+    const unsigned pixels = CTR_STEREO_MON_DIM * CTR_STEREO_MON_DIM;
+    if (frame >= header->frames) frame = header->frames - 1;
+    const unsigned start = frame * pixels;
+    for (unsigned i = 0; i < pixels; ++i)
+    {
+        unsigned at = start + i;
+        unsigned plane = (planes[at >> 1] >> ((at & 1u) * 4)) & 15u;
+        out[i] = (uint8_t)CtrStereoMon_Group(plane, header->planes, groups);
+    }
+}
+
+void CtrStereoMon_ComposeGroupedTile(const uint16_t *picture, const uint8_t *groupMap,
+                                     unsigned group, uint16_t *texture, unsigned texWidth,
+                                     unsigned tileX, unsigned tileY, unsigned skirt)
+{
+    for (unsigned y = 0; y < CTR_STEREO_MON_DIM; ++y)
+        for (unsigned x = 0; x < CTR_STEREO_MON_DIM; ++x)
+        {
+            unsigned i = y * CTR_STEREO_MON_DIM + x;
+            uint16_t pixel = picture[i];
+            unsigned g = groupMap[i];
+            bool on = pixel != 0 && g == group;
+
+            /* Preserve the reference composer's scan order and strict
+             * distance comparison: ties choose the same nearest colour. */
+            if (!on && pixel != 0 && g != CTR_STEREO_MON_NONE && g > group && skirt != 0)
+            {
+                int best = (int)(skirt * skirt) * 2 + 1;
+                for (int dy = -(int)skirt; dy <= (int)skirt; ++dy)
+                    for (int dx = -(int)skirt; dx <= (int)skirt; ++dx)
+                    {
+                        int nx = (int)x + dx, ny = (int)y + dy;
+                        int dist = dx * dx + dy * dy;
+                        if (dist < best && nx >= 0 && ny >= 0
+                            && nx < CTR_STEREO_MON_DIM && ny < CTR_STEREO_MON_DIM)
+                        {
+                            unsigned near = (unsigned)ny * CTR_STEREO_MON_DIM + (unsigned)nx;
+                            if (picture[near] != 0 && groupMap[near] == group)
+                            {
+                                best = dist;
+                                pixel = picture[near];
+                                on = true;
+                            }
+                        }
+                    }
+            }
+            texture[CtrVideo_Texel(tileX + x, tileY + y, texWidth)] = on ? pixel : 0;
+        }
+}

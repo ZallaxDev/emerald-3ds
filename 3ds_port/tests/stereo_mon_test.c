@@ -245,6 +245,59 @@ int main(int argc, char **argv)
                 }
             }
     }
+    /*
+     * Phase 6B: compare every byte of the original composer and the optimized
+     * pre-quantized path. Deterministic synthetic art varies frame, depth
+     * count, palette, transparency, group count, and 0/1/2 pixel skirts.
+     * The unchanged reference function remains the independent oracle.
+     */
+    {
+        static uint8_t randomPlanes[2 * 64 * 64 / 2];
+        static uint8_t groupMap[64 * 64];
+        static uint16_t synthPic[64 * 64], oldTex[128 * 512], newTex[128 * 512];
+        unsigned state = 0x68d42u;
+        const unsigned available[] = {2, 4, 7, 15};
+        const unsigned requested[] = {2, 3, 4, 8};
+        for (unsigned c = 0; c < sizeof(available) / sizeof(available[0]); ++c)
+        {
+            CtrStereoMonHeader sh = {.count = 1, .planes = (uint8_t)available[c],
+                                      .frames = 2, .width = 64, .height = 64,
+                                      .entryBytes = sizeof(randomPlanes)};
+            for (unsigned i = 0; i < sizeof(randomPlanes); ++i)
+            {
+                state = state * 1664525u + 1013904223u;
+                unsigned lo = ((state >> 17) % 13 == 0) ? 15 : ((state >> 8) % sh.planes);
+                state = state * 1664525u + 1013904223u;
+                unsigned hi = ((state >> 17) % 13 == 0) ? 15 : ((state >> 8) % sh.planes);
+                randomPlanes[i] = (uint8_t)(lo | (hi << 4));
+            }
+            for (unsigned i = 0; i < 64 * 64; ++i)
+            {
+                state = state * 1664525u + 1013904223u;
+                synthPic[i] = (state % 7 == 0) ? 0 : (uint16_t)(0x8000u | (state & 0x7fffu));
+            }
+            for (unsigned frame = 0; frame < sh.frames; ++frame)
+                for (unsigned k = 0; k < sizeof(requested) / sizeof(requested[0]); ++k)
+                {
+                    unsigned groups = requested[k] < sh.planes ? requested[k] : sh.planes;
+                    CtrStereoMon_GroupFrame(randomPlanes, &sh, frame, groups, groupMap);
+                    for (unsigned skirt = 0; skirt <= 2; ++skirt)
+                    {
+                        memset(oldTex, 0x5a, sizeof(oldTex));
+                        memset(newTex, 0x5a, sizeof(newTex));
+                        for (unsigned g = 0; g < groups; ++g)
+                        {
+                            unsigned x = (g % 2) * 64, y = (g / 2) * 64;
+                            CtrStereoMon_ComposeTile(synthPic, randomPlanes, &sh, frame,
+                                                      groups, g, oldTex, 128, x, y, skirt);
+                            CtrStereoMon_ComposeGroupedTile(synthPic, groupMap, g,
+                                                            newTex, 128, x, y, skirt);
+                        }
+                        CHECK(memcmp(oldTex, newTex, sizeof(oldTex)) == 0);
+                    }
+                }
+        }
+    }
     free(f);
 
     for (int a = 1; a < argc; ++a)

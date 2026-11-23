@@ -102,6 +102,17 @@ void CtrStereoMon_ComposeTile(const uint16_t *picture, const uint8_t *planes,
                               unsigned group, uint16_t *texture, unsigned texWidth,
                               unsigned tileX, unsigned tileY, unsigned skirt);
 
+/* Prepare all 4096 frame positions' quantized plane groups only once, before
+ * composing multiple depth cards. Both routines require a validated 64x64
+ * header and a complete frame buffer. NONE=15 stays an empty pixel.
+ * ComposeGroupedTile preserves ComposeTile's nearest-pixel tie order,
+ * transparency, skirt and Morton texture layout byte for byte. */
+void CtrStereoMon_GroupFrame(const uint8_t *planes, const CtrStereoMonHeader *header,
+                             unsigned frame, unsigned groups, uint8_t out[CTR_STEREO_MON_DIM * CTR_STEREO_MON_DIM]);
+void CtrStereoMon_ComposeGroupedTile(const uint16_t *picture, const uint8_t *groupMap,
+                                     unsigned group, uint16_t *texture, unsigned texWidth,
+                                     unsigned tileX, unsigned tileY, unsigned skirt);
+
 /* ── Native: the planes files (3ds_stereo_mon.c) ─────────────────────── */
 
 /* Reads the planes file once. False when there is none: nothing to show. */

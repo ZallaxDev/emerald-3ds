@@ -575,6 +575,7 @@ static void Compose(Slot *s, const Planes *p, const uint16_t *pal, unsigned grou
     uint64_t profStart = svcGetSystemTick();
 #endif
     static uint16_t picture[DIM * DIM];
+    static uint8_t groupMap[DIM * DIM]; /* one grouping shared by every card */
     static uint8_t cutTiles[FRAME_BYTES];
     const uint8_t *tiles = s->shows == SHOWS_BACK ? s->back + s->frame * FRAME_BYTES : s->buffer[s->frame];
     CtrStereoMonHeader hdr = *HeaderOf(p);
@@ -587,12 +588,13 @@ static void Compose(Slot *s, const Planes *p, const uint16_t *pal, unsigned grou
         tiles = cutTiles;
     }
     Picture(tiles, pal, picture);
+    CtrStereoMon_GroupFrame(p->planes, &hdr, (unsigned)s->frame, groups, groupMap);
     for (unsigned g = 0; g < groups; ++g)
     {
         unsigned tile = base + g;
 
-        CtrStereoMon_ComposeTile(picture, p->planes, &hdr, (unsigned)s->frame, groups, g, sTex.data, TEX_W,
-                                 (tile % 2) * DIM, (tile / 2) * DIM, SKIRT);
+        CtrStereoMon_ComposeGroupedTile(picture, groupMap, g, sTex.data, TEX_W,
+                                        (tile % 2) * DIM, (tile / 2) * DIM, SKIRT);
     }
     C3D_TexFlush(&sTex);
     s->composed = true;
