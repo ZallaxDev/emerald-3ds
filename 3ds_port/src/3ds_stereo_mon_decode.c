@@ -65,6 +65,22 @@ uint32_t CtrStereoMon_FramesBytes(const CtrStereoMonHeader *header, unsigned fra
     return header == NULL ? 0 : (uint32_t)frames * header->width * header->height / 2;
 }
 
+/* SDK-free check of the full depth-only payload. Older packs may use
+ * NONE=15, even when the advertised plane count is smaller. */
+bool CtrStereoMon_PayloadValid(const uint8_t *data, uint32_t bytes, unsigned planes)
+{
+    if (planes < 2 || planes > CTR_STEREO_MON_MAX_PLANES || (bytes != 0 && data == NULL))
+        return false;
+    for (uint32_t i = 0; i < bytes; ++i)
+    {
+        unsigned lo = data[i] & 15u, hi = data[i] >> 4;
+        if ((lo != CTR_STEREO_MON_NONE && lo >= planes)
+            || (hi != CTR_STEREO_MON_NONE && hi >= planes))
+            return false;
+    }
+    return true;
+}
+
 bool CtrStereoMon_Entry(const uint8_t *file, uint32_t size, const CtrStereoMonHeader *header,
                         unsigned index, uint16_t *national, const uint8_t **planes)
 {

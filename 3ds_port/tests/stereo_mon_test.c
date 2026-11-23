@@ -121,6 +121,20 @@ int main(int argc, char **argv)
     CHECK(!CtrStereoMon_Entry(f, size, &h, 2, NULL, NULL));
     CHECK(CtrStereoMon_Entry(f, size, &h, 0, &national, &planes));
     CHECK(national == 384);
+    CHECK(CtrStereoMon_PayloadValid(planes, h.entryBytes, h.planes));
+    {
+        const uint8_t allowed[] = {0x00, 0x21, 0x3f, 0xf3, 0xff};
+        const uint8_t invalidLo[] = {0x34};
+        const uint8_t invalidHi[] = {0x43};
+        const uint8_t maxPlane[] = {0xfe};
+        CHECK(CtrStereoMon_PayloadValid(allowed, sizeof(allowed), 4));
+        CHECK(!CtrStereoMon_PayloadValid(invalidLo, sizeof(invalidLo), 4));
+        CHECK(!CtrStereoMon_PayloadValid(invalidHi, sizeof(invalidHi), 4));
+        CHECK(CtrStereoMon_PayloadValid(maxPlane, sizeof(maxPlane), 15));
+        CHECK(!CtrStereoMon_PayloadValid(NULL, 1, 4));
+        CHECK(!CtrStereoMon_PayloadValid(allowed, sizeof(allowed), 1));
+        CHECK(!CtrStereoMon_PayloadValid(allowed, sizeof(allowed), 16));
+    }
     CHECK(CtrStereoMon_Plane(planes, &h, 0, 0, 0) == CTR_STEREO_MON_NONE);
     CHECK(CtrStereoMon_Plane(planes, &h, 0, 17, 5) == 1);
     CHECK(CtrStereoMon_Plane(planes, &h, 0, 63, 63) == 3);

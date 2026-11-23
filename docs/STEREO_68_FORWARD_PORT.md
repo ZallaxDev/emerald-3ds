@@ -205,8 +205,8 @@ sampling without adding counters or timer calls to a normal release build.
 Build the feature with the author's separately acquired packs, for example:
 
 ```sh
-make -C 3ds_port release STEREO_BATTLE=1 STEREO_PROFILE=1 \\
-  STEREO_MONS_PACK=/path/to/mons.bin \\
+make -C 3ds_port release STEREO_BATTLE=1 STEREO_PROFILE=1 \
+  STEREO_MONS_PACK=/path/to/mons.bin \
   STEREO_BACKS_PACK=/path/to/backs.bin
 ```
 
@@ -229,8 +229,12 @@ position can safely claim that sprite. Those matches are removed before
 texture composition and the original flat OAM renderer owns it; unrelated
 battlers remain eligible for stereoscopic rendering. An SDK-free host test
 covers distinct entries, two-slot collisions, three-slot collisions, all
-invalid/unassigned entries, and boundary indices. Existing missing pack,
-disabled setting, and failed texture-allocation fallbacks remain intact.
+invalid/unassigned entries, and boundary indices. An additional native payload check rejects malformed plane nibbles in
+manually changed RomFS packs *before* the compositor suppresses a sprite,
+preserving the legacy transparent sentinel `15`. SDK-free tests verify
+valid planes, legacy transparency, invalid nibbles and plane-count bounds.
+Missing packs, invalid entries, disabled settings and failed texture
+allocations retain the ordinary flat-sprite fallback.
 
 CI compiles the optional diagnostic mode within its non-shipping feature-on
 build and separately compiles and audits the ordinary `STEREO_BATTLE=0` build.

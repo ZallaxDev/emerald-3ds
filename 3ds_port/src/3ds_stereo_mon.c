@@ -134,6 +134,9 @@ static bool ReadPlanesInto(PlanesFile *pf, unsigned index, uint8_t *out, uint32_
     if (f == NULL) return false;
     ok = fseek(f, (long)offset, SEEK_SET) == 0 && fread(out, 1, bytes, f) == bytes;
     fclose(f);
+    /* An otherwise valid index can point to damaged on-device data.
+     * Reject it before the battle replaces any flat sprite. */
+    if (ok && !CtrStereoMon_PayloadValid(out, bytes, pf->header.planes)) ok = false;
     if (ok && frames) *frames = entryFrames;
     return ok;
 }

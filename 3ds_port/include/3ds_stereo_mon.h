@@ -68,6 +68,8 @@ bool CtrStereoMon_IndexEntry(const uint8_t *file, uint32_t size, const CtrStereo
 unsigned CtrStereoMon_EntryFrames(const uint8_t *file, uint32_t size, const CtrStereoMonHeader *header,
                                   unsigned index);
 uint32_t CtrStereoMon_FramesBytes(const CtrStereoMonHeader *header, unsigned frames);
+/* Validate every packed nibble before using a depth pack entry. */
+bool CtrStereoMon_PayloadValid(const uint8_t *data, uint32_t bytes, unsigned planes);
 /* The same with the planes themselves, which lie entirely inside `file`. */
 bool CtrStereoMon_Entry(const uint8_t *file, uint32_t size, const CtrStereoMonHeader *header,
                         unsigned index, uint16_t *national, const uint8_t **planes);
