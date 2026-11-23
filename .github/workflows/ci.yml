@@ -91,6 +91,10 @@ jobs:
             3ds_port/src/3ds_video_decode.c -o stereo_mon_test
           ./stereo_mon_test
           gcc -std=c99 -O2 -Wall -Wextra -Werror -I3ds_port/include \
+            3ds_port/tests/stereo_compose_bench.c 3ds_port/src/3ds_stereo_mon_decode.c \
+            3ds_port/src/3ds_video_decode.c -o stereo_compose_bench
+          ./stereo_compose_bench
+          gcc -std=c99 -O2 -Wall -Wextra -Werror -I3ds_port/include \
             3ds_port/tests/stereo_draw_gate_test.c -o stereo_draw_gate_test
           ./stereo_draw_gate_test
           gcc -std=c99 -O2 -Wall -Wextra -Werror -I3ds_port/include \

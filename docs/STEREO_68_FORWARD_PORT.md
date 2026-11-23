@@ -319,3 +319,15 @@ render-route and dropped-VBlank differences; pin device, game data, save,
 slider, settings, 600-frame windows and warmup. No real device or emulator
 measurements/captures were available during this change, so neither FPS
 improvements nor true visual parity are asserted here.
+
+
+### 6B host CPU microbenchmark (reproducible, not hardware data)
+
+`3ds_port/tests/stereo_compose_bench.c` now runs a fixed synthetic
+four-card sprite with 2-pixel skirts 24 times through each algorithm.
+It rejects any byte differences in the completed 128x512 texture atlas,
+reports host CPU milliseconds per sprite and a relative throughput factor,
+and does **not** enforce a fragile speed-ratio threshold. CI exercises this
+diagnostic on its Linux runner; actual Old/New 3DS performance and GPU
+latency remain unmeasured, requiring the opt-in Phase 6 profiler and
+physical-device runs.
