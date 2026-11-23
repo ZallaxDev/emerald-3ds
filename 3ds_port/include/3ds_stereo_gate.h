@@ -35,4 +35,13 @@ static inline unsigned CtrStereoMon_DropAmbiguousOam(int matched[4], unsigned co
     return ambiguous;
 }
 
+/* The GBA's OBJ VRAM is 32 KiB (1024 4bpp tiles). A 64x64 4bpp
+ * battler occupies 64 consecutive tiles. The depth matcher compares its
+ * whole 2048-byte frame, so a base above 960 could read past OBJ VRAM.
+ * The original hardware sprite renderer retains ownership instead. */
+static inline bool CtrStereoMon_TileBaseValid(unsigned tileNum)
+{
+    return tileNum <= (32768u - 2048u) / 32u;
+}
+
 #endif

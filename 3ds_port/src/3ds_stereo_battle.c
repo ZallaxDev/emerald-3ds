@@ -430,8 +430,10 @@ void CtrStereoBattle_SetSlot(unsigned position, unsigned tileNum, const uint8_t 
     SlotsInit();
     if (position >= SLOTS) return;
     s = &sSlots[position];
-    if (buffer == NULL || bufferFrames == 0)
+    if (buffer == NULL || bufferFrames == 0 || !CtrStereoMon_TileBaseValid(tileNum))
     {
+        /* Never compare 2048 bytes beyond the end of 32 KiB OBJ VRAM.
+         * Unsupported/wrapped tile bases keep the original flat sprite. */
         s->set = false;
         s->composed = false;
         return;

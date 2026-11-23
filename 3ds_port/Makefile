@@ -76,6 +76,9 @@ SOURCES += src/3ds_field_view.c
 # Staged, credited #68 battle compositor. OFF by default: no native modules,
 # memory, video-hook or gameplay changes in an ordinary build.
 STEREO_BATTLE ?= 0
+ifneq ($(filter-out 0 1,$(STEREO_BATTLE)),)
+$(error STEREO_BATTLE must be 0 or 1)
+endif
 # Diagnostic sampling is opt-in, and never available outside a stereo build.
 STEREO_PROFILE ?= 0
 ifneq ($(filter-out 0 1,$(STEREO_PROFILE)),)

@@ -353,3 +353,13 @@ cross-thread code paths are exercised by feature-on 3DS compilation.
 These address source-level correctness issues, not a claim that real 3DS
 timing, animation or frame pacing has been observed. Hardware acceptance
 remains required.
+
+**Additional bounds guard:** An eligible 64×64 4bpp battler needs 64
+consecutive 32-byte OBJ tiles. Before accepting a new slot, the optional
+renderer now rejects a base tile above 960 (the last base that fits in
+the GBA's 32 KiB OBJ region). This prevents its 2048-byte VRAM comparison
+from crossing the 32 KiB boundary and leaves any wrapping or unsupported
+sprite layout to the unchanged flat renderer. Host tests cover bases 0,
+959, 960, 961, 1023 and an invalid extreme. Invalid `STEREO_BATTLE`
+build values now fail at Makefile parsing rather than silently skipping
+feature isolation/pruning rules.

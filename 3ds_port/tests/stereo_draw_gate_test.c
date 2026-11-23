@@ -18,6 +18,12 @@ static bool Eligible(unsigned oam, unsigned count, float eye, const uint32_t mas
 int main(void)
 {
     uint32_t mask[4] = {0, 0, 0, 0};
+    CHECK(CtrStereoMon_TileBaseValid(0));
+    CHECK(CtrStereoMon_TileBaseValid(959));
+    CHECK(CtrStereoMon_TileBaseValid(960));
+    CHECK(!CtrStereoMon_TileBaseValid(961));
+    CHECK(!CtrStereoMon_TileBaseValid(1023));
+    CHECK(!CtrStereoMon_TileBaseValid(65535));
     CHECK(!Eligible(0, 1, 1.0f, NULL, false, false, false));
     CHECK(!Eligible(128, 1, 1.0f, mask, false, false, false));
     CHECK(!Eligible(65535, 1, 1.0f, mask, false, false, false));
