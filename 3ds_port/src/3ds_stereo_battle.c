@@ -105,7 +105,7 @@ typedef struct
     uint8_t monPicture[FRAME_BYTES], trainerPicture[FRAME_BYTES];
     bool hasMonPicture, hasTrainerPicture;
     const Planes *bufferPlanes;
-    uint32_t silhouetteKey;
+    uint64_t silhouetteKey; /* full IDs + disjoint readiness flags */
     /* This frame: the OAM entry (-1 none), what it shows and which frame,
      * the sprite's place and priority. */
     int oam, frame;
@@ -267,9 +267,9 @@ static void PlanesRead(Planes *p, uint16_t id, unsigned capacityFrames)
     /* The planes before the flags: the unlock orders the writes. */
     CtrLock_Lock(&sRequestLock);
     p->frames = ok ? frames : 0;
-    p->ok = ok;
-    p->failed = !ok;
-    p->pending = false;
+    CtrStereoBattle_FlagRelease(&p->ok, ok);
+    CtrStereoBattle_FlagRelease(&p->failed, !ok);
+    CtrStereoBattle_FlagRelease(&p->pending, false);
     CtrLock_Unlock(&sRequestLock);
 }
 
@@ -328,7 +328,7 @@ static bool TakeBack(Planes *p)
             if (svcGetSystemTick() - r->at > READ_WAIT_TICKS)
             {
                 r->p = NULL;
-                p->pending = false;
+                CtrStereoBattle_FlagRelease(&p->pending, false);
                 taken = true;
             }
             break;
@@ -346,17 +346,18 @@ static bool TakeBack(Planes *p)
 
 static void PlanesFor(Planes *p, uint16_t id, unsigned capacityFrames)
 {
-    if (p->pending)
+    if (CtrStereoBattle_FlagAcquire(&p->pending))
     {
         if (!TakeBack(p)) return;
         /* Taken back: the read it was waiting for, here. */
         PlanesRead(p, p->id, capacityFrames);
         return;
     }
-    if (p->id == id && (p->ok || p->failed || id == 0)) return;
+    if (p->id == id && (CtrStereoBattle_FlagAcquire(&p->ok)
+                           || CtrStereoBattle_FlagAcquire(&p->failed) || id == 0)) return;
     p->id = id;
-    p->ok = false;
-    p->failed = false;
+    CtrStereoBattle_FlagRelease(&p->ok, false);
+    CtrStereoBattle_FlagRelease(&p->failed, false);
     p->frames = 0;
     if (id == 0 || p->planes == NULL) return;
     if (ReaderReady())
@@ -368,7 +369,7 @@ static void PlanesFor(Planes *p, uint16_t id, unsigned capacityFrames)
         if (queued)
         {
             sRequests[sRequestTail++ % REQUESTS] = (Request){p, id, capacityFrames, svcGetSystemTick()};
-            p->pending = true;
+            CtrStereoBattle_FlagRelease(&p->pending, true);
         }
         CtrLock_Unlock(&sRequestLock);
         if (queued)
@@ -403,7 +404,7 @@ static unsigned CutOf(const uint8_t *vram, const uint8_t *tiles)
  * Transform's other species or a trainer's picture do not match. */
 static bool SilhouetteMatches(const uint8_t *tiles, const uint8_t *picture, bool given, const Planes *p)
 {
-    if (!p->ok || !given) return false;
+    if (!CtrStereoBattle_FlagAcquire(&p->ok) || !given) return false;
     for (unsigned i = 0; i < FRAME_BYTES; ++i)
     {
         uint8_t a = tiles[i], b = picture[i];
@@ -491,7 +492,10 @@ void CtrStereoBattle_SetSlot(unsigned position, unsigned tileNum, const uint8_t 
     /* Whose silhouette the buffer has: looked at again when it changes or
      * the candidates do (a read coming in, another id). */
     {
-        uint32_t key = ((uint32_t)s->mon.id << 16) | s->trainer.id | (s->mon.ok ? 1u << 15 : 0) | (s->trainer.ok ? 1u << 14 : 0);
+        uint64_t key = CtrStereoBattle_SilhouetteKey(
+            s->mon.id, s->trainer.id,
+            CtrStereoBattle_FlagAcquire(&s->mon.ok),
+            CtrStereoBattle_FlagAcquire(&s->trainer.ok));
 
         if (bufferChanged || picturesChanged || !s->set || key != s->silhouetteKey)
         {
@@ -624,7 +628,8 @@ static unsigned Shown(Slot *s, const uint8_t *vram, int *frame, const Planes **p
             *planes = s->bufferPlanes;
             return SHOWS_BUFFER;
         }
-    for (unsigned f = 0; f < s->backFrames && s->playerBack.ok && f < s->playerBack.frames; ++f)
+    for (unsigned f = 0; f < s->backFrames && CtrStereoBattle_FlagAcquire(&s->playerBack.ok)
+                         && f < s->playerBack.frames; ++f)
         if (memcmp(vram, s->back + f * FRAME_BYTES, FRAME_BYTES) == 0)
         {
             *frame = (int)f;

@@ -331,3 +331,25 @@ and does **not** enforce a fragile speed-ratio threshold. CI exercises this
 diagnostic on its Linux runner; actual Old/New 3DS performance and GPU
 latency remain unmeasured, requiring the opt-in Phase 6 profiler and
 physical-device runs.
+
+## Phase 7C — static regression audit and asynchronous publication
+
+**Fix: collision-free sprite silhouette identity.** Previously the trainer
+ID's kind bit `0x4000` overlapped with the `trainer.ok` bit of the 32-bit
+cache key, so an asynchronous trainer-depth load could become ready without
+invalidating the silhouette cache. The key now uses a 64-bit value with both
+16-bit IDs and separate, non-overlapping ready flags. A host regression
+test verifies transitions of either ready flag and changes to trainer and
+Pokémon IDs.
+
+**Fix: cross-thread readiness handoff.** The background file reader now uses
+release stores to publish its `ok`, `failed`, and `pending` flags after
+storing frames. The game/rendering thread uses acquire loads for these flags
+rather than racing ordinary C reads against the writer. The data buffer is
+only consumed after the acquire of `ok`, or after the pending flag is
+observed false. Host tests check the primitive state transitions and the
+cross-thread code paths are exercised by feature-on 3DS compilation.
+
+These address source-level correctness issues, not a claim that real 3DS
+timing, animation or frame pacing has been observed. Hardware acceptance
+remains required.
