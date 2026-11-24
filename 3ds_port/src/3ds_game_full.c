@@ -839,10 +839,9 @@ static u16 TimingSeed(void)
     return (u16)(seed ^ (seed >> 16) ^ (seed >> 32) ^ (seed >> 48));
 }
 
-/* Called at AgbMain entry (cold boot and soft reset). Off by default (OPTIONS'
- * RANDOM BOOT SEED, settings.txt boot_seed=): the fallback, Emerald's own zero
- * seed, which zero-seed RNG manipulation is built on. Scenarios retain their
- * historical seed path so existing recordings replay. */
+/* Called at AgbMain entry (cold boot and soft reset). RANDOM BOOT SEED
+ * defaults to console timing. Turning it off restores Emerald's zero seed.
+ * Scenarios retain their historical seed so existing recordings replay. */
 u16 Port_RngSeed(u16 fallback)
 {
     if (CtrScenario_Active() || CtrExtras_Get(CTR_BOOT_SEED_KEY) != 1)

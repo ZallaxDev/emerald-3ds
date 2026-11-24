@@ -343,9 +343,14 @@ int CtrSettings_GetInt(const char *key, int fallback)
 
 void CtrSettings_SetInt(const char *key, int value)
 {
-    int index = ExtraIndex(key, true);
+    int index = ExtraIndex(key, false);
 
-    if (index < 0 || sExtra[index].value == value)
+    if (index >= 0 && sExtra[index].value == value)
+        return;
+    /* An explicit zero can override a nonzero default on a new key. */
+    if (index < 0)
+        index = ExtraIndex(key, true);
+    if (index < 0)
         return;
     if (strcmp(key, "clock_speed") == 0)
         CtrDayNight_Update();

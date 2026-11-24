@@ -242,9 +242,8 @@ const CtrExtra gCtrExtras[] =
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("3D DEPTH", "PROFUNDIDAD 3D", "PROFONDEUR 3D", "PROFOND. 3D", "PROFUNDIDADE 3D", "3D-TIEFE", "3D おくゆき"), "voxel_depth", 7, 3, sVoxelDepths, NULL, NULL, NULL},
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("SHADOW QUALITY", "CALIDAD DE SOMBRAS", "QUALITÉ OMBRES", "QUALITÀ OMBRE", "QUALID. SOMBRAS", "SCHATTENQUALITÄT", "かげの ひんしつ"), "voxel_shadows", 0, 0, sVoxelShadows, NULL, VoxelShadowsStep, VoxelShadowsText},
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("SPEED EFFECTS", "EFECTOS VELOC.", "EFFETS VITESSE", "EFFETTI VELOC.", "EFEITOS VELOC.", "TEMPO-EFFEKTE", "スピード こうか"), "battle_speed_fx", 2, 1, gCtrExtrasOffOn, NULL, NULL, NULL},
-    /* Restore Emerald's deterministic boot seed by default; enable timing
-     * seeding only after the player switches this setting ON and resets. */
-    {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("RANDOM BOOT SEED", "SEMILLA ALEATORIA", "GRAINE ALÉATOIRE", "SEME CASUALE", "SEMENTE ALEAT.", "ZUFALLSSTARTWERT", "きどうじの たね"), CTR_BOOT_SEED_KEY, 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
+    /* Keep console timing by default; OFF restores Emerald's zero boot seed. */
+    {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("RANDOM BOOT SEED", "SEMILLA ALEATORIA", "GRAINE ALÉATOIRE", "SEME CASUALE", "SEMENTE ALEAT.", "ZUFALLSSTARTWERT", "きどうじの たね"), CTR_BOOT_SEED_KEY, 2, 1, gCtrExtrasOffOn, NULL, NULL, NULL},
     {CTR_EXTRAS_ENHANCEMENTS, CTR_TEXT("SPEED", "VELOC. JUEGO", "VITESSE", "VELOCITÀ", "VELOCIDADE", "TEMPO", "スピード"), "speed", 0, 0, NULL, NULL, SpeedStep, SpeedText},
     /* The game and the music keep real time on a slow frame; the sound
      * engine mixes on the DSP's clock (3ds_platform.c, 3ds_audio.c). */

@@ -7,11 +7,10 @@ this port. The optional upstream `SeedRngWithRtc()` change is guarded by
 
 The port makes two distinct changes:
 
-- With OPTIONS' **RANDOM BOOT SEED** on, normal 3DS boots and soft resets
-  start from console timing instead of zero. It is **off by default**: the
-  boot seed is then Emerald's zero, so vanilla behavior and the zero-seed RNG
-  manipulation built on it stay available. It is not required merely to make
-  the port match Emerald.
+- **RANDOM BOOT SEED** is on by default, so normal 3DS boots and soft resets
+  keep using console timing as in previous port versions. Turning the option
+  off restores Emerald's zero seed and supports RNG manipulation that relies
+  on it.
 - New-game generation reseeds at the reachable portable trainer-ID path. The
   port already generates both halves of the trainer ID from `Random()` there;
   its GBA naming-screen timer reseed is excluded by `PORTABLE`. This hook
@@ -39,9 +38,9 @@ removed.
 
 ## The RANDOM BOOT SEED option
 
-An entry on OPTIONS' second screen, after the 3D, shadow and speed-effect
-controls, is stored in `settings.txt` as `boot_seed=`
-(`0` OFF, the default; `1` ON; a missing or unknown value is OFF). The key is
+Find the toggle under **OPTIONS → GENERAL → SYSTEM**. The value is saved in
+`settings.txt` as `boot_seed=` (`0` OFF, `1` ON). A missing or invalid value
+defaults to ON. The key is
 `CTR_BOOT_SEED_KEY` in `3ds_port/include/3ds_extras.h`. It is read when
 `AgbMain` starts, so turning it on or off takes effect from the next soft reset
 (A+B+START+SELECT) or boot. It changes only the boot/soft-reset seed: the
@@ -59,10 +58,9 @@ and permutation are unaffected.
 
 `make -C 3ds_port verify-rng-seeding PYTHON=python3 HOSTCC=cc` tests the actual
 backend function, source variation, integer boundaries, scenario fallbacks,
-trainer-ID propagation and guarded call sites, and the boot seed option: its
-OPTIONS row (seven locale labels, two values, OFF by default), the zero seed it keeps at boot and
-on a soft reset without reading the clock, and the new-game reseed that does
-not depend on it. It compiles the actual applied
+trainer-ID propagation, and guarded call sites. It checks that the boot seed
+option is listed in the System group with seven locale labels and defaults to
+ON, and that turning it off keeps the zero seed without reading the clock. It compiles the actual applied
 `main.c` startup block and `new_game.c` trainer-ID function in eight macro
 configurations, including `PORTABLE`, and checks that scenario new games do not
 reseed or truncate the previous RNG state. From an overlay checkout, provide

@@ -41,17 +41,16 @@ def main():
     new_game = function(new_game_src, 'void NewGameInitData(void)')
     reseed_fn = function(code, 'void Port_ReseedForNewGame(void)')
     assert 'SeedRng(Port_RngSeed(0))' in callsite
-    # The boot seed option: its key, and its OPTIONS row, OFF by default.
+    # Check the registered default and the row the bottom screen displays.
     header = (ROOT / 'include/3ds_extras.h').read_text()
     key = re.search(r'#define CTR_BOOT_SEED_KEY "([a-z_]+)"', header).group(1)
     extras = (ROOT / 'src/3ds_extras.c').read_text()
     rows = [line.strip() for line in extras.splitlines()
-            if 'CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1)' in line
-            and 'CTR_BOOT_SEED_KEY' in line]
+            if 'CTR_TEXT(' in line and 'CTR_BOOT_SEED_KEY' in line]
     assert len(rows) == 1, 'one boot seed OPTIONS row'
     row = rows[0]
-    assert 'CTR_BOOT_SEED_KEY, 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL}' in row, (
-        'OFF/ON switch must default to OFF')
+    assert 'CTR_BOOT_SEED_KEY, 2, 1, gCtrExtrasOffOn, NULL, NULL, NULL}' in row, (
+        'OFF/ON switch must default to ON')
     # The row is a literal C initializer: check its delimiter and the seven
     # quoted locale strings directly instead of depending on regex escaping.
     assert row.count('CTR_TEXT(') == 1 and '), CTR_BOOT_SEED_KEY' in row, (
@@ -60,13 +59,12 @@ def main():
     labels = re.findall(r'"([^"]+)"', label_text)
     assert len(labels) == 7 and labels[0] == 'RANDOM BOOT SEED', (
         'all seven current language labels must exist')
-    second_page = [line for line in extras.splitlines()
-                   if 'CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1)' in line
-                   and 'CTR_TEXT(' in line]
-    assert second_page.index(next(l for l in second_page
-                                  if 'CTR_BOOT_SEED_KEY' in l)) > second_page.index(
-                                      next(l for l in second_page
-                                           if '"SPEED EFFECTS"' in l))
+    options = (ROOT / 'src/3ds_bottom_options.inc').read_text()
+    system_rows = options.split('sRowsSystem[] = {', 1)[1].split('};', 1)[0]
+    general_groups = options.split('sGroupsGeneral[] = {', 1)[1].split('};', 1)[0]
+    assert 'EXTRA_ROW(CTR_BOOT_SEED_KEY)' in system_rows, 'missing System toggle'
+    assert options.count('EXTRA_ROW(CTR_BOOT_SEED_KEY)') == 1
+    assert re.search(r'GROUP\(CTR_TEXT\("SYSTEM", [^\n]+\), sRowsSystem\)', general_groups)
     assert 'CtrExtras_Get(CTR_BOOT_SEED_KEY)' in seed_fn
     assert 'CtrExtras_Get' not in reseed_fn and 'TimingSeed()' in reseed_fn
     assert 'Port_ReseedForNewGame();' in trainer
@@ -227,7 +225,7 @@ int main(void)
 #else
     assert(randomCalls == 1);
 #endif
-    /* RANDOM BOOT SEED off (the default): boot and soft reset keep
+    /* RANDOM BOOT SEED off: boot and soft reset keep
      * Emerald's zero seed without reading the console's timing, and a new
      * game still reseeds the portable trainer-ID path from it. */
     scenario = false;

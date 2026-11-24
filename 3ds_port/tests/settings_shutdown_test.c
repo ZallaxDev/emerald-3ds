@@ -85,11 +85,14 @@ static void ExtraCapacity(void) {
 int main(int argc, char **argv) {
     fault = argc > 1 ? argv[1][0] - '0' : 0;
     ExtraCapacity();
-    CtrSettings_SetVoxel(true);
+    assert(CtrSettings_GetInt("boot_seed", 1) == 1);
+    CtrSettings_SetInt("boot_seed", 0);
+    assert(sSaver != NULL); /* The first OFF selection must queue a write. */
     pthread_mutex_lock(&diskMutex);
     while (!entered) pthread_cond_wait(&diskCond, &diskMutex);
     pthread_mutex_unlock(&diskMutex);
     /* Queue newer text while the worker owns an older snapshot. */
+    CtrSettings_SetVoxel(true);
     CtrSettings_SetVoxelBlur(false); CtrSettings_SetShowFps(true);
     CtrSettings_SetInt("day_night", 1); CtrSettings_SetInt("clock_speed", 5);
     CtrSettings_SetInt("timed_encounters", 1); CtrSettings_SetInt("show_clock", 1);
@@ -113,6 +116,7 @@ int main(int argc, char **argv) {
         assert(strstr(saved, "day_night=1\n") && strstr(saved, "clock_speed=5\n"));
         assert(strstr(saved, "timed_encounters=1\n") && strstr(saved, "show_clock=1\n"));
         assert(strstr(saved, "live_party=1\n") && strstr(saved, "live_bag=0\n"));
+        assert(strstr(saved, "boot_seed=0\n"));
         /* Parse the saved snapshot as if starting the application anew. */
         char reloaded[sizeof(saved)];
         memcpy(reloaded, saved, sizeof(saved));
@@ -121,6 +125,7 @@ int main(int argc, char **argv) {
         assert(CtrSettings_GetInt("live_bag", 0) == 0);
         char *line = strtok(reloaded, "\n");
         while (line) { CtrSettings_ApplyLine(line); line = strtok(NULL, "\n"); }
+        assert(CtrSettings_GetInt("boot_seed", 1) == 0);
         assert(CtrSettings_GetInt("live_party", 0) == 1);
         assert(CtrSettings_GetInt("live_bag", 1) == 0);
         CtrSettings_ApplyLine("live_party=0");
