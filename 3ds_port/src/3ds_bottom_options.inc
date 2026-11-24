@@ -57,6 +57,7 @@ static const OptRowDef sRowsLive[] = {
 static const OptRowDef sRowsSystem[] = {
     EXTRA_ROW("speed"),
     EXTRA_ROW("audio_clock"),
+    EXTRA_ROW(CTR_BOOT_SEED_KEY),
     GAME_ROW(OPT_FPS, CTR_TEXT("SHOW FPS", "MOSTRAR FPS", "AFFICH. FPS", "MOSTRA FPS", "MOSTRAR FPS", "FPS ZEIGEN", "FPS ひょうじ")),
 };
 static const OptRowDef sRows3d[] = {

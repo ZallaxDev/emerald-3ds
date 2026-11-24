@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- OPTIONS > GENERAL > SYSTEM: RANDOM BOOT SEED defaults to ON and keeps the
+  port's clock-based seed on boot and soft reset. Turn it OFF to use vanilla
+  Emerald's zero seed. New-game trainer IDs use timing in either mode. By
+  @ZallaxDev (original pull request #140; forward-ported by @mkrieger95).
+
 - Bottom screen: the summary shows the Pokémon's status icon, and the trainer
   memo has room for a third line. By @mkrieger95 (pull requests #270, #269).
 - Bottom screen: the wild list is not drawn again while nothing in it has

@@ -5,11 +5,12 @@ initial stream at boot is original game behavior, not a defect introduced by
 this port. The optional upstream `SeedRngWithRtc()` change is guarded by
 `BUGFIX`; this port enables the separate `UBFIX` flag.
 
-This proposal makes two distinct changes for maintainer consideration:
+The port makes two distinct changes:
 
-- Normal 3DS boots and soft resets start from console timing instead of zero.
-  This deliberately changes vanilla behavior and compatibility with zero-seed
-  RNG manipulation. It is not required merely to make the port match Emerald.
+- **RANDOM BOOT SEED** is on by default, so normal 3DS boots and soft resets
+  keep using console timing as in previous port versions. Turning the option
+  off restores Emerald's zero seed and supports RNG manipulation that relies
+  on it.
 - New-game generation reseeds at the reachable portable trainer-ID path. The
   port already generates both halves of the trainer ID from `Random()` there;
   its GBA naming-screen timer reseed is excluded by `PORTABLE`. This hook
@@ -17,10 +18,12 @@ This proposal makes two distinct changes for maintainer consideration:
   advanced since boot. The portable path already avoids reading the GBA timer;
   the missing portable reseed is the issue addressed here.
 
-The 3DS port now seeds the existing RNG at every `AgbMain` entry, including a
-soft reset, using a mix of the console's high-resolution system tick and wall
-clock. The reachable portable `InitPlayerTrainerId` path also samples the
-same source immediately before its two `Random()` calls. The GBA naming
+The 3DS port seeds the existing RNG at every `AgbMain` entry, including a
+soft reset, through `Port_RngSeed`. With RANDOM BOOT SEED off it returns the
+zero fallback without reading the clock; on, a mix of the console's
+high-resolution system tick and wall clock. The reachable portable
+`InitPlayerTrainerId` path always samples that timing source immediately
+before its two `Random()` calls, whatever the option says. The GBA naming
 screen timer hook is disabled by `PORTABLE`, so it is not used for this fix.
 Only these seed inputs change. The RNG algorithm, encounter generation, shiny
 checks, secondary RNG, and existing saves/Pokémon/trainer IDs are unchanged.
@@ -28,10 +31,21 @@ New games can naturally receive different trainer IDs.
 
 The seed remains 16-bit, matching `SeedRng`. Zero is a valid result, collisions
 are possible, and a different seed on every reset is not guaranteed. This is
-not a cryptographic generator or an increase to shiny odds. Frame-based RNG
+not a cryptographic generator or an increase to shiny odds. With RANDOM BOOT SEED enabled, frame-based RNG
 manipulation that assumes a zero startup seed will behave differently in
 normal play. Scripted/gameplay reseeding (including battle recordings) is not
 removed.
+
+## The RANDOM BOOT SEED option
+
+Find the toggle under **OPTIONS → GENERAL → SYSTEM**. The value is saved in
+`settings.txt` as `boot_seed=` (`0` OFF, `1` ON). A missing or invalid value
+defaults to ON. The key is
+`CTR_BOOT_SEED_KEY` in `3ds_port/include/3ds_extras.h`. It is read when
+`AgbMain` starts, so turning it on or off takes effect from the next soft reset
+(A+B+START+SELECT) or boot. It changes only the boot/soft-reset seed: the
+new-game trainer-ID reseed stays on either way, since without it the portable
+path would take both trainer-ID halves from whatever state the RNG reached.
 
 Measured scenarios retain the historical input at both seed points: recording
 and playback use zero at startup and skip new-game reseeding entirely, so
@@ -44,7 +58,9 @@ and permutation are unaffected.
 
 `make -C 3ds_port verify-rng-seeding PYTHON=python3 HOSTCC=cc` tests the actual
 backend function, source variation, integer boundaries, scenario fallbacks,
-trainer-ID propagation and guarded call sites. It compiles the actual applied
+trainer-ID propagation, and guarded call sites. It checks that the boot seed
+option is listed in the System group with seven locale labels and defaults to
+ON, and that turning it off keeps the zero seed without reading the clock. It compiles the actual applied
 `main.c` startup block and `new_game.c` trainer-ID function in eight macro
 configurations, including `PORTABLE`, and checks that scenario new games do not
 reseed or truncate the previous RNG state. From an overlay checkout, provide
