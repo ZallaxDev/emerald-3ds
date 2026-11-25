@@ -7,6 +7,8 @@
   Emerald's zero seed. New-game trainer IDs use timing in either mode. By
   @ZallaxDev (original pull request #140; forward-ported by @mkrieger95).
 
+- Follower and visible wild Pokémon: the tall and long grass rustles where
+  they step and covers their feet as it does the player's.
 - Bottom screen: the summary shows the Pokémon's status icon, and the trainer
   memo has room for a third line. By @mkrieger95 (pull requests #270, #269).
 - Bottom screen: the wild list is not drawn again while nothing in it has

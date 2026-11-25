@@ -34,6 +34,15 @@ from locale_lists import stage_id_lists
 ITALIAN_SHA1 = "1692db322400c3141c5de2db38469913ceb1f4d4"
 
 
+ITALIAN_BATTLE_BOX_GRAPHICS = (
+    ("graphics/battle_interface/hpbar.4bpp", 12655580, 384),
+    ("graphics/battle_interface/status.4bpp", 12656252, 480),
+    ("graphics/battle_interface/status2.4bpp", 12657852, 480),
+    ("graphics/battle_interface/status3.4bpp", 12658332, 480),
+    ("graphics/battle_interface/status4.4bpp", 12658812, 480),
+)
+
+
 def encoded(data: bytes) -> str:
     return ",".join("0x%02X" % byte for byte in data)
 
@@ -115,6 +124,15 @@ def stage(tree: Path, rom_path: Path) -> None:
         writes[tree / relative] = data
         if relative.endswith(".lz"):
             writes[tree / relative[:-3]] = lz77_decompress(source, offset)
+    # The battle info box's "HP" label and status pills (whole raw tiles of the
+    # cartridge's gHealthboxElementsGfxTable). The manifest predates them, so
+    # they are listed here; they sit where the German ROM keeps them.
+    for relative, offset, size in ITALIAN_BATTLE_BOX_GRAPHICS:
+        if relative in {name for name, _, _ in manifest["graphics"]}:
+            continue
+        if not 0 <= offset < offset + size <= len(source):
+            raise ValueError("Graphic outside ROM: " + relative)
+        writes[tree / relative] = source[offset:offset + size]
     # Assets the Italian ROM does not carry in the port's newer layout stay
     # English; the manifest records them so this is a decision, not an omission.
 

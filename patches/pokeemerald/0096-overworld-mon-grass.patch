@@ -1,0 +1,313 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: the grass rustles under the follower and the visible wild Pokemon
+Applies after 0095-main-menu-top-card.patch; apply with tools/bootstrap.py.
+
+diff --git a/include/follower_mon.h b/include/follower_mon.h
+--- a/include/follower_mon.h
++++ b/include/follower_mon.h
+@@ -12,6 +12,12 @@
+  */
+ #define OBJ_EVENT_GFX_FOLLOWER NUM_OBJ_EVENT_GFX   /* the one id no object uses */
+ #define LOCALID_FOLLOWER       254
++/* The visible wild Pokemon (wild_encounter.c) are sprites, no object events:
++ * the grass one rustles (field_effect_helpers.c) carries this local id plus
++ * its slot as its owner's, and asks VisibleWild_GrassOwner where that one is.
++ * Clear of the Berry Blender's 236-240, the follower and the player. */
++#define LOCALID_VISIBLE_WILD   248
++#define VISIBLE_WILD_GRASS_IDS 6
+ 
+ struct ObjectEvent;
+ struct ObjectEventGraphicsInfo;
+@@ -33,6 +39,10 @@ u8 FollowerMon_WildSprite(u32 slot, u16 species, u32 personality, bool8 shiny);
+ void FollowerMon_WildPrefetch(u16 species);
+ void FollowerMon_WildFace(struct Sprite *sprite, s8 dx, s8 dy, bool8 walking);
+ void FollowerMon_WildFree(u32 slot, struct Sprite *sprite);
++/* wild_encounter.c: the visible wild Pokemon of grass id
++ * `localId`, where it stands (x, y) and where it steps from (as an object's
++ * current and previous tiles, map coordinates); FALSE when none is about. */
++bool8 VisibleWild_GrassOwner(u8 localId, s16 *x, s16 *y, s16 *fromX, s16 *fromY);
+ /* No palette fade running: an ext palette loaded now keeps its colours. */
+ bool8 FollowerMon_PalettesSettled(void);
+ /* The soft reset (3ds_game_full.c): every file it holds freed, before the
+diff --git a/src/field_effect_helpers.c b/src/field_effect_helpers.c
+--- a/src/field_effect_helpers.c
++++ b/src/field_effect_helpers.c
+@@ -327,11 +327,75 @@ void UpdateShadowFieldEffect(struct Sprite *sprite)
+ #define sCurrentMap  data[5]
+ #define sObjectMoved data[7]
+ 
++#ifdef PLATFORM_3DS
++/* Where the one a grass effect belongs to stands (x, y) and steps from: an
++ * object event's current and previous tiles, or those of a visible wild
++ * Pokemon, a sprite with no object (LOCALID_VISIBLE_WILD). FALSE: gone. */
++static bool8 GrassWalkerAt(struct Sprite *sprite, s16 *x, s16 *y, s16 *fromX, s16 *fromY)
++{
++    u8 localId = sprite->sLocalId;
++    u8 objectEventId;
++
++    if (localId >= LOCALID_VISIBLE_WILD && localId < LOCALID_VISIBLE_WILD + VISIBLE_WILD_GRASS_IDS)
++        return VisibleWild_GrassOwner(localId, x, y, fromX, fromY);
++    /* The follower takes the player's map as it crosses into the next one
++     * (follower_mon.c): its grass from the last map is still its own. */
++    if (localId == LOCALID_FOLLOWER)
++    {
++        for (objectEventId = 0; objectEventId < OBJECT_EVENTS_COUNT; objectEventId++)
++            if (FollowerMon_IsFollower(&gObjectEvents[objectEventId]))
++                break;
++        if (objectEventId == OBJECT_EVENTS_COUNT)
++            return FALSE;
++    }
++    else if (TryGetObjectEventIdByLocalIdAndMap(localId, sprite->sMapNum, sprite->sMapGroup, &objectEventId))
++    {
++        return FALSE;
++    }
++    *x = gObjectEvents[objectEventId].currentCoords.x;
++    *y = gObjectEvents[objectEventId].currentCoords.y;
++    *fromX = gObjectEvents[objectEventId].previousCoords.x;
++    *fromY = gObjectEvents[objectEventId].previousCoords.y;
++    return TRUE;
++}
++
++/*
++ * A step's rustle starting on a tile: an earlier grass effect of the same kind
++ * on that tile goes. The two were drawn one over the other by sprite order,
++ * and in the voxel view as two decals in one plane: the follower, stepping
++ * where the player stood a moment before, had its rustle hidden under the
++ * player's grass, still there (its owner had only just left) and mostly
++ * settled; the player walking into the follower (they swap tiles), the other
++ * way round. Only one walker stands on a tile, and the newest grass is the
++ * same picture once settled: whoever is still leaving the tile stays as
++ * covered by it as by its own.
++ */
++static void RetireOlderGrass(void (*callback)(struct Sprite *), u8 fldEff)
++{
++    s16 x = gFieldEffectArguments[0];
++    s16 y = gFieldEffectArguments[1];
++    u32 i;
++
++    if (gFieldEffectArguments[7])
++        return;   /* appearing already in it (skip to the end): nothing rustles */
++    for (i = 0; i < MAX_SPRITES; i++)
++    {
++        struct Sprite *sprite = &gSprites[i];
++
++        if (sprite->inUse && sprite->callback == callback && sprite->sX == x && sprite->sY == y)
++            FieldEffectStop(sprite, fldEff);
++    }
++}
++#endif
++
+ u32 FldEff_TallGrass(void)
+ {
+     u8 spriteId;
+     s16 x = gFieldEffectArguments[0];
+     s16 y = gFieldEffectArguments[1];
++#ifdef PLATFORM_3DS
++    RetireOlderGrass(UpdateTallGrassFieldEffect, FLDEFF_TALL_GRASS);
++#endif
+     SetSpritePosToOffsetMapCoords(&x, &y, 8, 8);
+     spriteId = CreateSpriteAtEnd(gFieldEffectObjectTemplatePointers[FLDEFFOBJ_TALL_GRASS], x, y, 0);
+     if (spriteId != MAX_SPRITES)
+@@ -371,7 +435,15 @@ void UpdateTallGrassFieldEffect(struct Sprite *sprite)
+     mapGroup = sprite->sMapGroup;
+     metatileBehavior = MapGridGetMetatileBehaviorAt(sprite->sX, sprite->sY);
+ 
++#ifdef PLATFORM_3DS
++    // Its owner may be a visible wild Pokemon, which is no object event.
++    s16 walkerX, walkerY, fromX, fromY;
++
++    (void)localId; (void)mapNum; (void)mapGroup; (void)objectEventId;
++    if (!GrassWalkerAt(sprite, &walkerX, &walkerY, &fromX, &fromY)
++#else
+     if (TryGetObjectEventIdByLocalIdAndMap(localId, mapNum, mapGroup, &objectEventId)
++#endif
+      || !MetatileBehavior_IsTallGrass(metatileBehavior)
+      || (sprite->sObjectMoved && sprite->animEnded))
+     {
+@@ -380,9 +452,13 @@ void UpdateTallGrassFieldEffect(struct Sprite *sprite)
+     else
+     {
+         // Check if the object that triggered the effect has moved away
++#ifdef PLATFORM_3DS
++        if ((walkerX != sprite->sX || walkerY != sprite->sY) && (fromX != sprite->sX || fromY != sprite->sY))
++#else
+         struct ObjectEvent *objectEvent = &gObjectEvents[objectEventId];
+         if ((objectEvent->currentCoords.x != sprite->sX || objectEvent->currentCoords.y != sprite->sY)
+         && (objectEvent->previousCoords.x != sprite->sX || objectEvent->previousCoords.y != sprite->sY))
++#endif
+             sprite->sObjectMoved = TRUE;
+ 
+         // Metatile behavior var re-used as subpriority
+@@ -436,6 +512,9 @@ u32 FldEff_LongGrass(void)
+     u8 spriteId;
+     s16 x = gFieldEffectArguments[0];
+     s16 y = gFieldEffectArguments[1];
++#ifdef PLATFORM_3DS
++    RetireOlderGrass(UpdateLongGrassFieldEffect, FLDEFF_LONG_GRASS);
++#endif
+     SetSpritePosToOffsetMapCoords(&x, &y, 8, 8);
+     spriteId = CreateSpriteAtEnd(gFieldEffectObjectTemplatePointers[FLDEFFOBJ_LONG_GRASS], x, y, 0);
+     if (spriteId != MAX_SPRITES)
+@@ -474,7 +553,15 @@ void UpdateLongGrassFieldEffect(struct Sprite *sprite)
+     mapNum = sprite->sMapNum;
+     mapGroup = sprite->sMapGroup;
+     metatileBehavior = MapGridGetMetatileBehaviorAt(sprite->sX, sprite->sY);
++#ifdef PLATFORM_3DS
++    // Its owner may be a visible wild Pokemon, which is no object event.
++    s16 walkerX, walkerY, fromX, fromY;
++
++    (void)localId; (void)mapNum; (void)mapGroup; (void)objectEventId;
++    if (!GrassWalkerAt(sprite, &walkerX, &walkerY, &fromX, &fromY)
++#else
+     if (TryGetObjectEventIdByLocalIdAndMap(localId, mapNum, mapGroup, &objectEventId)
++#endif
+      || !MetatileBehavior_IsLongGrass(metatileBehavior)
+      || (sprite->sObjectMoved && sprite->animEnded))
+     {
+@@ -483,9 +570,13 @@ void UpdateLongGrassFieldEffect(struct Sprite *sprite)
+     else
+     {
+         // Check if the object that triggered the effect has moved away
++#ifdef PLATFORM_3DS
++        if ((walkerX != sprite->sX || walkerY != sprite->sY) && (fromX != sprite->sX || fromY != sprite->sY))
++#else
+         struct ObjectEvent *objectEvent = &gObjectEvents[objectEventId];
+         if ((objectEvent->currentCoords.x != sprite->sX || objectEvent->currentCoords.y != sprite->sY)
+          && (objectEvent->previousCoords.x != sprite->sX || objectEvent->previousCoords.y != sprite->sY))
++#endif
+             sprite->sObjectMoved = TRUE;
+ 
+         UpdateObjectEventSpriteInvisibility(sprite, FALSE);
+diff --git a/src/follower_mon.c b/src/follower_mon.c
+--- a/src/follower_mon.c
++++ b/src/follower_mon.c
+@@ -950,7 +950,14 @@ static u8 WalkAction(u8 speed, u8 dir)
+ 
+ static void Teleport(struct ObjectEvent *follower, s16 x, s16 y)
+ {
++    const struct ObjectEvent *player = &gObjectEvents[gPlayerAvatar.objectEventId];
++
+     MoveObjectEventToMapCoords(follower, x, y);
++    /* Onto the player's tile it is unseen, in its ball (on a bike, surfing):
++     * no grass of its own, settled, laid over the player's rustle there at
++     * each of the player's steps. Its next step makes its ground effects. */
++    if (x == player->currentCoords.x && y == player->currentCoords.y)
++        follower->triggerGroundEffectsOnMove = FALSE;
+     sFollower.queued = 0;
+ }
+ 
+diff --git a/src/wild_encounter.c b/src/wild_encounter.c
+--- a/src/wild_encounter.c
++++ b/src/wild_encounter.c
+@@ -953,6 +953,75 @@ static void VisibleRustle(const struct VisibleWild *v)
+     FieldEffectStart(effect);
+ }
+ 
++/*
++ * The grass it stands in or steps into, as an object's ground effects have
++ * it (event_object_movement.c): the tall grass rustles and then covers its
++ * feet, long grass too. Its owner is the slot's grass id (LOCALID_VISIBLE_WILD,
++ * VisibleWild_GrassOwner), so the grass stays while it stands there and goes
++ * once it has walked off, vanished or met the player. Left out when the field
++ * is short of sprites: the objects that come into view need theirs.
++ */
++#if VW_MAX > VISIBLE_WILD_GRASS_IDS
++#error "a visible wild Pokemon without a grass id"
++#endif
++#define VW_GRASS_SPARE 12        /* sprites left free for the field */
++
++static u8 VisibleElevation(const struct VisibleWild *v)
++{
++    u8 elevation = MapGridGetElevationAt(v->x, v->y);
++
++    /* 0 and 15 go with any: an object there keeps the one it had. */
++    if (elevation == 0 || elevation == 15)
++        elevation = gObjectEvents[gPlayerAvatar.objectEventId].previousElevation;
++    return elevation;
++}
++
++static void VisibleGrass(const struct VisibleWild *v, s16 x, s16 y, bool8 settled)
++{
++    u32 behavior = MapGridGetMetatileBehaviorAt(x, y);
++    u32 i, free = 0;
++    u8 effect;
++
++    if (v->water)
++        return;
++    if (MetatileBehavior_IsTallGrass(behavior))
++        effect = FLDEFF_TALL_GRASS;
++    else if (MetatileBehavior_IsLongGrass(behavior))
++        effect = FLDEFF_LONG_GRASS;
++    else
++        return;
++    for (i = 0; i < MAX_SPRITES; i++)
++        free += !gSprites[i].inUse;
++    if (free <= VW_GRASS_SPARE)
++        return;
++    gFieldEffectArguments[0] = x;
++    gFieldEffectArguments[1] = y;
++    gFieldEffectArguments[2] = VisibleElevation(v);
++    gFieldEffectArguments[3] = 2;
++    gFieldEffectArguments[4] = (LOCALID_VISIBLE_WILD + (v - sVisible)) << 8 | gSaveBlock1Ptr->location.mapNum;
++    gFieldEffectArguments[5] = gSaveBlock1Ptr->location.mapGroup;
++    gFieldEffectArguments[6] = (u8)gSaveBlock1Ptr->location.mapNum << 8 | (u8)gSaveBlock1Ptr->location.mapGroup;
++    gFieldEffectArguments[7] = settled;
++    FieldEffectStart(effect);
++}
++
++bool8 VisibleWild_GrassOwner(u8 localId, s16 *x, s16 *y, s16 *fromX, s16 *fromY)
++{
++    const struct VisibleWild *v;
++
++    if (localId < LOCALID_VISIBLE_WILD || localId >= LOCALID_VISIBLE_WILD + VW_MAX)
++        return FALSE;
++    v = &sVisible[localId - LOCALID_VISIBLE_WILD];
++    if (!v->active || !VisibleSpriteValid(v))
++        return FALSE;
++    /* Mid-step it is on its way onto the next tile, as an object then is. */
++    *x = v->x + (v->progress ? v->dx : 0);
++    *y = v->y + (v->progress ? v->dy : 0);
++    *fromX = v->x;
++    *fromY = v->y;
++    return TRUE;
++}
++
+ /* Growing (or shrinking): its size this frame, on its OAM matrix. Done, the
+  * sprite is an ordinary one again. Eased: fast at first, settling at the end. */
+ static void VisibleScaleStep(struct VisibleWild *v)
+@@ -1046,8 +1115,15 @@ static void VisiblePlace(struct VisibleWild *v)
+         if (v->scaleFrames == 0)
+             FollowerMon_WildFace(sprite, v->faceX, v->faceY, v->progress != 0);
+     }
+-    /* Further down the screen, drawn over: as the map's objects are. */
+-    sprite->subpriority = 200 - ((sprite->y + 64) >> 1 & 0x7F);
++    /* Further down the screen, drawn over: by the objects' own rule, so the
++     * grass it stands in (VisibleGrass) is drawn over its feet as over theirs,
++     * and it goes behind or in front of the player as an object would. */
++    {
++        u8 elevation = VisibleElevation(v);
++
++        sprite->oam.priority = ElevationToPriority(elevation);
++        SetObjectSubpriorityByElevation(elevation, sprite, 1);
++    }
+ }
+ 
+ /* Its sprite, on HGSS's picture if the pack has one, else its icon; it grows
+@@ -1087,6 +1163,9 @@ static bool8 VisibleMakeSprite(struct VisibleWild *v, u8 grow)
+     VisiblePlace(v);
+     VisibleStartScale(v, grow);
+     VisiblePlace(v);
++    /* In grass it stands in it, as an object made there (the field reset
++     * took the grass with the sprites). */
++    VisibleGrass(v, v->x, v->y, TRUE);
+     return TRUE;
+ }
+ 
+@@ -1250,6 +1329,8 @@ static void VisibleMove(struct VisibleWild *v, s16 px, s16 py, bool8 inWater)
+     v->dx = v->faceX = sSteps[dir][0];
+     v->dy = v->faceY = sSteps[dir][1];
+     v->progress = 1;
++    /* Into grass: it rustles as the step begins, as under an object's. */
++    VisibleGrass(v, tx, ty, FALSE);
+ }
+ 
+ /*

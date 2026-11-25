@@ -71,6 +71,7 @@ bool VoxelMesh_BeltFill(int x, int y, VoxelEdgeFill *fill)
 const VoxelMapInstance *VoxelMesh_BeltOwner(int x, int y, int *edgeX, int *edgeY)
 { (void)x; (void)y; *edgeX = *edgeY = 0; return NULL; }
 int VoxelRelief_FaceTile(const VoxelMapInstance *inst) { (void)inst; return -1; }
+bool VoxelRelief_OpenAir(unsigned layoutId) { (void)layoutId; return false; }
 bool VoxelRelief_EdgeFills(unsigned layoutId, unsigned i, int *metatile)
 { (void)layoutId; (void)i; (void)metatile; return false; }
 /* The row's seam between maps 3 and 4 asks map 4 a level up (Hoenn's loops

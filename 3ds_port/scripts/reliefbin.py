@@ -39,7 +39,7 @@ def load(path):
 
 def tail_start(b):
     """Offset of what follows the cut records in a relief.bin (the optional
-    tables: "EDGE", "UPRT", "STEP"), and the offset of the trailer (u32, "CUTS")."""
+    tables: "EDGE", "UNDR", "OPEN", "UPRT", "STEP"), and the offset of the trailer (u32, "CUTS")."""
     assert b[-4:] == b"CUTS"
     at = struct.unpack_from("<I", b, len(b) - 8)[0]
     nv, nc = struct.unpack_from("<HH", b, at)
@@ -49,8 +49,9 @@ def tail_start(b):
 def tail_tables(b):
     """{tag: (offset of the table, its bytes)} of the optional tables after the
     cuts, in file order. "EDGE": u16 n, u16 0, n x 18; "UPRT": u16 n, u16 0,
-    n x 4; "STEP": u16 n, u16 0, n x 6 (u16 layout, u8 x, u8 y, u16 riser mask)."""
-    sizes = {b"EDGE": 18, b"UNDR": 58, b"UPRT": 4, b"STEP": 6}
+    n x 4; "STEP": u16 n, u16 0, n x 6 (u16 layout, u8 x, u8 y, u16 riser mask);
+    "UNDR": n x 58; "OPEN": n x 2 (u16 layout, under the open sky)."""
+    sizes = {b"EDGE": 18, b"UNDR": 58, b"OPEN": 2, b"UPRT": 4, b"STEP": 6}
     at, end = tail_start(b)
     out = {}
     while at + 8 <= end and b[at:at + 4] in sizes:

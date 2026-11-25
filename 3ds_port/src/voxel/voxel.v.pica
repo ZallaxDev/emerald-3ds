@@ -77,55 +77,49 @@
 	mul r2, ctrVoxelConst.yyyy, inpos.wwww
 
 	; outpos = projection * r1, a lit vertex put back in the map's pass
-	dp4 r10.x, projection[0], r1
-	dp4 r10.y, projection[1], r1
+	dp4 outpos.x, projection[0], r1
+	dp4 outpos.y, projection[1], r1
 	dp4 r10.z, projection[2], r1
-	dp4 r10.w, projection[3], r1
+	dp4 outpos.w, projection[3], r1
 	add r11, -shadowSel.wwww, r2
 	mul r11, ctrShadowConst.xxxx, r11
 	max r11, zeros, r11
 	min r11, ones, r11
 	mul r11, shadowSel.zzzz, r11
-	add r10.z, r10.z, -r11.x
-	mov outpos, r10
+	add outpos.z, r10.z, -r11.x
 
 	mov outtc2, intex
 
-	; r8 = the shadow map's coordinates (+ the atlas', without the map)
-	mov r8, zeros
+	; texcoord0 = the shadow map's coordinates (+ the atlas', without the
+	; map): u, v alone, written straight out
 	dp4 r8.x, shadowU, r1
 	dp4 r8.y, shadowV, r1
 	mul r9, shadowSel.xxxx, intex
-	add r8, r8, r9
-	mov outtc0, r8
+	add outtc0.xy, r8, r9
 
 	; texcoord0w = the map's depth
-	dp4 r9.x, shadowW, r1
-	mov outtc0w, r9.xxxx
+	dp4 outtc0w, shadowW, r1
 
-	; r6 = the dapple pattern's coordinates (+ the atlas', with the map)
-	mov r6, zeros
+	; texcoord1 = the dapple pattern's coordinates (+ the atlas', with the map)
 	dp4 r6.x, dappleU, r0
 	dp4 r6.y, dappleV, r0
 	mul r9, shadowSel.yyyy, intex
-	add r6, r6, r9
-	mov outtc1, r6
+	add outtc1.xy, r6, r9
 
-	; r3 = t
-	mul r3, grade.xxxx, r2
-	add r3, grade.yyyy, r3
+	; r3 = t = shade * grade.x + grade.y, as one dph: grade.z is 0 (SetGrade,
+	; CtrVoxel_DioramaFused), so grade.xzzy = (grade.x, 0, 0, grade.y)
+	dph r3, r2, grade.xzzy
 	max r3, zeros, r3
 	min r3, ones, r3
 
 	; r4 = shade * lerp(shadeTint, sunTint, t)
 	mul r4, tintDiff, r3
 	add r4, shadeTint, r4
-	mul r4, r2, r4
-	mov outclr.xyz, r4
+	mul outclr.xyz, r2, r4
 
-	; r5 = haze from view-space depth (the camera looks down -Z)
-	mul r5, fog.xxxx, r1.zzzz
-	add r5, fog.yyyy, r5
+	; r5 = haze from view-space depth (the camera looks down -Z):
+	; viewZ * fog.x + fog.y as one dph, fog.w being 0 (SetGrade)
+	dph r5, r1.zzzz, fog.xwwy
 	max r5, zeros, r5
 	min r5, fog.zzzz, r5
 	add outclr.w, ones, -r5

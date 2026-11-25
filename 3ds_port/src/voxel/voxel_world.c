@@ -1124,7 +1124,15 @@ float VoxelWorld_FogDensity(void)
 
 bool VoxelWorld_Underground(void)
 {
-    return gMapHeader.mapType == MAP_TYPE_UNDERGROUND;
+    /* a map the game types as a cave but that stands under the open sky
+     * (relief_fixes.json "open_air") is lit as any map outdoors */
+    return gMapHeader.mapType == MAP_TYPE_UNDERGROUND
+        && !VoxelRelief_OpenAir(gMapHeader.mapLayoutId);
+}
+
+bool VoxelWorld_FlashDark(void)
+{
+    return gSaveBlock1Ptr != NULL && gSaveBlock1Ptr->flashLevel > 0;
 }
 
 bool VoxelWorld_MapIsConnected(void)

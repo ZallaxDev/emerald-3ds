@@ -66,10 +66,12 @@ def main() -> None:
         manifest = json.loads(gzip.decompress(path.read_bytes()))
         moved = 0
         for relative, file in manifest["files"].items():
+            new = (args.new / relative).read_text(encoding="utf-8")
+            if hashlib.sha256(new.encode()).hexdigest() == file["sha256"]:
+                continue  # already on the new tree
             old = (args.old / relative).read_text(encoding="utf-8")
             if hashlib.sha256(old.encode()).hexdigest() != file["sha256"]:
                 raise SystemExit("%s: %s does not match the old tree" % (name, relative))
-            new = (args.new / relative).read_text(encoding="utf-8")
             if new == old:
                 continue
             move = mapper(old, new)
@@ -80,6 +82,26 @@ def main() -> None:
                     raise SystemExit("%s: the change touches an edit in %s at %d; regenerate it" % (name, relative, start))
                 edits.append([target[0], target[1], offset, size, kind])
             file["edits"] = edits
+            file["sha256"] = hashlib.sha256(new.encode()).hexdigest()
+            moved += 1
+        # Texts with no translation yet: the same pinned files, spans only.
+        for relative, file in manifest.get("untranslated", {}).items():
+            new = (args.new / relative).read_text(encoding="utf-8")
+            if hashlib.sha256(new.encode()).hexdigest() == file["sha256"]:
+                continue  # already on the new tree
+            old = (args.old / relative).read_text(encoding="utf-8")
+            if hashlib.sha256(old.encode()).hexdigest() != file["sha256"]:
+                raise SystemExit("%s: %s does not match the old tree" % (name, relative))
+            if new == old:
+                continue
+            move = mapper(old, new)
+            spans = []
+            for start, end in file["spans"]:
+                target = move(start, end)
+                if target is None or new[target[0]:target[1]] != old[start:end]:
+                    raise SystemExit("%s: the change touches a span in %s at %d; regenerate it" % (name, relative, start))
+                spans.append(list(target))
+            file["spans"] = spans
             file["sha256"] = hashlib.sha256(new.encode()).hexdigest()
             moved += 1
         if moved:

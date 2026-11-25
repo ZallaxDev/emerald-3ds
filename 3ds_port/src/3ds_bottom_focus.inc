@@ -197,6 +197,12 @@ static void ProcessKeys(u8 mode)
         sInside = INSIDE_NONE;
         sFocus = sScreen;
     }
+    /* The save screen opened by a tap on its dock button takes the buttons as
+     * the one opened with A does: otherwise A would talk to whoever is in
+     * front of the player and B go unheard. */
+    if (sInside == INSIDE_NONE && sFocus == FOCUS_NONE && !sSwallow && !x && sScreen == SCR_SAVE
+        && mode == MODE_FIELD && FieldIdle())
+        sInside = INSIDE_SAVE;
     if (sInside != INSIDE_NONE)
     {
         if (x)

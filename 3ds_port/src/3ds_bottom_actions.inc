@@ -35,6 +35,17 @@ static void OpenAsked(u8 mode)
          || (lastMode == MODE_PARTY_MENU && sScreen == SCR_POKEMON) || (lastMode == MODE_POKENAV && sScreen == SCR_POKENAV)
          || (lastMode == MODE_CARD && sScreen == SCR_CARD && sClassicMenus))
             sScreen = SCR_MAP;
+        /* Reaching the field the first time, or from any other screen: the
+         * map, unless a screen was chosen to open there. */
+        else if (mode == MODE_FIELD && !sLeaveWanted)
+            sScreen = SCR_MAP;
+        /* The choice is spent once its game screen is the one open, or the
+         * field is reached. */
+        if (mode == MODE_FIELD || mode >= MODE_BATTLE_INFO
+         || (mode == MODE_BAG_MENU && sScreen == SCR_BAG) || (mode == MODE_POKEDEX && sScreen == SCR_POKEDEX)
+         || ((mode == MODE_PARTY_MENU || mode == MODE_SUMMARY) && sScreen == SCR_POKEMON)
+         || (mode == MODE_POKENAV && sScreen == SCR_POKENAV) || (mode == MODE_CARD && sScreen == SCR_CARD))
+            sLeaveWanted = FALSE;
         lastMode = mode;
         waited = 0;
     }

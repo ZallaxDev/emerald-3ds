@@ -85,8 +85,8 @@
 	dp4 outpos.w, projection[3], r1
 
 	; r5 = haze from view-space depth (the camera looks down -Z)
-	mul r5, fog.xxxx, r1.zzzz
-	add r5, fog.yyyy, r5
+	; (viewZ * fog.x + fog.y as one dph, fog.w being 0: voxel.v.pica)
+	dph r5, r1.zzzz, fog.xwwy
 	max r5, zeros, r5
 	min r5, fog.zzzz, r5
 	add r5, ones, -r5
@@ -101,8 +101,7 @@
 	mul r6, weatherConst.wwww, inpos.wwww
 	mul r6, r3.xxxx, r6
 	mul r6, r7, r6
-	mul r6, r5, r6
-	mov outclr.xyz, r6
+	mul outclr.xyz, r5, r6
 	mov outclr.w, r5
 
 	end

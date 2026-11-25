@@ -81,6 +81,11 @@ typedef struct
      * sprite clears exactly what it used to cover instead of the whole 64x64
      * slot. */
     int drawnWidth, drawnHeight;
+    /* Decoded for the smooth filter (SPRITE FILTER, DecodeSlotSmooth): the
+     * picture then starts this many texels into its cell (0 or 1 each way),
+     * with a ring of bled colour round it. Both 0 and false without it. */
+    bool smooth;
+    u8 gutterX, gutterY;
     /* Empty rows under the feet of the standing pose (the visible frame for
      * berry trees). The card leaves them out to put the feet on the ground. */
     int footPad;
@@ -100,8 +105,22 @@ static u8 sSlotEffect[VOXEL_SPRITE_SLOTS];
 static int sPlayerVertexFirst = -1;
 /* The door frame the atlas's door slot holds is not known (FindDoors). */
 static bool sDoorStale = true;
+/*
+ * SPRITE FILTER (settings.txt voxel_sprite_filter, ctr_voxel.c): the atlas
+ * sampled bilinearly, its slots decoded for it (DecodeSlotSmooth). Wanted is
+ * what the renderer asked for (VoxelEntities_SetSmooth); the atlas follows
+ * at the next VoxelEntities_Emit, every slot decoded again. The door's frame
+ * starts sDoorGutter texels into its cell (1 decoded for the filter, else 0).
+ */
+static bool sSmooth, sSmoothWanted;
+static unsigned sDoorGutter;
 
 int VoxelEntities_PlayerVertexFirst(void) { return sPlayerVertexFirst; }
+
+void VoxelEntities_SetSmooth(bool smooth)
+{
+    sSmoothWanted = smooth;
+}
 
 /*
  * What a card's place in the world costs to find - the ground's height and
@@ -522,6 +541,155 @@ static uint16_t *AtlasBlock(uint16_t *atlas, unsigned bx, unsigned by)
 }
 
 /*
+ * SPRITE FILTER: the atlas sampled bilinearly (ctr_voxel.c), which asks of a
+ * cell what nearest sampling did not:
+ *  - a gutter: a picture with room for it starts one texel into its cell,
+ *    so what a sample at its edge mixes in is its own cell's, never the
+ *    slot beside it (the slots touch). One the cell's full 64 across or
+ *    down has no room; its cards keep that edge half a texel in (SlotEdges);
+ *  - the ring round the outline bled (VoxelSlots_Bleed): the edge mixes with
+ *    its own colours, not with the black of a clear texel;
+ *  - and, in the renderer, the alpha test at a half, so the outline is the
+ *    middle of the mixed alpha, not grown by it.
+ * A picture is decoded into a scratch cell, row by row, bled there, and the
+ * cell written to the atlas a block at a time, what is cleared with it.
+ */
+static uint16_t sSmoothCell[VOXEL_SPRITE_SLOT_DIM * VOXEL_SPRITE_SLOT_DIM];
+
+/* The gutter before a picture `extent` texels across: one if it and a
+ * texel either side of it fit the cell. */
+static unsigned SmoothGutter(int extent)
+{
+    return extent + 2 <= (int)VOXEL_SPRITE_SLOT_DIM ? 1u : 0u;
+}
+
+/* The scratch cell's first `rows` rows cleared. */
+static void SmoothCellClear(unsigned rows)
+{
+    memset(sSmoothCell, 0, rows * VOXEL_SPRITE_SLOT_DIM * sizeof(uint16_t));
+}
+
+/* The scratch cell's [0, w) x [0, h) (whole blocks, at most the cell) to
+ * the atlas cell whose corner is (baseX, baseY). */
+static void SmoothCellToAtlas(uint16_t *atlas, unsigned baseX, unsigned baseY, unsigned w, unsigned h)
+{
+    static uint8_t morton[64];
+    static bool mortonReady;
+
+    if (!mortonReady)
+    {
+        for (unsigned i = 0; i < 64; ++i)
+            morton[i] = (uint8_t)CtrVideo_Texel(i & 7, i / 8, 8);
+        mortonReady = true;
+    }
+    for (unsigned by = 0; by < h / 8u; ++by)
+        for (unsigned bx = 0; bx < w / 8u; ++bx)
+        {
+            uint16_t *block = AtlasBlock(atlas, baseX / 8u + bx, baseY / 8u + by);
+            const uint16_t *src = sSmoothCell + by * 8u * VOXEL_SPRITE_SLOT_DIM + bx * 8u;
+
+            for (unsigned py = 0; py < 8u; ++py, src += VOXEL_SPRITE_SLOT_DIM)
+            {
+                const uint8_t *row = morton + py * 8u;
+
+                for (unsigned px = 0; px < 8u; ++px)
+                    block[row[px]] = src[px];
+            }
+        }
+}
+
+/* Up to a whole number of blocks, at most the cell. */
+static unsigned SmoothBlocks(unsigned texels)
+{
+    texels = (texels + 7u) & ~7u;
+    return texels < VOXEL_SPRITE_SLOT_DIM ? texels : VOXEL_SPRITE_SLOT_DIM;
+}
+
+/* DecodeSlot for the smooth filter: the same picture, one texel in where
+ * it fits, with its outline bled. Clears what the slot drew before as
+ * DecodeSlot does, from the cell's corner to the farther extent. */
+static void DecodeSlotSmooth(VoxelSpriteSlot *slot, unsigned index, uint16_t *atlas)
+{
+    const unsigned dim = VOXEL_SPRITE_SLOT_DIM;
+    unsigned baseX = (index % VOXEL_SPRITE_COLUMNS) * dim;
+    unsigned baseY = (index / VOXEL_SPRITE_COLUMNS) * dim;
+    unsigned gx = SmoothGutter(slot->atlasWidth), gy = SmoothGutter(slot->height);
+    unsigned bytesPerTile = slot->color256 ? 64u : 32u, colours = slot->color256 ? 256u : 16u;
+    int tilesX = slot->width / 8, tilesY = slot->height / 8;
+    /* The picture and the ring round it, as far as the cell goes. */
+    unsigned x0 = gx > 0 ? gx - 1u : 0u, y0 = gy > 0 ? gy - 1u : 0u;
+    unsigned x1 = gx + (unsigned)slot->atlasWidth + 1u, y1 = gy + (unsigned)slot->height + 1u;
+    unsigned w, h;
+    uint16_t graded[256];
+
+    if (x1 > dim) x1 = dim;
+    if (y1 > dim) y1 = dim;
+    /* Written: from the corner to what this or the last picture reached. */
+    w = SmoothBlocks(x1 > (unsigned)slot->drawnWidth ? x1 : (unsigned)slot->drawnWidth);
+    h = SmoothBlocks(y1 > (unsigned)slot->drawnHeight ? y1 : (unsigned)slot->drawnHeight);
+    SmoothCellClear(h);
+    for (unsigned c = 1; c < colours; ++c)
+        graded[c] = VoxelGrade_RGBA5551(slot->palette[c]);
+
+    if (slot->atlasWidth != slot->width)
+    {
+        /* Wider than the cell: every second column, as DecodeSlot. */
+        for (int y = 0; y < slot->height; ++y)
+        {
+            unsigned sy = (unsigned)(slot->flipY ? slot->height - 1 - y : y);
+            uint16_t *row = sSmoothCell + (gy + (unsigned)y) * dim + gx;
+
+            for (int x = 0; x < slot->atlasWidth; ++x)
+            {
+                unsigned sx = VoxelSlots_SourceColumn((unsigned)x, (unsigned)slot->atlasWidth,
+                                                      (unsigned)slot->width, slot->flipX);
+                unsigned colorIdx = VoxelSlots_TilePixel(slot->source, (unsigned)slot->width,
+                                                         sx, sy, slot->color256);
+
+                if (colorIdx != 0)
+                    row[x] = graded[colorIdx];
+            }
+        }
+    }
+    else
+    {
+        for (int ty = 0; ty < tilesY; ++ty)
+        {
+            for (int tx = 0; tx < tilesX; ++tx)
+            {
+                const u8 *tile = slot->source + (unsigned)(ty * tilesX + tx) * bytesPerTile;
+                unsigned ox = (unsigned)(slot->flipX ? tilesX - 1 - tx : tx);
+                unsigned oy = (unsigned)(slot->flipY ? tilesY - 1 - ty : ty);
+                unsigned flipX = slot->flipX ? 7u : 0u, flipY = slot->flipY ? 7u : 0u;
+
+                for (unsigned py = 0; py < 8; ++py)
+                {
+                    uint16_t *row = sSmoothCell + (gy + oy * 8u + (py ^ flipY)) * dim + gx + ox * 8u;
+
+                    for (unsigned px = 0; px < 8; ++px)
+                    {
+                        unsigned index8 = py * 8 + px;
+                        unsigned colorIdx = slot->color256
+                            ? tile[index8]
+                            : ((tile[index8 / 2] >> ((px & 1) * 4)) & 0xF);
+
+                        if (colorIdx != 0)
+                            row[px ^ flipX] = graded[colorIdx];
+                    }
+                }
+            }
+        }
+    }
+    VoxelSlots_Bleed(sSmoothCell + y0 * dim + x0, dim, x1 - x0, y1 - y0);
+    SmoothCellToAtlas(atlas, baseX, baseY, w, h);
+    slot->drawnWidth = (int)x1;
+    slot->drawnHeight = (int)y1;
+    slot->smooth = true;
+    slot->gutterX = (u8)gx;
+    slot->gutterY = (u8)gy;
+}
+
+/*
  * Writes the gathered tiles into the slot's 64x64 cell of the atlas. A
  * sprite's tiles are whole 8x8 blocks of the atlas, flipped or not, so each
  * goes to one block; the colours are graded once each into a table, not per
@@ -548,6 +716,13 @@ static void DecodeSlot(VoxelSpriteSlot *slot, unsigned index, uint16_t *atlas)
             morton[i] = (uint8_t)CtrVideo_Texel(i & 7, i / 8, 8);
         mortonReady = true;
     }
+    if (sSmooth)
+    {
+        DecodeSlotSmooth(slot, index, atlas);
+        return;
+    }
+    slot->smooth = false;
+    slot->gutterX = slot->gutterY = 0;
     for (int by = 0; by < (clearH + 7) / 8; ++by)
         for (int bx = 0; bx < (clearW + 7) / 8; ++bx)
             memset(AtlasBlock(atlas, baseX / 8 + (unsigned)bx, baseY / 8 + (unsigned)by), 0,
@@ -895,6 +1070,48 @@ static int VisibleRows(const VoxelSpriteSlot *slot)
     int pad = slot->footPad < slot->height ? slot->footPad : slot->height - 1;
 
     return slot->height - pad;
+}
+
+/* The corner of a slot's picture in the atlas, texels: its cell's, and the
+ * gutter it was decoded with (DecodeSlotSmooth; none without the filter). */
+static unsigned SlotX(const VoxelSpriteSlot *slot, unsigned index)
+{
+    return (index % VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM + slot->gutterX;
+}
+
+static unsigned SlotY(const VoxelSpriteSlot *slot, unsigned index)
+{
+    return (index / VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM + slot->gutterY;
+}
+
+/*
+ * How far in, texels, a card keeps each edge of the picture it shows
+ * (`rows` of it down): with the smooth filter, half a texel where that edge
+ * is the cell's own (no gutter: a picture 64 across or down), so a sample
+ * there is the edge texel's centre and nothing of the slot beside it is
+ * mixed in. That squeezes the picture by half a texel over 64 (under 1%).
+ * All 0 without the filter: the cards' coordinates are what they were.
+ */
+typedef struct
+{
+    float left, right, top, bottom;
+} SlotEdges;
+
+static SlotEdges SlotEdgesOf(const VoxelSpriteSlot *slot, int rows)
+{
+    SlotEdges e = {0.0f, 0.0f, 0.0f, 0.0f};
+
+    if (!slot->smooth)
+        return e;
+    if (slot->gutterX == 0)
+        e.left = 0.5f;
+    if (slot->gutterX + slot->atlasWidth >= (int)VOXEL_SPRITE_SLOT_DIM)
+        e.right = 0.5f;
+    if (slot->gutterY == 0)
+        e.top = 0.5f;
+    if (slot->gutterY + rows >= (int)VOXEL_SPRITE_SLOT_DIM)
+        e.bottom = 0.5f;
+    return e;
 }
 
 /*
@@ -1511,14 +1728,14 @@ static void EmitBillboard(VoxelBuilder *builder, const VoxelSpriteSlot *slot, un
                           float rightX, float rightZ, float stretch, float shade, float scale,
                           float *share)
 {
-    unsigned baseX = (index % VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
-    unsigned baseY = (index / VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
-    float u0 = baseX / (float)VOXEL_SPRITE_ATLAS_W;
-    float u1 = (baseX + slot->atlasWidth) / (float)VOXEL_SPRITE_ATLAS_W;
+    unsigned baseX = SlotX(slot, index), baseY = SlotY(slot, index);
     int rows = VisibleRows(slot);
+    SlotEdges edge = SlotEdgesOf(slot, rows);
+    float u0 = (baseX + edge.left) / (float)VOXEL_SPRITE_ATLAS_W;
+    float u1 = (baseX + slot->atlasWidth - edge.right) / (float)VOXEL_SPRITE_ATLAS_W;
     /* Row 0 in memory is v=1, the convention the whole port uses. */
-    float v0 = 1.0f - baseY / (float)VOXEL_SPRITE_ATLAS_H;
-    float v1 = 1.0f - (baseY + rows) / (float)VOXEL_SPRITE_ATLAS_H;
+    float v0 = 1.0f - (baseY + edge.top) / (float)VOXEL_SPRITE_ATLAS_H;
+    float v1 = 1.0f - (baseY + rows - edge.bottom) / (float)VOXEL_SPRITE_ATLAS_H;
     float halfW = slot->width / VOXEL_PIXELS_PER_TILE * 0.5f * scale;
     float height = rows / VOXEL_PIXELS_PER_TILE * stretch * scale;
     /* On relief the sprite stands where its cell was lifted to, and rides
@@ -1592,12 +1809,12 @@ static void EmitBillboard(VoxelBuilder *builder, const VoxelSpriteSlot *slot, un
 static void EmitDecal(VoxelBuilder *builder, const VoxelSpriteSlot *slot, unsigned index,
                       float cx, float cz, float lift, float shade)
 {
-    unsigned baseX = (index % VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
-    unsigned baseY = (index / VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
-    float u0 = baseX / (float)VOXEL_SPRITE_ATLAS_W;
-    float u1 = (baseX + slot->atlasWidth) / (float)VOXEL_SPRITE_ATLAS_W;
-    float v0 = 1.0f - baseY / (float)VOXEL_SPRITE_ATLAS_H;
-    float v1 = 1.0f - (baseY + slot->height) / (float)VOXEL_SPRITE_ATLAS_H;
+    unsigned baseX = SlotX(slot, index), baseY = SlotY(slot, index);
+    SlotEdges edge = SlotEdgesOf(slot, slot->height);
+    float u0 = (baseX + edge.left) / (float)VOXEL_SPRITE_ATLAS_W;
+    float u1 = (baseX + slot->atlasWidth - edge.right) / (float)VOXEL_SPRITE_ATLAS_W;
+    float v0 = 1.0f - (baseY + edge.top) / (float)VOXEL_SPRITE_ATLAS_H;
+    float v1 = 1.0f - (baseY + slot->height - edge.bottom) / (float)VOXEL_SPRITE_ATLAS_H;
     float halfW = slot->width / VOXEL_PIXELS_PER_TILE * 0.5f;
     float halfH = slot->height / VOXEL_PIXELS_PER_TILE * 0.5f;
     float y = VoxelRelief_LiftAt(cx, cz) + VOXEL_DECAL_LIFT + lift;
@@ -1620,12 +1837,12 @@ static void EmitDecal(VoxelBuilder *builder, const VoxelSpriteSlot *slot, unsign
 static void EmitTuftDecal(VoxelBuilder *builder, const VoxelSpriteSlot *slot, unsigned index,
                           float cx, float cz, float shade)
 {
-    unsigned baseX = (index % VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
-    unsigned baseY = (index / VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
-    float u0 = baseX / (float)VOXEL_SPRITE_ATLAS_W;
-    float u1 = (baseX + slot->atlasWidth) / (float)VOXEL_SPRITE_ATLAS_W;
-    float v0 = 1.0f - baseY / (float)VOXEL_SPRITE_ATLAS_H;
-    float v1 = 1.0f - (baseY + slot->height) / (float)VOXEL_SPRITE_ATLAS_H;
+    unsigned baseX = SlotX(slot, index), baseY = SlotY(slot, index);
+    SlotEdges edge = SlotEdgesOf(slot, slot->height);
+    float u0 = (baseX + edge.left) / (float)VOXEL_SPRITE_ATLAS_W;
+    float u1 = (baseX + slot->atlasWidth - edge.right) / (float)VOXEL_SPRITE_ATLAS_W;
+    float v0 = 1.0f - (baseY + edge.top) / (float)VOXEL_SPRITE_ATLAS_H;
+    float v1 = 1.0f - (baseY + slot->height - edge.bottom) / (float)VOXEL_SPRITE_ATLAS_H;
     float halfW = slot->width / VOXEL_PIXELS_PER_TILE * 0.5f;
     float halfH = slot->height / VOXEL_PIXELS_PER_TILE * 0.5f;
     float y = VoxelRelief_LiftAt(cx, cz) + VOXEL_DECAL_LIFT;
@@ -1674,12 +1891,12 @@ static void EmitTurnedDecal(VoxelBuilder *builder, const VoxelSpriteSlot *slot, 
         return;
     }
 
-    unsigned baseX = (index % VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
-    unsigned baseY = (index / VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
-    float u0 = baseX / (float)VOXEL_SPRITE_ATLAS_W;
-    float u1 = (baseX + slot->atlasWidth) / (float)VOXEL_SPRITE_ATLAS_W;
-    float v0 = 1.0f - baseY / (float)VOXEL_SPRITE_ATLAS_H;
-    float v1 = 1.0f - (baseY + slot->height) / (float)VOXEL_SPRITE_ATLAS_H;
+    unsigned baseX = SlotX(slot, index), baseY = SlotY(slot, index);
+    SlotEdges edge = SlotEdgesOf(slot, slot->height);
+    float u0 = (baseX + edge.left) / (float)VOXEL_SPRITE_ATLAS_W;
+    float u1 = (baseX + slot->atlasWidth - edge.right) / (float)VOXEL_SPRITE_ATLAS_W;
+    float v0 = 1.0f - (baseY + edge.top) / (float)VOXEL_SPRITE_ATLAS_H;
+    float v1 = 1.0f - (baseY + slot->height - edge.bottom) / (float)VOXEL_SPRITE_ATLAS_H;
     float halfW = slot->width / VOXEL_PIXELS_PER_TILE * 0.5f;
     float halfH = slot->height / VOXEL_PIXELS_PER_TILE * 0.5f;
     float y = VoxelRelief_LiftAt(cx, cz) + VOXEL_DECAL_LIFT;
@@ -1792,6 +2009,11 @@ static void FindDoors(VoxelDoor doors[VOXEL_DOORS], uint16_t *atlas)
     lastPrimary = primary;
     lastSecondary = secondary;
     lastWidth = width;
+    /* SPRITE FILTER: one texel into the cell, bled, as a slot's picture
+     * (DecodeSlotSmooth); the ring round it is all the cell's own. */
+    sDoorGutter = sSmooth ? 1u : 0u;
+    if (sSmooth)
+        SmoothCellClear(VOXEL_DOOR_ROWS + 8u);
     for (unsigned py = 0; py < VOXEL_DOOR_ROWS; ++py)
         for (unsigned px = 0; px < 32u; ++px)
         {
@@ -1806,8 +2028,17 @@ static void FindDoors(VoxelDoor doors[VOXEL_DOORS], uint16_t *atlas)
 
                 texel = VoxelGrade_RGBA5551(bgr15);
             }
-            atlas[CtrVideo_Texel(baseX + px, baseY + py, VOXEL_SPRITE_ATLAS_W)] = texel;
+            if (sSmooth)
+                sSmoothCell[(py + 1u) * VOXEL_SPRITE_SLOT_DIM + px + 1u] = texel;
+            else
+                atlas[CtrVideo_Texel(baseX + px, baseY + py, VOXEL_SPRITE_ATLAS_W)] = texel;
         }
+    if (sSmooth)
+    {
+        VoxelSlots_Bleed(sSmoothCell, VOXEL_SPRITE_SLOT_DIM, (width * 16u < 32u ? width * 16u : 32u) + 2u,
+                         VOXEL_DOOR_ROWS + 2u);
+        SmoothCellToAtlas(atlas, baseX, baseY, 32u + 8u, VOXEL_DOOR_ROWS + 8u);
+    }
 }
 
 /* In a doorway's column: 0 through it, up to 1 a little way before it. */
@@ -1852,8 +2083,8 @@ static float DoorShade(float nx, float ny, float nz)
 static void EmitDoorRows(VoxelBuilder *builder, const VoxelDoor *door, float wall,
                          float from, float to, float shade)
 {
-    unsigned baseX = (VOXEL_DOOR_SLOT % VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
-    unsigned baseY = (VOXEL_DOOR_SLOT / VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
+    unsigned baseX = (VOXEL_DOOR_SLOT % VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM + sDoorGutter;
+    unsigned baseY = (VOXEL_DOOR_SLOT / VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM + sDoorGutter;
     float u0 = baseX / (float)VOXEL_SPRITE_ATLAS_W;
     float u1 = (baseX + (unsigned)door->width * 16u) / (float)VOXEL_SPRITE_ATLAS_W;
     float top = (float)door->y - 1.0f;
@@ -1913,6 +2144,79 @@ static void EmitDoor(VoxelBuilder *builder, const VoxelDoor *door)
 #define VOXEL_CAST_SHADOW_ALPHA 0.36f
 #define VOXEL_CAST_SHADOW_LIFT 0.03f    /* over decals (0.02) */
 #define VOXEL_CAST_SHADOW_LIT 0.70f     /* sample at or below: no sun */
+
+/*
+ * How much of its shadow an object casts for the light it gets (`light`, the
+ * scenery's sample at its feet): none at or below the light of what the sun
+ * does not reach, all of it in full light. That light is VOXEL_CAST_SHADOW_LIT
+ * under the full sun (LOW's ambient), and higher under a weaker one
+ * (VoxelLighting_Ambient): under the moon a sprite standing in a house's
+ * shadow casts none on top of it.
+ */
+static float CastShadowStrength(float light)
+{
+    float lit = VoxelLighting_Ambient();
+
+    if (lit < VOXEL_CAST_SHADOW_LIT)
+        lit = VOXEL_CAST_SHADOW_LIT;
+    if (lit > 0.999f)
+        return 0.0f;
+    return (light - lit) / (1.0f - lit);
+}
+
+/*
+ * How much of the shadow each end of it casts - the feet and the tip - for
+ * the ground it falls on. On LOW from the scenery's shadow there, as the
+ * bake has it (VoxelLighting_LitAlone: the same rays as the ground's, crowns
+ * and all, at the ground and not at a point over it, so a sprite at the
+ * foot of a wall and one at the far edge of its shadow read alike): an end
+ * in the scenery's shadow casts nothing, one in the light all of it, and the
+ * quad fades between them where its two ends differ. Two rays a moving
+ * sprite a frame (the sample cache and the slot keep them: none standing
+ * still). On HIGH the shadow map decides, pixel by pixel (the cast shadows
+ * go into its term by MIN, ctr_voxel.c): both ends are the sprite's own
+ * light's, as they always were.
+ */
+#define VOXEL_CAST_GROUND_OVER 0.02f   /* the ground's sample, this far over it */
+
+typedef struct
+{
+    uint32_t epoch, key[5];
+    float feet, tip;
+} CastMemo;
+static CastMemo sCastMemo[VOXEL_SPRITE_SLOTS];
+
+static float CastGroundLit(float x, float z, float deck)
+{
+    float lift = VoxelRelief_LiftAt(x, z), shift = VoxelRelief_ShiftAt(x, z);
+
+    /* (where the sun finds it, as PlaceCompute's point: VoxelBuilder_SunZ) */
+    return VoxelLighting_LitAlone(x, lift + deck + VOXEL_CAST_GROUND_OVER,
+                                  z + shift + VoxelRelief_Lean() * lift + deck);
+}
+
+static void CastShadowEnds(unsigned slot, float fx, float fz, float tx, float tz, float deck,
+                           float light, float *feet, float *tip)
+{
+    CastMemo *memo;
+    uint32_t key[5] = { FloatBits(fx), FloatBits(fz), FloatBits(tx), FloatBits(tz), FloatBits(deck) };
+
+    if (VoxelLighting_Quality() == VOXEL_SHADOWS_HIGH || slot >= VOXEL_SPRITE_SLOTS)
+    {
+        *feet = *tip = CastShadowStrength(light);
+        return;
+    }
+    memo = &sCastMemo[slot];
+    if (!sMemoOn || memo->epoch != sMemoEpoch || memcmp(memo->key, key, sizeof(key)) != 0)
+    {
+        memo->feet = CastShadowStrength(CastGroundLit(fx, fz, deck));
+        memo->tip = tx == fx && tz == fz ? memo->feet : CastShadowStrength(CastGroundLit(tx, tz, deck));
+        memo->epoch = sMemoEpoch;
+        memcpy(memo->key, key, sizeof(key));
+    }
+    *feet = memo->feet;
+    *tip = memo->tip;
+}
 
 /* The ground under the four corners of a cast shadow: heights, then depths
  * (the slot keeps them with the corners and the deck they were found for). */
@@ -1977,15 +2281,15 @@ static void EmitCastShadow(VoxelBuilder *shadows, const VoxelSpriteSlot *slot, u
 {
     if (gVoxelSun.strength == 0.0f)
         return;
-    unsigned baseX = (index % VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
-    unsigned baseY = (index / VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
-    float u0 = baseX / (float)VOXEL_SPRITE_ATLAS_W;
-    float u1 = (baseX + slot->atlasWidth) / (float)VOXEL_SPRITE_ATLAS_W;
+    unsigned baseX = SlotX(slot, index), baseY = SlotY(slot, index);
     /* The rows the card shows (VisibleRows), from the feet: they meet their
      * own shadow. */
     int rows = VisibleRows(slot);
-    float v0 = 1.0f - baseY / (float)VOXEL_SPRITE_ATLAS_H;
-    float v1 = 1.0f - (baseY + rows) / (float)VOXEL_SPRITE_ATLAS_H;
+    SlotEdges edge = SlotEdgesOf(slot, rows);
+    float u0 = (baseX + edge.left) / (float)VOXEL_SPRITE_ATLAS_W;
+    float u1 = (baseX + slot->atlasWidth - edge.right) / (float)VOXEL_SPRITE_ATLAS_W;
+    float v0 = 1.0f - (baseY + edge.top) / (float)VOXEL_SPRITE_ATLAS_H;
+    float v1 = 1.0f - (baseY + rows - edge.bottom) / (float)VOXEL_SPRITE_ATLAS_H;
     /* The card's size, scale and all (EmitBillboard): a Pokemon growing in
      * casts the shadow of the size it is. */
     float halfW = slot->width / VOXEL_PIXELS_PER_TILE * 0.5f * scale;
@@ -1996,16 +2300,18 @@ static void EmitCastShadow(VoxelBuilder *shadows, const VoxelSpriteSlot *slot, u
     float ax = cx - rightX * halfW, az = cz - rightZ * halfW;
     float bx = cx + rightX * halfW, bz = cz + rightZ * halfW;
     float sx = VOXEL_SUN_DX * height, sz = VOXEL_SUN_DZ * height;
-    float strength = (light - VOXEL_CAST_SHADOW_LIT) / (1.0f - VOXEL_CAST_SHADOW_LIT);
+    float strength, tip;
     float ground[8];
 
+    CastShadowEnds(index, cx, cz, cx + sx, cz + sz, deck, light, &strength, &tip);
     /* Too much in shade for a sun to cast with: nothing to look the ground
      * up for. */
-    if (strength <= 0.0f)
+    if (strength <= 0.0f && tip <= 0.0f)
         return;
-    if (strength > 1.0f)
-        strength = 1.0f;
+    strength = strength < 0.0f ? 0.0f : strength > 1.0f ? 1.0f : strength;
+    tip = tip < 0.0f ? 0.0f : tip > 1.0f ? 1.0f : tip;
     strength *= VOXEL_CAST_SHADOW_ALPHA * gVoxelSun.strength;
+    tip *= VOXEL_CAST_SHADOW_ALPHA * gVoxelSun.strength;
     ShadowGroundAt(index, ax, az, bx, bz, sx, sz, deck, ground);
     float ya = ground[0], yb = ground[1], yc = ground[2], yd = ground[3];
     float za = ground[4], zb = ground[5], zc = ground[6], zd = ground[7];
@@ -2013,8 +2319,8 @@ static void EmitCastShadow(VoxelBuilder *shadows, const VoxelSpriteSlot *slot, u
     VoxelBuilder_Quad(shadows,
         &(VoxelVertex){ax,      ya, az + za,      u0, v1, strength},
         &(VoxelVertex){bx,      yb, bz + zb,      u1, v1, strength},
-        &(VoxelVertex){bx + sx, yc, bz + sz + zc, u1, v0, strength},
-        &(VoxelVertex){ax + sx, yd, az + sz + zd, u0, v0, strength});
+        &(VoxelVertex){bx + sx, yc, bz + sz + zc, u1, v0, tip},
+        &(VoxelVertex){ax + sx, yd, az + sz + zd, u0, v0, tip});
 }
 
 /*
@@ -2028,18 +2334,22 @@ static void EmitDecalShadow(VoxelBuilder *shadows, const VoxelSpriteSlot *slot, 
 {
     if (gVoxelSun.strength == 0.0f)
         return;
-    unsigned baseX = (index % VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
-    unsigned baseY = (index / VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
-    float u0 = baseX / (float)VOXEL_SPRITE_ATLAS_W;
-    float u1 = (baseX + slot->atlasWidth) / (float)VOXEL_SPRITE_ATLAS_W;
-    float v0 = 1.0f - baseY / (float)VOXEL_SPRITE_ATLAS_H;
-    float v1 = 1.0f - (baseY + slot->height) / (float)VOXEL_SPRITE_ATLAS_H;
+    unsigned baseX = SlotX(slot, index), baseY = SlotY(slot, index);
+    SlotEdges edge = SlotEdgesOf(slot, slot->height);
+    float u0 = (baseX + edge.left) / (float)VOXEL_SPRITE_ATLAS_W;
+    float u1 = (baseX + slot->atlasWidth - edge.right) / (float)VOXEL_SPRITE_ATLAS_W;
+    float v0 = 1.0f - (baseY + edge.top) / (float)VOXEL_SPRITE_ATLAS_H;
+    float v1 = 1.0f - (baseY + slot->height - edge.bottom) / (float)VOXEL_SPRITE_ATLAS_H;
     float halfW = slot->width / VOXEL_PIXELS_PER_TILE * 0.5f;
     float halfH = slot->height / VOXEL_PIXELS_PER_TILE * 0.5f;
     float x = cx + VOXEL_SUN_DX * height, z0 = cz + VOXEL_SUN_DZ * height;
     float y = VoxelRelief_LiftAt(x, z0) + VOXEL_CAST_SHADOW_LIFT;
     float z = z0 + VoxelRelief_ShiftAt(x, z0);
-    float strength = (light - VOXEL_CAST_SHADOW_LIT) / (1.0f - VOXEL_CAST_SHADOW_LIT);
+    float strength, tip;
+
+    /* (one end: where it falls, the quad round it) */
+    CastShadowEnds(index, x, z0, x, z0, 0.0f, light, &strength, &tip);
+    (void)tip;
 
     if (strength <= 0.0f)
         return;
@@ -2160,12 +2470,12 @@ static void EmitReflection(VoxelBuilder *reflections, const VoxelSpriteSlot *slo
                            unsigned index, float worldX, float worldZ,
                            float rightX, float rightZ, float stretch)
 {
-    unsigned baseX = (index % VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
-    unsigned baseY = (index / VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
-    float u0 = baseX / (float)VOXEL_SPRITE_ATLAS_W;
-    float u1 = (baseX + slot->atlasWidth) / (float)VOXEL_SPRITE_ATLAS_W;
-    float v0 = 1.0f - baseY / (float)VOXEL_SPRITE_ATLAS_H;
-    float v1 = 1.0f - (baseY + slot->height) / (float)VOXEL_SPRITE_ATLAS_H;
+    unsigned baseX = SlotX(slot, index), baseY = SlotY(slot, index);
+    SlotEdges edge = SlotEdgesOf(slot, slot->height);
+    float u0 = (baseX + edge.left) / (float)VOXEL_SPRITE_ATLAS_W;
+    float u1 = (baseX + slot->atlasWidth - edge.right) / (float)VOXEL_SPRITE_ATLAS_W;
+    float v0 = 1.0f - (baseY + edge.top) / (float)VOXEL_SPRITE_ATLAS_H;
+    float v1 = 1.0f - (baseY + slot->height - edge.bottom) / (float)VOXEL_SPRITE_ATLAS_H;
     float halfW = slot->width / VOXEL_PIXELS_PER_TILE * 0.5f;
     float cardLength = slot->height / VOXEL_PIXELS_PER_TILE * stretch;
     float fullLength = cardLength;
@@ -2205,8 +2515,8 @@ static void EmitCloudPiece(VoxelBuilder *reflections, const VoxelSpriteSlot *slo
                            float left, float top, float x0, float z0, float x1, float z1,
                            float y, float shift)
 {
-    unsigned baseX = (index % VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
-    unsigned baseY = (index / VOXEL_SPRITE_COLUMNS) * VOXEL_SPRITE_SLOT_DIM;
+    unsigned baseX = SlotX(slot, index), baseY = SlotY(slot, index);
+    SlotEdges edge = SlotEdgesOf(slot, slot->height);
     float width = slot->width / VOXEL_PIXELS_PER_TILE, height = slot->height / VOXEL_PIXELS_PER_TILE;
     float u0, u1, v0, v1;
 
@@ -2216,10 +2526,14 @@ static void EmitCloudPiece(VoxelBuilder *reflections, const VoxelSpriteSlot *slo
     z1 = fminf(z1, top + height);
     if (x1 <= x0 || z1 <= z0)
         return;
-    u0 = (baseX + slot->atlasWidth * (x0 - left) / width) / (float)VOXEL_SPRITE_ATLAS_W;
-    u1 = (baseX + slot->atlasWidth * (x1 - left) / width) / (float)VOXEL_SPRITE_ATLAS_W;
-    v0 = 1.0f - (baseY + slot->height * (z0 - top) / height) / (float)VOXEL_SPRITE_ATLAS_H;
-    v1 = 1.0f - (baseY + slot->height * (z1 - top) / height) / (float)VOXEL_SPRITE_ATLAS_H;
+    u0 = (baseX + edge.left + (slot->atlasWidth - edge.left - edge.right) * (x0 - left) / width)
+       / (float)VOXEL_SPRITE_ATLAS_W;
+    u1 = (baseX + edge.left + (slot->atlasWidth - edge.left - edge.right) * (x1 - left) / width)
+       / (float)VOXEL_SPRITE_ATLAS_W;
+    v0 = 1.0f - (baseY + edge.top + (slot->height - edge.top - edge.bottom) * (z0 - top) / height)
+              / (float)VOXEL_SPRITE_ATLAS_H;
+    v1 = 1.0f - (baseY + edge.top + (slot->height - edge.top - edge.bottom) * (z1 - top) / height)
+              / (float)VOXEL_SPRITE_ATLAS_H;
     VoxelBuilder_Quad(reflections,
         &(VoxelVertex){x0, y, z0 + shift, u0, v0, 1.0f},
         &(VoxelVertex){x1, y, z0 + shift, u1, v0, 1.0f},
@@ -2514,6 +2828,23 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
 
     sMemoOn = sMemoForced >= 0 ? sMemoForced != 0 : CtrSettings_GetInt("voxel_card_memo", 1) != 0;
     MemoWorldCheck();
+    /* SPRITE FILTER turned on or off: every picture decoded again the other
+     * way (DecodeSlot, FindDoors) before any card is made, the atlas cleared
+     * first so nothing of the other layout stays in a gutter. */
+    if (sSmoothWanted != sSmooth)
+    {
+        sSmooth = sSmoothWanted;
+        memset(atlas, 0, VOXEL_SPRITE_PIXELS * sizeof(uint16_t));
+        for (unsigned i = 0; i < VOXEL_SPRITE_SLOTS; ++i)
+        {
+            sSlots[i].valid = false;
+            sSlots[i].drawnWidth = sSlots[i].drawnHeight = 0;
+            sSlots[i].smooth = false;
+            sSlots[i].gutterX = sSlots[i].gutterY = 0;
+        }
+        sDoorStale = true;
+        sDoorGutter = 0;
+    }
     /* A card tilted to face the swoop's camera is seen square on: nothing
      * to make up (upright at a top-down pose it was a hair wide, seven tall). */
     sLay = camera->lay;

@@ -16,12 +16,14 @@
 #include "main.h"
 #include "battle.h"
 #include "battle_setup.h"
+#include "battle_interface.h"
 #include "script_pokemon_util.h"
 #include "overworld.h"
 #include "constants/species.h"
 #include "constants/opponents.h"
 #include "trainer_see.h"
 #include "pokemon.h"
+#include "string_util.h"
 #include "3ds_platform.h"
 
 #ifdef CTR_CYCLE_TEST
@@ -163,6 +165,37 @@ static void BattleTestConfig(void)
                  sQuitAfter);
 }
 
+#ifdef CTR_BATTLE_TEST_STATUS
+/*
+ * -DCTR_BATTLE_TEST_STATUS: from battle frame 400 on, every 400 frames the
+ * battlers take the next row of statuses (all five pills across the rows,
+ * the first two columns for a single battle), held every 20 frames against
+ * the battle's own cures, so the info boxes' status labels can be looked at
+ * in each language.
+ */
+static void BattleTestStatuses(void)
+{
+    static const u32 rows[3][4] = {
+        {STATUS1_POISON, STATUS1_PARALYSIS, STATUS1_SLEEP_TURN(5), STATUS1_BURN},
+        {STATUS1_FREEZE, STATUS1_TOXIC_POISON, STATUS1_BURN, STATUS1_PARALYSIS},
+        {STATUS1_SLEEP_TURN(5), STATUS1_FREEZE, STATUS1_POISON, STATUS1_FREEZE},
+    };
+    unsigned i, phase = ((sBattleFrames - 400) / 400) % 3;
+
+    if (sBattleFrames < 400 || sBattleFrames % 20 != 0) return;
+    for (i = 0; i < gBattlersCount && i < 4; ++i)
+    {
+        struct Pokemon *mon = GetBattlerSide(i) == B_SIDE_PLAYER ? &gPlayerParty[gBattlerPartyIndexes[i]]
+                                                                  : &gEnemyParty[gBattlerPartyIndexes[i]];
+        u32 status = rows[phase][i];
+
+        SetMonData(mon, MON_DATA_STATUS, &status);
+        gBattleMons[i].status1 = status;
+        UpdateHealthboxAttribute(gHealthboxSpriteIds[i], mon, HEALTHBOX_STATUS_ICON);
+    }
+}
+#endif
+
 void CtrCycle_Frame(void)
 {
     ++sFrame;
@@ -170,6 +203,9 @@ void CtrCycle_Frame(void)
     if (gMain.inBattle)
     {
         ++sBattleFrames;
+#ifdef CTR_BATTLE_TEST_STATUS
+        BattleTestStatuses();
+#endif
         if (sVramLeft && sBattleFrames == (u32)sVramAt)
         {
             while (vramSpaceFree() > (u32)sVramLeft * 1024u + 8192u && vramAlloc(8192)) {}
@@ -213,6 +249,15 @@ void CtrCycle_Frame(void)
             SetMonMoveSlot(&gPlayerParty[1], sMove, 0);
             CtrLog_Write(CTR_LOG_GAME, "BATTLE test: lead knows move %d", sMove);
         }
+#ifdef CTR_BATTLE_TEST_STATUS
+        /* A party of its own: a save of another language keeps its nicknames
+         * in that language's characters and length, which the battle's name
+         * boxes of this build do not take. */
+        ZeroPlayerPartyMons();
+        CreateMon(&gPlayerParty[0], SPECIES_GENGAR, 48, 31, TRUE, 0, OT_ID_PLAYER_ID, 0);
+        CreateMon(&gPlayerParty[1], SPECIES_UMBREON, 100, 31, TRUE, 0, OT_ID_PLAYER_ID, 0);
+        CalculatePlayerPartyCount();
+#endif
 #ifdef CTR_BATTLE_TEST_TRAINER
         if (!sTrainer) sTrainer = CTR_BATTLE_TEST_TRAINER;
 #endif

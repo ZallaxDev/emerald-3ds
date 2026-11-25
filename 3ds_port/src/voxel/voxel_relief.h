@@ -61,6 +61,11 @@ bool VoxelRelief_IsDrawn(const VoxelMapInstance *inst);
  */
 unsigned VoxelRelief_Belt(const VoxelMapInstance *inst);
 
+/* True for a layout under the open sky though the game types its map as a
+ * cave (MAP_TYPE_UNDERGROUND): relief_fixes.json's "open_air" list. Such a
+ * map has no cave look (VoxelWorld_Underground). */
+bool VoxelRelief_OpenAir(unsigned layoutId);
+
 /* The cliff wall a map's cut cells hang most often (its mountains' face
  * tile), -1 if none: what a back's north face is drawn with when its own
  * record names no wall. */

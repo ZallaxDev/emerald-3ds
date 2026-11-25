@@ -303,6 +303,36 @@ def test_under_and_below():
         raise AssertionError("an unknown piece below was taken")
 
 
+def test_open_air():
+    # the maps typed as caves that stand under the open sky: the fixes'
+    # "open_air" list, the relief's "OPEN" table (after "UNDR", before the
+    # tables the generator stamps last), read back as written
+    import reliefbin
+    import voxel_relief_fixes as vrf
+    top, deck = vrf.layout_index("LAYOUT_NAVEL_ROCK_TOP"), vrf.layout_index("LAYOUT_ABANDONED_SHIP_DECK")
+    shipped = vrf.load_fixes()
+    assert vrf.open_air_layouts(shipped) == {top}, shipped.get("open_air")
+    relief = {"layouts": {}, "variants": [], "cuts": {}, "edges": [],
+              "under": {(1, 2, 3): [5, 0xFFFF, [0] * 25]}}
+    vrf.apply(relief, {"layouts": {}, "open_air": ["LAYOUT_NAVEL_ROCK_TOP"]})
+    assert relief["open_air"] == {top}
+    blob = vrf.pack(relief)
+    assert list(reliefbin.tail_tables(blob)) == [b"UNDR", b"OPEN"], list(reliefbin.tail_tables(blob))
+    back = vrf.parse(blob)
+    assert back["open_air"] == {top} and deck not in back["open_air"]
+    assert back["under"] == relief["under"]
+    # taken off the list, it is off the file; no list, no table
+    vrf.apply(back, {"layouts": {}})
+    assert back["open_air"] == set() and b"OPEN" not in reliefbin.tail_tables(vrf.pack(back))
+    for bad in (["LAYOUT_NO_SUCH_PLACE"], ["MAP_NAVEL_ROCK_TOP"], "LAYOUT_NAVEL_ROCK_TOP", [7]):
+        try:
+            vrf.apply({"layouts": {}, "variants": [], "cuts": {}}, {"layouts": {}, "open_air": bad})
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("open_air %r was taken" % (bad,))
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_"):

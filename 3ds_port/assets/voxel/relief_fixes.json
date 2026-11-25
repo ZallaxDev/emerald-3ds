@@ -119931,6 +119931,9 @@
    }
   }
  },
+ "open_air": [
+  "LAYOUT_NAVEL_ROCK_TOP"
+ ],
  "pieces": {},
  "version": 1
 }

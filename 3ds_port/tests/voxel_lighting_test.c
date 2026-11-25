@@ -225,6 +225,32 @@ static void MovingSunTests(void)
     sTreePresent = sRailPresent = false;
     sCeilingOverride = 0.0f;
     gVoxelLightingStepEveryPoint = false;
+    /* The moon (3ds_daynight.c: up and to the right, 0.30): a sprite's card
+     * sample (0.75 up) on open ground is in full light, so it casts its whole
+     * faint shadow; one at the south-west foot of the house is in the
+     * house's moon shadow, at the ambient, and casts none on top of it
+     * (CastShadowStrength, voxel_entities.c). */
+    assert(VoxelLighting_SetSun(-0.85f, 0.55f, 0.30f, 1100));
+    VoxelLighting_Reset();
+    assert(fabsf(VoxelLighting_Ambient() - 0.91f) < 0.0001f);
+    assert(VoxelLighting_SampleAlone(10.5f, 0.75f, 10.5f) == 1.0f);
+    assert(VoxelLighting_SampleAlone(3.5f, 0.75f, 6.5f) == VoxelLighting_Ambient());
+    assert(VoxelLighting_Sample(3.5f, 0.02f, 6.5f) < 1.0f);
+    /* A sprite's cast shadow on LOW asks the ground at its ends
+     * (VoxelLighting_LitAlone, voxel_entities.c CastShadowEnds), not a point
+     * 0.75 over it: at the far edge of the house's moon shadow the ground is
+     * shaded while that point is already in the light - where the sprite
+     * cast its shadow on top of the house's. Without the contact shading:
+     * at the wall's foot as at the far edge. */
+    assert(VoxelLighting_LitAlone(3.5f, 0.02f, 6.5f) == VoxelLighting_Ambient());
+    assert(VoxelLighting_LitAlone(2.0f, 0.02f, 7.2f) == VoxelLighting_Ambient());
+    assert(VoxelLighting_SampleAlone(2.0f, 0.75f, 7.2f) == 1.0f);
+    assert(VoxelLighting_LitAlone(10.5f, 0.02f, 10.5f) == 1.0f);
+    /* HIGH: the shadow map decides (ctr_voxel.c: the cast shadows go into its
+     * term); its samples cast no ray, so the ground reads lit */
+    assert(VoxelLighting_SetQuality(VOXEL_SHADOWS_HIGH));
+    assert(VoxelLighting_LitAlone(3.5f, 0.02f, 6.5f) == 1.0f);
+    assert(VoxelLighting_SetQuality(VOXEL_SHADOWS_LOW));
     assert(VoxelLighting_SetSun(0.85f, 0.55f, 1.0f, 0));
     VoxelLighting_Reset();
     puts("PASS moving sun: both shadow directions, face lighting, zero axes, bounded rays, cache reuse, night, hash invalidation, 56700 oracle samples");

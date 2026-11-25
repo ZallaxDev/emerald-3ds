@@ -241,6 +241,9 @@ const CtrExtra gCtrExtras[] =
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("3D WORLD", "MUNDO 3D", "MONDE 3D", "MONDO 3D", "MUNDO 3D", "3D-WELT", "3D ワールド"), "voxel_stereo", 3, 0, sVoxelStereo, NULL, NULL, NULL},
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("3D DEPTH", "PROFUNDIDAD 3D", "PROFONDEUR 3D", "PROFOND. 3D", "PROFUNDIDADE 3D", "3D-TIEFE", "3D おくゆき"), "voxel_depth", 7, 3, sVoxelDepths, NULL, NULL, NULL},
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("SHADOW QUALITY", "CALIDAD DE SOMBRAS", "QUALITÉ OMBRES", "QUALITÀ OMBRE", "QUALID. SOMBRAS", "SCHATTENQUALITÄT", "かげの ひんしつ"), "voxel_shadows", 0, 0, sVoxelShadows, NULL, VoxelShadowsStep, VoxelShadowsText},
+    /* The voxel world's sprites sampled smoothly (ctr_voxel.c, voxel_entities.c,
+     * SPRITE FILTER): even pixels with the camera tilted, a little soft up close. */
+    {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("SPRITE FILTER", "FILTRO DE SPRITES", "FILTRE SPRITES", "FILTRO SPRITE", "FILTRO SPRITES", "SPRITE-FILTER", "スプライト フィルター"), "voxel_sprite_filter", 2, 0, gCtrExtrasOffOn, NULL, NULL, NULL},
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("SPEED EFFECTS", "EFECTOS VELOC.", "EFFETS VITESSE", "EFFETTI VELOC.", "EFEITOS VELOC.", "TEMPO-EFFEKTE", "スピード こうか"), "battle_speed_fx", 2, 1, gCtrExtrasOffOn, NULL, NULL, NULL},
     /* Keep console timing by default; OFF restores Emerald's zero boot seed. */
     {CTR_EXTRAS_SCREEN(CTR_EXTRAS_OPTIONS, 1), CTR_TEXT("RANDOM BOOT SEED", "SEMILLA ALEATORIA", "GRAINE ALÉATOIRE", "SEME CASUALE", "SEMENTE ALEAT.", "ZUFALLSSTARTWERT", "きどうじの たね"), CTR_BOOT_SEED_KEY, 2, 1, gCtrExtrasOffOn, NULL, NULL, NULL},
@@ -342,5 +345,5 @@ bool CtrExtras_NeedsVoxel(const CtrExtra *extra)
 {
     /* SPEED EFFECTS: the voxel battle's entrance (video/bworld.inc). */
     return extra->values == sVoxelStereo || extra->values == sVoxelDepths || extra->values == sVoxelShadows
-        || strcmp(extra->key, "battle_speed_fx") == 0;
+        || strcmp(extra->key, "voxel_sprite_filter") == 0 || strcmp(extra->key, "battle_speed_fx") == 0;
 }

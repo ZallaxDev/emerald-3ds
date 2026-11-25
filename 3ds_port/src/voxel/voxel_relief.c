@@ -35,6 +35,9 @@
  *   all of it), s16 top (pixels over the map's base: where the fill's top
  *   stands), u16 metatiles[4] (the map's own ids: a 2x2 block tiled out as
  *   the game's border block is, VoxelRelief_EdgeFillAt)
+ *   then, if the fixes list layouts under the open sky though the game types
+ *   their maps as caves (VoxelRelief_OpenAir), "OPEN", u16 layouts, u16 0;
+ *   layouts x 2: u16 layout, sorted (after "UNDR", when there is one)
  *   then, if any door or cave mouth of the map's faces stands upright (the
  *   lean leaves them vertical, at the foot of the face; VoxelRelief_Upright),
  *   "UPRT", u16 cells, u16 0, cells x 4: u16 layout, u8 x, u8 y, sorted by
@@ -91,6 +94,11 @@ typedef struct
     const uint8_t *cells;  /* into sBlob: x, y and the stored heights */
     uint8_t stride;        /* bytes a cell: CELL_BYTES, or WIDE_CELL_BYTES */
     int16_t *heights;      /* GRID per cell, pixels */
+    /* Where each row's cells start (height + 1 entries; NULL: search them
+     * all): Find searches the one row, a handful of cells, rather than the
+     * map's thousands - a dozen probes a stride apart, each a cache miss on
+     * the console, for every cell the memo had not kept. */
+    uint16_t *rows;
     /* A drawn map's surface where it stands, for the sun to be stopped by:
      * its height (pixels) at the middle of every lattice step of world X and
      * Z, not of the drawing's rows - a point of the drawing lies as far
@@ -178,6 +186,9 @@ static const uint8_t *sUnder;       /* "UNDR": u16 layout, u8 x, u8 y, u16 tile,
 static unsigned sUnderCount;
 static int16_t *sUnderHeights;      /* the heights of each, aligned */
 #define UNDER_BYTES 58
+static const uint8_t *sOpenAir;     /* "OPEN": u16 layout under the open sky, sorted */
+static unsigned sOpenAirCount;
+#define OPEN_AIR_BYTES 2
 static const uint8_t *sSteps;       /* "STEP": u16 layout, u8 x, u8 y, u16 riser mask a cell */
 static unsigned sStepCount;
 #define STEP_BYTES 6
@@ -282,6 +293,14 @@ bool VoxelRelief_Init(void)
                         sUnderHeights[k * GRID + g] = (int16_t)U16(sUnder + k * UNDER_BYTES + 8 + 2 * g);
                 e = sUnder + UNDER_BYTES * sUnderCount;
             }
+            if ((long)(e - sBlob) + 8 <= size - 8 && memcmp(e, "OPEN", 4) == 0)
+            {
+                sOpenAirCount = U16(e + 4);
+                sOpenAir = e + 8;
+                if ((long)(sOpenAir - sBlob) + (long)(OPEN_AIR_BYTES * sOpenAirCount) > size - 8)
+                    goto fail;
+                e = sOpenAir + OPEN_AIR_BYTES * sOpenAirCount;
+            }
             if ((long)(e - sBlob) + 8 <= size - 8 && memcmp(e, "UPRT", 4) == 0)
             {
                 sUprightCount = U16(e + 4);
@@ -333,6 +352,19 @@ bool VoxelRelief_Init(void)
             const uint8_t *a = l->cells + (k - 1) * l->stride, *c = a + l->stride;
             if (a[1] > c[1] || (a[1] == c[1] && a[0] >= c[0]))
                 goto fail;  /* not in row order: the search would miss cells */
+        }
+        /* (rows past 255 cannot be told apart by a cell's byte: no index) */
+        l->rows = l->height <= 256u ? malloc(((size_t)l->height + 1u) * sizeof(*l->rows)) : NULL;
+        if (l->rows != NULL)
+        {
+            unsigned k = 0;
+
+            for (unsigned y = 0; y <= l->height; ++y)
+            {
+                while (k < cells && l->cells[k * l->stride + 1] < y)
+                    ++k;
+                l->rows[y] = (uint16_t)k;
+            }
         }
         l->heights = malloc((size_t)(cells ? cells : 1) * GRID * sizeof(int16_t));
         if (l->heights == NULL)
@@ -414,6 +446,7 @@ void VoxelRelief_Shutdown(void)
         free(sLayouts[i].surface);
         free(sLayouts[i].surfaceCell);
         free(sLayouts[i].heights);
+        free(sLayouts[i].rows);
     }
     memset(sFindMemo, 0, sizeof(sFindMemo));
     memset(sCutMemo, 0, sizeof(sCutMemo));
@@ -439,6 +472,8 @@ void VoxelRelief_Shutdown(void)
     sUnderHeights = NULL;
     sUnder = NULL;
     sUnderCount = 0;
+    sOpenAir = NULL;
+    sOpenAirCount = 0;
     memset(sStepMemo, 0, sizeof(sStepMemo));
 }
 
@@ -532,7 +567,40 @@ static const int8_t kCutDir[8][2] = { { 0, -1 }, { 0, 1 }, { -1, 0 }, { 1, 0 },
 
 /* The rock's eight sides (its hull: a*i + b*j <= c over its pixels), and
  * whether it is that hull: a polygon. */
+static bool CutHullOf(const uint8_t *rows, int c[8]);
+
+/* The hulls last worked out, by their 16x16 rows: a map has a few dozen cut
+ * shapes, and each cut cell of every build tested its 256 pixels against
+ * eight sides twice over. Keyed by the rows' bytes themselves, whatever
+ * buffer they are in; a slot only ever answers the very rows it holds. */
+#define CUT_HULL_MEMO 32u
+typedef struct
+{
+    uint8_t rows[32];
+    int c[8];
+    bool polygon, used;
+} CutHullMemo;
+static CutHullMemo sCutHullMemo[CUT_HULL_MEMO];
+
 static bool CutHull(const uint8_t *rows, int c[8])
+{
+    uint32_t h = 2166136261u;
+    CutHullMemo *memo;
+
+    for (unsigned i = 0; i < 32; ++i)
+        h = (h ^ rows[i]) * 16777619u;
+    memo = &sCutHullMemo[(h ^ (h >> 16)) & (CUT_HULL_MEMO - 1u)];
+    if (!memo->used || memcmp(memo->rows, rows, 32) != 0)
+    {
+        memcpy(memo->rows, rows, 32);
+        memo->polygon = CutHullOf(rows, memo->c);
+        memo->used = true;
+    }
+    memcpy(c, memo->c, sizeof(memo->c));
+    return memo->polygon;
+}
+
+static bool CutHullOf(const uint8_t *rows, int c[8])
 {
     int rock = 0;
 
@@ -1048,6 +1116,13 @@ static int Find(const ReliefLayout *l, const VoxelMapInstance *inst, int x, int 
         return memo->k;
     key = ((unsigned)y << 8) | (unsigned)x;
     hi = l->count;
+    if (l->rows != NULL)
+    {
+        /* (keys are strictly increasing, Init: the one match is the one
+         * the whole search finds) */
+        lo = l->rows[y];
+        hi = l->rows[y + 1];
+    }
     memo->layout = l;
     memo->x = (int16_t)x;
     memo->y = (int16_t)y;
@@ -1087,6 +1162,14 @@ unsigned VoxelRelief_Belt(const VoxelMapInstance *inst)
 {
     const ReliefLayout *l = LayoutOf(inst);
     return l != NULL ? l->belt : 0u;
+}
+
+bool VoxelRelief_OpenAir(unsigned layoutId)
+{
+    for (unsigned i = 0; i < sOpenAirCount; ++i)
+        if (U16(sOpenAir + OPEN_AIR_BYTES * i) == layoutId)
+            return true;
+    return false;
 }
 
 bool VoxelRelief_IsSlope(const int16_t *grid)

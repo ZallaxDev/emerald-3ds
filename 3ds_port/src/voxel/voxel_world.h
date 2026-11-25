@@ -160,8 +160,13 @@ float VoxelWorld_Lightning(void);
 /* How thick the game's fog is right now, 0-1: its sprites' blend as it fades
  * in and out, 0 when there are none (voxel_world.c). */
 float VoxelWorld_FogDensity(void);
-/* A cave, tunnel or other map under the ground (MAP_TYPE_UNDERGROUND). */
+/* A cave, tunnel or other map under the ground (MAP_TYPE_UNDERGROUND), but
+ * for one under the open sky (relief_fixes.json "open_air",
+ * VoxelRelief_OpenAir): what the cave look keys on. */
 bool VoxelWorld_Underground(void);
+/* The map is one of the game's dark caves (flashLevel above 0): the field
+ * draws its circle of light round the player (VoxelFlashLight). */
+bool VoxelWorld_FlashDark(void);
 /* The palette fade on the backgrounds as a blend towards rgb (0-1) by amount,
  * false when there is none (voxel_world.c). */
 bool VoxelWorld_ScreenFade(float *amount, float rgb[3]);

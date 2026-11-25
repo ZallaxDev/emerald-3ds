@@ -32,6 +32,12 @@ typedef struct
 static SignRecord *sIndex;
 static unsigned sCount;
 static bool sTried;
+/* Where each layout's records start in sIndex (sFirstCount entries, the last
+ * one past every layout; NULL: search them all). Every cell of a build asks
+ * for its sign, most maps have none or a few, and the whole index's search
+ * was nine probes a record's size apart. */
+static uint16_t *sFirst;
+static unsigned sFirstCount;
 
 /* The light the lit windows and glass doors of a building throw on the ground
  * in front of them (gen_voxel_buildings.write_window_lights): one pool a window
@@ -54,6 +60,9 @@ void VoxelSign_Shutdown(void)
     sIndex = NULL;
     sCount = 0;
     sTried = false;
+    free(sFirst);
+    sFirst = NULL;
+    sFirstCount = 0;
     free(sLights);
     sLights = NULL;
     sLightCount = 0;
@@ -94,6 +103,35 @@ static bool LoadLights(void)
     return true;
 }
 
+static unsigned MaskKey(const SignRecord *r)
+{
+    return ((unsigned)r->layout << 20) | ((unsigned)r->y << 10) | r->x;
+}
+
+/* sFirst[L]: the first record whose key is L's or past it, as the search
+ * orders them - so a key of layout L lies between sFirst[L] and sFirst[L + 1]
+ * and the search there ends where the whole one does. Only for an index in
+ * key order (the search needs it anyway); without, none. */
+static void BuildFirst(void)
+{
+    unsigned last;
+
+    for (unsigned i = 1; i < sCount; ++i)
+        if (MaskKey(&sIndex[i - 1]) > MaskKey(&sIndex[i]))
+            return;
+    last = MaskKey(&sIndex[sCount - 1]) >> 20;
+    sFirst = malloc(((size_t)last + 2u) * sizeof(*sFirst));
+    if (sFirst == NULL)
+        return;
+    sFirstCount = last + 2u;
+    for (unsigned layout = 0, i = 0; layout < sFirstCount; ++layout)
+    {
+        while (i < sCount && MaskKey(&sIndex[i]) < (layout << 20))
+            ++i;
+        sFirst[layout] = (uint16_t)i;
+    }
+}
+
 static bool LoadMasks(void)
 {
     uint8_t header[8];
@@ -120,6 +158,7 @@ static bool LoadMasks(void)
         return false;
     }
     fclose(file);
+    BuildFirst();
     return true;
 }
 
@@ -131,15 +170,17 @@ void VoxelSign_Init(void)
 
 static const SignRecord *FindMask(unsigned layout, int x, int y)
 {
-    unsigned lo = 0, hi;
+    unsigned lo = 0, hi, want = (layout << 20) | ((unsigned)y << 10) | (unsigned)x;
     if (!LoadMasks()) return NULL;
     hi = sCount;
+    /* (a cell inside the layout's keys: x and y under 1024) */
+    if (sFirst != NULL && layout < 4095u && want >> 20 == layout) {
+        lo = layout < sFirstCount ? sFirst[layout] : sCount;
+        hi = layout + 1u < sFirstCount ? sFirst[layout + 1u] : sCount;
+    }
     while (lo < hi) {
         unsigned mid = lo + (hi - lo) / 2;
-        const SignRecord *r = &sIndex[mid];
-        unsigned key = ((unsigned)r->layout << 20) | ((unsigned)r->y << 10) | r->x;
-        unsigned want = (layout << 20) | ((unsigned)y << 10) | (unsigned)x;
-        if (key < want) lo = mid + 1;
+        if (MaskKey(&sIndex[mid]) < want) lo = mid + 1;
         else hi = mid;
     }
     if (lo == sCount || sIndex[lo].layout != layout

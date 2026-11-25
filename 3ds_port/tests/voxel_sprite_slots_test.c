@@ -426,6 +426,76 @@ static void TestDoorRow(void)
     }
 }
 
+/* ── Bleeding the outline for the smooth filter ─────────────────────────── */
+
+static void TestBleed(void)
+{
+    /* 5x4 in rows 8 apart; past the width a marker that must stay. */
+    uint16_t px[4 * 8];
+    const uint16_t red = 0xF801, mark = 0x1234;
+
+    for (unsigned i = 0; i < 4 * 8; ++i)
+        px[i] = (i % 8) < 5 ? 0 : mark;
+    px[1 * 8 + 2] = red;
+    VoxelSlots_Bleed(px, 8, 5, 4);
+    CHECK(px[1 * 8 + 2] == red);                  /* opaque: as it was */
+    CHECK(px[1 * 8 + 1] == (red & ~1u));          /* sides: its colour, alpha 0 */
+    CHECK(px[1 * 8 + 3] == (red & ~1u));
+    CHECK(px[0 * 8 + 2] == (red & ~1u));          /* above, below */
+    CHECK(px[2 * 8 + 2] == (red & ~1u));
+    CHECK(px[0 * 8 + 1] == (red & ~1u));          /* corners */
+    CHECK(px[2 * 8 + 3] == (red & ~1u));
+    CHECK(px[1 * 8 + 0] == 0);                    /* two away: untouched */
+    CHECK(px[3 * 8 + 2] == 0);
+    CHECK(px[1 * 8 + 4] == 0);
+    for (unsigned y = 0; y < 4; ++y)
+        for (unsigned x = 5; x < 8; ++x)
+            CHECK(px[y * 8 + x] == mark);         /* outside the picture */
+
+    /* Which neighbour: the side before above or below, those before a corner. */
+    {
+        uint16_t q[3 * 3] = {0};
+        const uint16_t a = 0x07C1, b = 0x003F, c = 0xFFFF;
+
+        q[0 * 3 + 0] = a;       /* corner of (1,1), side of (1,0) */
+        q[0 * 3 + 2] = b;
+        q[2 * 3 + 1] = c;       /* below (1,1) */
+        VoxelSlots_Bleed(q, 3, 3, 3);
+        CHECK(q[0 * 3 + 1] == (a & ~1u));         /* sides: the left one first */
+        CHECK(q[1 * 3 + 1] == (c & ~1u));         /* below before a corner */
+        CHECK(q[1 * 3 + 0] == (a & ~1u));         /* above before below */
+        CHECK(q[1 * 3 + 2] == (b & ~1u));
+        CHECK((q[2 * 3 + 0] & 1u) == 0 && (q[2 * 3 + 2] & 1u) == 0);
+    }
+
+    /* A full slot's width: no wrap from one edge to the other. */
+    {
+        static uint16_t w[2 * 64];
+
+        memset(w, 0, sizeof(w));
+        w[63] = red;
+        VoxelSlots_Bleed(w, 64, 64, 2);
+        CHECK(w[62] == (red & ~1u));
+        CHECK(w[64 + 63] == (red & ~1u));
+        CHECK(w[0] == 0 && w[64] == 0);
+    }
+
+    /* Nothing opaque or nothing clear: nothing changes. */
+    {
+        uint16_t clear[16] = {0}, solid[16];
+
+        for (unsigned i = 0; i < 16; ++i)
+            solid[i] = (uint16_t)(0x1001 + 2 * i);
+        VoxelSlots_Bleed(clear, 4, 4, 4);
+        VoxelSlots_Bleed(solid, 4, 4, 4);
+        for (unsigned i = 0; i < 16; ++i)
+        {
+            CHECK(clear[i] == 0);
+            CHECK(solid[i] == (uint16_t)(0x1001 + 2 * i));
+        }
+    }
+}
+
 int main(void)
 {
     TestAtlasWidth();
@@ -440,6 +510,7 @@ int main(void)
     TestPriorityAndPlacement();
     TestDoorPixel();
     TestDoorRow();
+    TestBleed();
     if (sFailures)
     {
         fprintf(stderr, "voxel_sprite_slots_test: %d failure(s)\n", sFailures);

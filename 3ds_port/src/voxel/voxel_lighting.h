@@ -54,6 +54,12 @@ float VoxelLighting_Sample(float x, float y, float z);
  * without the blocks' bound, which pays for itself over a build's rays but
  * classifies some four hundred cells the first time a lone ray needs it. */
 float VoxelLighting_SampleAlone(float x, float y, float z);
+/* Whether the sun reaches a point, lit on its own as SampleAlone does:
+ * 1, or the ambient where it does not - without the contact shading, which
+ * is the point's surroundings, not the sun's. For a sprite's cast shadow on
+ * LOW (voxel_entities.c): is the ground it falls on in the scenery's shadow?
+ * On HIGH always 1 (its samples cast no ray: the shadow map shades). */
+float VoxelLighting_LitAlone(float x, float y, float z);
 /* Ahead of the ground of cells x0..x1, z0..z1: the casters' bounds its rays
  * will read, `budget` new ones a call from `*cursor` (0 to begin). True once
  * all are read. The same shadows either way; it only spreads their cost. */

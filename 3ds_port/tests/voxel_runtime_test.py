@@ -43,7 +43,7 @@ def main():
 #define GPU_RGBA5551 0
 #define GPU_NEAREST 0
 #define GPU_CLAMP_TO_EDGE 0
-enum { NEED_HOLE, NEED_STALE, NEED_AHEAD, NEED_AHEAD_STALE };
+enum { NEED_HOLE, NEED_STALE, NEED_SHADOW, NEED_AHEAD, NEED_AHEAD_STALE };
 typedef struct { int mapGroup, mapNum, originX, originY, width, height; const void *primaryTileset, *secondaryTileset; } VoxelMapInstance;
 typedef struct { VoxelMapInstance *inst; int cx, cy, x0, y0, x1, y1; bool border; } ChunkSite;
 typedef struct { void *data; } C3D_Tex;
@@ -788,11 +788,15 @@ static int GSPGPU_FlushDataCache(const void *data, uint32_t size) { (void)data; 
 /* Page model 3: 64 quads apart, two triangles each, 2 slices of conversion. */
 #define QUADS 64u
 static VoxelVertex modelVertices[QUADS * 6u];
-static bool VoxelBuildings_StaticModel(unsigned pageModel, const VoxelVertex **vertices,
+static bool VoxelBuildings_StaticModel(unsigned pageModel, uint32_t *first,
                                        unsigned *count, float *ox, float *oy, float *su, float *sv) {
     if (pageModel != 3) return false;
-    *vertices = modelVertices; *count = QUADS * 6u; *ox = *oy = 0.0f; *su = *sv = 1.0f / 256.0f;
+    *first = 0; *count = QUADS * 6u; *ox = *oy = 0.0f; *su = *sv = 1.0f / 256.0f;
     return true;
+}
+static void VoxelBuildings_Vertex(uint32_t index, VoxelVertex *out) {
+    assert(index < QUADS * 6u);
+    *out = modelVertices[index];
 }
 '''
     statics += voxel[voxel.index('#define VOXEL_STATIC_MESHES 64u'):voxel.index('static void SetModelViewAt(')]

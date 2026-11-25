@@ -54,7 +54,13 @@ generators and every build, the builder's included, gets the same terrain.
           }
         }
       },
-      "furniture": {"pc1f": {"ball_w": {"height": 12, "base": 10}}}
+      "furniture": {"pc1f": {"ball_w": {"height": 12, "base": 10}}},
+      "open_air": ["LAYOUT_NAVEL_ROCK_TOP"]   layouts under the open sky though
+                                            the game types their maps as caves
+                                            (MAP_TYPE_UNDERGROUND): no cave look,
+                                            lit as any map outdoors
+                                            (VoxelRelief_OpenAir); a name that
+                                            is no layout is an error
     }
 
 In a cell, the order is: the generated lattice, then a piece (the cell's own
@@ -110,6 +116,10 @@ TWINS = {"LAYOUT_ROUTE111_NO_MIRAGE_TOWER": "LAYOUT_ROUTE111"}
 UNDER_TAG = b"UNDR"
 UNDER_FMT = "<HBBHH25h"
 UNDER_BYTES = 58
+# "OPEN", after "UNDR": u16 count, u16 0, count x u16 layout, sorted - the
+# layouts the fixes' "open_air" lists (voxel_relief.c VoxelRelief_OpenAir)
+OPEN_TAG = b"OPEN"
+OPEN_BYTES = 2
 
 
 # --- relief.bin, read and written without loss ---------------------------------
@@ -121,8 +131,10 @@ def parse(blob):
     "variants": [(layout, metatile, rows[16])],
     "cuts": {(layout, x, y): [variant, foot, ground, wall, sides, flags]},
     "edges": [(layout, edge, flags, first, last, top, m0, m1, m2, m3)],
-    "under": {(layout, x, y): [tile, wall, [25 px]]}} - the surface under a
-    raised floor ("UNDR", voxel_terraces' "below" marks)"""
+    "under": {(layout, x, y): [tile, wall, [25 px]]},
+    "open_air": {layout}} - "under" the surface under a raised floor ("UNDR",
+    voxel_terraces' "below" marks), "open_air" the layouts under the open sky
+    ("OPEN", the fixes' "open_air")"""
     if blob[:4] != MAGIC:
         raise ValueError("not a relief.bin")
     count, side = struct.unpack_from("<HH", blob, 4)
@@ -170,7 +182,13 @@ def parse(blob):
             lay, x, y, tile, wall, *grid = struct.unpack_from(UNDER_FMT, blob, at)
             under[(lay, x, y)] = [tile, wall, grid]
             at += UNDER_BYTES
-    return {"layouts": layouts, "variants": variants, "cuts": cuts, "edges": edges, "under": under}
+    open_air = set()
+    if blob[-4:] == b"CUTS" and blob[at:at + 4] == OPEN_TAG:
+        n = struct.unpack_from("<H", blob, at + 4)[0]
+        open_air = set(struct.unpack_from("<%dH" % n, blob, at + 8))
+        at += 8 + OPEN_BYTES * n
+    return {"layouts": layouts, "variants": variants, "cuts": cuts, "edges": edges, "under": under,
+            "open_air": open_air}
 
 
 _CUT_DIR = ((0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (1, -1), (-1, 1), (1, 1))
@@ -355,6 +373,9 @@ def pack(relief):
         for (lay, x, y), (tile, wall, grid) in sorted(under.items(), key=lambda kv: (kv[0][0], kv[0][2], kv[0][1])):
             table += struct.pack(UNDER_FMT, lay, x, y, tile, wall,
                                  *(max(-32768, min(32767, int(round(v)))) for v in grid))
+    open_air = sorted(relief.get("open_air") or ())
+    if open_air:
+        table += OPEN_TAG + struct.pack("<HH", len(open_air), 0) + struct.pack("<%dH" % len(open_air), *open_air)
     return blob + table + struct.pack("<I", len(blob)) + b"CUTS"
 
 
@@ -458,9 +479,31 @@ def edge_rows(name, spec, index, entry):
     return rows
 
 
+def open_air_layouts(fixes):
+    """The layout indices of the fixes' "open_air" list: the maps the game
+    types as caves (MAP_TYPE_UNDERGROUND) that stand under the open sky. Every
+    name must be a layout's."""
+    names = fixes.get("open_air", [])
+    if not isinstance(names, list):
+        raise ValueError("open_air: a list of layout names, not %r" % (names,))
+    out = set()
+    for name in names:
+        index = layout_index(name) if isinstance(name, str) else None
+        if index is None:
+            raise ValueError("open_air: %r is no layout" % (name,))
+        out.add(index)
+    return out
+
+
 def apply(relief, fixes, report=None):
     """The fixes over a parsed relief, in place. `report`, a list, gets one
     line per map changed."""
+    # the list replaces whatever the relief carried: a name taken off it is
+    # off the file
+    relief["open_air"] = open_air_layouts(fixes)
+    if report is not None:
+        names = {layout_index(n): n for n in fixes.get("open_air", [])}
+        report.extend("%s: open air" % names[i] for i in sorted(relief["open_air"]))
     pieces = fixes.get("pieces", {})
     layouts = dict(fixes.get("layouts", {}))
     for twin, first in TWINS.items():
@@ -563,7 +606,7 @@ def apply(relief, fixes, report=None):
 
 def apply_file(path, fixes_path=None, quiet=False):
     fixes = load_fixes(fixes_path)
-    if not fixes.get("layouts"):
+    if not fixes.get("layouts") and not fixes.get("open_air"):
         return
     report = []
     with open(path, "rb") as f:

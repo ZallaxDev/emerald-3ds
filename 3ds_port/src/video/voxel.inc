@@ -166,6 +166,49 @@ static void VoxelGloom(void)
 }
 
 /*
+ * A cave's veil (CtrVoxel_CaveVeil): the picture dimmed gently towards the
+ * edges round the player and a faint warm light added round them, in one
+ * premultiplied quad laid with (ONE, ONE - source alpha); its colour scaled
+ * by amount x light through the tint's blend towards black, its alpha by
+ * amount. Where the quad does not reach (the player far off the middle) the
+ * rest is filled with its rim. Not alpha tested: the warm light is colour
+ * where alpha is 0. The destination's alpha is left as it is.
+ */
+static void VoxelCaveVeil(void)
+{
+    CtrVoxelCaveVeil veil;
+    C2D_ImageTint tint;
+    float x0, y0, x1, y1;
+    unsigned alpha;
+    uint32_t rim;
+
+    if (!CtrVoxel_CaveVeil(&veil)) return;
+    const Tex3DS_SubTexture whole = {veil.tex->width, veil.tex->height, 0.0f, 1.0f, 1.0f, 0.0f};
+    alpha = (unsigned)(veil.amount * 255.0f + 0.5f);
+    rim = C2D_Color32((uint8_t)(veil.rim[0] * veil.amount * 255.0f + 0.5f),
+                      (uint8_t)(veil.rim[1] * veil.amount * 255.0f + 0.5f),
+                      (uint8_t)(veil.rim[2] * veil.amount * 255.0f + 0.5f),
+                      (uint8_t)(veil.rimAlpha * veil.amount * 255.0f + 0.5f));
+    x0 = veil.x - veil.halfW; x1 = veil.x + veil.halfW;
+    y0 = veil.y - veil.halfH; y1 = veil.y + veil.halfH;
+
+    C2D_Flush();
+    Blend(5, false, false);
+    C3D_AlphaTest(false, GPU_ALWAYS, 0);
+    C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, GPU_ONE, GPU_ONE_MINUS_SRC_ALPHA, GPU_ZERO, GPU_ONE);
+    C2D_PlainImageTint(&tint, C2D_Color32(0, 0, 0, alpha > 255 ? 255 : alpha),
+                       1.0f - veil.amount * veil.light);
+    C2D_DrawImageAt((C2D_Image){(C3D_Tex *)veil.tex, &whole}, x0, y0, 0, &tint,
+                    2.0f * veil.halfW / veil.tex->width, 2.0f * veil.halfH / veil.tex->height);
+    if (y0 > 0.0f) C2D_DrawRectSolid(0, 0, 0, CTR_GAME_WIDTH, y0, rim);
+    if (y1 < CTR_GAME_HEIGHT) C2D_DrawRectSolid(0, y1, 0, CTR_GAME_WIDTH, CTR_GAME_HEIGHT - y1, rim);
+    if (x0 > 0.0f) C2D_DrawRectSolid(0, y0, 0, x0, y1 - y0, rim);
+    if (x1 < CTR_GAME_WIDTH) C2D_DrawRectSolid(x1, y0, 0, CTR_GAME_WIDTH - x1, y1 - y0, rim);
+    C2D_Flush();
+    BlendForget();
+}
+
+/*
  * The circle of light of a dark cave in the voxel world: the same ground lit
  * as on the GBA - the game's radius, measured on the floor round the player,
  * so the camera's foreshortening makes it an ellipse - but with a soft edge
@@ -426,6 +469,7 @@ static void RenderVoxelTo(C3D_RenderTarget *target, int eye, uint32_t clear, boo
     if (bloom > 0.005f)
         VoxelBloomCompose(bloom);
     VoxelGloom();
+    VoxelCaveVeil();
     VoxelFlashLight();
     if (!(Reg(0) & 128) && !(cut & CTR_VOXEL_CUT_OVERLAY)) ComposeVoxelOverlay();
     C2D_Flush();

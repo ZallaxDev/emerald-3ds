@@ -105,6 +105,10 @@ class RandomizerLocaleTests(unittest.TestCase):
                        "files": {"src/battle_main.c": entry}, "graphics": [],
                        "credits": 0, "credits_entries": 275, "floors": []}
             size = max(e[2] + e[3] for e in entry["edits"])
+            # The stagers also copy raw battle box tiles from fixed ROM ranges.
+            box = (getattr(module, "BATTLE_BOX_GRAPHICS", ())
+                   or getattr(module, "ITALIAN_BATTLE_BOX_GRAPHICS", ()))
+            size = max([size] + [offset + length for _, offset, length in box])
             data = bytearray(size)
             for index, (_, _, offset, length, _) in enumerate(entry["edits"]):
                 data[offset:offset + length] = bytes((index + n) % 256 for n in range(length))

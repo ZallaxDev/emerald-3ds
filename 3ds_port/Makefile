@@ -161,6 +161,7 @@ GAMECFLAGS += -Wno-error=incompatible-pointer-types -Wno-error=int-conversion -W
 #   CTR_BOTTOM_CACHE_AUDIT  3ds_bottom_ui.c: a kept bottom screen is drawn anyway, a difference logged.
 #   CTR_SPRITE_ID_AUDIT     3ds_sprite_ids.c: logs a sprite that keeps its id with another template.
 #   CTR_TEST_BATTLE=frame   3ds_game_full.c: a wild Zigzagoon battle once the field is up at that frame.
+#   CTR_TEST_EVOLUTION=frame 3ds_game_full.c: the first party member's evolution scene once the field is up at that frame.
 #   CTR_MEASURE_AID         3ds_game_full.c: runs the warps and battles listed in measure.txt.
 #   CTR_TEST_EXT_PALETTE    3ds_game_full.c: Azahar check of the ext palettes with a party icon.
 #   PORT_HEAP_CHECK         ../src/malloc.c: CheckHeap walks the heap again.
@@ -384,6 +385,11 @@ verify-field-fade-hold:
 
 verify-voxel-overlay-depth:
 	"$(PYTHON)" tests/voxel_overlay_depth_test.py --cc "$(HOSTCC)"
+
+.PHONY: verify-overworld-grass
+VERIFY_HOST_CHECKS += verify-overworld-grass
+verify-overworld-grass:
+	"$(PYTHON)" -B tests/overworld_grass_test.py --cc "$(HOSTCC)" --tree $(ROOT)
 
 .PHONY: verify-logo-ptbr
 VERIFY_HOST_CHECKS += verify-logo-ptbr

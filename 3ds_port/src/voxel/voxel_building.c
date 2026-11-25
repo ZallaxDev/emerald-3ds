@@ -115,8 +115,32 @@ static uint8_t *sHeights;
 static uint16_t *sFootprints;   /* one per height byte */
 static uint16_t *sMasks;        /* 16 rows each */
 static unsigned sMaskCount;
-static VoxelVertex *sVertices;
 static unsigned sVertexCount;
+/*
+ * The models' vertices, some 660k of them: as read they took 24 bytes each
+ * (15 MiB of the heap, held for the session). Held packed instead, exactly:
+ * the table has only some 13k distinct 32-bit words, and a triangle list
+ * repeats its corners, so each block of VERTEX_BLOCK vertices keeps its
+ * distinct vertices once, as six u16 indices into one table of the words,
+ * and each vertex the u16 of its own in the block (about 4 MiB in all).
+ * VertexAt gives back the very bits the file holds. Should the words ever
+ * outgrow the u16 indices, the table is read whole as before (sVertices).
+ */
+#define VERTEX_BLOCK_SHIFT 12u
+#define VERTEX_BLOCK (1u << VERTEX_BLOCK_SHIFT)
+#ifndef VERTEX_WORDS_MAX        /* (a host test makes it small, for the fallback) */
+#define VERTEX_WORDS_MAX 49152u /* within the u16 index, 3/4 of the word hash */
+#endif
+#define VERTEX_WORD_SLOTS 65536u
+#define VERTEX_ROW_SLOTS (VERTEX_BLOCK * 2u)
+#define VERTEX_RECENT_BITS 8u
+#define VERTEX_RECENT (1u << VERTEX_RECENT_BITS)
+static VoxelVertex *sVertices;          /* the fallback: the table as read */
+static uint32_t *sVertexWords;          /* the distinct words */
+static uint16_t *sVertexRows;           /* 6 word indices per distinct vertex */
+static uint16_t *sVertexLocal;          /* per vertex: its row in its block */
+static uint32_t *sVertexBlockBase;      /* per block: its first row */
+static unsigned sVertexWordCount, sVertexRowCount;
 static uint8_t *sQuarters;      /* one per height byte */
 static uint8_t *sVariants;      /* 6 bytes each */
 static unsigned sVariantCount;
@@ -416,6 +440,207 @@ static void FreeAnims(void)
     sAnimRunCount = sAnimLiveCount = sAnimPaletteCount = sAnimStaticCount = 0;
 }
 
+/* (VoxelVertex is the file's record: six 32-bit floats, nothing between) */
+typedef char VoxelVertexIsTheRecord[sizeof(VoxelVertex) == 6u * sizeof(uint32_t) ? 1 : -1];
+
+static void FreeVertices(void)
+{
+    free(sVertices);
+    free(sVertexWords);
+    free(sVertexRows);
+    free(sVertexLocal);
+    free(sVertexBlockBase);
+    sVertices = NULL;
+    sVertexWords = NULL;
+    sVertexRows = NULL;
+    sVertexLocal = NULL;
+    sVertexBlockBase = NULL;
+    sVertexWordCount = sVertexRowCount = 0;
+}
+
+/* Vertex k (< sVertexCount) as the file holds it, bit for bit. */
+static inline void VertexAt(uint32_t k, VoxelVertex *out)
+{
+    const uint16_t *row;
+    uint32_t w[6];
+
+    if (sVertices != NULL)
+    {
+        *out = sVertices[k];
+        return;
+    }
+    row = &sVertexRows[(sVertexBlockBase[k >> VERTEX_BLOCK_SHIFT] + sVertexLocal[k]) * 6u];
+    for (unsigned c = 0; c < 6; ++c)
+        w[c] = sVertexWords[row[c]];
+    memcpy(out, w, sizeof(*out));
+}
+
+void VoxelBuildings_Vertex(uint32_t index, VoxelVertex *out)
+{
+    if (index < sVertexCount)
+        VertexAt(index, out);
+    else
+        memset(out, 0, sizeof(*out));
+}
+
+/* The index of word w in sVertexWords, added if new; -1 once they are full. */
+static long VertexWordId(uint16_t *slots, uint32_t w)
+{
+    uint32_t at = (w * 2654435761u) >> 16;
+
+    for (;; at = (at + 1u) & (VERTEX_WORD_SLOTS - 1u))
+    {
+        unsigned id = slots[at];
+
+        if (id == 0)
+            break;
+        if (sVertexWords[id - 1u] == w)
+            return (long)(id - 1u);
+    }
+    if (sVertexWordCount >= VERTEX_WORDS_MAX)
+        return -1;
+    sVertexWords[sVertexWordCount] = w;
+    slots[at] = (uint16_t)(sVertexWordCount + 1u);
+    return (long)sVertexWordCount++;
+}
+
+/*
+ * The vertex table, from the file's position on, packed (see sVertexWords).
+ * 0: read; 1: the words outgrew the indices, or there was no memory for the
+ * packing - the caller reads the table whole instead; -1: a short read.
+ */
+static int ReadVerticesPacked(FILE *file)
+{
+    unsigned blocks = (sVertexCount + VERTEX_BLOCK - 1u) >> VERTEX_BLOCK_SHIFT;
+    VoxelVertex *chunk = malloc(VERTEX_BLOCK * sizeof(VoxelVertex));
+    uint16_t *wordSlots = calloc(VERTEX_WORD_SLOTS, sizeof(uint16_t));
+    uint16_t *rowSlots = malloc(VERTEX_ROW_SLOTS * sizeof(uint16_t));
+    int result = 1;
+    /* Each component's recent words, by a few bits of their hash: 98% of the
+     * words are found here, without the big table's cache misses. */
+    static uint32_t recentWord[6][VERTEX_RECENT];
+    static uint16_t recentId[6][VERTEX_RECENT];     /* id + 1; 0: empty */
+
+    /* The rows as for a table of no repeats, given back once known. */
+    sVertexWords = malloc(VERTEX_WORDS_MAX * sizeof(uint32_t));
+    sVertexLocal = malloc(sVertexCount * sizeof(uint16_t) + 1);
+    sVertexBlockBase = malloc(blocks * sizeof(uint32_t) + 1);
+    sVertexRows = malloc(sVertexCount * 6u * sizeof(uint16_t) + 1);
+    if (chunk == NULL || wordSlots == NULL || rowSlots == NULL || sVertexWords == NULL
+     || sVertexLocal == NULL || sVertexBlockBase == NULL || sVertexRows == NULL)
+        goto done;
+    /* (ids of an earlier load: another table of words) */
+    memset(recentId, 0, sizeof(recentId));
+    for (unsigned b = 0; b < blocks; ++b)
+    {
+        uint32_t first = b << VERTEX_BLOCK_SHIFT;
+        unsigned n = sVertexCount - first < VERTEX_BLOCK ? sVertexCount - first : VERTEX_BLOCK;
+        uint32_t base = sVertexRowCount;
+
+        if (fread(chunk, sizeof(VoxelVertex), n, file) != n)
+        {
+            result = -1;
+            goto done;
+        }
+        sVertexBlockBase[b] = base;
+        memset(rowSlots, 0, VERTEX_ROW_SLOTS * sizeof(uint16_t));
+        for (unsigned i = 0; i < n; ++i)
+        {
+            uint32_t w[6], h = 0;
+            uint16_t ids[6];
+            unsigned at, local;
+
+            memcpy(w, &chunk[i], sizeof(w));
+            for (unsigned c = 0; c < 6; ++c)
+            {
+                unsigned r = (w[c] * 2654435761u) >> (32u - VERTEX_RECENT_BITS);
+
+                if (recentId[c][r] == 0 || recentWord[c][r] != w[c])
+                {
+                    long id = VertexWordId(wordSlots, w[c]);
+
+                    if (id < 0)
+                        goto done;
+                    recentWord[c][r] = w[c];
+                    recentId[c][r] = (uint16_t)(id + 1);
+                }
+                ids[c] = (uint16_t)(recentId[c][r] - 1u);
+                h = (h ^ ids[c]) * 16777619u;
+            }
+            for (at = (h ^ (h >> 15)) & (VERTEX_ROW_SLOTS - 1u);; at = (at + 1u) & (VERTEX_ROW_SLOTS - 1u))
+            {
+                unsigned slot = rowSlots[at];
+
+                if (slot == 0)
+                {
+                    /* a new vertex of the block: at most VERTEX_BLOCK of them,
+                     * so the slots are never more than half full */
+                    local = sVertexRowCount - base;
+                    memcpy(&sVertexRows[sVertexRowCount * 6u], ids, sizeof(ids));
+                    ++sVertexRowCount;
+                    rowSlots[at] = (uint16_t)(local + 1u);
+                    break;
+                }
+                if (memcmp(&sVertexRows[(base + slot - 1u) * 6u], ids, sizeof(ids)) == 0)
+                {
+                    local = slot - 1u;
+                    break;
+                }
+            }
+            sVertexLocal[first + i] = (uint16_t)local;
+        }
+    }
+    {
+        /* Shrunk in place (newlib splits the block): the rest is the heap's. */
+        uint16_t *rows = realloc(sVertexRows, sVertexRowCount * 6u * sizeof(uint16_t) + 1);
+        uint32_t *words = realloc(sVertexWords, sVertexWordCount * sizeof(uint32_t) + 1);
+
+        if (rows != NULL)
+            sVertexRows = rows;
+        if (words != NULL)
+            sVertexWords = words;
+    }
+    result = 0;
+
+done:
+    free(chunk);
+    free(wordSlots);
+    free(rowSlots);
+    if (result != 0)
+        FreeVertices();
+    return result;
+}
+
+/* The vertex table, from the file's position on (VertexAt reads it). */
+static bool ReadVertices(FILE *file)
+{
+    long at = ftell(file);
+    int packed;
+
+    if (at < 0)
+        return false;
+    packed = ReadVerticesPacked(file);
+    if (packed < 0)
+        return false;
+    if (packed == 0)
+    {
+        PORT_LOG("[VIDEO] VOXEL buildings: %u vertices held as %u distinct of %u words, %lu KiB "
+                 "(%lu KiB as read)\n", sVertexCount, sVertexRowCount, sVertexWordCount,
+                 (unsigned long)(((unsigned long)sVertexRowCount * 12u + sVertexCount * 2u
+                                  + sVertexWordCount * 4u
+                                  + ((sVertexCount + VERTEX_BLOCK - 1u) >> VERTEX_BLOCK_SHIFT) * 4u) >> 10),
+                 (unsigned long)(((unsigned long)sVertexCount * sizeof(VoxelVertex)) >> 10));
+        return true;
+    }
+    PORT_LOG("[VIDEO] VOXEL buildings: %u vertices not packed (more than %u distinct words, or no "
+             "memory for it): the table read whole\n", sVertexCount, (unsigned)VERTEX_WORDS_MAX);
+    sVertices = malloc(sVertexCount * sizeof(VoxelVertex) + 1);
+    /* The file's vertex record is VoxelVertex exactly: six little-endian
+     * floats, which is also the console's layout. */
+    return sVertices != NULL && fseek(file, at, SEEK_SET) == 0
+        && fread(sVertices, sizeof(VoxelVertex), sVertexCount, file) == sVertexCount;
+}
+
 bool VoxelBuildings_Init(void)
 {
     uint8_t header[28], row[16];
@@ -464,11 +689,10 @@ bool VoxelBuildings_Init(void)
     sHeights = malloc(sHeightBytes + 1);
     sFootprints = malloc(sHeightBytes * sizeof(uint16_t) + 1);
     sMasks = malloc(sMaskCount * 16 * sizeof(uint16_t) + 1);
-    sVertices = malloc(sVertexCount * sizeof(VoxelVertex) + 1);
     sQuarters = malloc(sHeightBytes + 1);
     sVariants = malloc(sVariantCount * 6u + 1);
     sDecks = malloc(sDeckCount * 8u + 1);
-    if (!sPages || !sModels || !sPageModels || !sPlacements || !sHeights || !sVertices
+    if (!sPages || !sModels || !sPageModels || !sPlacements || !sHeights
      || !sFootprints || !sMasks || !sQuarters || !sVariants || !sDecks)
         goto done;
     if (!ReadRows(file, sPageCount, 8, row, TakePage)
@@ -505,9 +729,7 @@ bool VoxelBuildings_Init(void)
     offset = ftell(file);
     if (offset < 0 || fseek(file, (4 - (offset & 3)) & 3, SEEK_CUR) != 0)
         goto done;
-    /* The file's vertex record is VoxelVertex exactly: six little-endian
-     * floats, which is also the console's layout. */
-    if (fread(sVertices, sizeof(VoxelVertex), sVertexCount, file) != sVertexCount)
+    if (!ReadVertices(file))
         goto done;
     if (!ReadAnims(file))
         goto done;
@@ -549,7 +771,7 @@ void VoxelBuildings_Shutdown(void)
     free(sHeights);
     free(sFootprints);
     free(sMasks);
-    free(sVertices);
+    FreeVertices();
     free(sQuarters);
     free(sVariants);
     sLive.valid = false;
@@ -568,7 +790,6 @@ void VoxelBuildings_Shutdown(void)
     sFootprints = NULL;
     sMasks = NULL;
     sMaskCount = 0;
-    sVertices = NULL;
     sPageCount = sModelCount = sPageModelCount = sPlacementCount = sVertexCount = 0;
     sLastLayout = -1;
     memset(sBands, 0, sizeof(sBands));
@@ -1348,7 +1569,6 @@ static unsigned CollectFronts(const VoxelMapInstance *inst, int x, int y, float 
     {
         unsigned i = rows != NULL ? rows->placements[first + t] : t;
         const BuildingModel *m = &sModels[sPageModels[p[i].pageModel].model];
-        const VoxelVertex *v = &sVertices[m->firstVertex];
         int lx = x - inst->originX - p[i].x, ly = y - inst->originY - p[i].y;
         float left = (float)(inst->originX + p[i].x), north = (float)ly;
 
@@ -1356,9 +1576,17 @@ static unsigned CollectFronts(const VoxelMapInstance *inst, int x, int y, float 
             continue;
         for (uint32_t k = 0; k + 2 < m->vertexCount; k += 3)
         {
-            const VoxelVertex *a = &v[k], *b = &v[k + 1], *c = &v[k + 2];
-            float lo = a->x < b->x ? a->x : b->x, hi = a->x > b->x ? a->x : b->x;
-            float y0 = a->y < b->y ? a->y : b->y, y1 = a->y > b->y ? a->y : b->y;
+            VoxelVertex tri[3];
+            const VoxelVertex *a = &tri[0], *b = &tri[1], *c = &tri[2];
+            float lo, hi, y0, y1;
+
+            VertexAt(m->firstVertex + k, &tri[0]);
+            VertexAt(m->firstVertex + k + 1, &tri[1]);
+            VertexAt(m->firstVertex + k + 2, &tri[2]);
+            lo = a->x < b->x ? a->x : b->x;
+            hi = a->x > b->x ? a->x : b->x;
+            y0 = a->y < b->y ? a->y : b->y;
+            y1 = a->y > b->y ? a->y : b->y;
 
             if (c->x < lo) lo = c->x;
             if (c->x > hi) hi = c->x;
@@ -1457,7 +1685,7 @@ bool VoxelBuildings_FrontAt(const VoxelMapInstance *inst, int x, int y,
     return found;
 }
 
-bool VoxelBuildings_StaticModel(unsigned pageModel, const VoxelVertex **vertices,
+bool VoxelBuildings_StaticModel(unsigned pageModel, uint32_t *first,
                                 unsigned *count, float *ox, float *oy, float *su, float *sv)
 {
     const BuildingPageModel *pm;
@@ -1469,7 +1697,7 @@ bool VoxelBuildings_StaticModel(unsigned pageModel, const VoxelVertex **vertices
     pm = &sPageModels[pageModel];
     m = &sModels[pm->model];
     page = &sPages[pm->page];
-    *vertices = &sVertices[m->firstVertex];
+    *first = m->firstVertex;
     *count = m->vertexCount;
     *ox = (float)pm->ox;
     *oy = (float)pm->oy;
@@ -1549,7 +1777,6 @@ bool VoxelBuildings_EmitSome(VoxelBuilder *builder, const VoxelMapInstance *inst
         for (; cursor->part < 2; ++cursor->part, cursor->vertex = 0)
         {
             unsigned r = cursor->part;
-            const VoxelVertex *v = &sVertices[first[r]];
 
             /* The ground patches are ground: a quad a cell, lit like the
              * terrain they lie on, so a shadow falls across them too. The
@@ -1571,7 +1798,7 @@ bool VoxelBuildings_EmitSome(VoxelBuilder *builder, const VoxelMapInstance *inst
 
                 for (unsigned j = 0; j < step; ++j)
                 {
-                    t[j] = v[k + j];
+                    VertexAt(first[r] + k + j, &t[j]);
                     t[j].x += wx;
                     t[j].z += wz;
                     t[j].u = (ox[r] + t[j].u) * su;

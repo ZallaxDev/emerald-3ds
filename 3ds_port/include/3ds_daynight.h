@@ -54,6 +54,10 @@ typedef struct
  *             height, 0 at the horizon to 1 at noon. The sun's glitter on the
  *             water follows them (GlitterShapeFor in ctr_voxel.c); untimed
  *             they are the legacy sun's, top left.
+ *   moonRays  the moon's faint shafts at night, a multiple of the weather's
+ *             rays as `rays` is; never above 0 where `rays` is (the sun's
+ *             own curve stays in `rays`, which the glitter reads), and while
+ *             it can be, the ray geometry and rayRgb above are the moon's
  */
 typedef struct
 {
@@ -65,6 +69,7 @@ typedef struct
     float rays, rayRgb[3];
     float rayX, rayAngle, rayWidth, rayLength;
     float sunDx, sunDz, sunAlt;
+    float moonRays;
 } CtrDayNightLight;
 
 typedef struct
@@ -73,6 +78,22 @@ typedef struct
     float amount;
 } CtrDayNightBlend;
 
+/* The moon's place, as gVoxelSun has a direction (positive towards -x / -z:
+ * these are up and to the right on the screen) and its height for the
+ * glitter's shape: fixed all night. Its shafts (moonRays), its glitter on the water
+ * (GlitterShapeFor, ctr_voxel.c) and its shadows (CtrDayNight_SunAt) all
+ * come from here. */
+#define CTR_DAYNIGHT_MOON_DX (-0.85f)
+#define CTR_DAYNIGHT_MOON_DZ 0.55f
+#define CTR_DAYNIGHT_MOON_ALT 0.50f
+
+/*
+ * The light that casts the shadows, in 15-minute steps: the sun from 04:00 to
+ * 20:00 (keys 2..81), the moon from 20:00 to 04:00 (key 1 while it casts
+ * nothing, 100 + its strength in thousandths while it does), the legacy sun
+ * (key 0, strength 1) with DAY / NIGHT off, indoors or without a clock. A
+ * new key is a new light: every chunk is lit again.
+ */
 typedef struct
 {
     float dx, dz, strength;

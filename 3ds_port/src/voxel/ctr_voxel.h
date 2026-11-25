@@ -107,6 +107,20 @@ bool CtrVoxel_DrawsSand(void);
  * black, centred on (x, y) of the logical surface, size pixels across, at
  * amount. NULL when there is none. */
 const C3D_Tex *CtrVoxel_Gloom(float *x, float *y, float *size, float *amount);
+/* A cave's veil over the frame just drawn (ctr_voxel.c, CaveLight): a
+ * premultiplied RGBA texture to lay with (ONE, ONE - source alpha), its
+ * colour x amount x light and its alpha x amount, centred on (x, y) of the
+ * logical surface, 2 halfW x 2 halfH pixels; past it the rim, premultiplied,
+ * x amount. False when there is none. */
+typedef struct
+{
+    const C3D_Tex *tex;
+    float x, y, halfW, halfH;
+    float amount;   /* 0..1, the fades and the swoop taken in */
+    float light;    /* 0..1, the warm light's flicker */
+    float rim[3], rimAlpha;
+} CtrVoxelCaveVeil;
+bool CtrVoxel_CaveVeil(CtrVoxelCaveVeil *veil);
 
 /*
  * Stereoscopy (3D slider): the world is drawn once per eye, each from its

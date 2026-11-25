@@ -8,7 +8,7 @@
 #define CTR_DAYNIGHT_NEUTRAL \
     {{1.0f, 1.0f, 1.0f}, 1.0f, 0.0f, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, \
      1.0f, 1.0f, 1.0f, {1.0f, 1.0f, 1.0f}, 0.0f, 35.0f, 0.0f, 1.0f, \
-     0.85f, 0.55f, 0.55f}
+     0.85f, 0.55f, 0.55f, 0.0f}
 
 static const unsigned sSpeeds[CTR_DAYNIGHT_SPEED_COUNT] = {1, 6, 12, 24, 60, 120};
 static CtrDayNightClock sClock;
@@ -182,6 +182,83 @@ static void RayGeometry(CtrDayNightLight *light, float progress)
     light->sunAlt = altitude;
 }
 
+/*
+ * The moon's shafts: a hint of cool light through the night air, much fainter
+ * than the sun's. The sun's rays (the keys' own curve) are exactly zero from
+ * the blue hour (1200) to before dawn (255); the moon's live inside that
+ * stretch only, fading in a quarter of an hour after the sun's have gone and
+ * out a quarter of an hour before they return, so the two never show at once
+ * and the source can change from the sun's place to the moon's with nothing
+ * drawn. Their place is the moon glitter's (GlitterShapeFor in ctr_voxel.c):
+ * up and to the right, so the shafts lean down to the left. Same mesh as the
+ * sun's, drawn its own way (DrawRays in ctr_voxel.c, VOXEL_MOON_RAY_*): a
+ * few soft beams with dark gaps between them, not the sun's broad glow, so
+ * they add a hint of blue where they fall and next to nothing to the night
+ * as a whole. Here: their strength, colour and the fan's shape - narrower
+ * than the sun's and long, so the beams reach past the dark of the night's
+ * veil at the top right into the lit middle of the picture.
+ */
+#define CTR_DAYNIGHT_MOON_RAYS 2.60f             /* x the weather's rays, at full night */
+#define CTR_DAYNIGHT_MOON_RAYS_FROM 1215.0f      /* evening: starting to show... */
+#define CTR_DAYNIGHT_MOON_RAYS_FULL 1305.0f      /* ...at full strength */
+#define CTR_DAYNIGHT_MOON_RAYS_FADE 150.0f       /* morning: starting to go... */
+#define CTR_DAYNIGHT_MOON_RAYS_GONE 240.0f       /* ...gone (the sun's start at 255) */
+#define CTR_DAYNIGHT_MOON_RAY_RGB {0.30f, 0.52f, 1.00f} /* x the rays' warm white: a cool blue */
+#define CTR_DAYNIGHT_MOON_RAY_X 1.0f             /* its source on the top edge: the right corner */
+#define CTR_DAYNIGHT_MOON_RAY_WIDTH 0.90f        /* the fan's scale across (the sun's: 1 to 1.4)... */
+#define CTR_DAYNIGHT_MOON_RAY_LENGTH 1.60f       /* ...and along (the sun's: 0.75 to 1.2) */
+/* (the moon's place, CTR_DAYNIGHT_MOON_DX/DZ/ALT, is in 3ds_daynight.h: the
+ * glitter and the moon's shadows read it too) */
+/* The moon's shadows (CtrDayNight_SunAt): what the shade tint (CtrDayNightLight.shade) is multiplied by at full
+ * night: the moon's shadow a touch bluer than the moonlit ground, which keeps
+ * the night's own tint. Only on what the bake shades (LOW: shadow, faces
+ * turned from the moon, contact), and only part of it there (voxel.v.pica's
+ * grade); a uniform, nothing to rebuild. */
+#define CTR_DAYNIGHT_MOON_SHADE_RGB {0.90f, 0.95f, 1.00f}
+
+static float MoonSmooth(float t)
+{
+    if (t <= 0.0f) return 0.0f;
+    if (t >= 1.0f) return 1.0f;
+    return t * t * (3.0f - 2.0f * t);
+}
+
+/* How much of the moon there is at `minute`, 0 to 1: its shafts' curve, and
+ * its shadows' (CtrDayNight_SunAt). 0 from 04:00 to 20:15. */
+static float MoonAmount(float minute)
+{
+    if (minute < CTR_DAYNIGHT_MOON_RAYS_GONE)
+        return 1.0f - MoonSmooth((minute - CTR_DAYNIGHT_MOON_RAYS_FADE)
+                                 / (CTR_DAYNIGHT_MOON_RAYS_GONE - CTR_DAYNIGHT_MOON_RAYS_FADE));
+    if (minute >= 1200.0f)
+        return MoonSmooth((minute - CTR_DAYNIGHT_MOON_RAYS_FROM)
+                          / (CTR_DAYNIGHT_MOON_RAYS_FULL - CTR_DAYNIGHT_MOON_RAYS_FROM));
+    return 0.0f;
+}
+
+static void MoonRays(CtrDayNightLight *light, float minute)
+{
+    static const float rgb[3] = CTR_DAYNIGHT_MOON_RAY_RGB;
+    float pitch = CTR_DAYNIGHT_RAY_PITCH * 3.141592654f / 180.0f;
+    /* The glow lies along the moon's SHADOWS as the screen shows them, not
+     * along the light's path through the air (the sun's shafts): a shadow on
+     * the ground goes (dx, dz) a tile of height, and the tilted camera draws
+     * the ground's z squeezed by sin(pitch). A glow at another angle than
+     * the shadows beside it "looks wrong". */
+    float down = CTR_DAYNIGHT_MOON_DZ * sinf(pitch);
+
+    light->moonRays = 0.0f;
+    if (minute >= CTR_DAYNIGHT_MOON_RAYS_GONE && minute < 1200.0f)
+        return;
+    light->moonRays = MoonAmount(minute) * CTR_DAYNIGHT_MOON_RAYS;
+    light->rayX = CTR_DAYNIGHT_MOON_RAY_X;
+    light->rayAngle = atan2f(CTR_DAYNIGHT_MOON_DX, down) * 180.0f / 3.141592654f;
+    light->rayWidth = CTR_DAYNIGHT_MOON_RAY_WIDTH;
+    light->rayLength = CTR_DAYNIGHT_MOON_RAY_LENGTH;
+    for (unsigned channel = 0; channel < 3; ++channel)
+        light->rayRgb[channel] = rgb[channel];
+}
+
 /* The tangent of one channel at key `index`: the weighted harmonic mean of
  * the two slopes around it, and flat wherever they differ in sign or either
  * is flat (Fritsch-Carlson). Minutes; the day is periodic. */
@@ -259,7 +336,52 @@ CtrDayNightLight CtrDayNight_At(unsigned timeMs)
     if (!neutral && light.daylight >= 1.0f)
         light.daylight = nextafterf(1.0f, 0.0f);
     RayGeometry(&light, (minute - 240.0f) / 960.0f);
+    MoonRays(&light, minute);
+    {
+        /* the moon's shadow a touch bluer (CTR_DAYNIGHT_MOON_SHADE_RGB); the
+         * 2D tint above is made without it */
+        static const float cool[3] = CTR_DAYNIGHT_MOON_SHADE_RGB;
+        float moon = MoonAmount(minute);
+
+        for (unsigned channel = 0; channel < 3 && moon > 0.0f; ++channel)
+            light.shade[channel] *= 1.0f - (1.0f - cool[channel]) * moon;
+    }
     return light;
+}
+
+/*
+ * The moon's shadows. At night the moon is the light that casts: gVoxelSun
+ * (voxel_lighting.c) takes its place and strength, and everything that
+ * follows the sun follows it - LOW's baked rays and faces, HIGH's shadow map
+ * and its off-screen casters, the trees' shadow cards, the sprites' cast
+ * shadows, the static models. One moon, one place: the shafts' and the
+ * glitter's (CTR_DAYNIGHT_MOON_DX/DZ, 3ds_daynight.h), fixed all night - a
+ * moving moon would re-light every chunk each quarter of an hour, as the sun
+ * does by day, for a shadow few would see move.
+ *
+ * Faint: the strength is what the bake scales the shadow by (the ambient is
+ * 1 - (1 - VOXEL_AMBIENT) x strength: 0.91 on LOW, 0.886 on HIGH), so moonlit
+ * ground is as lit as the whole night was before and the moon's shadow some
+ * 9-13% under it, where the sun's at noon is 30-38%.
+ *
+ * Its strength is the shafts' own curve (MoonAmount), held a quarter of an
+ * hour at a time as the sun's is: every new strength is a new key, and every
+ * chunk is built again for it (VoxelLighting_Hash), so the night costs what
+ * a quarter of an hour of the day does - six steps in at dusk, six out before
+ * dawn, none between. Each step takes the lower of the curve at its two ends,
+ * so the first and last quarters are 0: the sun's shadows are gone (20:00)
+ * before the moon's start (20:30), and the moon's (03:45) before the sun's
+ * come back (04:15) - the place changes with nothing cast.
+ */
+#define CTR_DAYNIGHT_MOON_SHADOW 0.30f   /* gVoxelSun.strength at full night (the sun's noon: 1) */
+#define CTR_DAYNIGHT_MOON_KEY 100u       /* keys past the sun's (2..81): 100 + the strength in 1000ths */
+
+/* The moon's share in the quarter of an hour that holds `minute`. */
+static float MoonStep(unsigned minute)
+{
+    unsigned start = minute / 15u * 15u;
+
+    return fminf(MoonAmount((float)start), MoonAmount((float)(start + 15u)));
 }
 
 /* A little more than before, and bluer: it lifts the darkest surfaces to a
@@ -286,16 +408,26 @@ CtrDayNightBlend CtrDayNight_Moonlight(const CtrDayNightLight *light, float fade
 static unsigned SunKey(unsigned timeMs)
 {
     unsigned minute = (timeMs % CTR_DAYNIGHT_DAY_MS) / 60000u;
+    float moon;
 
-    return minute >= 240u && minute < 1200u ? minute / 15u + 2u : 1u;
+    if (minute >= 240u && minute < 1200u)
+        return minute / 15u + 2u;
+    moon = MoonStep(minute);
+    return moon > 0.0f ? CTR_DAYNIGHT_MOON_KEY + (unsigned)(moon * 1000.0f + 0.5f) : 1u;
 }
 
 CtrDayNightSun CtrDayNight_SunAt(unsigned timeMs)
 {
     unsigned key = SunKey(timeMs);
-    CtrDayNightSun sun = {0.0f, 0.55f, 0.0f, key};
+    CtrDayNightSun sun = {CTR_DAYNIGHT_MOON_DX, CTR_DAYNIGHT_MOON_DZ, 0.0f, key};
 
-    if (key != 1u)
+    if (key == 1u || key >= CTR_DAYNIGHT_MOON_KEY)
+    {
+        /* the moon: its place, at whatever strength, even none */
+        sun.strength = CTR_DAYNIGHT_MOON_SHADOW
+                     * MoonStep((timeMs % CTR_DAYNIGHT_DAY_MS) / 60000u);
+    }
+    else
     {
         float progress = ((float)((key - 2u) * 15u) - 240.0f) / 960.0f;
         float altitude;

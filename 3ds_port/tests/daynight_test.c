@@ -153,8 +153,10 @@ static void LightTests(void)
         assert(lum >= 0.50f);
         lum = 0.299f * light.shade[0] + 0.587f * light.shade[1] + 0.114f * light.shade[2];
         assert(lum >= 0.50f);
-        /* The sun's rays come from the top edge, leaning the way the light travels. */
-        assert(light.rayX > -0.1f && light.rayX < 1.1f && light.rayWidth >= 1.0f && light.rayLength > 0.0f);
+        /* The sun's rays come from the top edge, leaning the way the light
+         * travels; the moon's fan (20:00-04:00) is narrower than any sun's. */
+        assert(light.rayX > -0.1f && light.rayX < 1.1f && light.rayLength > 0.0f);
+        assert(minute >= 1200u || minute < 240u ? light.rayWidth > 0.5f : light.rayWidth >= 1.0f);
     }
     /* Lamps come on before the dark and go off after dawn begins. */
     assert(CtrDayNight_At(17 * 3600000u + 30 * 60000u).glow > 0.0f);
@@ -181,6 +183,28 @@ static void LightTests(void)
         assert(CtrDayNight_At(minute * 60000u).rayX < CtrDayNight_At((minute - 1) * 60000u).rayX);
     /* Rays gone with the sun. */
     assert(CtrDayNight_At(21 * 3600000u).rays == 0.0f && CtrDayNight_At(2 * 3600000u).rays == 0.0f);
+    /* The moon's faint shafts: only at night, never with the sun's (so the
+     * source can move with nothing showing), fainter than the noon sun's,
+     * cool, from the top right, and without a step. */
+    assert(day.moonRays == 0.0f && neutral.moonRays == 0.0f);
+    assert(night.moonRays > 0.0f && night.moonRays < 3.0f * day.rays);
+    /* a narrower, longer fan than any of the sun's, and a deeper blue */
+    assert(night.rayWidth < 1.0f && night.rayLength > 1.2f);
+    assert(night.rayRgb[0] < 0.5f && night.rayRgb[1] < 0.7f && night.rayRgb[2] == 1.0f);
+    assert(night.rayRgb[2] > night.rayRgb[0] && night.rayX > 0.6f && night.rayAngle < -20.0f);
+    for (unsigned minute = 0; minute < 1440; ++minute)
+    {
+        CtrDayNightLight light = CtrDayNight_At(minute * 60000u);
+        CtrDayNightLight next = CtrDayNight_At((minute + 1) * 60000u);
+
+        assert(light.moonRays >= 0.0f && fabsf(next.moonRays - light.moonRays) < 0.05f);
+        assert(light.rays == 0.0f || light.moonRays == 0.0f);
+        /* within a quarter of an hour of the sun's, both are nothing */
+        if (minute >= 1185 && minute < 1215)
+            assert(light.moonRays == 0.0f);
+        if (minute >= 240 && minute < 270)
+            assert(light.moonRays == 0.0f);
+    }
 }
 
 static void MoonlightTests(void)
@@ -247,11 +271,43 @@ static void SunTests(void)
     Near(noon.dx, 0.0f);
     Near(noon.strength, 1.0f);
     assert(hypotf(noon.dx, noon.dz) < hypotf(morning.dx, morning.dz));
-    assert(CtrDayNight_SunAt(0).strength == 0.0f);
     assert(CtrDayNight_SunAt(20u * 3600000u).strength == 0.0f);
     assert(CtrDayNight_SunAt(4u * 3600000u).strength == 0.0f);
     assert(CtrDayNight_SunAt(240u * 60000u - 1u).key == 1u);
     assert(CtrDayNight_SunAt(6u * 3600000u + 900000u).key != morning.key);
+    /* The moon casts at night: from its shafts' and its glitter's place
+     * (up and to the right), faint, well under the sun's. */
+    CtrDayNightSun midnight = CtrDayNight_SunAt(0);
+    CtrDayNightLight midnightLight = CtrDayNight_At(0);
+
+    Near(midnight.dx, CTR_DAYNIGHT_MOON_DX);
+    Near(midnight.dz, CTR_DAYNIGHT_MOON_DZ);
+    assert(midnight.dx < 0.0f && midnight.dz > 0.0f);
+    assert(midnight.strength > 0.15f && midnight.strength < 0.45f);
+    assert(midnight.strength < 0.5f * noon.strength);
+    assert(midnight.key >= 100u && midnight.key != morning.key);
+    /* the shafts come from the same place: the rays' source moves with dx
+     * as the sun's does (0.38 screen widths per unit, RayGeometry) */
+    assert(midnightLight.moonRays > 0.0f);
+    Near(midnightLight.rayX, 1.0f); /* the moon's glow: from the right corner, along its shadows */
+    /* its shadow a touch bluer than the moonlit ground, which keeps the
+     * night's tint (and the 2D tint the night's own); the day untouched */
+    assert(midnightLight.shade[0] < midnightLight.sun[0] && midnightLight.shade[1] < midnightLight.sun[1]);
+    Near(midnightLight.shade[2], midnightLight.sun[2]);
+    assert(midnightLight.shade[0] > 0.85f * midnightLight.sun[0]);
+    Near(midnightLight.rgb[0], 0.48f);
+    /* (the blue hour's key, before the moon: as it was) */
+    for (unsigned channel = 0; channel < 3; ++channel)
+        Near(CtrDayNight_At(1200u * 60000u).shade[channel], CtrDayNight_At(1200u * 60000u).sun[channel]);
+    Near(CtrDayNight_At(12u * 3600000u).shade[0], 1.0f);
+    /* the same strength all through the full night, one key: no rebuilds */
+    for (unsigned minute = 1305; minute < 1440 + 150; ++minute)
+    {
+        CtrDayNightSun moon = CtrDayNight_SunAt(minute % 1440u * 60000u);
+
+        assert(moon.key == midnight.key);
+        Near(moon.strength, midnight.strength);
+    }
     for (unsigned minute = 0; minute < 1440; ++minute)
     {
         CtrDayNightSun sun = CtrDayNight_SunAt(minute * 60000u);
@@ -264,6 +320,66 @@ static void SunTests(void)
         Near(sun.dx, wrapped.dx);
     }
     assert(CtrDayNight_SunAt(6u * 3600000u + 899999u).key == morning.key);
+    /*
+     * The switches. The light is the sun's (keys 2..81) or the moon's (1,
+     * 100+); wherever one gives way to the other the moon casts nothing,
+     * and the sun's last step at dusk is its faintest (it goes from there to
+     * nothing at 20:00, as it always has), with a whole quarter of an hour
+     * of nothing cast between the two: the place changes with no shadow
+     * drawn from it. Within a step the key, the place and the strength never
+     * change; a new strength is a new key, at most every quarter of an hour.
+     */
+    {
+        unsigned nightKeys = 0, lastSun = 0, firstSun = 1440;
+
+        for (unsigned minute = 0; minute < 1440; ++minute)
+        {
+            CtrDayNightSun sun = CtrDayNight_SunAt(minute * 60000u);
+            CtrDayNightSun next = CtrDayNight_SunAt((minute + 1u) % 1440u * 60000u);
+            bool moon = sun.key == 1u || sun.key >= 100u, nextMoon = next.key == 1u || next.key >= 100u;
+
+            if (moon != nextMoon)
+                assert((moon ? sun : next).strength == 0.0f
+                       && (moon ? next : sun).strength < 0.1f);
+            if (moon)
+            {
+                Near(sun.dx, CTR_DAYNIGHT_MOON_DX);
+                Near(sun.dz, CTR_DAYNIGHT_MOON_DZ);
+                assert(sun.strength <= midnight.strength);
+                /* never in the sun's dark minutes either side */
+                assert(minute < 240u || minute >= 1200u);
+            }
+            else if (sun.strength > 0.0f)
+            {
+                if (minute < firstSun)
+                    firstSun = minute;
+                lastSun = minute;
+            }
+            if (sun.key == next.key)
+            {
+                Near(sun.strength, next.strength);
+                Near(sun.dx, next.dx);
+            }
+            else
+            {
+                assert((minute + 1u) % 15u == 0u);
+                if (moon || nextMoon)
+                    ++nightKeys;
+            }
+            /* the moon's shadows inside the gap the sun's leave */
+            if (moon && sun.strength > 0.0f)
+                assert((minute >= 1200u + 30u) || (minute < 240u - 15u));
+        }
+        /* sun in at 04:15, out after 19:59; moon from 20:30 to 03:44 */
+        assert(firstSun == 255u && lastSun == 1199u);
+        assert(CtrDayNight_SunAt(1229u * 60000u).strength == 0.0f);
+        assert(CtrDayNight_SunAt(1230u * 60000u).strength > 0.0f);
+        assert(CtrDayNight_SunAt(224u * 60000u).strength > 0.0f);
+        assert(CtrDayNight_SunAt(225u * 60000u).strength == 0.0f);
+        /* 20:00 (sun out), 20:30..21:45 (six in), 02:30..03:45 (six out),
+         * 04:00 (sun in) */
+        assert(nightKeys == 14u);
+    }
 }
 
 static void RuntimeTests(void)
@@ -278,7 +394,9 @@ static void RuntimeTests(void)
     sLocal = 0;
     CtrDayNight_Update();
     Near(CtrDayNight_Get()->rgb[0], 0.48f);
-    assert(CtrDayNight_GetSun()->key == 1 && CtrDayNight_GetSun()->strength == 0);
+    /* midnight: the moon casts */
+    assert(CtrDayNight_GetSun()->key == CtrDayNight_SunAt(0).key && CtrDayNight_GetSun()->key >= 100u);
+    assert(CtrDayNight_GetSun()->strength > 0.0f && CtrDayNight_GetSun()->strength < 0.5f);
     sOutdoor = false;
     CtrDayNight_Update();
     Near(CtrDayNight_Get()->rgb[0], 1);

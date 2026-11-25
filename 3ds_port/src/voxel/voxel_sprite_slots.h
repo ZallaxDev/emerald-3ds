@@ -38,6 +38,19 @@ unsigned VoxelSlots_TilePixel(const uint8_t *tiles, unsigned width, unsigned x, 
                               bool color256);
 
 /*
+ * For a picture sampled bilinearly (SPRITE FILTER, voxel_entities.c): every
+ * transparent texel of the `width` x `height` RGBA5551 picture at `pixels`
+ * (rows `stride` texels apart, width at most 64) that touches an opaque one,
+ * across or diagonally, takes that texel's colour - the one to its side
+ * first, then above or below, then a corner - and keeps alpha 0. A sample
+ * that mixes the outline with what is round it then mixes its own colours,
+ * not black (a transparent texel is 0x0000). Opaque texels and the rest are
+ * left as they are. One ring is enough: bilinear mixes a 2x2 of texels, and
+ * any of them it gives weight beside an opaque one is next to it.
+ */
+void VoxelSlots_Bleed(uint16_t *pixels, unsigned stride, unsigned width, unsigned height);
+
+/*
  * A door's frame as field_door.c lays it (DrawCurrentDoorAnimFrame): a
  * column of two metatiles a cell across, the top one's four 4bpp tiles (TL TR
  * BL BR) then the bottom one's, 8 tiles a column and the columns one after

@@ -48,11 +48,15 @@ static void OpenSave(void)
  * waiting. */
 static u8 sLeaveTo = SCR_COUNT;
 static u16 sLeaveToWait;
+/* The same choice, kept until the field is reached (OpenAsked): the game's
+ * screen drops sLeaveTo as it closes, before that. */
+static bool8 sLeaveWanted;
 
 static void LeaveForScreen(u8 screen)
 {
     if (screen == SCR_SAVE)
         OpenSave();
+    sLeaveWanted = TRUE;
     sScreen = screen;
     sLeaveTo = screen;
     sLeaveToWait = 0;

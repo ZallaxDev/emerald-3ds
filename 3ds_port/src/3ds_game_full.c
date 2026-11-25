@@ -43,6 +43,10 @@
 #include "script_pokemon_util.h"
 #include "constants/species.h"
 #endif
+#ifdef CTR_TEST_EVOLUTION
+#include "evolution_scene.h"
+#include "constants/species.h"
+#endif
 #ifdef CTR_MEASURE_AID
 #include "script.h"
 #include "palette.h"
@@ -1701,6 +1705,20 @@ void CtrGame_WaitFrame(void)
             started = true;
             CreateScriptedWildMon(SPECIES_ZIGZAGOON, 5, 0);
             BattleSetup_StartScriptedWildBattle();
+        }
+    }
+#endif
+#ifdef CTR_TEST_EVOLUTION
+    /* Azahar aid (-DCTR_TEST_EVOLUTION=frame): the first party member evolves
+     * into Ivysaur's scene (species swapped for the sprite only) once the
+     * field is up at that frame. */
+    {
+        static bool started;
+
+        if (!started && sFrames >= CTR_TEST_EVOLUTION && gMain.callback2 == CB2_Overworld)
+        {
+            started = true;
+            BeginEvolutionScene(&gPlayerParty[0], SPECIES_IVYSAUR, TRUE, 0);
         }
     }
 #endif

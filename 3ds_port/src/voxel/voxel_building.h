@@ -154,10 +154,17 @@ bool VoxelBuildings_FrontAt(const VoxelMapInstance *inst, int x, int y,
 /*
  * A static model's triangles (positions in tiles from its top-left cell, uv
  * pixels of its drawing, drawn shades) and where its drawing lies on its
- * page: uv on the page are (ox + u) * su, 1 - (oy + v) * sv.
+ * page: uv on the page are (ox + u) * su, 1 - (oy + v) * sv. The triangles
+ * are vertices first .. first + count - 1, read with VoxelBuildings_Vertex:
+ * an index, not a pointer, so a conversion held across frames stays valid
+ * even if the buildings are loaded again meanwhile.
  */
-bool VoxelBuildings_StaticModel(unsigned pageModel, const VoxelVertex **vertices,
+bool VoxelBuildings_StaticModel(unsigned pageModel, uint32_t *first,
                                 unsigned *count, float *ox, float *oy, float *su, float *sv);
+
+/* Vertex `index` of the models' table, exactly as buildings.bin holds it
+ * (all zero past the table, or with the buildings unloaded). */
+void VoxelBuildings_Vertex(uint32_t index, VoxelVertex *out);
 
 bool VoxelBuildings_DoorWall(const VoxelMapInstance *inst, int x, int y, float *z);
 

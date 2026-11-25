@@ -229,6 +229,8 @@ def stage(tree: Path, rom_path: Path) -> None:
         text = path.read_text(encoding="utf-8")
         if hashlib.sha256(text.encode()).hexdigest() != file["sha256"]:
             raise ValueError("Source differs from the pinned patched tree: " + relative)
+        if relative in left_c and hashlib.sha256(text.encode()).hexdigest() != left_c[relative]["sha256"]:
+            raise ValueError("Untranslated spans pinned to another source: " + relative)
         edits = [tuple(e) for e in file["edits"]]
         edits += [(start, end, 0, 0, "untranslated") for start, end in left_c.get(relative, {}).get("spans", [])]
         previous_end = 0

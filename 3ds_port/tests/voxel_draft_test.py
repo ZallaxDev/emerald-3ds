@@ -164,6 +164,11 @@ static void VoxelMesh_DraftCell(VoxelBuilder *b, const VoxelMapInstance *inst, i
                                                 page * 2.0f + col / 512.0f, 0.5f, 1.0f};
 }
 '''
+    # The shadow-only casters' list as production declares it (ReleaseChunk
+    # takes a chunk out of it; the kept walk keeps it).
+    begin = voxel.index('#define VOXEL_SHADOW_DRAWS_MAX')
+    end = voxel.index('static unsigned sShadowCount;', begin) + len('static unsigned sShadowCount;')
+    source += voxel[begin:end] + '\n'
     for signature in ['static void Pack(', 'static void ReportPackErrors(', 'static void PackDraft(',
                       'static int PackedFloor(', 'static int PackedCeil(',
                       'static unsigned ChunkBucket(', 'static unsigned ChunkBucketOf(',
@@ -196,7 +201,15 @@ static unsigned sRequestCount, sDrawCount, sHashesLeft = 10;
 static VoxelChunkDraw sDraws[VOXEL_DRAW_MAX];
 static void Draw(VoxelChunk *chunk, int worldX, int worldZ)
 { sDraws[sDrawCount++] = (VoxelChunkDraw){chunk, worldX, worldZ}; }
+/* The shadow-only casters' sweep, against a frustum of the test's own. */
+static VoxelPlane sFrustum[4];
+static bool sFrustumValid;
+static struct { float targetX, targetZ; } sCamera;
+static float DrawnBase(float base) { return base; }
+static const VoxelMapInstance *VoxelWorld_Instance(unsigned i) { (void)i; return NULL; }
 '''
+    source += function(voxel, 'static bool BoxVisible(')
+    source += through(voxel, 'static bool sShadowSweep;', 'static void ShadowCastersSeal(')
     source += through(voxel, '#define VOXEL_VISIT_KEEP_SITES', 'static void VisitRemember(')
     source += r'''
 static unsigned RequestWaitOld(const ChunkSite *site)
@@ -454,6 +467,9 @@ static void Walk(const VisitKey *key)
     sChunks[0].stamp = sChunks[1].stamp = sFrame;
     sChunks[1].viewStamp = sFrame;
     Draw(&sChunks[1], 10, 20);
+    /* chunk 0 off screen, its shadow on it */
+    sShadowCount = 1; sShadowNeeds = 1;
+    sShadowDraws[0] = (VoxelShadowDraw){.chunk = &sChunks[0], .worldX = 2, .worldZ = -8, .terrain = true, .far = 3.0f};
     sRequests[sRequestCount++] = (BuildRequest){.site = site, .need = 2, .waitIndex = RequestWait(&site, -1)};
     VisitRemember(key, 0, 1);
 }
@@ -494,6 +510,11 @@ static void TestVisitMemo(void)
     sDrawCount = sRequestCount = 0;
     assert(!VisitReplay(&other, 0.0f, 0.0f, &missing));
     sFrame = 503; assert(!VisitReplay(&key, 0.0f, 0.0f, &missing)); sFrame = 502;
+    /* Another sun, or the sweep off: the shadow-only casters change, walked afresh. */
+    memcpy(&other, &key, sizeof(key)); other.shadowSweepZ = 1.25f;
+    assert(!VisitReplay(&other, 0.0f, 0.0f, &missing));
+    memcpy(&other, &key, sizeof(key)); other.shadowSweep = 1;
+    assert(!VisitReplay(&other, 0.0f, 0.0f, &missing));
     sVisitMemo.valid = false; assert(!VisitReplay(&key, 0.0f, 0.0f, &missing)); sVisitMemo.valid = true;
     /* Every field it keys of a chunk it found, the one on screen and not. */
     for (unsigned k = 0; k < 2; ++k) {
@@ -529,8 +550,12 @@ static void TestVisitMemo(void)
     /* Nothing changed: put back as it was kept, the stamps written, the
      * requests keyed from where the player now is. */
     sDrawCount = sRequestCount = 0; missing = 0;
+    sShadowCount = sShadowNeeds = 0;
     assert(VisitReplay(&key, 44.0f, 1.0f, &missing));
     assert(missing == 1 && sDrawCount == 1 && sDraws[0].chunk == &sChunks[1]);
+    /* the shadow-only casters as the walk listed them */
+    assert(sShadowCount == 1 && sShadowNeeds == 1 && sShadowDraws[0].chunk == &sChunks[0]);
+    assert(sShadowDraws[0].worldX == 2 && sShadowDraws[0].worldZ == -8 && sShadowDraws[0].terrain);
     assert(sDraws[0].worldX == 10 && sDraws[0].worldZ == 20);
     assert(sRequestCount == 1 && sRequests[0].key == 2u * 100000u + 9u);
     assert(sRequestWait[sRequests[0].waitIndex].seen == sFrame);
@@ -545,9 +570,139 @@ static void TestVisitMemo(void)
     sDrawCount = sRequestCount = 0; assert(!VisitReplay(&key, 0.0f, 0.0f, &missing));
     Walk(&key); assert(sVisitMemo.valid);
     sFrame = 504; assert(VisitStateSame());
+    assert(sShadowCount == 1 && sShadowDraws[0].chunk == &sChunks[0]);
     ReleaseChunk(&sChunks[0]); assert(!VisitStateSame());
+    assert(sShadowCount == 0); /* a slot released leaves the shadow-only casters */
     sDrawCount = sRequestCount = 0; assert(!VisitReplay(&key, 0.0f, 0.0f, &missing));
     for (unsigned i = 0; i < VOXEL_CHUNK_SLOTS; ++i) ReleaseChunk(&sChunks[i]);
+}
+
+/*
+ * HIGH's shadow-only casters: a square off screen whose shadow falls on it.
+ * The frustum here: x 0..20, z up to 15, and a north edge z - y/2 >= 0 that
+ * a box's top leaves first, as the camera's top edge does.
+ */
+static VoxelChunk *Tall(unsigned slot, float top)
+{
+    VoxelChunk *c = &sChunks[slot];
+    memset(c, 0, sizeof(*c));
+    c->count = 600; c->buildingFirst = 400; c->gx1 = c->gz1 = 8; c->gy1 = top;
+    return c;
+}
+
+static void TestShadowCasters(void)
+{
+    static VoxelMapInstance inst = {.mapGroup = 7, .mapNum = 1};
+    ChunkSite north = {.inst = &inst, .x0 = 4, .y0 = -9, .x1 = 12, .y1 = -1, .baseX = 4, .baseY = -9};
+    ChunkSite east = {.inst = &inst, .x0 = 21, .y0 = 2, .x1 = 29, .y1 = 10, .baseX = 21, .baseY = 2};
+    ChunkSite far = {.inst = &inst, .x0 = 4, .y0 = -30, .x1 = 12, .y1 = -22, .baseX = 4, .baseY = -30};
+    VoxelChunk *house;
+
+    sFrustum[0] = (VoxelPlane){1.0f, 0.0f, 0.0f, 0.0f};
+    sFrustum[1] = (VoxelPlane){-1.0f, 0.0f, 0.0f, 20.0f};
+    sFrustum[2] = (VoxelPlane){0.0f, -0.5f, 1.0f, 0.0f};
+    sFrustum[3] = (VoxelPlane){0.0f, 0.0f, -1.0f, 15.0f};
+    sFrustumValid = true;
+    sFrame = 900;
+    /* (the lighting is not built here: the sweep stays off, the list empty) */
+    sShadowCount = 3; sShadowNeeds = 2;
+    ShadowSweepBegin();
+    assert(!sShadowSweep && sShadowCount == 0 && sShadowNeeds == 0);
+
+    /* A house four tiles tall just past the north edge: not in the picture,
+     * its shadow (a tile south for each it falls) is; with the sun from the
+     * south, or the sweep off, it is not; much further north it is not. */
+    house = Tall(40, 4.0f);
+    assert(!BoxVisible(4.0f, 0.0f, -9.0f, 12.0f, 4.0f, -1.0f));
+    assert(!SiteShadowReaches(&north, house));
+    sShadowSweep = true; sShadowSweepX = 0.0f; sShadowSweepZ = 1.0f;
+    assert(SiteShadowReaches(&north, house));
+    assert(!SiteShadowReaches(&far, Tall(41, 4.0f)));
+    sShadowSweepZ = -1.0f;
+    assert(!SiteShadowReaches(&north, house));
+    /* Flat ground shades nothing, however near. */
+    sShadowSweepZ = 1.0f;
+    assert(!SiteShadowReaches(&north, Tall(42, 0.5f)));
+    /* Past the east edge: only with the sun from the east, the shadow
+     * falling west. */
+    sShadowSweepZ = 0.0f; sShadowSweepX = -1.2f;
+    assert(SiteShadowReaches(&east, Tall(43, 4.0f)));
+    sShadowSweepX = 1.2f;
+    assert(!SiteShadowReaches(&east, Tall(43, 4.0f)));
+    /* Not built, or only its flat draft: up to a house's height. */
+    sShadowSweepX = 0.0f; sShadowSweepZ = 1.0f;
+    assert(SiteShadowReaches(&north, NULL));
+    {
+        VoxelChunk *draft = Tall(44, 0.2f);
+        draft->draft = true;
+        assert(SiteShadowReaches(&north, draft));
+        sShadowSweepZ = -1.0f;
+        assert(!SiteShadowReaches(&north, NULL) && !SiteShadowReaches(&north, draft));
+        sShadowSweepZ = 1.0f;
+    }
+
+    /* Its ground casts only where it rises: parts' boxes (x0 y0 w0 x1 y1 w1). */
+    house = Tall(40, 4.0f);
+    house->parts.on = true;
+    for (unsigned p = 0; p < VOXEL_PARTS; ++p) { house->parts.box[p][0] = 1.0f; house->parts.box[p][3] = 0.0f; }
+    house->parts.box[0][0] = 0.0f; house->parts.box[0][1] = 0.0f; house->parts.box[0][2] = 0.0f;
+    house->parts.box[0][3] = 8.0f; house->parts.box[0][4] = 0.1f; house->parts.box[0][5] = 8.0f;
+    assert(!ShadowTerrainReaches(house, 4, -9));
+    house->parts.box[1][0] = 0.0f; house->parts.box[1][1] = 0.0f; house->parts.box[1][2] = 0.0f;
+    house->parts.box[1][3] = 8.0f; house->parts.box[1][4] = 2.0f; house->parts.box[1][5] = 0.0f;
+    assert(ShadowTerrainReaches(house, 4, -9));
+    house->parts.on = false; /* not cut in parts: its whole box */
+    assert(ShadowTerrainReaches(house, 4, -9));
+
+    /* The cap: the nearest to the camera's target kept, the farthest turned
+     * away; nothing to cast (a draft, an empty chunk) never listed. */
+    sCamera.targetX = 10.0f; sCamera.targetZ = 5.0f;
+    sShadowCount = 0; sShadowOverflow = 0;
+    {
+        static const unsigned order[14] = {13, 0, 12, 1, 7, 2, 11, 3, 4, 10, 5, 6, 9, 8};
+        for (unsigned n = 0; n < 14; ++n) {
+            unsigned k = order[n];
+            ShadowCaster(Tall(50 + k, 3.0f), 6, -10 - 8 * (int)k);
+        }
+        assert(sShadowCount == VOXEL_SHADOW_DRAWS_MAX && sShadowOverflow == 2);
+        for (unsigned i = 0; i < sShadowCount; ++i) {
+            unsigned k = (unsigned)(sShadowDraws[i].chunk - &sChunks[50]);
+            assert(k < 12 && sShadowDraws[i].worldZ == -10 - 8 * (int)k && sShadowDraws[i].worldX == 6);
+            /* (its ground: not cut in parts, by its whole box - near enough) */
+            assert(sShadowDraws[i].terrain == (k == 0));
+        }
+        Tall(70, 3.0f)->draft = true;
+        ShadowCaster(&sChunks[70], 6, -2);
+        Tall(71, 3.0f)->count = 0;
+        ShadowCaster(&sChunks[71], 6, -2);
+        for (unsigned i = 0; i < sShadowCount; ++i)
+            assert(sShadowDraws[i].chunk != &sChunks[70] && sShadowDraws[i].chunk != &sChunks[71]);
+        /* a nearer one takes the farthest's place */
+        ShadowCaster(Tall(72, 3.0f), 6, 2);
+        assert(sShadowCount == VOXEL_SHADOW_DRAWS_MAX && sShadowOverflow == 3);
+        {
+            bool has72 = false, has11 = false;
+            for (unsigned i = 0; i < sShadowCount; ++i) {
+                has72 = has72 || sShadowDraws[i].chunk == &sChunks[72];
+                has11 = has11 || sShadowDraws[i].chunk == &sChunks[61];
+            }
+            assert(has72 && !has11);
+        }
+    }
+
+    /* Sealed: each kept from eviction this frame, as a drawn chunk is; given
+     * up when the picture has holes and no room. */
+    sShadowPeak = sShadowYielded = 0;
+    ShadowCastersSeal(false);
+    for (unsigned i = 0; i < sShadowCount; ++i)
+        assert(sShadowDraws[i].chunk->viewStamp == sFrame && !Evictable(sShadowDraws[i].chunk, true));
+    assert(sShadowPeak == VOXEL_SHADOW_DRAWS_MAX);
+    ShadowCastersSeal(true);
+    assert(sShadowCount == 0 && sShadowYielded == 1);
+
+    sShadowSweep = false;
+    sFrustumValid = false;
+    for (unsigned i = 0; i < VOXEL_CHUNK_SLOTS; ++i) memset(&sChunks[i], 0, sizeof(sChunks[i]));
 }
 
 int main(void)
@@ -556,7 +711,8 @@ int main(void)
     TestWait();
     TestDraft();
     TestVisitMemo();
-    puts("PASS draft: chunk index vs linear search, request wait vs linear table and reuse, no futile eviction, draft vertices/pages/bounds/uploads/refusals, freed blocks forget the ahead no-room size, kept view walk refused on index or keyed field changes and replayed otherwise");
+    TestShadowCasters();
+    puts("PASS draft: chunk index vs linear search, request wait vs linear table and reuse, no futile eviction, draft vertices/pages/bounds/uploads/refusals, freed blocks forget the ahead no-room size, kept view walk refused on index or keyed field changes and replayed otherwise (shadow-only casters with it), shadow-only casters by their sun-swept box, ground only where it rises, cap keeps the nearest, sealed against eviction or given up for room");
     return 0;
 }
 '''

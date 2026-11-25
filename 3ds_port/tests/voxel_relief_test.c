@@ -26,6 +26,11 @@
  * (VoxelRelief_SeamStep), and Lilycove 96 down to meet Route 124; Route 124
  * and Route 126 meet as they are. A lifted map stands that much higher.
  *
+ * argv[8] is Navel Rock's top, typed a cave by the game but under the open
+ * sky (relief_fixes.json "open_air"), argv[9] the Abandoned Ship's deck,
+ * typed so too and kept a cave: the first is open air, the second, Route 101
+ * and Rusturf Tunnel are not.
+ *
  * The table of upright cells ("UPRT": the doors and cave mouths cut into a
  * face, which the lean leaves vertical): every cell of it through
  * VoxelRelief_Upright, LiftAt and ShiftAt; and Route 116's two caves, (47, 8)
@@ -153,7 +158,7 @@ static bool Falls(const int16_t *g, int *high, int *low)
     return falls;
 }
 
-/* EDGE and under-floor layers precede the upright and stair tables. */
+/* EDGE, under-floor and open-air layers precede the upright and stair tables. */
 static const unsigned char *UprightAndStepsTables(const unsigned char *blob, long size)
 {
     unsigned at = Le16(blob + size - 8) | (Le16(blob + size - 6) << 16);
@@ -164,6 +169,8 @@ static const unsigned char *UprightAndStepsTables(const unsigned char *blob, lon
         t += 8 + 18u * Le16(t + 4);
     if (memcmp(t, "UNDR", 4) == 0)
         t += 8 + 58u * Le16(t + 4);
+    if (memcmp(t, "OPEN", 4) == 0)
+        t += 8 + 2u * Le16(t + 4);
     return t;
 }
 
@@ -372,9 +379,15 @@ int main(int argc, char **argv)
     VoxelMapInstance inst = {0};
     const int16_t *g;
 
-    assert(argc == 8);
+    assert(argc == 10);
     inst.layoutId = atoi(argv[1]);
     assert(VoxelRelief_Init());
+    /* the maps under the open sky though typed as caves */
+    assert(VoxelRelief_OpenAir((unsigned)atoi(argv[8])));
+    assert(!VoxelRelief_OpenAir((unsigned)atoi(argv[9])));
+    assert(!VoxelRelief_OpenAir((unsigned)atoi(argv[1])));
+    assert(!VoxelRelief_OpenAir((unsigned)atoi(argv[3])));
+    assert(!VoxelRelief_OpenAir(0));
     g = VoxelRelief_Cell(&inst, 3, 7);
     assert(g != NULL && VoxelRelief_IsSlope(g));
     assert(g[2 * VOXEL_RELIEF_SIDE + 2] == 6);
@@ -462,6 +475,6 @@ int main(int argc, char **argv)
     VoxelRelief_Shutdown();
     puts("PASS relief: ledge lip, a drawn terrace, a carved cave's belt and Route 108's leaning sea "
          "from the ROMFS file, searched in row order; Lilycove's seam with Route 124 asks a lift; "
-         "every cut cell through the memo; every upright cell of the file, Route 116's caves; every step cell of the file");
+         "every cut cell through the memo; every upright cell of the file, Route 116's caves; every step cell of the file; Navel Rock's top under the open sky");
     return 0;
 }

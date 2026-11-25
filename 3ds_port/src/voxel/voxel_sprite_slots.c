@@ -57,6 +57,59 @@ unsigned VoxelSlots_TilePixel(const uint8_t *tiles, unsigned width, unsigned x, 
     return (tiles[tile * 32u + py * 4u + px / 2u] >> ((px & 1u) * 4u)) & 0xFu;
 }
 
+/* A row's opaque texels spread one across, either way. */
+static uint64_t SpreadRow(uint64_t row)
+{
+    return row | (row << 1) | (row >> 1);
+}
+
+void VoxelSlots_Bleed(uint16_t *pixels, unsigned stride, unsigned width, unsigned height)
+{
+    /* Opaque texels a row (bit x), with an empty row over and under. */
+    uint64_t opaque[64u + 2u];
+    uint64_t inside;
+
+    if (width == 0 || width > 64u || height == 0 || height > 64u)
+        return;
+    inside = width == 64u ? ~(uint64_t)0 : ((uint64_t)1 << width) - 1u;
+    opaque[0] = opaque[height + 1u] = 0;
+    for (unsigned y = 0; y < height; ++y)
+    {
+        const uint16_t *row = pixels + y * stride;
+        uint64_t bits = 0;
+
+        for (unsigned x = 0; x < width; ++x)
+            if (row[x] & 1u)
+                bits |= (uint64_t)1 << x;
+        opaque[y + 1u] = bits;
+    }
+    for (unsigned y = 0; y < height; ++y)
+    {
+        const uint64_t *near = opaque + y;   /* near[0] above, near[1] the row, near[2] below */
+        uint64_t todo = (SpreadRow(near[0]) | SpreadRow(near[1]) | SpreadRow(near[2]))
+                      & ~near[1] & inside;
+        uint16_t *row = pixels + y * stride;
+
+        while (todo != 0)
+        {
+            /* Its side, then above and below, then the corners. */
+            static const int8_t order[8][2] = {{-1,0},{1,0},{0,-1},{0,1},{-1,-1},{1,-1},{-1,1},{1,1}};
+            unsigned x = (unsigned)__builtin_ctzll(todo);
+
+            todo &= todo - 1u;
+            for (unsigned k = 0; k < 8u; ++k)
+            {
+                int nx = (int)x + order[k][0], dy = order[k][1];
+
+                if (nx < 0 || nx >= (int)width || !(near[1 + dy] & ((uint64_t)1 << nx)))
+                    continue;
+                row[x] = (uint16_t)(pixels[(unsigned)((int)y + dy) * stride + (unsigned)nx] & ~1u);
+                break;
+            }
+        }
+    }
+}
+
 unsigned VoxelSlots_DoorPixel(const uint8_t *tiles, const uint8_t *palettes,
                               unsigned x, unsigned y, unsigned *palette)
 {
