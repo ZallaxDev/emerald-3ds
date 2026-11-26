@@ -258,8 +258,9 @@ void CtrVideo_Present(void)
 
     /* The frame's entry tick: its preparation, before FrameBegin. */
     f.entry = svcGetSystemTick();
+    CtrLog_Mark("present: prepare");
     FrameEntry(&f);
-    if (PresentHeld(&f)) return;
+    if (PresentHeld(&f)) { CtrLog_Mark("game"); return; }
     FrameHousekeeping();
     FrameView();
     FrameTrust();
@@ -269,11 +270,14 @@ void CtrVideo_Present(void)
      * pacing and swap: no gfxSwapBuffers/gspWaitForVBlank in this path. */
     f.waitStart = svcGetSystemTick();
     CtrVoxel_NoteFrameWait(f.waitStart);
+    CtrLog_Mark("present: FrameBegin, waiting for the GPU to finish the last frame");
     if (!C3D_FrameBegin(C3D_FRAME_SYNCDRAW))
     {
         sReport.waitMs = (svcGetSystemTick() - f.waitStart) * 1000.0f / SYSCLOCK_ARM11;
+        CtrLog_Mark("game");
         return;
     }
+    CtrLog_Mark("present: frame begun, palette");
     FrameBegun(&f);
     FrameDump();
     FrameDrops();
@@ -283,23 +287,31 @@ void CtrVideo_Present(void)
     UpdatePalette();
     PORT_PROF_END(palette, PORT_PROF_PALETTE);
     f.clear = FrameBackdrop();
+    CtrLog_Mark("present: voxel world update");
     FrameVoxel(&f);
+    CtrLog_Mark("present: battle world, stereo, route, HUD");
     FrameBattleWorld(&f);
     FrameStereo(&f);
     FramePlaneRamp(&f);
     FrameRoute(&f);
     FrameHud(&f);
     PORT_PROF_BEGIN(layers);
+    CtrLog_Mark("present: layers");
     FrameLayers(&f);
     PORT_PROF_END(layers, PORT_PROF_LAYERS);
     PORT_PROF_BEGIN(draw);
+    CtrLog_Mark("present: draw");
     FrameDraw(&f);
+    CtrLog_Mark("present: overlays");
     FrameOverlays(&f);
     PORT_PROF_END(draw, PORT_PROF_DRAW);
     PORT_PROF_BEGIN(frameEnd);
+    CtrLog_Mark("present: FrameEnd, handing the frame to the GPU");
     float gpuStartMs = FrameSubmit(f.start);
     PORT_PROF_END(frameEnd, PORT_PROF_FRAMEEND);
+    CtrLog_Mark("present: finish");
     FrameFinish(&f, gpuStartMs);
+    CtrLog_Mark("game");
 }
 
 const CtrVideoStats *CtrVideo_GetStats(void) { return &sStats; }

@@ -5,6 +5,7 @@
 #include <string.h>
 #include "port_log.h"
 #include "voxel_regions.h"
+#include "voxel_who.h"
 #include "voxel_file.h"
 #ifndef VOXEL_REGIONS_PATH
 #define VOXEL_REGIONS_PATH "voxel/regions.bin"
@@ -19,7 +20,8 @@ struct RegionIndex {
 };
 static struct RegionIndex *sIndex;
 static unsigned sIndexCount;
-static const struct RegionIndex *sRecent;
+static const struct RegionIndex *sRecentOf[VOXEL_THREADS];
+#define sRecent (sRecentOf[VOXEL_WHO])
 static uint8_t *sRoles;
 static unsigned Read16(const uint8_t *p) {
     return (unsigned)p[0] | ((unsigned)p[1] << 8);
@@ -30,7 +32,7 @@ static uint32_t Read32(const uint8_t *p) {
 }
 void VoxelRegions_Shutdown(void) {
     free(sRoles); free(sIndex);
-    sRoles = NULL; sIndex = NULL; sIndexCount = 0; sRecent = NULL;
+    sRoles = NULL; sIndex = NULL; sIndexCount = 0; memset(sRecentOf, 0, sizeof(sRecentOf));
 }
 bool VoxelRegions_Init(void) {
     FILE *file;

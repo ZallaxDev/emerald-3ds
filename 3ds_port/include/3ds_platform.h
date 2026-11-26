@@ -128,6 +128,14 @@ bool CtrScenario_Active(void);
 bool CtrScenario_Playing(void);
 /* settings.txt gpu_ops: the GPU's time by kind of work, logged now (3ds_video.c) */
 void CtrVideo_GpuOpsFlush(void);
+/* The voxel world's terrain is recorded and what it draws next is still to
+ * be computed: the GPU is started on it now, if this frame starts it early
+ * at all and has not yet (GpuStartEarly). */
+void CtrVideo_VoxelTerrainPart(void);
+void CtrVideo_VoxelTerrainRecorded(void);
+/* Texels were written by the CPU after that: the GPU's texture cache is
+ * dropped before the next draw (TexelsWritten). */
+void CtrVideo_TexelsWritten(void);
 /* The frame's input: recorded, or replaced by the recording. */
 void CtrScenario_Input(CtrInputSample *sample);
 /* The game clock while a scenario runs, in seconds since 1970. */

@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include "voxel_mesh_builder.h"
+#include "voxel_who.h"
 #include "voxel_atlas.h"
 #include "voxel_tree.h"
 #include "voxel_lighting.h"
@@ -3605,8 +3606,15 @@ typedef struct
     uint32_t stamp;
     bool hasFill;
     VoxelEdgeFill fill;
+    /* ... and its levels, as a belt of water and as one of land
+     * (BorderWaterLevel, VoxelMesh_BorderLevel): each cell is asked for both
+     * by itself and by the four cells round it, at every face and again for
+     * its trees. Bit 0: known; bit 1: the answer. */
+    uint8_t water, land;
+    float waterLevel, waterShift, landLevel, landShift;
 } BeltMemo;
-static BeltMemo sBeltMemo[VOXEL_BELT_MEMO];
+static BeltMemo sBeltMemoOf[VOXEL_THREADS][VOXEL_BELT_MEMO];
+#define sBeltMemo (sBeltMemoOf[VOXEL_WHO])
 
 static const VoxelMapInstance *BeltOwnerFind(int x, int y, int *edgeX, int *edgeY);
 
@@ -3623,6 +3631,7 @@ static const BeltMemo *BeltLookup(int x, int y)
         return memo;
     memo->owner = BeltOwnerFind(x, y, &memo->edgeX, &memo->edgeY);
     memo->hasFill = memo->owner != NULL && VoxelRelief_EdgeFillAt(memo->owner, x, y, &memo->fill);
+    memo->water = memo->land = 0;
     memo->x = x;
     memo->y = y;
     memo->stamp = stamp;
@@ -3750,7 +3759,37 @@ bool VoxelMesh_BeltFill(int x, int y, VoxelEdgeFill *fill)
         && (fill->metatile < VOXEL_BELT_SECONDARY_ID || owner->secondaryTileset == ring->secondaryTileset);
 }
 
+static bool BorderWaterLevelFind(int x, int y, float *level, float *shift);
+
 static bool BorderWaterLevel(int x, int y, float *level, float *shift)
+{
+    BeltMemo *memo = (BeltMemo *)BeltLookup(x, y);
+    bool is;
+
+    if (memo == NULL)
+        return BorderWaterLevelFind(x, y, level, shift);
+    if (memo->water & 1u)
+    {
+        /* (level and shift are written only for a belt of water, as found) */
+        if (memo->water & 2u)
+        {
+            *level = memo->waterLevel;
+            *shift = memo->waterShift;
+        }
+        return (memo->water & 2u) != 0;
+    }
+    is = BorderWaterLevelFind(x, y, level, shift);
+    /* (the search read no other belt cell: the entry is still this cell's) */
+    if (is)
+    {
+        memo->waterLevel = *level;
+        memo->waterShift = *shift;
+    }
+    memo->water = (uint8_t)(1u | (is ? 2u : 0u));
+    return is;
+}
+
+static bool BorderWaterLevelFind(int x, int y, float *level, float *shift)
 {
     const VoxelMapInstance *ring = VoxelWorld_Instance(0), *owner;
     int ex, ey;
@@ -3820,10 +3859,35 @@ static bool sBorderFollowsEdge = true;
 
 void VoxelMesh_SetBorderFollowsEdge(bool on)
 {
+    /* (the levels kept were found under the other answer) */
+    if (on != sBorderFollowsEdge)
+        memset(sBeltMemoOf, 0, sizeof(sBeltMemoOf));
     sBorderFollowsEdge = on;
 }
 
+static bool BorderLevelFind(int x, int y, float *level, float *shift);
+
 bool VoxelMesh_BorderLevel(int x, int y, float *level, float *shift)
+{
+    BeltMemo *memo = (BeltMemo *)BeltLookup(x, y);
+    bool is;
+
+    if (memo == NULL)
+        return BorderLevelFind(x, y, level, shift);
+    if (!(memo->land & 1u))
+    {
+        is = BorderLevelFind(x, y, level, shift);
+        memo->landLevel = *level;
+        memo->landShift = *shift;
+        memo->land = (uint8_t)(1u | (is ? 2u : 0u));
+        return is;
+    }
+    *level = memo->landLevel;
+    *shift = memo->landShift;
+    return (memo->land & 2u) != 0;
+}
+
+static bool BorderLevelFind(int x, int y, float *level, float *shift)
 {
     const VoxelMapInstance *ring = VoxelWorld_Instance(0), *owner;
     int ex, ey;

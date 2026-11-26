@@ -396,7 +396,9 @@ static void RenderVoxelTo(C3D_RenderTarget *target, int eye, uint32_t clear, boo
 
     /* C2D_TargetClear clears colour and depth, which the 3D pass needs. */
     C2D_TargetClear(sLogical, clear);
+    CtrLog_Mark("present: draw, voxel world");
     CtrVoxel_Draw(sLogical, eye);
+    CtrLog_Mark("present: draw, voxel post (blur, glow, veils, overlay)");
     sSceneOn = NULL; /* drawn on with C3D_FrameDrawOn, behind SceneOn's back */
 
     /* Finish the world before sampling it. UI is drawn on top after blur.

@@ -48,6 +48,7 @@
 #include "voxel_mesh_builder.h"
 #include "voxel_vertex_pack.h"
 #include "voxel_world.h"
+#include "voxel_who.h"
 #include "voxel_tree.h"
 #include "voxel_building.h"
 #include "voxel_grade.h"
@@ -452,6 +453,8 @@ static float TicksMs(uint64_t ticks)
 /* â”€â”€ Packing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 static void JobCancel(void);
+static void JobAwayHome(void);
+static void JobAtlasGone(const void *slot);
 static bool StaticMeshPrepare(unsigned pageModel, bool lit, unsigned triangles);
 static const struct StaticMesh *StaticMeshFind(unsigned pageModel, bool lit);
 static const struct StaticMesh *StaticMeshCurrent(unsigned pageModel, bool lit);
@@ -718,16 +721,43 @@ static void TreeCrowns(void);
  * be mostly air (on Route 112 it kept 37k of 50k vertices where this keeps
  * far fewer). The frustum's planes are linear in x, y and w all the same
  * (SlabVisible).
+ *
+ * The trees and the buildings standing in the chunk are cut the same way,
+ * each with boxes of its own (a house's would be air over the ground's): on
+ * a town's edge they are more vertices than its ground, and a chunk with a
+ * corner in the picture drew every one of them. So the vertices are in
+ * ranges - the ground's pages, the trees, HIGH's crowns, the buildings -
+ * each in its four parts, and the boxes are by kind: ground, trees (crowns
+ * among them), buildings. The turned crowns only the shadow map draws
+ * (treeShadow) are in no range.
  */
 #define VOXEL_PARTS 4u
-#define VOXEL_PARTS_ALL ((1u << VOXEL_PARTS) - 1u)
+#define VOXEL_PARTS_MASK ((1u << VOXEL_PARTS) - 1u)
+enum { VOXEL_KIND_GROUND, VOXEL_KIND_TREES, VOXEL_KIND_BUILDINGS, VOXEL_KINDS };
+#define VOXEL_RANGE_TREES VOXEL_ATLAS_PAGES
+#define VOXEL_RANGE_CROWNS (VOXEL_ATLAS_PAGES + 1u)
+#define VOXEL_RANGE_BUILDINGS (VOXEL_ATLAS_PAGES + 2u)
+#define VOXEL_RANGES (VOXEL_ATLAS_PAGES + 3u)
+#define VOXEL_PARTS_ALL ((1u << VOXEL_PARTS * VOXEL_KINDS) - 1u)
 
 typedef struct
 {
     bool on; /* cut in parts (a draft is not: drawn whole) */
-    uint16_t end[VOXEL_ATLAS_PAGES][VOXEL_PARTS - 1u];
-    float box[VOXEL_PARTS][6];
+    uint16_t end[VOXEL_RANGES][VOXEL_PARTS - 1u];
+    float box[VOXEL_KINDS][VOXEL_PARTS][6];
 } VoxelChunkParts;
+
+static unsigned RangeKind(unsigned range)
+{
+    return range < VOXEL_ATLAS_PAGES ? VOXEL_KIND_GROUND
+         : range < VOXEL_RANGE_BUILDINGS ? VOXEL_KIND_TREES : VOXEL_KIND_BUILDINGS;
+}
+
+/* The parts of one kind among a draw's (VoxelChunkDraw.parts). */
+static unsigned KindParts(unsigned seen, unsigned kind)
+{
+    return seen >> kind * VOXEL_PARTS & VOXEL_PARTS_MASK;
+}
 
 typedef struct
 {
@@ -832,7 +862,7 @@ typedef struct
 {
     const VoxelChunk *chunk;
     int worldX, worldZ; /* the chunk corner's place in the world this frame */
-    uint8_t parts;      /* which of its ground's parts are in the picture (VoxelChunkParts) */
+    uint16_t parts;     /* which parts are in the picture, four bits a kind (VoxelChunkParts) */
 } VoxelChunkDraw;
 
 static VoxelChunkDraw sDraws[VOXEL_DRAW_MAX];
@@ -1919,10 +1949,14 @@ static void ReadAhead(void)
         ReadAssetsAhead();
 }
 
+static void BuildWorkerStart(void);
+static void BuildWorkerStop(void);
+
 static void StreamStart(void)
 {
     s32 priority = 0x30;
 
+    BuildWorkerStart();
     memset(&sStream, 0, sizeof(sStream));
     memset(sBadPages, 0, sizeof(sBadPages));
     memset(&sAssetAhead, 0, sizeof(sAssetAhead));
@@ -1964,6 +1998,7 @@ static void StreamStart(void)
 
 static void StreamStop(void)
 {
+    BuildWorkerStop();
     if (sStream.thread != NULL)
     {
         sStream.quit = true;
@@ -3219,6 +3254,7 @@ bool CtrVoxel_Init(void)
      * parked (sHaveBuildings). */
     for (unsigned i = 0; i < VOXEL_BUILDING_PAGES; ++i)
         sPageSlots[i].page = -1;
+    JobAwayHome(); /* (the worker reads the buildings\' tables) */
     sBuildingsLoaded = VoxelBuildings_Init();
     sHaveBuildings = false;
     if (sBuildingsLoaded)
@@ -3356,6 +3392,7 @@ void CtrVoxel_Shutdown(void)
     sPageBlock = sChunkBlock = NULL;
     sHaveBuildings = false;
     StaticMeshesFree();
+    JobAwayHome(); /* (the worker reads the buildings\' tables) */
     VoxelBuildings_Shutdown();
     VoxelRelief_Shutdown();
     free(sScratch);
@@ -3942,7 +3979,9 @@ static VoxelAtlasSlot *AcquireAtlas(const VoxelMapInstance *inst, bool mayEvict)
             memset(tex, 0, sizeof(*tex));
         }
     }
-    /* Out of use from now on: what it held is being replaced. */
+    /* Out of use from now on: what it held is being replaced (and a job
+     * building from it, perhaps on the worker, is no longer the world's). */
+    JobAtlasGone(victim);
     victim->valid = false;
     AnimForget(victim);
     victim->primaryTileset = inst->primaryTileset;
@@ -4087,6 +4126,8 @@ static void RunAtlasJob(uint64_t started, float budget, bool inFrame)
         return; /* Other pages still own the job; publish only when all landed. */
     sAtlasJob.slot = NULL;
     bool changed = memcmp(&slot->map, &job->map, sizeof(slot->map)) != 0;
+    /* (the build's worker reads the table: not while it is set down) */
+    JobAwayHome();
     slot->map = job->map;
     if (job->extend)
     {
@@ -4223,11 +4264,11 @@ static struct
     bool overdue;
     unsigned terrainCount, buildingFirst, treeShadow, treeCrowns;
     unsigned terrainFirst[VOXEL_ATLAS_PAGES + 1u];
-    unsigned sortPage, sortScan, sortWrite;
-    /* ... then each page's parts (JobSortParts): three splits a page, and
-     * the parts' boxes measured last */
-    unsigned sortStep, boxScan;
-    bool sortOpen;
+    /* JobSort: a group's triangles told their buckets (even steps), then
+     * moved into their runs (odd) */
+    unsigned sortScan, sortWrite;
+    unsigned sortStep, sortNext[VOXEL_ATLAS_PAGES * VOXEL_PARTS], sortEnd[VOXEL_ATLAS_PAGES * VOXEL_PARTS];
+    bool sortOpen, boxOpen;
     VoxelChunkParts parts;
     VoxelBuildingCursor models;
     unsigned staticIndex;   /* JOB_STATICS: the next of sJobStatics */
@@ -4265,14 +4306,69 @@ static uint16_t sJobReadSlots[VOXEL_METATILE_IDS];
 static unsigned sJobStarts, sJobCancels;
 static float sCancelledBuildMs;
 
+/*
+ * ââ The job's slices on the second core ââââââââââââââââââââââââââââââââââââââ
+ *
+ * A build is 19-24 ms of an Old 3DS's one application core, taken from the
+ * frames in pieces; on the mach bike the squares come faster than that.
+ * The slices that read and write nothing but the job and its scratch - the
+ * sort and the packing, a fifth of a build - are run by a worker on the
+ * system core instead (BuildWorker), beside the frame rather than out of it.
+ * The job is away meanwhile: nothing on this thread steps it, and whatever
+ * drops it (JobCancel) calls it home first.
+ *
+ * settings.txt voxel_build_core=0: every slice on the render thread.
+ */
+enum { AWAY_HOME, AWAY_SENT, AWAY_RUNNING, AWAY_DONE };
+
+static struct
+{
+    Thread thread;
+    LightEvent wake;
+    volatile bool quit;
+    volatile int state;
+    volatile bool stop;     /* come home after the slice in hand */
+    uint64_t ticks;         /* the worker's, wall time */
+    unsigned jobs, recalls;
+    /* A dropped job the worker has not let go of yet (JobAwayDrop): the job,
+     * the builder and the scratch are still its own. */
+    volatile bool zombie;
+    /* The worker met the game's maps changed (VoxelWorld_WorkerMissed). */
+    volatile bool bad;
+    uint32_t epoch;         /* the world's as the job was sent */
+    unsigned who;           /* VOXEL_WHO as the worker reads it: 1 */
+    unsigned bads, drops;
+    unsigned steps, stepsSeen;
+    uint64_t homeTicks, homeWorst; /* this thread's waits for it (JobAwayHome) */
+} sAway;
+/* settings.txt voxel_build_core: 0 none of it, 1 the sort and the packing,
+ * 2 the geometry as well. */
+static int sBuildCore = 2;
+
+static bool JobAwayPhase(int phase);
+static void JobAwayHome(void);
+
+static void JobAwayDrop(void);
+static void WorkerFeed(void);
+
 static void JobCancel(void)
 {
+    /* (without waiting for the worker: what it has in hand it finishes for
+     * nothing, and no job starts till it has - JobZombie) */
+    JobAwayDrop();
     if (sJob.active)
     {
         ++sJobCancels;
         sCancelledBuildMs += TicksMs(sJob.ticks);
     }
     sJob.active = false;
+}
+
+/* The job building from atlas `slot`, dropped: the slot is another's now. */
+static void JobAtlasGone(const void *slot)
+{
+    if (sJob.active && (const void *)sJob.atlas == slot)
+        JobCancel();
 }
 
 static void JobStart(const ChunkSite *site, VoxelAtlasSlot *atlas, uint32_t hash,
@@ -4369,122 +4465,189 @@ static bool SortEast(const VoxelVertex *v)
     return v[0].x + v[1].x + v[2].x >= 1.5f * VOXEL_CHUNK;
 }
 
-/*
- * Each page's triangles into its four parts, as JobSort put them by page: in
- * place and in slices. Three splits a page - north before south, then west
- * before east in the north and east before west in the south.
- */
-static bool JobSortParts(unsigned *budget)
+/* Where range `range` of the job's vertices begins and ends (VoxelChunkParts). */
+static void JobRange(unsigned range, unsigned *first, unsigned *end)
 {
-    while (sJob.sortStep < VOXEL_ATLAS_PAGES * 3u)
+    unsigned grounds = sJob.buildingFirst - sJob.treeShadow - sJob.treeCrowns;
+
+    if (range < VOXEL_ATLAS_PAGES)
     {
-        unsigned page = sJob.sortStep / 3u, step = sJob.sortStep % 3u;
-        uint16_t *ends = sJob.parts.end[page];
-        unsigned lo = step == 2u ? ends[1] : sJob.terrainFirst[page];
-        unsigned hi = step == 1u ? ends[1] : sJob.terrainFirst[page + 1u];
-
-        if (!sJob.sortOpen)
-        {
-            sJob.sortScan = sJob.sortWrite = lo;
-            sJob.sortOpen = true;
-        }
-        while (sJob.sortScan < hi)
-        {
-            VoxelVertex *v = sScratch + sJob.sortScan;
-
-            if (*budget == 0)
-                return false;
-            --*budget;
-            if (step == 0u ? !SortSouth(v) : step == 1u ? !SortEast(v) : SortEast(v))
-            {
-                if (sJob.sortWrite != sJob.sortScan)
-                {
-                    VoxelVertex temp[3];
-
-                    memcpy(temp, v, sizeof(temp));
-                    memcpy(v, sScratch + sJob.sortWrite, sizeof(temp));
-                    memcpy(sScratch + sJob.sortWrite, temp, sizeof(temp));
-                }
-                sJob.sortWrite += 3;
-            }
-            sJob.sortScan += 3;
-        }
-        ends[step == 0u ? 1 : step == 1u ? 0 : 2] = (uint16_t)sJob.sortWrite;
-        sJob.sortOpen = false;
-        ++sJob.sortStep;
+        *first = sJob.terrainFirst[range];
+        *end = sJob.terrainFirst[range + 1u];
     }
-    return true;
+    else if (range == VOXEL_RANGE_TREES)
+    {
+        *first = sJob.terrainCount;
+        *end = grounds;
+    }
+    else if (range == VOXEL_RANGE_CROWNS)
+    {
+        *first = grounds;
+        *end = grounds + sJob.treeCrowns;
+    }
+    else
+    {
+        *first = sJob.buildingFirst;
+        *end = sBuilder.count;
+    }
 }
 
-/* ... and the box of each part, over every page. */
-static bool JobSortBoxes(unsigned *budget)
+/* A triangle's part among its range's four (VoxelChunkParts). */
+static unsigned SortPart(const VoxelVertex *v)
 {
-    unsigned end = sJob.terrainFirst[VOXEL_ATLAS_PAGES];
+    return SortSouth(v) ? (SortEast(v) ? 2u : 3u) : (SortEast(v) ? 1u : 0u);
+}
 
-    if (sJob.boxScan == 0)
+/*
+ * The sort's groups: the ground, whose triangles go by page and then by part,
+ * and the three ranges after it, by part alone.
+ */
+#define VOXEL_SORT_GROUPS (VOXEL_RANGES - VOXEL_ATLAS_PAGES + 1u)
+#define VOXEL_SORT_BUCKETS (VOXEL_ATLAS_PAGES * VOXEL_PARTS)
+
+/* The bucket of each triangle of the group being sorted, by its place in the
+ * scratch. */
+static uint8_t sSortBuckets[VOXEL_CHUNK_SCRATCH / 3u];
+
+/* The parts' boxes before any triangle (VoxelChunkParts). */
+static void SortBoxesOpen(void)
+{
+    for (unsigned kind = 0; kind < VOXEL_KINDS; ++kind)
         for (unsigned part = 0; part < VOXEL_PARTS; ++part)
             for (int a = 0; a < 3; ++a)
             {
-                sJob.parts.box[part][a] = 1e9f;
-                sJob.parts.box[part][3 + a] = -1e9f;
+                sJob.parts.box[kind][part][a] = 1e9f;
+                sJob.parts.box[kind][part][3 + a] = -1e9f;
             }
-    while (sJob.boxScan < end)
-    {
-        const VoxelVertex *v = sScratch + sJob.boxScan;
-        unsigned page = 0, part = 0;
-        float *box;
-
-        if (*budget == 0)
-            return false;
-        --*budget;
-        while (sJob.boxScan >= sJob.terrainFirst[page + 1u])
-            ++page;
-        while (part < VOXEL_PARTS - 1u && sJob.boxScan >= sJob.parts.end[page][part])
-            ++part;
-        box = sJob.parts.box[part];
-        for (int k = 0; k < 3; ++k)
-        {
-            if (v[k].x < box[0]) box[0] = v[k].x;
-            if (v[k].y < box[1]) box[1] = v[k].y;
-            if (v[k].z - v[k].y < box[2]) box[2] = v[k].z - v[k].y;
-            if (v[k].x > box[3]) box[3] = v[k].x;
-            if (v[k].y > box[4]) box[4] = v[k].y;
-            if (v[k].z - v[k].y > box[5]) box[5] = v[k].z - v[k].y;
-        }
-        sJob.boxScan += 3;
-    }
-    sJob.parts.on = true;
-    return true;
 }
 
-/* Partition triangles in bounded slices, without another vertex buffer.
- * U carries page*2 until packing; the gap avoids ambiguity at texture edges. */
+/* ... and widened by one. */
+static void SortBox(unsigned kind, unsigned part, const VoxelVertex *v)
+{
+    float *box = sJob.parts.box[kind][part];
+
+    for (int k = 0; k < 3; ++k)
+    {
+        float w = v[k].z - v[k].y;
+
+        if (v[k].x < box[0]) box[0] = v[k].x;
+        if (v[k].y < box[1]) box[1] = v[k].y;
+        if (w < box[2]) box[2] = w;
+        if (v[k].x > box[3]) box[3] = v[k].x;
+        if (v[k].y > box[4]) box[4] = v[k].y;
+        if (w > box[5]) box[5] = w;
+    }
+}
+
+/*
+ * The scratch's triangles into the order they are drawn in, in place and in
+ * bounded slices: the ground by page and each page by its four parts, then
+ * the trees, the crowns and the buildings by theirs. A group at a time: every
+ * triangle's bucket is told once, counted, and its part's box widened by it
+ * (even steps); then each triangle not in its bucket's run is swapped into
+ * it, where it stays (odd) - one read and at most one move a triangle. (The
+ * ground went through a partition a page first, each a read of what was left
+ * and a move of what was that page's, and then through its parts: three times
+ * the reads and twice the moves, 1-2 ms a chunk on hardware.)
+ * U carries page*2 until packing; the gap avoids ambiguity at texture edges.
+ */
 static bool JobSort(void)
 {
     unsigned budget = 128;
-    while (sJob.sortPage < VOXEL_ATLAS_PAGES && budget--)
+
+    if (!sJob.boxOpen)
     {
-        if (sJob.sortScan >= sJob.terrainCount)
-        {
-            sJob.terrainFirst[++sJob.sortPage] = sJob.sortWrite;
-            sJob.sortScan = sJob.sortWrite;
-            continue;
-        }
-        VoxelVertex *v = sScratch + sJob.sortScan;
-        unsigned page = (unsigned)(v[0].u * 0.5f);
-        if (page == sJob.sortPage)
-        {
-            VoxelVertex temp[3];
-            memcpy(temp, v, sizeof(temp));
-            memcpy(v, sScratch + sJob.sortWrite, sizeof(temp));
-            memcpy(sScratch + sJob.sortWrite, temp, sizeof(temp));
-            sJob.sortWrite += 3;
-        }
-        sJob.sortScan += 3;
+        SortBoxesOpen();
+        sJob.boxOpen = true;
     }
-    if (sJob.sortPage < VOXEL_ATLAS_PAGES)
-        return false;
-    return JobSortParts(&budget) && JobSortBoxes(&budget);
+    while (sJob.sortStep < VOXEL_SORT_GROUPS * 2u)
+    {
+        unsigned group = sJob.sortStep / 2u, range = VOXEL_ATLAS_PAGES + group - 1u;
+        unsigned buckets = group == 0 ? VOXEL_SORT_BUCKETS : VOXEL_PARTS, lo = 0, hi = sJob.terrainCount;
+
+        if (group != 0)
+            JobRange(range, &lo, &hi);
+        if (sJob.sortStep % 2u == 0)
+        {
+            /* the buckets told, counted and boxed */
+            if (!sJob.sortOpen)
+            {
+                sJob.sortScan = lo;
+                memset(sJob.sortNext, 0, sizeof(sJob.sortNext));
+                sJob.sortOpen = true;
+            }
+            for (; sJob.sortScan + 2u < hi; sJob.sortScan += 3)
+            {
+                const VoxelVertex *v = sScratch + sJob.sortScan;
+                unsigned part, bucket;
+
+                if (budget == 0)
+                    return false;
+                --budget;
+                bucket = part = SortPart(v);
+                if (group == 0)
+                {
+                    unsigned page = (unsigned)(v[0].u * 0.5f);
+
+                    if (page >= VOXEL_ATLAS_PAGES)
+                        page = VOXEL_ATLAS_PAGES - 1u;
+                    bucket += page * VOXEL_PARTS;
+                }
+                sSortBuckets[sJob.sortScan / 3u] = (uint8_t)bucket;
+                sJob.sortNext[bucket] += 3;
+                SortBox(group == 0 ? VOXEL_KIND_GROUND : RangeKind(range), part, v);
+            }
+            /* where each bucket's run begins, and ends */
+            for (unsigned bucket = 0, at = lo; bucket < buckets; ++bucket)
+            {
+                unsigned count = sJob.sortNext[bucket], part = bucket % VOXEL_PARTS;
+                unsigned of = group == 0 ? bucket / VOXEL_PARTS : range;
+
+                if (group == 0 && part == 0)
+                    sJob.terrainFirst[of] = at;
+                sJob.sortNext[bucket] = at;
+                at += count;
+                sJob.sortEnd[bucket] = at;
+                if (part < VOXEL_PARTS - 1u)
+                    sJob.parts.end[of][part] = (uint16_t)at;
+            }
+            if (group == 0)
+                sJob.terrainFirst[VOXEL_ATLAS_PAGES] = hi;
+            sJob.sortWrite = 0; /* the bucket whose run is being settled */
+            sJob.sortOpen = false;
+            ++sJob.sortStep;
+        }
+        while (sJob.sortWrite < buckets)
+        {
+            unsigned bucket = sJob.sortWrite, at = sJob.sortNext[bucket], own;
+
+            if (at >= sJob.sortEnd[bucket])
+            {
+                ++sJob.sortWrite;
+                continue;
+            }
+            if (budget == 0)
+                return false;
+            --budget;
+            own = sSortBuckets[at / 3u];
+            if (own != bucket)
+            {
+                /* into its own bucket's run, for good; what was there comes here */
+                unsigned to = sJob.sortNext[own];
+                VoxelVertex temp[3];
+
+                memcpy(temp, sScratch + at, sizeof(temp));
+                memcpy(sScratch + at, sScratch + to, sizeof(temp));
+                memcpy(sScratch + to, temp, sizeof(temp));
+                sSortBuckets[at / 3u] = sSortBuckets[to / 3u];
+                sSortBuckets[to / 3u] = (uint8_t)own;
+            }
+            sJob.sortNext[own] += 3;
+        }
+        ++sJob.sortStep;
+    }
+    sJob.parts.on = true;
+    return true;
 }
 
 /* A slice of the packing; true once the whole scratch is packed. */
@@ -4663,6 +4826,218 @@ static void JobStep(void)
 }
 
 /*
+ * The slices the worker may run. The sort and the packing read and write
+ * nothing but the job and its scratch. The geometry's (voxel_build_core 2)
+ * read the world: the worker has its own copy of every cache and memo they
+ * fill on the way (voxel_who.h) and of the current map's grid
+ * (VoxelWorld_SnapshotLive), and is called home before anything else they
+ * read changes (JobAwayHome: the instances, the sun, the buildings' tables,
+ * the atlas's table). Not an indoor map's, whose void tiles are the atlas
+ * composer's to work out (voxel_atlas.c). The static models' meshes and the
+ * upload are the GPU's, and this thread's.
+ */
+static bool JobAwayPhase(int phase)
+{
+    if (phase == JOB_SORT || phase == JOB_PACK)
+        return true;
+    return sBuildCore >= 2 && phase < JOB_SORT && !sJob.site.inst->indoor;
+}
+
+uintptr_t gVoxelWorkerStack, gVoxelWorkerStackSize;
+#define VOXEL_WORKER_STACK (64u * 1024u)
+
+static void BuildWorker(void *arg)
+{
+    /* Its stack, for VOXEL_WHO: this frame is at its top, a few hundred
+     * bytes down at most; the block reaches VOXEL_WORKER_STACK below that. */
+    gVoxelWorkerStack = (uintptr_t)&arg + 1024u - VOXEL_WORKER_STACK;
+    __sync_synchronize();
+    gVoxelWorkerStackSize = VOXEL_WORKER_STACK;
+    __sync_synchronize();
+    sAway.who = VOXEL_WHO;
+    for (;;)
+    {
+        LightEvent_Wait(&sAway.wake);
+        if (sAway.quit)
+            break;
+        if (__sync_bool_compare_and_swap(&sAway.state, AWAY_SENT, AWAY_RUNNING))
+        {
+            uint64_t start = svcGetSystemTick();
+            unsigned slices = 0;
+            static uint32_t sEpochSeen;
+
+            /* its caches under the world as it stands; its own copies of
+             * what a changed world forgets, forgotten */
+            VoxelLighting_Latch();
+            if (sEpochSeen != sAway.epoch)
+            {
+                sEpochSeen = sAway.epoch;
+                VoxelBuildings_ForgetMine();
+            }
+            while (!sAway.stop && JobAwayPhase(sJob.phase))
+            {
+                if (VoxelWorld_WorkerMissed())
+                {
+                    sAway.bad = true;
+                    break;
+                }
+                /* what it resolved a few slices ago it resolves again: a
+                 * payload is retired after frames untouched (CtrAssets_Collect) */
+                if (slices++ % 16u == 0)
+                    VoxelWorld_BeginBatch();
+                JobStep();
+            }
+            if (VoxelWorld_WorkerMissed())
+                sAway.bad = true;
+            sAway.steps += slices;
+            sAway.ticks += svcGetSystemTick() - start;
+            __sync_synchronize();
+            sAway.state = AWAY_DONE;
+        }
+    }
+}
+
+/*
+ * The job back on this thread, between two slices: at once if the worker had
+ * not begun, else after the slice it is in (a sort or pack slice, well under
+ * a millisecond of its own time).
+ */
+/* The job dropped where it is, with no wait. */
+static void JobAwayDrop(void)
+{
+    if (sAway.state == AWAY_HOME
+     || __sync_bool_compare_and_swap(&sAway.state, AWAY_SENT, AWAY_HOME))
+        return;
+    ++sAway.drops;
+    sAway.stop = true;
+    __sync_synchronize();
+    sAway.zombie = true;
+}
+
+/* Does the worker still hold a job that was dropped? Let go of, it is home. */
+static bool JobZombie(void)
+{
+    if (!sAway.zombie)
+        return false;
+    if (sAway.state != AWAY_DONE)
+        return true;
+    sAway.stop = false;
+    sAway.bad = false;
+    sAway.zombie = false;
+    __sync_synchronize();
+    sAway.state = AWAY_HOME;
+    return false;
+}
+
+static void JobAwayHome(void)
+{
+    if (sAway.state == AWAY_HOME)
+        return;
+    if (!__sync_bool_compare_and_swap(&sAway.state, AWAY_SENT, AWAY_HOME))
+    {
+        uint64_t start = svcGetSystemTick(), waited;
+
+        sAway.stop = true;
+        __sync_synchronize();
+        while (sAway.state != AWAY_DONE)
+            svcSleepThread(50000);
+        waited = svcGetSystemTick() - start;
+        sAway.homeTicks += waited;
+        if (waited > sAway.homeWorst)
+            sAway.homeWorst = waited;
+        ++sAway.recalls;
+        sAway.stop = false;
+        if (sAway.zombie)
+            sAway.bad = false;
+        sAway.zombie = false;
+        __sync_synchronize();
+        sAway.state = AWAY_HOME;
+    }
+}
+
+/*
+ * Is the job with the worker? One it has finished with comes home here; one
+ * whose next slices are the worker's is sent.
+ */
+static bool JobAway(void)
+{
+    if (sAway.state == AWAY_DONE)
+    {
+        __sync_synchronize();
+        sAway.state = AWAY_HOME;
+        /* built from maps the game changed under it: not the world's */
+        if (sAway.bad)
+        {
+            sAway.bad = false;
+            ++sAway.bads;
+            JobCancel();
+            return true;
+        }
+    }
+    if (sAway.state != AWAY_HOME)
+        return true;
+    if (sAway.thread == NULL || sBuildCore == 0 || sJob.cold || !JobAwayPhase(sJob.phase))
+        return false;
+    /* the current map's grid as it stands, for the geometry (the game writes
+     * the live one while the worker reads) */
+    if (sJob.phase < JOB_SORT)
+        VoxelWorld_SnapshotLive();
+    sAway.epoch = sEpoch;
+    ++sAway.jobs;
+    __sync_synchronize();
+    sAway.state = AWAY_SENT;
+    LightEvent_Signal(&sAway.wake);
+    return true;
+}
+
+static void BuildWorkerStart(void)
+{
+    s32 priority = 0x30;
+    u32 limit = 0;
+
+    int share = CtrSettings_GetInt("voxel_core_share", 70);
+
+    memset(&sAway, 0, sizeof(sAway));
+    sBuildCore = CtrSettings_GetInt("voxel_build_core", 2);
+    if (sBuildCore == 0)
+        return;
+    LightEvent_Init(&sAway.wake, RESET_ONESHOT);
+    svcGetThreadPriority(&priority, CUR_THREAD_HANDLE);
+    /* Only on the system core (StreamStart): on this one it would run in the
+     * waits the builds already use. */
+    if ((R_SUCCEEDED(APT_GetAppCpuTimeLimit(&limit)) && limit >= 30)
+        || R_SUCCEEDED(APT_SetAppCpuTimeLimit(30)))
+        sAway.thread = threadCreate(BuildWorker, NULL, VOXEL_WORKER_STACK, priority, 1, false);
+    /* settings.txt voxel_core_share: more of the system core for the
+     * application than the 30% the streams asked for (never less). */
+    if (sAway.thread != NULL && share > 30 && share <= 80 && (u32)share > limit
+     && R_SUCCEEDED(APT_SetAppCpuTimeLimit((u32)share)))
+        limit = (u32)share;
+    else if (limit == 0)
+        APT_GetAppCpuTimeLimit(&limit);
+    CtrLog_Write(CTR_LOG_VIDEO, "VOXEL build worker: %s (system core share %lu%%, mode %d)",
+                 sAway.thread != NULL ? "on the system core" : "none", (unsigned long)limit, sBuildCore);
+}
+
+static void BuildWorkerStop(void)
+{
+    JobAwayHome();
+    if (sAway.thread != NULL)
+    {
+        sAway.quit = true;
+        LightEvent_Signal(&sAway.wake);
+        threadJoin(sAway.thread, U64_MAX);
+        threadFree(sAway.thread);
+        CtrLog_Write(CTR_LOG_VIDEO, "VOXEL build worker: %u runs, %u slices, %.1f ms; "
+                     "called home %u times, waited %.1f ms (worst %.2f); dropped %u, missed maps %u; who %u/%u",
+                     sAway.jobs, sAway.steps, TicksMs(sAway.ticks), sAway.recalls,
+                     TicksMs(sAway.homeTicks), TicksMs(sAway.homeWorst), sAway.drops, sAway.bads,
+                     sAway.who, (unsigned)VOXEL_WHO);
+    }
+    memset(&sAway, 0, sizeof(sAway));
+}
+
+/*
  * Uploads a finished job into its chunk. On NO_STAGING or NO_VRAM nothing is
  * touched; on NO_STAGING the finished geometry waits for another frame, on
  * NO_VRAM RunJobs drops it.
@@ -4671,6 +5046,26 @@ static bool JobUvKey(const VoxelAtlasSlot *atlas);
 static bool IsChunkOf(const VoxelChunk *chunk, const ChunkSite *site);
 static void AuditBegin(VoxelChunk *chunk);
 static void AuditEnd(VoxelChunk *chunk, bool uvKnown);
+
+/*
+ * A belt square about to be built over in its own slot because the map the
+ * belt goes round has changed (a crossing: the belt is built on the current
+ * map, with its tiles): its mesh offered to the cold cache as an evicted
+ * chunk's is. Every square of the belt in sight is built again at every
+ * crossing - half of all the builds riding between Slateport and Route 110,
+ * 9-20 ms each on an Old 3DS - and crossing back finds them there
+ * (ColdTake). Before the copy that writes over its block, as ColdOffer asks;
+ * the build's own upload is still to be staged.
+ */
+static void ColdOfferReplaced(const VoxelChunk *chunk, const VoxelMapInstance *inst)
+{
+    if (!chunk->used || !chunk->border
+     || (chunk->mapGroup == inst->mapGroup && chunk->mapNum == inst->mapNum))
+        return;
+    sStagingPromise = sBuilder.count;
+    ColdOffer(chunk);
+    sStagingPromise = 0;
+}
 
 static BuildResult JobFinish(VoxelChunk *chunk)
 {
@@ -4701,10 +5096,13 @@ static BuildResult JobFinish(VoxelChunk *chunk)
         sStagingPromise = 0;
         if (block == NULL)
             return BUILD_NO_VRAM;
+        ColdOfferReplaced(chunk, inst);
         ChunkBlockFree(chunk->vram);
         chunk->vram = block;
         chunk->bytes = bytes;
     }
+    else
+        ColdOfferReplaced(chunk, inst);
 
     if (sBuilder.dropped != 0 && sBuilder.dropped > sWorstDropped)
     {
@@ -4846,8 +5244,9 @@ static BuildResult JobFinish(VoxelChunk *chunk)
  *
  * Its key is everything its vertices were made from, as a chunk's own
  * (VisitSite) and more, since a cold mesh outlives the world it was built in:
- * - the square: map group and number, chunk coordinates (no belt squares:
- *   their grid is new with every cut, and they are cheap);
+ * - the square: map group and number, chunk coordinates; a belt square by
+ *   the map the belt went round and its place on the belt's grid (their grid
+ *   is new with every cut, but where it lay is in the key, below);
  * - the layout and the tileset pair;
  * - SiteHash: its tiles and the margins the build reads, the casters that
  *   light it and the sun's key, the maps round it (layouts, tilesets, places),
@@ -4872,19 +5271,24 @@ static BuildResult JobFinish(VoxelChunk *chunk)
  * VOXEL_COLD_HOLD_FRAMES, nor while the heap has less than its size and
  * VOXEL_COLD_HEAP_MARGIN to spare.
  */
-#define VOXEL_COLD_BYTES (384u * 1024u)
-#define VOXEL_COLD_MESHES 48u
+/* Three megabytes, some hundred meshes: with 384 KiB it held ten, and riding
+ * a route there and back found three of sixty squares in it and built the
+ * rest again, 20 ms each on an Old 3DS, which leaves it 19 MiB of heap in
+ * the field (port.log, 2026-11-25). */
+#define VOXEL_COLD_BYTES (3072u * 1024u)
+#define VOXEL_COLD_MESHES 192u
 #define VOXEL_COLD_HOLD_FRAMES 600u
 #define VOXEL_COLD_HEAP_MARGIN (1024u * 1024u)
 /* Read back and not yet landed: at most these, in at most half the staging. */
 #define VOXEL_COLD_PENDING 4u
 #define VOXEL_COLD_TRANSIT_MAX (VOXEL_STAGING_VERTICES / 2u)
 /* The format of a mesh: bumped with any change to what a vertex holds. */
-#define VOXEL_COLD_FORMAT 2u
+#define VOXEL_COLD_FORMAT 3u
 
 typedef struct
 {
     bool used;
+    bool border;        /* a square of the belt round map (mapGroup, mapNum) */
     int mapGroup, mapNum, cx, cy;
     const void *layout, *primary, *secondary;
     uint32_t hash, uvKey[2], sum, format;
@@ -5144,13 +5548,18 @@ static bool ColdEnsureBlock(void)
     return true;
 }
 
-static ColdMesh *ColdFindLocked(int mapGroup, int mapNum, int cx, int cy)
+/* The square's cold mesh built where it lay at (x, y) in the world: one is
+ * kept for each place it was built at, so a square seen from both sides of
+ * a crossing has a mesh for either map being the world's origin - riding
+ * there and back, each crossing found the other side's and built again. */
+static ColdMesh *ColdFindLocked(int mapGroup, int mapNum, int cx, int cy, bool border, int x, int y)
 {
     for (unsigned i = 0; i < VOXEL_COLD_MESHES; ++i)
     {
         ColdMesh *m = &sCold[i];
 
-        if (m->used && m->cx == cx && m->cy == cy && m->mapNum == mapNum && m->mapGroup == mapGroup)
+        if (m->used && m->cx == cx && m->cy == cy && m->mapNum == mapNum && m->mapGroup == mapGroup
+         && m->border == border && m->x == x && m->y == y)
             return m;
     }
     return NULL;
@@ -5203,11 +5612,10 @@ static void ColdOffer(const VoxelChunk *c)
     VoxelGpuVertex *transit;
     ColdMesh *m;
 
-    if (!ColdWanted() || !c->used || c->border || c->draft || !c->uvKnown || c->count == 0
-     || c->vram == NULL)
+    if (!ColdWanted() || !c->used || c->draft || !c->uvKnown || c->count == 0 || c->vram == NULL)
         return;
     LightLock_Lock(&sColdLock);
-    m = ColdFindLocked(c->mapGroup, c->mapNum, c->cx, c->cy);
+    m = ColdFindLocked(c->mapGroup, c->mapNum, c->cx, c->cy, c->border, c->builtX, c->builtY);
     if (m != NULL && m->hash == c->hash && m->sum == c->sum && m->uvKey[0] == c->uvKey[0]
      && m->uvKey[1] == c->uvKey[1] && m->layout == c->layout && m->count == c->count
      && m->x == c->builtX && m->y == c->builtY)
@@ -5241,6 +5649,7 @@ static void ColdOffer(const VoxelChunk *c)
 
         memset(p, 0, sizeof(*p));
         p->used = true;
+        p->border = c->border;
         p->mapGroup = c->mapGroup;
         p->mapNum = c->mapNum;
         p->cx = c->cx;
@@ -5327,7 +5736,7 @@ static void ColdLand(void)
             continue;
         }
         LightLock_Lock(&sColdLock);
-        if ((m = ColdFindLocked(p->mapGroup, p->mapNum, p->cx, p->cy)) != NULL)
+        if ((m = ColdFindLocked(p->mapGroup, p->mapNum, p->cx, p->cy, p->border, p->x, p->y)) != NULL)
             ColdFreeLocked(m);
         m = ColdAllocLocked(ColdBytes(p), &data);
         if (m != NULL)
@@ -5364,27 +5773,20 @@ static bool ColdTake(const ChunkSite *site, uint32_t hash, const VoxelAtlasSlot 
     bool audit;
     ColdMesh *m;
 
-    if (!ColdWanted() || site->border || sColdBlock == NULL)
+    if (!ColdWanted() || sColdBlock == NULL)
         return false;
     base = VoxelRelief_Base(inst);
-    page = sHaveBuildings ? VoxelBuildings_PageOf(inst) : -1;
+    /* (as JobFinish gives a chunk its page) */
+    page = sHaveBuildings && !site->border ? VoxelBuildings_PageOf(inst) : -1;
     /* (as VoxelBuilder_SetStretch takes it) */
     if (!VoxelRelief_Stretch(inst, &stretch[0], &stretch[1], &stretch[2]))
         stretch[2] = 0.0f;
     LightLock_Lock(&sColdLock);
-    m = ColdFindLocked(inst->mapGroup, inst->mapNum, site->cx, site->cy);
+    m = ColdFindLocked(inst->mapGroup, inst->mapNum, site->cx, site->cy, site->border, site->baseX, site->baseY);
     if (m == NULL)
     {
         LightLock_Unlock(&sColdLock);
         ++sKeyCounts.coldMisses;
-        return false;
-    }
-    /* Built while another map was the world's origin: kept for when it is
-     * again, and built here meanwhile. */
-    if (m->x != site->baseX || m->y != site->baseY)
-    {
-        LightLock_Unlock(&sColdLock);
-        ++sKeyCounts.coldOrigin;
         return false;
     }
     if (m->format == VOXEL_COLD_FORMAT && m->layout == inst->layout
@@ -5462,7 +5864,9 @@ static bool JobUvKey(const VoxelAtlasSlot *atlas)
     const ChunkSite *site = &sJob.site;
     const VoxelMapInstance *inst = site->inst;
 
-    if (!sKeysOn || site->border || sBuilder.uncovered != 0 || sBuilder.readMixed)
+    /* (a belt square too: its slots are the current map's atlas's, and its
+     * key is what the cold cache keeps it by, ColdOfferReplaced) */
+    if (!sKeysOn || sBuilder.uncovered != 0 || sBuilder.readMixed)
         return false;
     if (inst->indoor)
         for (int y = site->y0 - VOXEL_CHUNK_MARGIN_NORTH; y < site->y1 + 1; ++y)
@@ -6139,46 +6543,105 @@ static bool SlabVisible(float ox, float oz, float x0, float y0, float w0, float 
     return true;
 }
 
-/* Which parts of the chunk's ground meet the frustum (VoxelChunkParts), as
- * bits; all of them where it is not cut in parts or the switch is off. */
+/* Which parts of the chunk meet the frustum (VoxelChunkParts), as bits, four
+ * a kind; all of them where it is not cut in parts or the switch is off. */
 static unsigned ChunkPartsSeen(const VoxelChunk *chunk, int worldX, int worldZ)
 {
     unsigned seen = 0;
 
     if (!chunk->parts.on || !sMeasureParts)
         return VOXEL_PARTS_ALL;
-    for (unsigned part = 0; part < VOXEL_PARTS; ++part)
-    {
-        const float *box = chunk->parts.box[part];
+    for (unsigned kind = 0; kind < VOXEL_KINDS; ++kind)
+        for (unsigned part = 0; part < VOXEL_PARTS; ++part)
+        {
+            const float *box = chunk->parts.box[kind][part];
 
-        /* (the margins: a packed vertex is rounded to 1/512 of a tile) */
-        if (box[0] <= box[3]
-         && SlabVisible((float)worldX, (float)worldZ, box[0] - 0.01f, box[1] - 0.05f, box[2] - 0.06f,
-                        box[3] + 0.01f, box[4] + 0.05f, box[5] + 0.06f))
-            seen |= 1u << part;
-    }
+            /* (the margins: a packed vertex is rounded to 1/512 of a tile) */
+            if (box[0] <= box[3]
+             && SlabVisible((float)worldX, (float)worldZ, box[0] - 0.01f, box[1] - 0.05f, box[2] - 0.06f,
+                            box[3] + 0.01f, box[4] + 0.05f, box[5] + 0.06f))
+                seen |= 1u << (kind * VOXEL_PARTS + part);
+        }
     return seen;
 }
 
-/* A page's ground in the chunk: where part `part` begins (4: where the page ends). */
-static unsigned ChunkPartFirst(const VoxelChunk *chunk, unsigned page, unsigned part)
+/* Where range `range` of the chunk's vertices begins and ends (VoxelChunkParts). */
+static void ChunkRange(const VoxelChunk *chunk, unsigned range, unsigned *first, unsigned *end)
 {
-    return part == 0 ? chunk->terrainFirst[page]
-         : part < VOXEL_PARTS ? chunk->parts.end[page][part - 1u] : chunk->terrainFirst[page + 1u];
+    unsigned grounds = chunk->buildingFirst - chunk->treeShadow - chunk->treeCrowns;
+
+    if (range < VOXEL_ATLAS_PAGES)
+    {
+        *first = chunk->terrainFirst[range];
+        *end = chunk->terrainFirst[range + 1u];
+    }
+    else if (range == VOXEL_RANGE_TREES)
+    {
+        *first = chunk->terrainCount;
+        *end = grounds;
+    }
+    else if (range == VOXEL_RANGE_CROWNS)
+    {
+        *first = grounds;
+        *end = grounds + chunk->treeCrowns;
+    }
+    else
+    {
+        *first = chunk->buildingFirst;
+        *end = chunk->count;
+    }
 }
 
-/* The ground's vertices the parts not in `seen` hold. */
+/* A range of the chunk: where part `part` begins (4: where the range ends). */
+static unsigned ChunkPartFirst(const VoxelChunk *chunk, unsigned range, unsigned part)
+{
+    unsigned first, end;
+
+    if (part != 0 && part < VOXEL_PARTS)
+        return chunk->parts.end[range][part - 1u];
+    ChunkRange(chunk, range, &first, &end);
+    return part == 0 ? first : end;
+}
+
+/* The vertices the parts not in `seen` hold. */
 static unsigned ChunkPartsLeftOut(const VoxelChunk *chunk, unsigned seen)
 {
     unsigned out = 0;
 
     if (seen == VOXEL_PARTS_ALL)
         return 0;
-    for (unsigned page = 0; page < VOXEL_ATLAS_PAGES; ++page)
+    for (unsigned range = 0; range < VOXEL_RANGES; ++range)
         for (unsigned part = 0; part < VOXEL_PARTS; ++part)
-            if (!(seen >> part & 1u))
-                out += ChunkPartFirst(chunk, page, part + 1u) - ChunkPartFirst(chunk, page, part);
+            if (!(KindParts(seen, RangeKind(range)) >> part & 1u))
+                out += ChunkPartFirst(chunk, range, part + 1u) - ChunkPartFirst(chunk, range, part);
     return out;
+}
+
+static int BindChunkVertices(const VoxelChunk *chunk, unsigned first, unsigned count);
+
+/* A range of the chunk drawn: the parts of it in the picture, each run of
+ * them one draw. */
+static void DrawChunkRange(const VoxelChunk *chunk, unsigned range, unsigned seen)
+{
+    unsigned parts = KindParts(seen, RangeKind(range));
+
+    for (unsigned part = 0; part < VOXEL_PARTS;)
+    {
+        unsigned next = part + 1u, from, run;
+
+        if (!(parts >> part & 1u))
+        {
+            part = next;
+            continue;
+        }
+        while (next < VOXEL_PARTS && (parts >> next & 1u))
+            ++next;
+        from = ChunkPartFirst(chunk, range, part);
+        run = ChunkPartFirst(chunk, range, next) - from;
+        if (run != 0)
+            C3D_DrawArrays(GPU_TRIANGLES, BindChunkVertices(chunk, from, run), (int)run);
+        part = next;
+    }
 }
 
 /*
@@ -6197,7 +6660,7 @@ static void DrawParts(void)
     counted = sFrame;
     for (unsigned i = 0; i < sDrawCount; ++i)
     {
-        sDraws[i].parts = (uint8_t)ChunkPartsSeen(sDraws[i].chunk, sDraws[i].worldX, sDraws[i].worldZ);
+        sDraws[i].parts = (uint16_t)ChunkPartsSeen(sDraws[i].chunk, sDraws[i].worldX, sDraws[i].worldZ);
         if (count)
         {
             unsigned out = ChunkPartsLeftOut(sDraws[i].chunk, sDraws[i].parts);
@@ -6328,7 +6791,7 @@ static bool ShadowTerrainReaches(const VoxelChunk *chunk, int worldX, int worldZ
                                   (float)(worldX + chunk->gx1), chunk->gy1, (float)(worldZ + chunk->gz1));
     for (unsigned part = 0; part < VOXEL_PARTS; ++part)
     {
-        const float *box = chunk->parts.box[part];
+        const float *box = chunk->parts.box[VOXEL_KIND_GROUND][part];
 
         if (box[0] > box[3])
             continue;
@@ -6442,7 +6905,7 @@ static void ViewAudit(void)
                 out = behind == 3;
             }
             outTri += out ? 3u : 0u;
-            if (!out && sDraws[i].parts != VOXEL_PARTS_ALL)
+            if (!out && KindParts(sDraws[i].parts, VOXEL_KIND_GROUND) != VOXEL_PARTS_MASK)
             {
                 /* in the picture: its part must be drawn */
                 unsigned page = 0, part = 0;
@@ -6453,7 +6916,7 @@ static void ViewAudit(void)
                     ++part;
                 if (!(sDraws[i].parts >> part & 1u))
                 {
-                    const float *b = chunk->parts.box[part];
+                    const float *b = chunk->parts.box[VOXEL_KIND_GROUND][part];
 
                     if (wrong == 0)
                         CtrLog_Write(CTR_LOG_VIDEO, "VOXEL VIEW AUDIT wrong: draw %u at %d,%d chunk %d,%d draft %d border %d t %u "
@@ -6541,6 +7004,64 @@ static void ViewAudit(void)
                 wide += span > 2 * 512 ? 3u : 0u;
                 hist[span <= 512 ? 0 : span <= 1024 ? 1 : span <= 2048 ? 2 : span <= 4096 ? 3 : span <= 8192 ? 4 : 5] += 3u;
             }
+        }
+        /* The trees and the buildings: how many of their vertices are out
+         * of the picture by triangle, and none in it may be in a part left
+         * out. */
+        {
+            unsigned kindTotal[VOXEL_KINDS] = {0}, kindOut[VOXEL_KINDS] = {0};
+
+            for (unsigned i = 0; i < sDrawCount; ++i)
+            {
+                const VoxelChunk *chunk = sDraws[i].chunk;
+                const VoxelGpuVertex *v = chunk->vram;
+                float ox = (float)sDraws[i].worldX, oz = (float)sDraws[i].worldZ;
+
+                if (v == NULL)
+                    continue;
+                for (unsigned range = VOXEL_RANGE_TREES; range < VOXEL_RANGES; ++range)
+                {
+                    unsigned kind = RangeKind(range), first, end;
+
+                    ChunkRange(chunk, range, &first, &end);
+                    kindTotal[kind] += end - first;
+                    for (unsigned t = first; t + 2 < end; t += 3)
+                    {
+                        bool out = false;
+                        unsigned part = 0;
+
+                        for (int p = 0; p < 4 && !out; ++p)
+                        {
+                            const VoxelPlane *pl = &sFrustum[p];
+                            int behind = 0;
+
+                            for (int k = 0; k < 3; ++k)
+                                behind += pl->x * (ox + v[t + k].x / 512.0f) + pl->y * (v[t + k].y / 512.0f)
+                                        + pl->z * (oz + v[t + k].z / 512.0f) + pl->w < 0.0f;
+                            out = behind == 3;
+                        }
+                        if (out)
+                        {
+                            kindOut[kind] += 3u;
+                            continue;
+                        }
+                        if (!chunk->parts.on)
+                            continue;
+                        while (part < VOXEL_PARTS - 1u && t >= chunk->parts.end[range][part])
+                            ++part;
+                        if (!(KindParts(sDraws[i].parts, kind) >> part & 1u))
+                        {
+                            if (wrong == 0)
+                                CtrLog_Write(CTR_LOG_VIDEO, "VOXEL VIEW AUDIT wrong: draw %u chunk %d,%d range %u part %u "
+                                             "seen %x t %u", i, chunk->cx, chunk->cy, range, part, sDraws[i].parts, t);
+                            wrong += 3u;
+                        }
+                    }
+                }
+            }
+            CtrLog_Write(CTR_LOG_VIDEO, "VOXEL VIEW AUDIT trees %u vertices, %u out of the picture by triangle; "
+                         "buildings %u, %u out", kindTotal[VOXEL_KIND_TREES], kindOut[VOXEL_KIND_TREES],
+                         kindTotal[VOXEL_KIND_BUILDINGS], kindOut[VOXEL_KIND_BUILDINGS]);
         }
         CtrLog_Write(CTR_LOG_VIDEO, "VOXEL VIEW AUDIT parts leave out %u, WRONGLY %u; middles outside the square %u; "
                      "wider than 2 tiles %u; spans <=1 %u <=2 %u <=4 %u <=8 %u <=16 %u more %u", partsOut, wrong,
@@ -7250,23 +7771,53 @@ static unsigned VisitView(float playerX, float playerZ, unsigned *missing, bool 
     return VISIT_MADE;
 }
 
-static int CompareRequests(const void *a, const void *b)
+/*
+ * The requests in the order they are served: by need (a drawable stale mesh
+ * must not outrank a missing visible chunk merely because it waited four
+ * frames), then the overdue ones first, the longest without progress before
+ * the rest (age resolves fairness within a class), then by key. The order is
+ * told once a request, as a number, and the numbers are sorted: the library's qsort called the
+ * comparison of two requests four hundred times for some sixty requests, each reading both
+ * requests' waits again, and swapped the requests themselves byte by byte -
+ * 3% of the field's CPU, every frame. (An age past 2^27 frames, a month,
+ * counts as that.)
+ */
+static void SortRequests(void)
 {
-    const BuildRequest *ra = a, *rb = b;
-    /* A drawable stale mesh must not outrank a missing visible chunk merely
-     * because it waited four frames. Age resolves fairness within a class. */
-    if (ra->need != rb->need) return ra->need < rb->need ? -1 : 1;
-    bool oa = RequestOverdue(ra), ob = RequestOverdue(rb);
-    if (oa != ob) return oa ? -1 : 1;
-    if (oa)
-    {
-        uint32_t aa = sFrame - sRequestWait[ra->waitIndex].progress;
-        uint32_t ab = sFrame - sRequestWait[rb->waitIndex].progress;
-        if (aa != ab) return aa > ab ? -1 : 1;
-    }
-    unsigned ka = ra->key, kb = rb->key;
+    static BuildRequest sorted[VOXEL_REQUESTS_MAX];
+    uint64_t keys[VOXEL_REQUESTS_MAX];
+    uint8_t order[VOXEL_REQUESTS_MAX];
+    bool moved = false;
 
-    return ka < kb ? -1 : ka > kb;
+    _Static_assert(VOXEL_REQUESTS_MAX <= 256u, "a request's index in a byte");
+    for (unsigned i = 0; i < sRequestCount; ++i)
+    {
+        const BuildRequest *r = &sRequests[i];
+        uint64_t key = (uint64_t)r->need << 60 | r->key;
+        unsigned at = i;
+
+        if (RequestOverdue(r))
+        {
+            uint32_t age = sFrame - sRequestWait[r->waitIndex].progress;
+
+            key |= (uint64_t)(0x7FFFFFFu - (age < 0x7FFFFFFu ? age : 0x7FFFFFFu)) << 32;
+        }
+        else
+            key |= (uint64_t)1 << 59;
+        for (; at != 0 && keys[at - 1u] > key; --at)
+        {
+            keys[at] = keys[at - 1u];
+            order[at] = order[at - 1u];
+            moved = true;
+        }
+        keys[at] = key;
+        order[at] = (uint8_t)i;
+    }
+    if (!moved)
+        return;
+    for (unsigned i = 0; i < sRequestCount; ++i)
+        sorted[i] = sRequests[order[i]];
+    memcpy(sRequests, sorted, sRequestCount * sizeof(sRequests[0]));
 }
 
 /*
@@ -7333,6 +7884,8 @@ static bool sCrossingSoon;
 #define VOXEL_INFRAME_MAX_MS 4.0f
 /* What this module built inside the last frame (not the visit). */
 static float sInFrameBuildMs;
+/* settings.txt voxel_inframe_real=0: the budget by the drawing time, as before. */
+static bool sInFrameReal = true;
 #define VOXEL_AHEAD_BACKOFF_FRAMES 30u
 
 static uint32_t sAheadBackoff;
@@ -7372,6 +7925,13 @@ static float InFrameBudget(void)
         return 0.0f;
     if (fixed < 0.0f)
         fixed = 0.0f;
+    /* When the last frame's GPU work really ended, less what this module
+     * built inside that frame (which pushed its start back by as much). The
+     * drawing time alone only counts from FrameEnd, long after the GPU was
+     * set to work: by it the budget was 2-4 ms too generous, and every hole
+     * built inside a frame cost that frame. */
+    if (sInFrameReal && video->gpuDoneMs > 0.0f)
+        return Clamp(VOXEL_INFRAME_TARGET_MS - (video->gpuDoneMs - sInFrameBuildMs), 0.0f, VOXEL_INFRAME_MAX_MS);
     return Clamp(VOXEL_INFRAME_TARGET_MS - fixed - video->gpuMs, 0.0f, VOXEL_INFRAME_MAX_MS);
 }
 
@@ -7653,6 +8213,10 @@ static bool StartNextJob(float elapsed, float holeMs, float aheadMs, bool forced
 {
     bool roomless = false;
 
+    /* the job, the builder and the scratch are the worker's till it lets go
+     * of the one that was dropped */
+    if (JobZombie())
+        return false;
     if (!sSlotFreeSeen)
     {
         sSlotFreeSeen = true;
@@ -7824,6 +8388,9 @@ static unsigned RunJobs(uint64_t started, float holeMs, float aheadMs, bool inFr
         bool forced = forceHole && slices == 0;
 
         if (!sJob.active && !StartNextJob(forced ? 0.0f : elapsed, holeMs, aheadMs, forced))
+            break;
+        /* its sort and packing are the worker's, beside the frame */
+        if (JobAway())
             break;
         budget = sHolesOnly && !sJob.hole && !sJob.overdue ? 0.0f : sJob.forView ? holeMs : aheadMs;
         if (sJob.phase != JOB_DONE)
@@ -8183,7 +8750,7 @@ static void UpdateView(float playerX, float playerZ, bool cut)
         sStats.atlasMs = TicksMs(visitEnd - started);
     }
     if (sRequestCount > 1)
-        qsort(sRequests, sRequestCount, sizeof(sRequests[0]), CompareRequests);
+        SortRequests();
     /*
      * Holes are covered at once with the draft of their square, except behind
      * the warm-up's fade, where the real thing is built before it lifts.
@@ -8194,7 +8761,7 @@ static void UpdateView(float playerX, float playerZ, bool cut)
         unsigned before = sDrafts;
 
         if (DraftHoles(&missing) && sRequestCount > 1)
-            qsort(sRequests, sRequestCount, sizeof(sRequests[0]), CompareRequests);
+            SortRequests();
         sStats.draftMs = MsSince(draftStart);
         sDraftMs += sStats.draftMs;
         static uint32_t lastDraftLog;
@@ -8274,6 +8841,9 @@ static void UpdateView(float playerX, float playerZ, bool cut)
         uint64_t buildStart = svcGetSystemTick();
         visitMs = TicksMs(buildStart - started);
         RunJobs(warmup ? started : buildStart, holeMs, aheadMs, true, warmup || starved, &missing);
+        /* (the worker's next job at once, not after FrameEnd: it would wait
+         * half a frame for it) */
+        WorkerFeed();
         sInFrameBuildMs = MsSince(buildStart);
     }
     sHolesOnly = false;
@@ -8355,6 +8925,32 @@ static void AfterOwedStatics(uint64_t started)
         sStats.afterOwedMs = TicksMs(svcGetSystemTick() - owedStart);
 }
 
+/*
+ * A job for the worker's windows when this thread had no time to start one:
+ * the most wanted square whatever its kind, begun past the budget (its
+ * signature and, if the cache has it, its cold mesh: StartCost), so that the
+ * second core never waits for the first to have a moment.
+ */
+static void WorkerFeed(void)
+{
+    bool holesOnly = sHolesOnly;
+
+    /* the worker's slices are progress too (RequestOverdue) */
+    if (sAway.steps != sAway.stepsSeen)
+    {
+        sAway.stepsSeen = sAway.steps;
+        if (sJob.active && sJob.forView)
+            sRequestWait[sJob.waitIndex].progress = sFrame;
+    }
+    if (sJob.active || sAway.thread == NULL || sBuildCore < 2 || sFrame < sWarmupUntil)
+        return;
+    sHolesOnly = false;
+    /* ... and handed over now, not at the next update's slices */
+    if (StartNextJob(0.0f, 1e9f, sFrame < sAheadBackoff ? 0.0f : 1e9f, true))
+        JobAway();
+    sHolesOnly = holesOnly;
+}
+
 void CtrVoxel_AfterSubmit(uint64_t frameBeginTick)
 {
     static float sOthersMs;
@@ -8398,6 +8994,9 @@ void CtrVoxel_AfterSubmit(uint64_t frameBeginTick)
     {
         /* (a model missing from the picture has its slice all the same) */
         AfterOwedStatics(started);
+        if (sJob.active && !JobValid())
+            JobCancel();
+        WorkerFeed();
         sStats.afterMs = MsSince(started);
         sLastBuildMs += sStats.afterMs;
         sAfterEndTick = svcGetSystemTick();
@@ -8415,6 +9014,7 @@ void CtrVoxel_AfterSubmit(uint64_t frameBeginTick)
     if (sJob.active && !JobValid())
         JobCancel();
     RunJobs(started, budget, aheadMs, false, false, NULL);
+    WorkerFeed();
     StaticWantsRun(started, budget, true);
     StaticWantsRun(started, budget, false);
     sStats.afterMs = MsSince(started);
@@ -8485,6 +9085,7 @@ static bool HandleMapChange(int mapGroup, int mapNum, float playerX, float playe
         sBeltOriginY -= sPreviousOrigins[i].originY;
         sLastX -= (float)sPreviousOrigins[i].originX;
         sLastZ -= (float)sPreviousOrigins[i].originY;
+        VoxelEntities_Crossed();
         CtrLog_Write(CTR_LOG_VIDEO, "VOXEL: crossed into %d:%d, camera shifted by %d,%d",
                      mapGroup, mapNum, -sPreviousOrigins[i].originX,
                      -sPreviousOrigins[i].originY);
@@ -9882,6 +10483,132 @@ static void DrawPartsNote(void)
     sStats.drawWeatherMs = TicksMs(sDrawTicks[DRAW_WEATHER]);
 }
 
+/*
+ * The frame's billboards: the sprites' cards, their cast shadows and their
+ * reflections, made and packed. Apart from the rest of the update because it
+ * may run after the terrain's draws are recorded and the GPU is started on
+ * them (sBillboardsOwed): on an Old 3DS the cards are 1.0-1.4 ms of every
+ * field frame, the GPU is what the frame waits for (four late frames in
+ * five were late by the GPU alone, port.log 2026-11-24), and nothing the
+ * terrain's draws read is written here - the cards go to the dynamic
+ * buffer and the sprite atlas, which only the draws recorded after read.
+ */
+static void UpdateBillboards(uint32_t lampsTicks, int mapGroup, int mapNum)
+{
+    uint64_t spritesStart = svcGetSystemTick();
+    VoxelBuilder sprites, reflections;
+    VoxelBuilder *shadowBuilder = NULL;
+    VoxelVertex *dynamic = sDynamicScratch;
+#if CTR_VOXEL_LIGHTING
+    VoxelBuilder shadows;
+#endif
+
+    uint32_t emitStart, emitTicks, packStart, packTicks;
+
+    VoxelBuilder_Init(&sprites, dynamic, VOXEL_SPRITE_RESERVE);
+    VoxelBuilder_SetOrigin(&sprites, sDynamicX, sDynamicZ);
+    VoxelBuilder_Init(&reflections, dynamic + VOXEL_REFLECTION_FIRST,
+                      VOXEL_REFLECTION_RESERVE);
+    VoxelBuilder_SetOrigin(&reflections, sDynamicX, sDynamicZ);
+#if CTR_VOXEL_LIGHTING
+    VoxelBuilder_Init(&shadows, dynamic + VOXEL_SHADOW_FIRST, VOXEL_SHADOW_RESERVE);
+    VoxelBuilder_SetOrigin(&shadows, sDynamicX, sDynamicZ);
+    shadowBuilder = &shadows;
+#endif
+#ifdef CTR_FRAME_DUMP
+    /* nocache.txt bit 65536: every slot gathered, as before (A/B frames).
+     * Read here: voxel_entities.c is a game unit, built without the
+     * audit builds' defines. */
+    VoxelEntities_SetKeep(!(CtrVideo_DumpOff() & 65536));
+#endif
+    /* SPRITE FILTER, read every few frames as SHADOW QUALITY is: the
+     * atlas's filter and its slots' layout change together, before
+     * the cards are made, so this frame's cards and texels agree. */
+    {
+        static uint32_t sFilterRead;
+
+        if (sFrame >= sFilterRead || sFilterRead - sFrame > 8u)
+        {
+            bool smooth = CtrSettings_GetInt("voxel_sprite_filter", 0) != 0;
+
+            sFilterRead = sFrame + 8u;
+            if (smooth != sSpriteSmooth)
+            {
+                GPU_TEXTURE_FILTER_PARAM filter = smooth ? GPU_LINEAR : GPU_NEAREST;
+
+                sSpriteSmooth = smooth;
+                C3D_TexSetFilter(&sSpriteAtlas, filter, filter);
+                VoxelEntities_SetSmooth(smooth);
+                CtrLog_Write(CTR_LOG_VIDEO, "VOXEL: sprite filter %s", smooth ? "ON" : "OFF");
+            }
+        }
+    }
+    emitStart = Port_ProfTick();
+    VoxelEntities_Emit(&sprites, (uint16_t *)sSpriteAtlas.data, &sCamera, shadowBuilder, &reflections);
+    packStart = Port_ProfTick();
+    emitTicks = packStart - emitStart;
+    sReflectionVertices = reflections.count;
+    sStats.reflections = reflections.count / 6u;   /* quads (EmitReflection: a strip each) */
+    PackDynamic(dynamic + VOXEL_REFLECTION_FIRST, reflections.count,
+                sDynamic + VOXEL_REFLECTION_FIRST);
+    packTicks = Port_ProfTick() - packStart;
+    if (reflections.dropped != 0)
+    {
+        ++sStats.errors;
+        CtrLog_Write(CTR_LOG_ERROR, "VOXEL: reflection staging overflow");
+    }
+    sSpriteVertices = sprites.count;
+    packStart = Port_ProfTick();
+    PackDynamic(dynamic, sprites.count, sDynamic);
+#if CTR_VOXEL_LIGHTING
+    sShadowVertices = shadows.count;
+    PackDynamic(dynamic + VOXEL_SHADOW_FIRST, shadows.count, sDynamic + VOXEL_SHADOW_FIRST);
+#endif
+    packTicks += Port_ProfTick() - packStart;
+#if CTR_VOXEL_LIGHTING
+    if (shadows.dropped != 0)
+    {
+        ++sStats.errors;
+        CtrLog_Write(CTR_LOG_ERROR, "VOXEL: cast shadow staging overflow");
+    }
+#endif
+    if (sprites.dropped != 0 && !sOverflowReported)
+    {
+        sOverflowReported = true;
+        ++sStats.errors;
+        CtrLog_Write(CTR_LOG_ERROR, "VOXEL: no staging room for billboards");
+    }
+    sStats.spritesMs = (float)((svcGetSystemTick() - spritesStart) * 1000.0 / SYSCLOCK_ARM11);
+    sStats.gatherMs = TicksMs(VoxelEntities_TakeGatherTicks());
+    sStats.packMs = TicksMs(packTicks);
+    BillboardsLog(TicksMs(lampsTicks), TicksMs(emitTicks) - sStats.gatherMs);
+    ReportPackErrors("the billboards around", sDynamicX, sDynamicZ, mapGroup, mapNum);
+    sStats.vertices += sSpriteVertices + sReflectionVertices;
+#if CTR_VOXEL_LIGHTING
+    sStats.vertices += sShadowVertices;
+#endif
+}
+
+/* The billboards of this update are still to be made, at the draw
+ * (UpdateBillboards), with what the update would have passed it. */
+static bool sBillboardsOwed;
+static uint32_t sBillboardsLampsTicks;
+static int sBillboardsMapGroup, sBillboardsMapNum;
+/*
+ * The terrain is some 50 draws and 3 ms of recording on an Old 3DS, and the
+ * GPU - which the frame waits on in the field, 9 ms of a picture - stood idle
+ * through all of it. It is set to work every sKickVertices vertices listed
+ * instead (CtrVideo_VoxelTerrainPart: the first starts the frame's queue, the
+ * later ones are a split each), so it draws the first chunks while the rest
+ * are recorded. settings.txt voxel_kick_verts=N; 0: once, with the whole
+ * terrain recorded, as before. Only where the cards are made late
+ * (sBillboardsOwed): the same frames the GPU was started in after the
+ * terrain.
+ */
+static unsigned sKickVertices = 0u;
+/* settings.txt voxel_sprites_late=0: made in the update, as before. */
+static bool sMeasureSpritesLate = true;
+
 /* What the keys did (see the keys of the chunks' meshes), every
  * VOXEL_KEYS_LOG_FRAMES updates. */
 static void KeysLog(void)
@@ -9984,9 +10711,14 @@ bool CtrVoxel_Update(void)
     sAtlasUploadPending = false;
     sAtlasCapacityBlocked = false;
     sViewReady = false;
+    sBillboardsOwed = false; /* (an update whose draw never came) */
     /* Nothing retires an asset payload between here and the end of the
      * update, so resolved pointers may be reused throughout. */
     VoxelWorld_BeginBatch();
+    /* (the build's worker reads the instances: home before they are set
+     * down again, JobAwayHome) */
+    if (!VoxelWorld_InstancesAreCurrent())
+        JobAwayHome();
     /* Built again only once what the set is made from has changed: the map,
      * its layout, the map version, a swap's answer (voxel_world.c). */
     VoxelWorld_UpdateInstances();
@@ -10027,6 +10759,9 @@ bool CtrVoxel_Update(void)
         }
         if (changed)
         {
+            /* (the build's worker is not waited for: it reads the grid as
+             * its job began, its caches are its own and told the world they
+             * were filled under, and its job is dropped with the epoch) */
             /* what stands on it is read off the grid again (voxel_building.h) */
             VoxelBuildings_WorldChanged();
             sMapVersion = version;
@@ -10060,6 +10795,10 @@ bool CtrVoxel_Update(void)
         sMeasureFusedBlur = CtrSettings_GetInt("voxel_fused_blur", 0) != 0;
         sMeasureScissor = CtrSettings_GetInt("voxel_scissor", 1) != 0;
         sMeasureParts = CtrSettings_GetInt("voxel_parts", 1) != 0;
+        sMeasureSpritesLate = CtrSettings_GetInt("voxel_sprites_late", 1) != 0;
+        sKickVertices = (unsigned)CtrSettings_GetInt("voxel_kick_verts", 0);
+        sInFrameReal = CtrSettings_GetInt("voxel_inframe_real", 1) != 0;
+        sBuildCore = CtrSettings_GetInt("voxel_build_core", 2);
         sMeasureAb = (unsigned)CtrSettings_GetInt("voxel_ab", 0);
         sMeasureCutEvery = (unsigned)CtrSettings_GetInt("voxel_cut", 0);
         sMeasurePartsEvery = (unsigned)CtrSettings_GetInt("voxel_parts_ab", 0);
@@ -10170,6 +10909,10 @@ bool CtrVoxel_Update(void)
         /* The option's, and nothing else's: the quality never changes by
          * itself. HIGH's map is claimed with the world's VRAM
          * (CtrVoxel_UnparkVram, CtrVoxel_ClaimShadowMap). */
+        if (readShadows && (VoxelLighting_Quality() == VOXEL_SHADOWS_HIGH) != CtrSettings_VoxelShadowsHigh())
+            JobAwayHome();
+        if (!VoxelLighting_SunIs(sun->dx, sun->dz, sun->strength, sun->key))
+            JobAwayHome();
         if (readShadows
          && VoxelLighting_SetQuality(CtrSettings_VoxelShadowsHigh()
                                      ? VOXEL_SHADOWS_HIGH : VOXEL_SHADOWS_LOW))
@@ -10366,18 +11109,11 @@ bool CtrVoxel_Update(void)
         sShadowVertices = 0;
 #endif
         sStats.spritesMs = sStats.gatherMs = sStats.packMs = 0.0f;
+        sBillboardsOwed = false;
     }
     else
     {
-        uint64_t spritesStart = svcGetSystemTick();
-        VoxelBuilder sprites, reflections;
-        VoxelBuilder *shadowBuilder = NULL;
-        VoxelVertex *dynamic = sDynamicScratch;
-#if CTR_VOXEL_LIGHTING
-        VoxelBuilder shadows;
-#endif
-
-        uint32_t lampsTicks, emitStart, emitTicks, packStart, packTicks;
+        uint32_t lampsTicks;
 
         sDynamicX = (int)floorf(sCamera.targetX);
         sDynamicZ = (int)floorf(sCamera.targetZ);
@@ -10386,96 +11122,27 @@ bool CtrVoxel_Update(void)
         UpdateNightLamps();
         lampsTicks = Port_ProfTick() - lampsTicks;
         UpdateGlitter();
-        VoxelBuilder_Init(&sprites, dynamic, VOXEL_SPRITE_RESERVE);
-        VoxelBuilder_SetOrigin(&sprites, sDynamicX, sDynamicZ);
-        VoxelBuilder_Init(&reflections, dynamic + VOXEL_REFLECTION_FIRST,
-                          VOXEL_REFLECTION_RESERVE);
-        VoxelBuilder_SetOrigin(&reflections, sDynamicX, sDynamicZ);
+        /* The cards after the terrain is drawn and the GPU started on it
+         * (CtrVoxel_Draw), but on HIGH, whose shadow map is drawn first of
+         * all with the sprites' own shadows merged into it afterwards. */
+        sBillboardsOwed = sMeasureSpritesLate
 #if CTR_VOXEL_LIGHTING
-        VoxelBuilder_Init(&shadows, dynamic + VOXEL_SHADOW_FIRST, VOXEL_SHADOW_RESERVE);
-        VoxelBuilder_SetOrigin(&shadows, sDynamicX, sDynamicZ);
-        shadowBuilder = &shadows;
+                       && VoxelLighting_Quality() != VOXEL_SHADOWS_HIGH
 #endif
-#ifdef CTR_FRAME_DUMP
-        /* nocache.txt bit 65536: every slot gathered, as before (A/B frames).
-         * Read here: voxel_entities.c is a game unit, built without the
-         * audit builds' defines. */
-        VoxelEntities_SetKeep(!(CtrVideo_DumpOff() & 65536));
-#endif
-        /* SPRITE FILTER, read every few frames as SHADOW QUALITY is: the
-         * atlas's filter and its slots' layout change together, before
-         * the cards are made, so this frame's cards and texels agree. */
-        {
-            static uint32_t sFilterRead;
-
-            if (sFrame >= sFilterRead || sFilterRead - sFrame > 8u)
-            {
-                bool smooth = CtrSettings_GetInt("voxel_sprite_filter", 0) != 0;
-
-                sFilterRead = sFrame + 8u;
-                if (smooth != sSpriteSmooth)
-                {
-                    GPU_TEXTURE_FILTER_PARAM filter = smooth ? GPU_LINEAR : GPU_NEAREST;
-
-                    sSpriteSmooth = smooth;
-                    C3D_TexSetFilter(&sSpriteAtlas, filter, filter);
-                    VoxelEntities_SetSmooth(smooth);
-                    CtrLog_Write(CTR_LOG_VIDEO, "VOXEL: sprite filter %s", smooth ? "ON" : "OFF");
-                }
-            }
-        }
-        emitStart = Port_ProfTick();
-        VoxelEntities_Emit(&sprites, (uint16_t *)sSpriteAtlas.data, &sCamera, shadowBuilder, &reflections);
-        packStart = Port_ProfTick();
-        emitTicks = packStart - emitStart;
-        sReflectionVertices = reflections.count;
-        sStats.reflections = reflections.count / 6u;   /* quads (EmitReflection: a strip each) */
-        PackDynamic(dynamic + VOXEL_REFLECTION_FIRST, reflections.count,
-                    sDynamic + VOXEL_REFLECTION_FIRST);
-        packTicks = Port_ProfTick() - packStart;
-        if (reflections.dropped != 0)
-        {
-            ++sStats.errors;
-            CtrLog_Write(CTR_LOG_ERROR, "VOXEL: reflection staging overflow");
-        }
-        sSpriteVertices = sprites.count;
-        packStart = Port_ProfTick();
-        PackDynamic(dynamic, sprites.count, sDynamic);
-#if CTR_VOXEL_LIGHTING
-        sShadowVertices = shadows.count;
-        PackDynamic(dynamic + VOXEL_SHADOW_FIRST, shadows.count, sDynamic + VOXEL_SHADOW_FIRST);
-#endif
-        packTicks += Port_ProfTick() - packStart;
-#if CTR_VOXEL_LIGHTING
-        if (shadows.dropped != 0)
-        {
-            ++sStats.errors;
-            CtrLog_Write(CTR_LOG_ERROR, "VOXEL: cast shadow staging overflow");
-        }
-#endif
-        if (sprites.dropped != 0 && !sOverflowReported)
-        {
-            sOverflowReported = true;
-            ++sStats.errors;
-            CtrLog_Write(CTR_LOG_ERROR, "VOXEL: no staging room for billboards");
-        }
-        sStats.spritesMs = (float)((svcGetSystemTick() - spritesStart) * 1000.0 / SYSCLOCK_ARM11);
-        sStats.gatherMs = TicksMs(VoxelEntities_TakeGatherTicks());
-        sStats.packMs = TicksMs(packTicks);
-        BillboardsLog(TicksMs(lampsTicks), TicksMs(emitTicks) - sStats.gatherMs);
+                       ;
+        sBillboardsLampsTicks = lampsTicks;
+        sBillboardsMapGroup = mapGroup;
+        sBillboardsMapNum = mapNum;
+        if (!sBillboardsOwed)
+            UpdateBillboards(lampsTicks, mapGroup, mapNum);
     }
-    ReportPackErrors("the billboards around", sDynamicX, sDynamicZ, mapGroup, mapNum);
 
 
     sStats.chunks = 0;
     for (unsigned i = 0; i < VOXEL_CHUNK_SLOTS; ++i)
         if (sChunks[i].used)
             ++sStats.chunks;
-    sStats.vertices += sSpriteVertices + sReflectionVertices + sLampVertices + sLampGroundVertices
-                     + sGlitVertices;
-#if CTR_VOXEL_LIGHTING
-    sStats.vertices += sShadowVertices;
-#endif
+    sStats.vertices += sLampVertices + sLampGroundVertices + sGlitVertices;
     sStats.updateMs = (float)((svcGetSystemTick() - started) * 1000.0 / SYSCLOCK_ARM11);
     if (sStats.updateMs > sStats.updatePeakMs)
         sStats.updatePeakMs = sStats.updateMs;
@@ -10820,6 +11487,7 @@ bool CtrVoxel_UnparkVram(void)
          * stopped before the tables it reads pages by are freed. */
         if (sStream.buffer != NULL)
             StreamStop();
+        JobAwayHome(); /* (the worker reads the buildings\' tables) */
         VoxelBuildings_Shutdown();
         sBuildingsLoaded = false;
         sBuildingsDropped = sBuildingsChanged = true;
@@ -10830,6 +11498,7 @@ bool CtrVoxel_UnparkVram(void)
     }
     else if (sPageBlock != NULL && sBuildingsDropped)
     {
+        JobAwayHome(); /* (the worker reads the buildings\' tables) */
         sBuildingsLoaded = VoxelBuildings_Init();
         sBuildingsDropped = !sBuildingsLoaded;
         sBuildingsChanged = true;
@@ -10899,6 +11568,7 @@ bool CtrVoxel_ClaimPages(void)
     sPageBlock = vramAlloc(VOXEL_PAGE_VRAM_BUDGET);
     if (sPageBlock == NULL)
         return false;
+    JobAwayHome(); /* (the worker reads the buildings\' tables) */
     sBuildingsLoaded = VoxelBuildings_Init();
     sBuildingsDropped = false;
     if (!sBuildingsLoaded)
@@ -15991,6 +16661,9 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
 {
     /* Its own CPU time and its passes' (DrawPartsFrame). */
     uint32_t drawStart = Port_ProfTick(), partStart, weatherBefore = sDrawTicks[DRAW_WEATHER];
+    /* the terrain given to the GPU in parts (sKickVertices) */
+    bool kickParts = false;
+    unsigned recorded = 0;
     C3D_Mtx projection, view;
     C3D_AttrInfo *attr;
     C3D_TexEnv *env;
@@ -16256,6 +16929,7 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
         if (every > 0 && sFrame % (unsigned)every == (unsigned)every / 2u && eye <= 0) ViewAudit();
     }
     partStart = Port_ProfTick();
+    kickParts = sBillboardsOwed && sKickVertices != 0;
     for (unsigned pass = 0; pass < VOXEL_ATLAS_PAGES + 2u; ++pass)
     {
         const C3D_Tex *boundTex = NULL;
@@ -16284,6 +16958,15 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
                 : pass == VOXEL_ATLAS_PAGES ? &sTreeAtlas : BuildingPage(chunk->buildingPage);
             if (tex == NULL)
                 continue;
+            /* The GPU set to work on what is recorded so far (see
+             * sKickVertices), by the vertices listed (a part left out of
+             * the picture counts too: this is only a measure of the work). */
+            if (kickParts && recorded >= sKickVertices)
+            {
+                CtrVideo_VoxelTerrainPart();
+                recorded = 0;
+            }
+            recorded += count;
 
             SetModelView(sDraws[i].worldX, sDraws[i].worldZ);
 #if CTR_VOXEL_LIGHTING
@@ -16307,36 +16990,27 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
                 /* the crowns keep their own light under the map: their
                  * shadows are on the ground, and a crown behind its own (or
                  * a neighbour's) turned card would read as shaded */
-                unsigned grounds = count - chunk->treeCrowns;
-
-                if (grounds != 0)
-                    C3D_DrawArrays(GPU_TRIANGLES, BindChunkVertices(chunk, first, grounds), (int)grounds);
-                ShadowReceive(false);
-                C3D_DrawArrays(GPU_TRIANGLES, BindChunkVertices(chunk, first + grounds, chunk->treeCrowns),
-                               (int)chunk->treeCrowns);
-                ShadowReceive(true);
+                DrawChunkRange(chunk, VOXEL_RANGE_TREES, sDraws[i].parts);
+                if (KindParts(sDraws[i].parts, VOXEL_KIND_TREES) != 0)
+                {
+                    ShadowReceive(false);
+                    DrawChunkRange(chunk, VOXEL_RANGE_CROWNS, sDraws[i].parts);
+                    ShadowReceive(true);
+                }
                 continue;
             }
-            if (pass < VOXEL_ATLAS_PAGES && sDraws[i].parts != VOXEL_PARTS_ALL)
+            /* (a kind wholly in the picture is one draw: the trees' two
+             * ranges are one run of vertices) */
+            if (KindParts(sDraws[i].parts, pass < VOXEL_ATLAS_PAGES ? VOXEL_KIND_GROUND
+                          : pass == VOXEL_ATLAS_PAGES ? VOXEL_KIND_TREES : VOXEL_KIND_BUILDINGS) != VOXEL_PARTS_MASK)
             {
-                /* the parts in the picture, each run of them one draw */
-                for (unsigned part = 0; part < VOXEL_PARTS;)
+                if (pass == VOXEL_ATLAS_PAGES)
                 {
-                    unsigned next = part + 1u, from, run;
-
-                    if (!(sDraws[i].parts >> part & 1u))
-                    {
-                        part = next;
-                        continue;
-                    }
-                    while (next < VOXEL_PARTS && (sDraws[i].parts >> next & 1u))
-                        ++next;
-                    from = ChunkPartFirst(chunk, pass, part);
-                    run = ChunkPartFirst(chunk, pass, next) - from;
-                    if (run != 0)
-                        C3D_DrawArrays(GPU_TRIANGLES, BindChunkVertices(chunk, from, run), (int)run);
-                    part = next;
+                    DrawChunkRange(chunk, VOXEL_RANGE_TREES, sDraws[i].parts);
+                    DrawChunkRange(chunk, VOXEL_RANGE_CROWNS, sDraws[i].parts);
                 }
+                else
+                    DrawChunkRange(chunk, pass < VOXEL_ATLAS_PAGES ? pass : VOXEL_RANGE_BUILDINGS, sDraws[i].parts);
                 continue;
             }
             C3D_DrawArrays(GPU_TRIANGLES, BindChunkVertices(chunk, first, count), (int)count);
@@ -16345,6 +17019,19 @@ void CtrVoxel_Draw(C3D_RenderTarget *target, int eye)
             DrawStatics(&view, dapples ? &light : NULL, glowing, false);
     }
     ReleaseGlowUnit();
+    if (sBillboardsOwed)
+    {
+        /* The terrain is recorded: the GPU starts on it while the cards the
+         * rest of the world draws are made (UpdateBillboards); their texels
+         * are new to it. */
+        sBillboardsOwed = false;
+        if (kickParts)
+            CtrVideo_VoxelTerrainPart();
+        else
+            CtrVideo_VoxelTerrainRecorded();
+        UpdateBillboards(sBillboardsLampsTicks, sBillboardsMapGroup, sBillboardsMapNum);
+        CtrVideo_TexelsWritten();
+    }
     /* The glow over the dapples moved the haze and the fade a stage on
      * (BuildingGlowEnv): back where every later pass has them. */
     C3D_TexEnvBufUpdate(C3D_Alpha, 0);

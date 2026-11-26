@@ -139,6 +139,9 @@ void VoxelBuildings_SetVariantFits(bool (*fits)(const VoxelMapInstance *inst, un
 /* The map changed (setmetatile): what was worked out of the placements that
  * stand only while a cell holds a metatile is worked out again. */
 void VoxelBuildings_MapChanged(void);
+/* The calling thread's own copies of what those two forget (voxel_who.h):
+ * the chunk build's worker, at its first run after the world changed. */
+void VoxelBuildings_ForgetMine(void);
 
 /*
  * The face of a model a walker in world cell (x, y) of `inst` stands before:

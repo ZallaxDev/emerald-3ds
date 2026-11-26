@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "voxel_lighting.h"
+#include "voxel_who.h"
 #include "voxel_tree.h"
 #include "voxel_building.h"
 #include "voxel_relief.h"
@@ -73,7 +74,8 @@ typedef struct
     int8_t from[DRAWN_FROM];
     const uint16_t *mask; /* a model over part of the cell: its footprint */
 } LightCell;
-static LightCell sCells[CELL_CACHE_SIZE];
+static LightCell sCellsOf[VOXEL_THREADS][CELL_CACHE_SIZE];
+#define sCells (sCellsOf[VOXEL_WHO])
 
 /* Adjacent ground quads share their half-tile samples. Cache the final ray/AO
  * result as well as casters; exact coordinates keep walls and sloped crowns
@@ -91,14 +93,22 @@ typedef struct
     uint16_t sun;
     uint32_t generation;
 } LightSample;
-static LightSample sSamples[SAMPLE_CACHE_SIZE];
+static LightSample sSamplesOf[VOXEL_THREADS][SAMPLE_CACHE_SIZE];
+#define sSamples (sSamplesOf[VOXEL_WHO])
 #define SAMPLE_WAYS 4u
 #define SAMPLE_SETS (SAMPLE_CACHE_SIZE / SAMPLE_WAYS)
-static uint8_t sSampleNext[SAMPLE_SETS];
-static uint32_t sGeneration;
-static uint32_t sSampleGeneration;
+static uint8_t sSampleNextOf[VOXEL_THREADS][SAMPLE_SETS];
+#define sSampleNext (sSampleNextOf[VOXEL_WHO])
+/* (a thread its own, the worker's latched from the render thread's as a run
+ * of its job begins - VoxelLighting_Latch: what it caches during a job the
+ * world has since left stays that world's) */
+static uint32_t sGenerationOf[VOXEL_THREADS];
+static uint32_t sSampleGenerationOf[VOXEL_THREADS];
+#define sGeneration (sGenerationOf[VOXEL_WHO])
+#define sSampleGeneration (sSampleGenerationOf[VOXEL_WHO])
 /* Bumped by every new sun (VoxelLighting_SetSun); never 0, which no sun is. */
-static uint16_t sSunGeneration = 1;
+static uint16_t sSunGenerationOf[VOXEL_THREADS] = {[0 ... VOXEL_THREADS - 1] = 1};
+#define sSunGeneration (sSunGenerationOf[VOXEL_WHO])
 VoxelSun gVoxelSun = {0.85f, 0.55f, 1.0f, 0};
 static float sAmbient = VOXEL_AMBIENT;
 /*
@@ -118,9 +128,11 @@ static float AmbientOf(float strength)
     return 1.0f - (1.0f - ambient) * strength;
 }
 static float sStepInverseX = 4.0f / 0.85f, sStepInverseZ = 4.0f / 0.55f;
-static unsigned sRays;
+static unsigned sRaysOf[VOXEL_THREADS];
+#define sRays (sRaysOf[VOXEL_WHO])
 /* Lit without the blocks' bound (VoxelLighting_SampleAlone). */
-static bool sAlone;
+static bool sAloneOf[VOXEL_THREADS];
+#define sAlone (sAloneOf[VOXEL_WHO])
 
 /*
  * No caster anywhere on screen is taller than this, so a ray that has climbed
@@ -162,7 +174,8 @@ typedef struct
     float ceiling;    /* world height; -1000 where nothing casts */
     uint32_t generation;
 } LightBlock;
-static LightBlock sBlocks[BLOCK_CACHE_SIZE];
+static LightBlock sBlocksOf[VOXEL_THREADS][BLOCK_CACHE_SIZE];
+#define sBlocks (sBlocksOf[VOXEL_WHO])
 /*
  * The tallest of a block and the two blocks west and north of it (3x3): all
  * a ray from inside the block can reach (VOXEL_LIGHT_REACH runs 6.8 cells
@@ -187,13 +200,16 @@ static int DrawnReach(const VoxelMapInstance *inst)
 
     return (int)ceilf(reach) + (VoxelRelief_IsDrawn(inst) ? SHIFT_ROWS : 0);
 }
-static LightBlock sReach[BLOCK_CACHE_SIZE];
+static LightBlock sReachOf[VOXEL_THREADS][BLOCK_CACHE_SIZE];
+#define sReach (sReachOf[VOXEL_WHO])
 /* Read for a ray with more than this left to climb to the map's bound. */
 #define BLOCK_CLIMB 1.0f
 
 /* The work rays do, for the slow chunk log: points marched, and of those (and
  * of the contact tests) how many were tested against a relief's surface. */
-static unsigned sSteps, sSurfaceTests;
+static unsigned sStepsOf[VOXEL_THREADS], sSurfaceTestsOf[VOXEL_THREADS];
+#define sSteps (sStepsOf[VOXEL_WHO])
+#define sSurfaceTests (sSurfaceTestsOf[VOXEL_WHO])
 
 static int Tile(float n)
 {
@@ -227,8 +243,11 @@ typedef struct
 {
     float x0, x1, from, to, add;
 } LightStretch;
-static LightStretch sStretches[MAX_VOXEL_MAP_INSTANCES];
-static unsigned sStretchCount, sStretchMaps = ~0u;
+static LightStretch sStretchesOf[VOXEL_THREADS][MAX_VOXEL_MAP_INSTANCES];
+#define sStretches (sStretchesOf[VOXEL_WHO])
+static unsigned sStretchCountOf[VOXEL_THREADS], sStretchMapsOf[VOXEL_THREADS] = {[0 ... VOXEL_THREADS - 1] = ~0u};
+#define sStretchCount (sStretchCountOf[VOXEL_WHO])
+#define sStretchMaps (sStretchMapsOf[VOXEL_WHO])
 
 static void ReadStretches(void)
 {
@@ -334,9 +353,26 @@ static void ResetSamples(void)
 {
     if (++sSampleGeneration == 0)
     {
-        memset(sSamples, 0, sizeof(sSamples));
+        memset(sSamplesOf, 0, sizeof(sSamplesOf)); /* every thread's */
         sSampleGeneration = 1;
     }
+}
+
+void VoxelLighting_Latch(void)
+{
+    unsigned who = VOXEL_WHO;
+
+    if (who == 0)
+        return;
+    sGenerationOf[who] = sGenerationOf[0];
+    sSampleGenerationOf[who] = sSampleGenerationOf[0];
+    sSunGenerationOf[who] = sSunGenerationOf[0];
+}
+
+bool VoxelLighting_SunIs(float dx, float dz, float strength, uint32_t key)
+{
+    return gVoxelSun.dx == dx && gVoxelSun.dz == dz
+        && gVoxelSun.strength == strength && gVoxelSun.key == key;
 }
 
 bool VoxelLighting_SetSun(float dx, float dz, float strength, uint32_t key)
@@ -391,13 +427,16 @@ void VoxelLighting_Reset(void)
 {
     if (++sGeneration == 0)
     {
-        memset(sCells, 0, sizeof(sCells));
-        memset(sBlocks, 0, sizeof(sBlocks));
-        memset(sReach, 0, sizeof(sReach));
+        memset(sCellsOf, 0, sizeof(sCellsOf)); /* every thread's */
+        memset(sBlocksOf, 0, sizeof(sBlocksOf));
+        memset(sReachOf, 0, sizeof(sReachOf));
         sGeneration = 1;
     }
     ResetSamples();
     sCeiling = CasterCeiling();
+    /* (each thread reads its own eased rows again, MapCeilings this one's) */
+    for (unsigned t = 0; t < VOXEL_THREADS; ++t)
+        sStretchMapsOf[t] = ~0u;
     MapCeilings();
 }
 
@@ -1220,7 +1259,8 @@ static float Contact(float x, float y, float z)
  * Nothing here changes which way a sample goes to or which it evicts.
  */
 #define SAMPLE_FRONT 256u
-static LightSample *sSampleFront[SAMPLE_FRONT];
+static LightSample *sSampleFrontOf[VOXEL_THREADS][SAMPLE_FRONT];
+#define sSampleFront (sSampleFrontOf[VOXEL_WHO])
 
 static inline unsigned SampleFrontSlot(float x, float y, float z)
 {

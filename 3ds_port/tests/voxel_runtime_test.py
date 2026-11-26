@@ -89,23 +89,35 @@ enum { JOB_GROUND, JOB_TREES, JOB_MODELS, JOB_BORDER, JOB_BORDER_TREES, JOB_SORT
 static bool sHolesOnly = true, validJob = true;
 static struct { bool active, forView, hole, overdue; unsigned waitIndex; ChunkSite site;
     int phase, row, col, models; unsigned buildingFirst;
-    unsigned sortPage, sortScan, sortWrite, terrainCount, terrainFirst[5], staticIndex; uint64_t ticks; } sJob;
+    unsigned sortScan, sortWrite, sortStep, sortNext[16], sortEnd[16], terrainCount, terrainFirst[5], staticIndex;
+    bool sortOpen, boxOpen; struct { bool on; uint16_t end[7][3]; } parts; uint64_t ticks; } sJob;
 typedef struct { float u, marker; } VoxelVertex;
 static VoxelVertex sScratch[6000];
+/* The sort's buckets are under test; the parts' boxes and the ranges after the ground are not. */
+#define VOXEL_PARTS 4u
+#define VOXEL_RANGES 7u
+#define VOXEL_KIND_GROUND 0u
+#define VOXEL_SORT_GROUPS (VOXEL_RANGES - VOXEL_ATLAS_PAGES + 1u)
+#define VOXEL_SORT_BUCKETS (VOXEL_ATLAS_PAGES * VOXEL_PARTS)
+static uint8_t sSortBuckets[2000];
+static unsigned boxesNoted;
+static void SortBoxesOpen(void) { boxesNoted = 0; }
+static void SortBox(unsigned kind, unsigned part, const VoxelVertex *v) { (void)kind; (void)part; (void)v; ++boxesNoted; }
+static unsigned SortPart(const VoxelVertex *v) { return ((unsigned)v->marker / 5u) % 4u; }
+static unsigned RangeKind(unsigned range) { return range; }
+static void JobRange(unsigned range, unsigned *first, unsigned *end) { (void)range; *first = *end = 6000; }
 /* Not the wide view, no Fly cinematic: the draft ring and its band never hold a build back. */
 #define VOXEL_BAND_FULL 12.0f
 static bool sWideView;
 static unsigned sWideHolesLeft;
 static struct { bool active; float lift; } sFly;
 static float SiteReach(const ChunkSite *site) { (void)site; return 0.0f; }
-/* The crowns' cards (HIGH's shadows) and the sort's parts and boxes are not under test. */
+/* The crowns' cards (HIGH's shadows) are not under test. */
 typedef struct { float x; } VoxelTreeCard;
 static VoxelTreeCard sJobCards[1];
 static unsigned TreeCardsWanted(void) { return 0; }
 static void VoxelTree_NoteCards(const VoxelTreeCard *cards, unsigned room) { (void)cards; (void)room; }
 static void TreeCrowns(void) {}
-static bool JobSortParts(unsigned *budget) { (void)budget; return true; }
-static bool JobSortBoxes(unsigned *budget) { (void)budget; return true; }
 /* Flat maps, no lean: a map is drawn at its base. */
 static float DrawnBase(float base) { return base; }
 static bool JobValid(void) { return validJob; }
@@ -134,10 +146,11 @@ static bool ChunkRoomPossible(unsigned bytes, bool forView) {
     ++roomAsks; roomAskedBytes = bytes; roomAskedForView = forView; return roomPossible;
 }
 '''
-    for signature in ['static unsigned WaitBucket(', 'static unsigned RequestWait(', 'static bool RequestOverdue(', 'static int CompareRequests(']:
+    for signature in ['static unsigned WaitBucket(', 'static unsigned RequestWait(', 'static bool RequestOverdue(', 'static void SortRequests(']:
         source += function(voxel, signature)
     source += through(voxel, '#define VOXEL_START_COST_MAX_MS', 'static void NoteStartCost(')
     source += through(voxel, 'static unsigned sAheadRoomBytes;', 'static bool AheadRoomNone(')
+    source += 'static bool JobZombie(void) { return false; }\n'
     for signature in ['static bool StartNextJob(', 'static bool JobSort(']:
         source += function(voxel, signature)
     source += through(voxel, 'static float sPhaseMs[JOB_DONE + 1];', 'static void NotePhaseCost(')
@@ -183,7 +196,8 @@ static uint64_t sAfterEndTick;
 static float sTailMs;
 static unsigned postStarts;
 static float sLastBuildMs, sInFrameBuildMs;
-typedef struct { float cpuMs, gpuMs, gpuStartMs; bool voxelFrame; } CtrVideoStats;
+static bool sInFrameReal = true;
+typedef struct { float cpuMs, gpuMs, gpuStartMs; bool voxelFrame; float gpuDoneMs; } CtrVideoStats;
 static uint32_t sAfterStarvedFrames;
 #define VOXEL_AFTER_STARVED_MS 1.0f
 static CtrVideoStats videoTiming;
@@ -228,6 +242,7 @@ static unsigned RunJobs(uint64_t a, float holes, float ahead, bool inFrame, bool
     if (StartNextJob(0, holes, ahead, false)) ++postStarts;
     return 0;
 }
+static void WorkerFeed(void) {}
 '''
     source += function(voxel, 'static float InFrameBudget(')
     source += function(voxel, 'void CtrVoxel_NoteFrameWait(')
@@ -251,19 +266,26 @@ static unsigned RunJobs(uint64_t a, float holes, float ahead, bool inFrame, bool
 int main(void) {
     /* The last present spent 5 ms fixed + 2 ms meshing and 6 ms on GPU:
      * meshing has 3 ms. A 2 ms scene visit is already in the fixed cost. */
-    videoTiming = (CtrVideoStats){7, 6, 7, true}; sInFrameBuildMs = 2; testTick = 102;
+    videoTiming = (CtrVideoStats){7, 6, 7, true, 0}; sInFrameBuildMs = 2; testTick = 102;
     BudgetVisit(false, true, false);
     assert(inFrameRemaining == 3.0f);
     /* Warm-up intentionally includes the scene visit in its 4 ms cap. */
     BudgetVisit(true, true, false); assert(inFrameRemaining == 2.0f);
     /* The GPU started early, at 6 ms of a 9 ms present: only what came before
      * it is charged (charged whole, the 9 ms left 14 - 7 - 7 = 0). */
-    videoTiming = (CtrVideoStats){9, 7, 6, true}; sInFrameBuildMs = 2;
+    videoTiming = (CtrVideoStats){9, 7, 6, true, 0}; sInFrameBuildMs = 2;
     BudgetVisit(false, true, false); assert(inFrameRemaining == 3.0f);
+    /* When the GPU's work is known to have ended at 13.5 ms, 2 ms of them
+     * this module's: 14 - 11.5, whatever the drawing time says. */
+    videoTiming = (CtrVideoStats){9, 5, 6, true, 13.5f}; sInFrameBuildMs = 2;
+    BudgetVisit(false, true, false); assert(inFrameRemaining == 2.5f);
+    sInFrameReal = false; sInFrameBuildMs = 2;
+    BudgetVisit(false, true, false); assert(inFrameRemaining == 4.0f);
+    sInFrameReal = true;
     /* The first frame back from a 2D screen has no figures of its own. */
-    videoTiming = (CtrVideoStats){7, 6, 7, false};
+    videoTiming = (CtrVideoStats){7, 6, 7, false, 0};
     BudgetVisit(false, true, false); assert(inFrameRemaining == 0.0f);
-    videoTiming = (CtrVideoStats){10, 6, 10, true}; sInFrameBuildMs = 0;
+    videoTiming = (CtrVideoStats){10, 6, 10, true, 0}; sInFrameBuildMs = 0;
     BudgetVisit(false, true, false); assert(inFrameRemaining == 0.0f);
     BudgetVisit(false, true, true); assert(inFrameRemaining == VOXEL_STARVE_MS);
     testTick = 1; sHolesOnly = true;
@@ -387,23 +409,26 @@ int main(void) {
         sRequests[i].key = sRequests[i].need * 100000u;
         sRequestWait[sRequests[i].waitIndex].progress = i == 0 ? 0 : sFrame;
     }
-    qsort(sRequests, 3, sizeof(sRequests[0]), CompareRequests);
+    SortRequests();
     assert(sRequests[0].need == NEED_HOLE && sRequests[1].need == NEED_STALE);
     memset(&sJob, 0, sizeof(sJob)); sJob.terrainCount = 6000;
     for (unsigned t = 0; t < 2000; ++t)
         for (unsigned v = 0; v < 3; ++v) sScratch[t*3+v] = (VoxelVertex){2.0f*(t%4)+v*0.5f, (float)t};
     unsigned steps = 1; while (!JobSort()) { assert(++steps < 100); }
-    assert(steps > 1 && sJob.terrainFirst[4] == 6000);
+    assert(steps > 1 && sJob.terrainFirst[0] == 0 && sJob.terrainFirst[4] == 6000 && sJob.parts.on && boxesNoted == 2000);
     bool seen[2000] = {0};
     for (unsigned p = 0; p < 4; ++p)
         for (unsigned v = sJob.terrainFirst[p]; v < sJob.terrainFirst[p+1]; v += 3) {
-            unsigned id = (unsigned)sScratch[v].marker;
+            unsigned id = (unsigned)sScratch[v].marker, part = 0;
             assert(!seen[id]); seen[id] = true;
+            while (part < 3 && v >= sJob.parts.end[p][part]) ++part;
+            assert(part == (id / 5u) % 4u);
             for (unsigned k = 0; k < 3; ++k) {
                 assert(sScratch[v+k].marker == (float)id);
                 assert((unsigned)(sScratch[v+k].u*0.5f) == p);
             }
         }
+    for (unsigned id = 0; id < 2000; ++id) assert(seen[id]);
     memset(&sJob, 0, sizeof(sJob)); assert(JobSort());
     for (unsigned reserve = 24; reserve <= 28; reserve += 4) {
         gxCmdQueue_s queue = {32, 0}; sFrameQueue = &queue; sUploadCommands = 0; sRenderReserve = reserve;
@@ -603,6 +628,7 @@ static void JobStep(void) { ++slicesRun; clockTicks += sliceTicks; if (nextPhase
 /* A static model converted with nowhere to go yet (StaticBuildFinish). */
 static bool held;
 static bool StaticBuildHeld(void) { return held; }
+static bool JobAway(void) { return false; }
 /* The next job, if one is queued, as StartNextJob would take it. */
 static unsigned queued;
 static int queuedPhase;

@@ -194,6 +194,72 @@ static void Writer(void *arg)
 }
 
 /*
+ * The hang watch (3ds_log.h). The beat and the mark are single words written
+ * by the main thread and read here: no lock, a torn pair only names the mark
+ * next to the one meant.
+ */
+#define WATCH_PERIOD_MS 500
+#define WATCH_STALL_MS 3000
+#define WATCH_AGAIN_MS 15000
+
+static Thread sWatch;
+static volatile uint32_t sBeat;
+static const char *volatile sMark = "start-up";
+static const char *volatile sMarkBefore = "";
+static s32 sMainPriority = 0x30;
+
+void CtrLog_Beat(void)
+{
+    ++sBeat;
+}
+
+void CtrLog_Mark(const char *where)
+{
+    sMarkBefore = sMark;
+    sMark = where;
+}
+
+static void Watch(void *arg)
+{
+    uint32_t seen = sBeat;
+    unsigned stalledMs = 0, saidAt = 0;
+    bool boosted = false;
+
+    (void)arg;
+    while (!sQuit)
+    {
+        const char *mark, *before;
+
+        svcSleepThread((s64)WATCH_PERIOD_MS * 1000000);
+        mark = sMark;
+        before = sMarkBefore;
+        if (sBeat != seen || mark == NULL)
+        {
+            if (saidAt != 0 && sBeat != seen)
+                CtrLog_Write(CTR_LOG_ERROR, "WATCH: the main loop turns again after %u ms", stalledMs);
+            seen = sBeat;
+            stalledMs = saidAt = 0;
+            continue;
+        }
+        stalledMs += WATCH_PERIOD_MS;
+        if (stalledMs < WATCH_STALL_MS || (saidAt != 0 && stalledMs - saidAt < WATCH_AGAIN_MS))
+            continue;
+        saidAt = stalledMs;
+        CtrLog_Write(CTR_LOG_ERROR, "WATCH: no frame for %u ms, main thread at \"%s\" (before it \"%s\"), beat %lu",
+                     stalledMs, mark, before != NULL ? before : "apt", (unsigned long)seen);
+        /* A spinning main thread never lets the writer run, and the line
+         * would stay in the ring: the writer goes above it, for good (the
+         * game is not coming back to care). */
+        if (!boosted && sWriter != NULL)
+        {
+            svcSetThreadPriority(threadGetHandle(sWriter), sMainPriority - 1 >= 0x18 ? sMainPriority - 1 : 0x18);
+            boosted = true;
+        }
+        LightEvent_Signal(&sWake);
+    }
+}
+
+/*
  * The bottom screen belongs to the game's own features, so no console is made
  * there. What the game and the platform layer print to stdout/stderr (bios.c
  * reports bad pointers with printf, for one) goes into the log a line at a time
@@ -292,6 +358,8 @@ void CtrLog_Init(void)
         svcGetThreadPriority(&priority, CUR_THREAD_HANDLE);
         sWriter = threadCreate(Writer, NULL, 8 * 1024,
                                priority + 2 <= 0x3F ? priority + 2 : 0x3F, -2, false);
+        sMainPriority = priority;
+        sWatch = threadCreate(Watch, NULL, 8 * 1024, priority - 1 >= 0x18 ? priority - 1 : 0x18, -2, false);
     }
     CtrLog_Write(CTR_LOG_BOOT, "--- new session ---");
     CtrLog_Write(CTR_LOG_FS, "SD log %s", sFile == NULL ? "disabled (no debug.txt) or unavailable"
@@ -359,6 +427,13 @@ void CtrLog_Write(CtrLogCategory category, const char *format, ...)
 
 void CtrLog_Close(void)
 {
+    if (sWatch != NULL)
+    {
+        sQuit = true;
+        threadJoin(sWatch, U64_MAX);
+        threadFree(sWatch);
+        sWatch = NULL;
+    }
     if (sWriter != NULL)
     {
         sQuit = true;

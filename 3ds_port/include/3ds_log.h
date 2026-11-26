@@ -23,4 +23,20 @@ void CtrLog_Write(CtrLogCategory category, const char *format, ...)
  * does not fit is dropped whole and counted in port.log. */
 void CtrLog_WriteBinary(const void *data, unsigned size);
 
+/*
+ * The hang watch (with the log on, nothing without it): a thread above the
+ * game's priority that looks twice a second at whether the main loop still
+ * turns. When no frame has started for three seconds it writes where the
+ * main thread last said it was, and sees that the line reaches the card even
+ * if the main thread is spinning (the writer is put above it). A frozen
+ * console - black screen, no HOME - then leaves in port.log the stage it
+ * froze in: a wait for the GPU, a draw, the game's own code.
+ *
+ * CtrLog_Beat: once a frame, from the main loop. CtrLog_Mark: where the main
+ * thread is from now on, a string literal (kept by pointer); NULL where a
+ * long wait is in order (APT: the HOME menu, sleep), which the watch skips.
+ */
+void CtrLog_Beat(void);
+void CtrLog_Mark(const char *where);
+
 #endif

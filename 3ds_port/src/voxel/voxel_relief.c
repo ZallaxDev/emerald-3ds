@@ -67,6 +67,7 @@
 #endif
 
 #include "voxel_relief.h"
+#include "voxel_who.h"
 #include "voxel_file.h"
 
 #ifndef VOXEL_RELIEF_PATH
@@ -141,7 +142,8 @@ typedef struct
     int16_t x, y;
     int k;
 } FindMemo;
-static FindMemo sFindMemo[FIND_MEMO_SIDE * FIND_MEMO_SIDE];
+static FindMemo sFindMemoOf[VOXEL_THREADS][FIND_MEMO_SIDE * FIND_MEMO_SIDE];
+#define sFindMemo (sFindMemoOf[VOXEL_WHO])
 
 static int Find(const ReliefLayout *l, const VoxelMapInstance *inst, int x, int y);
 
@@ -155,7 +157,8 @@ typedef struct
     bool used, upright;
     float top, foot;
 } UprightMemo;
-static UprightMemo sUprightMemo[FIND_MEMO_SIDE * FIND_MEMO_SIDE];
+static UprightMemo sUprightMemoOf[VOXEL_THREADS][FIND_MEMO_SIDE * FIND_MEMO_SIDE];
+#define sUprightMemo (sUprightMemoOf[VOXEL_WHO])
 
 /* The rows a south seam's ease is spread over (VoxelRelief_Stretch): six a
  * level, at most half the map; voxel_relief_fixes.py ease_rows. */
@@ -201,7 +204,8 @@ typedef struct
     bool used;
     uint16_t mask;      /* 0: not a step cell */
 } StepMemo;
-static StepMemo sStepMemo[FIND_MEMO_SIDE * FIND_MEMO_SIDE];
+static StepMemo sStepMemoOf[VOXEL_THREADS][FIND_MEMO_SIDE * FIND_MEMO_SIDE];
+#define sStepMemo (sStepMemoOf[VOXEL_WHO])
 #define EDGE_BYTES 18
 #define CUT_VARIANT_BYTES 36
 #define CUT_CELL_BYTES 14
@@ -217,7 +221,8 @@ typedef struct
     int16_t x, y;
     int record;            /* index into sCutCells, -1: not cut */
 } CutMemo;
-static CutMemo sCutMemo[FIND_MEMO_SIDE * FIND_MEMO_SIDE];
+static CutMemo sCutMemoOf[VOXEL_THREADS][FIND_MEMO_SIDE * FIND_MEMO_SIDE];
+#define sCutMemo (sCutMemoOf[VOXEL_WHO])
 
 /* floorf as a conversion and one correction: the library call it replaces was
  * made at every step of every shadow ray over a mountain. */
@@ -448,8 +453,8 @@ void VoxelRelief_Shutdown(void)
         free(sLayouts[i].heights);
         free(sLayouts[i].rows);
     }
-    memset(sFindMemo, 0, sizeof(sFindMemo));
-    memset(sCutMemo, 0, sizeof(sCutMemo));
+    memset(sFindMemoOf, 0, sizeof(sFindMemoOf));
+    memset(sCutMemoOf, 0, sizeof(sCutMemoOf));
     ForgetSeams();
     free(sLayouts);
     free(sLayoutIndex);
@@ -465,7 +470,7 @@ void VoxelRelief_Shutdown(void)
     sEdgeCount = 0;
     sUpright = NULL;
     sUprightCount = 0;
-    memset(sUprightMemo, 0, sizeof(sUprightMemo));
+    memset(sUprightMemoOf, 0, sizeof(sUprightMemoOf));
     sSteps = NULL;
     sStepCount = 0;
     free(sUnderHeights);
@@ -474,7 +479,7 @@ void VoxelRelief_Shutdown(void)
     sUnderCount = 0;
     sOpenAir = NULL;
     sOpenAirCount = 0;
-    memset(sStepMemo, 0, sizeof(sStepMemo));
+    memset(sStepMemoOf, 0, sizeof(sStepMemoOf));
 }
 
 bool VoxelRelief_EdgeFill(unsigned layoutId, unsigned edge, int along, unsigned index, VoxelEdgeFill *fill)
@@ -580,7 +585,8 @@ typedef struct
     int c[8];
     bool polygon, used;
 } CutHullMemo;
-static CutHullMemo sCutHullMemo[CUT_HULL_MEMO];
+static CutHullMemo sCutHullMemoOf[VOXEL_THREADS][CUT_HULL_MEMO];
+#define sCutHullMemo (sCutHullMemoOf[VOXEL_WHO])
 
 static bool CutHull(const uint8_t *rows, int c[8])
 {
@@ -1229,8 +1235,8 @@ static bool sUprightOpenings = false;
 void VoxelRelief_SetUprightOpenings(bool on)
 {
     sUprightOpenings = on;
-    memset(sUprightMemo, 0, sizeof(sUprightMemo));
-    memset(sStepMemo, 0, sizeof(sStepMemo));
+    memset(sUprightMemoOf, 0, sizeof(sUprightMemoOf));
+    memset(sStepMemoOf, 0, sizeof(sStepMemoOf));
 }
 
 static bool UprightOpenings(void)

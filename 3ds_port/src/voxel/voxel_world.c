@@ -28,6 +28,7 @@
 #include "port_platform.h"
 
 #include "voxel_world.h"
+#include "voxel_who.h"
 #include "voxel_regions.h"
 #include "voxel_tree.h"
 #include "voxel_atlas.h"
@@ -67,7 +68,43 @@ struct VoxelMemo
     unsigned count;
 };
 
-static struct VoxelMemo sAttributeMemo, sMapMemo, sBorderMemo;
+/* (a thread its own: voxel_who.h) */
+static struct VoxelMemo sAttributeMemoOf[VOXEL_THREADS], sMapMemoOf[VOXEL_THREADS], sBorderMemoOf[VOXEL_THREADS];
+#define sAttributeMemo (sAttributeMemoOf[VOXEL_WHO])
+#define sMapMemo (sMapMemoOf[VOXEL_WHO])
+#define sBorderMemo (sBorderMemoOf[VOXEL_WHO])
+
+#ifdef PLATFORM_3DS
+/* The current map's grid as the build's worker reads it (GetRawBlock). */
+static uint16_t sLiveCopy[MAX_MAP_DATA_SIZE];
+static int sLiveCopyWidth, sLiveCopyHeight;
+/* The worker met the camera's maps changed: what it built is not the world's. */
+static volatile bool sWorkerMissed;
+
+bool VoxelWorld_WorkerMissed(void)
+{
+    return sWorkerMissed;
+}
+
+void VoxelWorld_SnapshotLive(void)
+{
+    int width = gBackupMapLayout.width, height = gBackupMapLayout.height;
+    u8 index;
+
+    /* The camera's maps placed for the current map, which only this thread
+     * may do: the worker reads them as they are (VoxelWorld_BorderMetatile),
+     * and after a crossing nothing else may have asked yet. */
+    MapGridGetCameraBorderAt(0, 0, &index);
+    sWorkerMissed = false;
+    sLiveCopyWidth = sLiveCopyHeight = 0;
+    if (gBackupMapLayout.map == NULL || width <= 0 || height <= 0
+     || (unsigned)width * (unsigned)height > MAX_MAP_DATA_SIZE)
+        return;
+    memcpy(sLiveCopy, gBackupMapLayout.map, (size_t)width * (size_t)height * sizeof(uint16_t));
+    sLiveCopyWidth = width;
+    sLiveCopyHeight = height;
+}
+#endif
 
 void VoxelWorld_BeginBatch(void)
 {
@@ -674,6 +711,11 @@ static bool InstancesCurrent(void)
     return true;
 }
 
+bool VoxelWorld_InstancesAreCurrent(void)
+{
+    return InstancesCurrent();
+}
+
 bool VoxelWorld_UpdateInstances(void)
 {
 #ifdef PLATFORM_3DS
@@ -743,6 +785,17 @@ static u16 GetRawBlock(int worldX, int worldY, const VoxelMapInstance **outInst)
         int bx = localX + MAP_OFFSET;
         int by = localY + MAP_OFFSET;
 
+#ifdef PLATFORM_3DS
+        /* The build's worker reads the grid as its job began
+         * (VoxelWorld_SnapshotLive): the game writes the live one, and at a
+         * crossing lays it out again, while the worker runs. */
+        if (VOXEL_WHO != 0)
+        {
+            if (bx >= 0 && bx < sLiveCopyWidth && by >= 0 && by < sLiveCopyHeight)
+                return sLiveCopy[bx + sLiveCopyWidth * by];
+            return 0;
+        }
+#endif
         if (bx >= 0 && bx < gBackupMapLayout.width
          && by >= 0 && by < gBackupMapLayout.height)
             return gBackupMapLayout.map[bx + gBackupMapLayout.width * by];
@@ -843,7 +896,8 @@ bool VoxelWorld_UnderGroundMask(int worldX, int worldY, uint16_t rows[16])
         const void *primary, *secondary;
         uint16_t metatileId;
         uint16_t rows[16];
-    } sCache[UNDER_GROUND_CACHE];
+    } sCacheOf[VOXEL_THREADS][UNDER_GROUND_CACHE];
+#define sCache (sCacheOf[VOXEL_WHO])
     const VoxelMapInstance *inst = NULL;
     u16 block = GetRawBlock(worldX, worldY, &inst);
     const uint8_t *tiles = CtrVideo_GetBgVram();
@@ -1569,6 +1623,28 @@ int VoxelWorld_BorderMetatile(int worldX, int worldY)
     if (fill >= 0)
         return fill;
     owner = VoxelMesh_BeltOwner(worldX, worldY, &ex, &ey);
+#ifdef PLATFORM_3DS
+    /* The build's worker only reads the camera's maps, and only while they
+     * are the current map's: placing them again is the game's thread's
+     * (fieldmap.c), and a job that met them changed is dropped anyway. */
+    if (VOXEL_WHO != 0)
+    {
+        if (!MapGridCameraMapsCurrent())
+        {
+            sWorkerMissed = true;
+            return -1;
+        }
+        if (owner != NULL)
+            source = MapGridPeekCameraBorderOf((u16)(owner->mapGroup << 8 | owner->mapNum),
+                                               worldX - sInstances[0].originX,
+                                               worldY - sInstances[0].originY, &index);
+        if (source == NULL)
+            source = MapGridPeekCameraBorderAt(worldX - sInstances[0].originX,
+                                               worldY - sInstances[0].originY, &index);
+    }
+    else
+#endif
+    {
     if (owner != NULL)
         source = MapGridGetCameraBorderOf((u16)(owner->mapGroup << 8 | owner->mapNum),
                                           worldX - sInstances[0].originX,
@@ -1576,6 +1652,7 @@ int VoxelWorld_BorderMetatile(int worldX, int worldY)
     if (source == NULL)
         source = MapGridGetCameraBorderAt(worldX - sInstances[0].originX,
                                           worldY - sInstances[0].originY, &index);
+    }
     if (source == NULL)
         return -1;
     if (!MemoGet(&sBorderMemo, source, &resolved))

@@ -85,7 +85,9 @@ typedef struct { bool valid; uint32_t generation, extension; bool extendPending;
 typedef struct { float x, y, z, w; } VoxelPlane;
 typedef struct { ChunkSite site; unsigned key, need, waitIndex; } BuildRequest;
 #define VOXEL_PARTS 4u
-typedef struct { bool on; uint16_t end[VOXEL_ATLAS_PAGES][VOXEL_PARTS - 1u]; float box[VOXEL_PARTS][6]; } VoxelChunkParts;
+enum { VOXEL_KIND_GROUND, VOXEL_KIND_TREES, VOXEL_KIND_BUILDINGS, VOXEL_KINDS };
+#define VOXEL_RANGES (VOXEL_ATLAS_PAGES + 3u)
+typedef struct { bool on; uint16_t end[VOXEL_RANGES][VOXEL_PARTS - 1u]; float box[VOXEL_KINDS][VOXEL_PARTS][6]; } VoxelChunkParts;
 typedef struct {
     bool used, border;
     int mapGroup, mapNum, cx, cy;
@@ -644,12 +646,12 @@ static void TestShadowCasters(void)
     /* Its ground casts only where it rises: parts' boxes (x0 y0 w0 x1 y1 w1). */
     house = Tall(40, 4.0f);
     house->parts.on = true;
-    for (unsigned p = 0; p < VOXEL_PARTS; ++p) { house->parts.box[p][0] = 1.0f; house->parts.box[p][3] = 0.0f; }
-    house->parts.box[0][0] = 0.0f; house->parts.box[0][1] = 0.0f; house->parts.box[0][2] = 0.0f;
-    house->parts.box[0][3] = 8.0f; house->parts.box[0][4] = 0.1f; house->parts.box[0][5] = 8.0f;
+    for (unsigned p = 0; p < VOXEL_PARTS; ++p) { house->parts.box[VOXEL_KIND_GROUND][p][0] = 1.0f; house->parts.box[VOXEL_KIND_GROUND][p][3] = 0.0f; }
+    house->parts.box[VOXEL_KIND_GROUND][0][0] = 0.0f; house->parts.box[VOXEL_KIND_GROUND][0][1] = 0.0f; house->parts.box[VOXEL_KIND_GROUND][0][2] = 0.0f;
+    house->parts.box[VOXEL_KIND_GROUND][0][3] = 8.0f; house->parts.box[VOXEL_KIND_GROUND][0][4] = 0.1f; house->parts.box[VOXEL_KIND_GROUND][0][5] = 8.0f;
     assert(!ShadowTerrainReaches(house, 4, -9));
-    house->parts.box[1][0] = 0.0f; house->parts.box[1][1] = 0.0f; house->parts.box[1][2] = 0.0f;
-    house->parts.box[1][3] = 8.0f; house->parts.box[1][4] = 2.0f; house->parts.box[1][5] = 0.0f;
+    house->parts.box[VOXEL_KIND_GROUND][1][0] = 0.0f; house->parts.box[VOXEL_KIND_GROUND][1][1] = 0.0f; house->parts.box[VOXEL_KIND_GROUND][1][2] = 0.0f;
+    house->parts.box[VOXEL_KIND_GROUND][1][3] = 8.0f; house->parts.box[VOXEL_KIND_GROUND][1][4] = 2.0f; house->parts.box[VOXEL_KIND_GROUND][1][5] = 0.0f;
     assert(ShadowTerrainReaches(house, 4, -9));
     house->parts.on = false; /* not cut in parts: its whole box */
     assert(ShadowTerrainReaches(house, 4, -9));

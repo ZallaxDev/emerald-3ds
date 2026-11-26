@@ -59,6 +59,7 @@
 
 #include "voxel_atlas.h"
 #include "voxel_building.h"
+#include "voxel_who.h"
 #include "voxel_file.h"
 #include "voxel_grade.h"
 #include "voxel_lighting.h"
@@ -159,8 +160,13 @@ static float sMaxTop;
 static FILE *sPageFile;
 /* The placements last looked up: a build or a shadow ray asks about every
  * cell it touches, nearly always of the layout it asked about last. */
-static int sLastLayout = -1;
-static unsigned sLastFirst, sLastCount;
+/* A few of them, by the layout's low bits: a ray near a map's edge asks about
+ * two or three layouts in turn, and with one kept each cell was a search and
+ * a count of the layout's placements (8% of a chunk's build). */
+#define LAST_LAYOUTS 8u
+typedef struct { int layout; unsigned first, count; } LastPlacements; /* layout + 1; 0 is empty */
+static LastPlacements sLastOf[VOXEL_THREADS][LAST_LAYOUTS];
+#define sLast (sLastOf[VOXEL_WHO])
 
 /*
  * The current map as it stands. Its placements were found in its layout's
@@ -182,7 +188,15 @@ static struct
     int layout, header, originX, originY;
     int chosen;
     uint32_t signature;
-} sLive;
+} sLiveOf[VOXEL_THREADS];
+#define sLive (sLiveOf[VOXEL_WHO])
+
+/* Every thread's works it out again. */
+static void LiveForget(void)
+{
+    for (unsigned t = 0; t < VOXEL_THREADS; ++t)
+        sLiveOf[t].valid = false;
+}
 
 /* An upright face looking south: its span in world x and its z (FrontAt). */
 typedef struct
@@ -210,7 +224,8 @@ typedef struct
     FrontFace face[FRONT_FACES];
 } FrontCell;
 
-static FrontCell sFrontCells[FRONT_SETS];
+static FrontCell sFrontCellsOf[VOXEL_THREADS][FRONT_SETS];
+#define sFrontCells (sFrontCellsOf[VOXEL_WHO])
 /* Said once: a chunk with more static models than its list holds. */
 static bool sStaticsFullLogged;
 
@@ -266,8 +281,10 @@ typedef struct
     unsigned age;
     uint32_t bits[BAND_COUNT][BAND_WORDS];
 } PlacementBands;
-static PlacementBands sBands[BAND_SLOTS];
-static unsigned sBandClock;
+static PlacementBands sBandsOf[VOXEL_THREADS][BAND_SLOTS];
+static unsigned sBandClockOf[VOXEL_THREADS];
+#define sBands (sBandsOf[VOXEL_WHO])
+#define sBandClock (sBandClockOf[VOXEL_WHO])
 
 static unsigned U16(const uint8_t *p) { return (unsigned)p[0] | ((unsigned)p[1] << 8); }
 static uint32_t U32(const uint8_t *p)
@@ -774,7 +791,7 @@ void VoxelBuildings_Shutdown(void)
     FreeVertices();
     free(sQuarters);
     free(sVariants);
-    sLive.valid = false;
+    LiveForget();
     FreeAnims();
     free(sDecks);
     sQuarters = NULL;
@@ -791,10 +808,10 @@ void VoxelBuildings_Shutdown(void)
     sMasks = NULL;
     sMaskCount = 0;
     sPageCount = sModelCount = sPageModelCount = sPlacementCount = sVertexCount = 0;
-    sLastLayout = -1;
-    memset(sBands, 0, sizeof(sBands));
+    memset(sLastOf, 0, sizeof(sLastOf));
+    memset(sBandsOf, 0, sizeof(sBandsOf));
     FreeCellGrids();
-    memset(sFrontCells, 0, sizeof(sFrontCells));
+    memset(sFrontCellsOf, 0, sizeof(sFrontCellsOf));
     sMaxTop = 0.0f;
     if (sPageFile != NULL)
     {
@@ -924,7 +941,9 @@ static const BuildingPlacement *PlacementsOf(int layout, unsigned *count)
     *count = 0;
     if (sPlacementCount == 0)
         return NULL;
-    if (layout != sLastLayout)
+    LastPlacements *last = &sLast[(unsigned)layout % LAST_LAYOUTS];
+
+    if (last->layout != layout + 1)
     {
         while (lo < hi)
         {
@@ -937,24 +956,24 @@ static const BuildingPlacement *PlacementsOf(int layout, unsigned *count)
         }
         while (lo + n < sPlacementCount && (int)sPlacements[lo + n].layout == layout)
             ++n;
-        sLastLayout = layout;
-        sLastFirst = lo;
-        sLastCount = n;
+        last->layout = layout + 1;
+        last->first = lo;
+        last->count = n;
     }
-    *count = sLastCount;
-    return sLastCount ? &sPlacements[sLastFirst] : NULL;
+    *count = last->count;
+    return last->count ? &sPlacements[last->first] : NULL;
 }
 
 void VoxelBuildings_SetDrawings(const uint16_t *(*drawing)(int layoutId, int *width, int *height))
 {
     if (drawing != sDrawingOf)
-        sLive.valid = false;
+        LiveForget();
     sDrawingOf = drawing;
 }
 
 void VoxelBuildings_WorldChanged(void)
 {
-    sLive.valid = false;
+    LiveForget();
 }
 
 /*
@@ -1083,9 +1102,12 @@ static bool PlacementLive(const VoxelMapInstance *inst, const BuildingPlacement 
 
 float VoxelBuildings_LayoutTop(const VoxelMapInstance *inst)
 {
-    static int sTopLayout[LAYOUT_TOPS]; /* layout + 1; 0 is empty */
-    static float sTop[LAYOUT_TOPS];
-    static unsigned sTopNext;
+    static int sTopLayoutOf[VOXEL_THREADS][LAYOUT_TOPS]; /* layout + 1; 0 is empty */
+    static float sTopOf[VOXEL_THREADS][LAYOUT_TOPS];
+    static unsigned sTopNextOf[VOXEL_THREADS];
+#define sTopLayout (sTopLayoutOf[VOXEL_WHO])
+#define sTop (sTopOf[VOXEL_WHO])
+#define sTopNext (sTopNextOf[VOXEL_WHO])
     unsigned count;
     const BuildingPlacement *p;
     float top = 0.0f;
@@ -1182,8 +1204,10 @@ typedef struct
     uint16_t *cells;
 } CellGrid;
 
-static CellGrid sCellGrids[CELL_GRIDS];
-static unsigned sCellGridNext;
+static CellGrid sCellGridsOf[VOXEL_THREADS][CELL_GRIDS];
+static unsigned sCellGridNextOf[VOXEL_THREADS];
+#define sCellGrids (sCellGridsOf[VOXEL_WHO])
+#define sCellGridNext (sCellGridNextOf[VOXEL_WHO])
 
 /*
  * The placements whose rectangle reaches each row of a layout, in placement
@@ -1203,8 +1227,10 @@ typedef struct
     uint16_t *placements;
 } RowIndex;
 
-static RowIndex sRowIndexes[ROW_INDEXES];
-static unsigned sRowIndexNext;
+static RowIndex sRowIndexesOf[VOXEL_THREADS][ROW_INDEXES];
+static unsigned sRowIndexNextOf[VOXEL_THREADS];
+#define sRowIndexes (sRowIndexesOf[VOXEL_WHO])
+#define sRowIndexNext (sRowIndexNextOf[VOXEL_WHO])
 
 static void FreeRowIndex(RowIndex *r)
 {
@@ -1217,16 +1243,20 @@ static void FreeRowIndex(RowIndex *r)
 
 static void FreeCellGrids(void)
 {
-    for (unsigned i = 0; i < CELL_GRIDS; ++i)
+    /* every thread's */
+    for (unsigned t = 0; t < VOXEL_THREADS; ++t)
     {
-        free(sCellGrids[i].cells);
-        sCellGrids[i].cells = NULL;
-        sCellGrids[i].layout = -1;
+        for (unsigned i = 0; i < CELL_GRIDS; ++i)
+        {
+            free(sCellGridsOf[t][i].cells);
+            sCellGridsOf[t][i].cells = NULL;
+            sCellGridsOf[t][i].layout = -1;
+        }
+        sCellGridNextOf[t] = 0;
+        for (unsigned i = 0; i < ROW_INDEXES; ++i)
+            FreeRowIndex(&sRowIndexesOf[t][i]);
+        sRowIndexNextOf[t] = 0;
     }
-    sCellGridNext = 0;
-    for (unsigned i = 0; i < ROW_INDEXES; ++i)
-        FreeRowIndex(&sRowIndexes[i]);
-    sRowIndexNext = 0;
 }
 
 /* The row index of the layout `p` and `count` are the placements of; NULL
@@ -1627,6 +1657,12 @@ static unsigned CollectFronts(const VoxelMapInstance *inst, int x, int y, float 
 void VoxelBuildings_MapChanged(void)
 {
     /* a placement a script switched comes or goes with its faces */
+    memset(sFrontCellsOf, 0, sizeof(sFrontCellsOf));
+}
+
+void VoxelBuildings_ForgetMine(void)
+{
+    sLive.valid = false;
     memset(sFrontCells, 0, sizeof(sFrontCells));
 }
 

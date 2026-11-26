@@ -320,6 +320,132 @@ void CtrCycle_Frame(void)
 
 void CtrCycle_Input(CtrInputSample *sample) { (void)sample; }
 
+#elif defined(CTR_ROUTE_TEST)
+
+/*
+ * A ride on demand, for measuring the field on the move (-DCTR_ROUTE_TEST=laps):
+ * A through the title, then the Mach Bike along the waypoints of
+ * sdmc:/3ds/emerald3ds/route.txt ("group num x y" a line, each leg along one
+ * axis, and "laps N" over the build's own count; a waypoint on another map than the player's is ridden towards in the
+ * direction held last, across the connection), there and back `laps` times,
+ * never stopping, and out ("ROUTE test done"). It steers by the player's own
+ * square, so two builds whose frames cost differently ride the same way. Every
+ * trainer counts as beaten; a wild battle is left by RUN. Under a scenario's
+ * playback (an idle input, scripts/make_idle_scenario.py) the clock and the
+ * save are the scenario's, and nothing is saved.
+ */
+#include "bike.h"
+#include "event_object_movement.h"
+#include "field_player_avatar.h"
+#include "fieldmap.h"
+#include "script.h"
+#include "global.fieldmap.h"
+
+#define ROUTE_POINTS 64
+extern u8 gActionSelectionCursor[MAX_BATTLERS_COUNT];
+static struct { s8 group, num; s16 x, y; } sPoints[ROUTE_POINTS];
+static int sPointCount = -1, sNext, sStep = 1, sLapsLeft = CTR_ROUTE_TEST;
+static u32 sFrame, sFieldFrames;
+static u16 sHeld, sLast;
+
+static void RouteRead(void)
+{
+    FILE *file = fopen("sdmc:/3ds/emerald3ds/route.txt", "r");
+    char line[64];
+
+    sPointCount = 0;
+    if (file == NULL) return;
+    while (sPointCount < ROUTE_POINTS && fgets(line, sizeof(line), file))
+    {
+        int g, n, x, y;
+
+        if (sscanf(line, "laps %d", &g) == 1) sLapsLeft = g;
+        else if (sscanf(line, "%d %d %d %d", &g, &n, &x, &y) == 4)
+        {
+            sPoints[sPointCount].group = g; sPoints[sPointCount].num = n;
+            sPoints[sPointCount].x = x; sPoints[sPointCount].y = y;
+            ++sPointCount;
+        }
+    }
+    fclose(file);
+    for (unsigned i = 1; i < TRAINERS_COUNT; ++i)
+        SetTrainerFlag(i);
+    CtrLog_Write(CTR_LOG_GAME, "ROUTE test: %d waypoints, %d laps", sPointCount, sLapsLeft);
+}
+
+void CtrCycle_Frame(void)
+{
+    const struct ObjectEvent *player;
+    int x, y;
+
+    ++sFrame;
+    sHeld = 0;
+    if (gMain.inBattle)
+    {
+        for (unsigned i = 0; i < MAX_BATTLERS_COUNT; ++i)
+            gActionSelectionCursor[i] = 3;
+        if ((sFrame % 20) < 2) sHeld = 1;
+        return;
+    }
+    if (gMain.callback2 != CB2_Overworld)
+    {
+        if (sFieldFrames == 0 && (sFrame % 40) < 2) sHeld = 1;
+        return;
+    }
+    if (sPointCount < 0) RouteRead();
+    if (++sFieldFrames < 90 || sPointCount == 0) return;
+    if (ArePlayerFieldControlsLocked())
+    {
+        /* A message (a sign, a call): on with B. */
+        if ((sFrame % 20) < 2) sHeld = 2;
+        return;
+    }
+    if (!TestPlayerAvatarFlags(PLAYER_AVATAR_FLAG_MACH_BIKE))
+    {
+        if (sFieldFrames % 30 == 0) GetOnOffBike(PLAYER_AVATAR_FLAG_MACH_BIKE);
+        return;
+    }
+    player = &gObjectEvents[gPlayerAvatar.objectEventId];
+    x = player->currentCoords.x - MAP_OFFSET;
+    y = player->currentCoords.y - MAP_OFFSET;
+    while (gSaveBlock1Ptr->location.mapGroup == sPoints[sNext].group
+        && gSaveBlock1Ptr->location.mapNum == sPoints[sNext].num
+        && x == sPoints[sNext].x && y == sPoints[sNext].y)
+    {
+        CtrLog_Write(CTR_LOG_GAME, "ROUTE test: waypoint %d at frame %lu", sNext, (unsigned long)sFrame);
+        if ((sStep > 0 && sNext == sPointCount - 1) || (sStep < 0 && sNext == 0))
+        {
+            if (sStep < 0 && --sLapsLeft <= 0)
+            {
+                CtrLog_Write(CTR_LOG_GAME, "ROUTE test done at frame %lu", (unsigned long)sFrame);
+                CtrPlatform_RequestExit();
+                sPointCount = 0;
+                return;
+            }
+            sStep = -sStep;
+        }
+        sNext += sStep;
+    }
+    if (gSaveBlock1Ptr->location.mapGroup == sPoints[sNext].group
+     && gSaveBlock1Ptr->location.mapNum == sPoints[sNext].num)
+    {
+        if (x != sPoints[sNext].x && y != sPoints[sNext].y)
+        {
+            /* Off the leg: back onto it along the axis the last heading was not on. */
+            if (sLast & (16 | 32)) sLast = y < sPoints[sNext].y ? 128 : 64;
+            else sLast = x < sPoints[sNext].x ? 16 : 32;
+        }
+        else if (x != sPoints[sNext].x) sLast = x < sPoints[sNext].x ? 16 : 32;
+        else sLast = y < sPoints[sNext].y ? 128 : 64;
+    }
+    sHeld = sLast;
+}
+
+void CtrCycle_Input(CtrInputSample *sample)
+{
+    sample->buttons |= sHeld;
+}
+
 #else
 
 void CtrCycle_Frame(void) {}

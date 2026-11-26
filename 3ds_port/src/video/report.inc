@@ -151,6 +151,7 @@ static void ReportGpu(void)
         uint32_t shownAt = sSwapVBlank + 1;
 
         sReport.gpuDoneMs = (sSwapTick - sSubmitStart) * 1000.0f / SYSCLOCK_ARM11;
+        sStats.gpuDoneMs = sReport.gpuDoneMs;
         /* Two submissions in a row, each with its one swap seen, and no
          * held top screen or resume between them (sSubmitCrossed). */
         if (sShownOf != 0 && sShownOf + 1 == sSubmitId && swaps == sSwapsSeen + 1 && !sSubmitCrossed)
@@ -167,7 +168,10 @@ static void ReportGpu(void)
         sShownAt = shownAt;
     }
     else
+    {
         sShownOf = 0;
+        sStats.gpuDoneMs = 0.0f;
+    }
     sSwapsSeen = swaps;
     if (sSubmitId != 0) ReportDrains();
 }

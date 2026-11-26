@@ -6,9 +6,7 @@
 ; (1, 0, 0, w), worked out once instead of at every vertex: no shadow
 ; coordinates, no depth bias, the atlas' texcoord straight to texcoord0 and
 ; the dapples alone in texcoord1. The kept arithmetic is the same operations in
-; the same order as the full program's (both fold the grade's and the haze's
-; multiply-add into one dph each, against a uniform's own 0 component), so
-; colour and coordinates come out as the full program's.
+; the same order, so colour and coordinates come out as the full program's.
 ;
 ; `projection` is projection * modelView here, folded on the CPU
 ; (SetProjection and UploadModelView in ctr_voxel.c): the position goes through
@@ -65,24 +63,27 @@
 	mov outtc0, intex
 	mov outtc0w, zeros
 
-	; the dapple pattern's coordinates, straight out: texcoord1 is u, v alone
-	dp4 outtc1.x, dappleU, r0
-	dp4 outtc1.y, dappleV, r0
+	; r6 = the dapple pattern's coordinates
+	mov r6, zeros
+	dp4 r6.x, dappleU, r0
+	dp4 r6.y, dappleV, r0
+	mov outtc1, r6
 
-	; r3 = t = shade * grade.x + grade.y, as one dph: grade.z is 0 (SetGrade,
-	; CtrVoxel_DioramaFused), so grade.xzzy = (grade.x, 0, 0, grade.y)
-	dph r3, r2, grade.xzzy
+	; r3 = t
+	mul r3, grade.xxxx, r2
+	add r3, grade.yyyy, r3
 	max r3, zeros, r3
 	min r3, ones, r3
 
 	; r4 = shade * lerp(shadeTint, sunTint, t)
 	mul r4, tintDiff, r3
 	add r4, shadeTint, r4
-	mul outclr.xyz, r2, r4
+	mul r4, r2, r4
+	mov outclr.xyz, r4
 
-	; r5 = haze from view-space depth (the camera looks down -Z):
-	; viewZ * fog.x + fog.y as one dph, fog.w being 0 (SetGrade)
-	dph r5, r1.zzzz, fog.xwwy
+	; r5 = haze from view-space depth (the camera looks down -Z)
+	mul r5, fog.xxxx, r1.zzzz
+	add r5, fog.yyyy, r5
 	max r5, zeros, r5
 	min r5, fog.zzzz, r5
 	add outclr.w, ones, -r5

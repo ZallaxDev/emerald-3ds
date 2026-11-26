@@ -91,6 +91,15 @@ void VoxelWorld_BuildInstances(void);
  * those alone. True if it built.
  */
 bool VoxelWorld_UpdateInstances(void);
+/* Are the instances the ones a build now would make (nothing they were read
+ * from has changed since)? Reads only. */
+bool VoxelWorld_InstancesAreCurrent(void);
+/* The current map's grid copied for the chunk build's worker, which reads
+ * the copy (voxel_who.h): taken by the render thread as it hands a job over. */
+void VoxelWorld_SnapshotLive(void);
+/* Has the worker met the game's maps changed under it since the last
+ * snapshot? Its job is then to be dropped, not uploaded. */
+bool VoxelWorld_WorkerMissed(void);
 /* Builds so far: moves with every build of the instances, for whatever is
  * worked out from them to tell it is still theirs. */
 unsigned VoxelWorld_InstanceBuilds(void);

@@ -63,6 +63,8 @@ void VoxelEntities_Reset(void);
  * every update; this is for the rest.
  */
 void VoxelEntities_WorldChanged(void);
+/* A crossing: the cards may keep what they knew for a few frames (see the .c). */
+void VoxelEntities_Crossed(void);
 /* The cards' memo forced on (1) or off (0), or left to settings.txt (-1). */
 void VoxelEntities_SetMemo(int on);
 

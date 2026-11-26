@@ -170,6 +170,65 @@ void VoxelEntities_WorldChanged(void)
     ++sWorldHook;
 }
 
+/*
+ * A crossing moves the epoch - the instances are others, the lighting starts
+ * afresh - and every card on screen found all its answers again in the one
+ * frame: 10 ms on an Old 3DS, the frame dropped at each crossing. But the
+ * world a crossing leaves is the one it enters, only counted from another
+ * corner, and every answer kept is a height, a shade or a length - none a
+ * place. So for a few frames after it (VOXEL_MEMO_GRACE_FRAMES) the cards
+ * find again only what fits in VOXEL_MEMO_GRACE_TENTHS of the update, in the
+ * order they are emitted, and the rest keep the answers they had at the
+ * crossing: a walker's may be a few frames old. A slot never asked before
+ * the crossing has none and is always found. settings "voxel_memo_grace=N":
+ * that time in tenths of a millisecond; 0, all at once, as before. Not for a cut: its slots are other sprites'.
+ */
+#define VOXEL_MEMO_GRACE_FRAMES 12u
+#define VOXEL_MEMO_GRACE_TENTHS 25      /* of a millisecond */
+extern unsigned long long svcGetSystemTick(void);
+static uint32_t sGraceEpoch, sGraceFrames, sGraceKept;
+static unsigned long long sGraceDeadline;
+static bool sGraceNow;
+
+void VoxelEntities_Crossed(void)
+{
+    if (sGraceFrames == 0)
+        sGraceEpoch = sMemoEpoch;
+    sGraceFrames = VOXEL_MEMO_GRACE_FRAMES;
+}
+
+/* The update's start (VoxelEntities_Emit). */
+static void MemoGraceBegin(void)
+{
+    int tenths;
+
+    sGraceNow = false;
+    if (sGraceFrames == 0)
+        return;
+    --sGraceFrames;
+    tenths = CtrSettings_GetInt("voxel_memo_grace", VOXEL_MEMO_GRACE_TENTHS);
+    if (!sMemoOn || tenths <= 0)
+        return;
+    sGraceNow = true;
+    sGraceDeadline = svcGetSystemTick() + (unsigned long long)tenths * 26811u;
+    if (sGraceFrames == 0 && sGraceKept != 0)
+    {
+        CtrLog_Write(CTR_LOG_VIDEO, "VOXEL cards: %lu answers kept past a crossing", (unsigned long)sGraceKept);
+        sGraceKept = 0;
+    }
+}
+
+/* A memo that missed, of that epoch: is its answer kept for this frame? */
+static bool MemoKeptLate(uint32_t epoch)
+{
+    if (!sGraceNow || epoch == 0 || epoch < sGraceEpoch)
+        return false;
+    if (svcGetSystemTick() < sGraceDeadline)
+        return false;
+    ++sGraceKept;
+    return true;
+}
+
 static uint32_t FloatBits(float value)
 {
     uint32_t bits;
@@ -1381,7 +1440,7 @@ static void SolidTopsAt(unsigned slot, int first, int row, int dir,
     SolidMemo *memo = &sSolidMemo[slot];
 
     if (!(sMemoOn && memo->epoch == sMemoEpoch && memo->first == first && memo->row == row
-       && memo->dir == dir))
+       && memo->dir == dir) && !MemoKeptLate(memo->epoch))
     {
         for (int j = 0; j < VOXEL_KEYSTONE_ROWS; ++j)
             for (int i = 0; i < VOXEL_KEYSTONE_CELLS; ++i)
@@ -1505,6 +1564,12 @@ static void PointAt(unsigned slot, float cx, float cz, float *lift, float *shift
 #endif
         return;
     }
+    if (MemoKeptLate(memo->epoch))
+    {
+        *lift = memo->lift;
+        *shift = memo->shift;
+        return;
+    }
     PointCompute(cx, cz, lift, shift);
     if (sMemoOn)
     {
@@ -1551,6 +1616,8 @@ static float PushAt(unsigned slot, float cx, float cz, float halfW, float height
 #endif
         return memo->push;
     }
+    if (MemoKeptLate(memo->epoch))
+        return memo->push;
     push = PushCompute(cx, cz, halfW, height);
     if (sMemoOn)
     {
@@ -1633,6 +1700,13 @@ static void PlaceAt(unsigned slot, const struct ObjectEvent *obj, float worldX, 
 #endif
         return;
     }
+    if (MemoKeptLate(memo->epoch))
+    {
+        *deck = memo->deck;
+        *outdoor = memo->outdoor;
+        *shade = memo->shade;
+        return;
+    }
     PlaceCompute(slot, obj, worldX, worldZ, deck, outdoor, shade);
     if (sMemoOn)
     {
@@ -1709,6 +1783,12 @@ static void SpotAt(unsigned slot, float cx, float cz, float deck, bool *outdoor,
             AuditCompare("spot", slot, kept, fresh, 2);
         }
 #endif
+        return;
+    }
+    if (MemoKeptLate(memo->epoch))
+    {
+        *outdoor = memo->outdoor;
+        *shade = memo->shade;
         return;
     }
     SpotCompute(slot, cx, cz, deck, outdoor, shade);
@@ -2207,7 +2287,8 @@ static void CastShadowEnds(unsigned slot, float fx, float fz, float tx, float tz
         return;
     }
     memo = &sCastMemo[slot];
-    if (!sMemoOn || memo->epoch != sMemoEpoch || memcmp(memo->key, key, sizeof(key)) != 0)
+    if ((!sMemoOn || memo->epoch != sMemoEpoch || memcmp(memo->key, key, sizeof(key)) != 0)
+     && !MemoKeptLate(memo->epoch))
     {
         memo->feet = CastShadowStrength(CastGroundLit(fx, fz, deck));
         memo->tip = tx == fx && tz == fz ? memo->feet : CastShadowStrength(CastGroundLit(tx, tz, deck));
@@ -2264,6 +2345,11 @@ static void ShadowGroundAt(unsigned slot, float ax, float az, float bx, float bz
             AuditCompare("shadow", slot, ground, fresh, 8);
         }
 #endif
+        return;
+    }
+    if (MemoKeptLate(memo->epoch))
+    {
+        memcpy(ground, memo->ground, sizeof(memo->ground));
         return;
     }
     ShadowGroundCompute(ax, az, bx, bz, sx, sz, deck, ground);
@@ -2446,6 +2532,13 @@ static void ReflectionGroundAt(unsigned slot, float cx, float nearZ, float right
             AuditCompare("reflection", slot, kept, fresh, 2 + VOXEL_REFLECTION_STRIPS);
         }
 #endif
+        return;
+    }
+    if (MemoKeptLate(memo->epoch))
+    {
+        *shift = memo->shift;
+        *y = memo->y;
+        memcpy(lengths, memo->lengths, sizeof(memo->lengths));
         return;
     }
     ReflectionGroundCompute(cx, nearZ, rightX, rightZ, halfW, fullLength, shift, y, lengths);
@@ -2828,6 +2921,7 @@ void VoxelEntities_Emit(VoxelBuilder *builder, uint16_t *atlas, const VoxelCamer
 
     sMemoOn = sMemoForced >= 0 ? sMemoForced != 0 : CtrSettings_GetInt("voxel_card_memo", 1) != 0;
     MemoWorldCheck();
+    MemoGraceBegin();
     /* SPRITE FILTER turned on or off: every picture decoded again the other
      * way (DecodeSlot, FindDoors) before any card is made, the atlas cleared
      * first so nothing of the other layout stays in a gutter. */

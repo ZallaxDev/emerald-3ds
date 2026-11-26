@@ -299,8 +299,13 @@ void CtrPlatform_RequestExit(void) { sExit = true; }
 
 bool CtrPlatform_BeginFrame(void)
 {
+    /* The hang watch (3ds_log.h): APT may hold the loop for as long as the
+     * HOME menu or the lid does, and that is no hang. */
+    CtrLog_Mark(NULL);
     if (sExit || !aptMainLoop())
         return false;
+    CtrLog_Beat();
+    CtrLog_Mark("game");
     sWorkStart = svcGetSystemTick();
     CtrInput_Scan();
     const CtrInput *input = CtrInput_Get();

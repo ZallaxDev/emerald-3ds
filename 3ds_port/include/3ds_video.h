@@ -52,6 +52,10 @@ typedef struct
     /* Of the last frame: when the GPU was set to work, from the frame's start
      * (its early start, or FrameEnd); whether the voxel world was updated. */
     float gpuStartMs;
+    /* Of the last frame too: when its GPU work was over, from the frame's
+     * start (0 = not known). gpuMs is not that: it only counts from FrameEnd,
+     * and the GPU is set to work well before it. */
+    float gpuDoneMs;
     bool voxelFrame;
     /* For the frame profiler's records (3ds_prof.c), of the frame just made:
      * the time since the previous FrameBegin and when the CPU got back to it;

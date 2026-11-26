@@ -546,6 +546,31 @@ static void GpuStartEarly(unsigned at)
     gxCmdQueueRun(sFrameQueue);
 }
 
+void CtrVideo_VoxelTerrainRecorded(void)
+{
+    sGpuStage = CTR_STAGE_WORLD;
+    GpuStartEarly(CTR_EARLY_VOXEL);
+}
+
+/* A part of the terrain recorded: the queue started on it, or, running
+ * already, given it as a list of its own (the split's flush is the GX
+ * wrappers'). */
+void CtrVideo_VoxelTerrainPart(void)
+{
+    if (!sGpuEarly)
+    {
+        CtrVideo_VoxelTerrainRecorded();
+        return;
+    }
+    C2D_Flush();
+    C3D_FrameSplit(0);
+}
+
+void CtrVideo_TexelsWritten(void)
+{
+    TexelsWritten();
+}
+
 /*
  * Before C3D_FrameEnd. A queue that has caught up is stopped - idle, so
  * safely - and FrameEnd starts it as it always does. One still busy is left

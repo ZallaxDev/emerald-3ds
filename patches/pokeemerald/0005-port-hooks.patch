@@ -314,10 +314,10 @@ index 8ce0cc9e5052d5979de9d640b38571c2c02f1805..a539ff329a4b5a8a151d0aa784ec512e
  
  #endif // GUARD_WEATHER_H
 diff --git a/include/fieldmap.h b/include/fieldmap.h
-index 212dfb65a6868042e59f140df99fba7c8d134729..af451cd0f372cafa7bbd87a962444d63a9211cb2 100644
+index 212dfb65a6868042e59f140df99fba7c8d134729..712d3e6ebbc0ce6f45b4be98893da4087e064e83 100644
 --- a/include/fieldmap.h
 +++ b/include/fieldmap.h
-@@ -19,11 +19,35 @@
+@@ -19,11 +19,40 @@
  #define MAP_OFFSET_W (MAP_OFFSET * 2 + 1)
  #define MAP_OFFSET_H (MAP_OFFSET * 2)
  
@@ -343,6 +343,11 @@ index 212dfb65a6868042e59f140df99fba7c8d134729..af451cd0f372cafa7bbd87a962444d63
 +u32 MapGridGetMetatileIdForCameraAt(int x, int y);
 +const u16 *MapGridGetCameraBorderAt(int x, int y, u8 *index);
 +const u16 *MapGridGetCameraBorderOf(u16 id, int x, int y, u8 *index);
++#ifdef PLATFORM_3DS
++bool8 MapGridCameraMapsCurrent(void);
++const u16 *MapGridPeekCameraBorderAt(int x, int y, u8 *index);
++const u16 *MapGridPeekCameraBorderOf(u16 id, int x, int y, u8 *index);
++#endif
 +#ifdef PLATFORM_3DS
 +// The bank (3ds_tile_banks.h) of the tileset the camera draws x, y with
 +// (backup-layout coordinates), and that map's layout: 0 for the current
@@ -4513,7 +4518,7 @@ index 7cb260757c4267c4d9b1c1cf6cd460f5b99c2526..c66b4e9c9d17cb246ace0f2f42b119c1
      {
          return FALSE;
 diff --git a/src/event_object_movement.c b/src/event_object_movement.c
-index 6997f0b40aa0c43fd576454fa588fc68502f9fad..f5ed92048efe5871234e6f1d5204df9e7f4ddbc3 100644
+index 6997f0b40aa0c43fd576454fa588fc68502f9fad..d922f37678bc035c89b40f909d98ce468e2588a0 100644
 --- a/src/event_object_movement.c
 +++ b/src/event_object_movement.c
 @@ -22,6 +22,9 @@
@@ -4554,7 +4559,7 @@ index 6997f0b40aa0c43fd576454fa588fc68502f9fad..f5ed92048efe5871234e6f1d5204df9e
      const struct ObjectEventGraphicsInfo *graphicsInfo;
      const struct SubspriteTable *subspriteTables = NULL;
  
-@@ -1642,6 +1648,236 @@ u8 CreateVirtualObject(u8 graphicsId, u8 virtualObjId, s16 x, s16 y, u8 elevatio
+@@ -1642,6 +1648,293 @@ u8 CreateVirtualObject(u8 graphicsId, u8 virtualObjId, s16 x, s16 y, u8 elevatio
      return spriteId;
  }
  
@@ -4687,6 +4692,62 @@ index 6997f0b40aa0c43fd576454fa588fc68502f9fad..f5ed92048efe5871234e6f1d5204df9e
 +    return TRUE;
 +}
 +
++// The people of the maps joined to this one. The game makes a map's people
++// when the player enters it, which the GBA's screen never showed: nobody
++// stands within its five rows of a border. The wide and the voxel views reach
++// some twenty squares past it, and those people appeared in plain sight on
++// the step that crossed. Here they are made from the neighbour's own
++// templates as soon as they come into the window, at where the neighbour
++// lies on this map's grid, as its own (its map, their local ids): the
++// crossing shifts every object's coordinates and finds them already there
++// (GetObjectEventIdByLocalIdAndMap), as it does the people of the map left
++// behind. Only into free rooms: this map's people never give theirs up.
++static void TrySpawnConnectedObjectEvents(s16 left, s16 right, s16 top, s16 bottom, s16 cameraX, s16 cameraY)
++{
++    const struct MapConnections *connections = gMapHeader.connections;
++    s32 c;
++
++    if (connections == NULL || connections->connections == NULL || gMapHeader.mapLayout == NULL)
++        return;
++    for (c = 0; c < connections->count; c++)
++    {
++        const struct MapConnection *connection = &connections->connections[c];
++        const struct MapHeader *header;
++        s32 shiftX, shiftY;
++        u8 i;
++
++        if (connection->direction != CONNECTION_NORTH && connection->direction != CONNECTION_SOUTH
++         && connection->direction != CONNECTION_WEST && connection->direction != CONNECTION_EAST)
++            continue;
++        header = GetMapHeaderFromConnection(connection);
++        if (header == NULL || header->events == NULL || header->mapLayout == NULL)
++            continue;
++        switch (connection->direction)
++        {
++        case CONNECTION_NORTH: shiftX = connection->offset; shiftY = -header->mapLayout->height; break;
++        case CONNECTION_SOUTH: shiftX = connection->offset; shiftY = gMapHeader.mapLayout->height; break;
++        case CONNECTION_WEST:  shiftX = -header->mapLayout->width; shiftY = connection->offset; break;
++        default:               shiftX = gMapHeader.mapLayout->width; shiftY = connection->offset; break;
++        }
++        for (i = 0; i < header->events->objectEventCount; i++)
++        {
++            struct ObjectEventTemplate template = header->events->objectEvents[i];
++            s32 x = template.x + shiftX, y = template.y + shiftY;
++
++            if (template.kind != OBJ_KIND_NORMAL
++             || !IsInObjectEventWindow(x + MAP_OFFSET, y + MAP_OFFSET, left, right, top, bottom)
++             || FlagGet(template.flagId)
++             || GetObjectEventIdByLocalIdAndMap(template.localId, connection->mapNum, connection->mapGroup) != OBJECT_EVENTS_COUNT)
++                continue;
++            if (!HasFreeObjectEventSlot())
++                return;
++            template.x = x;
++            template.y = y;
++            TrySpawnObjectEventTemplate(&template, connection->mapNum, connection->mapGroup, cameraX, cameraY);
++        }
++    }
++}
++
 +void TrySpawnObjectEvents(s16 cameraX, s16 cameraY)
 +{
 +    u8 i, j, objectCount, waiting = 0;
@@ -4733,6 +4794,7 @@ index 6997f0b40aa0c43fd576454fa588fc68502f9fad..f5ed92048efe5871234e6f1d5204df9e
 +            break;
 +        TrySpawnObjectEventTemplate(&gSaveBlock1Ptr->objectEventTemplates[order[i]], mapNum, mapGroup, cameraX, cameraY);
 +    }
++    TrySpawnConnectedObjectEvents(left, right, top, bottom, cameraX, cameraY);
 +}
 +
 +// Room for an object made at the player's side (the follower, follower_mon.c):
@@ -4791,7 +4853,7 @@ index 6997f0b40aa0c43fd576454fa588fc68502f9fad..f5ed92048efe5871234e6f1d5204df9e
  void TrySpawnObjectEvents(s16 cameraX, s16 cameraY)
  {
      u8 i;
-@@ -1649,10 +1885,10 @@ void TrySpawnObjectEvents(s16 cameraX, s16 cameraY)
+@@ -1649,10 +1942,10 @@ void TrySpawnObjectEvents(s16 cameraX, s16 cameraY)
  
      if (gMapHeader.events != NULL)
      {
@@ -4806,7 +4868,7 @@ index 6997f0b40aa0c43fd576454fa588fc68502f9fad..f5ed92048efe5871234e6f1d5204df9e
  
          if (CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE)
              objectCount = GetNumBattlePyramidObjectEvents();
-@@ -1698,10 +1934,12 @@ void RemoveObjectEventsOutsideView(void)
+@@ -1698,10 +1991,12 @@ void RemoveObjectEventsOutsideView(void)
  
  static void RemoveObjectEventIfOutsideView(struct ObjectEvent *objectEvent)
  {
@@ -4823,7 +4885,7 @@ index 6997f0b40aa0c43fd576454fa588fc68502f9fad..f5ed92048efe5871234e6f1d5204df9e
  
      if (objectEvent->currentCoords.x >= left && objectEvent->currentCoords.x <= right
       && objectEvent->currentCoords.y >= top && objectEvent->currentCoords.y <= bottom)
-@@ -1711,6 +1949,7 @@ static void RemoveObjectEventIfOutsideView(struct ObjectEvent *objectEvent)
+@@ -1711,6 +2006,7 @@ static void RemoveObjectEventIfOutsideView(struct ObjectEvent *objectEvent)
          return;
      RemoveObjectEvent(objectEvent);
  }
@@ -4831,7 +4893,7 @@ index 6997f0b40aa0c43fd576454fa588fc68502f9fad..f5ed92048efe5871234e6f1d5204df9e
  
  void SpawnObjectEventsOnReturnToField(s16 x, s16 y)
  {
-@@ -1732,7 +1971,7 @@ static void SpawnObjectEventOnReturnToField(u8 objectEventId, s16 x, s16 y)
+@@ -1732,7 +2028,7 @@ static void SpawnObjectEventOnReturnToField(u8 objectEventId, s16 x, s16 y)
      struct Sprite *sprite;
      struct ObjectEvent *objectEvent;
      struct SpriteTemplate spriteTemplate;
@@ -4840,7 +4902,7 @@ index 6997f0b40aa0c43fd576454fa588fc68502f9fad..f5ed92048efe5871234e6f1d5204df9e
      const struct SubspriteTable *subspriteTables;
      const struct ObjectEventGraphicsInfo *graphicsInfo;
  
-@@ -2217,8 +2456,14 @@ static bool8 ObjectEventDoesElevationMatch(struct ObjectEvent *objectEvent, u8 e
+@@ -2217,8 +2513,14 @@ static bool8 ObjectEventDoesElevationMatch(struct ObjectEvent *objectEvent, u8 e
  void UpdateObjectEventsForCameraUpdate(s16 x, s16 y)
  {
      UpdateObjectEventCoordsForCameraUpdate();
@@ -4855,7 +4917,7 @@ index 6997f0b40aa0c43fd576454fa588fc68502f9fad..f5ed92048efe5871234e6f1d5204df9e
  }
  
  // The "CameraObject" functions below are responsible for an invisible sprite
-@@ -5024,6 +5269,13 @@ static u32 GetCopyDirection(u8 copyInitDir, u32 playerInitDir, u32 playerMoveDir
+@@ -5024,6 +5326,13 @@ static u32 GetCopyDirection(u8 copyInitDir, u32 playerInitDir, u32 playerMoveDir
  
  static void ObjectEventExecHeldMovementAction(struct ObjectEvent *objectEvent, struct Sprite *sprite)
  {
@@ -4869,7 +4931,7 @@ index 6997f0b40aa0c43fd576454fa588fc68502f9fad..f5ed92048efe5871234e6f1d5204df9e
      if (gMovementActionFuncs[objectEvent->movementActionId][sprite->sActionFuncId](objectEvent, sprite))
          objectEvent->heldMovementFinished = TRUE;
  }
-@@ -7372,10 +7624,14 @@ static void UpdateObjectEventOffscreen(struct ObjectEvent *objectEvent, struct S
+@@ -7372,10 +7681,14 @@ static void UpdateObjectEventOffscreen(struct ObjectEvent *objectEvent, struct S
      y2 = y;
      y2 += graphicsInfo->height;
  
@@ -4886,7 +4948,7 @@ index 6997f0b40aa0c43fd576454fa588fc68502f9fad..f5ed92048efe5871234e6f1d5204df9e
          objectEvent->offScreen = TRUE;
  }
  
-@@ -8580,9 +8836,11 @@ void UpdateObjectEventSpriteInvisibility(struct Sprite *sprite, bool8 invisible)
+@@ -8580,9 +8893,11 @@ void UpdateObjectEventSpriteInvisibility(struct Sprite *sprite, bool8 invisible)
      x2 = x - (sprite->centerToCornerVecX >> 1);
      y2 = y - (sprite->centerToCornerVecY >> 1);
  
@@ -4900,7 +4962,7 @@ index 6997f0b40aa0c43fd576454fa588fc68502f9fad..f5ed92048efe5871234e6f1d5204df9e
          sprite->invisible = TRUE;
  }
  
-@@ -8771,6 +9029,13 @@ static void DoShadowFieldEffect(struct ObjectEvent *objectEvent)
+@@ -8771,6 +9086,13 @@ static void DoShadowFieldEffect(struct ObjectEvent *objectEvent)
  {
      if (!objectEvent->hasShadow)
      {
@@ -7105,7 +7167,7 @@ index 10ce1bc37a9bdbd78c1601ca857fe67bf6fbac69..821dc7edce6e0b0262b8c72ac8f20a0e
 +}
 +#endif
 diff --git a/src/fieldmap.c b/src/fieldmap.c
-index 97db758caac9fefa27d6c2809df48086dc4ef4e1..c0c4ca3447cf4fe53ff0e142e148e5186f918a8c 100644
+index 97db758caac9fefa27d6c2809df48086dc4ef4e1..3798b7952eb4345ae4ecd2373d8e13381f217eda 100644
 --- a/src/fieldmap.c
 +++ b/src/fieldmap.c
 @@ -6,6 +6,7 @@
@@ -7259,7 +7321,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..c0c4ca3447cf4fe53ff0e142e148e518
      dest = &gBackupMapLayout.map[gBackupMapLayout.width * y + x];
  
      for (i = 0; i < height; i++)
-@@ -362,9 +456,553 @@ u8 MapGridGetCollisionAt(int x, int y)
+@@ -362,9 +456,603 @@ u8 MapGridGetCollisionAt(int x, int y)
      return UNPACK_COLLISION(block);
  }
  
@@ -7334,7 +7396,9 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..c0c4ca3447cf4fe53ff0e142e148e518
 +
 +static void PlaceCameraMap(const struct MapHeader *header, u16 id, int x, int y, bool8 near)
 +{
-+    struct CameraMap *map = &sCameraMaps[sCameraMapCount++];
++    // (counted once filled: the voxel build's worker reads them beside this
++    // thread, MapGridPeekCameraBorderAt)
++    struct CameraMap *map = &sCameraMaps[sCameraMapCount];
 +
 +    map->header = header;
 +    map->id = id;
@@ -7345,6 +7409,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..c0c4ca3447cf4fe53ff0e142e148e518
 +#ifdef PLATFORM_3DS
 +    map->bank = 0;
 +#endif
++    sCameraMapCount++;
 +}
 +
 +// The maps across the side connections of sCameraMaps[from]. The current map's
@@ -7464,13 +7529,55 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..c0c4ca3447cf4fe53ff0e142e148e518
 +// of a crossing. The 2x2 is phased on that map's own origin, as
 +// GetBorderBlockAt phases it when that map is the current one (or on the map
 +// that shares its block, above).
++static const u16 *CameraBorderAt(int x, int y, u8 *index);
++static const u16 *CameraBorderOf(u16 id, int x, int y, u8 *index);
++
 +const u16 *MapGridGetCameraBorderAt(int x, int y, u8 *index)
++{
++    UpdateCameraMaps();
++    return CameraBorderAt(x, y, index);
++}
++
++#ifdef PLATFORM_3DS
++// Are the maps placed the current map's (nothing UpdateCameraMaps would
++// place again)? Reads only.
++bool8 MapGridCameraMapsCurrent(void);
++static bool8 CameraMapsCurrent(void)
++{
++    u16 id = (gSaveBlock1Ptr->location.mapGroup << 8) | gSaveBlock1Ptr->location.mapNum;
++
++    return sCameraMapCount != 0 && sCameraMapsLayout == gMapHeader.mapLayout
++        && sCameraMapsConnections == gMapHeader.connections && sCameraMapsId == id;
++}
++
++// The same two answers for a thread that is not the game's (the voxel chunk
++// build's worker): never placing the maps, and NULL while they are not the
++// current map's. One read while the game's thread places them again is of
++// maps half placed - each a map that was or is there - and its job is dropped.
++bool8 MapGridCameraMapsCurrent(void)
++{
++    return CameraMapsCurrent();
++}
++
++const u16 *MapGridPeekCameraBorderAt(int x, int y, u8 *index)
++{
++    *index = 0;
++    return CameraMapsCurrent() ? CameraBorderAt(x, y, index) : NULL;
++}
++
++const u16 *MapGridPeekCameraBorderOf(u16 id, int x, int y, u8 *index)
++{
++    *index = 0;
++    return CameraMapsCurrent() ? CameraBorderOf(id, x, y, index) : NULL;
++}
++#endif
++
++static const u16 *CameraBorderAt(int x, int y, u8 *index)
 +{
 +    const struct CameraMap *best = NULL;
 +    u32 bestDistance = 0;
 +    int i;
 +
-+    UpdateCameraMaps();
 +    for (i = 0; i < sCameraMapCount; i++)
 +    {
 +        const struct CameraMap *map = &sCameraMaps[i];
@@ -7511,9 +7618,14 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..c0c4ca3447cf4fe53ff0e142e148e518
 +// not draw its border.
 +const u16 *MapGridGetCameraBorderOf(u16 id, int x, int y, u8 *index)
 +{
++    UpdateCameraMaps();
++    return CameraBorderOf(id, x, y, index);
++}
++
++static const u16 *CameraBorderOf(u16 id, int x, int y, u8 *index)
++{
 +    int i;
 +
-+    UpdateCameraMaps();
 +    for (i = 0; i < sCameraMapCount; i++)
 +    {
 +        const struct CameraMap *map = &sCameraMaps[i];
@@ -7813,7 +7925,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..c0c4ca3447cf4fe53ff0e142e148e518
  
      if (block == MAPGRID_UNDEFINED)
          return UNPACK_METATILE(GetBorderBlockAt(x, y));
-@@ -375,6 +1013,9 @@ u32 MapGridGetMetatileIdAt(int x, int y)
+@@ -375,6 +1063,9 @@ u32 MapGridGetMetatileIdAt(int x, int y)
  u32 MapGridGetMetatileBehaviorAt(int x, int y)
  {
      u16 metatile = MapGridGetMetatileIdAt(x, y);
@@ -7823,7 +7935,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..c0c4ca3447cf4fe53ff0e142e148e518
      return UNPACK_BEHAVIOR(GetMetatileAttributesById(metatile));
  }
  
-@@ -412,11 +1053,47 @@ u16 GetMetatileAttributesById(u16 metatile)
+@@ -412,11 +1103,47 @@ u16 GetMetatileAttributesById(u16 metatile)
      if (metatile < NUM_METATILES_IN_PRIMARY)
      {
          attributes = gMapHeader.mapLayout->primaryTileset->metatileAttributes;
@@ -7871,7 +7983,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..c0c4ca3447cf4fe53ff0e142e148e518
          return attributes[metatile - NUM_METATILES_IN_PRIMARY];
      }
      else
-@@ -660,19 +1337,32 @@ bool8 CameraMove(int x, int y)
+@@ -660,19 +1387,32 @@ bool8 CameraMove(int x, int y)
      }
      else
      {
@@ -7904,7 +8016,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..c0c4ca3447cf4fe53ff0e142e148e518
      }
      return gCamera.active;
  }
-@@ -854,10 +1544,22 @@ static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTil
+@@ -854,10 +1594,22 @@ static void CopyTilesetToVramUsingHeap(struct Tileset const *tileset, u16 numTil
  {
      if (tileset)
      {
@@ -7927,7 +8039,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..c0c4ca3447cf4fe53ff0e142e148e518
      }
  }
  
-@@ -878,20 +1580,53 @@ static void LoadTilesetPalette(struct Tileset const *tileset, u16 destOffset, u1
+@@ -878,20 +1630,53 @@ static void LoadTilesetPalette(struct Tileset const *tileset, u16 destOffset, u1
  
      if (tileset)
      {
@@ -7984,7 +8096,7 @@ index 97db758caac9fefa27d6c2809df48086dc4ef4e1..c0c4ca3447cf4fe53ff0e142e148e518
              ApplyGlobalTintToPaletteEntries(destOffset, size >> 1);
          }
      }
-@@ -926,8 +1661,20 @@ void CopyMapTilesetsToVram(struct MapLayout const *mapLayout)
+@@ -926,8 +1711,20 @@ void CopyMapTilesetsToVram(struct MapLayout const *mapLayout)
  {
      if (mapLayout)
      {
@@ -25169,7 +25281,7 @@ index 909b86ab8c667cd0ad2eb625860c705b30f98334..3c4b5abbe303854470444e246a199c1c
      sSpritePics[i].images = images;
      sSpritePics[i].paletteTag = paletteTag;
 diff --git a/src/trainer_see.c b/src/trainer_see.c
-index f7b19aa8d9248316751b4e623530954ab7d3f856..ec70c2234f0ac93010e055752be65b1b86f472cc 100644
+index f7b19aa8d9248316751b4e623530954ab7d3f856..309e75f62c9f87855105af9b8407679f8159a583 100644
 --- a/src/trainer_see.c
 +++ b/src/trainer_see.c
 @@ -1,4 +1,7 @@
@@ -25180,7 +25292,23 @@ index f7b19aa8d9248316751b4e623530954ab7d3f856..ec70c2234f0ac93010e055752be65b1b
  #include "battle_setup.h"
  #include "event_data.h"
  #include "event_object_movement.h"
-@@ -256,6 +259,10 @@ static u8 CheckTrainer(u8 objectEventId)
+@@ -203,6 +206,15 @@ bool8 CheckForTrainersWantingBattle(void)
+             continue;
+         if (gObjectEvents[i].trainerType != TRAINER_TYPE_NORMAL && gObjectEvents[i].trainerType != TRAINER_TYPE_BURIED)
+             continue;
++#ifdef PLATFORM_3DS
++        // A trainer of a joined map (made ahead of the crossing,
++        // TrySpawnConnectedObjectEvents, or left behind by it) waits for the
++        // player to be on its map: its script moves people by this map's
++        // local ids.
++        if (gObjectEvents[i].mapNum != gSaveBlock1Ptr->location.mapNum
++         || gObjectEvents[i].mapGroup != gSaveBlock1Ptr->location.mapGroup)
++            continue;
++#endif
+ 
+         numTrainers = CheckTrainer(i);
+         if (numTrainers == 2)
+@@ -256,6 +268,10 @@ static u8 CheckTrainer(u8 objectEventId)
      else
          scriptPtr = GetObjectEventScriptPointerByObjectEventId(objectEventId);
  
@@ -25191,7 +25319,7 @@ index f7b19aa8d9248316751b4e623530954ab7d3f856..ec70c2234f0ac93010e055752be65b1b
      if (CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE)
      {
          if (GetBattlePyramidTrainerFlag(objectEventId))
-@@ -699,6 +706,9 @@ u8 FldEff_ExclamationMarkIcon(void)
+@@ -699,6 +715,9 @@ u8 FldEff_ExclamationMarkIcon(void)
  
      if (spriteId != MAX_SPRITES)
          SetIconSpriteData(&gSprites[spriteId], FLDEFF_EXCLAMATION_MARK_ICON, 0);
@@ -25201,7 +25329,7 @@ index f7b19aa8d9248316751b4e623530954ab7d3f856..ec70c2234f0ac93010e055752be65b1b
  
      return 0;
  }
-@@ -709,6 +719,8 @@ u8 FldEff_QuestionMarkIcon(void)
+@@ -709,6 +728,8 @@ u8 FldEff_QuestionMarkIcon(void)
  
      if (spriteId != MAX_SPRITES)
          SetIconSpriteData(&gSprites[spriteId], FLDEFF_QUESTION_MARK_ICON, 1);
@@ -25210,7 +25338,7 @@ index f7b19aa8d9248316751b4e623530954ab7d3f856..ec70c2234f0ac93010e055752be65b1b
  
      return 0;
  }
-@@ -724,6 +736,10 @@ u8 FldEff_HeartIcon(void)
+@@ -724,6 +745,10 @@ u8 FldEff_HeartIcon(void)
          SetIconSpriteData(sprite, FLDEFF_HEART_ICON, 0);
          sprite->oam.paletteNum = 2;
      }
