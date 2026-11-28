@@ -49,10 +49,12 @@ static const OptRowDef sRowsUi[] = {
     GAME_ROW(OPT_SOUND, CTR_TEXT("SOUND", "SONIDO", "SON", "AUDIO", "SOM", "TON", "サウンド")),
     EXTRA_ROW("classic_menus"),
 };
-/* Opt-in browsers use a separate tab, leaving six-row groups intact. */
+/* Optional field enhancements share one group (maximum four groups per tab).
+ * Each toggle remains default-off in the persistent extras registry. */
 static const OptRowDef sRowsLive[] = {
     EXTRA_ROW("live_party"),
     EXTRA_ROW("live_bag"),
+    EXTRA_ROW("remote_pc"),
 };
 static const OptRowDef sRowsSystem[] = {
     EXTRA_ROW("speed"),
@@ -146,7 +148,7 @@ static const OptRowDef sRowsGraphics[] = {
 static const OptGroupDef sGroupsGeneral[] = {
     GROUP(CTR_TEXT("INTERFACE", "INTERFAZ", "INTERFACE", "INTERFACCIA", "INTERFACE", "OBERFLÄCHE", "がめん"), sRowsUi),
     GROUP(CTR_TEXT("SYSTEM", "SISTEMA", "SYSTÈME", "SISTEMA", "SISTEMA", "SYSTEM", "システム"), sRowsSystem),
-    GROUP(CTR_TEXT("LIVE", "EN VIVO", "DIRECT", "LIVE", "AO VIVO", "LIVE", "ライブ"), sRowsLive),
+    GROUP(CTR_TEXT("ENHANCEMENTS", "MEJORAS", "AMÉLIORATIONS", "MIGLIORIE", "MELHORIAS", "VERBESSERUNGEN", "かいぜん"), sRowsLive),
     GROUP(CTR_TEXT("GRAPHICS", "GRÁFICOS", "GRAPHISMES", "GRAFICA", "GRÁFICOS", "GRAFIK", "グラフィック"), sRowsGraphics),
 };
 static const OptGroupDef sGroupsWorld[] = {

@@ -13,15 +13,17 @@ ROOT = Path(__file__).resolve().parents[2]
 options = (ROOT / "3ds_port/src/3ds_bottom_options.inc").read_text(encoding="utf-8")
 extras = (ROOT / "3ds_port/src/3ds_extras.c").read_text(encoding="utf-8")
 actions = (ROOT / "3ds_port/src/3ds_bottom_actions.inc").read_text(encoding="utf-8")
-# Both toggles are registered default-off and exposed once, with no silent
-# truncation of group rows or category tabs.
-for key in ("live_party", "live_bag"):
+# All three opt-in field enhancements are registered default-off and exposed
+# exactly once, within the four-group/six-row options page limits.
+for key in ("live_party", "live_bag", "remote_pc"):
     assert options.count(f'EXTRA_ROW("{key}")') == 1
     assert re.search(rf'"{key}", 2, 0, gCtrExtrasOffOn', extras)
 rows = dict(re.findall(r'static const OptRowDef (sRows\w+)\[\] = \{(.*?)\n\};', options, re.S))
 groups = re.findall(r'static const OptGroupDef (sGroups\w+)\[\] = \{(.*?)\n\};', options, re.S)
 assert "sRowsLive" in rows
-assert len(re.findall(r'EXTRA_ROW\(', rows["sRowsLive"])) == 2
+assert len(re.findall(r'EXTRA_ROW\(', rows["sRowsLive"])) == 3
+assert any("ENHANCEMENTS" in body and "sRowsLive" in body and name == "sGroupsGeneral"
+           for name, body in groups)
 assert any("sRowsLive" in body and name == "sGroupsGeneral" for name, body in groups)
 for name, body in rows.items():
     assert len(re.findall(r'GAME_ROW\(|EXTRA_ROW\(|\{ROW_INFO', body)) <= 6, name
