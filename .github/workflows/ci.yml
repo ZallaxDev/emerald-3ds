@@ -75,6 +75,8 @@ jobs:
           timeout 10s ./assets_warmup_test
       - name: Incremental voxel build dependencies
         run: python 3ds_port/tests/voxel_make_deps_test.py
+      - name: Relief terrace GC scope and restoration
+        run: python 3ds_port/tests/voxel_terrace_gc_test.py
       - name: Input and video decoding
         run: |
           cd 3ds_port

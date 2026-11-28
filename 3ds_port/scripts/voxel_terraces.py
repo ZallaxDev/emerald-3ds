@@ -55,6 +55,7 @@ import argparse
 import collections
 import copy
 import functools
+import gc
 import itertools
 import math
 import os
@@ -5940,6 +5941,21 @@ def chosen_layouts():
     return chosen + [e["id"] for e in vb._layouts_json() if gr.is_cave(e["id"]) and e["id"] not in chosen]
 
 
+def _solve_gc_tuned(lid, reference, topology):
+    """Raise the generation-0 GC threshold only during a terrace-group solve.
+
+    Keep the original solver and generated data untouched; restore the caller's
+    thresholds on success or error. Measured four-worker relief outputs remained
+    byte-identical, with lower median wall time and no observed RSS increase.
+    """
+    previous = gc.get_threshold()
+    try:
+        gc.set_threshold(max(previous[0], 3000), previous[1], previous[2])
+        return solve(lid, reference, topology=topology)
+    finally:
+        gc.set_threshold(*previous)
+
+
 def _serial_solves(layouts, reference):
     done = set()
     topology = None
@@ -5948,7 +5964,7 @@ def _serial_solves(layouts, reference):
             continue
         if topology is None:
             topology = gr.map_topology()
-        sol = solve(lid, reference, topology=topology)
+        sol = _solve_gc_tuned(lid, reference, topology)
         done.update(lid for lid, _, _ in sol["cells"].members)
         yield sol
 
@@ -5963,7 +5979,7 @@ def _prepare_worker(blob):
 
 
 def _solve_in_worker(lid):
-    return solve(lid, _worker_reference, topology=_worker_topology)
+    return _solve_gc_tuned(lid, _worker_reference, _worker_topology)
 
 
 def _parallel_solves(layouts, blob, jobs):
