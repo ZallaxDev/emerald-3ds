@@ -1,0 +1,201 @@
+Emerald 3DS changes to pret/pokeemerald 76463dac15cad36aca5e2b3f6366abf9e53f814f: visible wild Pokemon that notice the player and run at them (OPTIONS > WILD CHASE)
+Applies after 0092-touch-message-ack.patch; apply with tools/bootstrap.py.
+
+diff --git a/src/wild_encounter.c b/src/wild_encounter.c
+index 2793170..17ada6b 100644
+--- a/src/wild_encounter.c
++++ b/src/wild_encounter.c
+@@ -654,6 +654,26 @@ static u32 VisibleSetting(void)
+ }
+ 
+ #define VISIBLE_MOST() sVisibleMost[VisibleSetting()]
++
++/* WILD CHASE: none, one in three, or every one of them notices the player
++ * near it and runs at them. */
++#define VW_NOTICE 4              /* tiles (across and along) it notices within */
++#define VW_CHASE_FRAMES 600      /* the longest it runs after the player */
++#define VW_CHASE_LOST 8          /* it gives up beyond this */
++#define VW_HOP 12                /* frames of the hop it notices with */
++
++static bool8 VisibleRollAggressive(void)
++{
++    switch (CtrExtras_Get("wild_chase"))
++    {
++    case 1:
++        return Random() % 3 == 0;
++    case 2:
++        return TRUE;
++    default:
++        return FALSE;
++    }
++}
+ /* MANY: they are the only wild Pokemon met by walking or surfing. */
+ #define VISIBLE_REPLACES_RANDOM() (VisibleSetting() == ARRAY_COUNT(sVisibleMost) - 1)
+ 
+@@ -674,6 +694,10 @@ struct VisibleWild
+     bool8 active, water, shiny;
+     bool8 hgss;                  /* on HGSS's overworld sprite (follower_mon.c), else its icon */
+     bool8 vanishing;             /* shrinking away, gone at the end */
++    bool8 aggressive;            /* notices the player and runs at them (WILD CHASE) */
++    bool8 chasing;
++    u8 hop;                      /* frames left of the hop it noticed with */
++    u16 chase;                   /* frames it has been running after the player */
+     u8 spriteId;                 /* VW_NONE: none now (a field reset took it), made again on its tile */
+     u8 matrix;                   /* its OAM matrix while it grows or shrinks, else 0xFF */
+     u8 scaleTime, scaleFrames;   /* how far into growing or shrinking */
+@@ -1012,6 +1036,8 @@ static void VisiblePlace(struct VisibleWild *v)
+         if (v->scaleFrames == 0)
+             FollowerMon_WildFace(sprite, v->faceX, v->faceY, v->progress != 0);
+     }
++    /* The hop it notices the player with (VisibleNotice). */
++    sprite->y2 = v->hop ? -(s16)((v->hop * (VW_HOP - v->hop)) / 9) : 0;
+     /* Further down the screen, drawn over: as the map's objects are. */
+     sprite->subpriority = 200 - ((sprite->y + 64) >> 1 & 0x7F);
+ }
+@@ -1104,6 +1130,9 @@ static void VisibleTrySpawn(u16 headerId)
+         v->dx = v->dy = 0;
+         v->progress = 0;
+         v->vanishing = FALSE;
++        v->aggressive = VisibleRollAggressive();
++        v->chasing = FALSE;
++        v->hop = 0;
+         v->idle = VW_GROW + 30 + Random() % 90;
+         v->sparkle = 0;
+         if (!VisibleMakeSprite(v, VW_GROW))
+@@ -1181,20 +1210,48 @@ static void VisibleMove(struct VisibleWild *v, s16 px, s16 py, bool8 inWater)
+ 
+     if (v->progress)
+     {
+-        /* Half a pixel a frame: a stroll. */
+-        if (++v->progress >= 32)
++        /* Half a pixel a frame: a stroll; running after the player, a
++         * pixel a frame, the player's walk. */
++        v->progress += v->chasing ? 2 : 1;
++        if (v->progress >= 32)
+         {
+             v->x += v->dx;
+             v->y += v->dy;
+             v->dx = v->dy = 0;
+             v->progress = 0;
+-            v->idle = 40 + Random() % 120;
++            v->idle = v->chasing ? 1 : 40 + Random() % 120;
+         }
+         return;
+     }
+     if (v->idle && --v->idle)
+         return;
+-    dir = Random() % 4;
++    if (v->chasing)
++    {
++        /* Straight at the player: along the longer way first, the other
++         * if that is blocked. */
++        s16 ddx = px - v->x, ddy = py - v->y;
++        u32 first, second;
++
++        if (VW_ABS(ddx) >= VW_ABS(ddy))
++        {
++            first = ddx < 0 ? 2 : 3;
++            second = ddy < 0 ? 0 : ddy > 0 ? 1 : first;
++        }
++        else
++        {
++            first = ddy < 0 ? 0 : 1;
++            second = ddx < 0 ? 2 : ddx > 0 ? 3 : first;
++        }
++        dir = first;
++        tx = v->x + sSteps[dir][0];
++        ty = v->y + sSteps[dir][1];
++        if (!(tx == px && ty == py) && (!VisibleTileFits(tx, ty, v->water) || VisibleAt(tx, ty, v) != NULL))
++            dir = second;
++    }
++    else
++    {
++        dir = Random() % 4;
++    }
+     tx = v->x + sSteps[dir][0];
+     ty = v->y + sSteps[dir][1];
+     if (tx == px && ty == py)
+@@ -1208,7 +1265,7 @@ static void VisibleMove(struct VisibleWild *v, s16 px, s16 py, bool8 inWater)
+     }
+     if (!VisibleTileFits(tx, ty, v->water) || VisibleAt(tx, ty, v) != NULL)
+     {
+-        v->idle = 30;
++        v->idle = v->chasing ? 8 : 30;
+         return;
+     }
+     v->dx = v->faceX = sSteps[dir][0];
+@@ -1216,6 +1273,49 @@ static void VisibleMove(struct VisibleWild *v, s16 px, s16 py, bool8 inWater)
+     v->progress = 1;
+ }
+ 
++/*
++ * WILD CHASE: one that may (VisibleRollAggressive) notices the player within
++ * VW_NOTICE tiles, where it lives, with a hop and a cry of alarm, and runs at
++ * them; it gives up after VW_CHASE_FRAMES or beyond VW_CHASE_LOST tiles, and
++ * strolls on, never to notice them again.
++ */
++static void VisibleNotice(struct VisibleWild *v, s16 px, s16 py, bool8 inWater)
++{
++    s16 ddx = px - v->x, ddy = py - v->y;
++
++    if (v->hop)
++        v->hop--;
++    if (v->chasing)
++    {
++        if (++v->chase > VW_CHASE_FRAMES || VW_ABS(ddx) + VW_ABS(ddy) > VW_CHASE_LOST || v->water != inWater)
++        {
++            v->chasing = FALSE;
++            v->aggressive = FALSE;
++            if (!v->progress)
++                v->idle = 120;
++        }
++        return;
++    }
++    if (!v->aggressive || v->progress || v->water != inWater || VW_ABS(ddx) + VW_ABS(ddy) > VW_NOTICE)
++        return;
++    v->chasing = TRUE;
++    v->chase = 0;
++    v->hop = VW_HOP;
++    v->idle = VW_HOP + 8;        /* the hop, then it runs */
++    if (VW_ABS(ddx) >= VW_ABS(ddy))
++    {
++        v->faceX = ddx < 0 ? -1 : 1;
++        v->faceY = 0;
++    }
++    else
++    {
++        v->faceX = 0;
++        v->faceY = ddy < 0 ? -1 : 1;
++    }
++    PlaySE(SE_PIN);
++    CtrLog_Write(CTR_LOG_GAME, "visible wild: species %u runs at the player", v->species);
++}
++
+ /*
+  * Into the next map (event_object_movement.c, as the objects' coordinates
+  * shift with the camera): they keep walking where they were, in the new
+@@ -1439,19 +1539,21 @@ void VisibleWild_Update(void)
+                 continue;
+             }
+         }
+-        else if (idle)
++        else if (idle || ((v->chasing || v->aggressive) && !ArePlayerFieldControlsLocked() && !ScriptContext_IsEnabled()))
+         {
+             bool8 touched = v->idle == 0xFFFF
+                 || (v->x == player->currentCoords.x && v->y == player->currentCoords.y && !v->progress);
+ 
++            VisibleNotice(v, player->currentCoords.x, player->currentCoords.y, inWater);
+             // It walked into the player: a repel keeps it off, as it keeps random ones.
+-            if (touched && v->water == inWater && (v->idle != 0xFFFF || IsWildLevelAllowedByRepel(v->level)))
++            if (idle && touched && v->water == inWater && (v->idle != 0xFFFF || IsWildLevelAllowedByRepel(v->level)))
+             {
+                 VisibleStartBattle(v);
+                 return;
+             }
++            /* Into the player as they walk on: it looks again. */
+             if (v->idle == 0xFFFF)
+-                v->idle = 60;
++                v->idle = idle ? 60 : 1;
+             VisibleMove(v, player->currentCoords.x, player->currentCoords.y, inWater);
+             // Often enough to be told from the others at a glance: a shiny
+             // one's icon is drawn in the same colours as any other's.
