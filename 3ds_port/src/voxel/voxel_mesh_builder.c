@@ -4128,6 +4128,12 @@ void VoxelMesh_EmitBorder(VoxelBuilder *builder, int x0, int y0, int x1, int y1)
 
             if (!BorderAt(x, y))
                 continue;
+            /* The same black filler round the rooms the game files as
+             * underground (the Abandoned Ship's): stood up it is the black
+             * wall the indoor case above leaves out, and the south one hid
+             * the rooms' last rows and the player in them. */
+            if (VoxelAtlas_IsVoid(VoxelWorld_Instance(0), VoxelWorld_BorderMetatile(x, y)))
+                continue;
             /* (ground lies at its level, a wood stands: BeltStand) */
             courses = drawn ? drawn : BeltStand(x, y);
             if (BorderWaterLevel(x, y, &level, &shift))
