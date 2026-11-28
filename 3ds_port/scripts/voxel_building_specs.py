@@ -4314,10 +4314,10 @@ def trainer_fan_club():
         piece("table_w", [(66, 144, 94, 177)], 11, leave=GENERIC_RUG, solid=True, fill=1,
               foot=177),
         piece("partition_w", [(0, 107, 47, 137)], 26, fill=16, foot=144, side=FAN_CLUB_WALL_SIDE,
-              walls=[((47, 144), (47, 118))]),
+              walls=[((47, 144), (47, 118))], solid=True),
         piece("partition_e", [(145, 107, 192, 144)], 26, fill=16, foot=144,
-              side=FAN_CLUB_WALL_SIDE, walls=[((145, 118), (145, 144))]),
-        piece("wall", [(0, 0, 192, 32)], 32, fill=16, foot=32, side=FAN_CLUB_WALL_SIDE),
+              side=FAN_CLUB_WALL_SIDE, walls=[((145, 118), (145, 144))], solid=True),
+        piece("wall", [(0, 0, 192, 32)], 32, fill=16, foot=32, side=FAN_CLUB_WALL_SIDE, solid=True),
         piece("side_w", [], 32, side=FAN_CLUB_WALL_SIDE, walls=[((0, 224), (0, 32))]),
         piece("side_e", [], 32, side=FAN_CLUB_WALL_SIDE, walls=[((192, 32), (192, 224))]),
     ]
@@ -4368,9 +4368,12 @@ def day_care():
         piece("plant_s", [(0, 114, 16, 143)], 28, leave=DAY_CARE_FLOOR, card=True),
         piece("table", [(160, 82, 192, 111)], 5, leave=DAY_CARE_GRASS, solid=True,
               side=(164, 84, 188, 100)),
-        piece("fence", [(96, 128, 192, 144)], 15, through=True,
+        # the post at its west end stands on its row, taller than the
+        # pickets (its whole drawing, rows 112-143): on its own row above, it
+        # stood a cell behind the fence, apart from it
+        piece("fence", [(105, 128, 192, 144)], 15, through=True,
               leave=DAY_CARE_FLOOR + DAY_CARE_GRASS),
-        piece("gatepost", [(96, 112, 105, 128)], 15, leave=DAY_CARE_FLOOR),
+        piece("gatepost", [(96, 112, 105, 144)], 28, leave=DAY_CARE_FLOOR + DAY_CARE_GRASS),
         piece("pc", [(160, 8, 176, 40)], 24, leave=DAY_CARE_WALL, back=32),
         # the crates' rims are the wall's wood: only its paint is left
         piece("crate_w", [(80, 23, 96, 48)], 7, leave=DAY_CARE_PAINT, against=32),
@@ -4424,7 +4427,10 @@ def seashore_house():
 # behind it two recesses, each with its own back wall and side walls (their
 # tops the orange strips down the drawing): the reception's, with its desk
 # across the front and a glass case in each back corner, and the stairs',
-# the stairs up painted on its back wall. Every wall 28 px, its top 4 px.
+# the stairs up painted on its back wall. Every wall 28 px, its top 4 px,
+# solid: a wall standing on its foot row and not solid has its ends
+# dressed as a railing's, the drawn column projected - the wallpaper's
+# stripes ran down them on the slant; solid, they take `side`.
 
 DEVON_FLOOR = ("cd837b", "deaca4", "bd6252")
 DEVON_WALL = ("835a31", "e69c62", "6a7b41", "839473", "9c9c9c", "acb494")
@@ -4438,21 +4444,21 @@ def devon_corp_1f():
         piece("case_e", [(128, 22, 144, 48)], 26, round="lathe", leave=DEVON_FLOOR + DEVON_WALL),
         piece("desk", [(48, 62, 128, 80)], 8, leave=DEVON_FLOOR, solid=True),
         # the recesses' side walls, down from their back walls to the front
-        piece("wall_rww", [(44, 0, 48, 80)], 28, fill=16, foot=80, side=side,
+        piece("wall_rww", [(44, 0, 48, 80)], 28, fill=16, foot=80, side=side, solid=True,
               walls=[((48, 80), (48, 32))]),
-        piece("wall_rwe", [(144, 0, 148, 80)], 28, fill=16, foot=80, side=side,
+        piece("wall_rwe", [(144, 0, 148, 80)], 28, fill=16, foot=80, side=side, solid=True,
               walls=[((144, 32), (144, 80))]),
-        piece("wall_rew", [(204, 0, 208, 80)], 28, fill=16, foot=80, side=side,
+        piece("wall_rew", [(204, 0, 208, 80)], 28, fill=16, foot=80, side=side, solid=True,
               walls=[((208, 80), (208, 32))]),
-        piece("wall_ree", [(256, 0, 260, 80)], 28, fill=16, foot=80, side=side,
+        piece("wall_ree", [(256, 0, 260, 80)], 28, fill=16, foot=80, side=side, solid=True,
               walls=[((256, 32), (256, 80))]),
         # the recesses' back walls
-        piece("wall_rw", [(48, 0, 144, 32)], 28, fill=16, foot=32, side=side),
-        piece("wall_re", [(208, 0, 256, 32)], 28, fill=16, foot=32, side=side),
+        piece("wall_rw", [(48, 0, 144, 32)], 28, fill=16, foot=32, side=side, solid=True),
+        piece("wall_re", [(208, 0, 256, 32)], 28, fill=16, foot=32, side=side, solid=True),
         # the front wall
-        piece("wall_w", [(0, 48, 44, 80)], 28, fill=16, foot=80, side=side),
-        piece("wall_c", [(148, 48, 204, 80)], 28, fill=16, foot=80, side=side),
-        piece("wall_e", [(260, 48, 304, 80)], 28, fill=16, foot=80, side=side),
+        piece("wall_w", [(0, 48, 44, 80)], 28, fill=16, foot=80, side=side, solid=True),
+        piece("wall_c", [(148, 48, 204, 80)], 28, fill=16, foot=80, side=side, solid=True),
+        piece("wall_e", [(260, 48, 304, 80)], 28, fill=16, foot=80, side=side, solid=True),
         piece("side_w", [], 28, side=side, walls=[((0, 144), (0, 80))]),
         piece("side_e", [], 28, side=side, walls=[((304, 80), (304, 144))]),
     ]
@@ -4489,10 +4495,10 @@ def tent_lobby():
               + [(208 - x, z) for x, z in reversed(TENT_COUNTER_INNER)] + [(160, 48), (144, 48)]),
         # the curtain down each side, from the back wall
         piece("wall_cw", [(0, 0, 16, 80)], 32, fill=16, foot=80, side=side, leave=TENT_FLOOR,
-              walls=[((16, 80), (16, 32))]),
+              walls=[((16, 80), (16, 32))], solid=True),
         piece("wall_ce", [(192, 0, 208, 80)], 32, fill=16, foot=80, side=side, leave=TENT_FLOOR,
-              walls=[((192, 32), (192, 80))]),
-        piece("wall", [(16, 0, 192, 32)], 32, fill=16, foot=32, side=side),
+              walls=[((192, 32), (192, 80))], solid=True),
+        piece("wall", [(16, 0, 192, 32)], 32, fill=16, foot=32, side=side, solid=True),
         piece("side_w", [], 32, side=side, walls=[((0, 160), (0, 80))]),
         piece("side_e", [], 32, side=side, walls=[((208, 80), (208, 160))]),
     ]
@@ -4523,9 +4529,12 @@ def slateport_fan_club():
     side = SLATEPORT_FAN_SIDE
     wall_floor = SLATEPORT_FAN_WALL + SLATEPORT_FAN_FLOOR
     return [
-        piece("plant_sw", [(0, 150, 16, 176)], 26, card=True, leave=SLATEPORT_FAN_FLOOR),
-        piece("plant_se", [(208, 150, 224, 176)], 26, card=True, leave=SLATEPORT_FAN_FLOOR),
-        piece("table", [(80, 94, 144, 128)], 10, leave=SLATEPORT_FAN_RUG, solid=True),
+        # their leaves from row 147: from 150 their tips lay on the floor
+        piece("plant_sw", [(0, 147, 16, 176)], 29, card=True, leave=SLATEPORT_FAN_FLOOR),
+        piece("plant_se", [(208, 147, 224, 176)], 29, card=True, leave=SLATEPORT_FAN_FLOOR),
+        # the glass table as drawn, rows 98-130, its legs too: from row 94 it
+        # took the sofa's foot behind it and stood over the sofa
+        piece("table", [(80, 98, 144, 131)], 12, leave=SLATEPORT_FAN_RUG, solid=True),
         piece("plant_w", [(48, 20, 64, 47)], 27, card=True, leave=wall_floor),
         piece("plant_e", [(160, 20, 176, 47)], 27, card=True, leave=wall_floor),
         # pilasters: the wall's own pattern 5 px forward, their tops its trim
@@ -4678,13 +4687,15 @@ def room_shell(w, h, foot=32, side=None, top=0):
 
 # The Shop tileset's mint glass counters (Lavaridge's Herb Shop, the Seaside
 # Cycling Road's gates): 7 px, their arms to the wall's foot. The Herb Shop's
-# register is the Department Store's, found again (reuse_pieces).
+# register is the Department Store's, on this counter: its own (`alone`), as
+# the Store's, found again, stood on the Store's 10 px counter, over this one.
 
 MINT_SHOP_FLOOR = ("e69c39", "f6c539", "f6e673", "cd8320", "ac5a20")
 
 
 def herb_shop():
     return [
+        dict(piece("register", [(82, 25, 95, 39)], 8, base=7, solid=True), alone=True),
         piece("counter", [(0, 44, 96, 63), (80, 28, 96, 44)], 7, leave=MINT_SHOP_FLOOR,
               plan=[(0, 52), (80, 52), (80, 35), (96, 35), (96, 63), (0, 63)]),
     ] + room_shell(176, 128)
@@ -4701,7 +4712,9 @@ def cycling_gate():
 
 def safari_rest_house():
     return [
-        piece("table", [(49, 79, 79, 112)], 8, leave=("ded552", "bdb431", "8b8b8b"),
+        # its own columns, 50-77 (from 49 to 79 it took a column of each
+        # chair beside it, their dark outline on its sides)
+        piece("table", [(50, 79, 78, 112)], 8, leave=("ded552", "bdb431", "8b8b8b"),
               solid=True),
     ] + room_shell(160, 144, foot=64, top=32)
 
@@ -4727,7 +4740,12 @@ def institute_desk(name, x, y):
 def institute_1f():
     side = INSTITUTE_SIDE
     return [
-        piece("machine", [(4, 32, 28, 62)], 17, leave=INSTITUTE_FLOOR),
+        # the bed: its mattress 6 px (the footboard and legs its front), its
+        # top back to the headboard, which stands at its head, the wall seen
+        # between its rails (as a 17 px box, its blanket stood up)
+        piece("bed", [(4, 42, 28, 64)], 6, leave=INSTITUTE_FLOOR, back=42, solid=True,
+              side=(10, 48, 16, 54)),
+        piece("bed_head", [(5, 32, 27, 42)], 10, card=True, leave=INSTITUTE_FLOOR),
         piece("bookcases", [(128, 16, 192, 48)], 20, leave=INSTITUTE_FLOOR, against=32),
     ] + [institute_desk("desk_%d" % x, x, 64) for x in (176, 192, 256, 272)] + [
         piece("partition_ww", [(48, 0, 64, 99)], 29, fill=16, foot=99, side=side, against=32,
@@ -4755,9 +4773,9 @@ def institute_2f():
         # the last bookcase, single (the pairs before it are 1F's)
         piece("bookcase_e", [(208, 16, 240, 48)], 20, leave=INSTITUTE_FLOOR, against=32),
         piece("partition_n", [(64, 0, 80, 99)], 29, fill=16, foot=99, side=side, against=32,
-              walls=[((64, 32), (64, 99)), ((80, 99), (80, 32))]),
+              walls=[((64, 32), (64, 99)), ((80, 99), (80, 32))], solid=True),
         piece("partition_s", [(64, 112, 80, 176)], 29, fill=16, foot=205, side=side,
-              walls=[((64, 141), (64, 205)), ((80, 205), (80, 141))]),
+              walls=[((64, 141), (64, 205)), ((80, 205), (80, 141))], solid=True),
     ] + room_shell(320, 176)
 
 
@@ -4951,13 +4969,48 @@ def mystery_events_house_1f():
 # back wall (see below).
 
 E4_WALL_SIDE = (32, 16, 48, 32)
+# The entry door (5-7, 12-13), which elite_four.inc closes behind the player
+# (EntryDoor_ClosedTop over ClosedBottom). Open, the front wall's top runs on
+# over the doorway: a lintel, the band's last 8 rows its front, lifted to the
+# wall's top; shut, the door is a stretch of the wall, read off the room
+# drawn so (each room's `_closed`).
+E4_DOOR_TOP, E4_DOOR_BOTTOM = 0x206, 0x20E
+E4_DOOR_DRAW = dict([((x, 12), E4_DOOR_TOP) for x in (5, 6, 7)] +
+                    [((x, 13), E4_DOOR_BOTTOM) for x in (5, 6, 7)])
 
 
-def elite_four_room(floor):
+# The back wall stands to row 2's foot, where the side walls start: the
+# spotlights along it (row 2) and the door's lower half painted on its face.
+# They change together when the member is beaten (elite_four.inc,
+# SetAdvanceToNextRoomMetatiles: the lights off, the door open), so the wall
+# stands in each state (`when`, its first spotlight), the other read off the
+# room drawn so (each room's `_advance`) - stood on row 2's top edge, the
+# lights and the door's foot had lain on the floor before it.
+E4_LAMP_ON, E4_LAMP_OFF = 0x20D, 0x2DE          # Right spotlight, at (0, 2)
+E4_ADVANCE_DRAW = dict([((x, 2), 0x2DE) for x in (0, 2, 4, 9, 11)] +
+                       [((x, 2), 0x2DD) for x in (1, 3, 8, 10, 12)] +
+                       [((6, 1), 0x344), ((6, 2), 0x345)])
+
+
+def e4_back_wall(lamp):
+    return piece("wall", [(0, 0, 208, 48)], 32, fill=16, foot=48, side=E4_WALL_SIDE, solid=True,
+                 when=(0, 2, lamp))
+
+
+def e4_entrance_door():
+    return piece("wall_front_door", [(80, 172, 128, 224)], 32, fill=16, foot=224, side=E4_WALL_SIDE,
+                 solid=True, when=(6, 12, E4_DOOR_TOP))
+
+
+def elite_four_room(floor, door_open):
     """`floor`: the room's own floor colours (the pillars' tops are the
-    border's, so only the main floor is left round them)."""
+    border's, so only the main floor is left round them); `door_open`: the
+    metatile of the open entry doorway (the room's floor), while which the
+    lintel stands."""
     side = E4_WALL_SIDE
     return [
+        piece("wall_front_lintel", [(80, 172, 128, 192)], 8, base=24, side=side, solid=True,
+              when=(6, 12, door_open)),
         piece("pillar_w", [(0, 68, 26, 147)], 69, leave=floor),
         piece("pillar_e", [(182, 68, 208, 147)], 69, leave=floor),
         # the door painted on the back wall, as the rooms' doors are: a
@@ -4968,9 +5021,9 @@ def elite_four_room(floor):
         # row on: a piece's rectangle lays every cell in it in its model, and
         # the spotlights and the entry door stay drawn to change. Named as
         # walls, the room's own (own_shell)
-        piece("wall", [(0, 0, 208, 32)], 32, fill=16, foot=32, side=side),
-        piece("wall_front_w", [(0, 172, 80, 224)], 32, fill=16, foot=224),
-        piece("wall_front_e", [(128, 172, 208, 224)], 32, fill=16, foot=224),
+        e4_back_wall(E4_LAMP_ON),
+        piece("wall_front_w", [(0, 172, 80, 224)], 32, fill=16, foot=224, side=side, solid=True),
+        piece("wall_front_e", [(128, 172, 208, 224)], 32, fill=16, foot=224, side=side, solid=True),
         piece("side_w", [], 32, side=side, walls=[((0, 204), (0, 48))]),
         piece("side_e", [], 32, side=side, walls=[((208, 48), (208, 204))]),
     ]
@@ -5641,7 +5694,10 @@ def frontier_palace_lobby():
         out += [
             piece("terminal_" + side, [(32 + dx, 108, 48 + dx, 136)], 28, card=True,
                   leave=PALACE_FLOOR),
-            piece("table_%s1" % side, [(32 + dx, 80, 56 + dx, 118)], 6, leave=PALACE_FLOOR),
+            # round the terminal's head (rows 108-117) before it: in its
+            # rectangle, the head lay on the table's top and front too
+            piece("table_%s1" % side, [(32 + dx, 80, 56 + dx, 108), (48 + dx, 108, 56 + dx, 118)], 6,
+                  leave=PALACE_FLOOR),
             piece("table_%s2" % side, [(56 + dx, 96, 80 + dx, 118)], 6, leave=PALACE_FLOOR),
             piece("table_%s3" % side, [(96 + dx, 96, 120 + dx, 118)], 6, leave=PALACE_FLOOR),
             piece("table_%s4" % side, [(120 + dx, 80, 144 + dx, 118)], 6, leave=PALACE_FLOOR),
@@ -5651,9 +5707,15 @@ def frontier_palace_lobby():
 
 # the Battle Pike's: fourteen copper pillars, a gold ball on each, 21 px
 # tall on their cells - those at the side walls too - and a glass terminal
-# on a post before the curtain
+# on a post before the curtain. A pillar is turned (`round="lathe"`): its
+# column, the wide cap on it and the ball sunk in the cap round, fitted to
+# its drawing, the room behind it - the curtain, the floor - not its own
 PIKE_CURTAIN = ("c50000", "ff0000", "7b3100", "523131", "ff9462")
 PIKE_FLOOR = ("7b6a31", "a48b31", "cdac31")
+# the other Pike rooms' pink floor, round their silver and gold pillars
+PIKE_ROOM_FLOOR = ("e6737b", "b45241", "ff9ca4")
+# a pillar's plan round; few sides, as there are fifty in the wild room
+PIKE_PILLAR_TURN = dict(round="lathe", squash=1.0, turn=(10, 5))
 
 
 def frontier_pike_lobby():
@@ -5661,7 +5723,12 @@ def frontier_pike_lobby():
              (1, 10), (9, 10), (3, 12), (7, 12)]
     return [piece("terminal", [(128, 44, 144, 72)], 28, card=True,
                   leave=PIKE_CURTAIN + PIKE_FLOOR)] + [
-        piece("pillar_%d_%d" % (x, y), [(x * 16, y * 16 - 15, x * 16 + 16, y * 16 + 16)], 21)
+        # the lobby's floor less its golds, which the caps are drawn in too;
+        # the two behind the desk a little shallower, their feet clear of
+        # its top's corners
+        piece("pillar_%d_%d" % (x, y), [(x * 16, y * 16 - 15, x * 16 + 16, y * 16 + 16)], 21,
+              leave=PIKE_CURTAIN + PIKE_FLOOR[1:2],
+              **dict(PIKE_PILLAR_TURN, **({"squash": 0.8} if (x, y) in ((4, 5), (6, 5)) else {})))
         for (x, y) in cells]
 
 
@@ -5687,6 +5754,11 @@ def frontier_arena_lobby():
 # stay drawn
 def frontier_pyramid_lobby():
     return [
+        # the terminal by the stairs, its own: its head before the terrace's
+        # dark face, which the Pike's terminal, found again, did not match -
+        # its head stayed drawn on the floor
+        dict(piece("terminal", [(80, 188, 96, 216)], 28, card=True,
+                   leave=("313183", "5a527b", "8b7b7b", "b49c7b")), alone=True),
         piece("pillar_w", [(32, 0, 48, 104)], 80),
         piece("pillar_e", [(192, 0, 208, 104)], 80),
         piece("brazier_w", [(64, 72, 80, 96)], 20),
@@ -5720,14 +5792,29 @@ FRONTIER_LOBBY_SIDES = {
 
 def pike_pillar(x, y):
     """A Battle Pike pillar on cell (x, y): its cap from 15 px above the
-    cell, 21 px tall, as the lobby's."""
-    return piece("pillar_%d_%d" % (x, y), [(x * 16, y * 16 - 15, x * 16 + 16, y * 16 + 16)], 21)
+    cell, 21 px tall, turned as the lobby's, on the rooms' pink floor."""
+    return piece("pillar_%d_%d" % (x, y), [(x * 16, y * 16 - 15, x * 16 + 16, y * 16 + 16)], 21,
+                 leave=PIKE_CURTAIN + PIKE_ROOM_FLOOR, **PIKE_PILLAR_TURN)
+
+
+# the Battle Tower battle room's floor, round its lamps
+TOWER_BATTLE_FLOOR = ("a4834a", "d5b46a", "ffffac")
+
+
+def tower_lamp(x, y):
+    """A lamp in a corner of the Tower's battle room: a drum under a gold
+    dome, 16 px tall, turned (`round="lathe"`). Its outline steps in round
+    the dome, so the back wall drawn either side of it, in the drum's own
+    greys, is not taken for its own; the floor round its foot is left."""
+    x0, y0 = x * 16, y * 16
+    return piece("lamp_%d_%d" % (x, y), [(x0 + 4, y0 - 8, x0 + 12, y0 - 2), (x0 + 2, y0 - 2, x0 + 14, y0),
+                                          (x0, y0, x0 + 16, y0 + 16)], 16,
+                 leave=TOWER_BATTLE_FLOOR, round="lathe", squash=1.0, turn=(12, 4))
 
 
 def tower_battle_room():
-    # the four lamps in its corners, 16 px tall
-    return [piece("lamp_%d_%d" % (x, y), [(x * 16, y * 16 - 8, x * 16 + 16, y * 16 + 16)], 16)
-            for (x, y) in ((0, 2), (9, 2), (0, 8), (9, 8))] + room_shell(160, 144, 32)
+    # the four lamps in its corners
+    return [tower_lamp(x, y) for (x, y) in ((0, 2), (9, 2), (0, 8), (9, 8))] + room_shell(160, 144, 32)
 
 
 def dome_pre_battle_room():
@@ -5769,13 +5856,41 @@ def pike_wild_mons_room():
     return [pike_pillar(x, y) for (x, y) in cells]
 
 
+def factory_battle_room():
+    """The Factory's battle room: its back wall 40 px, its corners cut on the
+    slant - the wall's foot runs from (16, 41) down to the side at row 57,
+    its trim along it - each a prism on that corner (`plan`), its slanted
+    face the drawing, the floor below it in its cells left. (As a room_shell
+    on row 64, the back wall stood a stretch of floor forward of its foot.)"""
+    side = (64, 0, 80, 40)
+    floor = ("d5d5c5", "acac8b", "ffffff")
+    return [
+        piece("wall", [(16, 0, 192, 40)], 40, fill=16, foot=40, side=side),
+        piece("wall_corner_w", [(0, 0, 16, 57)], 40, plan=[(0, 40), (16, 40), (16, 41), (0, 57)],
+              side=side, leave=floor),
+        piece("wall_corner_e", [(192, 0, 208, 57)], 40, plan=[(192, 40), (208, 40), (208, 57), (192, 41)],
+              side=side, leave=floor),
+        piece("side_w", [], 40, side=side, walls=[((0, 192), (0, 57))]),
+        piece("side_e", [], 40, side=side, walls=[((208, 57), (208, 192))]),
+    ]
+
+
+# the corridor's tatami and its stripes, seen round its plants' leaves
+ARENA_TATAMI = ("d5b46a", "decd83", "eee6a4")
+
+
 def arena_corridor():
     """The Battle Arena's corridor runs round a block: its face to the south,
     shoji 64 px tall, its sides along the corridors; the black over it, and
-    between the two stretches of the back wall, is beyond the room."""
+    between the two stretches of the back wall, is beyond the room. A potted
+    plant stands in each corner (cards)."""
     side = (64, 0, 80, 48)
     shoji = (112, 128, 128, 192)
     return [
+        piece("plant_%d_%d" % (x, y), [(x * 16, y * 16, x * 16 + 16, y * 16 + 16)], 16, card=True,
+              leave=ARENA_TATAMI)
+        for (x, y) in ((0, 3), (17, 3), (0, 13), (17, 13))
+    ] + [
         piece("wall_w", [(0, 0, 96, 48)], 48, fill=16, foot=48, side=side),
         piece("wall_e", [(192, 0, 288, 48)], 48, fill=16, foot=48, side=side),
         piece("block", [(48, 128, 240, 192)], 64, fill=16, foot=192, side=shoji),
@@ -5816,7 +5931,7 @@ FRONTIER_ROOMS = [
     ("frontier_factory_pre_battle_room", "LAYOUT_BATTLE_FRONTIER_BATTLE_FACTORY_PRE_BATTLE_ROOM",
      0x202, lambda: room_shell(272, 224, 96)),
     ("frontier_factory_battle_room", "LAYOUT_BATTLE_FRONTIER_BATTLE_FACTORY_BATTLE_ROOM", 0x2f1,
-     lambda: room_shell(208, 192, 64)),
+     factory_battle_room),
     # the Pike's: their pillars copper (the lobby's), silver (the three-path
     # room's) and gold (the wild Pokemon's room's); the normal room's
     # curtain, which opens by script, is painted on its wall
@@ -8033,7 +8148,11 @@ SPECS = [
     },
     {
         "name": "herb_shop",
+        # (its register's rectangle its `pit`: the Store's register, found
+        # again there, is not stood over its own - a found piece stands
+        # wherever it is drawn again, a room's own piece or not)
         "interior": {"layout": "LAYOUT_LAVARIDGE_TOWN_HERB_SHOP", "ground": [0x268],
+                     "pit": [(82, 25, 95, 39)],
                      "pieces": own_shell(herb_shop())},
     },
     {
@@ -8110,22 +8229,70 @@ SPECS = [
     {
         "name": "sidneys_room",
         "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_SIDNEYS_ROOM", "ground": [0x22c],
-                     "pieces": own_shell(elite_four_room(("c59462", "cda473")))},
+                     "pieces": own_shell(elite_four_room(("c59462", "cda473"), 0x22c))},
+    },
+    {
+        # the entry door shut behind the player (E4_DOOR_DRAW)
+        "name": "sidneys_room_closed",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_SIDNEYS_ROOM", "ground": [0x22c],
+                     "draw": E4_DOOR_DRAW, "pieces": own_shell([e4_entrance_door()])},
+    },
+    {
+        # the member beaten: the lights off, the door on open (E4_ADVANCE_DRAW)
+        "name": "sidneys_room_advance",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_SIDNEYS_ROOM", "ground": [0x22c],
+                     "draw": E4_ADVANCE_DRAW, "pieces": own_shell([e4_back_wall(E4_LAMP_OFF)])},
     },
     {
         "name": "phoebes_room",
         "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_PHOEBES_ROOM", "ground": [0x25c],
-                     "pieces": own_shell(elite_four_room(("a47bac", "b48bbd")))},
+                     "pieces": own_shell(elite_four_room(("a47bac", "b48bbd"), 0x25c))},
+    },
+    {
+        # the entry door shut behind the player (E4_DOOR_DRAW)
+        "name": "phoebes_room_closed",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_PHOEBES_ROOM", "ground": [0x25c],
+                     "draw": E4_DOOR_DRAW, "pieces": own_shell([e4_entrance_door()])},
+    },
+    {
+        # the member beaten: the lights off, the door on open (E4_ADVANCE_DRAW)
+        "name": "phoebes_room_advance",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_PHOEBES_ROOM", "ground": [0x25c],
+                     "draw": E4_ADVANCE_DRAW, "pieces": own_shell([e4_back_wall(E4_LAMP_OFF)])},
     },
     {
         "name": "glacias_room",
         "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_GLACIAS_ROOM", "ground": [0x28c],
-                     "pieces": own_shell(elite_four_room(("bdc5ff", "cdd5ff")))},
+                     "pieces": own_shell(elite_four_room(("bdc5ff", "cdd5ff"), 0x28c))},
+    },
+    {
+        # the entry door shut behind the player (E4_DOOR_DRAW)
+        "name": "glacias_room_closed",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_GLACIAS_ROOM", "ground": [0x28c],
+                     "draw": E4_DOOR_DRAW, "pieces": own_shell([e4_entrance_door()])},
+    },
+    {
+        # the member beaten: the lights off, the door on open (E4_ADVANCE_DRAW)
+        "name": "glacias_room_advance",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_GLACIAS_ROOM", "ground": [0x28c],
+                     "draw": E4_ADVANCE_DRAW, "pieces": own_shell([e4_back_wall(E4_LAMP_OFF)])},
     },
     {
         "name": "drakes_room",
         "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_DRAKES_ROOM", "ground": [0x2bc],
-                     "pieces": own_shell(elite_four_room(("e67341", "ff7341")))},
+                     "pieces": own_shell(elite_four_room(("e67341", "ff7341"), 0x2bc))},
+    },
+    {
+        # the entry door shut behind the player (E4_DOOR_DRAW)
+        "name": "drakes_room_closed",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_DRAKES_ROOM", "ground": [0x2bc],
+                     "draw": E4_DOOR_DRAW, "pieces": own_shell([e4_entrance_door()])},
+    },
+    {
+        # the member beaten: the lights off, the door on open (E4_ADVANCE_DRAW)
+        "name": "drakes_room_advance",
+        "interior": {"layout": "LAYOUT_EVER_GRANDE_CITY_DRAKES_ROOM", "ground": [0x2bc],
+                     "draw": E4_ADVANCE_DRAW, "pieces": own_shell([e4_back_wall(E4_LAMP_OFF)])},
     },
     {
         "name": "league_1f",
@@ -8248,7 +8415,10 @@ SPECS = [
     },
     {
         "name": "frontier_pyramid_lobby",
+        # (its terminal's rectangle its `pit`: the Pike's terminal, found
+        # again there, is not stood over its own)
         "interior": {"layout": FRONTIER_LOBBIES["pyramid"][0], "ground": [FRONTIER_LOBBIES["pyramid"][4]],
+                     "pit": [(80, 188, 96, 216)],
                      "pieces": own_shell(frontier_lobby("pyramid"))},
     },
     {
@@ -8424,12 +8594,35 @@ o..#.....#.####
 }
 
 
+# the puzzle rooms' tatami, its lines and its shade, round the partitions
+TRICK_FLOOR = ("c5ffac", "a4cd6a", "83ac4a", "8b8b8b", "6a8b31")
+# the rooms whose partitions' tops, drawn `height` rows north of their
+# cells, are their own (TRICK_PUZZLES: the cream ones)
+TRICK_TOPS_ABOVE = (1, 3)
+
+
 def trick_house_puzzle(n):
     height, text = TRICK_PUZZLES[n]
     rows = text.split()
     cells = [(x, y + 2) for y, row in enumerate(rows) for x, c in enumerate(row) if c == "#"]
-    return rect_pieces("partition", runs_of(cells), height) + trick_house_shell(
+    shell = trick_house_shell(
         {(x, y + 2) for y, row in enumerate(rows) for x, c in enumerate(row) if c == "o"})
+    if n not in TRICK_TOPS_ABOVE:
+        return rect_pieces("partition", runs_of(cells), height) + shell
+    # A partition stands on its cells, its top `height` rows above them as the
+    # GBA draws it: its rectangle starts that much higher, the tatami there
+    # left (`leave`), where the cell above it is floor - from its cells' edge,
+    # that much of its top lay flat on the floor north of it. Under another
+    # partition its top is that one's front.
+    own = set(cells)
+    out = []
+    for (x0, y0, x1, y1) in run_rects(runs_of(cells)):
+        above = all((x // 16, y0 // 16 - 1) not in own for x in range(x0, x1, 16))
+        top = y0 - height if above else y0
+        out.append(piece("partition_%d_%d" % (x0 // 16, y0 // 16), [(x0, top, x1, y1)],
+                         height if above else min(height, y1 - y0 - 4),
+                         leave=TRICK_FLOOR if above else ()))
+    return out + shell
 
 
 # the eighth's jars on its ice, one to each cell, to a pixel short of its
@@ -8476,8 +8669,10 @@ def trick_house_corridor():
     side = (64, 0, 80, 32)
     return [
         piece("wall", [(48, 0, 240, 32)], 32, fill=16, foot=32, side=side),
-        piece("wall_mid", [(0, 96, 48, 128)], 32, fill=16, foot=128, side=side),
-        piece("wall_low", [(48, 320, 96, 352)], 32, fill=16, foot=352, side=side),
+        # the lower two run back to the dark behind them (`back`): a slab a
+        # cell deep, they left floor laid behind them under the dark
+        piece("wall_mid", [(0, 96, 48, 128)], 32, fill=16, foot=128, side=side, back=96, solid=True),
+        piece("wall_low", [(48, 320, 96, 352)], 32, fill=16, foot=352, side=side, back=320, solid=True),
     ]
 
 
@@ -8525,21 +8720,39 @@ SPECS += [{"name": "trick_house_puzzle%d" % n,
 
 
 # The link rooms (the Colosseums, the Trade Center, the Record Corner, the
-# Union Room): a back wall, and side walls on the inner edge of the rims
-# down their sides, the rims behind them; the rim across the front, with
-# its doorway, is the front wall the GBA's camera looks over, and stays
-# drawn. And the truck the game starts in.
+# Union Room): a back wall, and side walls down the rims along their sides;
+# the rim across the front, with its doorway, is the front wall the GBA's
+# camera looks over, and stays drawn. And the truck the game starts in.
 
 def link_room(w, h, foot, x0, x1, z1, top=0):
     """A link room: its back wall (x0 to x1, standing on `foot`) and its
-    side walls along x0 and x1 from it to z1, the front rim's edge."""
+    side walls along x0 and x1 from it to z1, the front rim's edge. Where a
+    rim runs down a side, the wall is the rim whole: a block the wall's
+    height, its top the rim as drawn (`flat`, as Mauville's gym), its inner
+    face the wall - a wall on the rim's inner edge alone left the rim at the
+    floor's level behind it, the floor seeming to run on past the wall. The
+    Union Room's floor runs to the map's edges: its walls stand there."""
     side = (x0 + 16, top, x0 + 32, foot)
-    return [
-        piece("wall", [(x0 - 16 if x0 else 0, top, x1 + 16 if x1 < w else w, foot)], foot - top,
-              fill=16, foot=foot, side=side),
+    out = [piece("wall", [(x0 - 16 if x0 else 0, top, x1 + 16 if x1 < w else w, foot)], foot - top,
+                 fill=16, foot=foot, side=side)]
+    if x0:
+        return out + [
+            piece("side_w", [(x0 - 16, foot, x0, z1)], foot - top, side=side, flat=True,
+                  walls=[((x0, z1), (x0, foot))]),
+            piece("side_e", [(x1, foot, x1 + 16, z1)], foot - top, side=side, flat=True,
+                  walls=[((x1, foot), (x1, z1))]),
+        ]
+    return out + [
         piece("side_w", [], foot - top, side=side, walls=[((x0, z1), (x0, foot))]),
         piece("side_e", [], foot - top, side=side, walls=[((x1, foot), (x1, z1))]),
     ]
+
+
+def link_rims(x0, x1, z1, top=0):
+    """The rims a link room's side blocks stand on (link_room): drawn at the
+    floor's level, a wall's height south of where they stand."""
+    return [((x0 - 16, top, x0, z1), "the west rim, the side wall's top"),
+            ((x1, top, x1 + 16, z1), "the east rim, the side wall's top")]
 
 
 def record_corner():
@@ -8549,7 +8762,9 @@ def record_corner():
         piece("seat_sw", [(112, 85, 128, 111)], 14),
         piece("seat_ne", [(192, 53, 208, 79)], 14),
         piece("seat_se", [(192, 85, 208, 111)], 14),
-        piece("table", [(128, 67, 192, 112)], 12),
+        # round the receptionist, who stands in its middle (10,5): her cell
+        # left to the map, or the table's box hid all but her head
+        piece("table", [(128, 67, 192, 112)], 12, skip=[(10, 5)]),
     ] + link_room(320, 160, 32, 64, 256, 144)
 
 
@@ -8569,18 +8784,20 @@ def inside_of_truck():
 
 LINK_ROOMS = [
     ("battle_colosseum_2p", "LAYOUT_BATTLE_COLOSSEUM_2P", 0x255,
-     lambda: link_room(224, 144, 48, 16, 208, 128)),
+     lambda: link_room(224, 144, 48, 16, 208, 128), link_rims(16, 208, 128)),
     ("battle_colosseum_4p", "LAYOUT_BATTLE_COLOSSEUM_4P", 0x255,
-     lambda: link_room(224, 144, 48, 16, 208, 128)),
+     lambda: link_room(224, 144, 48, 16, 208, 128), link_rims(16, 208, 128)),
     # the trading machine between its two chairs, which stay drawn
     ("trade_center", "LAYOUT_TRADE_CENTER", 0x208,
-     lambda: [piece("machine", [(82, 68, 110, 104)], 16)] + link_room(192, 144, 48, 16, 176, 128)),
-    ("record_corner", "LAYOUT_RECORD_CORNER", 0x2c4, record_corner),
-    ("union_room", "LAYOUT_UNION_ROOM", 0x213, lambda: link_room(240, 192, 32, 0, 240, 176)),
-    ("inside_of_truck", "LAYOUT_INSIDE_OF_TRUCK", 0x20a, inside_of_truck),
+     lambda: [piece("machine", [(82, 68, 110, 104)], 16)] + link_room(192, 144, 48, 16, 176, 128),
+     link_rims(16, 176, 128)),
+    ("record_corner", "LAYOUT_RECORD_CORNER", 0x2c4, record_corner, link_rims(64, 256, 144)),
+    ("union_room", "LAYOUT_UNION_ROOM", 0x213, lambda: link_room(240, 192, 32, 0, 240, 176), []),
+    ("inside_of_truck", "LAYOUT_INSIDE_OF_TRUCK", 0x20a, inside_of_truck, []),
 ]
-SPECS += [{"name": n, "interior": {"layout": lid, "ground": [g], "pieces": own_shell(f())}}
-          for (n, lid, g, f) in LINK_ROOMS]
+SPECS += [{"name": n, "interior": dict({"layout": lid, "ground": [g], "pieces": own_shell(f())},
+                                      **({"redrawn": rims} if rims else {}))}
+          for (n, lid, g, f, rims) in LINK_ROOMS]
 
 
 # The S.S. Tidal: the corridor round its block of cabins, the cargo on its
@@ -8601,10 +8818,13 @@ def ss_tidal_corridor():
 
 def kw_pieces(prefix, cells, height, extra):
     """rect_pieces(prefix, runs_of(cells), height) with each piece's own
-    keywords besides: `extra` {name: {keyword: value}}."""
-    return [piece(name, [(x0, y0, x1, y1)], min(height, y1 - y0 - 4), **extra.get(name, {}))
-            for (x0, y0, x1, y1) in run_rects(runs_of(cells))
-            for name in ["%s_%d_%d" % (prefix, x0 // 16, y0 // 16)]]
+    keywords besides: `extra` {name: {keyword: value}}, its `height` too."""
+    out = []
+    for (x0, y0, x1, y1) in run_rects(runs_of(cells)):
+        name = "%s_%d_%d" % (prefix, x0 // 16, y0 // 16)
+        kw = dict(extra.get(name, {}))
+        out.append(piece(name, [(x0, y0, x1, y1)], kw.pop("height", min(height, y1 - y0 - 4)), **kw))
+    return out
 
 
 def crate_stacks(cells):
@@ -8629,26 +8849,78 @@ SS_TIDAL_CARGO = cell_runs((2, 2, 3), (3, 2, 3), (6, 2, 3), (7, 2, 3), (10, 2, 3
 # its back wall, its side walls and its furniture - the beds, the tables and
 # chairs - a piece to each rectangle of their cells, 12 px
 SS_TIDAL_CABIN_X = (1, 10, 19, 28)
-# the beds whose sides would be their dark outline, projected: dressed with a
-# plain patch of their blanket instead; and a bin on the carpet, the carpet
-# round it left
+# the beds, their sides (which would be their dark outline, projected)
+# dressed with a plain patch of their blanket instead: 6 px tall, their
+# footboard and legs their front (at a table's 12 their blankets' feet stood
+# up); and the bins on the carpet, the carpet round them left
 SS_TIDAL_BLANKET = {"n0_1_2": (29, 41), "n0_6_2": (102, 41), "n1_10_2": (173, 41),
                     "n1_15_2": (246, 41), "n2_19_2": (317, 41), "n3_33_2": (534, 41),
-                    "s0_1_11": (29, 185), "s0_6_11": (102, 185), "s2_24_11": (390, 185)}
+                    "s0_1_11": (29, 185), "s0_6_11": (102, 185), "s1_15_11": (246, 185),
+                    "s2_24_11": (390, 185), "s3_28_11": (461, 185)}
+SS_TIDAL_CARPET = ("de7b52", "bd5a41", "bd7341", "dea462")
 SS_TIDAL_FURNITURE_KW = dict(
-    {"furniture_" + k: {"solid": True, "side": (x, y, x + 6, y + 6)}
+    {"furniture_" + k: {"solid": True, "side": (x, y, x + 6, y + 6), "height": 6}
      for k, (x, y) in SS_TIDAL_BLANKET.items()},
-    furniture_n1_10_5={"leave": ("de7b52", "bd5a41", "bd7341", "dea462")})
+    **{"furniture_" + k: {"leave": SS_TIDAL_CARPET}
+       for k in ("n0_7_7", "n1_10_5", "s1_16_13", "n2_23_7", "s3_28_13")})
 SS_TIDAL_FURNITURE = {
     "n0": "1,2 2,2 6,2 7,2 1,3 2,3 6,3 7,3 5,6 6,6 5,7 6,7 7,7",
     "s0": "1,11 2,11 6,11 7,11 1,12 2,12 6,12 7,12",
     "n1": "10,2 11,2 15,2 16,2 10,3 11,3 15,3 16,3 10,5 13,5 14,5 13,6 14,6",
-    "s1": "15,11 16,11 11,12 12,12 15,12 16,12 11,13 12,13 16,13",
-    "n2": "19,2 20,2 19,3 20,3 22,5 23,5 22,6 23,6 23,7",
+    "s1": "15,11 16,11 11,12 12,12 15,12 16,12 11,13 12,13",
+    "n2": "19,2 20,2 19,3 20,3 22,5 23,5 22,6 23,6",
     "s2": "19,11 20,11 24,11 25,11 19,12 20,12 24,12 25,12",
     "n3": "28,2 29,2 33,2 34,2 28,3 29,3 33,3 34,3 28,4 33,6 34,6 33,7 34,7",
-    "s3": "28,11 29,11 28,12 29,12 31,12 32,12 33,12 34,12 28,13 31,13 32,13 33,13 34,13",
+    "s3": "28,11 29,11 28,12 29,12 31,12 32,12 33,12 34,12 31,13 32,13 33,13 34,13",
 }
+# the bins against a bed or a table: pieces of their own (in the rectangles
+# of their cells, half of the bed stood as tall as the bin). The one under
+# n3's desk stays its west column's: the Hidden Floor's desks are its east
+# column, found again
+SS_TIDAL_BINS = {"s1": "16,13", "n2": "23,7", "s3": "28,13"}
+
+
+# A cabin wall's white top, drawn outside the cabin beside it, where the
+# wall is the ship's side; and halfway across the dark between two cabins
+CABIN_RIM, CABIN_HALF = 6, 16
+
+
+def cabin_sides(name, x0, x1, top, foot, end, side, gaps=(), reach=(CABIN_RIM, CABIN_RIM)):
+    """A cabin's side walls (the Tidal's and the Abandoned Ship's), from its
+    back wall (`top` to `foot`) to `end`: blocks the wall's height, reaching
+    out from the cabin (`reach`, west and east) over what is drawn beside
+    it - at the ship's sides its white rim, 6 px; between two cabins half
+    the dark between them, the two blocks one partition, its rims (where
+    drawn) and the dark its top. A wall on the cabin's edge alone left the
+    rims on the floor and the dark a slot between the walls' backs (the
+    black bars between the cabins). Open where a passage runs through a
+    side (`gaps`, [(side, z0, z1)]): the stretch before it is drawn a block,
+    its end face under its top; the one after it stays a wall on the cabin's
+    edge - a block there, the wall's height just south of the passage, hid
+    the passage and whoever walked it from the camera."""
+    h = foot - top
+    out = []
+    for s, x, r in (("w", x0, reach[0]), ("e", x1, reach[1])):
+        r0, r1 = (x - r, x) if s == "w" else (x, x + r)
+        cuts = sorted((z0, z1) for (t, z0, z1) in gaps if t == s)
+        runs, z = [], foot
+        for z0, z1 in cuts:
+            runs.append((z, z0)); z = z1
+        runs.append((z, end))
+        for i, (a, b) in enumerate(runs):
+            n = "side_%s_%s%s" % (name, s, "_%d" % i if len(runs) > 1 else "")
+            if a == foot:
+                out.append(piece(n, [(r0, top, r1, b)], h, solid=True, side=side))
+            else:
+                out.append(piece(n, [], h, side=side,
+                                 walls=[((x, b), (x, a)) if s == "w" else ((x, a), (x, b))]))
+    return out
+
+
+def cabin_reach(i, n):
+    """The `reach` of the i-th of n cabins side by side: half the dark
+    towards a neighbour, the rim at the ship's sides."""
+    return (CABIN_RIM if i == 0 else CABIN_HALF, CABIN_RIM if i == n - 1 else CABIN_HALF)
 
 
 def ss_tidal_rooms():
@@ -8657,14 +8929,14 @@ def ss_tidal_rooms():
         x0, x1 = cx * 16, (cx + 7) * 16
         for row, top, foot, end in (("n", 0, 32, 128), ("s", 144, 176, 272)):
             name = "%s%d" % (row, i)
-            cells = [tuple(int(v) for v in c.split(",")) for c in SS_TIDAL_FURNITURE[name].split()]
             side = (x0, top, x0 + 16, foot)
-            out += kw_pieces("furniture_" + name, cells, 12, SS_TIDAL_FURNITURE_KW)
+            for group in (SS_TIDAL_FURNITURE[name], SS_TIDAL_BINS.get(name, "")):
+                cells = [tuple(int(v) for v in c.split(",")) for c in group.split()]
+                out += kw_pieces("furniture_" + name, cells, 12, SS_TIDAL_FURNITURE_KW)
             out += [
                 piece("wall_" + name, [(x0, top, x1, foot)], 32, fill=16, foot=foot, side=side),
-                piece("side_%s_w" % name, [], 32, side=side, walls=[((x0, end), (x0, foot))]),
-                piece("side_%s_e" % name, [], 32, side=side, walls=[((x1, foot), (x1, end))]),
-            ]
+            ] + cabin_sides(name, x0, x1, top, foot, end, side,
+                            reach=cabin_reach(i, len(SS_TIDAL_CABIN_X)))
     return out
 
 
@@ -8847,27 +9119,18 @@ SPECS += [{"name": "sky_pillar_%s%s" % (f.lower(), clean.lower()),
 # cabins, a door burst open, and breaches in the walls and floor (blocked,
 # drawn dark), which stay drawn.
 
-def ship_cabin(name, x0, top, foot, end, gap=None, side_gaps=(), cells=7):
+def ship_cabin(name, x0, top, foot, end, gap=None, side_gaps=(), cells=7, reach=(CABIN_RIM, CABIN_RIM)):
     """A cabin `cells` wide from x0: its back wall from `top`, standing on
     `foot` (round a passage broken through it: `gap`, (x0, x1)), and its side
-    walls from it to `end`, open where a passage runs through them
-    (`side_gaps`, [(side, z0, z1)])."""
+    walls from it to `end` (cabin_sides, `reach`), open where a passage runs
+    through them (`side_gaps`, [(side, z0, z1)])."""
     x1 = x0 + 16 * cells
     side = (x0, top, x0 + 16, foot)
     out = []
     for i, (a, b) in enumerate([(x0, gap[0]), (gap[1], x1)] if gap else [(x0, x1)]):
         out.append(piece("wall_%s%s" % (name, "_%d" % i if gap else ""), [(a, top, b, foot)], 32,
                          fill=16, foot=foot, side=side))
-    for s, x in (("w", x0), ("e", x1)):
-        cuts = sorted((z0, z1) for (t, z0, z1) in side_gaps if t == s)
-        runs, z = [], foot
-        for z0, z1 in cuts:
-            runs.append((z, z0)); z = z1
-        runs.append((z, end))
-        for i, (a, b) in enumerate(runs):
-            out.append(piece("side_%s_%s%s" % (name, s, "_%d" % i if len(runs) > 1 else ""), [], 32, side=side,
-                             walls=[((x, b), (x, a)) if s == "w" else ((x, a), (x, b))]))
-    return out
+    return out + cabin_sides(name, x0, x1, top, foot, end, side, side_gaps, reach)
 
 
 def ship_corridors_1f():
@@ -8891,9 +9154,11 @@ def ship_corridors_1f():
 def ship_rooms_1f():
     """Four cabins: a passage broken between the two below (row 13), and one
     down from the north-east cabin through the south-east one's back wall."""
-    return (ship_cabin("n0", 16, 0, 32, 128) + ship_cabin("n1", 160, 0, 32, 128)
-            + ship_cabin("s0", 16, 144, 176, 272, side_gaps=[("e", 208, 224)])
-            + ship_cabin("s1", 160, 144, 176, 272, gap=(208, 224), side_gaps=[("w", 208, 224)]))
+    w, e = cabin_reach(0, 2), cabin_reach(1, 2)
+    return (ship_cabin("n0", 16, 0, 32, 128, reach=w) + ship_cabin("n1", 160, 0, 32, 128, reach=e)
+            + ship_cabin("s0", 16, 144, 176, 272, side_gaps=[("e", 208, 224)], reach=w)
+            + ship_cabin("s1", 160, 144, 176, 272, gap=(208, 224), side_gaps=[("w", 208, 224)],
+                         reach=e))
 
 
 def ship_rooms2_1f():
@@ -8902,18 +9167,39 @@ def ship_rooms2_1f():
     return ship_cabin("n0", 16, 0, 32, 128) + ship_cabin("s0", 16, 144, 176, 272, gap=(64, 80))
 
 
+# The doors whose bottoms the ship's scripts change, locked and unlocked
+# (METATILE_InsideShip_IntactDoor_Bottom_*): both shut, told apart by their
+# lights. A door's column of its block stands whole in each state (`when`),
+# the other state's read off the room drawn so (the `_unlocked`/`_locked`
+# rooms) - left drawn, its bottom lay on the floor under its upper half.
+SHIP_DOOR_LOCKED, SHIP_DOOR_UNLOCKED = 0x233, 0x22B
+
+
+def ship_door_column(name, rect, door, state, face, **kw):
+    """The column of a block of cabins down to the floor through the door
+    at `door` (x, y), standing while that door's bottom is `state`."""
+    return piece("%s_%s" % (name, "locked" if state == SHIP_DOOR_LOCKED else "unlocked"),
+                 [rect], 26, solid=True, side=face, when=door + (state,), **kw)
+
+
+def ship_corridors_b1f_door(state):
+    # the north-east block's door (11,4)
+    return ship_door_column("block_ne_door", (176, 0, 192, 79), (11, 4), state, (160, 54, 176, 78))
+
+
 def ship_corridors_b1f():
     """Below: two blocks of cabins running off the map's top edge, their
     doors on their south faces - the north-west one's burst open, painted on,
-    and the north-east one's (11,4) left drawn, its script changing it, a
-    lintel over it - and the back wall beside the stairs, which stay drawn.
-    Across the south, a third block's roof, its front past the map's edge:
-    its cabins' doors are on its back edge, walked onto, as 1F's are."""
+    and the north-east one's (11,4), its script changing it (its column
+    standing in each state: ship_door_column) - and the back wall beside the
+    stairs, which stay drawn. Across the south, a third block's roof, its
+    front past the map's edge: its cabins' doors are on its back edge,
+    walked onto, as 1F's are."""
     side = (0, 0, 16, 32)
     return [
         piece("block_nw", [(32, 0, 128, 79)], 26, solid=True, side=(32, 54, 48, 78)),
         piece("block_ne_w", [(160, 0, 176, 79)], 26, solid=True, side=(160, 54, 176, 78)),
-        piece("block_ne_lintel", [(176, 0, 192, 64)], 26, solid=True, foot=79, side=(160, 54, 176, 78)),
+        ship_corridors_b1f_door(SHIP_DOOR_UNLOCKED),
         piece("block_ne_e", [(192, 0, 208, 79)], 26, solid=True, side=(160, 54, 176, 78)),
         piece("block_s", [(64, 121, 208, 160)], 26, solid=True, side=(64, 121, 80, 147)),
         piece("wall_w", [(0, 0, 32, 32)], 32, fill=16, foot=32, side=side),
@@ -8921,19 +9207,30 @@ def ship_corridors_b1f():
     ]
 
 
+SHIP_HIDDEN_FACE = (32, 117, 48, 142)
+
+
+def ship_hidden_doors(state):
+    # the doors (3,8) and (6,8), their columns whole (the west one a row
+    # short at its top, under the indent at (3,3))
+    return [ship_door_column("block_%d" % x, (x * 16, y0, x * 16 + 16, 143), (x, 8), state,
+                             SHIP_HIDDEN_FACE)
+            for (x, y0) in ((3, 64), (6, 57))]
+
+
 def ship_hidden_corridors():
     """The hidden floor's corridor round its block of cabins (one row higher
     than 1F's: its face rows 7-8). Its script changes the doors' bottoms at
-    (3,8) and (6,8) and the indents on its back edge at (3,3) and (9,3):
-    those cells are in no piece, a lintel over each door, the columns under
-    the indents a row shorter. The flooded corner stays drawn."""
+    (3,8) and (6,8) - their columns standing in each state (ship_door_column)
+    - and the indents on its back edge at (3,3) and (9,3): those cells are in
+    no piece, the columns under them a row shorter. The flooded corner stays
+    drawn."""
     side = (16, 0, 32, 32)
-    face = (32, 117, 48, 142)
-    return [piece("block_%d" % (x0 // 16), [(x0, y0, x1, y1)], 26, solid=True, side=face,
-                  **({"foot": 143} if y1 < 143 else {}))
-            for (x0, y0, x1, y1) in ((32, 57, 48, 143), (48, 64, 64, 128), (64, 57, 96, 143),
-                                     (96, 57, 112, 128), (112, 57, 144, 143), (144, 64, 160, 143),
-                                     (160, 57, 176, 143))] + [
+    face = SHIP_HIDDEN_FACE
+    return [piece("block_%d" % (x0 // 16), [(x0, y0, x1, y1)], 26, solid=True, side=face)
+            for (x0, y0, x1, y1) in ((32, 57, 48, 143), (64, 57, 96, 143), (112, 57, 144, 143),
+                                     (144, 64, 160, 143), (160, 57, 176, 143))] + \
+        ship_hidden_doors(SHIP_DOOR_LOCKED) + [
         piece("wall", [(0, 0, 208, 32)], 32, fill=16, foot=32, side=side),
     ]
 
@@ -8948,8 +9245,8 @@ def ship_hidden_rooms():
            for (x, y) in ((22, 2), (40, 2), (40, 10))]
     for i, (x0, n) in enumerate(((16, 12), (240, 13), (480, 13))):
         gaps_n = [("e", 48, 64)] if i == 1 else [("w", 48, 64)] if i == 2 else []
-        out += ship_cabin("n%d" % i, x0, 0, 32, 112, side_gaps=gaps_n, cells=n)
-        out += ship_cabin("s%d" % i, x0, 128, 160, 240, cells=n)
+        out += ship_cabin("n%d" % i, x0, 0, 32, 112, side_gaps=gaps_n, cells=n, reach=cabin_reach(i, 3))
+        out += ship_cabin("s%d" % i, x0, 128, 160, 240, cells=n, reach=cabin_reach(i, 3))
     return out
 
 
@@ -8989,11 +9286,12 @@ ABANDONED_SHIP_ROOMS = [
     # three cabins in a row, the middle one's floor broken through to the
     # water below (drawn)
     ("abandoned_ship_rooms_b1f", "LAYOUT_ABANDONED_SHIP_ROOMS_B1F", 0x238,
-     lambda: sum((ship_cabin("c%d" % i, x0, 0, 32, 128) for i, x0 in enumerate((16, 160, 304))), [])),
+     lambda: sum((ship_cabin("c%d" % i, x0, 0, 32, 128, reach=cabin_reach(i, 3))
+                  for i, x0 in enumerate((16, 160, 304))), [])),
     # two cabins, a passage broken between them (row 4)
     ("abandoned_ship_rooms2_b1f", "LAYOUT_ABANDONED_SHIP_ROOMS2_B1F", 0x238,
-     lambda: ship_cabin("w", 16, 0, 32, 128, side_gaps=[("e", 64, 80)])
-     + ship_cabin("e", 160, 0, 32, 128, side_gaps=[("w", 64, 80)])),
+     lambda: ship_cabin("w", 16, 0, 32, 128, side_gaps=[("e", 64, 80)], reach=cabin_reach(0, 2))
+     + ship_cabin("e", 160, 0, 32, 128, side_gaps=[("w", 64, 80)], reach=cabin_reach(1, 2))),
     ("abandoned_ship_room_b1f", "LAYOUT_ABANDONED_SHIP_ROOM_B1F", 0x238,
      lambda: ship_cabin("c", 16, 0, 32, 128)),
     ("abandoned_ship_hidden_floor_corridors", "LAYOUT_ABANDONED_SHIP_HIDDEN_FLOOR_CORRIDORS", 0x202,
@@ -9017,6 +9315,17 @@ ABANDONED_SHIP_ROOMS = [
 ]
 SPECS += [{"name": n, "interior": {"layout": lid, "ground": [g], "pieces": own_shell(f())}}
           for (n, lid, g, f) in ABANDONED_SHIP_ROOMS]
+# the scripted doors' other state, read off the room drawn so
+SPECS += [
+    {"name": "abandoned_ship_hidden_floor_corridors_unlocked",
+     "interior": {"layout": "LAYOUT_ABANDONED_SHIP_HIDDEN_FLOOR_CORRIDORS", "ground": [0x202],
+                  "draw": {(3, 8): SHIP_DOOR_UNLOCKED, (6, 8): SHIP_DOOR_UNLOCKED},
+                  "pieces": own_shell(ship_hidden_doors(SHIP_DOOR_UNLOCKED))}},
+    {"name": "abandoned_ship_corridors_b1f_locked",
+     "interior": {"layout": "LAYOUT_ABANDONED_SHIP_CORRIDORS_B1F", "ground": [0x202],
+                  "draw": {(11, 4): SHIP_DOOR_LOCKED},
+                  "pieces": own_shell([ship_corridors_b1f_door(SHIP_DOOR_LOCKED)])}},
+]
 
 
 
