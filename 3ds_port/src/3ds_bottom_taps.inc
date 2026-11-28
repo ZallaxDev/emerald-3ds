@@ -37,6 +37,7 @@ static void DoSave(void)
 static void OpenSave(void)
 {
     sSaveStep = SAVE_ASK;
+    sSaveSel = 0;
     StringExpandPlaceholders(sSaveMessage, gText_ConfirmSave);
 }
 

@@ -154,8 +154,10 @@ static void ChooseColumnItem(u8 mode, u8 item)
 
 static void SaveKeys(u8 mode, u16 down)
 {
-    if (down & A_BUTTON)
-        Activate(sSaveStep == SAVE_DONE ? HIT_OK : HIT_YES, mode);
+    if (sSaveStep != SAVE_DONE && FieldIdle() && (down & (DPAD_UP | DPAD_DOWN | DPAD_LEFT | DPAD_RIGHT)))
+        MoveFocus(&sSaveSel, !sSaveSel);
+    else if (down & A_BUTTON)
+        Activate(sSaveStep == SAVE_DONE ? HIT_OK : sSaveSel ? HIT_NO : HIT_YES, mode);
     else if (down & B_BUTTON)
         Activate(sSaveStep == SAVE_DONE ? HIT_OK : HIT_NO, mode);
     /* Done or declined, the screen goes back to the map: so does the focus,

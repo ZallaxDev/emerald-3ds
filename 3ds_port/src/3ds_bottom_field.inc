@@ -1158,8 +1158,10 @@ static void SaveButton(int x, int w, int y, int h, const u8 *label, Rgb colour, 
                        const ViewState *s)
 {
     bool8 pressed = enabled && s->pressed == id;
+    /* The marked one glows round its own edge, as every other plate's focus. */
+    bool8 marked = enabled && ((id == HIT_YES && s->saveSel == 0) || (id == HIT_NO && s->saveSel == 1));
     int oy = Plate(x, y, w, h, !enabled ? sOffGrey : pressed ? sEmerald : colour,
-                   pressed ? PLATE_STATE_PRESSED : PLATE_STATE_NORMAL);
+                   pressed ? PLATE_STATE_PRESSED : marked ? PLATE_STATE_FOCUS : PLATE_STATE_NORMAL);
 
     TextIn(label, x, oy, w, h, &sNormal, 'c', STYLE_WHITE, 4);
     if (enabled)

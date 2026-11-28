@@ -1053,6 +1053,7 @@ static void Snapshot(ViewState *s, u8 mode, u8 pressed)
             SnapshotSave(s);
             s->saveStep = sSaveStep;
             s->canSave = FieldIdle();
+            s->saveSel = sInside == INSIDE_SAVE && sSaveStep != SAVE_DONE ? sSaveSel : 0xFF;
             CopyText(s->text, sizeof(s->text), sSaveMessage);
             break;
         case SCR_OPTION:

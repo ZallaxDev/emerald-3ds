@@ -512,6 +512,8 @@ static void Activate(u8 id, u8 mode)
             if (sSaveStep == SAVE_ASK && gSaveFileStatus != SAVE_STATUS_EMPTY && gSaveFileStatus != SAVE_STATUS_CORRUPT)
             {
                 sSaveStep = SAVE_OVERWRITE;
+                /* As the game's own box: another file's warning starts on NO. */
+                sSaveSel = gDifferentSaveFile ? 1 : 0;
                 StringExpandPlaceholders(sSaveMessage, gDifferentSaveFile ? gText_DifferentSaveFile
                                                                          : gText_AlreadySavedFile);
             }

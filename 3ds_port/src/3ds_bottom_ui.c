@@ -466,7 +466,7 @@ typedef struct
     u16 id, dex, hours, hofHours, linkWins, linkLosses, trades, pokeblocks, contests;
     u32 money;
     /* Save and options. */
-    u8 saveStep, canSave;
+    u8 saveStep, canSave, saveSel;
     u8 options[OPTION_ROWS];
     /* The OPTIONS category and group on show, and what their rows show. */
     u8 optPage, optSub;
@@ -677,6 +677,8 @@ static bool8 sEncView, sEncUncaught;
 static u8 sEncPage;
 static unsigned sClockNoticeSerial;
 static u8 sSaveStep;
+/* The button the keys have marked on the save screen: 0 YES, 1 NO. */
+static u8 sSaveSel;
 /* Room for the longest, gText_DifferentSaveFile (some 230 bytes). */
 static u8 sSaveMessage[256];
 
@@ -1111,6 +1113,7 @@ void CtrBottom_SoftReset(void)
     sEncView = sEncUncaught = FALSE;
     sEncPage = 0;
     sSaveStep = SAVE_ASK;
+    sSaveSel = 0;
     sAsk.kind = sAsked.kind = ASK_NONE;
     sBattleTap = HIT_NONE;
     sMoveCancel = sQuickBallTap = sQuickBallFocus = FALSE;
